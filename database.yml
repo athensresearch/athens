@@ -1,0 +1,22 @@
+development:
+  dialect: "mysql"
+  database: vgoprox
+  host: 127.0.0.1
+  port: 3307
+  user: vgp
+  password: vgp
+
+test:
+  dialect: "mysql"
+  database: circle-test
+  host: 127.0.0.1
+  port: 3306
+  user: ubuntu
+  
+production:
+  dialect: "mysql"
+  database: vgoprox
+  host: {{ env "DB_HOST" }}
+  port: {{ env "DB_PORT" }}
+  user: {{ env "DB_USER" }}
+  password: {{ env "DB_PASS" }}

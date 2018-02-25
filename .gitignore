@@ -14,3 +14,4 @@
 .glide/
 node_modules
 public
+tmp/*

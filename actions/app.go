@@ -1,15 +1,15 @@
 package actions
 
 import (
+	// "github.com/arschles/vgoprox/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
-	"github.com/gobuffalo/buffalo/middleware/ssl"
-	"github.com/gobuffalo/envy"
-	"github.com/unrolled/secure"
-
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
+	"github.com/gobuffalo/buffalo/middleware/ssl"
+	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr"
+	"github.com/unrolled/secure"
 )
 
 // ENV is used to help switch settings based on where the
@@ -44,7 +44,7 @@ func App() *buffalo.App {
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.PopTransaction)
 		// Remove to disable this.
-		app.Use(middleware.PopTransaction(models.DB))
+		// app.Use(middleware.PopTransaction(models.DB))
 
 		// Setup and use translations:
 		var err error
@@ -53,15 +53,15 @@ func App() *buffalo.App {
 		}
 		app.Use(T.Middleware())
 
-		app.GET("/", HomeHandler)
+		app.GET("/", homeHandler)
 
 		moduleGroup := app.Group("/module")
 		versionGroup := moduleGroup.Group("/@v")
 
-		versionGroup.GET("/list", ListHandler)
-		versionGroup.GET("/{version}.info", VersionInfoHandler)
-		versionGroup.GET("/{version}.mod", VersionModuleHandler)
-		versionGroup.GET("/{version}.zip", VersionZipHandler)
+		versionGroup.GET("/list", listHandler)
+		versionGroup.GET("/{version}.info", versionInfoHandler)
+		versionGroup.GET("/{version}.mod", versionModuleHandler)
+		versionGroup.GET("/{version}.zip", versionZipHandler)
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)
