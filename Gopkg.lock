@@ -336,6 +336,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/pierrre/archivefile"
+  packages = ["zip"]
+  revision = "e2d100bc74f58ed7d2f41175cd2cf5fe29446399"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -501,6 +507,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d985a72ff370dba9e708969f958fefb388a8411a32ed0ec000f5613f27a7c816"
+  inputs-digest = "5d725089953a20a5e348470245b57930e8bb973fc837e1185ca9d62bb463684a"
   solver-name = "gps-cdcl"
   solver-version = 1

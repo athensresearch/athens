@@ -3,15 +3,11 @@ package actions
 import (
 	"net/http"
 
+	"github.com/arschles/vgoprox/pkg/payloads"
 	"github.com/arschles/vgoprox/pkg/storage"
 	"github.com/gobuffalo/buffalo"
 	"github.com/pkg/errors"
 )
-
-type uploadPayload struct {
-	Module []byte `json:"module_base64"`
-	Zip    []byte `json:"zip_base64"`
-}
 
 func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
@@ -20,7 +16,7 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 			return errors.WithStack(err)
 		}
 		version := c.Param("ver")
-		payload := new(uploadPayload)
+		payload := new(payloads.Upload)
 		if c.Bind(payload); err != nil {
 			return errors.WithStack(err)
 		}
