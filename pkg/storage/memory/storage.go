@@ -7,16 +7,10 @@ import (
 	"github.com/arschles/vgoprox/pkg/storage"
 )
 
-type version struct {
-	info storage.RevInfo
-	mod  []byte
-	zip  []byte
-}
-
 type entriesT struct {
 	*sync.RWMutex
 	// keys are baseURL + "/" + module. use the 'key' method to get these
-	versions map[string][]*version
+	versions map[string][]*storage.Version
 }
 
 func (e *entriesT) key(baseURL, module string) string {
@@ -25,5 +19,5 @@ func (e *entriesT) key(baseURL, module string) string {
 
 var entries = &entriesT{
 	RWMutex:  new(sync.RWMutex),
-	versions: map[string][]*version{},
+	versions: map[string][]*storage.Version{},
 }

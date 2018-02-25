@@ -22,3 +22,20 @@ func getStandardParams(c buffalo.Context) (*standardPathParams, error) {
 	}
 	return &standardPathParams{baseURL: baseURL, module: module}, nil
 }
+
+type allPathParams struct {
+	*standardPathParams
+	version string
+}
+
+func getAllPathParams(c buffalo.Context) (*allPathParams, error) {
+	stdParams, err := getStandardParams(c)
+	if err != nil {
+		return nil, err
+	}
+	version := c.Param("version")
+	if version == "" {
+		return nil, fmt.Errorf("version not found")
+	}
+	return &allPathParams{standardPathParams: stdParams, version: version}, nil
+}

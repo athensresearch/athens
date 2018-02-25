@@ -16,7 +16,7 @@ func (l *Lister) List(basePath, module string) ([]string, error) {
 	}
 	ret := make([]string, len(versions))
 	for i, version := range versions {
-		ret[i] = version.info.Version
+		ret[i] = version.RevInfo.Version
 	}
 	return ret, nil
 }
@@ -27,7 +27,7 @@ func (l *Lister) All() ([]*storage.RevInfo, error) {
 	defer entries.RUnlock()
 	for _, versions := range entries.versions {
 		for _, version := range versions {
-			ret = append(ret, &version.info)
+			ret = append(ret, &version.RevInfo)
 		}
 	}
 	return ret, nil

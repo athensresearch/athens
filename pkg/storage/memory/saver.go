@@ -9,15 +9,15 @@ import (
 type Saver struct{}
 
 func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
-	newVsn := &version{
-		info: storage.RevInfo{
+	newVsn := &storage.Version{
+		RevInfo: storage.RevInfo{
 			Version: vsn,
 			Short:   vsn,
 			Time:    time.Now(),
 			Name:    vsn,
 		},
-		mod: mod,
-		zip: zip,
+		Mod: mod,
+		Zip: zip,
 	}
 	entries.Lock()
 	defer entries.Unlock()

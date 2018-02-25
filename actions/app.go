@@ -33,8 +33,8 @@ func init() {
 	}
 	gopath = g
 	storageReader = storage.Reader{
-		Lister:    &memory.Lister{},
-		Versioner: &memory.Versioner{},
+		Lister: &memory.Lister{},
+		Getter: &memory.Getter{},
 	}
 	storageWriter = &memory.Saver{}
 }
@@ -80,8 +80,8 @@ func App() *buffalo.App {
 		app.GET("/all", allHandler(storageReader))
 		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storageReader))
 		app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storageReader))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler)
-		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler)
+		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storageReader))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storageReader))
 		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storageWriter))
 
 		// serve files from the public directory:
