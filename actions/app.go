@@ -8,7 +8,7 @@ import (
 	"github.com/arschles/vgoprox/pkg/storage/memory"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
-	"github.com/gobuffalo/buffalo/middleware/csrf"
+	// "github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/envy"
@@ -57,7 +57,8 @@ func App() *buffalo.App {
 
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
-		app.Use(csrf.New)
+		// csrfMiddleware := csrf.New
+		// app.Use(csrfMiddleware)
 
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.PopTransaction)
@@ -77,7 +78,9 @@ func App() *buffalo.App {
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.info", versionInfoHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.mod", versionModuleHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.zip", versionZipHandler)
-		app.POST("/admin/upload/{baseURL:.+}/{module}/{ver}", uploadHandler(storageWriter))
+		adminGroup := app.Group("/admin")
+		// adminGroup.Middleware.Skip(csrfMiddleware)
+		adminGroup.POST("/upload/{baseURL:.+}/{module}/{ver}", uploadHandler(storageWriter))
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)

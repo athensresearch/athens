@@ -14,27 +14,29 @@ import (
 )
 
 const help = `Usage:
-vgp <basepath> <module> <version>
+vgp <dir> <basepath> <module> <version>
 
 Details:
 
-- The directory from which code will be uploaded is <basepath>/<module>
-- ... and that directory must have a go.mod file in ot
+- The directory from which code will be uploaded is <dir>
+- ... and that directory must have a go.mod file in it
+- ... and the go.mod file's 'module' directive must match <module>
 - ... and if there's a vendor directory under that directory, it won't be ignored right now
 - ... and the go.mod file will be uploaded with the source
 `
 
 func main() {
-	if len(os.Args) != 4 {
+	if len(os.Args) != 5 {
 		log.Println(help)
 		os.Exit(1)
 	}
 
-	basePath := os.Args[1]
-	module := os.Args[2]
-	version := os.Args[3]
+	dir := os.Args[1]
+	basePath := os.Args[2]
+	module := os.Args[3]
+	version := os.Args[4]
 
-	fullDirectory, err := filepath.Abs(filepath.Join(basePath, module))
+	fullDirectory, err := filepath.Abs(dir)
 	if err != nil {
 		log.Fatalf("couldn't get full directory (%s)", err)
 	}
@@ -60,6 +62,8 @@ func main() {
 	if err := json.NewEncoder(buf).Encode(postBody); err != nil {
 		log.Fatalf("error encoding json (%s)", err)
 	}
+	log.Printf("POSTing to %s", url)
+	log.Printf("Body\n%s", string(buf.Bytes()))
 	resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		log.Fatalf("error uploading (%s)", err)
