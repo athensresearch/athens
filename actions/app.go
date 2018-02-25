@@ -32,7 +32,10 @@ func init() {
 		log.Fatalf("GOPATH is not set!")
 	}
 	gopath = g
-	storageReader = &memory.Lister{}
+	storageReader = storage.Reader{
+		Lister:    &memory.Lister{},
+		Versioner: &memory.Versioner{},
+	}
 	storageWriter = &memory.Saver{}
 }
 
@@ -76,10 +79,10 @@ func App() *buffalo.App {
 
 		app.GET("/all", allHandler(storageReader))
 		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storageReader))
-		app.GET("/{base_url:.+}/{module}/@v/{ver}.info", versionInfoHandler)
-		app.GET("/{base_url:.+}/{module}/@v/{ver}.mod", versionModuleHandler)
-		app.GET("/{base_url:.+}/{module}/@v/{ver}.zip", versionZipHandler)
-		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{ver}", uploadHandler(storageWriter))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storageReader))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler)
+		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler)
+		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storageWriter))
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)

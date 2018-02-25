@@ -9,6 +9,11 @@ type NotFoundErr struct {
 	Module   string
 }
 
+type ErrVersionNotFound struct {
+	NotFoundErr
+	Version string
+}
+
 func (n NotFoundErr) Error() string {
 	return fmt.Sprintf("%s/%s not found", n.BasePath, n.Module)
 }

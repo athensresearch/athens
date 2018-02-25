@@ -1,5 +1,6 @@
 package storage
 
-type Reader interface {
+type Reader struct {
 	Lister
+	Versioner
 }

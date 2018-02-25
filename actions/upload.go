@@ -15,7 +15,7 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		version := c.Param("ver")
+		version := c.Param("version")
 		payload := new(payloads.Upload)
 		if c.Bind(payload); err != nil {
 			return errors.WithStack(err)
