@@ -5,8 +5,8 @@ import (
 )
 
 type RevInfo struct {
-	Version string    // version string
-	Name    string    // complete ID in underlying repository
-	Short   string    // shortened ID, for use in pseudo-version
-	Time    time.Time // commit time
+	Version string    `json:"Version"` // version string
+	Name    string    `json:"Name"`    // complete ID in underlying repository
+	Short   string    `json:"Short"`   // shortened ID, for use in pseudo-version
+	Time    time.Time `json:"Time"`    // commit time
 }

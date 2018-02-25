@@ -20,3 +20,15 @@ func (l *Lister) List(basePath, module string) ([]string, error) {
 	}
 	return ret, nil
 }
+
+func (l *Lister) All() ([]*storage.RevInfo, error) {
+	ret := []*storage.RevInfo{}
+	entries.RLock()
+	defer entries.RUnlock()
+	for _, versions := range entries.versions {
+		for _, version := range versions {
+			ret = append(ret, &version.info)
+		}
+	}
+	return ret, nil
+}

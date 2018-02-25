@@ -22,7 +22,6 @@ func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
 	entries.Lock()
 	defer entries.Unlock()
 	key := entries.key(baseURL, module)
-	existing := entries.versions[key]
-	existing = append(existing, newVsn)
+	entries.versions[key] = append(entries.versions[key], newVsn)
 	return nil
 }

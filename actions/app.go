@@ -74,7 +74,8 @@ func App() *buffalo.App {
 
 		app.GET("/", homeHandler)
 
-		app.GET("/{base_url:.+}/{module}/@v/list", listHandler)
+		app.GET("/all", allHandler(storageReader))
+		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storageReader))
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.info", versionInfoHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.mod", versionModuleHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.zip", versionZipHandler)
