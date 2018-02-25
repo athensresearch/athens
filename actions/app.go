@@ -78,9 +78,7 @@ func App() *buffalo.App {
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.info", versionInfoHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.mod", versionModuleHandler)
 		app.GET("/{base_url:.+}/{module}/@v/{ver}.zip", versionZipHandler)
-		adminGroup := app.Group("/admin")
-		// adminGroup.Middleware.Skip(csrfMiddleware)
-		adminGroup.POST("/upload/{baseURL:.+}/{module}/{ver}", uploadHandler(storageWriter))
+		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{ver}", uploadHandler(storageWriter))
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)
