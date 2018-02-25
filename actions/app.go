@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"log"
+	
 	// "github.com/arschles/vgoprox/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
@@ -17,6 +19,16 @@ import (
 var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
 var T *i18n.Translator
+
+var gopath string
+func init() {
+	g, err = envy.MustGet("GOPATH")
+	if err != nil {
+		log.Fatalf("GOPATH is not set!"))
+	}
+	gopath = g
+
+}
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
@@ -55,13 +67,10 @@ func App() *buffalo.App {
 
 		app.GET("/", homeHandler)
 
-		moduleGroup := app.Group("/module")
-		versionGroup := moduleGroup.Group("/@v")
-
-		versionGroup.GET("/list", listHandler)
-		versionGroup.GET("/{version}.info", versionInfoHandler)
-		versionGroup.GET("/{version}.mod", versionModuleHandler)
-		versionGroup.GET("/{version}.zip", versionZipHandler)
+		app.GET("/{base_url}/{module}/@v/list", listHandler)
+		app.GET("/{base_url}/{module}/@v/{ver}.info", versionInfoHandler)
+		app.GET("/{base_url}/{module}/@v/{ver}.mod", versionModuleHandler)
+		app.GET("/{base_url}/{module}/@v/{ver}.zip", versionZipHandler)
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)
