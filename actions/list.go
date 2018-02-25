@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/arschles/vgoprox/pkg/storage"
 	"github.com/arschles/vgoprox/pkg/storage/memory"
 	"github.com/gobuffalo/buffalo"
-	"github.com/pkg/errors"
+	errs "github.com/pkg/errors"
 )
 
 var lister = &memory.Lister{}
@@ -17,8 +18,10 @@ func listHandler(c buffalo.Context) error {
 		return err
 	}
 	versions, err := lister.List(params.baseURL, params.module)
-	if err != nil {
-		return errors.WithStack(err)
+	if storage.IsNotFoundError(err) {
+		return c.Error(http.StatusNotFound, err)
+	} else if err != nil {
+		return errs.WithStack(err)
 	}
 	return c.Render(http.StatusOK, r.String(strings.Join(versions, "\n")))
 }

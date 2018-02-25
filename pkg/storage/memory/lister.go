@@ -1,20 +1,18 @@
 package memory
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
+	"github.com/arschles/vgoprox/pkg/storage"
 )
 
 type Lister struct{}
 
-func (l *Lister) List(baseURL, module string) ([]string, error) {
-	key := entries.key(baseURL, module)
+func (l *Lister) List(basePath, module string) ([]string, error) {
+	key := entries.key(basePath, module)
 	entries.RLock()
 	defer entries.RUnlock()
 	versions, ok := entries.versions[key]
 	if !ok {
-		return nil, errors.WithStack(fmt.Errorf("no entry %s", key))
+		return nil, storage.NotFoundErr{BasePath: basePath, Module: module}
 	}
 	ret := make([]string, len(versions))
 	for i, version := range versions {
