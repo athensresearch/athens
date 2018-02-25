@@ -63,11 +63,11 @@ func main() {
 		log.Fatalf("error encoding json (%s)", err)
 	}
 	log.Printf("POSTing to %s", url)
-	log.Printf("Body\n%s", string(buf.Bytes()))
 	resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		log.Fatalf("error uploading (%s)", err)
 	} else if resp.StatusCode != 200 {
 		log.Fatalf("upload failed because status code was %d", resp.StatusCode)
 	}
+	log.Printf("SUCCESS!")
 }
