@@ -2,8 +2,10 @@ package actions
 
 import (
 	"log"
-	
+
 	// "github.com/arschles/vgoprox/models"
+	"github.com/arschles/vgoprox/pkg/storage"
+	"github.com/arschles/vgoprox/pkg/storage/memory"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
 	"github.com/gobuffalo/buffalo/middleware/csrf"
@@ -21,13 +23,17 @@ var app *buffalo.App
 var T *i18n.Translator
 
 var gopath string
+var storageReader storage.Reader
+var storageWriter storage.Saver
+
 func init() {
-	g, err = envy.MustGet("GOPATH")
+	g, err := envy.MustGet("GOPATH")
 	if err != nil {
-		log.Fatalf("GOPATH is not set!"))
+		log.Fatalf("GOPATH is not set!")
 	}
 	gopath = g
-
+	storageReader = &memory.Lister{}
+	storageWriter = &memory.Saver{}
 }
 
 // App is where all routes and middleware for buffalo
@@ -67,10 +73,11 @@ func App() *buffalo.App {
 
 		app.GET("/", homeHandler)
 
-		app.GET("/{base_url}/{module}/@v/list", listHandler)
-		app.GET("/{base_url}/{module}/@v/{ver}.info", versionInfoHandler)
-		app.GET("/{base_url}/{module}/@v/{ver}.mod", versionModuleHandler)
-		app.GET("/{base_url}/{module}/@v/{ver}.zip", versionZipHandler)
+		app.GET("/{base_url:.+}/{module}/@v/list", listHandler)
+		app.GET("/{base_url:.+}/{module}/@v/{ver}.info", versionInfoHandler)
+		app.GET("/{base_url:.+}/{module}/@v/{ver}.mod", versionModuleHandler)
+		app.GET("/{base_url:.+}/{module}/@v/{ver}.zip", versionZipHandler)
+		app.POST("/admin/upload/{baseURL:.+}/{module}/{ver}", uploadHandler(storageWriter))
 
 		// serve files from the public directory:
 		app.ServeFiles("/", assetsBox)

@@ -2,33 +2,23 @@ package actions
 
 import (
 	"net/http"
-	"path/filepath"
 	"strings"
 
+	"github.com/arschles/vgoprox/pkg/storage/memory"
 	"github.com/gobuffalo/buffalo"
-	git "gopkg.in/src-d/go-git.v4"
+	"github.com/pkg/errors"
 )
+
+var lister = &memory.Lister{}
 
 func listHandler(c buffalo.Context) error {
 	params, err := getStandardParams(c)
 	if err != nil {
 		return err
 	}
-	gitRepo, err := git.PlainOpen(filepath.Join(gopath, "src", params.baseURL, params.module))
+	versions, err := lister.List(params.baseURL, params.module)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-	tags, err := gitRepo.Tags()
-	if err != nil {
-		return err
-	}
-	ret := []string{}
-	for {
-		ref, err := tags.Next()
-		if err != nil || ref == nil {
-			break
-		}
-		ret = append(ret, ref.String())
-	}
-	c.Render(http.StatusOK, r.String(strings.Join(ret, "\n")))
+	return c.Render(http.StatusOK, r.String(strings.Join(versions, "\n")))
 }
