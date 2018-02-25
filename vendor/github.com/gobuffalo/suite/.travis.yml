@@ -1,0 +1,13 @@
+language: go
+
+sudo: false
+
+go:
+  - 1.8
+  - tip
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_1be751f1f9f0_key -iv $encrypted_1be751f1f9f0_iv -in .gitcookies.enc -out .gitcookies -d
+matrix:
+  allow_failures:
+    - go: 'tip'

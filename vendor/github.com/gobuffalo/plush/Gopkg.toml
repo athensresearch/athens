@@ -1,0 +1,31 @@
+[[constraint]]
+  name = "github.com/gobuffalo/tags"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/markbates/going"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/markbates/inflect"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/russross/blackfriday"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/shurcooL/github_flavored_markdown"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.1.4"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/sync"

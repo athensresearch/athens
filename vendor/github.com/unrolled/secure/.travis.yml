@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.7.x
+  - 1.8.x
+  - 1.9.x
+  - tip
+
+install:
+  - go get github.com/codegangsta/negroni
+
+script:
+  - go test -v -race -tags=integration

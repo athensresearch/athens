@@ -1,0 +1,15 @@
+sudo: required
+
+services:
+  - docker
+install: false
+
+go:
+  - 1.8
+
+script:
+  - docker build .
+
+addons:
+  code_climate:
+    repo_token: b3b137f48bcd4e7fc58959706e292888be90f06c51822f6105fe50c0e1502191
