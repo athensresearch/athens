@@ -140,7 +140,8 @@ See [CLI](#CLI) for information on how to add modules back into the server.
 
 # Contributing
 
-This project is early and there's plenty of work to do. If you find a bug or want to fix a bug, I love PRs and issues!
+This project is early and there's plenty of interesting and challenging work to do.
+If you find a bug or want to fix a bug, I :heart: PRs and issues!
 
 Below is a list of general areas that I'm planning to work on, so if you'd like to help there ping me or file an issue (I am 'arschles' on the Gophers Slack):
 
