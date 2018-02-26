@@ -21,13 +21,13 @@ func (l *Lister) List(basePath, module string) ([]string, error) {
 	return ret, nil
 }
 
-func (l *Lister) All() ([]*storage.RevInfo, error) {
-	ret := []*storage.RevInfo{}
+func (l *Lister) All() (map[string][]*storage.RevInfo, error) {
+	ret := map[string][]*storage.RevInfo{}
 	entries.RLock()
 	defer entries.RUnlock()
-	for _, versions := range entries.versions {
+	for name, versions := range entries.versions {
 		for _, version := range versions {
-			ret = append(ret, &version.RevInfo)
+			ret[name] = append(ret[name], &version.RevInfo)
 		}
 	}
 	return ret, nil

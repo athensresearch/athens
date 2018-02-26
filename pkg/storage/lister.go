@@ -4,5 +4,5 @@ package storage
 type Lister interface {
 	// must return NotFoundErr if baseURL / module isn't found
 	List(baseURL, module string) ([]string, error)
-	All() ([]*RevInfo, error)
+	All() (map[string][]*RevInfo, error)
 }
