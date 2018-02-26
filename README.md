@@ -85,7 +85,7 @@ value yet (that's planned though)
 - If there are any `vendor` directories under `<directory>`, they won't be ignored yet, but that's
 planned
 
-# More details:
+# Resources:
 
 - ["Go and Versioning"](https://research.swtch.com/vgo) papers
 - [vgo wiki](https://github.com/golang/go/wiki/vgo)
