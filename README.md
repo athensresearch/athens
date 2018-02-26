@@ -19,9 +19,9 @@ all module metadata (version, name, `go.mod` files) and module source is deleted
 
 There are a few more storage modules on deck:
 
-- On local disk
-- MySQL Database
-- Various cloud blog stores
+- Local disk
+- RDBMS's + cloud blob stores (for the source zips)
+- Cloud databases + cloud blob stores (for the source zips)
 
 # CLI
 
