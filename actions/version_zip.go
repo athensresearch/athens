@@ -3,8 +3,8 @@ package actions
 import (
 	"net/http"
 
-	"github.com/arschles/vgoprox/pkg/storage"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/storage"
 )
 
 func versionZipHandler(getter storage.Getter) func(c buffalo.Context) error {

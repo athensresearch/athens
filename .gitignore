@@ -16,3 +16,4 @@ node_modules
 public
 tmp/*
 vgp
+bin/*

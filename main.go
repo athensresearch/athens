@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/arschles/vgoprox/actions"
+	"github.com/gomods/athens/actions"
 )
 
 func main() {

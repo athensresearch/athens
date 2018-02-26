@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/arschles/vgoprox/pkg/payloads"
+	"github.com/gomods/athens/pkg/payloads"
 )
 
 const help = `Usage:

@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"github.com/arschles/vgoprox/pkg/storage"
+	"github.com/gomods/athens/pkg/storage"
 )
 
 type Getter struct{}

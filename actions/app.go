@@ -3,11 +3,11 @@ package actions
 import (
 	"log"
 
-	// "github.com/arschles/vgoprox/models"
-	"github.com/arschles/vgoprox/pkg/storage"
-	"github.com/arschles/vgoprox/pkg/storage/memory"
+	// "github.com/gomods/athens/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
+	"github.com/gomods/athens/pkg/storage"
+	"github.com/gomods/athens/pkg/storage/memory"
 	// "github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/arschles/vgoprox/pkg/storage"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/storage"
 	errs "github.com/pkg/errors"
 )
 

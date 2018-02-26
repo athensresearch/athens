@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arschles/vgoprox/pkg/storage"
+	"github.com/gomods/athens/pkg/storage"
 )
 
 type entriesT struct {

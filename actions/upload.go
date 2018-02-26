@@ -3,9 +3,9 @@ package actions
 import (
 	"net/http"
 
-	"github.com/arschles/vgoprox/pkg/payloads"
-	"github.com/arschles/vgoprox/pkg/storage"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/payloads"
+	"github.com/gomods/athens/pkg/storage"
 	"github.com/pkg/errors"
 )
 

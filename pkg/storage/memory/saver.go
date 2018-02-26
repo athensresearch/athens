@@ -3,7 +3,7 @@ package memory
 import (
 	"time"
 
-	"github.com/arschles/vgoprox/pkg/storage"
+	"github.com/gomods/athens/pkg/storage"
 )
 
 type Saver struct{}
