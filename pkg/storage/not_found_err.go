@@ -22,3 +22,16 @@ func IsNotFoundError(err error) bool {
 	_, ok := err.(NotFoundErr)
 	return ok
 }
+
+type ErrVersionAlreadyExists struct {
+	ErrVersionNotFound
+}
+
+func (e ErrVersionAlreadyExists) Error() string {
+	return fmt.Sprintf("%s/%s@%s", e.BasePath, e.Module, e.Version)
+}
+
+func IsVersionAlreadyExistsErr(err error) bool {
+	_, ok := err.(ErrVersionAlreadyExists)
+	return ok
+}
