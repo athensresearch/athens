@@ -1,7 +1,7 @@
 # vgoprox
 
 _This is a very early alpha release, and the API will be changing as the proxy API changes._
-_Do not run this in production_
+_Do not run this in production. This warning will be changed or removed as the project and the proxy API changes._
 
 vgoprox is a proxy server for [vgo modules](https://github.com/golang/go/wiki/vgo). It implements
 the download protocol specified [here](https://research.swtch.com/vgo-module) 
