@@ -5,7 +5,8 @@ _Do not run this in production. This warning will be changed or removed as the p
 
 vgoprox is a proxy server for [vgo modules](https://github.com/golang/go/wiki/vgo). It implements
 the download protocol specified [here](https://research.swtch.com/vgo-module) 
-(under "Download Protocol").
+(under "Download Protocol"), and a few additional API endpoints to make it more useful. See
+[API.md](./API.md) for more information.
 
 # Storage
 
