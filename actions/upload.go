@@ -22,7 +22,7 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 		}
 		saveErr := store.Save(stdParams.baseURL, stdParams.module, version, payload.Module, payload.Zip)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
-			return c.Errorf(http.StatusConflict, saveErr)
+			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {
 			return errors.WithStack(err)
 		}

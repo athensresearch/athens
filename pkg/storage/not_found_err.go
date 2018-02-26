@@ -9,13 +9,18 @@ type NotFoundErr struct {
 	Module   string
 }
 
-type ErrVersionNotFound struct {
-	NotFoundErr
-	Version string
-}
-
 func (n NotFoundErr) Error() string {
 	return fmt.Sprintf("%s/%s not found", n.BasePath, n.Module)
+}
+
+type ErrVersionNotFound struct {
+	BasePath string
+	Module   string
+	Version  string
+}
+
+func (e ErrVersionNotFound) Error() string {
+	return fmt.Sprintf("%s/%s@%s not found", e.BasePath, e.Module, e.Version)
 }
 
 func IsNotFoundError(err error) bool {
@@ -24,7 +29,9 @@ func IsNotFoundError(err error) bool {
 }
 
 type ErrVersionAlreadyExists struct {
-	ErrVersionNotFound
+	BasePath string
+	Module   string
+	Version  string
 }
 
 func (e ErrVersionAlreadyExists) Error() string {

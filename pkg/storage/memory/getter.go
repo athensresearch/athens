@@ -17,11 +17,9 @@ func (v *Getter) Get(baseURL, module, vsn string) (*storage.Version, error) {
 		}
 	}
 	return nil, &storage.ErrVersionNotFound{
-		NotFoundErr: storage.NotFoundErr{
-			BasePath: baseURL,
-			Module:   module,
-		},
-		Version: vsn,
+		BasePath: baseURL,
+		Module:   module,
+		Version:  vsn,
 	}
 
 }

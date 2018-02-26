@@ -23,10 +23,13 @@ func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
 	defer entries.Unlock()
 	key := entries.key(baseURL, module)
 	existingVersionsSlice := entries.versions[key]
-	found := false
 	for _, version := range existingVersionsSlice {
 		if version.RevInfo.Version == vsn {
-			return storage.ErrVersionAlreadyExists{BaseURL: baseURL, Module: module, Version: vsn}
+			return storage.ErrVersionAlreadyExists{
+				BasePath: baseURL,
+				Module:   module,
+				Version:  vsn,
+			}
 		}
 	}
 	newVersionsSlice := append(existingVersionsSlice, newVsn)
