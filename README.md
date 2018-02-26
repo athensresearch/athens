@@ -81,9 +81,9 @@ work). The setup:
 
 - First, I uploaded a basic module to the server using the CLI (see above) using the following command 
 from the root of this repo:
-```console
-./vgp ./testmodule arschles.com testmodule v1.0.0
-```
+    ```console
+    ./vgp ./testmodule arschles.com testmodule v1.0.0
+    ```
 - Then I created a new module with the following files in it:
     - A single `go.mod` file with only the following line in it: `module "foo.bar/baz"`
     - A `main.go` file with the following in it:
