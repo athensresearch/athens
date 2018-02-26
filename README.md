@@ -138,6 +138,13 @@ all of your modules will disappear** because the only storage driver is in-memor
 
 See [CLI](#CLI) for information on how to add modules back into the server.
 
+# Contributing
+
+If you have something you'd like to fix, or you find a bug, I love PRs and Issues!
+
+The only thing I ask is that you follow the 
+[Contributor Covenant](https://www.contributor-covenant.org/).
+
 # Resources:
 
 - ["Go and Versioning"](https://research.swtch.com/vgo) papers
