@@ -140,7 +140,14 @@ See [CLI](#CLI) for information on how to add modules back into the server.
 
 # Contributing
 
-If you have something you'd like to fix, or you find a bug, I love PRs and Issues!
+This project is early and there's plenty of work to do. If you find a bug or want to fix a bug, I love PRs and issues!
+
+Below is a list of general areas that I'm planning to work on, so if you'd like to help there ping me or file an issue (I am 'arschles' on the Gophers Slack):
+
+- New storage backends (probably disk next because it's the easiest on the TODO list :smile:)
+- Adding new commands to the CLI (I'll probably use [Cobra](https://github.com/spf13/cobra) to do it)
+- Bugfixes in the CLI
+- Adding tests
 
 The only thing I ask is that you follow the 
 [Contributor Covenant](https://www.contributor-covenant.org/).
