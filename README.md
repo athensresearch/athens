@@ -1,9 +1,9 @@
-# vgoprox
+# Athens
 
 _This is a very early alpha release, and the API will be changing as the proxy API changes._
 _Do not run this in production. This warning will be changed or removed as the project and the proxy API changes._
 
-vgoprox is a proxy server for [vgo modules](https://github.com/golang/go/wiki/vgo). It implements
+Athens is a proxy server for [vgo modules](https://github.com/golang/go/wiki/vgo). It implements
 the download protocol specified [here](https://research.swtch.com/vgo-module) 
 (under "Download Protocol"), and a few additional API endpoints to make it more useful. See
 [API.md](./API.md) for more information.
@@ -47,8 +47,8 @@ right now. Run it like this:
 A few additional notes on this CLI:
 
 - It is hard coded to make requests against `http://localhost:3000`, so you'll need to have the 
-`vgoprox` server running to successfully use it (see [Development](#development) above)
-- `<directory>` will be zipped up and uploaded to the vgoprox server
+Athens server running to successfully use it (see [Development](#development) above)
+- `<directory>` will be zipped up and uploaded to the Athens server
 - ... and it needs to have a `go.mod` file in its root
 - The go.mod file's 'module' directive must match `<module>`. `vgp` won't read that 
 value yet (that's planned though)
@@ -73,7 +73,7 @@ Second, it doesn't hold any packages other than the ones you upload to it. A pac
 is pretty much only as useful as the packages it stores. You can work around that by declaring
 dependencies as `file:///` URLs if you want, but that defeats much of the purpose of this project.
 
-When vgoprox has better storage drivers (at least persistent ones!), it'll be easier to load it up 
+When athens has better storage drivers (at least persistent ones!), it'll be easier to load it up 
 with modules (i.e. by running a background job to crawl your `GOPATH`). At that point, it'll be
 more practical to successfully run `vgo get` inside a less-trivial project.
 
@@ -102,7 +102,7 @@ vgo: downloading arschles.com/testmodule v1.0.0
 vgo: import "arschles.com/testmodule": zip for arschles.com/testmodule@v1.0. has unexpected file testmodule/.DS_Store
 ```
 
-As you can see, the CLI uploaded a file to vgoprox that's not `.go`, `go.mod`, or anything else 
+As you can see, the CLI uploaded a file to athens that's not `.go`, `go.mod`, or anything else 
 that `vgo` allows, so at least the CLI needs some work (and the server needs some sanity checks too).
 
 You can get around all of this by manually zipping up your code and uploading it with `curl` or 
@@ -122,7 +122,7 @@ buffalo dev
 You'll see some output in your console that looks like this:
 
 ```console
-Aarons-MacBook-Pro:vgoprox arschles$ buffalo dev
+$ buffalo dev
 buffalo: 2018/02/25 16:09:36 === Rebuild on: :start: ===
 buffalo: 2018/02/25 16:09:36 === Running: go build -v -i -o tmp/vgoprox-build  (PID: 94067) ===
 buffalo: 2018/02/25 16:09:37 === Building Completed (PID: 94067) (Time: 1.115613079s) ===
