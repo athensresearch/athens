@@ -79,8 +79,8 @@
 [[projects]]
   name = "github.com/gobuffalo/envy"
   packages = ["."]
-  revision = "50fabbbaf1e65fc9b739f37a00590c396485d84d"
-  version = "v1.4.0"
+  revision = "15f5083a6e269f8698715b13dd25f0538754ab37"
+  version = "v1.4.1"
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
@@ -97,8 +97,20 @@
     "parser",
     "token"
   ]
-  revision = "ea63b975b95e49b7af0dc7ec2369ac8c5e056548"
-  version = "v3.6.10"
+  revision = "a3df688902c0ccd9fa712ed5a1da6b78e7efab0d"
+  version = "v3.6.12"
+
+[[projects]]
+  name = "github.com/gobuffalo/pop"
+  packages = [
+    ".",
+    "associations",
+    "columns",
+    "fizz",
+    "fizz/translators"
+  ]
+  revision = "7e5659815c83f0e257958631052f2df0acec8be9"
+  version = "v4.0.5"
 
 [[projects]]
   name = "github.com/gobuffalo/suite"
@@ -113,8 +125,23 @@
     "form",
     "form/bootstrap"
   ]
-  revision = "fb8c35d4e7434f0c89fb421eb77fa70626a5c894"
-  version = "v1.9.6"
+  revision = "ab52126649ee51d858d9525f60bc1618592433b0"
+  version = "v2.0.0"
+
+[[projects]]
+  name = "github.com/gobuffalo/uuid"
+  packages = ["."]
+  revision = "3a9fb6c5c481d4886f1e9323c61ad743fb955860"
+  version = "v2.0.0"
+
+[[projects]]
+  name = "github.com/gobuffalo/validate"
+  packages = [
+    ".",
+    "validators"
+  ]
+  revision = "42d8db6e06e617cdedcc7a849d6690a2cb5a8d28"
+  version = "v2.0.0"
 
 [[projects]]
   branch = "master"
@@ -159,7 +186,7 @@
     ".",
     "reflectx"
   ]
-  revision = "05cef0741ade10ca668982355b3f3f0bcf0ff0a8"
+  revision = "cf35089a197953c69420c8d0cecda90809764b1d"
 
 [[projects]]
   name = "github.com/joho/godotenv"
@@ -202,7 +229,7 @@
   branch = "master"
   name = "github.com/markbates/inflect"
   packages = ["."]
-  revision = "80fa1ea41b0dc859816314ab0b85f07a6bc57923"
+  revision = "3e32b42850a9f09fac18a6c09bbd04325f51f732"
 
 [[projects]]
   name = "github.com/markbates/pop"
@@ -214,8 +241,8 @@
     "fizz/translators",
     "nulls"
   ]
-  revision = "2a6ad5481507f61f5cfedc4d065ac7014452e379"
-  version = "3.60.4"
+  revision = "f230643ae0f8fa01e9444c2fb857ba1f1a78eb1f"
+  version = "v4.0.0"
 
 [[projects]]
   name = "github.com/markbates/refresh"
@@ -223,8 +250,8 @@
     "refresh",
     "refresh/web"
   ]
-  revision = "31a58af168f3788ce36d49f66aca4b439f64c7d4"
-  version = "v1.3.3"
+  revision = "fab0ab1230a5772b04f3b736821822935b5a5279"
+  version = "v1.4.0"
 
 [[projects]]
   name = "github.com/markbates/sigtx"
@@ -234,10 +261,7 @@
 
 [[projects]]
   name = "github.com/markbates/validate"
-  packages = [
-    ".",
-    "validators"
-  ]
+  packages = ["."]
   revision = "cd8cc34c703420d6b084fbbfd5085e8e71c5b830"
   version = "v1.0.0"
 
@@ -354,6 +378,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/rs/cors"
+  packages = ["."]
+  revision = "feef513b9575b32f84bafa580aad89b011259019"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
   revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
@@ -403,7 +433,7 @@
   branch = "master"
   name = "github.com/shurcooL/graphql"
   packages = ["ident"]
-  revision = "d0549edd16dceb6939e538fdb1b4f2ec7ee816cc"
+  revision = "8d3d310716dedf6f4945d11299e54a55bbdc6ff1"
 
 [[projects]]
   branch = "master"
@@ -461,7 +491,7 @@
   branch = "master"
   name = "github.com/unrolled/secure"
   packages = ["."]
-  revision = "5b5ec9db37417c8cb346915cee5fe8dcbc739a95"
+  revision = "88720c9cbecfcf2eceb9bb4311ad6e398a8381ed"
 
 [[projects]]
   branch = "master"
@@ -471,7 +501,7 @@
     "blowfish",
     "ssh/terminal"
   ]
-  revision = "49796115aa4b964c318aad4f3084fdb41e9aa067"
+  revision = "91a49db82a88618983a78a06c1cbd4e00ab749ab"
 
 [[projects]]
   branch = "master"
@@ -507,6 +537,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5d725089953a20a5e348470245b57930e8bb973fc837e1185ca9d62bb463684a"
+  inputs-digest = "5f47b8f5a84ddf03f021fb3b0365f2431caff4fa6a930ddb9800b43f46b8cc6b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -150,5 +150,8 @@ func truncateHelper(s string, opts map[string]interface{}) string {
 		return s
 	}
 	trail := opts["trail"].(string)
+	if len(trail) >= size {
+		return trail
+	}
 	return s[:size-len(trail)] + trail
 }

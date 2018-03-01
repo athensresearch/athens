@@ -38,7 +38,12 @@ func (n Name) Singular() string {
 
 // Camel version of a name
 func (n Name) Camel() string {
-	return Camelize(string(n))
+	c := Camelize(string(n))
+	if strings.HasSuffix(c, "Id") {
+		c = strings.TrimSuffix(c, "Id")
+		c += "ID"
+	}
+	return c
 }
 
 // Model version of a name. ie. "user" => "User"

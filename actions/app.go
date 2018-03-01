@@ -6,13 +6,14 @@ import (
 	// "github.com/gomods/athens/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
-	"github.com/gomods/athens/pkg/storage"
-	"github.com/gomods/athens/pkg/storage/memory"
-	// "github.com/gobuffalo/buffalo/middleware/csrf"
+	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr"
+	"github.com/gomods/athens/pkg/storage"
+	"github.com/gomods/athens/pkg/storage/memory"
+	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 )
 
@@ -45,7 +46,10 @@ func init() {
 func App() *buffalo.App {
 	if app == nil {
 		app = buffalo.New(buffalo.Options{
-			Env:         ENV,
+			Env: ENV,
+			PreWares: []buffalo.PreWare{
+				cors.Default().Handler,
+			},
 			SessionName: "_toodo_session",
 		})
 		// Automatically redirect to SSL
@@ -60,8 +64,8 @@ func App() *buffalo.App {
 
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
-		// csrfMiddleware := csrf.New
-		// app.Use(csrfMiddleware)
+		csrfMiddleware := csrf.New
+		app.Use(csrfMiddleware)
 
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.PopTransaction)

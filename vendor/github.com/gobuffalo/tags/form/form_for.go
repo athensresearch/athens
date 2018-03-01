@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	"github.com/gobuffalo/tags"
+	"github.com/gobuffalo/uuid"
+	"github.com/gobuffalo/validate"
 	"github.com/markbates/inflect"
-	"github.com/markbates/validate"
-	"github.com/satori/go.uuid"
 )
 
 //FormFor is a form made for a struct

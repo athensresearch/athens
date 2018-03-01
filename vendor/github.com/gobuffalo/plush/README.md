@@ -276,6 +276,16 @@ fmt.Print(s)
 * `form` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version)
 * `form_for` - support for the [github.com/gobuffalo/tags/form](https://github.com/gobuffalo/tags/tree/master/form) package (Bootstrap version) to build a form for a model
 
+#### truncate
+
+`truncate` takes two optional parameters:
+* `size` - the maximum length of the returned string
+* `trail` - the string to append at the end of a truncated string, defaults to `...`
+
+```html
+<p><%= truncate("a long string", {"size": 10, "trail": "[more]"})%></p>
+```
+
 ### From github.com/markbates/inflect
 
 * `asciffy`

@@ -17,6 +17,7 @@ var env = map[string]string{}
 
 func init() {
 	loadEnv()
+	Load()
 }
 
 // Load the ENV variables to the env map

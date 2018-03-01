@@ -46,8 +46,8 @@
   name = "github.com/markbates/grift"
 
 [[constraint]]
-  name = "github.com/markbates/pop"
-  version = "3.60.4"
+  name = "github.com/gobuffalo/pop"
+  version = "4.0.5"
 
 [[constraint]]
   branch = "master"

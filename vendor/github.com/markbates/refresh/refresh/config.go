@@ -19,6 +19,7 @@ type Configuration struct {
 	IncludedExtensions []string      `yaml:"included_extensions"`
 	BuildTargetPath    string        `yaml:"build_target_path"`
 	BuildPath          string        `yaml:"build_path"`
+	BuildFlags         []string      `yaml:"build_flags"`
 	BuildDelay         time.Duration `yaml:"build_delay"`
 	BinaryName         string        `yaml:"binary_name"`
 	CommandFlags       []string      `yaml:"command_flags"`
