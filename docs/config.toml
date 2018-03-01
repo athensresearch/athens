@@ -1,0 +1,6 @@
+baseURL = "https://docs.gomods.io"
+theme = "hugo-theme-learn"
+languageCode = "en-us"
+title = "gomods.io Documentation"
+[outputs]
+home = [ "HTML", "RSS", "JSON"]
