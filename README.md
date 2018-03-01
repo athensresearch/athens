@@ -111,8 +111,10 @@ similar, but like I said, that's super impractical. Yay alpha software!
 # Development
 
 The server is written using [Buffalo](https://gobuffalo.io/), so it's fairly straightforward
-to get started on development. Download 
-[v0.10.3](https://github.com/gobuffalo/buffalo/releases/tag/v0.10.3) or later, untar/unzip the
+to get started on development. You'll need Buffalo v0.11.0 or later to do devlopment on Athens.
+
+Download 
+[v0.11.0](https://github.com/gobuffalo/buffalo/releases/tag/v0.11.0) or later, untar/unzip the
 binary into your PATH, and then run the following from the root of this repository:
 
 ```console
