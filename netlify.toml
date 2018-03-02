@@ -1,0 +1,8 @@
+[Settings]
+    ID = "gomods-athens"
+
+[build]
+    base = "docs/"
+    publish = "docs/public/"
+    command = "hugo -v"
+    environment = { HUGO_VERSION = "0.37" }
