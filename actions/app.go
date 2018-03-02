@@ -15,6 +15,8 @@ import (
 	"github.com/gomods/athens/pkg/storage/memory"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
+
+	"github.com/markbates/goth/gothic"
 )
 
 // ENV is used to help switch settings based on where the
@@ -79,6 +81,8 @@ func App() *buffalo.App {
 		}
 		app.Use(T.Middleware())
 
+		// serve go-get requests
+		app.Use(GoGet())
 		app.GET("/", homeHandler)
 
 		app.GET("/all", allHandler(storageReader))
@@ -88,7 +92,13 @@ func App() *buffalo.App {
 		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storageReader))
 		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storageWriter))
 
+		auth := app.Group("/auth")
+		auth.GET("/{provider}", buffalo.WrapHandlerFunc(gothic.BeginAuthHandler))
+		auth.GET("/{provider}/callback", AuthCallback)
+		//	app.GET("/{base_url:.+}/{module}", homeHandler)
 		// serve files from the public directory:
+
+		// has to be last
 		app.ServeFiles("/", assetsBox)
 	}
 
