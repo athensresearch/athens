@@ -376,12 +376,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/pierrre/archivefile"
-  packages = ["zip"]
-  revision = "e2d100bc74f58ed7d2f41175cd2cf5fe29446399"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -404,6 +398,12 @@
   packages = ["."]
   revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
   version = "v1.5.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/sabhiram/go-gitignore"
+  packages = ["."]
+  revision = "362f9845770f1606d61ba3ddf9cfb1f0780d2ffe"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -577,6 +577,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b932a7203b656100c32f321f4df2e038ef99f5ec000af583933816360a287021"
+  inputs-digest = "804e688f3a2534d9ce51cef8fd70f2d32f025e82b2b383aacfc72d414a4a0594"
   solver-name = "gps-cdcl"
   solver-version = 1

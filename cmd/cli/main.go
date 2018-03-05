@@ -48,7 +48,7 @@ func main() {
 		log.Fatalf("couldn't find go.mod file (%s)", err)
 	}
 
-	zipBytes, err := makeZip(fullDirectory)
+	zipBytes, err := makeZip(fullDirectory, basePath, module, version)
 	if err != nil {
 		log.Fatalf("couldn't make zip (%s)", err)
 	}
