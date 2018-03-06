@@ -4,13 +4,11 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-type Lister struct{}
-
-func (l *Lister) List(basePath, module string) ([]string, error) {
-	key := entries.key(basePath, module)
-	entries.RLock()
-	defer entries.RUnlock()
-	versions, ok := entries.versions[key]
+func (v *getterSaverImpl) List(basePath, module string) ([]string, error) {
+	key := v.key(basePath, module)
+	v.RLock()
+	defer v.RUnlock()
+	versions, ok := v.versions[key]
 	if !ok {
 		return nil, storage.NotFoundErr{BasePath: basePath, Module: module}
 	}

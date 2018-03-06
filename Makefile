@@ -3,3 +3,6 @@ cli:
 
 docs:
 	cd docs && hugo
+
+test:
+	go test ./...

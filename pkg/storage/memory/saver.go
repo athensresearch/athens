@@ -6,9 +6,7 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-type Saver struct{}
-
-func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
+func (v *getterSaverImpl) Save(baseURL, module, vsn string, mod, zip []byte) error {
 	newVsn := &storage.Version{
 		RevInfo: storage.RevInfo{
 			Version: vsn,
@@ -19,10 +17,10 @@ func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
 		Mod: mod,
 		Zip: zip,
 	}
-	entries.Lock()
-	defer entries.Unlock()
-	key := entries.key(baseURL, module)
-	existingVersionsSlice := entries.versions[key]
+	v.Lock()
+	defer v.Unlock()
+	key := v.key(baseURL, module)
+	existingVersionsSlice := v.versions[key]
 	for _, version := range existingVersionsSlice {
 		if version.RevInfo.Version == vsn {
 			return storage.ErrVersionAlreadyExists{
@@ -33,6 +31,6 @@ func (s *Saver) Save(baseURL, module, vsn string, mod, zip []byte) error {
 		}
 	}
 	newVersionsSlice := append(existingVersionsSlice, newVsn)
-	entries.versions[key] = newVersionsSlice
+	v.versions[key] = newVersionsSlice
 	return nil
 }

@@ -35,17 +35,15 @@ func init() {
 		log.Fatalf("GOPATH is not set!")
 	}
 	gopath = g
-	storageReader = storage.Reader{
-		Lister: &memory.Lister{},
-		Getter: &memory.Getter{},
-	}
-	storageWriter = &memory.Saver{}
 }
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
 // application.
 func App() *buffalo.App {
+	mem := memory.New()
+	storageReader := mem
+	storageWriter := mem
 	if app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,
