@@ -102,7 +102,7 @@ vgo: import "arschles.com/testmodule": zip for arschles.com/testmodule@v1.0. has
 ```
 
 As you can see, the CLI uploaded a file to athens that's not `.go`, `go.mod`, or anything else
-that `vgo` allows, so at least the CLI needs some work (and the server needs some sanity checks too).
+that vgo, so at least the CLI needs some work (and the server needs some sanity checks too).
 
 You can get around all of this by manually zipping up your code and uploading it with `curl` or
 similar, but like I said, that's super impractical. Yay alpha software!
