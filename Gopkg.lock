@@ -56,6 +56,18 @@
   version = "v1.4.7"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/globalsign/mgo"
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram"
+  ]
+  revision = "baa28fcb8e7d5dfab92026c0920cb6c9ae72faa2"
+
+[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
@@ -595,6 +607,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e0ed53bce6bc09f30952c7e63ea1a3410457ddce0494607173ed0be286838375"
+  inputs-digest = "45cc14ae48d06ff23ff6dbbbadaffc91fe4932bf071511c23525ca5e229e3d6f"
   solver-name = "gps-cdcl"
   solver-version = 1

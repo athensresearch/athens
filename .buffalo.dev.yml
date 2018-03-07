@@ -15,7 +15,7 @@ included_extensions:
 - .env
 build_path: tmp
 build_delay: 200ns
-binary_name: vgoprox-build
+binary_name: athens-build
 command_flags: []
 enable_colors: true
 log_name: buffalo

@@ -13,6 +13,8 @@ import (
 	"github.com/gobuffalo/packr"
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/storage/memory"
+	"github.com/gomods/athens/pkg/user"
+	"github.com/gomods/athens/pkg/user/mongo"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 
@@ -28,6 +30,7 @@ var T *i18n.Translator
 var gopath string
 var storageReader storage.Reader
 var storageWriter storage.Saver
+var userStore *user.Store
 
 func init() {
 	g, err := envy.MustGet("GOPATH")
@@ -44,13 +47,19 @@ func App() *buffalo.App {
 	mem := memory.New()
 	storageReader := mem
 	storageWriter := mem
+	mgoStore := mongo.NewMongoUserStore("127.0.0.1:27017")
+	err := mgoStore.Connect()
+	if err != nil {
+		panic(err)
+	}
+
 	if app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,
 			PreWares: []buffalo.PreWare{
 				cors.Default().Handler,
 			},
-			SessionName: "_toodo_session",
+			SessionName: "_athens_session",
 		})
 		// Automatically redirect to SSL
 		app.Use(ssl.ForceSSL(secure.Options{
@@ -91,7 +100,7 @@ func App() *buffalo.App {
 
 		auth := app.Group("/auth")
 		auth.GET("/{provider}", buffalo.WrapHandlerFunc(gothic.BeginAuthHandler))
-		auth.GET("/{provider}/callback", AuthCallback)
+		auth.GET("/{provider}/callback", authCallback(mgoStore))
 		//	app.GET("/{base_url:.+}/{module}", homeHandler)
 		// serve files from the public directory:
 
