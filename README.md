@@ -50,6 +50,16 @@ all of your modules will disappear** because the only storage driver is in-memor
 
 See [CLI](#CLI) for information on how to add modules back into the server.
 
+## Dependencies
+
+To run the development server, or run tests (tip: run `make test` to easily
+run tests), you'll need a running MongoDB server. The easiest way to get
+one is using Docker. Simply run this command and you'll have the server running:
+
+```console
+docker run -d -p 27017:27017 mongo:3.0.15-wheezy
+```
+
 # Contributing
 
 This project is early and there's plenty of interesting and challenging work to do.
