@@ -25,3 +25,19 @@ this basic functionality:
   ```go
   package mycustompackage // import "my/custom/package"
   ```
+
+# Registry Restrictions
+
+The registry gets its code from one of two places:
+
+* A webhook that fetches code from a VCS
+* A manual upload
+
+In either case, it imposes the following restrictions on the modules it
+holds:
+
+* In the webhook case, the VCS repository must already be "known"
+  (the owner of the repository will need to register it prior)
+* In either case, the registry will reject an update on an existing tag, if
+  it's been downloaded 1 or more times
+  * So that tags are immutable, and we don't break anyone's builds
