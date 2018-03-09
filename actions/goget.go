@@ -2,16 +2,20 @@ package actions
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/cdn"
 )
 
-func GoGet() buffalo.MiddlewareFunc {
+// GoGet is middleware that checks for the 'go-get=1' query string. If it exists,
+// uses getter to determine the redirect location
+func GoGet(getter cdn.Getter) buffalo.MiddlewareFunc {
 	return func(next buffalo.Handler) buffalo.Handler {
 		return func(c buffalo.Context) error {
 			if strings.Contains(c.Request().URL.Query().Get("go-get"), "1") {
-				return goGetMeta(c)
+				return goGetMeta(c, getter)
 			}
 			return next(c)
 		}
@@ -19,12 +23,20 @@ func GoGet() buffalo.MiddlewareFunc {
 }
 
 // stubbed for now, look up package stuff
-func goGetMeta(c buffalo.Context) error {
+func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
 	sp, err := getStandardParams(c)
 	if err != nil {
 		return err
 	}
-	meta := fmt.Sprintf("<!DOCTYPE html><meta name='go-import' content='%s/%s mod https://gomods.io/%s/%s", sp.baseURL, sp.module, sp.baseURL, sp.module)
-	_, err = c.Response().Write([]byte(meta))
-	return err
+	loc, err := getter.Get(sp.baseURL, sp.module)
+	if err != nil {
+		return c.Error(
+			http.StatusNotFound,
+			fmt.Errorf("%s/%s does not exist", sp.baseURL, sp.module),
+		)
+	}
+	c.Set("redirectLoc", loc)
+	c.Set("baseURL", sp.baseURL)
+	c.Set("module", sp.module)
+	return c.Render(http.StatusOK, r.HTML("goget.html"))
 }
