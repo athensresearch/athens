@@ -11,8 +11,6 @@ import (
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr"
-	"github.com/gomods/athens/pkg/storage"
-	"github.com/gomods/athens/pkg/storage/memory"
 	"github.com/gomods/athens/pkg/user"
 	"github.com/gomods/athens/pkg/user/mongo"
 	"github.com/rs/cors"
@@ -28,8 +26,6 @@ var app *buffalo.App
 var T *i18n.Translator
 
 var gopath string
-var storageReader storage.Reader
-var storageWriter storage.Saver
 var userStore *user.Store
 
 func init() {
@@ -44,13 +40,15 @@ func init() {
 // should be defined. This is the nerve center of your
 // application.
 func App() *buffalo.App {
-	mem := memory.New()
-	storageReader := mem
-	storageWriter := mem
-	mgoStore := mongo.NewMongoUserStore("127.0.0.1:27017")
-	err := mgoStore.Connect()
+	storage, err := newStorage()
 	if err != nil {
-		panic(err)
+		log.Fatalf("storage error (%s)", err)
+		return nil
+	}
+	mgoStore := mongo.NewMongoUserStore("127.0.0.1:27017")
+	if err := mgoStore.Connect(); err != nil {
+		log.Fatalf("mongo connection erorr (%s)", err)
+		return nil
 	}
 
 	cdnGetter := newCDNGetter()
@@ -94,11 +92,11 @@ func App() *buffalo.App {
 		app.Use(GoGet(cdnGetter))
 		app.GET("/", homeHandler)
 
-		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storageReader))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storageReader))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storageReader))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storageReader))
-		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storageWriter))
+		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storage))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storage))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storage))
+		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storage))
+		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storage))
 
 		auth := app.Group("/auth")
 		auth.GET("/{provider}", buffalo.WrapHandlerFunc(gothic.BeginAuthHandler))
