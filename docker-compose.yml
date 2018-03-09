@@ -1,0 +1,6 @@
+version: '3'
+services:
+  mongo:
+    image: mongo:3.0.15-wheezy
+    ports:
+      - 27017:27017

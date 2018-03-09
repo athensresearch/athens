@@ -53,11 +53,22 @@ See [CLI](#CLI) for information on how to add modules back into the server.
 ## Dependencies
 
 To run the development server, or run tests (tip: run `make test` to easily
-run tests), you'll need a running MongoDB server. The easiest way to get
-one is using Docker. Simply run this command and you'll have the server running:
+run tests), you'll need a running MongoDB server. We plan to add more service
+dependencies in the future, so we are using
+[Docker](https://www.docker.com/) and
+[Docker Compose](https://docs.docker.com/compose/) to create and destroy
+development environments.
+
+To create, run the following from the repository root:
 
 ```console
-docker run -d -p 27017:27017 mongo:3.0.15-wheezy
+docker-compose up -d
+```
+
+To destroy:
+
+```console
+docker-compose down
 ```
 
 # Contributing
