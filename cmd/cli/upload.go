@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	parser "github.com/gomods/athens/pkg/gomod/file"
 	"github.com/gomods/athens/pkg/payloads"
 	"github.com/spf13/cobra"
 )
@@ -23,21 +24,17 @@ func newUploadCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upload [directory]",
 		Short: "package up a directory and upload it to the athens server",
+		Args:  cobra.ExactArgs(1),
 		RunE:  upload(uploadCmd),
 	}
 	cmd.Flags().StringVarP(&uploadCmd.baseURL, "base-url", "b", "", "The base URL of the module (required)")
 	cmd.MarkFlagRequired("base-url")
-	cmd.Flags().StringVarP(&uploadCmd.moduleName, "module", "m", "", "The name of this module (required)")
-	cmd.MarkFlagRequired("module-name")
 	cmd.Flags().StringVarP(&uploadCmd.version, "version", "v", "v0.0.1", "The version of this module")
 	return cmd
 }
 
 func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return fmt.Errorf("missing the directory")
-		}
 		dir := args[0]
 
 		fullDirectory, err := filepath.Abs(dir)
@@ -49,6 +46,12 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 		modBytes, err := ioutil.ReadFile(modFilePath)
 		if err != nil {
 			return fmt.Errorf("couldn't find go.mod file (%s)", err)
+		}
+
+		gomodParser := parser.NewFileParser(modFilePath)
+		c.moduleName, err = gomodParser.ModuleName()
+		if err != nil {
+			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
 		zipBytes, err := makeZip(fullDirectory, c.baseURL, c.moduleName, c.version)
