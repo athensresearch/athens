@@ -2,6 +2,7 @@ package disk
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -16,7 +17,7 @@ func (v *storageImpl) Get(baseURL, module, version string) (*storage.Version, er
 		return nil, err
 	}
 
-	src, err := ioutil.ReadFile(filepath.Join(versionedPath, "source.zip"))
+	src, err := os.OpenFile(filepath.Join(versionedPath, "source.zip"), os.O_RDONLY, 0666)
 	if err != nil {
 		return nil, err
 	}

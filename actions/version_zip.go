@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/gobuffalo/buffalo"
@@ -17,8 +18,11 @@ func versionZipHandler(getter storage.Getter) func(c buffalo.Context) error {
 		if err != nil {
 			return err
 		}
+		defer version.Zip.Close()
+
 		c.Response().WriteHeader(http.StatusOK)
-		_, err = c.Response().Write(version.Zip)
+
+		_, err = io.Copy(c.Response(), version.Zip)
 		return err
 	}
 }

@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"io/ioutil"
 	"path/filepath"
 )
 
@@ -23,10 +24,13 @@ func (d *DiskTests) TestGetSaveListRoundTrip() {
 	r.Equal(version, retVersion)
 	gotten, err := d.storage.Get(baseURL, module, version)
 	r.NoError(err)
+	defer gotten.Zip.Close()
 	r.Equal(version, gotten.RevInfo.Version)
 	r.Equal(version, gotten.RevInfo.Name)
 	r.Equal(version, gotten.RevInfo.Short)
 	// TODO: test the time
 	r.Equal(gotten.Mod, mod)
-	r.Equal(gotten.Zip, zip)
+	zipContent, err := ioutil.ReadAll(gotten.Zip)
+	r.NoError(err)
+	r.Equal(zipContent, zip)
 }

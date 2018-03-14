@@ -1,12 +1,15 @@
 package memory
 
 import (
+	"bytes"
+	"io/ioutil"
 	"time"
 
 	"github.com/gomods/athens/pkg/storage"
 )
 
 func (v *getterSaverImpl) Save(baseURL, module, vsn string, mod, zip []byte) error {
+	reader := ioutil.NopCloser(bytes.NewReader(zip))
 	newVsn := &storage.Version{
 		RevInfo: storage.RevInfo{
 			Version: vsn,
@@ -15,7 +18,7 @@ func (v *getterSaverImpl) Save(baseURL, module, vsn string, mod, zip []byte) err
 			Name:    vsn,
 		},
 		Mod: mod,
-		Zip: zip,
+		Zip: reader,
 	}
 	v.Lock()
 	defer v.Unlock()

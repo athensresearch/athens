@@ -1,5 +1,7 @@
 package memory
 
+import "io/ioutil"
+
 func (m *MemoryTests) TestGet() {
 	mem := m.mem
 	r := m.Require()
@@ -9,5 +11,7 @@ func (m *MemoryTests) TestGet() {
 	r.NoError(err)
 	r.Equal(version, vsn.RevInfo.Version)
 	r.Equal(mod, vsn.Mod)
-	r.Equal(zip, vsn.Zip)
+	zipContent, err := ioutil.ReadAll(vsn.Zip)
+	r.NoError(err)
+	r.Equal(zip, zipContent)
 }
