@@ -1,4 +1,4 @@
-package main
+package module
 
 import (
 	"archive/zip"
@@ -21,8 +21,9 @@ type file struct {
 	Body string
 }
 
+// MakeZip takes dir and module info and generates vgo valid zip
 // the dir must end with a "/"
-func makeZip(dir, basePath, module, version string) ([]byte, error) {
+func MakeZip(dir, basePath, module, version string) ([]byte, error) {
 	ignoreParser := getIgnoreParser(dir)
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)

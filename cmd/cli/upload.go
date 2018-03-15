@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	parser "github.com/gomods/athens/pkg/gomod/file"
+	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/payloads"
 	"github.com/spf13/cobra"
 )
@@ -54,7 +55,7 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := makeZip(fullDirectory, c.baseURL, c.moduleName, c.version)
+		zipBytes, err := module.MakeZip(fullDirectory, c.baseURL, c.moduleName, c.version)
 		if err != nil {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}

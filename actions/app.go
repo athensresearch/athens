@@ -97,6 +97,7 @@ func App() *buffalo.App {
 		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storage))
 		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storage))
 		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storage))
+		app.POST("/admin/fetch/{base_url:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
 
 		auth := app.Group("/auth")
 		auth.GET("/{provider}", buffalo.WrapHandlerFunc(gothic.BeginAuthHandler))
