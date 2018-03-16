@@ -12,17 +12,21 @@ import (
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr"
 	"github.com/gomods/athens/pkg/user"
-	"github.com/gomods/athens/pkg/user/mongo"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
-
-	"github.com/markbates/goth/gothic"
 )
 
 // ENV is used to help switch settings based on where the
 // application is being run. Default is "development".
 var ENV = envy.Get("GO_ENV", "development")
+
+// MODE identifies whether athens is running in proxy or registry mode.
+//
+// valid values are "proxy" or "registry"
+var MODE = envy.Get("ATHENS_MODE", "proxy")
 var app *buffalo.App
+
+// T is the translator to use
 var T *i18n.Translator
 
 var gopath string
@@ -40,19 +44,6 @@ func init() {
 // should be defined. This is the nerve center of your
 // application.
 func App() *buffalo.App {
-	storage, err := newStorage()
-	if err != nil {
-		log.Fatalf("storage error (%s)", err)
-		return nil
-	}
-	mgoStore := mongo.NewMongoUserStore("127.0.0.1:27017")
-	if err := mgoStore.Connect(); err != nil {
-		log.Fatalf("mongo connection erorr (%s)", err)
-		return nil
-	}
-
-	cdnGetter := newCDNGetter()
-
 	if app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,
@@ -88,25 +79,29 @@ func App() *buffalo.App {
 		}
 		app.Use(T.Middleware())
 
-		// serve go-get requests
-		app.Use(GoGet(cdnGetter))
 		app.GET("/", homeHandler)
 
-		app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storage))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storage))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storage))
-		app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storage))
-		app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storage))
-		app.POST("/admin/fetch/{base_url:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
+		if MODE == "proxy" {
+			log.Printf("starting athens in proxy mode")
+			if err := addProxyRoutes(app); err != nil {
+				log.Fatalf("error adding proxy routes (%s)", err)
+				return nil
+			}
+		} else if MODE == "registry" {
+			log.Printf("starting athens in registry mode")
+			if err := addRegistryRoutes(app); err != nil {
+				log.Fatalf("error adding registry routes (%s)", err)
+				return nil
+			}
+		} else {
+			log.Fatalf("unsupported mode %s, exiting", MODE)
+			return nil
+		}
 
-		auth := app.Group("/auth")
-		auth.GET("/{provider}", buffalo.WrapHandlerFunc(gothic.BeginAuthHandler))
-		auth.GET("/{provider}/callback", authCallback(mgoStore))
-		//	app.GET("/{base_url:.+}/{module}", homeHandler)
 		// serve files from the public directory:
-
 		// has to be last
 		app.ServeFiles("/", assetsBox)
+
 	}
 
 	return app
