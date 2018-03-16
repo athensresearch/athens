@@ -22,7 +22,6 @@ func GoGet(getter cdn.Getter) buffalo.MiddlewareFunc {
 	}
 }
 
-// stubbed for now, look up package stuff
 func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
 	sp, err := getStandardParams(c)
 	if err != nil {
