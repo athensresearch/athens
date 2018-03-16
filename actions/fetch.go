@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gobuffalo/buffalo"
@@ -30,6 +31,7 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 
 		path, err := git.DownloadRepo()
 		if err != nil {
+			os.Remove(path)
 			return err
 		}
 
