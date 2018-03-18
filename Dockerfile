@@ -10,7 +10,6 @@ ADD package.json .
 ADD yarn.lock .
 RUN yarn install --no-progress
 ADD . .
-RUN dep ensure -v
 RUN buffalo build --static -o /bin/app
 
 FROM alpine
