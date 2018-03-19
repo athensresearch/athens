@@ -58,7 +58,7 @@ module.exports = {
       debug: false
     }),
     new ManifestPlugin({
-      fileName: "manifest.json"
+      fileName: "../manifest.json"
     })
   ],
   module: {
