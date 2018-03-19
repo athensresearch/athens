@@ -6,5 +6,5 @@ import (
 
 // Saver saves a module metadata & storage to its underlying storage
 type Saver interface {
-	Save(module, version *storage.Version) error
+	Save(module string, version *storage.Version) error
 }
