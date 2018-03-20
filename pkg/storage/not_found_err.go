@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-type NotFoundErr struct {
+type ErrNotFound struct {
 	BasePath string
 	Module   string
 }
 
-func (n NotFoundErr) Error() string {
+func (n ErrNotFound) Error() string {
 	return fmt.Sprintf("%s/%s not found", n.BasePath, n.Module)
 }
 
@@ -24,7 +24,7 @@ func (e ErrVersionNotFound) Error() string {
 }
 
 func IsNotFoundError(err error) bool {
-	_, ok := err.(NotFoundErr)
+	_, ok := err.(ErrNotFound)
 	return ok
 }
 

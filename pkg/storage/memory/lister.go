@@ -10,7 +10,7 @@ func (v *getterSaverImpl) List(basePath, module string) ([]string, error) {
 	defer v.RUnlock()
 	versions, ok := v.versions[key]
 	if !ok {
-		return nil, storage.NotFoundErr{BasePath: basePath, Module: module}
+		return nil, storage.ErrNotFound{BasePath: basePath, Module: module}
 	}
 	ret := make([]string, len(versions))
 	for i, version := range versions {
