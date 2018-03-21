@@ -17,6 +17,6 @@ func versionInfoHandler(getter storage.Getter) func(c buffalo.Context) error {
 		if err != nil {
 			return err
 		}
-		return c.Render(http.StatusOK, r.JSON(version.RevInfo))
+		return c.Render(http.StatusOK, proxy.JSON(version.RevInfo))
 	}
 }

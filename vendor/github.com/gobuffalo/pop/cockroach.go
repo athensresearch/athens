@@ -230,11 +230,11 @@ func (p *cockroach) LoadSchema(r io.Reader) error {
 
 func (p *cockroach) TruncateAll(tx *Connection) error {
 	type table struct {
-		TableName string `sql:"table_name"`
+		TableName string `db:"table_name"`
 	}
 
 	tables := []table{}
-	if err := tx.RawQuery("select table_name from information_schema.tables;").All(&tables); err != nil {
+	if err := tx.RawQuery("select table_name from information_schema.tables where table_schema = ?;", tx.Dialect.Details().Database).All(&tables); err != nil {
 		return err
 	}
 

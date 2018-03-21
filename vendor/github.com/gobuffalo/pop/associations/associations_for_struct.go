@@ -3,10 +3,18 @@ package associations
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/gobuffalo/pop/columns"
 )
+
+// If a field match with the regexp, it will be considered as a valid field definition.
+// e.g: "MyField"             => valid.
+// e.g: "MyField.NestedField" => valid.
+// e.g: "MyField."            => not valid.
+// e.g: "MyField.*"           => not valid for now.
+var validAssociationExpRegexp = regexp.MustCompile(`^(([a-zA-Z0-9]*)(\.[a-zA-Z0-9]+)?)+$`)
 
 // associationBuilders is a map that helps to aisle associations finding process
 // with the associations implementation. Every association MUST register its builder
@@ -20,13 +28,31 @@ var associationBuilders = map[string]associationBuilder{}
 // not exist for a model.
 func AssociationsForStruct(s interface{}, fields ...string) (Associations, error) {
 	associations := Associations{}
+	innerAssociations := InnerAssociations{}
+
 	t, v := getModelDefinition(s)
 	fields = trimFields(fields)
 
 	// validate if fields contains a non existing field in struct.
-	for _, f := range fields {
-		if _, ok := t.FieldByName(f); !ok {
-			return associations, fmt.Errorf("field %s does not exist in model %s", f, t.Name())
+	// and vefiry is it has inner associations.
+	for i := range fields {
+		var innerField, field string
+
+		if !validAssociationExpRegexp.MatchString(fields[i]) {
+			return associations, fmt.Errorf("association '%s' does not match the format %s", fields[i], "'<field>' or '<field>.<nested-field>'")
+		}
+
+		if strings.Contains(fields[i], ".") {
+			field = fields[i][:strings.Index(fields[i], ".")]
+			innerField = fields[i][strings.Index(fields[i], ".")+1:]
+			fields[i] = field
+		}
+		if _, ok := t.FieldByName(fields[i]); !ok {
+			return associations, fmt.Errorf("field %s does not exist in model %s", fields[i], t.Name())
+		}
+
+		if innerField != "" {
+			innerAssociations = append(innerAssociations, InnerAssociation{fields[i], innerField})
 		}
 	}
 
@@ -44,11 +70,12 @@ func AssociationsForStruct(s interface{}, fields ...string) (Associations, error
 			tag := tags.Find(name)
 			if !tag.Empty() {
 				params := associationParams{
-					field:      f,
-					model:      s,
-					modelType:  t,
-					modelValue: v,
-					popTags:    tags,
+					field:             f,
+					model:             s,
+					modelType:         t,
+					modelValue:        v,
+					popTags:           tags,
+					innerAssociations: innerAssociations,
 				}
 
 				a, err := builder(params)
@@ -61,6 +88,7 @@ func AssociationsForStruct(s interface{}, fields ...string) (Associations, error
 			}
 		}
 	}
+
 	return associations, nil
 }
 

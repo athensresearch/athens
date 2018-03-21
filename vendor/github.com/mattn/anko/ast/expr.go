@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"reflect"
+)
+
 // Expr provides all of interfaces for expression.
 type Expr interface {
 	Pos
@@ -94,7 +98,7 @@ type TernaryOpExpr struct {
 // CallExpr provide calling expression.
 type CallExpr struct {
 	ExprImpl
-	Func     interface{}
+	Func     reflect.Value
 	Name     string
 	SubExprs []Expr
 	VarArg   bool
@@ -137,7 +141,7 @@ type FuncExpr struct {
 	ExprImpl
 	Name   string
 	Stmts  []Stmt
-	Args   []string
+	Params []string
 	VarArg bool
 }
 
@@ -164,12 +168,6 @@ type AssocExpr struct {
 	Rhs      Expr
 }
 
-// NewExpr provide expression to make new instance.
-type NewExpr struct {
-	ExprImpl
-	Type string
-}
-
 // ConstExpr provide expression for constant variable.
 type ConstExpr struct {
 	ExprImpl
@@ -182,11 +180,8 @@ type ChanExpr struct {
 	Rhs Expr
 }
 
-type Type struct {
-	Name string
-}
-
-type MakeExpr struct {
+// NewExpr provide expression to make new instance.
+type NewExpr struct {
 	ExprImpl
 	Type string
 }
@@ -197,9 +192,26 @@ type MakeChanExpr struct {
 	SizeExpr Expr
 }
 
-type MakeArrayExpr struct {
+type ArrayCount struct {
+	Count int
+}
+
+type MakeExpr struct {
 	ExprImpl
-	Type    string
-	LenExpr Expr
-	CapExpr Expr
+	Dimensions int
+	Type       string
+	LenExpr    Expr
+	CapExpr    Expr
+}
+
+type MakeTypeExpr struct {
+	ExprImpl
+	Name string
+	Type Expr
+}
+
+// LenExpr provide expression to get length of array, map, etc.
+type LenExpr struct {
+	ExprImpl
+	Expr Expr
 }

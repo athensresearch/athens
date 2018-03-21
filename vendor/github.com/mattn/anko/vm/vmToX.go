@@ -8,10 +8,6 @@ import (
 	"strings"
 )
 
-func ToFunc(f Func) reflect.Value {
-	return reflect.ValueOf(f)
-}
-
 // toString converts all reflect.Value-s into string.
 func toString(v reflect.Value) string {
 	if !v.IsValid() {

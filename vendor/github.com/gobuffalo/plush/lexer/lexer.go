@@ -229,11 +229,17 @@ func (l *Lexer) readChar() {
 }
 
 func (l *Lexer) peekChar() byte {
-
 	if l.readPosition >= len(l.input) {
 		return 0
 	}
 	return l.input[l.readPosition]
+}
+
+func (l *Lexer) prevChar() byte {
+	if l.readPosition < 2 {
+		return l.input[l.readPosition-1]
+	}
+	return l.input[l.readPosition-2]
 }
 
 func (l *Lexer) readIdentifier() string {
@@ -273,6 +279,14 @@ func (l *Lexer) readHTML() string {
 	position := l.position
 
 	for l.ch != 0 {
+
+		if l.ch == '\\' && l.prevChar() == '\\' && l.peekChar() == '<' {
+			// escape escaping
+			l.readChar()
+			x := l.input[position : l.position-1]
+			return x
+		}
+
 		// allow for expression escaping using \<% foo %>
 		if l.ch == '\\' && l.peekChar() == '<' {
 			l.readChar()

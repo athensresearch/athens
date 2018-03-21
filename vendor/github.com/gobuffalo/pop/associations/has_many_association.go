@@ -17,6 +17,7 @@ type hasManyAssociation struct {
 	ownerID   interface{}
 	fkID      string
 	orderBy   string
+	*associationComposite
 }
 
 func init() {
@@ -31,13 +32,14 @@ func hasManyAssociationBuilder(p associationParams) (Association, error) {
 	}
 
 	return &hasManyAssociation{
-		tableName: p.popTags.Find("has_many").Value,
-		field:     p.field,
-		value:     p.modelValue.FieldByName(p.field.Name),
-		ownerName: p.modelType.Name(),
-		ownerID:   ownerID.Interface(),
-		fkID:      p.popTags.Find("fk_id").Value,
-		orderBy:   p.popTags.Find("order_by").Value,
+		tableName:            p.popTags.Find("has_many").Value,
+		field:                p.field,
+		value:                p.modelValue.FieldByName(p.field.Name),
+		ownerName:            p.modelType.Name(),
+		ownerID:              ownerID.Interface(),
+		fkID:                 p.popTags.Find("fk_id").Value,
+		orderBy:              p.popTags.Find("order_by").Value,
+		associationComposite: &associationComposite{innerAssociations: p.innerAssociations},
 	}, nil
 }
 

@@ -5,6 +5,7 @@ var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var ManifestPlugin = require("webpack-manifest-plugin");
 var PROD = process.env.NODE_ENV || "development";
 var CleanWebpackPlugin = require("clean-webpack-plugin");
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var entries = {
   application: [
@@ -58,7 +59,7 @@ module.exports = {
       debug: false
     }),
     new ManifestPlugin({
-      fileName: "../manifest.json"
+      fileName: "manifest.json"
     })
   ],
   module: {
@@ -101,17 +102,15 @@ module.exports = {
 };
 
 if (PROD != "development") {
-  module.exports.plugins.push(
-    new webpack.optimize.UglifyJsPlugin({
-      beautify: false,
-      mangle: {
-        screw_ie8: true,
-        keep_fnames: true
-      },
-      compress: {
-        screw_ie8: true
-      },
-      comments: false
-    })
-  );
+	module.exports.plugins.push(
+		new UglifyJSPlugin({
+			sourceMap: true,
+			uglifyOptions: {
+				mangle: false,
+				output: {
+					beautify: true
+				}
+			}
+		})
+	);
 }

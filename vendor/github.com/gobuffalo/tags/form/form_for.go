@@ -126,13 +126,13 @@ func (f FormFor) addFormatTag(field string, opts tags.Options) {
 
 //RadioButton creates a radio button for a struct field
 func (f FormFor) RadioButton(field string, opts tags.Options) *tags.Tag {
-	return f.RadioButton(field, opts)
+	return f.RadioButtonTag(field, opts)
 }
 
 //RadioButtonTag creates a radio button for a struct field
 func (f FormFor) RadioButtonTag(field string, opts tags.Options) *tags.Tag {
 	f.buildOptions(field, opts)
-	return f.Form.RadioButton(opts)
+	return f.Form.RadioButtonTag(opts)
 }
 
 //SelectTag creates a select tag for a specified struct field and loads options from the options opject

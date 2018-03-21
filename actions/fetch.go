@@ -59,6 +59,6 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 			return errors.WithStack(err)
 		}
 
-		return c.Render(http.StatusOK, r.String(err.Error()))
+		return c.Render(http.StatusOK, proxy.String(err.Error()))
 	}
 }

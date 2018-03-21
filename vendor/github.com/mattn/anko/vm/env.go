@@ -26,13 +26,40 @@ type Env struct {
 	sync.RWMutex
 }
 
+var basicTypes = []struct {
+	name string
+	typ  reflect.Type
+}{
+	{name: "interface", typ: reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()},
+	{name: "bool", typ: reflect.TypeOf(true)},
+	{name: "string", typ: reflect.TypeOf("a")},
+	{name: "int", typ: reflect.TypeOf(int(1))},
+	{name: "int32", typ: reflect.TypeOf(int32(1))},
+	{name: "int64", typ: reflect.TypeOf(int64(1))},
+	{name: "uint", typ: reflect.TypeOf(uint(1))},
+	{name: "uint32", typ: reflect.TypeOf(uint32(1))},
+	{name: "uint64", typ: reflect.TypeOf(uint64(1))},
+	{name: "byte", typ: reflect.TypeOf(byte(1))},
+	{name: "rune", typ: reflect.TypeOf('a')},
+	{name: "float32", typ: reflect.TypeOf(float32(1))},
+	{name: "float64", typ: reflect.TypeOf(float64(1))},
+}
+
+func newBasicTypes() map[string]reflect.Type {
+	types := make(map[string]reflect.Type, len(basicTypes))
+	for i := 0; i < len(basicTypes); i++ {
+		types[basicTypes[i].name] = basicTypes[i].typ
+	}
+	return types
+}
+
 // NewEnv creates new global scope.
 func NewEnv() *Env {
 	b := false
 
 	return &Env{
 		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
+		typ:       newBasicTypes(),
 		parent:    nil,
 		interrupt: &b,
 	}
@@ -49,6 +76,7 @@ func (e *Env) NewEnv() *Env {
 	}
 }
 
+// NewPackage creates a new env with a name
 func NewPackage(n string) *Env {
 	b := false
 
@@ -61,6 +89,7 @@ func NewPackage(n string) *Env {
 	}
 }
 
+// NewPackage creates a new env with a name under the parent env
 func (e *Env) NewPackage(n string) *Env {
 	return &Env{
 		env:       make(map[string]reflect.Value),
@@ -69,6 +98,32 @@ func (e *Env) NewPackage(n string) *Env {
 		name:      n,
 		interrupt: e.interrupt,
 	}
+}
+
+// AddPackage creates a new env with a name that has methods and types in it. Created under the parent env
+func (e *Env) AddPackage(name string, methods map[string]interface{}, types map[string]interface{}) (*Env, error) {
+	if strings.Contains(name, ".") {
+		return nil, fmt.Errorf("Unknown symbol '%s'", name)
+	}
+	var err error
+	pack := e.NewPackage(name)
+
+	for methodName, methodValue := range methods {
+		err = pack.Define(methodName, methodValue)
+		if err != nil {
+			return pack, err
+		}
+	}
+	for typeName, typeValue := range types {
+		err = pack.DefineType(typeName, typeValue)
+		if err != nil {
+			return pack, err
+		}
+	}
+
+	// can ignore error from Define because of check at the start of the function
+	e.Define(name, pack)
+	return pack, nil
 }
 
 func (e *Env) SetExternal(res EnvResolver) {
@@ -128,7 +183,7 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 		if v.CanAddr() {
 			return v.Addr(), nil
 		} else {
-			return NilValue, fmt.Errorf("Unaddressable")
+			return nilValue, fmt.Errorf("Unaddressable")
 		}
 	}
 	if e.external != nil {
@@ -137,12 +192,12 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 			if v.CanAddr() {
 				return v.Addr(), nil
 			} else {
-				return NilValue, fmt.Errorf("Unaddressable")
+				return nilValue, fmt.Errorf("Unaddressable")
 			}
 		}
 	}
 	if e.parent == nil {
-		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+		return nilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
 	return e.parent.Addr(k)
 }
@@ -163,7 +218,7 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 		}
 	}
 	if e.parent == nil {
-		return NilType, fmt.Errorf("Undefined type '%s'", k)
+		return nilType, fmt.Errorf("Undefined type '%s'", k)
 	}
 	return e.parent.Type(k)
 }
@@ -192,7 +247,7 @@ func (e *Env) get(k string) (reflect.Value, error) {
 		}
 	}
 	if e.parent == nil {
-		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+		return nilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
 	return e.parent.get(k)
 }
@@ -201,7 +256,7 @@ func (e *Env) get(k string) (reflect.Value, error) {
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
 	if v == nil {
-		return e.setValue(k, NilValue)
+		return e.setValue(k, nilValue)
 	}
 	return e.setValue(k, reflect.ValueOf(v))
 }
@@ -230,6 +285,7 @@ func (e *Env) DefineGlobal(k string, v interface{}) error {
 	return e.Define(k, v)
 }
 
+// defineGlobalValue defines symbol in global scope.
 func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
 	for e.parent != nil {
 		e = e.parent
@@ -237,30 +293,48 @@ func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
 	return e.defineValue(k, v)
 }
 
-// DefineType defines type which specifis symbol in global scope.
-func (e *Env) DefineType(k string, t interface{}) error {
+// Define defines symbol in current scope.
+func (e *Env) Define(k string, v interface{}) error {
+	if v == nil {
+		return e.defineValue(k, nilValue)
+	}
+	return e.defineValue(k, reflect.ValueOf(v))
+}
+
+// defineValue defines symbol in current scope.
+func (e *Env) defineValue(k string, v reflect.Value) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	global := e
-	keys := []string{k}
 
-	e.RLock()
-	for global.parent != nil {
-		if global.name != "" {
-			keys = append(keys, global.name)
-		}
-		global = global.parent
+	e.Lock()
+	e.env[k] = v
+	e.Unlock()
+
+	return nil
+}
+
+// DefineGlobalType defines type in global scope.
+func (e *Env) DefineGlobalType(k string, t interface{}) error {
+	for e.parent != nil {
+		e = e.parent
 	}
-	e.RUnlock()
+	return e.DefineType(k, t)
+}
 
-	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
-		keys[i], keys[j] = keys[j], keys[i]
+// DefineGlobalReflectType defines type in global scope.
+func (e *Env) DefineGlobalReflectType(k string, t reflect.Type) error {
+	for e.parent != nil {
+		e = e.parent
 	}
+	return e.DefineReflectType(k, t)
+}
 
+// DefineType defines type in current scope.
+func (e *Env) DefineType(k string, t interface{}) error {
 	var typ reflect.Type
 	if t == nil {
-		typ = NilType
+		typ = nilType
 	} else {
 		var ok bool
 		typ, ok = t.(reflect.Type)
@@ -269,28 +343,17 @@ func (e *Env) DefineType(k string, t interface{}) error {
 		}
 	}
 
-	global.Lock()
-	global.typ[strings.Join(keys, ".")] = typ
-	global.Unlock()
-
-	return nil
+	return e.DefineReflectType(k, typ)
 }
 
-// Define defines symbol in current scope.
-func (e *Env) Define(k string, v interface{}) error {
-	if v == nil {
-		return e.defineValue(k, NilValue)
-	}
-	return e.defineValue(k, reflect.ValueOf(v))
-}
-
-func (e *Env) defineValue(k string, v reflect.Value) error {
+// DefineReflectType defines type in current scope.
+func (e *Env) DefineReflectType(k string, t reflect.Type) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
 
 	e.Lock()
-	e.env[k] = v
+	e.typ[k] = t
 	e.Unlock()
 
 	return nil
@@ -307,6 +370,8 @@ func (e *Env) String() string {
 // Dump show symbol values in the scope.
 func (e *Env) Dump() {
 	e.RLock()
+	fmt.Printf("Name: %v\n", e.name)
+	fmt.Printf("Has parent: %v\n", e.parent != nil)
 	for k, v := range e.env {
 		fmt.Printf("%v = %#v\n", k, v)
 	}
@@ -317,7 +382,7 @@ func (e *Env) Dump() {
 func (e *Env) Execute(src string) (interface{}, error) {
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
-		return NilValue, err
+		return nilValue, err
 	}
 	return Run(stmts, e)
 }

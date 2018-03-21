@@ -37,6 +37,11 @@ func (m *mysql) URL() string {
 
 func (m *mysql) urlWithoutDb() string {
 	c := m.ConnectionDetails
+	if m.ConnectionDetails.URL != "" {
+		// respect user's own URL definition (with options).
+		url := strings.TrimPrefix(m.ConnectionDetails.URL, "mysql://")
+		return strings.Replace(url, "/"+c.Database+"?", "/?", 1)
+	}
 	s := "%s:%s@(%s:%s)/?parseTime=true&multiStatements=true&readTimeout=1s"
 	return fmt.Sprintf(s, c.User, c.Password, c.Host, c.Port)
 }

@@ -1,5 +1,7 @@
 require("expose-loader?$!expose-loader?jQuery!jquery");
-require("bootstrap-sass/assets/javascripts/bootstrap.js");
+require("popper.js/dist/popper.min.js");
+require("bootstrap/dist/js/bootstrap.min.js");
+
 $(() => {
 
 });

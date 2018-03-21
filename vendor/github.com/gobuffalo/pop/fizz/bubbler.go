@@ -4,10 +4,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mattn/anko/core"
 	"github.com/mattn/anko/vm"
 	"github.com/pkg/errors"
-
-	core "github.com/mattn/anko/builtins"
 )
 
 type BubbleType int

@@ -43,6 +43,8 @@ Any other type passed it will be be passed straight through to the underlying da
 * `null` - By default columns are not allowed to be `null`.
 * `default` - The default value you want for this column. By default this is `null`.
 * `default_raw` - The default value defined as a database function.
+* `after` - (MySQL Only) Add a column after another column in the table. `example: {"after":"created_at"}`
+* `first` - (MySQL Only) Add a column to the first position in the table. `example: {"first": true}`
 
 ## Drop a Table
 

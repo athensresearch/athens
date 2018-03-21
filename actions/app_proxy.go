@@ -10,6 +10,7 @@ func addProxyRoutes(app *buffalo.App) error {
 		return err
 	}
 
+	app.GET("/", proxyHomeHandler)
 	app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storage))
 	app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storage))
 	app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storage))

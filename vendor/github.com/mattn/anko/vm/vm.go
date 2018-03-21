@@ -4,53 +4,59 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"unsafe"
+	"strings"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/parser"
 )
 
-var (
-	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	NilType           = reflect.TypeOf(nil)
-	StringType        = reflect.TypeOf("a")
-	UnsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
-	InterfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-	TrueValue         = reflect.ValueOf(true)
-	FalseValue        = reflect.ValueOf(false)
-	ZeroValue         = reflect.Value{}
+type (
+	// Error provides a convenient interface for handling runtime error.
+	// It can be Error interface with type cast which can call Pos().
+	Error struct {
+		Message string
+		Pos     ast.Position
+	}
 )
 
-// Error provides a convenient interface for handling runtime error.
-// It can be Error interface with type cast which can call Pos().
-type Error struct {
-	Message string
-	Pos     ast.Position
-}
-
 var (
+	nilType               = reflect.TypeOf(nil)
+	stringType            = reflect.TypeOf("a")
+	interfaceType         = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	interfaceSliceType    = reflect.TypeOf([]interface{}{})
+	reflectValueType      = reflect.TypeOf(reflect.Value{})
+	reflectValueSliceType = reflect.TypeOf([]reflect.Value{})
+	errorType             = reflect.ValueOf([]error{nil}).Index(0).Type()
+	vmErrorType           = reflect.TypeOf(&Error{})
+
+	nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	trueValue                 = reflect.ValueOf(true)
+	falseValue                = reflect.ValueOf(false)
+	zeroValue                 = reflect.Value{}
+	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
+
 	BreakError     = errors.New("Unexpected break statement")
 	ContinueError  = errors.New("Unexpected continue statement")
 	ReturnError    = errors.New("Unexpected return statement")
 	InterruptError = errors.New("Execution interrupted")
 )
 
-// NewStringError makes error interface with message.
-func NewStringError(pos ast.Pos, err string) error {
+// newStringError makes error interface with message.
+func newStringError(pos ast.Pos, err string) error {
 	if pos == nil {
 		return &Error{Message: err, Pos: ast.Position{1, 1}}
 	}
 	return &Error{Message: err, Pos: pos.Position()}
 }
 
-// NewErrorf makes error interface with message.
-func NewErrorf(pos ast.Pos, format string, args ...interface{}) error {
+// newErrorf makes error interface with message.
+func newErrorf(pos ast.Pos, format string, args ...interface{}) error {
 	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.Position()}
 }
 
-// NewError makes error interface with message.
+// newError makes error interface with message.
 // This doesn't overwrite last error.
-func NewError(pos ast.Pos, err error) error {
+func newError(pos ast.Pos, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -71,18 +77,11 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// Func is function interface to reflect functions internaly.
-type Func func(args ...reflect.Value) (reflect.Value, error)
-
-func (f Func) String() string {
-	return fmt.Sprintf("[Func: %p]", f)
-}
-
 // Interrupts the execution of any running statements in the specified environment.
 // This includes all parent & child environments.
 // Note that the execution is not instantly aborted: after a call to Interrupt,
 // the current running statement will finish, but the next statement will not run,
-// and instead will return a NilValue and an InterruptError.
+// and instead will return a nilValue and an InterruptError.
 func Interrupt(env *Env) {
 	env.Lock()
 	*(env.interrupt) = true
@@ -105,7 +104,8 @@ func isNil(v reflect.Value) bool {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
 		// from reflect IsNil:
 		// Note that IsNil is not always equivalent to a regular comparison with nil in Go.
-		// For example, if v was created by calling ValueOf with an uninitialized interface variable i, i==nil will be true but v.IsNil will panic as v will be the zero Value.
+		// For example, if v was created by calling ValueOf with an uninitialized interface variable i,
+		// i==nil will be true but v.IsNil will panic as v will be the zero Value.
 		return v.IsNil()
 	default:
 		return false
@@ -114,7 +114,9 @@ func isNil(v reflect.Value) bool {
 
 func isNum(v reflect.Value) bool {
 	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr, reflect.Float32, reflect.Float64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Float32, reflect.Float64:
 		return true
 	}
 	return false
@@ -197,41 +199,41 @@ func equal(lhsV, rhsV reflect.Value) bool {
 
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	if !aMap.IsValid() || aMap.IsNil() {
-		return NilValue
+		return nilValue
 	}
 
 	keyType := key.Type()
-	if keyType == InterfaceType && aMap.Type().Key() != InterfaceType {
+	if keyType == interfaceType && aMap.Type().Key() != interfaceType {
 		if key.Elem().IsValid() && !key.Elem().IsNil() {
 			keyType = key.Elem().Type()
 		}
 	}
 	if keyType != aMap.Type().Key() {
-		return NilValue
+		return nilValue
 	}
 
 	// From reflect MapIndex:
 	// It returns the zero Value if key is not found in the map or if v represents a nil map.
 	value := aMap.MapIndex(key)
 
-	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == InterfaceType && !value.IsNil() {
+	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == interfaceType && !value.IsNil() {
 		value = reflect.ValueOf(value.Interface())
 	}
 
-	// Note if the map is of reflect.Value, it will incorectly return nil when zero value
+	// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
 	// Unware of any other way for this to be done to correct that
-	if value == ZeroValue {
-		return NilValue
+	if value == zeroValue {
+		return nilValue
 	}
 
 	return value
 }
 
-func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
+func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
 	lhsT := lhsV.Type().Elem()
 	rhsT := rhsV.Type().Elem()
 
-	if lhsT.Kind() == rhsT.Kind() {
+	if lhsT == rhsT {
 		return reflect.AppendSlice(lhsV, rhsV), nil
 	}
 
@@ -242,20 +244,114 @@ func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (r
 		return lhsV, nil
 	}
 
-	if rhsT != InterfaceType || (lhsT.Kind() != reflect.Array && lhsT.Kind() != reflect.Slice) {
-		return NilValue, NewStringError(expr, "invalid type conversion")
+	leftHasSubArray := lhsT.Kind() == reflect.Slice || lhsT.Kind() == reflect.Array
+	rightHasSubArray := rhsT.Kind() == reflect.Slice || rhsT.Kind() == reflect.Array
+
+	if leftHasSubArray != rightHasSubArray && lhsT != interfaceType && rhsT != interfaceType {
+		return nilValue, newStringError(expr, "invalid type conversion")
 	}
 
-	for i := 0; i < rhsV.Len(); i++ {
-		value := rhsV.Index(i).Elem()
-		if value.Kind() != reflect.Array && value.Kind() != reflect.Slice {
-			return NilValue, NewStringError(expr, "invalid type conversion")
+	if !leftHasSubArray && !rightHasSubArray {
+		for i := 0; i < rhsV.Len(); i++ {
+			value := rhsV.Index(i)
+			if rhsT == interfaceType {
+				value = value.Elem()
+			}
+			if lhsT == value.Type() {
+				lhsV = reflect.Append(lhsV, value)
+			} else if value.Type().ConvertibleTo(lhsT) {
+				lhsV = reflect.Append(lhsV, value.Convert(lhsT))
+			} else {
+				return nilValue, newStringError(expr, "invalid type conversion")
+			}
 		}
-		newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, 1), value)
-		if err != nil {
-			return NilValue, err
-		}
-		lhsV = reflect.Append(lhsV, newSlice)
+		return lhsV, nil
 	}
-	return lhsV, nil
+
+	if (leftHasSubArray || lhsT == interfaceType) && (rightHasSubArray || rhsT == interfaceType) {
+		for i := 0; i < rhsV.Len(); i++ {
+			value := rhsV.Index(i)
+			if rhsT == interfaceType {
+				value = value.Elem()
+				if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
+					return nilValue, newStringError(expr, "invalid type conversion")
+				}
+			}
+			newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, value.Len()), value)
+			if err != nil {
+				return nilValue, err
+			}
+			lhsV = reflect.Append(lhsV, newSlice)
+		}
+		return lhsV, nil
+	}
+
+	return nilValue, newStringError(expr, "invalid type conversion")
+}
+
+func getTypeFromString(env *Env, name string) (reflect.Type, error) {
+	env, typeString, err := getEnvFromString(env, name)
+	if err != nil {
+		return nilType, err
+	}
+	t, err := env.Type(typeString)
+	if err != nil {
+		return nilType,  err
+	}
+	return t,  nil
+}
+
+func getEnvFromString(env *Env, name string) (*Env, string, error) {
+	nameSplit := strings.SplitN(name, ".", 2)
+	for len(nameSplit) > 1 {
+		e, found := env.env[nameSplit[0]]
+		if !found {
+			return nil, "", fmt.Errorf("no namespace called: %v", nameSplit[0])
+		}
+		env = e.Interface().(*Env)
+		nameSplit = strings.SplitN(nameSplit[1], ".", 2)
+	}
+	return env, nameSplit[0], nil
+}
+
+func makeValue(t reflect.Type) (reflect.Value, error) {
+	switch t.Kind() {
+	case reflect.Chan:
+		return reflect.MakeChan(t, 0), nil
+	case reflect.Func:
+		return reflect.MakeFunc(t, nil), nil
+	case reflect.Map:
+		// note creating slice as work around to create map
+		// just doing MakeMap can give incorrect type for defined types
+		value := reflect.MakeSlice(reflect.SliceOf(t), 0, 1)
+		value = reflect.Append(value, reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())))
+		return value.Index(0), nil
+	case reflect.Ptr:
+		ptrV := reflect.New(t.Elem())
+		v, err := makeValue(t.Elem())
+		if err != nil {
+			return nilValue, err
+		}
+		if !ptrV.Elem().CanSet() {
+			return nilValue, fmt.Errorf("type " + t.String() + " cannot be assigned")
+		}
+		ptrV.Elem().Set(v)
+		return ptrV, nil
+	case reflect.Slice:
+		return reflect.MakeSlice(t, 0, 0), nil
+	case reflect.Struct:
+		structV := reflect.New(t).Elem()
+		for i := 0; i < structV.NumField(); i++ {
+			v, err := makeValue(structV.Field(i).Type())
+			if err != nil {
+				return nilValue, err
+			}
+			if !structV.Field(i).CanSet() {
+				return nilValue, fmt.Errorf("struct member '" + t.Field(i).Name + "' cannot be assigned")
+			}
+			structV.Field(i).Set(v)
+		}
+		return structV, nil
+	}
+	return reflect.New(t).Elem(), nil
 }

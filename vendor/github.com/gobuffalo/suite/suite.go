@@ -5,7 +5,9 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware/csrf"
+	"github.com/gobuffalo/packr"
 	"github.com/markbates/willie"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,6 +25,18 @@ func NewAction(app *buffalo.App) *Action {
 		Model: NewModel(),
 	}
 	return as
+}
+
+func NewActionWithFixtures(app *buffalo.App, box packr.Box) (*Action, error) {
+	m, err := NewModelWithFixtures(box)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	as := &Action{
+		App:   app,
+		Model: m,
+	}
+	return as, nil
 }
 
 func Run(t *testing.T, s suite.TestingSuite) {

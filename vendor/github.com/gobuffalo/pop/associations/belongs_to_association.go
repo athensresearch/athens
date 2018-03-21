@@ -3,8 +3,6 @@ package associations
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/markbates/inflect"
 )
 
 // belongsToAssociation is the implementation for the belongs_to
@@ -14,6 +12,7 @@ type belongsToAssociation struct {
 	ownerType  reflect.Type
 	ownerID    reflect.Value
 	owner      interface{}
+	*associationComposite
 }
 
 func init() {
@@ -22,7 +21,7 @@ func init() {
 
 func belongsToAssociationBuilder(p associationParams) (Association, error) {
 	fval := p.modelValue.FieldByName(p.field.Name)
-	ownerIDField := fmt.Sprintf("%s%s", inflect.Capitalize(fval.Type().Name()), "ID")
+	ownerIDField := fmt.Sprintf("%s%s", p.field.Name, "ID")
 
 	if _, found := p.modelType.FieldByName(ownerIDField); !found {
 		return nil, fmt.Errorf("there is no '%s' defined in model '%s'", ownerIDField, p.modelType.Name())
@@ -35,10 +34,11 @@ func belongsToAssociationBuilder(p associationParams) (Association, error) {
 	}
 
 	return &belongsToAssociation{
-		ownerModel: fval,
-		ownerType:  fval.Type(),
-		ownerID:    f,
-		owner:      p.model,
+		ownerModel:           fval,
+		ownerType:            fval.Type(),
+		ownerID:              f,
+		owner:                p.model,
+		associationComposite: &associationComposite{innerAssociations: p.innerAssociations},
 	}, nil
 }
 

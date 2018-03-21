@@ -384,6 +384,8 @@ func (p *SQLite) colType(c fizz.Column) string {
 		return "NUMERIC"
 	case "string":
 		return "TEXT"
+	case "blob":
+		return "BLOB"
 	default:
 		return c.ColType
 	}

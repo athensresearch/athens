@@ -21,14 +21,14 @@ func Run(stmts []ast.Stmt, env *Env) (interface{}, error) {
 
 // run executes statements in the specified environment.
 func run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
-	rv := NilValue
+	rv := nilValue
 	var err error
 	for _, stmt := range stmts {
 		switch stmt.(type) {
 		case *ast.BreakStmt:
-			return NilValue, BreakError
+			return nilValue, BreakError
 		case *ast.ContinueStmt:
-			return NilValue, ContinueError
+			return nilValue, ContinueError
 		case *ast.ReturnStmt:
 			rv, err = runSingleStmt(stmt, env)
 			if err != nil {
@@ -57,13 +57,13 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (interface{}, error) {
 // runSingleStmt executes one statement in the specified environment.
 func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	if *(env.interrupt) {
-		return NilValue, InterruptError
+		return nilValue, InterruptError
 	}
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return rv, NewError(stmt, err)
+			return rv, newError(stmt, err)
 		}
 		return rv, nil
 	case *ast.VarStmt:
@@ -72,7 +72,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		for i, expr := range stmt.Exprs {
 			rvs[i], err = invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(expr, err)
+				return nilValue, newError(expr, err)
 			}
 		}
 		for i, name := range stmt.Names {
@@ -88,7 +88,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		for i, rhs := range stmt.Rhss {
 			rvs[i], err = invokeExpr(rhs, env)
 			if err != nil {
-				return NilValue, NewError(rhs, err)
+				return nilValue, newError(rhs, err)
 			}
 		}
 		if len(stmt.Lhss) > 1 && len(rvs) == 1 {
@@ -113,7 +113,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			_, err = invokeLetExpr(lhs, v, env)
 			if err != nil {
-				return NilValue, NewError(lhs, err)
+				return nilValue, newError(lhs, err)
 			}
 		}
 		return rvs[len(rvs)-1], nil
@@ -121,7 +121,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		// If
 		rv, err := invokeExpr(stmt.If, env)
 		if err != nil {
-			return rv, NewError(stmt, err)
+			return rv, newError(stmt, err)
 		}
 		if toBool(rv) {
 			// Then
@@ -129,7 +129,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 			rv, err = run(stmt.Then, newenv)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 			return rv, nil
 		}
@@ -140,7 +140,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				// ElseIf
 				rv, err = invokeExpr(stmt_if.If, env)
 				if err != nil {
-					return rv, NewError(stmt, err)
+					return rv, newError(stmt, err)
 				}
 				if !toBool(rv) {
 					continue
@@ -149,7 +149,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				done = true
 				rv, err = run(stmt_if.Then, env)
 				if err != nil {
-					return rv, NewError(stmt, err)
+					return rv, newError(stmt, err)
 				}
 				break
 			}
@@ -160,7 +160,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 			rv, err = run(stmt.Else, newenv)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 		}
 		return rv, nil
@@ -177,7 +177,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			_, e1 := run(stmt.Catch, cenv)
 			if e1 != nil {
-				err = NewError(stmt.Catch[0], e1)
+				err = newError(stmt.Catch[0], e1)
 			} else {
 				err = nil
 			}
@@ -188,16 +188,16 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer fenv.Destroy()
 			_, e2 := run(stmt.Finally, newenv)
 			if e2 != nil {
-				err = NewError(stmt.Finally[0], e2)
+				err = newError(stmt.Finally[0], e2)
 			}
 		}
-		return NilValue, NewError(stmt, err)
+		return nilValue, newError(stmt, err)
 	case *ast.LoopStmt:
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for {
 			if *(env.interrupt) {
-				return NilValue, InterruptError
+				return nilValue, InterruptError
 			}
 			if stmt.Expr != nil {
 				ev, ee := invokeExpr(stmt.Expr, newenv)
@@ -217,10 +217,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err == ReturnError {
 					return rv, err
 				}
-				return NilValue, NewError(stmt, err)
+				return nilValue, newError(stmt, err)
 			}
 		}
-		return NilValue, nil
+		return nilValue, nil
 	case *ast.ForStmt:
 		val, ee := invokeExpr(stmt.Value, env)
 		if ee != nil {
@@ -230,13 +230,13 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			val = val.Elem()
 		}
 		switch val.Kind() {
-		case reflect.Array, reflect.Slice:
+		case reflect.Slice, reflect.Array:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
 
 			for i := 0; i < val.Len(); i++ {
 				if *(env.interrupt) {
-					return NilValue, InterruptError
+					return nilValue, InterruptError
 				}
 				iv := val.Index(i)
 				if iv.Kind() == reflect.Ptr || (iv.Kind() == reflect.Interface && !iv.IsNil()) {
@@ -251,10 +251,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					if err == ReturnError {
 						return rv, err
 					}
-					return NilValue, NewError(stmt, err)
+					return nilValue, newError(stmt, err)
 				}
 			}
-			return NilValue, nil
+			return nilValue, nil
 		case reflect.Map:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
@@ -262,7 +262,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			keys := val.MapKeys()
 			for i := 0; i < len(keys); i++ {
 				if *(env.interrupt) {
-					return NilValue, InterruptError
+					return nilValue, InterruptError
 				}
 				newenv.defineValue(stmt.Vars[0], keys[i])
 				if len(stmt.Vars) > 1 {
@@ -276,17 +276,17 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					if err == ReturnError {
 						return rv, err
 					}
-					return NilValue, NewError(stmt, err)
+					return nilValue, newError(stmt, err)
 				}
 			}
-			return NilValue, nil
+			return nilValue, nil
 		case reflect.Chan:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
 
 			for {
 				if *(env.interrupt) {
-					return NilValue, InterruptError
+					return nilValue, InterruptError
 				}
 				iv, ok := val.Recv()
 				if !ok {
@@ -304,27 +304,27 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					if err == ReturnError {
 						return rv, err
 					}
-					return NilValue, NewError(stmt, err)
+					return nilValue, newError(stmt, err)
 				}
 			}
-			return NilValue, nil
+			return nilValue, nil
 		default:
-			return NilValue, NewStringError(stmt, "for cannot loop over type "+val.Kind().String())
+			return nilValue, newStringError(stmt, "for cannot loop over type "+val.Kind().String())
 		}
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		_, err := invokeExpr(stmt.Expr1, newenv)
 		if err != nil {
-			return NilValue, err
+			return nilValue, err
 		}
 		for {
 			if *(env.interrupt) {
-				return NilValue, InterruptError
+				return nilValue, InterruptError
 			}
 			fb, err := invokeExpr(stmt.Expr2, newenv)
 			if err != nil {
-				return NilValue, err
+				return nilValue, err
 			}
 			if !toBool(fb) {
 				break
@@ -338,24 +338,24 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err == ReturnError {
 					return rv, err
 				}
-				return NilValue, NewError(stmt, err)
+				return nilValue, newError(stmt, err)
 			}
 			_, err = invokeExpr(stmt.Expr3, newenv)
 			if err != nil {
-				return NilValue, err
+				return nilValue, err
 			}
 		}
-		return NilValue, nil
+		return nilValue, nil
 	case *ast.ReturnStmt:
 		var err error
-		rv := NilValue
+		rv := nilValue
 		switch len(stmt.Exprs) {
 		case 0:
 			return rv, nil
 		case 1:
 			rv, err = invokeExpr(stmt.Exprs[0], env)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 			return rv, nil
 		}
@@ -363,7 +363,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		for i, expr := range stmt.Exprs {
 			rv, err = invokeExpr(expr, env)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 			if !rv.IsValid() || !rv.CanInterface() {
 				rvs[i] = nil
@@ -375,25 +375,25 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ThrowStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return rv, NewError(stmt, err)
+			return rv, newError(stmt, err)
 		}
 		if !rv.IsValid() {
-			return NilValue, NewError(stmt, err)
+			return nilValue, newError(stmt, err)
 		}
-		return rv, NewStringError(stmt, fmt.Sprint(rv.Interface()))
+		return rv, newStringError(stmt, fmt.Sprint(rv.Interface()))
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
 		rv, err := run(stmt.Stmts, newenv)
 		if err != nil {
-			return rv, NewError(stmt, err)
+			return rv, newError(stmt, err)
 		}
 		env.defineGlobalValue(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
 	case *ast.SwitchStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return rv, NewError(stmt, err)
+			return rv, newError(stmt, err)
 		}
 		done := false
 		var default_stmt *ast.DefaultStmt
@@ -405,14 +405,14 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			case_stmt := ss.(*ast.CaseStmt)
 			cv, err := invokeExpr(case_stmt.Expr, env)
 			if err != nil {
-				return NilValue, NewError(stmt, err)
+				return nilValue, newError(stmt, err)
 			}
 			if !equal(rv, cv) {
 				continue
 			}
 			rv, err = run(case_stmt.Stmts, env)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 			done = true
 			break
@@ -420,11 +420,11 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if !done && default_stmt != nil {
 			rv, err = run(default_stmt.Stmts, env)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return rv, newError(stmt, err)
 			}
 		}
 		return rv, nil
 	default:
-		return NilValue, NewStringError(stmt, "unknown statement")
+		return nilValue, newStringError(stmt, "unknown statement")
 	}
 }

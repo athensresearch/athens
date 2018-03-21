@@ -62,6 +62,8 @@ var opName = map[string]int{
 	"go":       GO,
 	"chan":     CHAN,
 	"make":     MAKE,
+	"type":     TYPE,
+	"len":     LEN,
 }
 
 // Init resets code to scan.
@@ -259,7 +261,7 @@ retry:
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
-					err = fmt.Errorf(`syntax error "%s"`, "..")
+					err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
 					return
 				}
 			} else {
@@ -267,30 +269,11 @@ retry:
 				tok = int(ch)
 				lit = string(ch)
 			}
-		case '\n':
+		case '\n', '(', ')', ':', ';', '%', '?', '{', '}', '[', ']', ',', '^':
 			tok = int(ch)
 			lit = string(ch)
-		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^':
-			s.next()
-			if ch == '[' && s.peek() == ']' {
-				s.next()
-				if isLetter(s.peek()) {
-					s.back()
-					tok = ARRAYLIT
-					lit = "[]"
-				} else {
-					s.back()
-					s.back()
-					tok = int(ch)
-					lit = string(ch)
-				}
-			} else {
-				s.back()
-				tok = int(ch)
-				lit = string(ch)
-			}
 		default:
-			err = fmt.Errorf(`syntax error "%s"`, string(ch))
+			err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
 			tok = int(ch)
 			lit = string(ch)
 			return
@@ -376,7 +359,7 @@ func (s *Scanner) skipBlank() {
 	}
 }
 
-// scanIdentifier returns identifier begining at current position.
+// scanIdentifier returns identifier beginning at current position.
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
@@ -389,7 +372,7 @@ func (s *Scanner) scanIdentifier() (string, error) {
 	return string(ret), nil
 }
 
-// scanNumber returns number begining at current position.
+// scanNumber returns number beginning at current position.
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
 	ch := s.peek()
@@ -504,7 +487,7 @@ type Lexer struct {
 func (l *Lexer) Lex(lval *yySymType) int {
 	tok, lit, pos, err := l.s.Scan()
 	if err != nil {
-		l.e = &Error{Message: fmt.Sprintf("%s", err.Error()), Pos: pos, Fatal: true}
+		l.e = &Error{Message: err.Error(), Pos: pos, Fatal: true}
 	}
 	lval.tok = ast.Token{Tok: tok, Lit: lit}
 	lval.tok.SetPosition(pos)

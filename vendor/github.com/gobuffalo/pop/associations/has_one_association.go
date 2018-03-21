@@ -14,6 +14,7 @@ type hasOneAssociation struct {
 	ownerName  string
 	owner      interface{}
 	fkID       string
+	*associationComposite
 }
 
 func init() {
@@ -29,12 +30,13 @@ func hasOneAssociationBuilder(p associationParams) (Association, error) {
 
 	fval := p.modelValue.FieldByName(p.field.Name)
 	return &hasOneAssociation{
-		owner:      p.model,
-		ownedModel: fval,
-		ownedType:  fval.Type(),
-		ownerID:    ownerID.Interface(),
-		ownerName:  p.modelType.Name(),
-		fkID:       p.popTags.Find("fk_id").Value,
+		owner:                p.model,
+		ownedModel:           fval,
+		ownedType:            fval.Type(),
+		ownerID:              ownerID.Interface(),
+		ownerName:            p.modelType.Name(),
+		fkID:                 p.popTags.Find("fk_id").Value,
+		associationComposite: &associationComposite{innerAssociations: p.innerAssociations},
 	}, nil
 }
 

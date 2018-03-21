@@ -151,3 +151,7 @@ func (n Name) Package() string {
 func (n Name) Char() string {
 	return strings.ToLower(string(n[0]))
 }
+
+func (n Name) String() string {
+	return string(n)
+}

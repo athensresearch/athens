@@ -37,5 +37,5 @@ func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
 	c.Set("redirectLoc", loc)
 	c.Set("baseURL", sp.baseURL)
 	c.Set("module", sp.module)
-	return c.Render(http.StatusOK, r.HTML("goget.html"))
+	return c.Render(http.StatusOK, proxy.HTML("goget.html"))
 }

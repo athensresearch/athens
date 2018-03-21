@@ -1,8 +1,13 @@
 package suite
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gobuffalo/envy"
-	"github.com/markbates/pop"
+	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/pop"
+	"github.com/gobuffalo/suite/fix"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -10,7 +15,8 @@ import (
 type Model struct {
 	suite.Suite
 	*require.Assertions
-	DB *pop.Connection
+	DB       *pop.Connection
+	Fixtures packr.Box
 }
 
 func (m *Model) SetupTest() {
@@ -32,6 +38,28 @@ func (m *Model) DBDelta(delta int, name string, fn func()) {
 	m.Equal(ec, sc+delta)
 }
 
+func (as *Model) LoadFixture(name string) {
+	sc, err := fix.Find(name)
+	as.NoError(err)
+	db := as.DB.Store
+
+	for _, table := range sc.Tables {
+		for _, row := range table.Row {
+			q := "insert into " + table.Name
+			keys := []string{}
+			skeys := []string{}
+			for k := range row {
+				keys = append(keys, k)
+				skeys = append(skeys, ":"+k)
+			}
+
+			q = q + fmt.Sprintf(" (%s) values (%s)", strings.Join(keys, ","), strings.Join(skeys, ","))
+			_, err = db.NamedExec(q, row)
+			as.NoError(err)
+		}
+	}
+}
+
 func NewModel() *Model {
 	m := &Model{}
 	c, err := pop.Connect(envy.Get("GO_ENV", "test"))
@@ -39,4 +67,10 @@ func NewModel() *Model {
 		m.DB = c
 	}
 	return m
+}
+
+func NewModelWithFixtures(box packr.Box) (*Model, error) {
+	m := NewModel()
+	m.Fixtures = box
+	return m, fix.Init(box)
 }

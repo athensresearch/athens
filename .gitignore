@@ -19,3 +19,4 @@ vgp
 bin/*
 .envrc
 athens
+yarn-error.log

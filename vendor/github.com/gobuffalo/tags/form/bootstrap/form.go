@@ -44,7 +44,7 @@ func (f Form) RadioButton(opts tags.Options) *tags.Tag {
 //RadioButtonTag builds a bootstrap input[type=radio] with passed options
 func (f Form) RadioButtonTag(opts tags.Options) *tags.Tag {
 	return divWrapper(opts, func(o tags.Options) tags.Body {
-		return f.Form.RadioButton(o)
+		return f.Form.RadioButtonTag(o)
 	})
 }
 
@@ -63,7 +63,7 @@ func (f Form) TextArea(opts tags.Options) *tags.Tag {
 //TextAreaTag builds a bootstrap textarea with passed options
 func (f Form) TextAreaTag(opts tags.Options) *tags.Tag {
 	return divWrapper(opts, func(o tags.Options) tags.Body {
-		return f.Form.TextArea(o)
+		return f.Form.TextAreaTag(o)
 	})
 }
 

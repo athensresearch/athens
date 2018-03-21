@@ -162,7 +162,9 @@ func (c *compiler) evalFunctionLiteral(node *ast.FunctionLiteral) (interface{}, 
 func (c *compiler) evalPrefixExpression(node *ast.PrefixExpression) (interface{}, error) {
 	res, err := c.evalExpression(node.Right)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		if errors.Cause(err) != ErrUnknownIdentifier {
+			return nil, errors.WithStack(err)
+		}
 	}
 	switch node.Operator {
 	case "!":

@@ -26,6 +26,6 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 		} else if err != nil {
 			return errors.WithStack(err)
 		}
-		return c.Render(http.StatusOK, r.JSON(nil))
+		return c.Render(http.StatusOK, proxy.JSON(nil))
 	}
 }

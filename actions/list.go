@@ -21,6 +21,6 @@ func listHandler(lister storage.Lister) func(c buffalo.Context) error {
 		} else if err != nil {
 			return errs.WithStack(err)
 		}
-		return c.Render(http.StatusOK, r.String(strings.Join(versions, "\n")))
+		return c.Render(http.StatusOK, proxy.String(strings.Join(versions, "\n")))
 	}
 }

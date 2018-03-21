@@ -375,6 +375,8 @@ func (p *Cockroach) colType(c fizz.Column) string {
 		return "UUID"
 	case "time", "datetime":
 		return "timestamp"
+	case "blob":
+		return "BYTES"
 	default:
 		return c.ColType
 	}

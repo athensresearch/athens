@@ -11,7 +11,11 @@ type ScopeFunc func(q *Query) *Query
 //		}
 //	}
 //
-//	q.Scope(ByName("mark").Where("id = ?", 1).First(&User{})
+//	func WithDeleted(q *pop.Query) *pop.Query {
+//		return q.Where("deleted_at is null")
+//	}
+//
+//	c.Scope(ByName("mark)).Scope(WithDeleted).First(&User{})
 func (q *Query) Scope(sf ScopeFunc) *Query {
 	return sf(q)
 }
@@ -24,7 +28,11 @@ func (q *Query) Scope(sf ScopeFunc) *Query {
 //		}
 //	}
 //
-//	c.Scope(ByName("mark")).First(&User{})
+//	func WithDeleted(q *pop.Query) *pop.Query {
+//		return q.Where("deleted_at is null")
+//	}
+//
+//	c.Scope(ByName("mark)).Scope(WithDeleted).First(&User{})
 func (c *Connection) Scope(sf ScopeFunc) *Query {
 	return Q(c).Scope(sf)
 }

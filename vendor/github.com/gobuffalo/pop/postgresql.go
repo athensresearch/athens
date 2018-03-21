@@ -130,7 +130,11 @@ func (p *postgresql) urlWithoutDb() string {
 	c := p.ConnectionDetails
 	ssl := defaults.String(c.Options["sslmode"], "disable")
 
-	s := "postgres://%s:%s@%s:%s/?sslmode=%s"
+	// https://github.com/gobuffalo/buffalo/issues/836
+	// If the db is not precised, postgresql takes the username as the database to connect on.
+	// To avoid a connection problem if the user db is not here, we use the default "postgres"
+	// db, just like the other client tools do.
+	s := "postgres://%s:%s@%s:%s/postgres?sslmode=%s"
 	return fmt.Sprintf(s, c.User, c.Password, c.Host, c.Port, ssl)
 }
 

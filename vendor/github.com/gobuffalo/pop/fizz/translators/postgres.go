@@ -27,6 +27,8 @@ func (p *Postgres) CreateTable(t fizz.Table) (string, error) {
 				s = fmt.Sprintf("\"%s\" %s PRIMARY KEY", c.Name, p.colType(c))
 			case "integer", "INT", "int":
 				s = fmt.Sprintf("\"%s\" SERIAL PRIMARY KEY", c.Name)
+			case "bigint", "BIGINT":
+				s = fmt.Sprintf("\"%s\" BIGSERIAL PRIMARY KEY", c.Name)
 			default:
 				return "", errors.Errorf("can not use %s as a primary key", c.ColType)
 			}
@@ -208,6 +210,8 @@ func (p *Postgres) colType(c fizz.Column) string {
 		return "UUID"
 	case "time", "datetime":
 		return "timestamp"
+	case "blob":
+		return "bytea"
 	default:
 		return c.ColType
 	}
