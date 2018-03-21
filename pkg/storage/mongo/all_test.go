@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	baseURL = "testbaseurl"
 	module  = "testmodule"
 	version = "v1.0.0"
 )

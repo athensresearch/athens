@@ -10,8 +10,8 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func (v *storageImpl) Get(baseURL, module, version string) (*storage.Version, error) {
-	versionedPath := v.versionLocation(baseURL, module, version)
+func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
+	versionedPath := v.versionLocation(module, version)
 	mod, err := afero.ReadFile(v.filesystem, filepath.Join(versionedPath, "go.mod"))
 	if err != nil {
 		return nil, err

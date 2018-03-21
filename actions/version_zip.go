@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
@@ -14,10 +15,13 @@ func versionZipHandler(getter storage.Getter) func(c buffalo.Context) error {
 		if err != nil {
 			return err
 		}
-		version, err := getter.Get(params.baseURL, params.module, params.version)
-		if err != nil {
+		version, err := getter.Get(params.module, params.version)
+		if storage.IsNotFoundError(err) {
+			return c.Error(http.StatusNotFound, fmt.Errorf("%s@%s not found", params.module, params.version))
+		} else if err != nil {
 			return err
 		}
+
 		defer version.Zip.Close()
 
 		c.Response().WriteHeader(http.StatusOK)

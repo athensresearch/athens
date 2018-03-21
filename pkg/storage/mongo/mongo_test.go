@@ -6,13 +6,13 @@ import (
 
 func (m *MongoTests) TestGetSaveListRoundTrip() {
 	r := m.Require()
-	m.storage.Save(baseURL, module, version, mod, zip)
-	listedVersions, err := m.storage.List(baseURL, module)
+	m.storage.Save(module, version, mod, zip)
+	listedVersions, err := m.storage.List(module)
 	r.NoError(err)
 	r.Equal(1, len(listedVersions))
 	retVersion := listedVersions[0]
 	r.Equal(version, retVersion)
-	gotten, err := m.storage.Get(baseURL, module, version)
+	gotten, err := m.storage.Get(module, version)
 	r.NoError(err)
 	defer gotten.Zip.Close()
 	r.Equal(version, gotten.RevInfo.Version)

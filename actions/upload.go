@@ -11,7 +11,7 @@ import (
 
 func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
-		stdParams, err := getStandardParams(c)
+		mod, err := getModule(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -20,7 +20,7 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 		if c.Bind(payload); err != nil {
 			return errors.WithStack(err)
 		}
-		saveErr := store.Save(stdParams.baseURL, stdParams.module, version, payload.Module, payload.Zip)
+		saveErr := store.Save(mod, version, payload.Module, payload.Zip)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
 			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {

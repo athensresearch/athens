@@ -23,19 +23,15 @@ func GoGet(getter cdn.Getter) buffalo.MiddlewareFunc {
 }
 
 func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
-	sp, err := getStandardParams(c)
+	params, err := getAllPathParams(c)
 	if err != nil {
 		return err
 	}
-	loc, err := getter.Get(sp.baseURL, sp.module)
+	loc, err := getter.Get(params.module, params.version)
 	if err != nil {
-		return c.Error(
-			http.StatusNotFound,
-			fmt.Errorf("%s/%s does not exist", sp.baseURL, sp.module),
-		)
+		return c.Error(http.StatusNotFound, fmt.Errorf("module %s does not exist", params.module))
 	}
 	c.Set("redirectLoc", loc)
-	c.Set("baseURL", sp.baseURL)
-	c.Set("module", sp.module)
+	c.Set("module", params.module)
 	return c.Render(http.StatusOK, proxy.HTML("goget.html"))
 }

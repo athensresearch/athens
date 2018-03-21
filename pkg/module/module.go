@@ -23,7 +23,7 @@ type file struct {
 
 // MakeZip takes dir and module info and generates vgo valid zip
 // the dir must end with a "/"
-func MakeZip(dir, basePath, module, version string) ([]byte, error) {
+func MakeZip(dir, module, version string) ([]byte, error) {
 	ignoreParser := getIgnoreParser(dir)
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)
@@ -33,7 +33,7 @@ func MakeZip(dir, basePath, module, version string) ([]byte, error) {
 			return err
 		}
 
-		fileName := getFileName(path, dir, basePath, module, version)
+		fileName := getFileName(path, dir, module, version)
 
 		if ignoreParser.MatchesPath(fileName) {
 			return nil
@@ -68,13 +68,12 @@ func getIgnoreParser(dir string) ignore.IgnoreParser {
 }
 
 // getFileName composes filename for zip to match standard specified as
-// mod.path@mod.version/{filename}
-// where mod.path equals {basePath}/{moduleName}
-func getFileName(path, dir, basePath, module, version string) string {
+// module@version/{filename}
+func getFileName(path, dir, module, version string) string {
 	filename := strings.TrimPrefix(path, dir)
 	filename = strings.TrimLeftFunc(filename, func(r rune) bool { return r == os.PathSeparator })
 
 	moduleID := fmt.Sprintf("%s@%s", module, version)
 
-	return filepath.Join(basePath, moduleID, filename)
+	return filepath.Join(moduleID, filename)
 }
