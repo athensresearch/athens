@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	parser "github.com/gomods/athens/pkg/gomod/file"
 	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/payloads"
-	"github.com/spf13/cobra"
 )
 
 type uploadCmd struct {
