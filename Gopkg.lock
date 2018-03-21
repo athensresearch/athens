@@ -512,6 +512,15 @@
   revision = "bd320f5d308e1a3c4314c678d8227a0d72574ae7"
 
 [[projects]]
+  name = "github.com/spf13/afero"
+  packages = [
+    ".",
+    "mem"
+  ]
+  revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
@@ -585,6 +594,19 @@
   revision = "f6cff0780e542efa0c8e864dc8fa522808f6a598"
 
 [[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
+[[projects]]
   name = "google.golang.org/appengine"
   packages = [
     "internal",
@@ -607,6 +629,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "45cc14ae48d06ff23ff6dbbbadaffc91fe4932bf071511c23525ca5e229e3d6f"
+  inputs-digest = "bcfc806f9c63ab83620668a0cd386c88d30ba0278aaced3204972a5772befae4"
   solver-name = "gps-cdcl"
   solver-version = 1

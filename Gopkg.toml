@@ -60,3 +60,7 @@
 [[constraint]]
   name = "github.com/spf13/viper"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/spf13/afero"
+  version = "1.0.2"
