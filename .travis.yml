@@ -4,4 +4,12 @@ language: go
 install: false
 go:
   - "1.10.x"
-script: go test ./...
+before_script:
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
+  - go get github.com/golang/lint/golint                        # Linter
+script:
+  - test -z $(gofmt -s -l $GO_FILES)         # Fail if a .go file hasn't been formatted with gofmt
+  - go vet ./...                             # Go static analyzer
+  - golint $(go list ./...)                  # TODO: add -set_exit_status at some point
+  - go test -race ./...                      # Run all the tests with the race detector enabled
+  
