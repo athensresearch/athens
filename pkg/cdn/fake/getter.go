@@ -6,6 +6,6 @@ type Getter struct {
 }
 
 // Get is the cdn.Getter implementation that always returns g.URL, nil
-func (g *Getter) Get(baseURL, module string) (string, error) {
+func (g *Getter) Get(module string) (string, error) {
 	return g.URL, nil
 }

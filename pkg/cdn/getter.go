@@ -12,5 +12,5 @@ package cdn
 // - https://mycdn.com/gomods.io/my/module/@v/{version}.mod
 // - https://mycdn.com/gomods.io/my/module/@v/{version}.zip
 type Getter interface {
-	Get(baseURL, module string) (string, error)
+	Get(module string) (string, error)
 }

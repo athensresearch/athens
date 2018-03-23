@@ -4,3 +4,12 @@ services:
     image: mongo:3.0.15-wheezy
     ports:
       - 27017:27017
+  mysql:
+    image: bitnami/mysql:5.7.21-r7
+    ports:
+      - "3306:3306"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "MYSQL_USER=vgp"
+      - "MYSQL_PASSWORD=vgp"
+      - "MYSQL_DATABASE=vgoprox"

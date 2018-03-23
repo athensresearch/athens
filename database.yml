@@ -8,10 +8,11 @@ development:
 
 test:
   dialect: "mysql"
-  database: circle-test
+  database: vgoprox
   host: 127.0.0.1
   port: 3306
-  user: ubuntu
+  user: vgp
+  password: vgp
   
 production:
   dialect: "mysql"

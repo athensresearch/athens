@@ -27,7 +27,7 @@ func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
 	if err != nil {
 		return err
 	}
-	loc, err := getter.Get(params.module, params.version)
+	loc, err := getter.Get(params.module)
 	if err != nil {
 		return c.Error(http.StatusNotFound, fmt.Errorf("module %s does not exist", params.module))
 	}
