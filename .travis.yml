@@ -1,18 +1,11 @@
-<<<<<<< HEAD
 services:
   - mongodb
 language: go
 install: false
 go:
   - "1.10.x"
-script: go test ./...
-=======
 services:
   - mongodb
-language: go
-install: false
-go:
-  - "1.10.x"
 before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
   - go get github.com/golang/lint/golint                        # Linter
@@ -21,5 +14,3 @@ script:
   - go vet ./...                             # Go static analyzer
   - golint $(go list ./...)                  # TODO: add -set_exit_status at some point
   - go test -race ./...                      # Run all the tests with the race detector enabled
-  
->>>>>>> cba1c45003240094d05ef0d7ef1429d94fbc80bc
