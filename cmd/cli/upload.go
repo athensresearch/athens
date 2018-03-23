@@ -16,7 +16,6 @@ import (
 )
 
 type uploadCmd struct {
-	baseURL    string
 	moduleName string
 	version    string
 }
@@ -29,8 +28,6 @@ func newUploadCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  upload(uploadCmd),
 	}
-	cmd.Flags().StringVarP(&uploadCmd.baseURL, "base-url", "b", "", "The base URL of the module (required)")
-	cmd.MarkFlagRequired("base-url")
 	cmd.Flags().StringVarP(&uploadCmd.version, "version", "v", "v0.0.1", "The version of this module")
 	return cmd
 }
@@ -56,14 +53,13 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := module.MakeZip(fullDirectory, c.baseURL, c.moduleName, c.version)
+		zipBytes, err := module.MakeZip(fullDirectory, c.moduleName, c.version)
 		if err != nil {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}
 
 		url := fmt.Sprintf(
-			"http://localhost:3000/admin/upload/%s/%s/%s",
-			c.baseURL,
+			"http://localhost:3000/admin/upload/%s/%s",
 			c.moduleName,
 			c.version,
 		)

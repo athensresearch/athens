@@ -79,6 +79,8 @@ func App() *buffalo.App {
 		}
 		app.Use(T.Middleware())
 
+		app.GET("/", homeHandler)
+
 		if MODE == "proxy" {
 			log.Printf("starting athens in proxy mode")
 			if err := addProxyRoutes(app); err != nil {

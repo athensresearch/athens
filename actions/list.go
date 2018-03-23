@@ -11,11 +11,11 @@ import (
 
 func listHandler(lister storage.Lister) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
-		params, err := getStandardParams(c)
+		mod, err := getModule(c)
 		if err != nil {
 			return err
 		}
-		versions, err := lister.List(params.baseURL, params.module)
+		versions, err := lister.List(mod)
 		if storage.IsNotFoundError(err) {
 			return c.Error(http.StatusNotFound, err)
 		} else if err != nil {

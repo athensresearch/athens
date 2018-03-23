@@ -1,6 +1,6 @@
 # Athens
 
-_This is a very early alpha release, and the API will be changing as the proxy API changes._
+*This is a very early alpha release, and the API will be changing as the proxy API changes.*
 _Do not run this in production. This warning will be changed or removed as the project and the proxy API changes._
 
 Athens is a proxy server for [vgo modules](https://github.com/golang/go/wiki/vgo). It implements
@@ -75,17 +75,14 @@ docker-compose down
 
 This project is early and there's plenty of interesting and challenging work to do.
 
-If you find a bug or want to fix a bug, I :heart: PRs and issues!
+If you find a bug or want to fix a bug, I :heart: PRs and issues! If you see an issue
+in the [queue](https://github.com/gomods/athens/issues) that you'd like to work on,
+please just post a comment saying that you want to work on it. Something like
+"I want to work on this" is fine.
 
-Below is a list of general areas that I'm planning to work on, so if you'd like to help there ping me or file an issue (I am 'arschles' on the Gophers Slack):
-
-* New storage backends (probably disk next because it's the easiest on the TODO list :smile:)
-* Adding new commands to the CLI (I'll probably use [Cobra](https://github.com/spf13/cobra) to do it)
-* Bugfixes in the CLI
-* Adding tests
-
-The only thing I ask is that you follow the
-[Contributor Covenant](https://www.contributor-covenant.org/).
+Finally, please follow the
+[Contributor Covenant](https://www.contributor-covenant.org/) in everything
+you do on this project - issue comments, pull requests, etc...
 
 # Resources:
 

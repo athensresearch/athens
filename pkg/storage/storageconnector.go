@@ -19,12 +19,12 @@ func (n noOpConnectedStorage) Connect() error {
 	return nil
 }
 
-func (n noOpConnectedStorage) Get(baseURL, module, vsn string) (*Version, error) {
-	return n.s.Get(baseURL, module, vsn)
+func (n noOpConnectedStorage) Get(module, vsn string) (*Version, error) {
+	return n.s.Get(module, vsn)
 }
-func (n noOpConnectedStorage) List(baseURL, module string) ([]string, error) {
-	return n.s.List(baseURL, module)
+func (n noOpConnectedStorage) List(module string) ([]string, error) {
+	return n.s.List(module)
 }
-func (n noOpConnectedStorage) Save(baseURL, module, version string, mod, zip []byte) error {
-	return n.s.Save(baseURL, module, version, mod, zip)
+func (n noOpConnectedStorage) Save(module, version string, mod, zip []byte) error {
+	return n.s.Save(module, version, mod, zip)
 }

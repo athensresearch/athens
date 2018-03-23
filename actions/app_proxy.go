@@ -11,11 +11,11 @@ func addProxyRoutes(app *buffalo.App) error {
 	}
 
 	app.GET("/", proxyHomeHandler)
-	app.GET("/{base_url:.+}/{module}/@v/list", listHandler(storage))
-	app.GET("/{base_url:.+}/{module}/@v/{version}.info", versionInfoHandler(storage))
-	app.GET("/{base_url:.+}/{module}/@v/{version}.mod", versionModuleHandler(storage))
-	app.GET("/{base_url:.+}/{module}/@v/{version}.zip", versionZipHandler(storage))
-	app.POST("/admin/upload/{base_url:[a-zA-Z./]+}/{module}/{version}", uploadHandler(storage))
-	app.POST("/admin/fetch/{base_url:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
+	app.GET("/{module:.+}/@v/list", listHandler(storage))
+	app.GET("/{module:.+}/@v/{version}.info", versionInfoHandler(storage))
+	app.GET("/{module:.+}/@v/{version}.mod", versionModuleHandler(storage))
+	app.GET("/{module:.+}/@v/{version}.zip", versionZipHandler(storage))
+	app.POST("/admin/upload/{module:[a-zA-Z./]+}/{version}", uploadHandler(storage))
+	app.POST("/admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
 	return nil
 }

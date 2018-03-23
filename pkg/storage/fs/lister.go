@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (l *storageImpl) List(basePath, module string) ([]string, error) {
-	loc := l.moduleLocation(basePath, module)
+func (l *storageImpl) List(module string) ([]string, error) {
+	loc := l.moduleLocation(module)
 	fileInfos, err := afero.ReadDir(l.filesystem, loc)
 	if err != nil {
 		return nil, err

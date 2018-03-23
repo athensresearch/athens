@@ -12,12 +12,12 @@ type storageImpl struct {
 	filesystem afero.Fs
 }
 
-func (s *storageImpl) moduleLocation(baseURL, module string) string {
-	return filepath.Join(s.rootDir, baseURL, module)
+func (s *storageImpl) moduleLocation(module string) string {
+	return filepath.Join(s.rootDir, module)
 }
 
-func (s *storageImpl) versionLocation(baseURL, module, version string) string {
-	return filepath.Join(s.moduleLocation(baseURL, module), version)
+func (s *storageImpl) versionLocation(module, version string) string {
+	return filepath.Join(s.moduleLocation(module), version)
 
 }
 

@@ -15,10 +15,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// /admin/fetch/{base_url:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}
+// /admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}
 func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
-		baseURL := c.Param("base_url")
 		owner := c.Param("owner")
 		repo := c.Param("repo")
 		ref := c.Param("ref")
@@ -47,12 +46,12 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := module.MakeZip(path, baseURL, moduleName, version)
+		zipBytes, err := module.MakeZip(path, moduleName, version)
 		if err != nil {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}
 
-		saveErr := store.Save(baseURL, moduleName, version, modBytes, zipBytes)
+		saveErr := store.Save(moduleName, version, modBytes, zipBytes)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
 			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {

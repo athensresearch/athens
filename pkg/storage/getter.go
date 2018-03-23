@@ -1,6 +1,7 @@
 package storage
 
+// Getter gets module metadata and its source from underlying storage
 type Getter interface {
-	// must return ErrNotFound if the coordinates are not found
-	Get(baseURL, module, vsn string) (*Version, error)
+	// Get must return ErrNotFound if the coordinates are not found
+	Get(module, vsn string) (*Version, error)
 }
