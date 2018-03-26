@@ -88,9 +88,8 @@ func tryToFloat64(v reflect.Value) (float64, error) {
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
-		} else {
-			return 0, nil
 		}
+		return 0, nil
 	case reflect.String:
 		f, err := strconv.ParseFloat(v.String(), 64)
 		if err == nil {
@@ -121,9 +120,8 @@ func tryToInt64(v reflect.Value) (int64, error) {
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
-		} else {
-			return 0, nil
 		}
+		return 0, nil
 	case reflect.String:
 		s := v.String()
 		var i int64
@@ -161,9 +159,8 @@ func tryToInt(v reflect.Value) (int, error) {
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
-		} else {
-			return 0, nil
 		}
+		return 0, nil
 	case reflect.String:
 		s := v.String()
 		var i int64

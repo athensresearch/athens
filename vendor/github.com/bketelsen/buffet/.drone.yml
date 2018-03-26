@@ -1,0 +1,9 @@
+workspace:
+  base: /go
+  path: src/github.com/bketelsen/buffet
+
+pipeline:
+  build:
+    image: golang:1.10
+    commands:
+      - make

@@ -6,13 +6,13 @@ type Position struct {
 	Column int
 }
 
-// Pos interface provies two functions to get/set the position for expression or statement.
+// Pos interface provides two functions to get/set the position for expression or statement.
 type Pos interface {
 	Position() Position
 	SetPosition(Position)
 }
 
-// PosImpl provies commonly implementations for Pos.
+// PosImpl provides commonly implementations for Pos.
 type PosImpl struct {
 	pos Position
 }

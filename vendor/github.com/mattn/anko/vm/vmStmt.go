@@ -136,9 +136,9 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		done := false
 		if len(stmt.ElseIf) > 0 {
 			for _, stmt := range stmt.ElseIf {
-				stmt_if := stmt.(*ast.IfStmt)
+				ifStmt := stmt.(*ast.IfStmt)
 				// ElseIf
-				rv, err = invokeExpr(stmt_if.If, env)
+				rv, err = invokeExpr(ifStmt.If, env)
 				if err != nil {
 					return rv, newError(stmt, err)
 				}
@@ -147,7 +147,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 				// ElseIf Then
 				done = true
-				rv, err = run(stmt_if.Then, env)
+				rv, err = run(ifStmt.Then, env)
 				if err != nil {
 					return rv, newError(stmt, err)
 				}
@@ -396,29 +396,29 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return rv, newError(stmt, err)
 		}
 		done := false
-		var default_stmt *ast.DefaultStmt
+		var defaultStmt *ast.DefaultStmt
 		for _, ss := range stmt.Cases {
 			if ssd, ok := ss.(*ast.DefaultStmt); ok {
-				default_stmt = ssd
+				defaultStmt = ssd
 				continue
 			}
-			case_stmt := ss.(*ast.CaseStmt)
-			cv, err := invokeExpr(case_stmt.Expr, env)
+			caseStmt := ss.(*ast.CaseStmt)
+			cv, err := invokeExpr(caseStmt.Expr, env)
 			if err != nil {
 				return nilValue, newError(stmt, err)
 			}
 			if !equal(rv, cv) {
 				continue
 			}
-			rv, err = run(case_stmt.Stmts, env)
+			rv, err = run(caseStmt.Stmts, env)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
 			done = true
 			break
 		}
-		if !done && default_stmt != nil {
-			rv, err = run(default_stmt.Stmts, env)
+		if !done && defaultStmt != nil {
+			rv, err = run(defaultStmt.Stmts, env)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}

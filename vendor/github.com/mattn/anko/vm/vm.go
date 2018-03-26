@@ -35,9 +35,13 @@ var (
 	zeroValue                 = reflect.Value{}
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
-	BreakError     = errors.New("Unexpected break statement")
-	ContinueError  = errors.New("Unexpected continue statement")
-	ReturnError    = errors.New("Unexpected return statement")
+	// BreakError when there is an unexpected break statement
+	BreakError = errors.New("Unexpected break statement")
+	// ContinueError when there is an unexpected continue statement
+	ContinueError = errors.New("Unexpected continue statement")
+	// ReturnError when there is an unexpected return statement
+	ReturnError = errors.New("Unexpected return statement")
+	// InterruptError when execution has been interrupted
 	InterruptError = errors.New("Execution interrupted")
 )
 
@@ -77,7 +81,7 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// Interrupts the execution of any running statements in the specified environment.
+// Interrupt interrupts the execution of any running statements in the specified environment.
 // This includes all parent & child environments.
 // Note that the execution is not instantly aborted: after a call to Interrupt,
 // the current running statement will finish, but the next statement will not run,
@@ -296,9 +300,9 @@ func getTypeFromString(env *Env, name string) (reflect.Type, error) {
 	}
 	t, err := env.Type(typeString)
 	if err != nil {
-		return nilType,  err
+		return nilType, err
 	}
-	return t,  nil
+	return t, nil
 }
 
 func getEnvFromString(env *Env, name string) (*Env, string, error) {

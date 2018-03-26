@@ -206,6 +206,20 @@ func GetsockoptInt(fd, level, opt int) (value int, err error) {
 	return int(n), err
 }
 
+func GetsockoptLinger(fd, level, opt int) (*Linger, error) {
+	var linger Linger
+	vallen := _Socklen(SizeofLinger)
+	err := getsockopt(fd, level, opt, unsafe.Pointer(&linger), &vallen)
+	return &linger, err
+}
+
+func GetsockoptTimeval(fd, level, opt int) (*Timeval, error) {
+	var tv Timeval
+	vallen := _Socklen(unsafe.Sizeof(tv))
+	err := getsockopt(fd, level, opt, unsafe.Pointer(&tv), &vallen)
+	return &tv, err
+}
+
 func Recvfrom(fd int, p []byte, flags int) (n int, from Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny

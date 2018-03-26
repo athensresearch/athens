@@ -142,13 +142,13 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 	}
 
 	// TOFIX: how VM pointers/addressing work
-	// Untill then, this is a work around to set pointers back to VM variables
+	// Until then, this is a work around to set pointers back to VM variables
 	// This will probably panic for some functions and/or calls that are variadic
 	if !isRunVmFunction {
 		for i, expr := range callExpr.SubExprs {
 			if addrExpr, ok := expr.(*ast.AddrExpr); ok {
 				if identExpr, ok := addrExpr.Expr.(*ast.IdentExpr); ok {
-					invokeLetExpr(identExpr, args[i].Elem(), env)
+					invokeLetExpr(identExpr, args[i].Elem().Elem(), env)
 				}
 			}
 		}
@@ -286,25 +286,23 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 			}
 			return args, false, nil
 
-		} else {
-
-			// rt.IsVariadic() && callExpr.VarArg
-
-			sliceType := rt.In(numIn - 1).Elem()
-			arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
-			if err != nil {
-				return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
-			}
-			arg, err = convertReflectValueToType(arg, sliceType)
-			if err != nil {
-				return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-					"function wants argument type "+rt.In(indexIn).String()+" but received type "+arg.Type().String())
-			}
-			args = append(args, arg)
-
-			return args, true, nil
-
 		}
+
+		// rt.IsVariadic() && callExpr.VarArg
+
+		sliceType := rt.In(numIn - 1).Elem()
+		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+		if err != nil {
+			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+		}
+		arg, err = convertReflectValueToType(arg, sliceType)
+		if err != nil {
+			return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
+				"function wants argument type "+rt.In(indexIn).String()+" but received type "+arg.Type().String())
+		}
+		args = append(args, arg)
+
+		return args, true, nil
 	}
 
 	//	!rt.IsVariadic() && callExpr.VarArg

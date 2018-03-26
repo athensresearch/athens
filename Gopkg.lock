@@ -20,10 +20,34 @@
   version = "v1.5"
 
 [[projects]]
+  name = "github.com/apache/thrift"
+  packages = ["lib/go/thrift"]
+  revision = "b2a4d4ae21c789b689dd162deb819665567f481c"
+  version = "0.10.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  name = "github.com/bketelsen/buffet"
+  packages = ["."]
+  revision = "f760b4e7393237659356498ae613b8403418d9ca"
+  version = "v0.1.3"
+
+[[projects]]
   branch = "master"
   name = "github.com/cockroachdb/cockroach-go"
   packages = ["crdb"]
   revision = "59c0560478b705bf9bd12f9252224a0fad7c87df"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/codahale/hdrhistogram"
+  packages = ["."]
+  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -91,14 +115,14 @@
 [[projects]]
   name = "github.com/gobuffalo/envy"
   packages = ["."]
-  revision = "1da02dbc651746580b648821369e93d6da80b5e0"
-  version = "v1.6.1"
+  revision = "ef60bfc50c8f92d1ee64674d8ce7a48f1f67625e"
+  version = "v1.6.2"
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
   packages = ["."]
-  revision = "3b045e91f1107684685627303665f7e02b1be016"
-  version = "v1.10.6"
+  revision = "3402a167bccf1bdd5c93ca820be9f27bba46261e"
+  version = "v1.10.7"
 
 [[projects]]
   name = "github.com/gobuffalo/plush"
@@ -229,7 +253,7 @@
     ".",
     "oid"
   ]
-  revision = "b2004221932bd6b13167ef654c81cffac36f7537"
+  revision = "614cb7963ff8ee90114d039a0f92dcd6a79292f9"
 
 [[projects]]
   branch = "master"
@@ -298,8 +322,8 @@
     "parser",
     "vm"
   ]
-  revision = "804acf7e67a6c1389ea487791a6ac149cc81ae44"
-  version = "v0.0.1"
+  revision = "f4b54922efdd844c58a93f8faca1fe0c62ca44c3"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -318,6 +342,12 @@
   packages = ["."]
   revision = "6c771bb9887719704b210e87e934f08be014bdb1"
   version = "v1.6.0"
+
+[[projects]]
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -349,6 +379,16 @@
   version = "v1.10.0"
 
 [[projects]]
+  name = "github.com/opentracing/opentracing-go"
+  packages = [
+    ".",
+    "ext",
+    "log"
+  ]
+  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
@@ -365,6 +405,39 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/prometheus/client_golang"
+  packages = ["prometheus"]
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "38c53a9f4bfcd932d1b00bfc65e256a7fba6b37a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs"
+  ]
+  revision = "780932d4fbbe0e69b84c34c20f5c8d0981e109ea"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -499,6 +572,36 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/uber/jaeger-client-go"
+  packages = [
+    ".",
+    "config",
+    "internal/baggage",
+    "internal/baggage/remote",
+    "internal/spanlog",
+    "internal/throttler",
+    "log",
+    "rpcmetrics",
+    "thrift-gen/agent",
+    "thrift-gen/baggage",
+    "thrift-gen/jaeger",
+    "thrift-gen/sampling",
+    "thrift-gen/zipkincore",
+    "utils"
+  ]
+  revision = "c107110d057826281414cb964f167bce5be17588"
+  version = "v2.12.0"
+
+[[projects]]
+  name = "github.com/uber/jaeger-lib"
+  packages = [
+    "metrics",
+    "metrics/prometheus"
+  ]
+  revision = "4267858c0679cd4e47cefed8d7f70fd386cfb567"
+  version = "v1.4.0"
+
+[[projects]]
   name = "github.com/technosophos/moniker"
   packages = ["."]
   revision = "4d1d2a7d4b69cee56dadb6a7634945f829154858"
@@ -518,7 +621,7 @@
     "blowfish",
     "ssh/terminal"
   ]
-  revision = "80db560fac1fb3e6ac81dbc7f8ae4c061f5257bd"
+  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
 
 [[projects]]
   branch = "master"
@@ -553,7 +656,7 @@
     "unix",
     "windows"
   ]
-  revision = "bb729a57828d76e3050e664d86aa052741ab620f"
+  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -585,12 +688,12 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
+  version = "v2.2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "175a70f01383e4767dfbbed2704602d7205fa8dc5fac2c32a1c188fa65090db0"
+  inputs-digest = "644ded0afa55225394cac59cb8f0b9fb9184f9ba3a32d3e5ef767d55b6060d97"
   solver-name = "gps-cdcl"
   solver-version = 1

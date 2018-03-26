@@ -237,6 +237,13 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
 		return v, nil
+	case *ast.DerefExpr:
+		v, err := invokeExpr(lhs.Expr, env)
+		if err != nil {
+			return nilValue, newError(expr, err)
+		}
+		v.Elem().Set(rv)
+		return v, nil
 	}
 	return nilValue, newStringError(expr, "Invalid operation")
 }

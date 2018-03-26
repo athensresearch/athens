@@ -72,7 +72,7 @@ type ContinueStmt struct {
 	StmtImpl
 }
 
-// ForStmt provide "return" expression statement.
+// ReturnStmt provide "return" expression statement.
 type ReturnStmt struct {
 	StmtImpl
 	Exprs []Expr

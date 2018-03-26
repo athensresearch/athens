@@ -28,7 +28,7 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 	if !rv.IsValid() {
 		return makeValue(rt)
 	}
-	if rt == interfaceType || rv.Type() == rt  {
+	if rt == interfaceType || rv.Type() == rt {
 		return rv, nil
 	}
 	if rv.Type().ConvertibleTo(rt) {
@@ -95,7 +95,7 @@ func convertVmFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 
 		outValues := rv.Interface().([]reflect.Value)
 		if len(outValues) < rt.NumOut() {
-			panic(fmt.Sprintf("function wants %v return vavlues but recived %v values", rt.NumOut(), len(outValues)))
+			panic(fmt.Sprintf("function wants %v return vavlues but received %v values", rt.NumOut(), len(outValues)))
 		}
 
 		rvs = make([]reflect.Value, 0, rt.NumOut())

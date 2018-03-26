@@ -158,7 +158,10 @@ func (b Box) Walk(wf WalkFunc) error {
 			return errors.WithStack(err)
 		}
 		return filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
-			cleanName := strings.TrimPrefix(path, base)
+			cleanName, err := filepath.Rel(base, path)
+			if err != nil {
+				cleanName = strings.TrimPrefix(path, base)
+			}
 			cleanName = filepath.ToSlash(filepath.Clean(cleanName))
 			cleanName = strings.TrimPrefix(cleanName, "/")
 			cleanName = filepath.FromSlash(cleanName)

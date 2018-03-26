@@ -10,6 +10,7 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
+// ImportToX adds all the toX to the env given
 func ImportToX(env *vm.Env) {
 
 	env.Define("toBool", func(v interface{}) bool {
@@ -144,7 +145,7 @@ func toSlice(from []interface{}, ptr interface{}) {
 	// so we need to create a New slice of the proper type and copy the values individually
 	t := reflect.TypeOf(ptr).Elem()
 	slice := reflect.MakeSlice(t, len(from), len(from))
-	// Copying the data, val is an adressable Pointer of the actual target type
+	// Copying the data, val is an addressable Pointer of the actual target type
 	val := reflect.Indirect(reflect.New(t.Elem()))
 	for i := 0; i < len(from); i++ {
 		v := reflect.ValueOf(from[i])

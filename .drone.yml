@@ -1,0 +1,18 @@
+workspace:
+  base: /go
+  path: src/github.com/gomods/athens
+
+pipeline:
+  ping:
+    image: mongo:3.0
+    commands:
+      - sleep 15
+  build:
+    image: golang:1.10
+    commands:
+      - go test ./...
+
+services:
+  mongo:
+    image: mongo:3.0
+    command: [ --smallfiles ]

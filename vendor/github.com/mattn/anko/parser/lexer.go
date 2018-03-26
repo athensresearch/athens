@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	EOF = -1   // End of file.
-	EOL = '\n' // End of line.
+	// EOF is short for End of file.
+	EOF = -1
+	// EOL is short for End of line.
+	EOL = '\n'
 )
 
 // Error provides a convenient interface for handling runtime error.
-// It can be Error inteface with type cast which can call Pos().
+// It can be Error interface with type cast which can call Pos().
 type Error struct {
 	Message  string
 	Pos      ast.Position
@@ -63,7 +65,8 @@ var opName = map[string]int{
 	"chan":     CHAN,
 	"make":     MAKE,
 	"type":     TYPE,
-	"len":     LEN,
+	"len":      LEN,
+	"delete":   DELETE,
 }
 
 // Init resets code to scan.
@@ -420,7 +423,6 @@ func (s *Scanner) scanRawString() (string, error) {
 		s.next()
 		if s.peek() == EOF {
 			return "", errors.New("unexpected EOF")
-			break
 		}
 		if s.peek() == '`' {
 			s.next()
@@ -474,7 +476,7 @@ eos:
 	return string(ret), nil
 }
 
-// Lexer provides inteface to parse codes.
+// Lexer provides interface to parse codes.
 type Lexer struct {
 	s     *Scanner
 	lit   string
@@ -501,7 +503,7 @@ func (l *Lexer) Error(msg string) {
 	l.e = &Error{Message: msg, Pos: l.pos, Fatal: false}
 }
 
-// Parser provides way to parse the code using Scanner.
+// Parse provides way to parse the code using Scanner.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
@@ -510,11 +512,12 @@ func Parse(s *Scanner) ([]ast.Stmt, error) {
 	return l.stmts, l.e
 }
 
+// EnableErrorVerbose enabled verbose errors from the parser
 func EnableErrorVerbose() {
 	yyErrorVerbose = true
 }
 
-// ParserSrc provides way to parse the code from source.
+// ParseSrc provides way to parse the code from source.
 func ParseSrc(src string) ([]ast.Stmt, error) {
 	scanner := &Scanner{
 		src: []rune(src),

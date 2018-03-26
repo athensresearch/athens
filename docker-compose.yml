@@ -13,3 +13,15 @@ services:
       - "MYSQL_USER=vgp"
       - "MYSQL_PASSWORD=vgp"
       - "MYSQL_DATABASE=vgoprox"
+  jaeger:
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9441
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 14268:14268
+      - 9411:9411
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686

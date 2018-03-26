@@ -184,11 +184,24 @@ func GoPaths() []string {
 	return strings.Split(gp, ":")
 }
 
+func importPath(path string) string {
+	for _, gopath := range GoPaths() {
+		srcpath := filepath.Join(gopath, "src")
+		rel, err := filepath.Rel(srcpath, path)
+		if err == nil {
+			return filepath.ToSlash(rel)
+		}
+	}
+
+	// fallback to trim
+	rel := strings.TrimPrefix(path, filepath.Join(GoPath(), "src"))
+	rel = strings.TrimPrefix(rel, string(filepath.Separator))
+	return filepath.ToSlash(rel)
+}
+
 func CurrentPackage() string {
 	pwd, _ := os.Getwd()
-	pwd = strings.TrimPrefix(pwd, filepath.Join(GoPath(), "src"))
-	pwd = strings.TrimPrefix(pwd, string(filepath.Separator))
-	return filepath.ToSlash(pwd)
+	return importPath(pwd)
 }
 
 func Environ() []string {
