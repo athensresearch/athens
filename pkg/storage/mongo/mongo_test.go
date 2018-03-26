@@ -28,7 +28,7 @@ func (m *MongoTests) TestGetSaveListRoundTrip() {
 func (m *MongoTests) TestNewMongoStorage() {
 	r := m.Require()
 	url := "mongodb://127.0.0.1:27017"
-	getterSaver := NewMongoStorage(url)
+	getterSaver := NewStorage(url)
 	getterSaver.Connect()
 
 	r.NotNil(getterSaver.c)

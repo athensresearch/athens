@@ -12,5 +12,5 @@ before_script:
 script:
   - test -z $(gofmt -s -l $GO_FILES)         # Fail if a .go file hasn't been formatted with gofmt
   - go vet ./...                             # Go static analyzer
-  - golint $(go list ./...)                  # TODO: add -set_exit_status at some point
+  - golint -set_exit_status $(go list ./...) # Linter             
   - go test -race ./...                      # Run all the tests with the race detector enabled

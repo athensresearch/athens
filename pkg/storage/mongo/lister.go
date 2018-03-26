@@ -7,7 +7,8 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func (s *MongoModuleStore) List(module string) ([]string, error) {
+// List lists all versions of a module
+func (s *ModuleStore) List(module string) ([]string, error) {
 	c := s.s.DB(s.d).C(s.c)
 	result := make([]storage.Module, 0)
 	err := c.Find(bson.M{"module": module}).All(&result)

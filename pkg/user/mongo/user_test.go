@@ -7,7 +7,7 @@ import (
 	"github.com/gomods/athens/pkg/user"
 )
 
-var m *MongoUserStore
+var m *UserStore
 
 func TestConnect(t *testing.T) {
 	setup(t)
@@ -40,7 +40,7 @@ func TestCreate(t *testing.T) {
 func setup(t *testing.T) {
 	var err error
 	if m == nil {
-		m = NewMongoUserStore("mongodb://127.0.0.1:27017")
+		m = NewUserStore("mongodb://127.0.0.1:27017")
 		err = m.Connect()
 		if err != nil {
 			t.Error(err)

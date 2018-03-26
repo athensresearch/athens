@@ -10,7 +10,8 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func (s *MongoModuleStore) Get(module, vsn string) (*storage.Version, error) {
+// Get a specific version of a module
+func (s *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
 	c := s.s.DB(s.d).C(s.c)
 	result := &storage.Module{}
 	err := c.Find(bson.M{"module": module, "version": vsn}).One(result)

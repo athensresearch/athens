@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func newStorage() (storage.Storage, error) {
+func newStorage() (storage.Backend, error) {
 	storageType := envy.Get("ATHENS_STORAGE_TYPE", "memory")
 	switch storageType {
 	case "memory":
@@ -31,7 +31,7 @@ func newStorage() (storage.Storage, error) {
 		if err != nil {
 			return nil, fmt.Errorf("missing mongo URL (%s)", err)
 		}
-		return mongo.NewMongoStorage(mongoURI), nil
+		return mongo.NewStorage(mongoURI), nil
 	default:
 		return nil, fmt.Errorf("storage type %s is unknown", storageType)
 	}

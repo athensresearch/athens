@@ -7,9 +7,10 @@ import (
 	"github.com/markbates/goth"
 )
 
+// ErrNotFound will be returned if a user could not be found in the user store
 var ErrNotFound = errors.New("user not found")
 
-// UserStore provides an interface for storing Users
+// Store provides an interface for getting, storing and updating Users
 type Store interface {
 	Get(id, provider string) (*User, error)
 	Save(*User) error

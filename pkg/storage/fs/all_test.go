@@ -28,7 +28,7 @@ var (
 
 type FsTests struct {
 	suite.Suite
-	storage storage.Storage
+	storage storage.Backend
 	rootDir string
 	fs      afero.Fs
 }

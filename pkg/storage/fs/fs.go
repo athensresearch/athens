@@ -23,7 +23,7 @@ func (s *storageImpl) versionLocation(module, version string) string {
 
 // NewStorage returns a new ListerSaver implementation that stores
 // everything under rootDir
-func NewStorage(rootDir string, filesystem afero.Fs) storage.Storage {
+func NewStorage(rootDir string, filesystem afero.Fs) storage.Backend {
 	return &storageImpl{rootDir: rootDir, filesystem: filesystem}
 
 }

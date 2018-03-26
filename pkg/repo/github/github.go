@@ -24,7 +24,8 @@ type gitCrawler struct {
 	ref      string
 }
 
-func NewGitCrawler(owner string, repoName string, ref string) (repo.RepoCrawler, error) {
+// NewGitCrawler creates a new Crawler for repositories hosted on github
+func NewGitCrawler(owner string, repoName string, ref string) (repo.Crawler, error) {
 	if owner == "" || repoName == "" {
 		return nil, errors.New("invalid repository identifier")
 	}
@@ -36,6 +37,7 @@ func NewGitCrawler(owner string, repoName string, ref string) (repo.RepoCrawler,
 	}, nil
 }
 
+// Fetches a tarball of a repo and untars it into a temp dir which is used later in the workflow.
 func (g gitCrawler) DownloadRepo() (string, error) {
 	uri := fmt.Sprintf(fetchRepoURI, g.owner, g.repoName, g.ref)
 

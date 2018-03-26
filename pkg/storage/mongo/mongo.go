@@ -4,21 +4,23 @@ import (
 	"github.com/globalsign/mgo"
 )
 
-type MongoModuleStore struct {
+// ModuleStore represents a mongo backed storage backend.
+type ModuleStore struct {
 	s   *mgo.Session
 	d   string // database
 	c   string // collection
 	url string
 }
 
-// NewMongoStorage  returns an unconnected Mongo Module Storage
-// that satisfies the Storage interface.  You must call
+// NewStorage returns an unconnected Mongo backed storage
+// that satisfies the Backend interface.  You must call
 // Connect() on the returned store before using it.
-func NewMongoStorage(url string) *MongoModuleStore {
-	return &MongoModuleStore{url: url}
+func NewStorage(url string) *ModuleStore {
+	return &ModuleStore{url: url}
 }
 
-func (m *MongoModuleStore) Connect() error {
+// Connect conntect the the newly created mongo backend.
+func (m *ModuleStore) Connect() error {
 	s, err := mgo.Dial(m.url)
 	if err != nil {
 		return err

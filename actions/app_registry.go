@@ -8,7 +8,7 @@ import (
 
 func addRegistryRoutes(app *buffalo.App) error {
 	cdnGetter := newCDNGetter()
-	mgoStore := mongo.NewMongoUserStore("127.0.0.1:27017")
+	mgoStore := mongo.NewUserStore("127.0.0.1:27017")
 	if err := mgoStore.Connect(); err != nil {
 		return err
 	}

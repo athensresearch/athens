@@ -10,21 +10,23 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-type MongoUserStore struct {
+// UserStore represents a UserStore implementation backed by mongo.
+type UserStore struct {
 	s   *mgo.Session
 	d   string // database
 	c   string // collection
 	url string
 }
 
-// NewMongoUserStore returns an unconnected MongoUserStore
+// NewUserStore returns an unconnected UserStore
 // that satisfies the UserStore interface.  You must call
 // Connect() on the returned store before using it.
-func NewMongoUserStore(url string) *MongoUserStore {
-	return &MongoUserStore{url: url}
+func NewUserStore(url string) *UserStore {
+	return &UserStore{url: url}
 }
 
-func (m *MongoUserStore) Connect() error {
+// Connect establishes a session to the mongo cluster.
+func (m *UserStore) Connect() error {
 	s, err := mgo.Dial(m.url)
 	if err != nil {
 		panic(err)
@@ -51,7 +53,7 @@ func (m *MongoUserStore) Connect() error {
 }
 
 // Get returns a user from the Mongo Store
-func (m *MongoUserStore) Get(id, provider string) (*user.User, error) {
+func (m *UserStore) Get(id, provider string) (*user.User, error) {
 	c := m.s.DB(m.d).C(m.c)
 	result := &user.User{}
 	err := c.Find(bson.M{"provider": provider, "userid": id}).One(result)
@@ -64,12 +66,12 @@ func (m *MongoUserStore) Get(id, provider string) (*user.User, error) {
 }
 
 // Save adds a user to the Mongo Store
-func (m *MongoUserStore) Save(u *user.User) error {
+func (m *UserStore) Save(u *user.User) error {
 	c := m.s.DB(m.d).C(m.c)
 	return c.Insert(u)
 }
 
 // Update updates a user in the Mongo Store
-func (m *MongoUserStore) Update(*user.User) error {
+func (m *UserStore) Update(*user.User) error {
 	return errors.New("not implemented")
 }
