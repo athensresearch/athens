@@ -27,6 +27,7 @@ Download
 binary into your PATH, and then run the following from the root of this repository:
 
 ```console
+cd cmd/proxy
 buffalo dev
 ```
 

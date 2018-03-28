@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>GopherPacks.io</title>
+		<%= stylesheetTag("application.css") %>
+		<meta name="csrf-param" content="authenticity_token" />
+		<meta name="csrf-token" content="<%= authenticity_token %>" />
+		<link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
+	</head>
+	<body>
+		<div class="container">
+			<!-- NavBar -->
+			<nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
+				<a class="navbar-brand" href="<%= rootPath() %>">
+					<img src="<%= assetPath("images/logo.svg") %>" style="width:50px;">
+				</a>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					<ul class="navbar-nav mr-auto">
+						<li class="nav-item">
+							<a class="nav-link" href="#">Categories</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#">Topics</a>
+						</li>
+					</ul>
+				</div>
+			</nav>
+			<!-- End NavBar -->
+			<%= partial("flash.html") %>
+			<%= yield %>
+		</div>
+		<footer class="footer text-center fixed-bottom">
+			<div>
+				<ul class="list-inline">
+					<li class="text-muted">GopherPacks &copy; 2018</li>
+				</ul>
+			</div>
+		</footer>
+		<%= javascriptTag("application.js") %>
+	</body>
+</html>

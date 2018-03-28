@@ -1,5 +1,5 @@
 build:
-	buffalo build
+	cd cmd/proxy && buffalo build
 
 run: build
 	./athens
