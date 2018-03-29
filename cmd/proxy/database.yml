@@ -13,7 +13,15 @@ test:
   port: 3306
   user: vgp
   password: vgp
-  
+
+test_postgres:
+  dialect: "postgres"
+  database: athens_development
+  user: postgres
+  password: ''
+  host: 127.0.0.1
+  pool: 5
+
 production:
   dialect: "mysql"
   database: olympusdb

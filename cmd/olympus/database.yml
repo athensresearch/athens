@@ -6,6 +6,14 @@ development:
   user: vgp
   password: vgp
 
+test_postgres:
+  dialect: "postgres"
+  database: athens_development
+  user: postgres
+  password: ''
+  host: 127.0.0.1
+  pool: 5
+
 test:
   dialect: "mysql"
   database: olympusdb

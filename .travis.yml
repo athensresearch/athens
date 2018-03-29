@@ -1,16 +1,20 @@
 services:
   - mongodb
+  - postgresql
 language: go
 install: false
 go:
   - "1.10.x"
-services:
-  - mongodb
-before_script:
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
-  - go get github.com/golang/lint/golint                        # Linter
 script:
   - test -z $(gofmt -s -l $GO_FILES)         # Fail if a .go file hasn't been formatted with gofmt
   - go vet ./...                             # Go static analyzer
-  - golint -set_exit_status $(go list ./...) # Linter             
+  - golint -set_exit_status $(go list ./...) # Linter
   - go test -race ./...                      # Run all the tests with the race detector enabled
+before_script:
+  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
+  - go get github.com/golang/lint/golint
+  - export POP_PATH=$PWD/cmd/proxy
+  - export GO_ENV=test_postgres
+  - go get -u -v github.com/gobuffalo/buffalo/buffalo
+  - buffalo db create
+  - buffalo db migrate up

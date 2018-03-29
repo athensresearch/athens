@@ -130,6 +130,11 @@ func getStorage() (storage.Backend, error) {
 		if err != nil {
 			return nil, fmt.Errorf("missing disk storage root (%s)", err)
 		}
+	case "postgres", "sqlite", "cockroach", "mysql":
+		storageRoot, err = envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")
+		if err != nil {
+			return nil, fmt.Errorf("missing rdbms connectionName (%s)", err)
+		}
 	}
 
 	return newStorage(storageType, storageRoot)
