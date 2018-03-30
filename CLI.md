@@ -8,7 +8,7 @@ by authentication or authorization. Everybody has "god mode"!_
 
 Athens provides a basic CLI for the registry that makes it convenient to
 upload a new module, or new version of a module, to the server. Find the code
-for it in the [./cli](./cli) directory, and build it with the following:
+for it in the [./cli](./cmd/cli) directory, and build it with the following:
 
 ```console
 make cli

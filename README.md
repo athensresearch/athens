@@ -49,7 +49,7 @@ After the `Starting application at 127.0.0.1:3000` is logged, the server is up a
 As you edit and save code, Buffalo will automatically restart the server. **This means that
 all of your modules will disappear** because the only storage driver is in-memory right now.
 
-See [CLI](#CLI) for information on how to add modules back into the server.
+See [CLI](./CLI.md) for information on how to add modules back into the server.
 
 ## Dependencies
 
