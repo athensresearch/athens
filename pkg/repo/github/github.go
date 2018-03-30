@@ -21,11 +21,11 @@ const (
 type gitCrawler struct {
 	owner    string
 	repoName string
-	ref      string
+	tag      string
 }
 
 // NewGitCrawler creates a new Crawler for repositories hosted on github
-func NewGitCrawler(owner string, repoName string, ref string) (repo.Crawler, error) {
+func NewGitCrawler(owner string, repoName string, tag string) (repo.Crawler, error) {
 	if owner == "" || repoName == "" {
 		return nil, errors.New("invalid repository identifier")
 	}
@@ -33,13 +33,13 @@ func NewGitCrawler(owner string, repoName string, ref string) (repo.Crawler, err
 	return &gitCrawler{
 		owner:    owner,
 		repoName: repoName,
-		ref:      ref,
+		tag:      tag,
 	}, nil
 }
 
 // Fetches a tarball of a repo and untars it into a temp dir which is used later in the workflow.
 func (g gitCrawler) DownloadRepo() (string, error) {
-	uri := fmt.Sprintf(fetchRepoURI, g.owner, g.repoName, g.ref)
+	uri := fmt.Sprintf(fetchRepoURI, g.owner, g.repoName, g.tag)
 
 	resp, err := http.Get(uri)
 	if err != nil {
@@ -47,34 +47,37 @@ func (g gitCrawler) DownloadRepo() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	tmpSubDir := fmt.Sprintf(tmpFileName, g.owner, g.repoName, g.ref)
-	tmpDir := filepath.Join(os.TempDir(), tmpSubDir)
-	if err := untar(resp.Body, tmpDir); err != nil {
+	tmpDir := os.TempDir()
+	dirName, err := untar(resp.Body, tmpDir)
+	if err != nil {
 		os.Remove(tmpDir)
 		return "", err
 	}
 
-	return tmpDir, nil
+	return dirName, nil
 }
 
-func untar(content io.Reader, tmpDir string) error {
+func untar(content io.Reader, tmpDir string) (string, error) {
 	gzr, err := gzip.NewReader(content)
 	defer gzr.Close()
 	if err != nil {
-		return err
+		return "", err
 	}
 	tr := tar.NewReader(gzr)
+	var dirName string
 
 	for {
 		hdr, err := tr.Next()
-		switch {
-		case err == io.EOF:
-			break
 
-		case err != nil:
-			return err
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
 
-		case hdr == nil:
+			return "", err
+		}
+
+		if hdr == nil {
 			continue
 		}
 
@@ -83,22 +86,28 @@ func untar(content io.Reader, tmpDir string) error {
 		switch hdr.Typeflag {
 
 		case tar.TypeDir:
+			if dirName == "" {
+				dirName = target
+			}
+
 			if _, err := os.Stat(target); err != nil {
 				if err := os.MkdirAll(target, 0755); err != nil {
-					return err
+					return "", err
 				}
 			}
 
 		case tar.TypeReg:
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
 			if err != nil {
-				return err
+				return "", err
 			}
 			defer f.Close()
 
 			if _, err := io.Copy(f, tr); err != nil {
-				return err
+				return "", err
 			}
 		}
 	}
+
+	return dirName, nil
 }
