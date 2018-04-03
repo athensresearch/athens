@@ -23,12 +23,12 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 		ref := c.Param("ref")
 		version := c.Param("version")
 
-		git, err := github.NewGitCrawler(owner, repo, ref)
+		git, err := github.NewGitFetcher(owner, repo, ref)
 		if err != nil {
 			return err
 		}
 
-		path, err := git.DownloadRepo()
+		path, err := git.Fetch()
 		if err != nil {
 			os.Remove(path)
 			return err

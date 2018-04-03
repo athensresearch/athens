@@ -16,5 +16,6 @@ before_script:
   - export POP_PATH=$PWD/cmd/proxy
   - export GO_ENV=test_postgres
   - go get -u -v github.com/gobuffalo/buffalo/buffalo
+  - go get -u -v golang.org/x/vgo
   - buffalo db create
   - buffalo db migrate up
