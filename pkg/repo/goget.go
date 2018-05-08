@@ -48,7 +48,7 @@ func (g *genericFetcher) Fetch() (string, error) {
 	escapedURI := strings.Replace(g.repoURI, "/", "-", -1)
 	repoDirName := fmt.Sprintf(tmpRepoDir, escapedURI, g.version)
 
-	repoRoot, err := setupTmp(repoDirName)
+	gopath, repoRoot, err := setupTmp(repoDirName)
 	if err != nil {
 		return "", err
 	}
@@ -56,7 +56,7 @@ func (g *genericFetcher) Fetch() (string, error) {
 
 	prepareStructure(repoRoot)
 
-	dirName, err := getSources(repoRoot, g.repoURI, g.version)
+	dirName, err := getSources(gopath, repoRoot, g.repoURI, g.version)
 
 	return dirName, err
 }
@@ -82,11 +82,12 @@ func isVgoInstalled() bool {
 	return false
 }
 
-func setupTmp(repoDirName string) (string, error) {
-	tmpDir := os.TempDir()
-	path := filepath.Join(tmpDir, repoDirName)
+func setupTmp(repoDirName string) (string, string, error) {
+	gopathDir := os.TempDir()
 
-	return path, os.MkdirAll(path, os.ModeDir|os.ModePerm)
+	path := filepath.Join(gopathDir, "src", repoDirName)
+
+	return gopathDir, path, os.MkdirAll(path, os.ModeDir|os.ModePerm)
 }
 
 // Hacky thing makes vgo not to complain
@@ -103,7 +104,7 @@ func prepareStructure(repoRoot string) error {
 	return ioutil.WriteFile(sourcePath, sourceContent, 0666)
 }
 
-func getSources(repoRoot, repoURI, version string) (string, error) {
+func getSources(gopath, repoRoot, repoURI, version string) (string, error) {
 	version = strings.TrimPrefix(version, "@")
 	if !strings.HasPrefix(version, "v") {
 		version = "v" + version
@@ -112,7 +113,7 @@ func getSources(repoRoot, repoURI, version string) (string, error) {
 
 	fullURI := fmt.Sprintf("%s@%s", uri, version)
 
-	gopathEnv := fmt.Sprintf("GOPATH=%s", repoRoot)
+	gopathEnv := fmt.Sprintf("GOPATH=%s", gopath)
 	disableCgo := "CGO_ENABLED=0"
 
 	cmd := exec.Command("vgo", "get", fullURI)
@@ -120,7 +121,7 @@ func getSources(repoRoot, repoURI, version string) (string, error) {
 	cmd.Env = append(cmd.Env, gopathEnv, disableCgo)
 	cmd.Dir = repoRoot
 
-	packagePath := filepath.Join(repoRoot, "src", "v", "cache", repoURI, "@v")
+	packagePath := filepath.Join(gopath, "src", "v", "cache", repoURI, "@v")
 
 	o, err := cmd.CombinedOutput()
 	if err != nil {
