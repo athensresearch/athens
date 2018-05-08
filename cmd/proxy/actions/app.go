@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"fmt"
 	"log"
 
 	// "github.com/gomods/athens/models"
@@ -12,7 +11,6 @@ import (
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/packr"
-	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/user"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -112,30 +110,4 @@ func App() *buffalo.App {
 	}
 
 	return app
-}
-
-func getStorage() (storage.Backend, error) {
-	storageType := envy.Get("ATHENS_STORAGE_TYPE", "memory")
-	var storageRoot string
-	var err error
-
-	switch storageType {
-	case "mongo":
-		storageRoot, err = envy.MustGet("ATHENS_MONGO_STORAGE_URL")
-		if err != nil {
-			return nil, fmt.Errorf("missing mongo URL (%s)", err)
-		}
-	case "disk":
-		storageRoot, err = envy.MustGet("ATHENS_DISK_STORAGE_ROOT")
-		if err != nil {
-			return nil, fmt.Errorf("missing disk storage root (%s)", err)
-		}
-	case "postgres", "sqlite", "cockroach", "mysql":
-		storageRoot, err = envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")
-		if err != nil {
-			return nil, fmt.Errorf("missing rdbms connectionName (%s)", err)
-		}
-	}
-
-	return newStorage(storageType, storageRoot)
 }

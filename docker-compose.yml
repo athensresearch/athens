@@ -13,6 +13,14 @@ services:
       - "MYSQL_USER=vgp"
       - "MYSQL_PASSWORD=vgp"
       - "MYSQL_DATABASE=vgoprox"
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
   jaeger:
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9441

@@ -92,6 +92,12 @@
   revision = "baa28fcb8e7d5dfab92026c0920cb6c9ae72faa2"
 
 [[projects]]
+  name = "github.com/go-ini/ini"
+  packages = ["."]
+  revision = "ace140f73450505f33e8b8418216792275ae82a7"
+  version = "v1.35.0"
+
+[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
@@ -356,6 +362,19 @@
   revision = "542fd4642604d0d0c26112396ce5b1a9d01eee0b"
 
 [[projects]]
+  name = "github.com/minio/minio-go"
+  packages = [
+    ".",
+    "pkg/credentials",
+    "pkg/encrypt",
+    "pkg/s3signer",
+    "pkg/s3utils",
+    "pkg/set"
+  ]
+  revision = "3d2d02921f0510e9d1f66ef77a265b8dddd36992"
+  version = "6.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
@@ -572,6 +591,12 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/technosophos/moniker"
+  packages = ["."]
+  revision = "4d1d2a7d4b69cee56dadb6a7634945f829154858"
+  version = "0.1.0"
+
+[[projects]]
   name = "github.com/uber/jaeger-client-go"
   packages = [
     ".",
@@ -602,12 +627,6 @@
   version = "v1.4.0"
 
 [[projects]]
-  name = "github.com/technosophos/moniker"
-  packages = ["."]
-  revision = "4d1d2a7d4b69cee56dadb6a7634945f829154858"
-  version = "0.1.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/unrolled/secure"
   packages = ["."]
@@ -617,7 +636,9 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "argon2",
     "bcrypt",
+    "blake2b",
     "blowfish",
     "ssh/terminal"
   ]
@@ -630,7 +651,9 @@
     "context",
     "context/ctxhttp",
     "html",
-    "html/atom"
+    "html/atom",
+    "idna",
+    "lex/httplex"
   ]
   revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
@@ -661,12 +684,20 @@
 [[projects]]
   name = "golang.org/x/text"
   packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
     "internal/gen",
+    "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "language",
+    "secure/bidirule",
     "transform",
+    "unicode/bidi",
     "unicode/cldr",
-    "unicode/norm"
+    "unicode/norm",
+    "unicode/rangetable"
   ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
@@ -694,6 +725,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "644ded0afa55225394cac59cb8f0b9fb9184f9ba3a32d3e5ef767d55b6060d97"
+  inputs-digest = "173ff6c2c337045d232136a62beb172ea3ae6442d990a422e4140191f0c0dd99"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -88,3 +88,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/minio/minio-go"
+  version = "6.0.0"
