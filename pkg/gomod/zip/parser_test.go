@@ -4,19 +4,17 @@ import (
 	"archive/zip"
 	"errors"
 	"io"
-	"io/ioutil"
-	"os"
 	"testing"
 
+	"github.com/gomods/athens/pkg/gomod"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/gomods/athens/pkg/gomod"
 )
 
 func TestZipParser_ModuleName(t *testing.T) {
 	a := assert.New(t)
-
+	fs := afero.NewOsFs()
 	var testCases = []struct {
 		file        string
 		dstFileName string
@@ -33,7 +31,7 @@ func TestZipParser_ModuleName(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.file, func(t *testing.T) {
-			zipfile := zipTestMod(t, tc.file, tc.dstFileName)
+			zipfile := zipTestMod(t, fs, tc.file, tc.dstFileName)
 
 			reader, err := zip.OpenReader(zipfile)
 			a.NoError(err)
@@ -47,16 +45,16 @@ func TestZipParser_ModuleName(t *testing.T) {
 	}
 }
 
-func zipTestMod(t *testing.T, src string, dstFileName string) (target string) {
+func zipTestMod(t *testing.T, fs afero.Fs, src string, dstFileName string) (target string) {
 	r := require.New(t)
-	zipfile, err := ioutil.TempFile("", "")
+	zipfile, err := afero.TempFile(fs, "", "")
 	r.NoError(err, "an error occurred while creating temporary file")
 	defer zipfile.Close()
 
 	archive := zip.NewWriter(zipfile)
 	defer archive.Close()
 
-	srcfile, err := os.Open(src)
+	srcfile, err := fs.Open(src)
 	r.NoError(err, "an error occurred while opening fixture file")
 	defer srcfile.Close()
 

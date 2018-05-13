@@ -1,9 +1,10 @@
 package github
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/afero"
 )
 
 func Test_Download(t *testing.T) {
@@ -11,7 +12,9 @@ func Test_Download(t *testing.T) {
 	repo := "captainhook"
 	version := "v0.1.8"
 
-	fetcher, err := NewGitFetcher(owner, repo, version)
+	memFs := afero.NewMemMapFs()
+
+	fetcher, err := NewGitFetcher(memFs, owner, repo, version)
 	if err != nil {
 		t.Error(err)
 	}
@@ -25,18 +28,17 @@ func Test_Download(t *testing.T) {
 	}
 
 	t.Log(path)
-
-	if _, err := os.Stat(filepath.Join(path, version+".mod")); err != nil {
+	if _, err := memFs.Stat(filepath.Join(path, version+".mod")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".zip")); err != nil {
+	if _, err := memFs.Stat(filepath.Join(path, version+".zip")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".info")); err != nil {
+	if _, err := memFs.Stat(filepath.Join(path, version+".info")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}

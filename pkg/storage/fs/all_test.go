@@ -5,7 +5,6 @@ import (
 
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/spf13/afero"
-
 	"github.com/stretchr/testify/suite"
 )
 

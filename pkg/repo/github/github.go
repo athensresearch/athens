@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,8 +19,8 @@ import (
 
 	"github.com/gomods/athens/pkg/gomod/file"
 	"github.com/gomods/athens/pkg/module"
-
 	"github.com/gomods/athens/pkg/repo"
+	"github.com/spf13/afero"
 )
 
 const (
@@ -31,6 +30,7 @@ const (
 )
 
 type gitFetcher struct {
+	fs       afero.Fs
 	owner    string
 	repoName string
 	tag      string
@@ -38,16 +38,18 @@ type gitFetcher struct {
 }
 
 // NewGitFetcher creates a new Fetcher for repositories hosted on github
-func NewGitFetcher(owner string, repoName string, tag string) (repo.Fetcher, error) {
+func NewGitFetcher(fs afero.Fs, owner string, repoName string, tag string) (repo.Fetcher, error) {
 	if owner == "" || repoName == "" {
 		return nil, errors.New("invalid repository identifier")
 	}
 
-	return &gitFetcher{
+	gf := &gitFetcher{
 		owner:    owner,
 		repoName: repoName,
 		tag:      tag,
-	}, nil
+		fs:       fs,
+	}
+	return gf, nil
 }
 
 // Fetches a tarball of a repo and untars it into a temp dir which is used later in the workflow.
@@ -56,44 +58,48 @@ func (g gitFetcher) Fetch() (string, error) {
 
 	client := http.Client{Timeout: timeout * time.Second}
 	resp, err := client.Get(uri)
+
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	tmpDir := os.TempDir()
-	g.dirName, err = untar(resp.Body, tmpDir)
+	tmpDir, err := afero.TempDir(g.fs, "", "")
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		return "", err
+	}
+	g.dirName, err = untar(g.fs, resp.Body, tmpDir)
+	if err != nil {
+		g.fs.RemoveAll(tmpDir)
 		return "", err
 	}
 
 	// Get module name from go.mod
 	gomodPath := filepath.Join(g.dirName, "go.mod")
-	parser := file.NewFileParser(gomodPath)
+	parser := file.NewFileParser(g.fs, gomodPath)
 
 	moduleName, err := parser.ModuleName()
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		g.fs.RemoveAll(tmpDir)
 		return g.dirName, err
 	}
 
 	// Generate zip
 	if err := g.generateZip(moduleName); err != nil {
-		os.RemoveAll(tmpDir)
+		g.fs.RemoveAll(tmpDir)
 		return g.dirName, err
 	}
 
 	// Rename go.mod
 	verModPath := filepath.Join(g.dirName, g.tag+".mod")
-	if err := os.Rename(gomodPath, verModPath); err != nil {
-		os.RemoveAll(tmpDir)
+	if err := g.fs.Rename(gomodPath, verModPath); err != nil {
+		g.fs.RemoveAll(tmpDir)
 		return g.dirName, err
 	}
 
 	// Generate info
 	if err := g.generateInfo(); err != nil {
-		os.RemoveAll(tmpDir)
+		g.fs.RemoveAll(tmpDir)
 		return g.dirName, err
 	}
 
@@ -106,17 +112,17 @@ func (g *gitFetcher) Clear() error {
 		return nil
 	}
 
-	return os.RemoveAll(g.dirName)
+	return g.fs.RemoveAll(g.dirName)
 }
 
 func (g *gitFetcher) generateZip(moduleName string) error {
-	zipContent, err := module.MakeZip(g.dirName, moduleName, g.tag)
+	zipContent, err := module.MakeZip(g.fs, g.dirName, moduleName, g.tag)
 	if err != nil {
 		return err
 	}
 
 	zipPath := filepath.Join(g.dirName, g.tag+".zip")
-	return ioutil.WriteFile(zipPath, zipContent, os.ModePerm)
+	return afero.WriteFile(g.fs, zipPath, zipContent, os.ModePerm)
 }
 
 func (g *gitFetcher) generateInfo() error {
@@ -131,10 +137,10 @@ func (g *gitFetcher) generateInfo() error {
 	}
 
 	goinfoPath := filepath.Join(g.dirName, g.tag+".info")
-	return ioutil.WriteFile(goinfoPath, infoContent, os.ModePerm)
+	return afero.WriteFile(g.fs, goinfoPath, infoContent, os.ModePerm)
 }
 
-func untar(content io.Reader, tmpDir string) (string, error) {
+func untar(fs afero.Fs, content io.Reader, tmpDir string) (string, error) {
 	gzr, err := gzip.NewReader(content)
 	defer gzr.Close()
 	if err != nil {
@@ -167,14 +173,14 @@ func untar(content io.Reader, tmpDir string) (string, error) {
 				dirName = target
 			}
 
-			if _, err := os.Stat(target); err != nil {
-				if err := os.MkdirAll(target, 0755); err != nil {
+			if _, err := fs.Stat(target); err != nil {
+				if err := fs.MkdirAll(target, 0755); err != nil {
 					return "", err
 				}
 			}
 
 		case tar.TypeReg:
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
+			f, err := fs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(hdr.Mode))
 			if err != nil {
 				return "", err
 			}

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 const (
@@ -21,6 +22,7 @@ var (
 )
 
 type genericFetcher struct {
+	fs      afero.Fs
 	repoURI string
 	version string
 	dirName string
@@ -28,7 +30,7 @@ type genericFetcher struct {
 
 // NewGenericFetcher creates fetcher which uses go get tool to fetch sources
 // returns path of directory containing vx.y.z.(zip|info|mod)
-func NewGenericFetcher(repoURI, version string) (Fetcher, error) {
+func NewGenericFetcher(fs afero.Fs, repoURI, version string) (Fetcher, error) {
 	if !isVgoInstalled() {
 		return nil, errors.New("vgo not installed")
 	}
@@ -38,6 +40,7 @@ func NewGenericFetcher(repoURI, version string) (Fetcher, error) {
 	}
 
 	return &genericFetcher{
+		fs:      fs,
 		repoURI: repoURI,
 		version: version,
 	}, nil
@@ -48,15 +51,15 @@ func (g *genericFetcher) Fetch() (string, error) {
 	escapedURI := strings.Replace(g.repoURI, "/", "-", -1)
 	repoDirName := fmt.Sprintf(tmpRepoDir, escapedURI, g.version)
 
-	gopath, repoRoot, err := setupTmp(repoDirName)
+	gopath, repoRoot, err := setupTmp(g.fs, repoDirName)
 	if err != nil {
 		return "", err
 	}
 	g.dirName = repoRoot
 
-	prepareStructure(repoRoot)
+	prepareStructure(g.fs, repoRoot)
 
-	dirName, err := getSources(gopath, repoRoot, g.repoURI, g.version)
+	dirName, err := getSources(g.fs, gopath, repoRoot, g.repoURI, g.version)
 
 	return dirName, err
 }
@@ -67,7 +70,7 @@ func (g *genericFetcher) Clear() error {
 		return nil
 	}
 
-	return os.RemoveAll(g.dirName)
+	return g.fs.RemoveAll(g.dirName)
 }
 
 func isVgoInstalled() bool {
@@ -82,29 +85,32 @@ func isVgoInstalled() bool {
 	return false
 }
 
-func setupTmp(repoDirName string) (string, string, error) {
-	gopathDir := os.TempDir()
+func setupTmp(fs afero.Fs, repoDirName string) (string, string, error) {
+	gopathDir, err := afero.TempDir(fs, "", "")
+	if err != nil {
+		return "", "", err
+	}
 
 	path := filepath.Join(gopathDir, "src", repoDirName)
 
-	return gopathDir, path, os.MkdirAll(path, os.ModeDir|os.ModePerm)
+	return gopathDir, path, fs.MkdirAll(path, os.ModeDir|os.ModePerm)
 }
 
 // Hacky thing makes vgo not to complain
-func prepareStructure(repoRoot string) error {
+func prepareStructure(fs afero.Fs, repoRoot string) error {
 	// vgo expects go.mod file present with module statement or .go file with import comment
 	gomodPath := filepath.Join(repoRoot, "go.mod")
 	gomodContent := []byte("module \"mod\"")
-	if err := ioutil.WriteFile(gomodPath, gomodContent, 0666); err != nil {
+	if err := afero.WriteFile(fs, gomodPath, gomodContent, 0666); err != nil {
 		return err
 	}
 
 	sourcePath := filepath.Join(repoRoot, "mod.go")
 	sourceContent := []byte(`package mod // import "mod"`)
-	return ioutil.WriteFile(sourcePath, sourceContent, 0666)
+	return afero.WriteFile(fs, sourcePath, sourceContent, 0666)
 }
 
-func getSources(gopath, repoRoot, repoURI, version string) (string, error) {
+func getSources(fs afero.Fs, gopath, repoRoot, repoURI, version string) (string, error) {
 	version = strings.TrimPrefix(version, "@")
 	if !strings.HasPrefix(version, "v") {
 		version = "v" + version
@@ -129,7 +135,7 @@ func getSources(gopath, repoRoot, repoURI, version string) (string, error) {
 		case isLimitHit(o):
 			// github quota exceeded
 			return packagePath, ErrLimitExceeded
-		case checkFiles(packagePath, version) == nil:
+		case checkFiles(fs, packagePath, version) == nil:
 			// some compilation error
 			return packagePath, nil
 		default:
@@ -140,16 +146,16 @@ func getSources(gopath, repoRoot, repoURI, version string) (string, error) {
 	return packagePath, err
 }
 
-func checkFiles(path, version string) error {
-	if _, err := os.Stat(filepath.Join(path, version+".mod")); err != nil {
+func checkFiles(fs afero.Fs, path, version string) error {
+	if _, err := fs.Stat(filepath.Join(path, version+".mod")); err != nil {
 		return errors.New("go.mod not found")
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".zip")); err != nil {
+	if _, err := fs.Stat(filepath.Join(path, version+".zip")); err != nil {
 		return errors.New("zip package not found")
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".info")); err != nil {
+	if _, err := fs.Stat(filepath.Join(path, version+".info")); err != nil {
 		return errors.New("info file not found")
 	}
 

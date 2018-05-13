@@ -5,9 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/afero"
-
 	"github.com/gomods/athens/pkg/storage"
+	"github.com/spf13/afero"
 )
 
 func (v *storageImpl) Get(module, version string) (*storage.Version, error) {

@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-
 	parser "github.com/gomods/athens/pkg/gomod/file"
 	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/payloads"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 type uploadCmd struct {
@@ -38,6 +37,7 @@ func newUploadCmd() *cobra.Command {
 
 func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		fs := afero.NewOsFs()
 		dir := args[0]
 
 		fullDirectory, err := filepath.Abs(dir)
@@ -46,18 +46,18 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 		}
 		cmd.Printf("found directory %s", fullDirectory)
 		modFilePath := filepath.Join(fullDirectory, "go.mod")
-		modBytes, err := ioutil.ReadFile(modFilePath)
+		modBytes, err := afero.ReadFile(fs, modFilePath)
 		if err != nil {
 			return fmt.Errorf("couldn't find go.mod file (%s)", err)
 		}
 
-		gomodParser := parser.NewFileParser(modFilePath)
+		gomodParser := parser.NewFileParser(fs, modFilePath)
 		c.moduleName, err = gomodParser.ModuleName()
 		if err != nil {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := module.MakeZip(fullDirectory, c.moduleName, c.version)
+		zipBytes, err := module.MakeZip(fs, fullDirectory, c.moduleName, c.version)
 		if err != nil {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}

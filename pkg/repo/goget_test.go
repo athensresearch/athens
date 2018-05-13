@@ -1,16 +1,17 @@
 package repo
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/afero"
 )
 
 func Test_Download(t *testing.T) {
 	version := "v0.1.8"
 	gitURI := "github.com/bketelsen/captainhook"
-
-	fetcher, err := NewGenericFetcher(gitURI, version)
+	fs := afero.NewOsFs()
+	fetcher, err := NewGenericFetcher(fs, gitURI, version)
 	if err != nil {
 		t.Error(err)
 		t.Fail()
@@ -32,17 +33,17 @@ func Test_Download(t *testing.T) {
 		t.Fail()
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".mod")); err != nil {
+	if _, err := fs.Stat(filepath.Join(path, version+".mod")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".zip")); err != nil {
+	if _, err := fs.Stat(filepath.Join(path, version+".zip")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if _, err := os.Stat(filepath.Join(path, version+".info")); err != nil {
+	if _, err := fs.Stat(filepath.Join(path, version+".info")); err != nil {
 		t.Error(err)
 		t.Fail()
 	}

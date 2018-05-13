@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"github.com/gomods/athens/pkg/repo/github"
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
 // /admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}
@@ -22,8 +22,9 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 		repo := c.Param("repo")
 		ref := c.Param("ref")
 		version := c.Param("version")
+		fs := afero.NewOsFs()
 
-		git, err := github.NewGitFetcher(owner, repo, ref)
+		git, err := github.NewGitFetcher(fs, owner, repo, ref)
 		if err != nil {
 			return err
 		}
@@ -35,18 +36,18 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 		}
 
 		modFilePath := filepath.Join(path, "go.mod")
-		modBytes, err := ioutil.ReadFile(modFilePath)
+		modBytes, err := afero.ReadFile(fs, modFilePath)
 		if err != nil {
 			return fmt.Errorf("couldn't find go.mod file (%s)", err)
 		}
 
-		gomodParser := parser.NewFileParser(modFilePath)
+		gomodParser := parser.NewFileParser(fs, modFilePath)
 		moduleName, err := gomodParser.ModuleName()
 		if err != nil {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := module.MakeZip(path, moduleName, version)
+		zipBytes, err := module.MakeZip(fs, path, moduleName, version)
 		if err != nil {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}

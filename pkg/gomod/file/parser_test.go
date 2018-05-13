@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gomods/athens/pkg/gomod"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFileParser_ModuleName(t *testing.T) {
@@ -23,10 +23,10 @@ func TestFileParser_ModuleName(t *testing.T) {
 		{"testdata/go.3.mod", "", parser.ErrNotFound},
 		{"testdata/go.4.mod", "", parser.ErrNotFound},
 	}
-
+	fs := afero.NewOsFs()
 	for _, tc := range testCases {
 		t.Run(tc.file, func(t *testing.T) {
-			fp := NewFileParser(tc.file)
+			fp := NewFileParser(fs, tc.file)
 			actual, actualErr := fp.ModuleName()
 
 			a.Equal(tc.expected, actual)
@@ -36,7 +36,8 @@ func TestFileParser_ModuleName(t *testing.T) {
 }
 
 func TestFileParser_ModuleName_FileNotFound(t *testing.T) {
-	fp := NewFileParser("/not/exist")
+	fs := afero.NewOsFs()
+	fp := NewFileParser(fs, "/not/exist")
 	_, err := fp.ModuleName()
 	assert.True(t, os.IsNotExist(err))
 }

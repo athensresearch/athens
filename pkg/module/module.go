@@ -4,12 +4,12 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	ignore "github.com/sabhiram/go-gitignore"
+	"github.com/spf13/afero"
 )
 
 const (
@@ -23,8 +23,8 @@ type file struct {
 
 // MakeZip takes dir and module info and generates vgo valid zip
 // the dir must end with a "/"
-func MakeZip(dir, module, version string) ([]byte, error) {
-	ignoreParser := getIgnoreParser(dir)
+func MakeZip(fs afero.Fs, dir, module, version string) ([]byte, error) {
+	ignoreParser := getIgnoreParser(fs, dir)
 	buf := new(bytes.Buffer)
 	w := zip.NewWriter(buf)
 
@@ -39,7 +39,7 @@ func MakeZip(dir, module, version string) ([]byte, error) {
 			return nil
 		}
 
-		fileContent, err := ioutil.ReadFile(path)
+		fileContent, err := afero.ReadFile(fs, path)
 		if err != nil {
 			return err
 		}
@@ -53,18 +53,27 @@ func MakeZip(dir, module, version string) ([]byte, error) {
 		return err
 	}
 
-	err := filepath.Walk(dir, walkFunc)
+	err := afero.Walk(fs, dir, walkFunc)
 	w.Close()
 
 	return buf.Bytes(), err
 }
 
-func getIgnoreParser(dir string) ignore.IgnoreParser {
+func getIgnoreParser(fs afero.Fs, dir string) ignore.IgnoreParser {
 	gitFilePath := filepath.Join(dir, gitIgnoreFilename)
-	gitParser, _ := ignore.CompileIgnoreFileAndLines(gitFilePath, gitIgnoreFilename)
+	gitParser, _ := compileIgnoreFileAndLines(fs, gitFilePath, gitIgnoreFilename)
 	dsStoreParser := dsStoreIgnoreParser{}
 
 	return newMultiIgnoreParser(gitParser, dsStoreParser)
+}
+
+func compileIgnoreFileAndLines(fs afero.Fs, fpath string, lines ...string) (*ignore.GitIgnore, error) {
+	buffer, err := afero.ReadFile(fs, fpath)
+	if err != nil {
+		return nil, err
+	}
+	s := strings.Split(string(buffer), "\n")
+	return ignore.CompileIgnoreLines(append(s, lines...)...)
 }
 
 // getFileName composes filename for zip to match standard specified as
