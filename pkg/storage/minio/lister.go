@@ -1,6 +1,7 @@
 package minio
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -25,5 +26,6 @@ func (l *storageImpl) List(module string) ([]string, error) {
 	for ver := range dict {
 		ret = append(ret, ver)
 	}
+	sort.Strings(ret)
 	return ret, nil
 }

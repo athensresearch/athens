@@ -67,9 +67,15 @@ func App() *buffalo.App {
 			log.Fatalf("error creating storage (%s)", err)
 			return nil
 		}
+		eventlogReader, err := newEventlog()
+		if err != nil {
+			log.Fatalf("error creating eventlog (%s)", err)
+			return nil
+		}
 
 		app.GET("/", homeHandler)
 		app.GET("/feed/{syncpoint:.*}", feedHandler(storage))
+		app.GET("/eventlog/{sequence_id}", eventlogHandler(eventlogReader))
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

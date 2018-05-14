@@ -5,5 +5,5 @@ import (
 )
 
 func homeHandler(c buffalo.Context) error {
-	return c.Render(200, olympus.HTML("index.html"))
+	return c.Render(200, renderEng.HTML("index.html"))
 }

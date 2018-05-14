@@ -15,6 +15,6 @@ func feedHandler(s storage.Backend) func(c buffalo.Context) error {
 
 		feed := make(map[string][]string)
 
-		return c.Render(http.StatusOK, olympus.JSON(feed))
+		return c.Render(http.StatusOK, renderEng.JSON(feed))
 	}
 }

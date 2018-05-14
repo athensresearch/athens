@@ -5,11 +5,11 @@ import (
 	"github.com/gobuffalo/packr"
 )
 
-var olympus *render.Engine
+var renderEng *render.Engine
 var assetsBox = packr.NewBox("../public")
 
 func init() {
-	olympus = render.New(render.Options{
+	renderEng = render.New(render.Options{
 		// HTML layout to be used for all HTML requests:
 		HTMLLayout:       "application.html",
 		JavaScriptLayout: "application.js",

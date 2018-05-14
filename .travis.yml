@@ -17,6 +17,7 @@ before_script:
   - export GO_ENV=test_postgres
   - export MINIO_ACCESS_KEY=minio
   - export MINIO_SECRET_KEY=minio123
+  - export ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
   - wget https://dl.minio.io/server/minio/release/linux-amd64/minio && chmod +x minio && nohup ./minio server . &
   - go get -u -v github.com/gobuffalo/buffalo/buffalo
   - go get -u -v golang.org/x/vgo
