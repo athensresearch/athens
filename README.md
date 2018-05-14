@@ -20,7 +20,7 @@ to a description of each:
 # Development
 
 The server is written using [Buffalo](https://gobuffalo.io/), so it's fairly straightforward
-to get started on development. You'll need Buffalo v0.11.0 or later to do devlopment on Athens.
+to get started on development. You'll need Buffalo v0.11.0 or later to do development on Athens.
 
 Download
 [v0.11.0](https://github.com/gobuffalo/buffalo/releases/tag/v0.11.0) or later, untar/unzip the
