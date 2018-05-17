@@ -16,3 +16,12 @@ func newEventlog() (eventlog.Reader, error) {
 	l, err := mongo.NewLog(mongoURI)
 	return l, err
 }
+
+func newCacheMissesLog() (eventlog.Appender, error) {
+	mongoURI, err := envy.MustGet("ATHENS_MONGO_STORAGE_URL")
+	if err != nil {
+		return nil, fmt.Errorf("missing mongo URL (%s)", err)
+	}
+	l, err := mongo.NewLogWithCollection(mongoURI, "cachemisseslog")
+	return l, err
+}

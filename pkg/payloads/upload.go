@@ -5,3 +5,9 @@ type Upload struct {
 	Module []byte `json:"module"`
 	Zip    []byte `json:"zip"`
 }
+
+// Module is used by proxy to send info about cache miss to Olympus
+type Module struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}

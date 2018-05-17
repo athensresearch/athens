@@ -73,10 +73,16 @@ func App() *buffalo.App {
 			return nil
 		}
 
+		cacheMissesLog, err := newCacheMissesLog()
+		if err != nil {
+			log.Fatalf("error creating cachemisses log (%s)", err)
+			return nil
+		}
+
 		app.GET("/", homeHandler)
 		app.GET("/feed/{syncpoint:.*}", feedHandler(storage))
 		app.GET("/eventlog/{sequence_id}", eventlogHandler(eventlogReader))
-
+		app.POST("/cachemiss", cachemissHandler(cacheMissesLog))
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 

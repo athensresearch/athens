@@ -1,7 +1,7 @@
 version: '3'
 services:
   mongo:
-    image: mongo:3.0.15-wheezy
+    image: mongo:3.7.9-jessie
     ports:
       - 27017:27017
   mysql:
@@ -13,6 +13,10 @@ services:
       - "MYSQL_USER=vgp"
       - "MYSQL_PASSWORD=vgp"
       - "MYSQL_DATABASE=vgoprox"
+  postgres:
+    image: postgres:9.6.9-alpine
+    ports:
+      - "5432:5432"
   minio:
     image: minio/minio:latest
     command: server /data
