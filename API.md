@@ -21,7 +21,7 @@ Athens implements a few other APIs that you need to know about to make it useful
 This lets you upload a new module, or a new version of an existing module. The request body should look like this:
 
 ```json
-{ "module": "bytes of the go.mod file", "zip": "bytes for the zipped source" }
+{ "module": "bytes of the go.mod file", "zip": "bytes for the zipped source", "info": "bytes of the version.info file" }
 ```
 
 ## `GET /all`

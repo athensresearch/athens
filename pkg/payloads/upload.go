@@ -4,6 +4,7 @@ package payloads
 type Upload struct {
 	Module []byte `json:"module"`
 	Zip    []byte `json:"zip"`
+	Info   []byte `json:"info"`
 }
 
 // Module is used by proxy to send info about cache miss to Olympus

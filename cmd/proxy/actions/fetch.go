@@ -52,7 +52,13 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}
 
-		saveErr := store.Save(moduleName, version, modBytes, zipBytes)
+		infoFilePath := filepath.Join(path, version+".info")
+		infoBytes, err := afero.ReadFile(fs, infoFilePath)
+		if err != nil {
+			return fmt.Errorf("coudln't find .info file (%s)", err)
+		}
+
+		saveErr := store.Save(moduleName, version, modBytes, zipBytes, infoBytes)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
 			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {

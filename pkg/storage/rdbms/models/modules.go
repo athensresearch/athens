@@ -19,6 +19,7 @@ type Module struct {
 	Version   string    `json:"version" db:"version"`
 	Mod       []byte    `json:"mod" db:"mod"`
 	Zip       []byte    `json:"zip" db:"zip"`
+	Info      []byte    `json:"info" db:"info"`
 }
 
 // String is not required by pop and may be deleted
@@ -44,6 +45,7 @@ func (m *Module) Validate(tx *pop.Connection) (*validate.Errors, error) {
 		&validators.StringIsPresent{Field: m.Version, Name: "Version"},
 		&validators.BytesArePresent{Field: m.Mod, Name: "Mod"},
 		&validators.BytesArePresent{Field: m.Zip, Name: "Zip"},
+		&validators.BytesArePresent{Field: m.Info, Name: "Info"},
 	), nil
 }
 

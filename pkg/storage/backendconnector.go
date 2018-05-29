@@ -25,6 +25,6 @@ func (n noOpConnectedBackend) Get(module, vsn string) (*Version, error) {
 func (n noOpConnectedBackend) List(module string) ([]string, error) {
 	return n.s.List(module)
 }
-func (n noOpConnectedBackend) Save(module, version string, mod, zip []byte) error {
-	return n.s.Save(module, version, mod, zip)
+func (n noOpConnectedBackend) Save(module, version string, mod, zip, info []byte) error {
+	return n.s.Save(module, version, mod, zip, info)
 }

@@ -6,4 +6,5 @@ type Module struct {
 	Version string `bson:"version"`
 	Mod     []byte `bson:"mod"`
 	Zip     []byte `bson:"zip"`
+	Info    []byte `bson:"info"`
 }

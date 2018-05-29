@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"strings"
-	"time"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/gomods/athens/pkg/storage"
@@ -22,13 +21,8 @@ func (s *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
 		return nil, err
 	}
 	return &storage.Version{
-		RevInfo: storage.RevInfo{
-			Version: result.Version,
-			Name:    result.Version,
-			Short:   result.Version,
-			Time:    time.Now(),
-		},
-		Mod: result.Mod,
-		Zip: ioutil.NopCloser(bytes.NewReader(result.Zip)),
+		Mod:  result.Mod,
+		Zip:  ioutil.NopCloser(bytes.NewReader(result.Zip)),
+		Info: result.Info,
 	}, nil
 }

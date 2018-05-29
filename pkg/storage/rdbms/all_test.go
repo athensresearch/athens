@@ -20,8 +20,9 @@ var (
 	// with the Generator interface (https://godoc.org/testing/quick#Generator).
 	// The rough, simplified idea would be to run a single test case multiple
 	// times over different (increasing) values.
-	mod = []byte("123")
-	zip = []byte("456")
+	mod  = []byte("123")
+	zip  = []byte("456")
+	info = []byte("789")
 )
 
 type RDBMSTestSuite struct {

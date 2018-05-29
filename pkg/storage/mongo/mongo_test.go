@@ -6,7 +6,7 @@ import (
 
 func (m *MongoTests) TestGetSaveListRoundTrip() {
 	r := m.Require()
-	m.storage.Save(module, version, mod, zip)
+	m.storage.Save(module, version, mod, zip, info)
 	listedVersions, err := m.storage.List(module)
 	r.NoError(err)
 	r.Equal(1, len(listedVersions))
@@ -15,14 +15,12 @@ func (m *MongoTests) TestGetSaveListRoundTrip() {
 	gotten, err := m.storage.Get(module, version)
 	r.NoError(err)
 	defer gotten.Zip.Close()
-	r.Equal(version, gotten.RevInfo.Version)
-	r.Equal(version, gotten.RevInfo.Name)
-	r.Equal(version, gotten.RevInfo.Short)
 	// TODO: test the time
 	r.Equal(gotten.Mod, mod)
 	zipContent, err := ioutil.ReadAll(gotten.Zip)
 	r.NoError(err)
 	r.Equal(zipContent, zip)
+	r.Equal(gotten.Info, info)
 }
 
 func (m *MongoTests) TestNewMongoStorage() {

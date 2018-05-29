@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (s *storageImpl) Save(module, vsn string, mod, zip []byte) error {
+func (s *storageImpl) Save(module, vsn string, mod, zip, info []byte) error {
 	dir := s.versionLocation(module, vsn)
 	// TODO: 777 is not the best filemode, use something better
 
@@ -22,5 +22,10 @@ func (s *storageImpl) Save(module, vsn string, mod, zip []byte) error {
 	}
 
 	// write the zipfile
-	return afero.WriteFile(s.filesystem, filepath.Join(dir, "source.zip"), zip, os.ModePerm)
+	if err := afero.WriteFile(s.filesystem, filepath.Join(dir, "source.zip"), zip, os.ModePerm); err != nil {
+		return err
+	}
+
+	// write the info file
+	return afero.WriteFile(s.filesystem, filepath.Join(dir, vsn+".info"), info, os.ModePerm)
 }

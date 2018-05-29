@@ -3,7 +3,6 @@ package fs
 import (
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/spf13/afero"
@@ -21,15 +20,15 @@ func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
 		return nil, err
 	}
 
+	info, err := afero.ReadFile(v.filesystem, filepath.Join(versionedPath, version+".info"))
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: store the time in the saver, and parse it here
 	return &storage.Version{
-		RevInfo: storage.RevInfo{
-			Version: version,
-			Name:    version,
-			Short:   version,
-			Time:    time.Now(),
-		},
-		Mod: mod,
-		Zip: src,
+		Mod:  mod,
+		Zip:  src,
+		Info: info,
 	}, nil
 }

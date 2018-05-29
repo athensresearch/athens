@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -20,6 +21,13 @@ func versionInfoHandler(getter storage.Getter) func(c buffalo.Context) error {
 		} else if err != nil {
 			return err
 		}
-		return c.Render(http.StatusOK, proxy.JSON(version.RevInfo))
+
+		var revInfo storage.RevInfo
+		err = json.Unmarshal(version.Info, &revInfo)
+		if err != nil {
+			return err
+		}
+
+		return c.Render(http.StatusOK, proxy.JSON(revInfo))
 	}
 }

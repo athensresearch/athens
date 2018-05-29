@@ -62,6 +62,12 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 			return fmt.Errorf("couldn't make zip (%s)", err)
 		}
 
+		infoFilePath := filepath.Join(fullDirectory, c.version+".info")
+		infoBytes, err := afero.ReadFile(fs, infoFilePath)
+		if err != nil {
+			return fmt.Errorf("coudln't find .info file (%s)", err)
+		}
+
 		u, err := url.Parse(c.baseURL)
 		if err != nil {
 			return fmt.Errorf("not a valid base url (%s)", err)
@@ -71,6 +77,7 @@ func upload(c *uploadCmd) func(*cobra.Command, []string) error {
 		postBody := &payloads.Upload{
 			Module: modBytes,
 			Zip:    zipBytes,
+			Info:   infoBytes,
 		}
 		buf := new(bytes.Buffer)
 		if err := json.NewEncoder(buf).Encode(postBody); err != nil {

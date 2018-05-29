@@ -3,7 +3,6 @@ package rdbms
 import (
 	"bytes"
 	"io/ioutil"
-	"time"
 
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/storage/rdbms/models"
@@ -17,13 +16,8 @@ func (r *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
 		return nil, err
 	}
 	return &storage.Version{
-		RevInfo: storage.RevInfo{
-			Version: result.Version,
-			Name:    result.Version,
-			Short:   result.Version,
-			Time:    time.Now(),
-		},
-		Mod: result.Mod,
-		Zip: ioutil.NopCloser(bytes.NewReader(result.Zip)),
+		Mod:  result.Mod,
+		Zip:  ioutil.NopCloser(bytes.NewReader(result.Zip)),
+		Info: result.Info,
 	}, nil
 }
