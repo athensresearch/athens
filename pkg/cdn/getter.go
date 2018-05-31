@@ -12,5 +12,8 @@ package cdn
 // - https://mycdn.com/gomods.io/my/module/@v/{version}.mod
 // - https://mycdn.com/gomods.io/my/module/@v/{version}.zip
 type Getter interface {
+	// Get gets the base URL for the given module.
+	// Returns ErrNotFound if the module isn't found, and another
+	// non-nil error on any other error encountered
 	Get(module string) (string, error)
 }
