@@ -1,6 +1,6 @@
 package fake
 
-// Getter is a (./pkg/cdn).Getter implementation that always returns URL
+// Getter is a (./pkg/cdn/metadata).Getter implementation that always returns URL
 type Getter struct {
 	URL string
 }

@@ -1,4 +1,4 @@
-package cdn
+package metadata
 
 // Getter gets the details about a given baseURL & module and returns the base
 // URL of the module metadata and content. For example, if

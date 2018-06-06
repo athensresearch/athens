@@ -1,0 +1,5 @@
+create_table("cdn_metadata_entries", func(t) {
+	t.Column("id", "uuid", {"primary": true})
+	t.Column("module", "text", {})
+	t.Column("redirect_url", "text", {})
+})

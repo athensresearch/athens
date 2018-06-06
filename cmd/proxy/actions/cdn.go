@@ -1,10 +1,10 @@
 package actions
 
 import (
-	"github.com/gomods/athens/pkg/cdn"
-	"github.com/gomods/athens/pkg/cdn/fake"
+	cdnmetadata "github.com/gomods/athens/pkg/cdn/metadata"
+	"github.com/gomods/athens/pkg/cdn/metadata/fake"
 )
 
-func newCDNGetter() cdn.Getter {
+func newCDNGetter() cdnmetadata.Getter {
 	return &fake.Getter{URL: "https://mycdn.com"}
 }

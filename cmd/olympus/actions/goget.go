@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gomods/athens/pkg/cdn"
+	cdnmetadata "github.com/gomods/athens/pkg/cdn/metadata"
 	"github.com/gomods/athens/pkg/paths"
 )
 
 // GoGet is middleware that checks for the 'go-get=1' query string. If it exists,
 // uses getter to determine the redirect location
-func GoGet(getter cdn.Getter) buffalo.MiddlewareFunc {
+func GoGet(getter cdnmetadata.Getter) buffalo.MiddlewareFunc {
 	return func(next buffalo.Handler) buffalo.Handler {
 		return func(c buffalo.Context) error {
 			if strings.Contains(c.Request().URL.Query().Get("go-get"), "1") {
@@ -23,7 +23,7 @@ func GoGet(getter cdn.Getter) buffalo.MiddlewareFunc {
 	}
 }
 
-func goGetMeta(c buffalo.Context, getter cdn.Getter) error {
+func goGetMeta(c buffalo.Context, getter cdnmetadata.Getter) error {
 	params, err := paths.GetAllParams(c)
 	if err != nil {
 		return err

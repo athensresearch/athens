@@ -25,7 +25,7 @@ const DefaultMongoURL = "127.0.0.1:27017"
 type Mongo struct {
 	suite.Suite
 	url    string
-	dbName string
+	DBName string
 	DB     *mgo.Database
 }
 
@@ -36,7 +36,7 @@ type Mongo struct {
 func (m *Mongo) SetupTest() {
 	sess, err := mgo.Dial(m.url)
 	m.Require().NoError(err)
-	m.DB = sess.DB(m.dbName)
+	m.DB = sess.DB(m.DBName)
 }
 
 // TearDownTest drops the database that was created in SetupTest
@@ -50,6 +50,6 @@ func (m *Mongo) TearDownTest() {
 func NewMongo(url string) *Mongo {
 	return &Mongo{
 		url:    url,
-		dbName: names.NameSep("-") + "-athens-testing",
+		DBName: names.NameSep("-") + "-athens-testing",
 	}
 }
