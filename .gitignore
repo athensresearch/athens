@@ -20,3 +20,5 @@ bin/*
 .envrc
 athens
 yarn-error.log
+cmd/proxy/proxy
+cmd/olympus/olympus
