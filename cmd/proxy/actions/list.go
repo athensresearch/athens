@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/paths"
 	"github.com/gomods/athens/pkg/storage"
 	errs "github.com/pkg/errors"
 )
 
 func listHandler(lister storage.Lister) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
-		mod, err := getModule(c)
+		mod, err := paths.GetModule(c)
 		if err != nil {
 			return err
 		}

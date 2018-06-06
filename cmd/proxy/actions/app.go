@@ -20,10 +20,6 @@ import (
 // application is being run. Default is "development".
 var ENV = envy.Get("GO_ENV", "development")
 
-// MODE identifies whether athens is running in proxy or registry mode.
-//
-// valid values are "proxy" or "registry"
-var MODE = envy.Get("ATHENS_MODE", "proxy")
 var app *buffalo.App
 
 // T is the translator to use
@@ -81,25 +77,13 @@ func App() *buffalo.App {
 
 		app.GET("/", homeHandler)
 
-		if MODE == "proxy" {
-			log.Printf("starting athens in proxy mode")
-			store, err := getStorage()
-			if err != nil {
-				log.Fatalf("error getting storage configuration (%s)", err)
-				return nil
-			}
-			if err := addProxyRoutes(app, store); err != nil {
-				log.Fatalf("error adding proxy routes (%s)", err)
-				return nil
-			}
-		} else if MODE == "registry" {
-			log.Printf("starting athens in registry mode")
-			if err := addRegistryRoutes(app); err != nil {
-				log.Fatalf("error adding registry routes (%s)", err)
-				return nil
-			}
-		} else {
-			log.Fatalf("unsupported mode %s, exiting", MODE)
+		store, err := getStorage()
+		if err != nil {
+			log.Fatalf("error getting storage configuration (%s)", err)
+			return nil
+		}
+		if err := addProxyRoutes(app, store); err != nil {
+			log.Fatalf("error adding proxy routes (%s)", err)
 			return nil
 		}
 

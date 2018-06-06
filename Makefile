@@ -11,4 +11,5 @@ docs:
 	cd docs && hugo
 
 test:
-	go test ./...
+	cd cmd/proxy && buffalo test
+	cd cmd/olympus && buffalo test
