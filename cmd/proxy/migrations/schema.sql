@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.7.21, for osx10.13 (x86_64)
 --
--- Host: 127.0.0.1    Database: vgoprox
+-- Host: 127.0.0.1    Database: athens
 -- ------------------------------------------------------
 -- Server version	5.7.21
 
@@ -37,4 +37,4 @@ CREATE TABLE `schema_migration` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-03-21 16:06:17
+-- Dump completed on 2018-06-06 12:32:35

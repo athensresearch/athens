@@ -18,29 +18,23 @@ Athens is composed roughly of three logical pieces. The below list contains link
 The server is written using [Buffalo](https://gobuffalo.io/), so it's fairly straightforward
 to get started on development. You'll need Buffalo v0.11.0 or later to do development on Athens.
 
-Download [v0.11.0](https://github.com/gobuffalo/buffalo/releases/tag/v0.11.0) or later, untar/unzip the binary into your PATH, and then run the following from the root of this repository:
+Download [v0.11.0](https://github.com/gobuffalo/buffalo/releases/tag/v0.11.0) or later, untar/unzip the binary into your PATH, and then run the
+following to run [Olympus](https://github.com/gomods/athens/wiki/The-Central-Package-Registry-(Olympus)):
+
+```console
+cd cmd/olympus
+buffalo dev
+```
+
+... and the following to run [Athens](https://github.com/gomods/athens/wiki/Proxies-(Athens):
 
 ```console
 cd cmd/proxy
 buffalo dev
 ```
 
-You'll see some output in your console that looks like this:
-
-```console
-$ buffalo dev
-buffalo: 2018/02/25 16:09:36 === Rebuild on: :start: ===
-buffalo: 2018/02/25 16:09:36 === Running: go build -v -i -o tmp/vgoprox-build  (PID: 94067) ===
-buffalo: 2018/02/25 16:09:37 === Building Completed (PID: 94067) (Time: 1.115613079s) ===
-buffalo: 2018/02/25 16:09:37 === Running: tmp/vgoprox-build (PID: 94078) ===
-time="2018-02-25T16:09:37-08:00" level=info msg="Starting application at 127.0.0.1:3000" INFO[2018-02-25T16:09:37-08:00] Starting Simple Background Worker Webpack is watching the files…
-```
-
-After the `Starting application at 127.0.0.1:3000` is logged, the server is up and running.
-As you edit and save code, Buffalo will automatically restart the server. **This means that
-all of your modules will disappear** because the only storage driver is in-memory right now.
-
-See [CLI](./CLI.md) for information on how to add modules back into the server.
+After you see something like `Starting application at 127.0.0.1:3000`, the server
+is up and running. As you edit and save code, Buffalo will automatically restart the server.
 
 ## Dependencies and Set-up
 
@@ -50,16 +44,18 @@ development environments.
 To create, run the following from the repository root:
 
 ```console
-docker-compose up -d
+docker-compose -p athens up -d
 ```
 
 To destroy:
 
 ```console
-docker-compose down
+docker-compose -p athens down
 ```
 
-A few environment variables are expected by the application and tests.
+A few environment variables are expected by the application and tests. They are 
+stored in `cmd/olympus/.env` and `cmd/proxy/.env`. Below is a table of the
+default values:
 
 |Variable |Value  |
 |---|---:|

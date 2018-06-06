@@ -12,7 +12,7 @@ services:
       - "ALLOW_EMPTY_PASSWORD=yes"
       - "MYSQL_USER=vgp"
       - "MYSQL_PASSWORD=vgp"
-      - "MYSQL_DATABASE=vgoprox"
+      - "MYSQL_DATABASE=athens"
   postgres:
     image: postgres:9.6.9-alpine
     ports:
