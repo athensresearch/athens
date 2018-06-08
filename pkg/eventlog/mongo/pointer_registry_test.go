@@ -34,16 +34,16 @@ func (m *MongoRegistryTests) TestSetReadRoundTrip() {
 	r.NoError(err)
 	gotten, err := m.registry.LookupPointer("deployment1")
 	r.NoError(err)
-	r.Equal(gotten, "location1")
+	r.Equal("location1", gotten)
 
 	err = m.registry.SetPointer("deployment1", "location2")
 	r.NoError(err)
 	gotten, err = m.registry.LookupPointer("deployment1")
 	r.NoError(err)
-	r.Equal(gotten, "location2")
+	r.Equal("location2", gotten)
 
 	gotten, err = m.registry.LookupPointer("doesnt-exist")
-	r.Equal(err, eventlog.ErrDeploymentNotFound)
+	r.Equal(eventlog.ErrDeploymentNotFound, err)
 }
 
 func (m *MongoRegistryTests) TestNewRegistry() {
@@ -57,5 +57,5 @@ func (m *MongoRegistryTests) TestNewRegistry() {
 	r.NotNil(registry.c)
 	r.NotNil(registry.d)
 	r.NotNil(registry.s)
-	r.Equal(registry.url, url)
+	r.Equal(url, registry.url)
 }

@@ -50,8 +50,7 @@ func (r *Registry) LookupPointer(deploymentID string) (string, error) {
 	var result eventlog.RegisteredEventlog
 
 	c := r.s.DB(r.d).C(r.c)
-	err := c.FindId(deploymentID).One(&result)
-	if err == mgo.ErrNotFound {
+	if err := c.FindId(deploymentID).One(&result); err == mgo.ErrNotFound {
 		return result.Pointer, eventlog.ErrDeploymentNotFound
 	}
 
