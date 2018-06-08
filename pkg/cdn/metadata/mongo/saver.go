@@ -13,12 +13,13 @@ func (s *MetadataStore) Save(module, redirectURL string) error {
 	if err != nil {
 		return err
 	}
+	t := time.Now().UTC()
 	m := &metadata.CDNMetadataEntry{
 		ID:          id,
 		Module:      module,
 		RedirectURL: redirectURL,
-		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
+		CreatedAt:   t,
+		UpdatedAt:   t,
 	}
 
 	c := s.session.DB(s.db).C(s.col)
