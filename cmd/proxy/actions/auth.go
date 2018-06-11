@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gobuffalo/buffalo"
@@ -12,10 +13,14 @@ import (
 )
 
 func init() {
-	gothic.Store = App().SessionStore
+	app, err := App()
+	if err != nil {
+		log.Fatal(err)
+	}
+	gothic.Store = app.SessionStore
 
 	goth.UseProviders(
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), fmt.Sprintf("%s%s", App().Host, "/auth/github/callback")),
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), fmt.Sprintf("%s%s", app.Host, "/auth/github/callback")),
 	)
 }
 

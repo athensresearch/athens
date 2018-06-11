@@ -14,8 +14,10 @@ import (
 	"github.com/spf13/afero"
 )
 
-func getStorage() (storage.Backend, error) {
-	storageType := envy.Get("ATHENS_STORAGE_TYPE", "memory")
+// GetStorage returns storage backend based on env configuration
+func GetStorage() (storage.BackendConnector, error) {
+	// changing to mongo storage, memory seems buggy
+	storageType := envy.Get("ATHENS_STORAGE_TYPE", "mongo")
 	var storageRoot string
 	var err error
 
@@ -33,7 +35,8 @@ func getStorage() (storage.Backend, error) {
 		if err != nil {
 			return nil, fmt.Errorf("missing disk storage root (%s)", err)
 		}
-		return fs.NewStorage(storageRoot, afero.NewOsFs()), nil
+		s := fs.NewStorage(storageRoot, afero.NewOsFs())
+		return storage.NoOpBackendConnector(s), nil
 	case "postgres", "sqlite", "cockroach", "mysql":
 		storageRoot, err = envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")
 		if err != nil {
@@ -58,7 +61,8 @@ func getStorage() (storage.Backend, error) {
 		if useSSLVar := envy.Get("ATHENS_MINIO_USE_SSL", "yes"); strings.ToLower(useSSLVar) == "no" {
 			useSSL = false
 		}
-		return minio.NewStorage(endpoint, accessKeyID, secretAccessKey, bucketName, useSSL)
+		s, err := minio.NewStorage(endpoint, accessKeyID, secretAccessKey, bucketName, useSSL)
+		return storage.NoOpBackendConnector(s), err
 	default:
 		return nil, fmt.Errorf("storage type %s is unknown", storageType)
 	}

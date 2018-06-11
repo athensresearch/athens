@@ -80,6 +80,15 @@
   version = "v1.4.7"
 
 [[projects]]
+  name = "github.com/garyburd/redigo"
+  packages = [
+    "internal",
+    "redis"
+  ]
+  revision = "a69d19351219b6dd56f274f96d85a7014a2ec34e"
+  version = "v1.6.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/globalsign/mgo"
   packages = [
@@ -123,6 +132,12 @@
   packages = ["."]
   revision = "ef60bfc50c8f92d1ee64674d8ce7a48f1f67625e"
   version = "v1.6.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gobuffalo/gocraft-work-adapter"
+  packages = ["."]
+  revision = "60818d397c5972382763a95286427f87acaeb3fb"
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
@@ -194,6 +209,12 @@
   name = "github.com/gobuffalo/x"
   packages = ["httpx"]
   revision = "11ca13c05abd73167c56ed10f8874c7c7497f759"
+
+[[projects]]
+  name = "github.com/gocraft/work"
+  packages = ["."]
+  revision = "67c8dc210ce647e8d8a4206c7f5856ea2390f290"
+  version = "v0.5.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -459,16 +480,22 @@
   revision = "780932d4fbbe0e69b84c34c20f5c8d0981e109ea"
 
 [[projects]]
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  revision = "b41be1df696709bb6395fe435af20370037c0b4c"
+  version = "v1.1"
+
+[[projects]]
   name = "github.com/rs/cors"
   packages = ["."]
   revision = "feef513b9575b32f84bafa580aad89b011259019"
   version = "v1.3.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
-  version = "v1.5.1"
+  revision = "11635eb403ff09dbc3a6b5a007ab5ab09151c229"
 
 [[projects]]
   branch = "master"
@@ -725,6 +752,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "173ff6c2c337045d232136a62beb172ea3ae6442d990a422e4140191f0c0dd99"
+  inputs-digest = "e4be137612513ca9dd71ca340d983af32772b19fff154337ac474c0f6f899e8a"
   solver-name = "gps-cdcl"
   solver-version = 1

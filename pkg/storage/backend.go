@@ -4,5 +4,6 @@ package storage
 type Backend interface {
 	Lister
 	Getter
+	Checker
 	Saver
 }

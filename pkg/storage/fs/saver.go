@@ -12,7 +12,7 @@ func (s *storageImpl) Save(module, vsn string, mod, zip, info []byte) error {
 	// TODO: 777 is not the best filemode, use something better
 
 	// make the versioned directory to hold the go.mod and the zipfile
-	if err := s.filesystem.MkdirAll(dir, os.ModePerm); err != nil {
+	if err := s.filesystem.MkdirAll(dir, os.ModeDir|os.ModePerm); err != nil {
 		return err
 	}
 

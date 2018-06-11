@@ -25,7 +25,7 @@ func (m *MongoTests) SetupTest() {
 
 	store.Connect()
 
-	store.s.DB(store.d).C(store.c).RemoveAll(nil)
+	store.s.DB(store.db).C(store.col).RemoveAll(nil)
 	m.log = store
 }
 

@@ -92,3 +92,11 @@
 [[constraint]]
   name = "github.com/minio/minio-go"
   version = "6.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gobuffalo/gocraft-work-adapter"
+
+[[constraint]]
+  name = "github.com/garyburd/redigo"
+  version = "1.6.0"
