@@ -34,7 +34,7 @@ type FsTests struct {
 }
 
 func (d *FsTests) SetupTest() {
-	memFs := afero.NewMemMapFs()
+	memFs := afero.NewOsFs()
 	r, err := afero.TempDir(memFs, "", "athens-fs-tests")
 	d.Require().NoError(err)
 	d.storage = NewStorage(r, memFs)

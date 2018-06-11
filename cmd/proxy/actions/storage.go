@@ -7,6 +7,7 @@ import (
 	"github.com/gobuffalo/envy"
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/storage/fs"
+	"github.com/gomods/athens/pkg/storage/mem"
 	"github.com/gomods/athens/pkg/storage/minio"
 	"github.com/gomods/athens/pkg/storage/mongo"
 	"github.com/gomods/athens/pkg/storage/rdbms"
@@ -20,12 +21,7 @@ func getStorage() (storage.Backend, error) {
 
 	switch storageType {
 	case "memory":
-		memFs := afero.NewMemMapFs()
-		tmpDir, err := afero.TempDir(memFs, "inmem", "")
-		if err != nil {
-			return nil, fmt.Errorf("could not create temp dir for 'In Memory' storage (%s)", err)
-		}
-		return fs.NewStorage(tmpDir, memFs), nil
+		return mem.NewStorage()
 	case "mongo":
 		storageRoot, err = envy.MustGet("ATHENS_MONGO_STORAGE_URL")
 		if err != nil {
