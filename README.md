@@ -1,3 +1,5 @@
+_Note: this document is out of date. Updates coming soon_
+
 # Athens
 
 *This is a very early alpha release, and the API will be changing as the proxy API changes.*
