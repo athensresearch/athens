@@ -1,3 +1,5 @@
+_Note: this document is out of date_
+
 # The Athens Registry
 
 Athens runs a registry service that stores module source code and metadata for
