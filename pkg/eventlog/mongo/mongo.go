@@ -1,6 +1,8 @@
 package mongo
 
 import (
+	"fmt"
+
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/gomods/athens/pkg/eventlog"
@@ -59,6 +61,30 @@ func (m *Log) ReadFrom(id string) ([]eventlog.Event, error) {
 	err := c.Find(bson.M{"_id": bson.M{"$gt": id}}).All(&events)
 
 	return events, err
+}
+
+// ReadSingle gets the module metadata about the given module/version.
+// If something went wrong doing the get operation, returns a non-nil error.
+func (m *Log) ReadSingle(module, version string) (eventlog.Event, error) {
+	var events []eventlog.Event
+
+	c := m.s.DB(m.db).C(m.col)
+	err := c.Find(bson.M{
+		"$and": []interface{}{
+			bson.M{"module": bson.M{"$eq": module}},
+			bson.M{"version": bson.M{"$eq": version}},
+		}}).All(&events)
+
+	if err != nil {
+		return eventlog.Event{}, err
+	}
+
+	eventsCount := len(events)
+	if eventsCount == 0 {
+		return eventlog.Event{}, fmt.Errorf("Module %s %s not found", module, version)
+	}
+
+	return events[eventsCount-1], nil
 }
 
 // Append appends Event to event log and returns its ID.

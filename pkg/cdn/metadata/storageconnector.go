@@ -22,6 +22,7 @@ func (n noOpConnectedStorage) Connect() error {
 func (n noOpConnectedStorage) Get(module string) (string, error) {
 	return n.s.Get(module)
 }
+
 func (n noOpConnectedStorage) Save(module, redirectURL string) error {
 	return n.s.Save(module, redirectURL)
 }

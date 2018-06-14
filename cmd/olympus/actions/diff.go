@@ -9,9 +9,9 @@ import (
 )
 
 type dbDiff struct {
-	Added      []string `json:"added"`
-	Deleted    []string `json:"deleted"`
-	Deprecated []string `json:"deprecated"`
+	Added      []eventlog.Event `json:"added"`
+	Deleted    []eventlog.Event `json:"deleted"`
+	Deprecated []eventlog.Event `json:"deprecated"`
 }
 
 func diffHandler(stg storage.Backend, eLog eventlog.Reader) func(buffalo.Context) error {
@@ -33,16 +33,12 @@ func diffHandler(stg storage.Backend, eLog eventlog.Reader) func(buffalo.Context
 func buildDiff(events []eventlog.Event) (*dbDiff, error) {
 	ret := &dbDiff{}
 	for _, evt := range events {
-		evtJSON, err := evt.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
 		if evt.Op == eventlog.OpAdd {
-			ret.Added = append(ret.Added, string(evtJSON))
+			ret.Added = append(ret.Added, evt)
 		} else if evt.Op == eventlog.OpDel {
-			ret.Deleted = append(ret.Deleted, string(evtJSON))
+			ret.Deleted = append(ret.Deleted, evt)
 		} else if evt.Op == eventlog.OpDep {
-			ret.Deprecated = append(ret.Deprecated, string(evtJSON))
+			ret.Deprecated = append(ret.Deprecated, evt)
 		}
 	}
 	return ret, nil

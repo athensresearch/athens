@@ -33,7 +33,7 @@ func cachemissHandler(l eventlog.Appender) func(c buffalo.Context) error {
 		if err := c.Bind(cm); err != nil {
 			return err
 		}
-		e := eventlog.Event{Module: cm.Name, Version: cm.Version, Time: time.Now()}
+		e := eventlog.Event{Module: cm.Name, Version: cm.Version, Time: time.Now(), Op: eventlog.OpAdd}
 		id, err := l.Append(e)
 		if err != nil {
 			return err

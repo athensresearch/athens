@@ -1,6 +1,10 @@
 package eventlog
 
-import "github.com/gomods/athens/pkg/storage"
+import (
+	"errors"
+
+	"github.com/gomods/athens/pkg/storage"
+)
 
 type multiReader struct {
 	logs    []SequencedLog
@@ -93,6 +97,19 @@ func (mr *multiReader) ReadFrom(index string) ([]Event, error) {
 	}
 
 	return events, nil
+}
+
+// ReadSingle gets the module metadata about the given module/version.
+// If something went wrong doing the get operation, returns a non-nil error.
+func (mr *multiReader) ReadSingle(module, version string) (Event, error) {
+	for _, l := range mr.logs {
+		e, err := l.Log.ReadSingle(module, version)
+		if err == nil {
+			return e, nil
+		}
+	}
+
+	return Event{}, errors.New("Event not found")
 }
 
 func exists(event Event, log []Event, checker storage.Checker) bool {

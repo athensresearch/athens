@@ -1,6 +1,8 @@
 package disposable
 
 import (
+	"errors"
+
 	"github.com/gomods/athens/pkg/eventlog"
 )
 
@@ -42,6 +44,12 @@ func (c *Log) ReadFrom(id string) ([]eventlog.Event, error) {
 	}
 
 	return ee, nil
+}
+
+// ReadSingle gets the module metadata about the given module/version.
+// If something went wrong doing the get operation, returns a non-nil error.
+func (c *Log) ReadSingle(module, version string) (eventlog.Event, error) {
+	return eventlog.Event{}, errors.New("TODO: implement")
 }
 
 // Append appends Event to event log and returns its ID.

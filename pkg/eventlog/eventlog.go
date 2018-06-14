@@ -15,6 +15,10 @@ type Reader interface {
 	// ReadFrom reads all events from the log starting at event with specified id (excluded).
 	// If id is not found behaves like Read().
 	ReadFrom(id string) ([]Event, error)
+
+	// ReadSingle gets the module metadata about the given module/version.
+	// If something went wrong doing the get operation, returns a non-nil error.
+	ReadSingle(module, version string) (Event, error)
 }
 
 // Appender is writer to append only event log.

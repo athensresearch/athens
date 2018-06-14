@@ -32,3 +32,6 @@ func (n noOpConnectedBackend) List(module string) ([]string, error) {
 func (n noOpConnectedBackend) Save(module, version string, mod, zip, info []byte) error {
 	return n.backend.Save(module, version, mod, zip, info)
 }
+func (n noOpConnectedBackend) Delete(module, version string) error {
+	return n.backend.Delete(module, version)
+}

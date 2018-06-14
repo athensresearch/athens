@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/globalsign/mgo/bson"
@@ -129,6 +130,19 @@ func (m *InMemoryReader) ReadFrom(id string) ([]Event, error) {
 	}
 
 	return m.mem[index+1:], nil
+}
+
+// ReadSingle gets the module metadata about the given module/version.
+// If something went wrong doing the get operation, returns a non-nil error.
+func (m *InMemoryReader) ReadSingle(module, version string) (Event, error) {
+	for i := len(m.mem); i > 0; i-- {
+		e := m.mem[i]
+		if e.Module == module && e.Version == version {
+			return e, nil
+		}
+	}
+
+	return Event{}, fmt.Errorf("Module %s %s not found", module, version)
 }
 
 // Append appends Event to event log and returns its ID.

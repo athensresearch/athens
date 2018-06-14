@@ -2,6 +2,7 @@ package olympus
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -52,6 +53,12 @@ func (o *Log) ReadFrom(id string) ([]eventlog.Event, error) {
 	err = json.Unmarshal(el, &events)
 
 	return events, err
+}
+
+// ReadSingle gets the module metadata about the given module/version.
+// If something went wrong doing the get operation, returns a non-nil error.
+func (o *Log) ReadSingle(module, version string) (eventlog.Event, error) {
+	return eventlog.Event{}, errors.New("TODO: implement")
 }
 
 // Append appends Event to event log and returns its ID.
