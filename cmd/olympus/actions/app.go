@@ -13,6 +13,7 @@ import (
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/packr"
+	"github.com/gomods/athens/pkg/cdn/metadata/azurecdn"
 )
 
 // ENV is used to help switch settings based on where the
@@ -49,6 +50,13 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		csrfMiddleware := csrf.New
 		app.Use(csrfMiddleware)
+
+		// TODO: parameterize the GoGet getter here.
+		//
+		// Defaulting to Azure for now
+		app.Use(GoGet(azurecdn.Metadata{
+			// TODO: initialize the azurecdn.Storage struct here
+		}))
 
 		// Wraps each request in a transaction.
 		//  c.Value("tx").(*pop.PopTransaction)
