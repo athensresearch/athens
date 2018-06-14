@@ -1,4 +1,7 @@
-_Note: this document is out of date. Updates coming soon_
+_Note: this document is out of date. Updates coming soon, but until then, see the following two design docs:_
+- [Design of Olympus, the central package repository](https://github.com/gomods/athens/wiki/The-Central-Package-Registry-(Olympus))
+- [Design of Athens, the edge proxy](https://github.com/gomods/athens/wiki/Proxies-(Athens))
+
 
 # Athens
 
