@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gomods/athens/pkg/paths"
 	"github.com/gomods/athens/pkg/storage"
@@ -12,6 +13,8 @@ import (
 
 func versionZipHandler(getter storage.Getter) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
+		sp := buffet.SpanFromContext(c)
+		sp.SetOperationName("versionZipHandler")
 		params, err := paths.GetAllParams(c)
 		if err != nil {
 			return err

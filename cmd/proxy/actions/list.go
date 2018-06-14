@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gomods/athens/pkg/paths"
 	"github.com/gomods/athens/pkg/storage"
@@ -12,6 +13,8 @@ import (
 
 func listHandler(lister storage.Lister) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
+		sp := buffet.SpanFromContext(c)
+		sp.SetOperationName("listHandler")
 		mod, err := paths.GetModule(c)
 		if err != nil {
 			return err

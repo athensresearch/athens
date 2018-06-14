@@ -13,7 +13,6 @@ import (
 func cacheMissHandler(next buffalo.Handler, w worker.Worker) buffalo.Handler {
 	return func(c buffalo.Context) error {
 		nextErr := next(c)
-
 		if isModuleNotFoundErr(nextErr) {
 			params, err := paths.GetAllParams(c)
 			if err != nil {
@@ -28,7 +27,6 @@ func cacheMissHandler(next buffalo.Handler, w worker.Worker) buffalo.Handler {
 			}
 
 		}
-
 		return nextErr
 	}
 }
@@ -48,7 +46,9 @@ func isModuleNotFoundErr(err error) bool {
 	if _, ok := err.(storage.ErrVersionNotFound); ok {
 		return ok
 	}
-
-	s := err.Error()
-	return strings.HasPrefix(s, "module ") && strings.HasSuffix(s, "not found")
+	if err != nil {
+		s := err.Error()
+		return strings.HasPrefix(s, "module ") && strings.HasSuffix(s, "not found")
+	}
+	return false
 }

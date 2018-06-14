@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	parser "github.com/gomods/athens/pkg/gomod/file"
 	"github.com/gomods/athens/pkg/module"
@@ -18,6 +19,8 @@ import (
 // /admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}
 func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
+		sp := buffet.SpanFromContext(c)
+		sp.SetOperationName("fetchHandler")
 		owner := c.Param("owner")
 		repo := c.Param("repo")
 		ref := c.Param("ref")
