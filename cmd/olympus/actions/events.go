@@ -2,9 +2,9 @@ package actions
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gobuffalo/buffalo"
+	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gomods/athens/pkg/eventlog"
 	"github.com/gomods/athens/pkg/payloads"
 )
@@ -27,18 +27,20 @@ func eventlogHandler(r eventlog.Reader) func(c buffalo.Context) error {
 	}
 }
 
-func cachemissHandler(l eventlog.Appender) func(c buffalo.Context) error {
+func cachemissHandler(l eventlog.Appender, w worker.Worker) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
 		cm := &payloads.Module{}
 		if err := c.Bind(cm); err != nil {
 			return err
 		}
-		e := eventlog.Event{Module: cm.Name, Version: cm.Version, Time: time.Now(), Op: eventlog.OpAdd}
-		id, err := l.Append(e)
-		if err != nil {
-			return err
-		}
-		e.ID = id
-		return c.Render(http.StatusOK, renderEng.JSON(e))
+
+		return w.Perform(worker.Job{
+			Queue:   workerQueue,
+			Handler: DownloadWorkerName,
+			Args: worker.Args{
+				workerModuleKey:  cm.Name,
+				workerVersionKey: cm.Version,
+			},
+		})
 	}
 }

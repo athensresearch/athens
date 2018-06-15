@@ -22,5 +22,4 @@ func (as *ActionSuite) Test_Cache_Miss_Route() {
 	mod.Version = "1.0.0"
 	res := as.JSON("/cachemiss").Post(mod)
 	as.Equal(200, res.Code)
-	as.Contains(res.Body.String(), "\"module\":\"moduleName\",\"version\":\"1.0.0\"")
 }

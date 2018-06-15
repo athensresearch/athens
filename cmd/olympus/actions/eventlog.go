@@ -8,7 +8,8 @@ import (
 	"github.com/gomods/athens/pkg/eventlog/mongo"
 )
 
-func newEventlog() (eventlog.Reader, error) {
+// GetEventLog returns implementation of eventlog.EventLog
+func GetEventLog() (eventlog.Eventlog, error) {
 	mongoURI, err := envy.MustGet("ATHENS_MONGO_STORAGE_URL")
 	if err != nil {
 		return nil, fmt.Errorf("missing mongo URL (%s)", err)

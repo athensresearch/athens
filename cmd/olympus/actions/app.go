@@ -3,38 +3,52 @@ package actions
 import (
 	"log"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
-	"github.com/gobuffalo/buffalo/middleware/ssl"
-	"github.com/gobuffalo/envy"
-	"github.com/rs/cors"
-	"github.com/unrolled/secure"
-
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
+	"github.com/gobuffalo/buffalo/middleware/ssl"
+	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/packr"
 	"github.com/gomods/athens/pkg/cdn/metadata/azurecdn"
+	"github.com/rs/cors"
+	"github.com/unrolled/secure"
 )
 
-// ENV is used to help switch settings based on where the
-// application is being run. Default is "development".
-var ENV = envy.Get("GO_ENV", "development")
-var app *buffalo.App
+const (
+	// DownloadWorkerName is name of the worker downloading packages from VCS
+	DownloadWorkerName = "download-worker"
+)
 
-// T is buffalo Translator
-var T *i18n.Translator
+var (
+	workerQueue      = "default"
+	workerModuleKey  = "module"
+	workerVersionKey = "version"
+	// ENV is used to help switch settings based on where the
+	// application is being run. Default is "development".
+	ENV = envy.Get("GO_ENV", "development")
+	app *buffalo.App
+	// T is buffalo Translator
+	T *i18n.Translator
+)
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
 // application.
 func App() *buffalo.App {
 	if app == nil {
+		redisPort := envy.Get("OLYMPUS_REDIS_QUEUE_PORT", ":6379")
+
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,
 			PreWares: []buffalo.PreWare{
 				cors.Default().Handler,
 			},
 			SessionName: "_olympus_session",
+			Worker:      getWorker(redisPort),
 		})
 		// Automatically redirect to SSL
 		app.Use(ssl.ForceSSL(secure.Options{
@@ -70,12 +84,12 @@ func App() *buffalo.App {
 		}
 		app.Use(T.Middleware())
 
-		storage, err := newStorage()
+		storage, err := GetStorage()
 		if err != nil {
 			log.Fatalf("error creating storage (%s)", err)
 			return nil
 		}
-		eventlogReader, err := newEventlog()
+		eventlogReader, err := GetEventLog()
 		if err != nil {
 			log.Fatalf("error creating eventlog (%s)", err)
 			return nil
@@ -91,9 +105,24 @@ func App() *buffalo.App {
 		app.GET("/diff/{lastID}", diffHandler(storage, eventlogReader))
 		app.GET("/feed/{lastID}", feedHandler(storage))
 		app.GET("/eventlog/{sequence_id}", eventlogHandler(eventlogReader))
-		app.POST("/cachemiss", cachemissHandler(cacheMissesLog))
+		app.POST("/cachemiss", cachemissHandler(cacheMissesLog, app.Worker))
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 
 	return app
+}
+
+func getWorker(port string) worker.Worker {
+	return gwa.New(gwa.Options{
+		Pool: &redis.Pool{
+			MaxActive: 5,
+			MaxIdle:   5,
+			Wait:      true,
+			Dial: func() (redis.Conn, error) {
+				return redis.Dial("tcp", port)
+			},
+		},
+		Name:           DownloadWorkerName,
+		MaxConcurrency: 25,
+	})
 }

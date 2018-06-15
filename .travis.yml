@@ -1,6 +1,7 @@
 services:
   - mongodb
   - postgresql
+  - redis-server
 language: go
 install: false
 go:
