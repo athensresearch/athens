@@ -13,3 +13,6 @@ docs:
 test:
 	cd cmd/proxy && buffalo test
 	cd cmd/olympus && buffalo test
+
+olympus-docker:
+	docker build -t gopackages/olympus -f cmd/olympus/Dockerfile .
