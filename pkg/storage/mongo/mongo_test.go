@@ -1,12 +1,13 @@
 package mongo
 
 import (
+	"context"
 	"io/ioutil"
 )
 
 func (m *MongoTests) TestGetSaveListRoundTrip() {
 	r := m.Require()
-	m.storage.Save(module, version, mod, zip, info)
+	m.storage.Save(context.Background(), module, version, mod, zip, info)
 	listedVersions, err := m.storage.List(module)
 	r.NoError(err)
 	r.Equal(1, len(listedVersions))

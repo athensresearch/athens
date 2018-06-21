@@ -3,7 +3,9 @@ package azurecdn
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net/url"
 
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
@@ -37,9 +39,7 @@ func (s Storage) BaseURL() *url.URL {
 }
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
-func (s *Storage) Save(module, version string, mod, zip, info []byte) error {
-	ctx := context.Background()
-
+func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, info []byte) error {
 	pipe := azblob.NewPipeline(s.cred, azblob.PipelineOptions{})
 	serviceURL := azblob.NewServiceURL(*s.accountURL, pipe)
 	// rules on container names:
@@ -59,18 +59,37 @@ func (s *Storage) Save(module, version string, mod, zip, info []byte) error {
 	}
 	emptyMeta := map[string]string{}
 	emptyBlobAccessCond := azblob.BlobAccessConditions{}
-	// TODO: do these in parallel
-	if _, err := infoBlobURL.Upload(ctx, bytes.NewReader(info), httpHeaders("application/json"), emptyMeta, emptyBlobAccessCond); err != nil {
-		// TODO: log
-		return err
+
+	const numUpload = 3
+	uploadErrs := make(chan error, numUpload)
+
+	upload := func(url azblob.BlockBlobURL, content io.ReadSeeker, contentType string) {
+		_, err := url.Upload(ctx, content, httpHeaders(contentType), emptyMeta, emptyBlobAccessCond)
+		uploadErrs <- err
 	}
-	if _, err := modBlobURL.Upload(ctx, bytes.NewReader(info), httpHeaders("text/plain"), emptyMeta, emptyBlobAccessCond); err != nil {
-		// TODO: log
-		return err
+
+	go upload(infoBlobURL, bytes.NewReader(info), "application/json")
+	go upload(modBlobURL, bytes.NewReader(mod), "text/plain")
+	go upload(zipBlobURL, bytes.NewReader(zip), "application/octet-stream")
+
+	encountered := make([]error, 0, numUpload)
+	for i := 0; i < numUpload; i++ {
+		select {
+		case err := <-uploadErrs:
+			if err != nil {
+				encountered = append(encountered, err)
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
-	if _, err := zipBlobURL.Upload(ctx, bytes.NewReader(zip), httpHeaders("application/octet-stream"), emptyMeta, emptyBlobAccessCond); err != nil {
-		// TODO: log
-		return err
+
+	if len(encountered) > 0 {
+		message := bytes.NewBufferString("encountered multiple errors during save:\n")
+		for _, err := range encountered {
+			fmt.Fprintln(message, err.Error())
+		}
+		return errors.New(message.String())
 	}
 
 	// TODO: take out lease on the /list file and add the version to it

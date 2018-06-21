@@ -2,11 +2,12 @@ package minio
 
 import (
 	"bytes"
+	"context"
 
 	minio "github.com/minio/minio-go"
 )
 
-func (s *storageImpl) Save(module, vsn string, mod, zip, info []byte) error {
+func (s *storageImpl) Save(_ context.Context, module, vsn string, mod, zip, info []byte) error {
 	dir := s.versionLocation(module, vsn)
 	modFileName := dir + "/" + "go.mod"
 	zipFileName := dir + "/" + "source.zip"

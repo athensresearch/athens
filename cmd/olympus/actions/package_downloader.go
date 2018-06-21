@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
@@ -51,7 +52,7 @@ func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Wo
 		}
 
 		// save it
-		if err := s.Save(module, version, modBytes, zipBytes, infoBytes); err != nil {
+		if err := s.Save(context.Background(), module, version, modBytes, zipBytes, infoBytes); err != nil {
 			return err
 		}
 

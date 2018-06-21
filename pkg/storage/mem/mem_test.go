@@ -1,6 +1,7 @@
 package mem
 
 import (
+	"context"
 	"io/ioutil"
 	"testing"
 
@@ -40,7 +41,7 @@ func (d *MemTests) TestGetSaveListRoundTrip() {
 	d.Require().NoError(err)
 
 	// save and list modules
-	r.NoError(storage.Save(module, version, mod, zip, info))
+	r.NoError(storage.Save(context.Background(), module, version, mod, zip, info))
 	listedVersions, err := storage.List(module)
 	r.NoError(err)
 	r.Equal(1, len(listedVersions))

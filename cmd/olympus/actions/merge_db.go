@@ -1,14 +1,14 @@
 package actions
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"time"
 
-	"github.com/gomods/athens/pkg/storage"
-
 	"github.com/gomods/athens/pkg/cdn"
 	"github.com/gomods/athens/pkg/eventlog"
+	"github.com/gomods/athens/pkg/storage"
 )
 
 // mergeDB merges diff into the module database.
@@ -22,7 +22,7 @@ import (
 //		- Delete operation adds tombstone to module metadata k/v store
 //
 // Both could be fixed by putting each 'for' loop into a (global) critical section
-func mergeDB(originURL string, diff dbDiff, eLog eventlog.Eventlog, storage storage.Backend) error {
+func mergeDB(ctx context.Context, originURL string, diff dbDiff, eLog eventlog.Eventlog, storage storage.Backend) error {
 	for _, added := range diff.Added {
 		if _, err := eLog.ReadSingle(added.Module, added.Version); err != nil {
 			// the module/version already exists, is deprecated, or is
@@ -46,7 +46,7 @@ func mergeDB(originURL string, diff dbDiff, eLog eventlog.Eventlog, storage stor
 			continue
 		}
 
-		if err := storage.Save(added.Module, added.Version, data.Mod, zipBytes, data.Info); err != nil {
+		if err := storage.Save(ctx, added.Module, added.Version, data.Mod, zipBytes, data.Info); err != nil {
 			log.Printf("error saving new module %s/%s to CDN (%s)", added.Module, added.Version, err)
 			continue
 		}

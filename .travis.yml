@@ -15,7 +15,7 @@ env:
     - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
     - CODE_COV=1
 script:
-  - test -z $(gofmt -s -l $GO_FILES)                              # Fail if a .go file hasn't been formatted with gofmt
+  - test -z $(gofmt -s -l $GO_FILES | tee /dev/stderr)            # Fail if a .go file hasn't been formatted with gofmt
   - golint -set_exit_status $(go list ./...)                      # Linter
   - go test -race -coverprofile cover.out -covermode atomic ./... # Run all the tests with the race detector and code coverage enabled
 before_script:

@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +19,7 @@ const (
 	OlympusGlobalEndpointOverrideKey = "OLYMPUS_GLOBAL_ENDPOINT"
 )
 
-// GetProcessCacheMissJob porcesses queue of cache misses and downloads sources from active Olympus
+// GetProcessCacheMissJob processes queue of cache misses and downloads sources from active Olympus
 func GetProcessCacheMissJob(s storage.Backend, w worker.Worker) worker.Handler {
 	return func(args worker.Args) (err error) {
 		module, version, err := parseArgs(args)
@@ -43,7 +44,7 @@ func GetProcessCacheMissJob(s storage.Backend, w worker.Worker) worker.Handler {
 			return err
 		}
 
-		if err = s.Save(module, version, v.Mod, zip, v.Info); err != nil {
+		if err = s.Save(context.Background(), module, version, v.Mod, zip, v.Info); err != nil {
 			process(module, version, args, w)
 		}
 

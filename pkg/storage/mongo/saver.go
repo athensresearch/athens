@@ -1,9 +1,13 @@
 package mongo
 
-import "github.com/gomods/athens/pkg/storage"
+import (
+	"context"
+
+	"github.com/gomods/athens/pkg/storage"
+)
 
 // Save stores a module in mongo storage.
-func (s *ModuleStore) Save(module, version string, mod, zip, info []byte) error {
+func (s *ModuleStore) Save(_ context.Context, module, version string, mod, zip, info []byte) error {
 	m := &storage.Module{
 		Module:  module,
 		Version: version,

@@ -1,13 +1,14 @@
 package fs
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/afero"
 )
 
-func (s *storageImpl) Save(module, vsn string, mod, zip, info []byte) error {
+func (s *storageImpl) Save(_ context.Context, module, vsn string, mod, zip, info []byte) error {
 	dir := s.versionLocation(module, vsn)
 	// TODO: 777 is not the best filemode, use something better
 

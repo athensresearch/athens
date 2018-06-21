@@ -61,7 +61,7 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 			return fmt.Errorf("coudln't find .info file (%s)", err)
 		}
 
-		saveErr := store.Save(moduleName, version, modBytes, zipBytes, infoBytes)
+		saveErr := store.Save(c, moduleName, version, modBytes, zipBytes, infoBytes)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
 			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {

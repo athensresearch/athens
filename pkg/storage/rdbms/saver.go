@@ -1,11 +1,13 @@
 package rdbms
 
 import (
+	"context"
+
 	"github.com/gomods/athens/pkg/storage/rdbms/models"
 )
 
 // Save stores a module in rdbms storage.
-func (r *ModuleStore) Save(module, version string, mod, zip, info []byte) error {
+func (r *ModuleStore) Save(_ context.Context, module, version string, mod, zip, info []byte) error {
 	m := &models.Module{
 		Module:  module,
 		Version: version,

@@ -24,7 +24,7 @@ func uploadHandler(store storage.Saver) func(c buffalo.Context) error {
 		if c.Bind(payload); err != nil {
 			return errors.WithStack(err)
 		}
-		saveErr := store.Save(mod, version, payload.Module, payload.Zip, payload.Info)
+		saveErr := store.Save(c, mod, version, payload.Module, payload.Zip, payload.Info)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
 			return c.Error(http.StatusConflict, saveErr)
 		} else if err != nil {
