@@ -100,3 +100,23 @@
 [[constraint]]
   name = "github.com/garyburd/redigo"
   version = "1.6.0"
+
+[[constraint]]
+  name = "cloud.google.com/go"
+  version = "0.23.0"
+
+[[constraint]]
+  branch = "master"
+  name = "google.golang.org/api"
+
+[[override]]
+  name = "github.com/golang/protobuf"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "google.golang.org/appengine"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "google.golang.org/appengine/aetest"
+  version = "1.0.0"
