@@ -17,7 +17,7 @@ import (
 // GetPackageDownloaderJob porcesses queue of cache misses and downloads sources from VCS
 func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Worker) worker.Handler {
 	return func(args worker.Args) error {
-		module, version, err := parseArgs(args)
+		module, version, err := parsePackageDownloaderJobArgs(args)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Wo
 	}
 }
 
-func parseArgs(args worker.Args) (string, string, error) {
+func parsePackageDownloaderJobArgs(args worker.Args) (string, string, error) {
 	module, ok := args[workerModuleKey].(string)
 	if !ok {
 		return "", "", errors.New("module name not specified")

@@ -21,7 +21,8 @@ script:
 before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)   # All the .go files, excluding vendor/
   - go get github.com/golang/lint/golint
-  - wget https://dl.minio.io/server/minio/release/linux-amd64/minio && chmod +x minio && nohup ./minio server . &
+  - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
+  - chmod +x minio && nohup ./minio server . &
   - go get -u -v github.com/gobuffalo/buffalo/buffalo
   - go get -u -v golang.org/x/vgo
   - buffalo db create

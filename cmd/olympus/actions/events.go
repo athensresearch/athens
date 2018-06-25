@@ -36,7 +36,7 @@ func cachemissHandler(l eventlog.Appender, w worker.Worker) func(c buffalo.Conte
 
 		return w.Perform(worker.Job{
 			Queue:   workerQueue,
-			Handler: DownloadWorkerName,
+			Handler: DownloadHandlerName,
 			Args: worker.Args{
 				workerModuleKey:  cm.Name,
 				workerVersionKey: cm.Version,

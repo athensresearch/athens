@@ -19,14 +19,19 @@ import (
 )
 
 const (
-	// DownloadWorkerName is name of the worker downloading packages from VCS
-	DownloadWorkerName = "download-worker"
+	// OlympusWorkerName is the name of the Olympus worker
+	OlympusWorkerName = "olympus-worker"
+	// DownloadHandlerName is name of the handler downloading packages from VCS
+	DownloadHandlerName = "download-handler"
+	// PushNotificationHandlerName is the name of the handler processing push notifications
+	PushNotificationHandlerName = "push-notification-worker"
 )
 
 var (
-	workerQueue      = "default"
-	workerModuleKey  = "module"
-	workerVersionKey = "version"
+	workerQueue               = "default"
+	workerModuleKey           = "module"
+	workerVersionKey          = "version"
+	workerPushNotificationKey = "push-notification"
 	// ENV is used to help switch settings based on where the
 	// application is being run. Default is "development".
 	ENV = envy.Get("GO_ENV", "development")
@@ -106,6 +111,7 @@ func App() *buffalo.App {
 		app.GET("/feed/{lastID}", feedHandler(storage))
 		app.GET("/eventlog/{sequence_id}", eventlogHandler(eventlogReader))
 		app.POST("/cachemiss", cachemissHandler(cacheMissesLog, app.Worker))
+		app.POST("/push", pushNotificationHandler(app.Worker))
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 
@@ -122,7 +128,7 @@ func getWorker(port string) worker.Worker {
 				return redis.Dial("tcp", port)
 			},
 		},
-		Name:           DownloadWorkerName,
+		Name:           OlympusWorkerName,
 		MaxConcurrency: 25,
 	})
 }
