@@ -23,7 +23,10 @@ func GetStorage() (storage.BackendConnector, error) {
 		if err != nil {
 			return nil, fmt.Errorf("missing disk storage root (%s)", err)
 		}
-		s := fs.NewStorage(rootLocation, afero.NewOsFs())
+		s, err := fs.NewStorage(rootLocation, afero.NewOsFs())
+		if err != nil {
+			return nil, fmt.Errorf("could not create new storage from os fs (%s)", err)
+		}
 		return storage.NoOpBackendConnector(s), nil
 	case "mongo":
 		mongoURI, err := envy.MustGet("ATHENS_MONGO_STORAGE_URL")

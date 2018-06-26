@@ -29,7 +29,10 @@ func NewStorage() (storage.BackendConnector, error) {
 		return nil, fmt.Errorf("could not create temp dir for 'In Memory' storage (%s)", err)
 	}
 
-	s := fs.NewStorage(tmpDir, memFs)
+	s, err := fs.NewStorage(tmpDir, memFs)
+	if err != nil {
+		return nil, fmt.Errorf("could not create storage from memory fs (%s)", err)
+	}
 	memStorage = storage.NoOpBackendConnector(s)
 	return memStorage, nil
 }

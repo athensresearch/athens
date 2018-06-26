@@ -35,7 +35,10 @@ func GetStorage() (storage.BackendConnector, error) {
 		if err != nil {
 			return nil, fmt.Errorf("missing disk storage root (%s)", err)
 		}
-		s := fs.NewStorage(storageRoot, afero.NewOsFs())
+		s, err := fs.NewStorage(storageRoot, afero.NewOsFs())
+		if err != nil {
+			return nil, fmt.Errorf("could not create new storage from os fs (%s)", err)
+		}
 		return storage.NoOpBackendConnector(s), nil
 	case "postgres", "sqlite", "cockroach", "mysql":
 		storageRoot, err = envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")

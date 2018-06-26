@@ -37,7 +37,8 @@ func (d *FsTests) SetupTest() {
 	memFs := afero.NewOsFs()
 	r, err := afero.TempDir(memFs, "", "athens-fs-tests")
 	d.Require().NoError(err)
-	d.storage = NewStorage(r, memFs)
+	d.storage, err = NewStorage(r, memFs)
+	d.Require().NoError(err)
 	d.rootDir = r
 	d.fs = memFs
 }
