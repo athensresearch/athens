@@ -127,7 +127,7 @@ func getSources(fs afero.Fs, gopath, repoRoot, repoURI, version string) (string,
 	cmd.Env = append(cmd.Env, gopathEnv, disableCgo)
 	cmd.Dir = repoRoot
 
-	packagePath := filepath.Join(gopath, "src", "mod", "cache", repoURI, "@v")
+	packagePath := filepath.Join(gopath, "src", "mod", "cache", "download", repoURI, "@v")
 
 	o, err := cmd.CombinedOutput()
 	if err != nil {
