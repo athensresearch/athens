@@ -31,9 +31,9 @@ type GcpTests struct {
 func (g *GcpTests) SetupSuite() {
 	// this is the test project praxis-cab-207400.appspot.com
 	// administered by robbie <robjloranger@protonmail.com>
-	// the variable ATHENS_GCP_TEST_KEY should point to the test key json file
+	// the variable ATHENS_STORAGE_GCP_SA should point to the test key json file
 	// and must be set for this test which otherwise will be skipped
-	creds, err := envy.MustGet("ATHENS_GCP_TEST_KEY")
+	creds, err := envy.MustGet("ATHENS_STORAGE_GCP_SA")
 	if err != nil {
 		g.T().Skip()
 	}
@@ -48,7 +48,7 @@ func (g *GcpTests) SetupSuite() {
 	// time stamped test module names will prevent concurrent test interference
 	g.module = "gcp-test" + time.Now().String()
 	g.version = "v1.2.3"
-	envy.Set("ATHENS_GCP_BUCKET_NAME", "staging.praxis-cab-207400.appspot.com")
+	envy.Set("ATHENS_STORAGE_GCP_BUCKET", "staging.praxis-cab-207400.appspot.com")
 }
 
 func (g *GcpTests) TearDownSuite() {

@@ -19,7 +19,7 @@ type Storage struct {
 
 // New returns a new Storage instance authenticated using the provided
 // ClientOptions. The bucket name to be used will be loaded from the
-// environment variable ATHENS_GCP_BUCKET_NAME.
+// environment variable ATHENS_STORAGE_GCP_BUCKET.
 //
 // The ClientOptions should provide permissions sufficient to read, write and
 // delete objects in google cloud storage for your project.
@@ -28,9 +28,9 @@ func New(ctx context.Context, cred option.ClientOption) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create new client: %s", err)
 	}
-	bucketname, err := envy.MustGet("ATHENS_GCP_BUCKET_NAME")
+	bucketname, err := envy.MustGet("ATHENS_STORAGE_GCP_BUCKET")
 	if err != nil {
-		return nil, fmt.Errorf("could not load 'ATHENS_GCP_BUCKET_NAME': %s", err)
+		return nil, fmt.Errorf("could not load 'ATHENS_STORAGE_GCP_BUCKET': %s", err)
 	}
 	bkt := client.Bucket(bucketname)
 	return &Storage{bucket: bkt}, nil
