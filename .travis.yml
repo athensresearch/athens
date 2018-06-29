@@ -16,7 +16,7 @@ env:
     - CODE_COV=1
 script:
   - test -z $(gofmt -s -l $GO_FILES | tee /dev/stderr)            # Fail if a .go file hasn't been formatted with gofmt
-  - golint -set_exit_status $(go list ./...)                      # Linter
+  - golint -set_exit_status $(go list ./... | grep -v '/mocks')   # Linter
   - go test -race -coverprofile cover.out -covermode atomic ./... # Run all the tests with the race detector and code coverage enabled
 before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)   # All the .go files, excluding vendor/
