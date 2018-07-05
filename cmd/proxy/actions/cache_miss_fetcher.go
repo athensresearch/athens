@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/envy"
+	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/storage"
 	olympusStore "github.com/gomods/athens/pkg/storage/olympus"
 )
@@ -96,5 +96,5 @@ func process(module, version string, args worker.Args, w worker.Worker) error {
 
 // GetOlympusEndpoint returns global endpoint with override in mind
 func GetOlympusEndpoint() string {
-	return envy.Get(OlympusGlobalEndpointOverrideKey, OlympusGlobalEndpoint)
+	return env.OlympusGlobalEndpointWithDefault(OlympusGlobalEndpoint)
 }

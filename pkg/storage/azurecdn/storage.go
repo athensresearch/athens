@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
+	"github.com/gomods/athens/pkg/config"
 )
 
 // Storage implements (github.com/gomods/athens/pkg/storage).Saver and
@@ -48,9 +49,9 @@ func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, in
 	// This container must exist
 	containerURL := serviceURL.NewContainerURL("gomodules")
 
-	infoBlobURL := containerURL.NewBlockBlobURL(fmt.Sprintf("%s/@v/%s.info", module, version))
-	modBlobURL := containerURL.NewBlockBlobURL(fmt.Sprintf("%s/@v/%s.mod", module, version))
-	zipBlobURL := containerURL.NewBlockBlobURL(fmt.Sprintf("%s/@v/%s.zip", module, version))
+	infoBlobURL := containerURL.NewBlockBlobURL(config.PackageVersionedName(module, version, "info"))
+	modBlobURL := containerURL.NewBlockBlobURL(config.PackageVersionedName(module, version, "mod"))
+	zipBlobURL := containerURL.NewBlockBlobURL(config.PackageVersionedName(module, version, "zip"))
 
 	httpHeaders := func(contentType string) azblob.BlobHTTPHeaders {
 		return azblob.BlobHTTPHeaders{

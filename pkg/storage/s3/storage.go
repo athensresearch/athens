@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
 )
 
@@ -101,7 +102,7 @@ func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, in
 }
 
 func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, version, name string, content []byte) {
-	key := key(module, version, name)
+	key := config.PackageVersionedName(module, version, name)
 
 	save := func() error {
 		_, err := s.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
@@ -118,8 +119,4 @@ func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, vers
 		errChan <- fmt.Errorf("uploading %s/%s.%s timed out", module, version, name)
 
 	}
-}
-
-func key(module, version, name string) string {
-	return fmt.Sprintf("%s/@v/%s.%s", module, version, name)
 }

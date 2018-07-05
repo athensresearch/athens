@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gobuffalo/envy"
+	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/storage/fs"
 	"github.com/gomods/athens/pkg/storage/mem"
@@ -17,7 +17,7 @@ import (
 // GetStorage returns storage backend based on env configuration
 func GetStorage() (storage.BackendConnector, error) {
 	// changing to mongo storage, memory seems buggy
-	storageType := envy.Get("ATHENS_STORAGE_TYPE", "mongo")
+	storageType := env.StorageTypeWithDefault("mongo")
 	var storageRoot string
 	var err error
 
@@ -25,15 +25,15 @@ func GetStorage() (storage.BackendConnector, error) {
 	case "memory":
 		return mem.NewStorage()
 	case "mongo":
-		storageRoot, err = envy.MustGet("ATHENS_MONGO_STORAGE_URL")
+		storageRoot, err = env.MongoURI()
 		if err != nil {
-			return nil, fmt.Errorf("missing mongo URL (%s)", err)
+			return nil, err
 		}
 		return mongo.NewStorage(storageRoot), nil
 	case "disk":
-		storageRoot, err = envy.MustGet("ATHENS_DISK_STORAGE_ROOT")
+		storageRoot, err = env.DiskRoot()
 		if err != nil {
-			return nil, fmt.Errorf("missing disk storage root (%s)", err)
+			return nil, err
 		}
 		s, err := fs.NewStorage(storageRoot, afero.NewOsFs())
 		if err != nil {
@@ -41,27 +41,27 @@ func GetStorage() (storage.BackendConnector, error) {
 		}
 		return storage.NoOpBackendConnector(s), nil
 	case "postgres", "sqlite", "cockroach", "mysql":
-		storageRoot, err = envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")
+		storageRoot, err = env.RdbmsName()
 		if err != nil {
-			return nil, fmt.Errorf("missing rdbms connectionName (%s)", err)
+			return nil, err
 		}
 		return rdbms.NewRDBMSStorage(storageRoot), nil
 	case "minio":
-		endpoint, err := envy.MustGet("ATHENS_MINIO_ENDPOINT")
+		endpoint, err := env.MinioEndpoint()
 		if err != nil {
-			return nil, fmt.Errorf("missing minio endpoint (%s)", err)
+			return nil, err
 		}
-		accessKeyID, err := envy.MustGet("ATHENS_MINIO_ACCESS_KEY_ID")
+		accessKeyID, err := env.MinioAccessKeyID()
 		if err != nil {
-			return nil, fmt.Errorf("missing minio access key ID (%s)", err)
+			return nil, err
 		}
-		secretAccessKey, err := envy.MustGet("ATHENS_MINIO_SECRET_ACCESS_KEY")
+		secretAccessKey, err := env.MinioSecretAccessKey()
 		if err != nil {
-			return nil, fmt.Errorf("missing minio secret access key (%s)", err)
+			return nil, err
 		}
-		bucketName := envy.Get("ATHENS_MINIO_BUCKET_NAME", "gomods")
+		bucketName := env.MinioBucketNameWithDefault("gomods")
 		useSSL := true
-		if useSSLVar := envy.Get("ATHENS_MINIO_USE_SSL", "yes"); strings.ToLower(useSSLVar) == "no" {
+		if useSSLVar := env.MinioSSLWithDefault("yes"); strings.ToLower(useSSLVar) == "no" {
 			useSSL = false
 		}
 		s, err := minio.NewStorage(endpoint, accessKeyID, secretAccessKey, bucketName, useSSL)

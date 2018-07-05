@@ -11,9 +11,9 @@ import (
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/buffalo/worker"
-	"github.com/gobuffalo/envy"
 	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/packr"
+	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/user"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -34,7 +34,7 @@ const (
 
 // ENV is used to help switch settings based on where the
 // application is being run. Default is "development".
-var ENV = envy.Get("GO_ENV", "development")
+var ENV = env.GoEnvironmentWithDefault("development")
 
 var app *buffalo.App
 
@@ -45,9 +45,9 @@ var gopath string
 var userStore *user.Store
 
 func init() {
-	g, err := envy.MustGet("GOPATH")
+	g, err := env.GoPath()
 	if err != nil {
-		log.Fatalf("GOPATH is not set!")
+		log.Fatal(err)
 	}
 	gopath = g
 }
@@ -57,7 +57,7 @@ func init() {
 // application.
 func App() (*buffalo.App, error) {
 	if app == nil {
-		redisPort := envy.Get("ATHENS_REDIS_QUEUE_PORT", ":6379")
+		redisPort := env.RedisQueuePortWithDefault(":6379")
 
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,

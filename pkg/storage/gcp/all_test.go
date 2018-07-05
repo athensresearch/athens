@@ -2,12 +2,12 @@ package gcp
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/gobuffalo/envy"
+	"github.com/gomods/athens/pkg/config"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/option"
 	"google.golang.org/appengine/aetest"
@@ -70,13 +70,13 @@ func (g *GcpTests) TearDownSuite() {
 // matching the module name. folders do not exist so deleting the
 // full object 'path' is sufficient
 func cleanBucket(ctx context.Context, bkt *storage.BucketHandle, mod, ver string) error {
-	if err := bkt.Object(fmt.Sprintf("%s/@v/%s.%s", mod, ver, "mod")).Delete(ctx); err != nil {
+	if err := bkt.Object(config.PackageVersionedName(mod, ver, "mod")).Delete(ctx); err != nil {
 		return err
 	}
-	if err := bkt.Object(fmt.Sprintf("%s/@v/%s.%s", mod, ver, "info")).Delete(ctx); err != nil {
+	if err := bkt.Object(config.PackageVersionedName(mod, ver, "info")).Delete(ctx); err != nil {
 		return err
 	}
-	if err := bkt.Object(fmt.Sprintf("%s/@v/%s.%s", mod, ver, "zip")).Delete(ctx); err != nil {
+	if err := bkt.Object(config.PackageVersionedName(mod, ver, "zip")).Delete(ctx); err != nil {
 		return err
 	}
 	return nil

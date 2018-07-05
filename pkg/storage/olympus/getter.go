@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/storage"
 )
 
@@ -12,9 +13,9 @@ import (
 func (s *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
 	// TODO: fetch from endpoint
 
-	modURI := fmt.Sprintf("%s/%s/@v/%s.mod", s.url, module, vsn)
-	zipURI := fmt.Sprintf("%s/%s/@v/%s.zip", s.url, module, vsn)
-	infoURI := fmt.Sprintf("%s/%s/@v/%s.info", s.url, module, vsn)
+	modURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "mod"))
+	zipURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "zip"))
+	infoURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "info"))
 
 	// fetch mod file
 	var mod []byte
