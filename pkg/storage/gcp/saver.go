@@ -13,7 +13,8 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Storage implements the (github.com/gomods/pkg/storage).Saver interface
+// Storage implements the Saver interface
+// (./pkg/storage).Saver
 type Storage struct {
 	bucket *storage.BucketHandle
 }
@@ -22,8 +23,8 @@ type Storage struct {
 // ClientOptions. The bucket name to be used will be loaded from the
 // environment variable ATHENS_STORAGE_GCP_BUCKET.
 //
-// The ClientOptions should provide permissions sufficient to read, write and
-// delete objects in google cloud storage for your project.
+// The ClientOptions should provide permissions sufficient to create objects
+// in google cloud storage for your project.
 func New(ctx context.Context, cred option.ClientOption) (*Storage, error) {
 	client, err := storage.NewClient(ctx, cred)
 	if err != nil {
@@ -37,7 +38,17 @@ func New(ctx context.Context, cred option.ClientOption) (*Storage, error) {
 	return &Storage{bucket: bkt}, nil
 }
 
-// Save uploads the modules .mod, .zip and .info files for a given version
+// Save uploads the module .mod, .zip and .info files for a given version.
+// It expects a context, which can be provided using context.Background
+// from the standard library.
+//
+// Please note the following limitations which will eventually be configurable:
+//
+// All three uploads share a time out currently set to
+// 300 seconds. After which all ongoing uploads will cancel.
+//
+// Uploaded files are publicly accessable in the storage bucket as per
+// an ACL rule.
 func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, info []byte) error {
 	errs := make(chan error, 3)
 	// create a context that will time out after 300 seconds / 5 minutes
@@ -85,7 +96,7 @@ func writeToBucket(ctx context.Context, bkt *storage.BucketHandle, filename stri
 		}
 	}(wc)
 	wc.ContentType = "application/octet-stream"
-	// TODO: set better access control?
+	// TODO: have this configurable to allow for mixed public/private modules
 	wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
 	if _, err := wc.Write(file); err != nil {
 		return err
