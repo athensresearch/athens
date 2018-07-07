@@ -116,3 +116,7 @@
 [[constraint]]
   name = "google.golang.org/appengine"
   version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/go-multierror"

@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"path/filepath"
@@ -17,7 +18,7 @@ func (d *FsTests) TestLocationFuncs() {
 
 func (d *FsTests) TestGetSaveListRoundTrip() {
 	r := d.Require()
-	r.NoError(d.storage.Save(context.Background(), module, version, mod, zip, info))
+	r.NoError(d.storage.Save(context.Background(), module, version, mod, bytes.NewReader(zip), info))
 	listedVersions, err := d.storage.List(module)
 	r.NoError(err)
 	r.Equal(1, len(listedVersions))

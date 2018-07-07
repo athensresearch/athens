@@ -1,13 +1,14 @@
 package rdbms
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 )
 
 func (rd *RDBMSTestSuite) TestGetSaveListRoundTrip() {
 	r := rd.Require()
-	err := rd.storage.Save(context.Background(), module, version, mod, zip, info)
+	err := rd.storage.Save(context.Background(), module, version, mod, bytes.NewReader(zip), info)
 	r.NoError(err)
 	listedVersions, err := rd.storage.List(module)
 	r.NoError(err)

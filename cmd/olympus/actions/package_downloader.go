@@ -23,7 +23,8 @@ func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Wo
 		}
 
 		// download package
-		f, err := repo.NewGenericFetcher(afero.NewOsFs(), module, version)
+		fs := afero.NewOsFs()
+		f, err := repo.NewGenericFetcher(fs, module, version)
 		if err != nil {
 			return err
 		}
@@ -40,10 +41,11 @@ func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Wo
 		}
 
 		zipPath := filepath.Join(dirName, version+".zip")
-		zipBytes, err := ioutil.ReadFile(zipPath)
+		zipFile, err := fs.Open(zipPath)
 		if err != nil {
 			return err
 		}
+		defer zipFile.Close()
 
 		infoPath := filepath.Join(dirName, version+".info")
 		infoBytes, err := ioutil.ReadFile(infoPath)
@@ -52,7 +54,7 @@ func GetPackageDownloaderJob(s storage.Backend, e eventlog.Eventlog, w worker.Wo
 		}
 
 		// save it
-		if err := s.Save(context.Background(), module, version, modBytes, zipBytes, infoBytes); err != nil {
+		if err := s.Save(context.Background(), module, version, modBytes, zipFile, infoBytes); err != nil {
 			return err
 		}
 

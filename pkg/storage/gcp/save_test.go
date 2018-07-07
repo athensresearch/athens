@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"bytes"
 	"context"
 
 	"cloud.google.com/go/storage"
@@ -19,7 +20,7 @@ func (g *GcpTests) TestSave() {
 	r := g.Require()
 	store, err := New(g.context, g.options)
 	r.NoError(err)
-	err = store.Save(g.context, g.module, g.version, mod, info, zip)
+	err = store.Save(g.context, g.module, g.version, mod, bytes.NewReader(zip), info)
 	r.NoError(err)
 
 	err = exists(g.context, g.options, g.bucket, g.module, g.version)

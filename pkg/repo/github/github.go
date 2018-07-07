@@ -116,13 +116,15 @@ func (g *gitFetcher) Clear() error {
 }
 
 func (g *gitFetcher) generateZip(moduleName string) error {
-	zipContent, err := module.MakeZip(g.fs, g.dirName, moduleName, g.tag)
+	zipReader := module.MakeZip(g.fs, g.dirName, moduleName, g.tag)
+
+	zipPath := filepath.Join(g.dirName, g.tag+".zip")
+	f, err := g.fs.OpenFile(zipPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return err
 	}
-
-	zipPath := filepath.Join(g.dirName, g.tag+".zip")
-	return afero.WriteFile(g.fs, zipPath, zipContent, os.ModePerm)
+	_, err = io.Copy(f, zipReader)
+	return err
 }
 
 func (g *gitFetcher) generateInfo() error {

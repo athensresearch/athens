@@ -3,11 +3,12 @@ package minio
 import (
 	"bytes"
 	"context"
+	"io"
 
 	minio "github.com/minio/minio-go"
 )
 
-func (s *storageImpl) Save(_ context.Context, module, vsn string, mod, zip, info []byte) error {
+func (s *storageImpl) Save(_ context.Context, module, vsn string, mod []byte, zip io.Reader, info []byte) error {
 	dir := s.versionLocation(module, vsn)
 	modFileName := dir + "/" + "go.mod"
 	zipFileName := dir + "/" + "source.zip"
@@ -16,7 +17,7 @@ func (s *storageImpl) Save(_ context.Context, module, vsn string, mod, zip, info
 	if err != nil {
 		return err
 	}
-	_, err = s.minioClient.PutObject(s.bucketName, zipFileName, bytes.NewReader(zip), int64(len(zip)), minio.PutObjectOptions{})
+	_, err = s.minioClient.PutObject(s.bucketName, zipFileName, zip, -1, minio.PutObjectOptions{})
 	if err != nil {
 		return err
 	}

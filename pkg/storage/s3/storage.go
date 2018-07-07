@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/url"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 // Storage implements (github.com/gomods/athens/pkg/storage).Saver and
@@ -75,30 +77,31 @@ func (s Storage) BaseURL() *url.URL {
 }
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
-func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, info []byte) error {
+func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
 	errChan := make(chan error, 3)
 
 	tctx, cancel := context.WithTimeout(ctx, env.Timeout())
 	defer cancel()
 
+	zipBytes, err := ioutil.ReadAll(zip)
+	if err != nil {
+		return err
+	}
+
 	go s.upload(tctx, errChan, module, version, "mod", mod)
-	go s.upload(tctx, errChan, module, version, "zip", zip)
+	go s.upload(tctx, errChan, module, version, "zip", zipBytes)
 	go s.upload(tctx, errChan, module, version, "info", info)
 
-	errs := make([]string, 0, 3)
+	var errors error
 	for i := 0; i < 3; i++ {
 		err := <-errChan
 		if err != nil {
-			errs = append(errs, err.Error())
+			errors = multierror.Append(errors, err)
 		}
 	}
 	close(errChan)
 
-	if len(errs) > 0 {
-		return fmt.Errorf("One or more errors occured saving %s %s: %s", module, version, strings.Join(errs, ", "))
-	}
-
-	return nil
+	return errors
 }
 
 func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, version, name string, content []byte) {

@@ -1,15 +1,17 @@
 package gcp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
+	multierror "github.com/hashicorp/go-multierror"
 	"google.golang.org/api/option"
 )
 
@@ -49,36 +51,32 @@ func New(ctx context.Context, cred option.ClientOption) (*Storage, error) {
 //
 // Uploaded files are publicly accessable in the storage bucket as per
 // an ACL rule.
-func (s *Storage) Save(ctx context.Context, module, version string, mod, zip, info []byte) error {
+func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
 	errs := make(chan error, 3)
 	// create a context that will time out after 300 seconds / 5 minutes
 	ctxWT, cancelCTX := context.WithTimeout(ctx, 300*time.Second)
 	defer cancelCTX()
 
 	// dispatch go routine for each file to upload
-	go upload(ctxWT, errs, s.bucket, module, version, "mod", mod)
+	go upload(ctxWT, errs, s.bucket, module, version, "mod", bytes.NewReader(mod))
 	go upload(ctxWT, errs, s.bucket, module, version, "zip", zip)
-	go upload(ctxWT, errs, s.bucket, module, version, "info", info)
+	go upload(ctxWT, errs, s.bucket, module, version, "info", bytes.NewReader(info))
 
-	errsOut := make([]string, 0, 3)
+	var errors error
 	// wait for each routine above to send a value
 	for count := 0; count < 3; count++ {
 		err := <-errs
 		if err != nil {
-			errsOut = append(errsOut, err.Error())
+			errors = multierror.Append(errors, err)
 		}
 	}
 	close(errs)
 
-	// return concatenated error string if there is anything to report
-	if len(errsOut) > 0 {
-		return fmt.Errorf("one or more errors occured saving %s/@v/%s: %s", module, version, strings.Join(errsOut, ", "))
-	}
-	return nil
+	return errors
 }
 
 // upload waits for either writeToBucket to complete or the context expires
-func upload(ctx context.Context, errs chan<- error, bkt *storage.BucketHandle, module, version, ext string, file []byte) {
+func upload(ctx context.Context, errs chan<- error, bkt *storage.BucketHandle, module, version, ext string, file io.Reader) {
 	select {
 	case errs <- writeToBucket(ctx, bkt, config.PackageVersionedName(module, version, ext), file):
 		return
@@ -88,7 +86,7 @@ func upload(ctx context.Context, errs chan<- error, bkt *storage.BucketHandle, m
 }
 
 // writeToBucket performs the actual write to a gcp storage bucket
-func writeToBucket(ctx context.Context, bkt *storage.BucketHandle, filename string, file []byte) error {
+func writeToBucket(ctx context.Context, bkt *storage.BucketHandle, filename string, file io.Reader) error {
 	wc := bkt.Object(filename).NewWriter(ctx)
 	defer func(w *storage.Writer) {
 		if err := w.Close(); err != nil {
@@ -98,7 +96,7 @@ func writeToBucket(ctx context.Context, bkt *storage.BucketHandle, filename stri
 	wc.ContentType = "application/octet-stream"
 	// TODO: have this configurable to allow for mixed public/private modules
 	wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
-	if _, err := wc.Write(file); err != nil {
+	if _, err := io.Copy(wc, file); err != nil {
 		return err
 	}
 	return nil

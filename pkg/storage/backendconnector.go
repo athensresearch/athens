@@ -1,6 +1,9 @@
 package storage
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 // BackendConnector is a regular storage backend with Connect functionality
 type BackendConnector interface {
@@ -31,7 +34,7 @@ func (n noOpConnectedBackend) Get(module, vsn string) (*Version, error) {
 func (n noOpConnectedBackend) List(module string) ([]string, error) {
 	return n.backend.List(module)
 }
-func (n noOpConnectedBackend) Save(ctx context.Context, module, version string, mod, zip, info []byte) error {
+func (n noOpConnectedBackend) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
 	return n.backend.Save(ctx, module, version, mod, zip, info)
 }
 func (n noOpConnectedBackend) Delete(module, version string) error {

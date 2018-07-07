@@ -50,10 +50,7 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 			return fmt.Errorf("couldn't parse go.mod file (%s)", err)
 		}
 
-		zipBytes, err := module.MakeZip(fs, path, moduleName, version)
-		if err != nil {
-			return fmt.Errorf("couldn't make zip (%s)", err)
-		}
+		zipBytes := module.MakeZip(fs, path, moduleName, version)
 
 		infoFilePath := filepath.Join(path, version+".info")
 		infoBytes, err := afero.ReadFile(fs, infoFilePath)
