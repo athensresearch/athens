@@ -67,19 +67,26 @@ func walkFunc(fs afero.Fs, zw *zip.Writer, dir, module, version string, ignorePa
 
 func getIgnoreParser(fs afero.Fs, dir string) ignore.IgnoreParser {
 	gitFilePath := filepath.Join(dir, gitIgnoreFilename)
-	gitParser, _ := compileIgnoreFileAndLines(fs, gitFilePath, gitIgnoreFilename)
+	gitParser := compileIgnoreFileAndLines(fs, gitFilePath, gitIgnoreFilename)
 	dsStoreParser := dsStoreIgnoreParser{}
 
 	return newMultiIgnoreParser(gitParser, dsStoreParser)
 }
 
-func compileIgnoreFileAndLines(fs afero.Fs, fpath string, lines ...string) (*ignore.GitIgnore, error) {
+func compileIgnoreFileAndLines(fs afero.Fs, fpath string, lines ...string) ignore.IgnoreParser {
 	buffer, err := afero.ReadFile(fs, fpath)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	s := strings.Split(string(buffer), "\n")
-	return ignore.CompileIgnoreLines(append(s, lines...)...)
+	ip, err := ignore.CompileIgnoreLines(append(s, lines...)...)
+	if err != nil {
+		// if we return ip, then it won't be a nil interface,
+		// even if ip is a nil pointer.
+		return nil
+	}
+
+	return ip
 }
 
 // getFileName composes filename for zip to match standard specified as
