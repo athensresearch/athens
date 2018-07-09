@@ -73,7 +73,7 @@ func NewWithClient(bucketName string, client s3iface.S3API) (*Storage, error) {
 //
 //	<meta name="go-import" content="gomods.com/athens mod BaseURL()">
 func (s Storage) BaseURL() *url.URL {
-	return s.baseURI
+	return env.CDNEndpointWithDefault(s.baseURI)
 }
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.

@@ -37,7 +37,7 @@ func New(accountName, accountKey string) (*Storage, error) {
 //
 //	<meta name="go-import" content="gomods.com/athens mod BaseURL()">
 func (s Storage) BaseURL() *url.URL {
-	return s.accountURL
+	return env.CDNEndpointWithDefault(s.accountURL)
 }
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
