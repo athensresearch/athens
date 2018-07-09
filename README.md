@@ -2,8 +2,8 @@
 
 Welcome to the Athens project! We're building all things Go package repository in here. 
 
-1. [Package Registry](https://github.com/gomods/athens/wiki/The-Central-Package-Registry-(Olympus))
-2. [Edge Proxy](https://github.com/gomods/athens/wiki/Proxies-(Zeus))
+1. [Package Registry](./REGISTRY.md)
+2. [Edge Proxy](./PROXY.md)
 
 If you want more of a tl;dr on the project, check out [this quick introduction](https://medium.com/@arschles/project-athens-c80606497ce1)
 
