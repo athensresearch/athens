@@ -43,6 +43,7 @@ func reportCacheMiss(module, version string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{
 		Timeout: 30 * time.Second,

@@ -46,9 +46,11 @@ var (
 func App() *buffalo.App {
 	if app == nil {
 		redisPort := env.OlympusRedisQueuePortWithDefault(":6379")
+		port := env.OlympusHTTPPort(":3001")
 
 		app = buffalo.New(buffalo.Options{
-			Env: ENV,
+			Addr: port,
+			Env:  ENV,
 			PreWares: []buffalo.PreWare{
 				cors.Default().Handler,
 			},
