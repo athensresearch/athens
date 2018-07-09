@@ -87,8 +87,6 @@ This project is early and there's plenty of interesting and challenging work to 
 If you find a bug or want to fix a bug, I :heart: PRs and issues! If you see an issue
 in the [queue](https://github.com/gomods/athens/issues) that you'd like to work on, please just post a comment saying that you want to work on it. Something like "I want to work on this" is fine.
 
-Finally, please follow the [Contributor Covenant](https://www.contributor-covenant.org/) in everything you do on this project - issue comments, pull requests, etc...
-
 # Resources:
 
 * ["Go and Versioning"](https://research.swtch.com/vgo) papers
@@ -136,3 +134,12 @@ vgo: import "arschles.com/testmodule": zip for arschles.com/testmodule@v1.0. has
 As you can see, the CLI uploaded a file to athens that's not `.go`, `go.mod`, or anything else that vgo, so at least the CLI needs some work (and the server needs some sanity checks too).
 
 You can get around all of this by manually zipping up your code and uploading it with `curl` or similar, but like I said, that's super impractical. Yay alpha software!
+
+# Code of Conduct
+
+This project follows the [Contributor Covenant](https://www.contributor-covenant.org/) (English version [here](https://www.contributor-covenant.org/version/1/4/code-of-conduct)) code of conduct.
+
+If you have concerns, notice a code of conduct violation, or otherwise would like to talk about something
+related to this code of conduct, please reach out to me, Aaron Schlesinger on the [Gophers Slack](https://gophers.slack.com/. My username is `arschles`. Note that in the future, we will be expanding the
+ways that you can contact us regarding the code of conduct.
+
