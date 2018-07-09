@@ -40,7 +40,7 @@ Speaking of contributing, read on!
 
 This project is early and there's plenty of interesting and challenging work to do.
 
-If you find a bug or want to fix a bug, I :heart: PRs and issues! If you see an issue
+If you find a bug or want to fix a bug, we :heart: PRs and issues! If you see an issue
 in the [queue](https://github.com/gomods/athens/issues) that you'd like to work on, please just post a comment saying that you want to work on it. Something like "I want to work on this" is fine.
 
 # Resources:
