@@ -13,7 +13,7 @@ func proxyHomeHandler(c buffalo.Context) error {
 
 func homeHandler(c buffalo.Context) error {
 	slow(c)
-	return c.Render(200, registry.HTML("index.html"))
+	return c.Render(200, proxy.HTML("index.html"))
 }
 
 func slow(c buffalo.Context) {

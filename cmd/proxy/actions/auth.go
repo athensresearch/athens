@@ -44,6 +44,6 @@ func authCallback(store user.Store) func(c buffalo.Context) error {
 			}
 			return c.Error(500, err)
 		}
-		return c.Render(200, registry.JSON(u))
+		return c.Render(200, proxy.JSON(u))
 	}
 }
