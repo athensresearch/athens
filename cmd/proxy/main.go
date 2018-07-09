@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gomods/athens/cmd/proxy/actions"
+	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/storage"
 )
 
@@ -20,10 +21,12 @@ func main() {
 	}
 
 	w := app.Worker
-	if err := w.Register(actions.FetcherWorkerName, actions.GetProcessCacheMissJob(s, w)); err != nil {
+	mf := module.NewFilter()
+	if err := w.Register(actions.FetcherWorkerName, actions.GetProcessCacheMissJob(s, w, mf)); err != nil {
 		log.Fatal(err)
 	}
-	if err := w.Register(actions.ReporterWorkerName, actions.GetCacheMissReporterJob(w)); err != nil {
+
+	if err := w.Register(actions.ReporterWorkerName, actions.GetCacheMissReporterJob(w, mf)); err != nil {
 		log.Fatal(err)
 	}
 
