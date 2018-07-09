@@ -8,6 +8,7 @@ go:
   - "1.10.x"
 env:
   global:
+    - PATH=${PATH}:./bin
     - POP_PATH=$PWD/cmd/proxy
     - GO_ENV=test_postgres
     - MINIO_ACCESS_KEY=minio
@@ -19,11 +20,12 @@ script:
   - golint -set_exit_status $(go list ./... | grep -v '/mocks')   # Linter
   - go test -race -coverprofile cover.out -covermode atomic ./... # Run all the tests with the race detector and code coverage enabled
 before_script:
+  - mkdir bin
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)   # All the .go files, excluding vendor/
   - go get github.com/golang/lint/golint
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
-  - go get -u -v github.com/gobuffalo/buffalo/buffalo
+  - ./scripts/get_buffalo.sh
   - go get -u -v golang.org/x/vgo
   - buffalo db create
   - buffalo db migrate up
