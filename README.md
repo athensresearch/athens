@@ -43,10 +43,22 @@ This project is early and there's plenty of interesting and challenging work to 
 If you find a bug or want to fix a bug, we :heart: PRs and issues! If you see an issue
 in the [queue](https://github.com/gomods/athens/issues) that you'd like to work on, please just post a comment saying that you want to work on it. Something like "I want to work on this" is fine.
 
-# Resources:
+If you decide to contribute (we hope you do :smile:), the process is familiar and easy if you've used Github before.
+There are no long documents to read or complex setup.
 
-* ["Go and Versioning"](https://research.swtch.com/vgo) papers
-* [vgo wiki](https://github.com/golang/go/wiki/vgo)
+# Getting Involved
+
+If you're not ready to contribute code yet, there are plenty of other great ways to get involved:
+
+- Come talk to us in the `#athens` channel in the [Gophers slack](http://gophers.slack.com/). We’re a really friendly group, so come say hi and join us! Ping me (`@arschles` on slack) in the channel and I’ll give you the lowdown
+- Come to our [weekly development meetings](https://docs.google.com/document/d/1xpvgmR1Fq4iy1j975Tb4H_XjeXUQUOAvn0FximUzvIk/edit#)! They are a great way to meet folks, ask questions, find some stuff to work on, or just hang out if you want to. Just like with this project, absolutely everyone is welcome to join and participate in those
+- Get familiar with the system. There's lots to read about. Here are some places to start:
+    - [Gentle Introduction to the Project](https://medium.com/@arschles/project-athens-c80606497ce1) - the basics of why we started this project
+    - [The Download Protocol](https://medium.com/@arschles/project-athens-the-download-protocol-2b346926a818) - the core API that the registry and proxies implement and CLIs use to download packages
+    - [Registry Design](./REGISTRY.md) - what the registry is and how it works
+    - [Proxy Design](./PROXY.md) - what the proxy is and how it works
+    - [vgo wiki](https://github.com/golang/go/wiki/vgo) - context and details on how Go dependency management works in general
+    - ["Go and Versioning"](https://research.swtch.com/vgo) - long papers on Go dependency management details, internals, etc...
 
 # Code of Conduct
 
