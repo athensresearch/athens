@@ -27,7 +27,7 @@ func eventlogHandler(r eventlog.Reader) func(c buffalo.Context) error {
 	}
 }
 
-func cachemissHandler(l eventlog.Appender, w worker.Worker) func(c buffalo.Context) error {
+func cachemissHandler(w worker.Worker) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
 		cm := &payloads.Module{}
 		if err := c.Bind(cm); err != nil {
