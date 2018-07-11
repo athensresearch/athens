@@ -43,8 +43,11 @@ This project is early and there's plenty of interesting and challenging work to 
 If you find a bug or want to fix a bug, we :heart: PRs and issues! If you see an issue
 in the [queue](https://github.com/gomods/athens/issues) that you'd like to work on, please just post a comment saying that you want to work on it. Something like "I want to work on this" is fine.
 
-If you decide to contribute (we hope you do :smile:), the process is familiar and easy if you've used Github before.
-There are no long documents to read or complex setup.
+If you decide to contribute (we hope you do :smile:), the process is familiar and easy if you've used Github before. There are no long documents to read or complex setup. If you haven't used Github before, the awesome [@bketelsen](https://github.com/bketelsen) has created a good overview on how to contribute code - see [here](https://www.youtube.com/watch?v=bgSDcTyysRc).
+
+Before you do start contributing or otherwise getting involved, we want to let you know that we follow a general [philosophy](./PHILOSOPHY.md) in how we work together, and we'd really appreciate you getting familiar with it before you start.
+
+It's not too long and it's ok for you to "skim" it (or even just read the first two sections :smile:), just as long as you understand the spirit of who we are and how we work.
 
 # Getting Involved
 
