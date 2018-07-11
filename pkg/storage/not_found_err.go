@@ -27,7 +27,11 @@ func (e ErrVersionNotFound) Error() string {
 
 // IsNotFoundError returns true if err is an ErrNotFound
 func IsNotFoundError(err error) bool {
-	_, ok := err.(ErrNotFound)
+	if _, ok := err.(ErrNotFound); ok {
+		return ok
+	}
+
+	_, ok := err.(ErrVersionNotFound)
 	return ok
 }
 

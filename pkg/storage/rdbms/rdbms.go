@@ -20,6 +20,16 @@ func NewRDBMSStorage(connectionName string) *ModuleStore {
 	}
 }
 
+// NewRDBMSStorageWithConn  returns a connected RDBMS Module Storage
+// that satisfies the Storage interface. You must call
+// Connect() on the returned store before using it.
+// connectionName
+func NewRDBMSStorageWithConn(connection *pop.Connection) *ModuleStore {
+	return &ModuleStore{
+		conn: connection,
+	}
+}
+
 // Connect creates connection to rdmbs backend.
 func (r *ModuleStore) Connect() error {
 	c, err := pop.Connect(r.connectionName)

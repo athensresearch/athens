@@ -3,6 +3,7 @@ package minio
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/gomods/athens/pkg/storage"
 	minio "github.com/minio/minio-go"
@@ -17,7 +18,7 @@ func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
 	}
 	mod, err := ioutil.ReadAll(modReader)
 	if err != nil {
-		return nil, err
+		return nil, transformNotFoundErr(module, version, err)
 	}
 	zipPath := fmt.Sprintf("%s/source.zip", versionedPath)
 	zipReader, err := v.minioClient.GetObject(v.bucketName, zipPath, minio.GetObjectOptions{})
@@ -31,7 +32,7 @@ func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
 	}
 	info, err := ioutil.ReadAll(infoReader)
 	if err != nil {
-		return nil, err
+		return nil, transformNotFoundErr(module, version, err)
 	}
 
 	// TODO: store the time in the saver, and parse it here
@@ -40,4 +41,13 @@ func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
 		Zip:  zipReader,
 		Info: info,
 	}, nil
+}
+
+func transformNotFoundErr(module, version string, err error) error {
+	if eresp, ok := err.(minio.ErrorResponse); ok {
+		if eresp.StatusCode == http.StatusNotFound {
+			return storage.ErrVersionNotFound{Module: module, Version: version}
+		}
+	}
+	return err
 }
