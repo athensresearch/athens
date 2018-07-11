@@ -75,9 +75,8 @@ func queueCacheMissFetch(module, version string, w worker.Worker) error {
 		Queue:   workerQueue,
 		Handler: FetcherWorkerName,
 		Args: worker.Args{
-			workerModuleKey:   module,
-			workerVersionKey:  version,
-			workerTryCountKey: maxTryCount,
+			workerModuleKey:  module,
+			workerVersionKey: version,
 		},
 	})
 }

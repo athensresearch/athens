@@ -28,7 +28,6 @@ const (
 	workerQueue        = "default"
 	workerModuleKey    = "module"
 	workerVersionKey   = "version"
-	workerTryCountKey  = "trycount"
 
 	maxTryCount = 5
 )

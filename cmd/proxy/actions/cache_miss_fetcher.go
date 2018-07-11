@@ -3,7 +3,6 @@ package actions
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gomods/athens/pkg/config/env"
@@ -38,16 +37,11 @@ func GetProcessCacheMissJob(s storage.Backend, w worker.Worker, mf *module.Filte
 		// get module info
 		v, err := getModuleInfo(mod, version)
 		if err != nil {
-			process(mod, version, args, w)
 			return err
 		}
 		defer v.Zip.Close()
 
-		if err := s.Save(context.Background(), mod, version, v.Mod, v.Zip, v.Info); err != nil {
-			process(mod, version, args, w)
-		}
-
-		return err
+		return s.Save(context.Background(), mod, version, v.Mod, v.Zip, v.Info)
 	}
 }
 
@@ -68,29 +62,6 @@ func parseArgs(args worker.Args) (string, string, error) {
 func getModuleInfo(module, version string) (*storage.Version, error) {
 	os := olympusStore.NewStorage(GetOlympusEndpoint())
 	return os.Get(module, version)
-}
-
-// process pushes pull job into the queue to be processed asynchonously
-func process(module, version string, args worker.Args, w worker.Worker) error {
-	// decrementing avoids endless loop of entries with missing trycount
-	trycount, ok := args[workerTryCountKey].(int)
-	if !ok {
-		return fmt.Errorf("Trycount missing or invalid")
-	}
-
-	if trycount <= 0 {
-		return fmt.Errorf("Max trycount for %s %s reached", module, version)
-	}
-
-	return w.Perform(worker.Job{
-		Queue:   workerQueue,
-		Handler: FetcherWorkerName,
-		Args: worker.Args{
-			workerModuleKey:   module,
-			workerVersionKey:  version,
-			workerTryCountKey: trycount - 1,
-		},
-	})
 }
 
 // GetOlympusEndpoint returns global endpoint with override in mind
