@@ -6,10 +6,6 @@ build:
 run: build
 	./athens
 
-.PHONY: cli	
-cli:
-	go build -o athens ./cmd/cli
-
 .PHONY: docs
 docs:
 	cd docs && hugo
