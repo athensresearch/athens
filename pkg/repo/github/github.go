@@ -144,10 +144,11 @@ func (g *gitFetcher) generateInfo() error {
 
 func untar(fs afero.Fs, content io.Reader, tmpDir string) (string, error) {
 	gzr, err := gzip.NewReader(content)
-	defer gzr.Close()
 	if err != nil {
 		return "", err
 	}
+	defer gzr.Close()
+
 	tr := tar.NewReader(gzr)
 	var dirName string
 
