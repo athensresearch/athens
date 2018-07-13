@@ -84,6 +84,8 @@
     "private/protocol/xml/xmlutil",
     "service/s3",
     "service/s3/s3iface",
+    "service/s3/s3manager",
+    "service/s3/s3manager/s3manageriface",
     "service/sts"
   ]
   revision = "fde4ded7becdeae4d26bf1212916aabba79349b4"
@@ -340,12 +342,6 @@
   name = "github.com/hashicorp/go-multierror"
   packages = ["."]
   revision = "b7773ae218740a7be65057fc60b366a49b538a44"
-
-[[projects]]
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
 
 [[projects]]
   name = "github.com/jmespath/go-jmespath"
@@ -690,18 +686,6 @@
   version = "v1.0.2"
 
 [[projects]]
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
-
-[[projects]]
-  name = "github.com/spf13/pflag"
-  packages = ["."]
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
-  version = "v1.0.0"
-
-[[projects]]
   name = "github.com/stretchr/objx"
   packages = ["."]
   revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
@@ -944,6 +928,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f97f7787279ab52f2bb4d057552e115109606229dd6b424bd1b54aada52d94ba"
+  inputs-digest = "9cc84a3946a26681be6d073c345488ca0f421c564e0f24e6adedf25755b62ed0"
   solver-name = "gps-cdcl"
   solver-version = 1

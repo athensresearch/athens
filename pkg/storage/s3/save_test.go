@@ -31,5 +31,5 @@ func (d *S3Tests) TestSave() {
 		expectedValues[config.PackageVersionedName(module, version, "zip")] = vzip
 	}
 
-	r.NoError(Verify(d.client, expectedValues))
+	r.NoError(Verify(d.uploader, expectedValues))
 }

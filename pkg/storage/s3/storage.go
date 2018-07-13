@@ -5,12 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/url"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
 	multierror "github.com/hashicorp/go-multierror"
@@ -25,9 +24,9 @@ import (
 // - AWS_SESSION_TOKEN		- [optional]
 // For information how to get your keyId and access key turn to official aws docs: https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/setting-up.html
 type Storage struct {
-	bucket  string
-	client  s3iface.S3API
-	baseURI *url.URL
+	bucket   string
+	baseURI  *url.URL
+	uploader s3manageriface.UploaderAPI
 }
 
 // New creates a new AWS S3 CDN saver
@@ -42,27 +41,26 @@ func New(bucketName string) (*Storage, error) {
 	if err != nil {
 		return nil, err
 	}
+	uploader := s3manager.NewUploader(sess)
 
-	// client with session
-	client := s3.New(sess)
 	return &Storage{
-		bucket:  bucketName,
-		client:  client,
-		baseURI: u,
+		bucket:   bucketName,
+		uploader: uploader,
+		baseURI:  u,
 	}, nil
 }
 
-// NewWithClient creates a new AWS S3 CDN saver with provided client
-func NewWithClient(bucketName string, client s3iface.S3API) (*Storage, error) {
+// NewWithUploader creates a new AWS S3 CDN saver with provided uploader
+func NewWithUploader(bucketName string, uploader s3manageriface.UploaderAPI) (*Storage, error) {
 	u, err := url.Parse(fmt.Sprintf("http://%s.s3.amazonaws.com", bucketName))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Storage{
-		bucket:  bucketName,
-		client:  client,
-		baseURI: u,
+		bucket:   bucketName,
+		uploader: uploader,
+		baseURI:  u,
 	}, nil
 }
 
@@ -83,14 +81,9 @@ func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, 
 	tctx, cancel := context.WithTimeout(ctx, env.Timeout())
 	defer cancel()
 
-	zipBytes, err := ioutil.ReadAll(zip)
-	if err != nil {
-		return err
-	}
-
-	go s.upload(tctx, errChan, module, version, "mod", mod)
-	go s.upload(tctx, errChan, module, version, "zip", zipBytes)
-	go s.upload(tctx, errChan, module, version, "info", info)
+	go s.upload(tctx, errChan, module, version, "mod", bytes.NewReader(mod))
+	go s.upload(tctx, errChan, module, version, "zip", zip)
+	go s.upload(tctx, errChan, module, version, "info", bytes.NewReader(info))
 
 	var errors error
 	for i := 0; i < 3; i++ {
@@ -104,15 +97,15 @@ func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, 
 	return errors
 }
 
-func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, version, name string, content []byte) {
-	key := config.PackageVersionedName(module, version, name)
-
+func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, version, name string, content io.Reader) {
 	save := func() error {
-		_, err := s.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		key := config.PackageVersionedName(module, version, name)
+		upParams := &s3manager.UploadInput{
 			Bucket: &s.bucket,
 			Key:    &key,
-			Body:   bytes.NewReader(content),
-		})
+			Body:   content,
+		}
+		_, err := s.uploader.UploadWithContext(ctx, upParams)
 		return err
 	}
 

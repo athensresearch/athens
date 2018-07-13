@@ -2,75 +2,40 @@ package s3
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"sync"
 	"testing"
 
-	aws "github.com/aws/aws-sdk-go/aws"
-	request "github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/gomods/athens/pkg/storage/s3/mocks"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
-type TestMock struct {
-	mocks.APIMock
-	db   map[string][]byte
-	lock sync.Mutex
-}
-
 type S3Tests struct {
 	suite.Suite
-	client  *TestMock
-	storage *Storage
+	uploader *s3UploaderMock
+	storage  *Storage
 }
 
 func Test_ActionSuite(t *testing.T) {
-	clientMock := getS3Mock()
-	storage, err := NewWithClient("test", clientMock)
+	uploaderMock := newUploaderMock()
+	storage, err := NewWithUploader("test", uploaderMock)
 	if err != nil {
 		t.Error(err)
 	}
 
-	suite.Run(t, &S3Tests{client: clientMock, storage: storage})
-}
-
-func getS3Mock() *TestMock {
-	svc := new(TestMock)
-	svc.db = make(map[string][]byte)
-
-	svc.On("PutObjectWithContext", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("*s3.PutObjectInput")).Return(
-		func(_ aws.Context, input *s3.PutObjectInput, _ ...request.Option) *s3.PutObjectOutput {
-			b, e := ioutil.ReadAll(input.Body)
-			if e != nil {
-				log.Fatal(e)
-			}
-
-			svc.lock.Lock()
-			svc.db[*input.Key] = b
-			svc.lock.Unlock()
-
-			return nil
-		}, nil)
-
-	return svc
+	suite.Run(t, &S3Tests{uploader: uploaderMock, storage: storage})
 }
 
 // Verify returns error if S3 state differs from expected one
-func Verify(t *TestMock, value map[string][]byte) error {
-	t.lock.Lock()
-	defer t.lock.Unlock()
+func Verify(um *s3UploaderMock, value map[string][]byte) error {
+	um.lock.Lock()
+	defer um.lock.Unlock()
 
 	expectedLength := len(value)
-	actualLength := len(t.db)
-	if len(value) != len(t.db) {
+	actualLength := len(um.db)
+	if expectedLength != actualLength {
 		return fmt.Errorf("Length does not match. Expected: %d. Actual: %d", expectedLength, actualLength)
 	}
 
 	for k, v := range value {
-		actual, ok := t.db[k]
+		actual, ok := um.db[k]
 		if !ok {
 			return fmt.Errorf("Missing element %s", k)
 		}

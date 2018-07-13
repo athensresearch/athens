@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gomods/athens/pkg/config/env"
 )
 
 const (
@@ -25,7 +27,7 @@ func getCommitInfo(owner, repo, tag string) (CommitInfo, error) {
 
 	uri := fmt.Sprintf(fetchCommitURI, owner, repo, tag)
 
-	client := http.Client{Timeout: timeout * time.Second}
+	client := http.Client{Timeout: env.Timeout()}
 	resp, err := client.Get(uri)
 	if err != nil {
 		return commitInfo, err
