@@ -4,8 +4,10 @@
 		<meta charset="utf-8">
 		<title>Athens Go Module Proxy</title>
 		<%= stylesheetTag("application.css") %>
-		<meta name="csrf-param" content="authenticity_token" />
-		<meta name="csrf-token" content="<%= authenticity_token %>" />
+		<%= if (authenticity_token) { %>
+			<meta name="csrf-param" content="authenticity_token" />
+			<meta name="csrf-token" content="<%= authenticity_token %>" />
+		<% } %>
 		<link rel="icon" href="<%= assetPath("images/favicon.ico") %>">
 	</head>
 	<body>
