@@ -1,13 +1,16 @@
 package actions
 
 import (
+	"github.com/garyburd/redigo/redis"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/packr"
+	"github.com/gocraft/work"
 	"github.com/gomods/athens/pkg/cdn/metadata/azurecdn"
 	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/download"
@@ -19,7 +22,6 @@ import (
 
 // AppConfig contains dependencies used in App
 type AppConfig struct {
-	Worker         worker.Worker
 	Storage        storage.Backend
 	EventLog       eventlog.Eventlog
 	CacheMissesLog eventlog.Appender
@@ -50,9 +52,14 @@ var (
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
 // application.
-func App(config *AppConfig) *buffalo.App {
+func App(config *AppConfig) (*buffalo.App, error) {
 	if app == nil {
 		port := env.Port(":3001")
+
+		w, err := getWorker(config.Storage, config.EventLog)
+		if err != nil {
+			return nil, err
+		}
 
 		app = buffalo.New(buffalo.Options{
 			Addr: port,
@@ -61,7 +68,7 @@ func App(config *AppConfig) *buffalo.App {
 				cors.Default().Handler,
 			},
 			SessionName: "_olympus_session",
-			Worker:      config.Worker,
+			Worker:      w,
 		})
 		// Automatically redirect to SSL
 		app.Use(ssl.ForceSSL(secure.Options{
@@ -93,7 +100,6 @@ func App(config *AppConfig) *buffalo.App {
 		// app.Use(middleware.PopTransaction(models.DB))
 
 		// Setup and use translations:
-		var err error
 		if T, err = i18n.New(packr.NewBox("../locales"), "en-US"); err != nil {
 			app.Stop(err)
 		}
@@ -103,8 +109,8 @@ func App(config *AppConfig) *buffalo.App {
 		app.GET("/diff/{lastID}", diffHandler(config.Storage, config.EventLog))
 		app.GET("/feed/{lastID}", feedHandler(config.Storage))
 		app.GET("/eventlog/{sequence_id}", eventlogHandler(config.EventLog))
-		app.POST("/cachemiss", cachemissHandler(config.Worker))
-		app.POST("/push", pushNotificationHandler(config.Worker))
+		app.POST("/cachemiss", cachemissHandler(w))
+		app.POST("/push", pushNotificationHandler(w))
 
 		// Download Protocol
 		app.GET(download.PathList, download.ListHandler(config.Storage, renderEng))
@@ -115,5 +121,32 @@ func App(config *AppConfig) *buffalo.App {
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 
-	return app
+	return app, nil
+}
+
+func getWorker(store storage.Backend, eLog eventlog.Eventlog) (worker.Worker, error) {
+	port := env.OlympusRedisQueuePortWithDefault(":6379")
+	w := gwa.New(gwa.Options{
+		Pool: &redis.Pool{
+			MaxActive: 5,
+			MaxIdle:   5,
+			Wait:      true,
+			Dial: func() (redis.Conn, error) {
+				return redis.Dial("tcp", port)
+			},
+		},
+		Name:           OlympusWorkerName,
+		MaxConcurrency: env.AthensMaxConcurrency(),
+	})
+
+	opts := work.JobOptions{
+		SkipDead: true,
+		MaxFails: env.WorkerMaxFails(),
+	}
+
+	if err := w.RegisterWithOptions(DownloadHandlerName, opts, GetPackageDownloaderJob(store, eLog, w)); err != nil {
+		return nil, err
+	}
+
+	return w, w.RegisterWithOptions(PushNotificationHandlerName, opts, GetProcessPushNotificationJob(store, eLog))
 }

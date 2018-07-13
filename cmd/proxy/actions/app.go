@@ -13,8 +13,10 @@ import (
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/packr"
+	"github.com/gocraft/work"
 	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/module"
+	"github.com/gomods/athens/pkg/storage"
 	"github.com/gomods/athens/pkg/user"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -28,8 +30,6 @@ const (
 	workerQueue        = "default"
 	workerModuleKey    = "module"
 	workerVersionKey   = "version"
-
-	maxTryCount = 5
 )
 
 // ENV is used to help switch settings based on where the
@@ -57,7 +57,21 @@ func init() {
 // application.
 func App() (*buffalo.App, error) {
 	if app == nil {
-		redisPort := env.RedisQueuePortWithDefault(":6379")
+		store, err := GetStorage()
+		mf := module.NewFilter()
+		if err != nil {
+			err = fmt.Errorf("error getting storage configuration (%s)", err)
+			return nil, err
+		}
+		if err := store.Connect(); err != nil {
+			err = fmt.Errorf("error connecting to storage (%s)", err)
+			return nil, err
+		}
+
+		worker, err := getWorker(store, mf)
+		if err != nil {
+			return nil, err
+		}
 
 		app = buffalo.New(buffalo.Options{
 			Env: ENV,
@@ -65,7 +79,7 @@ func App() (*buffalo.App, error) {
 				cors.Default().Handler,
 			},
 			SessionName: "_athens_session",
-			Worker:      getWorker(redisPort),
+			Worker:      worker,
 		})
 		// Automatically redirect to SSL
 		app.Use(ssl.ForceSSL(secure.Options{
@@ -90,7 +104,6 @@ func App() (*buffalo.App, error) {
 		// app.Use(middleware.PopTransaction(models.DB))
 
 		// Setup and use translations:
-		var err error
 		if T, err = i18n.New(packr.NewBox("../locales"), "en-US"); err != nil {
 			app.Stop(err)
 		}
@@ -98,17 +111,6 @@ func App() (*buffalo.App, error) {
 
 		app.GET("/", homeHandler)
 
-		store, err := GetStorage()
-		if err != nil {
-			err = fmt.Errorf("error getting storage configuration (%s)", err)
-			return nil, err
-		}
-		if err := store.Connect(); err != nil {
-			err = fmt.Errorf("error connecting to storage (%s)", err)
-			return nil, err
-		}
-
-		mf := module.NewFilter()
 		if err := addProxyRoutes(app, store, mf); err != nil {
 			err = fmt.Errorf("error adding proxy routes (%s)", err)
 			return nil, err
@@ -117,14 +119,14 @@ func App() (*buffalo.App, error) {
 		// serve files from the public directory:
 		// has to be last
 		app.ServeFiles("/", assetsBox)
-
 	}
 
 	return app, nil
 }
 
-func getWorker(port string) worker.Worker {
-	return gwa.New(gwa.Options{
+func getWorker(s storage.Backend, mf *module.Filter) (worker.Worker, error) {
+	port := env.RedisQueuePortWithDefault(":6379")
+	w := gwa.New(gwa.Options{
 		Pool: &redis.Pool{
 			MaxActive: 5,
 			MaxIdle:   5,
@@ -134,6 +136,17 @@ func getWorker(port string) worker.Worker {
 			},
 		},
 		Name:           FetcherWorkerName,
-		MaxConcurrency: 25,
+		MaxConcurrency: env.AthensMaxConcurrency(),
 	})
+
+	opts := work.JobOptions{
+		SkipDead: true,
+		MaxFails: env.WorkerMaxFails(),
+	}
+
+	if err := w.RegisterWithOptions(FetcherWorkerName, opts, GetProcessCacheMissJob(s, w, mf)); err != nil {
+		return nil, err
+	}
+
+	return w, w.RegisterWithOptions(ReporterWorkerName, opts, GetCacheMissReporterJob(w, mf))
 }

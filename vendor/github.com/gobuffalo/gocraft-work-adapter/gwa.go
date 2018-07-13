@@ -78,6 +78,13 @@ func (q *Adapter) Register(name string, h worker.Handler) error {
 	return nil
 }
 
+func (q *Adapter) RegisterWithOptions(name string, opts work.JobOptions, h worker.Handler) error {
+	q.Pool.JobWithOptions(name, opts, func(job *work.Job) error {
+		return h(job.Args)
+	})
+	return nil
+}
+
 func (q Adapter) Perform(job worker.Job) error {
 	q.Logger.Infof("Enqueuing job %s\n", job)
 	_, err := q.Enqueur.Enqueue(job.Handler, job.Args)

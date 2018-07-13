@@ -1,13 +1,13 @@
 package actions
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/suite"
+	"github.com/gocraft/work"
 	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/eventlog"
 	"github.com/gomods/athens/pkg/eventlog/mongo"
@@ -19,32 +19,7 @@ type ActionSuite struct {
 	*suite.Action
 }
 
-type FakeWorker struct {
-	job *worker.Job
-}
-
-func (f *FakeWorker) Start(ctx context.Context) error {
-	return nil
-}
-func (f *FakeWorker) Stop() error {
-	return nil
-}
-func (f *FakeWorker) Perform(j worker.Job) error {
-	f.job = &j
-	return nil
-}
-func (f *FakeWorker) PerformAt(j worker.Job, t time.Time) error {
-	return nil
-}
-func (f *FakeWorker) PerformIn(j worker.Job, t time.Duration) error {
-	return nil
-}
-func (f *FakeWorker) Register(n string, h worker.Handler) error {
-	return nil
-}
-
 func Test_ActionSuite(t *testing.T) {
-	worker := &FakeWorker{}
 	stg, err := mem.NewStorage()
 	if err != nil {
 		t.Fatalf("error creating storage (%s)", err)
@@ -61,9 +36,8 @@ func Test_ActionSuite(t *testing.T) {
 		Storage:        stg,
 		EventLog:       eLog,
 		CacheMissesLog: eLog,
-		Worker:         worker,
 	}
-	app := App(&config)
+	app, err := App(&config)
 	as := &ActionSuite{suite.NewAction(app)}
 	suite.Run(t, as)
 }
@@ -72,13 +46,31 @@ func (as *ActionSuite) Test_Cache_Miss_Route() {
 	mod := &payloads.Module{}
 	mod.Name = "moduleName"
 	mod.Version = "1.0.0"
+
+	worker, ok := as.App.Worker.(*gwa.Adapter)
+	as.True(ok)
+
+	// stop workers so job stays in the queue
+	as.NoError(worker.Stop())
+
 	res := as.JSON("/cachemiss").Post(mod)
 
-	fakeWorker, ok := as.App.Worker.(*FakeWorker)
+	// get redis queue
+	conn := worker.Enqueur.Pool.Get()
+	redisQ := OlympusWorkerName + ":jobs:" + DownloadHandlerName
+	defer conn.Close()
+
+	// Fetch the job from the queue
+	resp, err := conn.Do("LPOP", redisQ)
+	as.NoError(err)
+
+	var job work.Job
+	bResp := resp.([]byte)
+	as.NoError(json.Unmarshal(bResp, &job))
+
+	module, ok := job.Args[workerModuleKey].(string)
 	as.True(ok)
-	module, ok := fakeWorker.job.Args[workerModuleKey].(string)
-	as.True(ok)
-	version, ok := fakeWorker.job.Args[workerVersionKey].(string)
+	version, ok := job.Args[workerVersionKey].(string)
 	as.True(ok)
 
 	as.Equal("moduleName", module)
@@ -91,11 +83,31 @@ func (as *ActionSuite) Test_Push_Notification_Route() {
 	p.OriginURL = "https://mycdn.com/"
 	e := eventlog.Event{ID: "1", Module: "mymod", Version: "1.0.0", Time: time.Now(), Op: eventlog.OpAdd}
 	p.Events = []eventlog.Event{e}
+
+	worker, ok := as.App.Worker.(*gwa.Adapter)
+	as.True(ok)
+
+	// stop workers so job stays in the queue
+	as.NoError(worker.Stop())
+
+	// push event
 	res := as.JSON("/push").Post(p)
 	as.Equal(200, res.Code)
-	fakeWorker, ok := as.App.Worker.(*FakeWorker)
-	as.True(ok)
-	pnJSON, ok := fakeWorker.job.Args[workerPushNotificationKey].(string)
+
+	// get redis queue
+	conn := worker.Enqueur.Pool.Get()
+	redisQ := OlympusWorkerName + ":jobs:" + PushNotificationHandlerName
+	defer conn.Close()
+
+	// fetch the job from the queue
+	resp, err := conn.Do("LPOP", redisQ)
+	as.NoError(err)
+
+	var job work.Job
+	bResp := resp.([]byte)
+	as.NoError(json.Unmarshal(bResp, &job))
+
+	pnJSON, ok := job.Args[workerPushNotificationKey].(string)
 	as.True(ok)
 	pn := &payloads.PushNotification{}
 	b := []byte(pnJSON)

@@ -203,7 +203,7 @@
   branch = "master"
   name = "github.com/gobuffalo/gocraft-work-adapter"
   packages = ["."]
-  revision = "60818d397c5972382763a95286427f87acaeb3fb"
+  revision = "ea8ee2474b42a2cec4f8a581522db9087e6af8ab"
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
@@ -928,6 +928,10 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
+<<<<<<< HEAD
+  inputs-digest = "4eeaed6464886b68a6e06cb065f6b899402953022ab81440da60c1547cc5f4b8"
+=======
   inputs-digest = "9cc84a3946a26681be6d073c345488ca0f421c564e0f24e6adedf25755b62ed0"
+>>>>>>> master
   solver-name = "gps-cdcl"
   solver-version = 1
