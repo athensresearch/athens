@@ -10,7 +10,6 @@ import (
 	"github.com/gomods/athens/pkg/config"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/option"
-	"google.golang.org/appengine/aetest"
 )
 
 var (
@@ -38,17 +37,12 @@ func (g *GcpTests) SetupSuite() {
 		g.T().Skip()
 	}
 	g.options = option.WithCredentialsFile(creds)
-	ctx, done, err := aetest.NewContext()
-	defer done()
-	if err != nil {
-		g.T().Fatalf("could not create new aetest context: %s", err)
-	}
-	g.context = ctx
+	g.context = context.Background()
 	g.bucket = "staging.praxis-cab-207400.appspot.com"
 	// time stamped test module names will prevent concurrent test interference
 	g.module = "gcp-test" + time.Now().String()
 	g.version = "v1.2.3"
-	envy.Set("ATHENS_STORAGE_GCP_BUCKET", "staging.praxis-cab-207400.appspot.com")
+	envy.Set("ATHENS_STORAGE_GCP_BUCKET", g.bucket)
 }
 
 func (g *GcpTests) TearDownSuite() {
