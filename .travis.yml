@@ -24,7 +24,7 @@ before_script:
   - mkdir bin
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)   # All the .go files, excluding vendor/
   - go get github.com/golang/lint/golint
-  - go get github.com/golang/dep
+  - go get github.com/golang/dep/cmd/dep
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
   - ./scripts/get_buffalo.sh
