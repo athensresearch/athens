@@ -1,0 +1,8 @@
+# set default behavior for those who have not set core.autcrlf
+* text=auto
+
+# the following file types will be normalized and converted to native endings
+# on checkout
+*.md
+*.toml
+*.yml
