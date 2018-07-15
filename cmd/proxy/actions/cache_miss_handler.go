@@ -1,20 +1,19 @@
 package actions
 
 import (
-	"log"
-
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/worker"
+	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/paths"
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func cacheMissHandler(next buffalo.Handler, w worker.Worker, mf *module.Filter) buffalo.Handler {
+func cacheMissHandler(next buffalo.Handler, w worker.Worker, mf *module.Filter, lggr log.Entry) buffalo.Handler {
 	return func(c buffalo.Context) error {
 		params, err := paths.GetAllParams(c)
 		if err != nil {
-			log.Println(err)
+			lggr.SystemErr(err)
 			return err
 		}
 
@@ -26,7 +25,7 @@ func cacheMissHandler(next buffalo.Handler, w worker.Worker, mf *module.Filter) 
 		if storage.IsNotFoundError(nextErr) {
 			// TODO: add separate worker instead of inline reports
 			if err := queueCacheMissReportJob(params.Module, params.Version, app.Worker); err != nil {
-				log.Println(err)
+				lggr.SystemErr(err)
 				return nextErr
 			}
 
