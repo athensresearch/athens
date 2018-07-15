@@ -9,6 +9,13 @@ If you want more of a tl;dr on the project, check out [this quick introduction](
 
 # Project Status
 
+[![Build Status](https://travis-ci.org/gomods/athens.svg?branch=master)](https://travis-ci.org/gomods/athens)
+[![codecov](https://codecov.io/gh/gomods/athens/branch/master/graph/badge.svg)](https://codecov.io/gh/gomods/athens)
+[![GoDoc](https://godoc.org/github.com/gomods/athens?status.svg)](https://godoc.org/github.com/gomods/athens)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gomods/athens)](https://goreportcard.com/report/github.com/gomods/athens)              
+
+
+
 Project Athens is in a very early alpha release and everything might change.
 Don't run it in production, but do play around with it and [contribute](#contributing)
 when you can!
