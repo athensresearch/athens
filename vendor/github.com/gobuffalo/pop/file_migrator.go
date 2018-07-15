@@ -2,13 +2,16 @@ package pop
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
-	"github.com/gobuffalo/pop/fizz"
+	"github.com/gobuffalo/fizz"
+	"github.com/gobuffalo/pop/fix"
 	"github.com/pkg/errors"
 )
 
@@ -44,16 +47,26 @@ func (fm *FileMigrator) findMigrations() error {
 	filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			matches := mrx.FindAllStringSubmatch(info.Name(), -1)
-			if matches == nil || len(matches) == 0 {
+			if len(matches) == 0 {
 				return nil
 			}
 			m := matches[0]
+			var dbType string
+			if m[3] == "" {
+				dbType = "all"
+			} else {
+				dbType = m[3][1:]
+				if !DialectSupported(dbType) {
+					return fmt.Errorf("unsupported dialect %s", dbType)
+				}
+			}
 			mf := Migration{
 				Path:      p,
 				Version:   m[1],
 				Name:      m[2],
-				Direction: m[3],
-				Type:      m[4],
+				DBType:    dbType,
+				Direction: m[4],
+				Type:      m[5],
 				Runner: func(mf Migration, tx *Connection) error {
 					f, err := os.Open(p)
 					if err != nil {
@@ -89,6 +102,18 @@ func migrationContent(mf Migration, c *Connection, r io.Reader) (string, error) 
 	}
 
 	content := string(b)
+
+	if mf.Type == "fizz" {
+		// test for && fix anko migrations
+		fixed, err := fix.Anko(content)
+		if err != nil {
+			return "", errors.Wrapf(err, "could not fizz the migration %s", mf.Path)
+		}
+		if strings.TrimSpace(fixed) != strings.TrimSpace(content) {
+			fmt.Printf("[WARN] %s uses an old fizz syntax. please use\n%s\n", mf.Path, fixed)
+		}
+		content = fixed
+	}
 
 	t := template.Must(template.New("sql").Parse(content))
 	var bb bytes.Buffer

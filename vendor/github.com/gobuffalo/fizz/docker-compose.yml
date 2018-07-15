@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=pop_test
+      - MYSQL_USER=pop
+      - MYSQL_PASSWORD=pop
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_DB=pop_test
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sqldumps:/docker-entrypoint-initdb.d
+  cockroach:
+    image: cockroachdb/cockroach:v1.1.1
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - "./cockroach-data/roach1:/cockroach/cockroach-data"
+    command: start --insecure

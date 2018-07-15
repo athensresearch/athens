@@ -13,6 +13,8 @@ type Bool struct {
 	Valid bool
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the bool is not valid, otherwise it returns the bool value.
 func (ns Bool) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -73,6 +75,8 @@ func (ns *Bool) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Bool) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

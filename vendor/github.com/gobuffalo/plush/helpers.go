@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"os"
 	"reflect"
 	"strings"
 	"sync"
 
 	"github.com/gobuffalo/plush/ast"
 
+	"github.com/gobuffalo/envy"
 	"github.com/markbates/inflect"
 	"github.com/pkg/errors"
 )
@@ -31,7 +31,7 @@ func init() {
 	Helpers.Add("downcase", strings.ToLower)
 	Helpers.Add("contentFor", contentForHelper)
 	Helpers.Add("contentOf", contentOfHelper)
-	Helpers.Add("markdown", markdownHelper)
+	Helpers.Add("markdown", MarkdownHelper)
 	Helpers.Add("len", lenHelper)
 	Helpers.Add("debug", debugHelper)
 	Helpers.Add("inspect", inspectHelper)
@@ -42,6 +42,8 @@ func init() {
 	Helpers.Add("form", BootstrapFormHelper)
 	Helpers.Add("form_for", BootstrapFormForHelper)
 	Helpers.Add("truncate", truncateHelper)
+	Helpers.Add("env", envy.MustGet)
+	Helpers.Add("envOr", envy.Get)
 	Helpers.Add("raw", func(s string) template.HTML {
 		return template.HTML(s)
 	})
@@ -121,10 +123,6 @@ func debugHelper(v interface{}) template.HTML {
 
 func inspectHelper(v interface{}) string {
 	return fmt.Sprintf("%+v", v)
-}
-
-func envHelper(k string) string {
-	return os.Getenv(k)
 }
 
 func htmlEscape(s string, help HelperContext) (string, error) {

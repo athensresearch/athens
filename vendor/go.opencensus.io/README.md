@@ -32,8 +32,7 @@ Currently, OpenCensus supports:
 * Stackdriver [Monitoring][exporter-stackdriver] and [Trace][exporter-stackdriver]
 * [Jaeger][exporter-jaeger] for traces
 * [AWS X-Ray][exporter-xray] for traces
-
-
+* [Datadog][exporter-datadog] for stats and traces
 ## Overview
 
 ![OpenCensus Overview](https://i.imgur.com/cf4ElHE.jpg)
@@ -116,16 +115,16 @@ Here we create a view with the DistributionAggregation over our measure.
 [embedmd]:# (internal/readme/stats.go view)
 ```go
 if err := view.Register(&view.View{
-	Name:        "my.org/video_size_distribution",
+	Name:        "example.com/video_size_distribution",
 	Description: "distribution of processed video size over time",
 	Measure:     videoSize,
 	Aggregation: view.Distribution(0, 1<<32, 2<<32, 3<<32),
 }); err != nil {
-	log.Fatalf("Failed to subscribe to view: %v", err)
+	log.Fatalf("Failed to register view: %v", err)
 }
 ```
 
-Subscribe begins collecting data for the view. Subscribed views' data will be
+Register begins collecting data for the view. Registered views' data will be
 exported via the registered exporters.
 
 ## Traces
@@ -188,3 +187,4 @@ release in which the functionality was marked *Deprecated*.
 [exporter-zipkin]: https://godoc.org/go.opencensus.io/exporter/zipkin
 [exporter-jaeger]: https://godoc.org/go.opencensus.io/exporter/jaeger
 [exporter-xray]: https://github.com/census-instrumentation/opencensus-go-exporter-aws
+[exporter-datadog]: https://github.com/DataDog/opencensus-go-exporter-datadog

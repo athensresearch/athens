@@ -7,14 +7,14 @@ dist: trusty
 
 matrix:
   include:
-  - go: 1.7
+  - go: 1.9
     env:
     - TESTS=true
     - COVERAGE=true
-  - go: 1.7
+  - go: 1.9
     env:
     - CROSSDOCK=true
-  - go: 1.7
+  - go: 1.9
     env:
     - TESTS=true
     - USE_DEP=true

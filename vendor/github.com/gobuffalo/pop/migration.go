@@ -2,41 +2,28 @@ package pop
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"runtime"
 	"time"
 
+	"github.com/gobuffalo/makr"
 	"github.com/pkg/errors"
 )
 
 // MigrationCreate writes contents for a given migration in normalized files
 func MigrationCreate(path, name, ext string, up, down []byte) error {
+	g := makr.New()
 	n := time.Now().UTC()
 	s := n.Format("20060102150405")
 
-	err := os.MkdirAll(path, 0766)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't create migrations path %s", path)
-	}
-
 	upf := filepath.Join(path, (fmt.Sprintf("%s_%s.up.%s", s, name, ext)))
-	err = ioutil.WriteFile(upf, up, 0666)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't write up migration %s", upf)
-	}
-	fmt.Printf("> %s\n", upf)
+	g.Add(makr.NewFile(upf, string(up)))
 
 	downf := filepath.Join(path, (fmt.Sprintf("%s_%s.down.%s", s, name, ext)))
-	err = ioutil.WriteFile(downf, down, 0666)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't write up migration %s", downf)
-	}
+	g.Add(makr.NewFile(downf, string(down)))
 
-	fmt.Printf("> %s\n", downf)
-	return nil
+	return g.Run(".", makr.Data{})
 }
 
 // MigrateUp is deprecated, and will be removed in a future version. Use FileMigrator#Up instead.

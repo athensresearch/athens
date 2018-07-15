@@ -136,7 +136,7 @@ func (f FormFor) RadioButtonTag(field string, opts tags.Options) *tags.Tag {
 }
 
 //SelectTag creates a select tag for a specified struct field and loads options from the options opject
-func (f FormFor) SelectTag(field string, opts tags.Options) *SelectTag {
+func (f FormFor) SelectTag(field string, opts tags.Options) *tags.Tag {
 	f.buildOptions(field, opts)
 	return f.Form.SelectTag(opts)
 }

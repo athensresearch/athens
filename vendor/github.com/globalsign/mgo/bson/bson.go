@@ -42,6 +42,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"reflect"
 	"runtime"
@@ -426,6 +427,36 @@ func Now() time.Time {
 // strange reason has its own datatype defined in BSON.
 type MongoTimestamp int64
 
+// Time returns the time part of ts which is stored with second precision.
+func (ts MongoTimestamp) Time() time.Time {
+	return time.Unix(int64(uint64(ts)>>32), 0)
+}
+
+// Counter returns the counter part of ts.
+func (ts MongoTimestamp) Counter() uint32 {
+	return uint32(ts)
+}
+
+// NewMongoTimestamp creates a timestamp using the given
+// date `t` (with second precision) and counter `c` (unique for `t`).
+//
+// Returns an error if time `t` is not between 1970-01-01T00:00:00Z
+// and 2106-02-07T06:28:15Z (inclusive).
+//
+// Note that two MongoTimestamps should never have the same (time, counter) combination:
+// the caller must ensure the counter `c` is increased if creating multiple MongoTimestamp
+// values for the same time `t` (ignoring fractions of seconds).
+func NewMongoTimestamp(t time.Time, c uint32) (MongoTimestamp, error) {
+	u := t.Unix()
+	if u < 0 || u > math.MaxUint32 {
+		return -1, errors.New("invalid value for time")
+	}
+
+	i := int64(u<<32 | int64(c))
+
+	return MongoTimestamp(i), nil
+}
+
 type orderKey int64
 
 // MaxKey is a special value that compares higher than all other possible BSON
@@ -746,6 +777,14 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 					return nil, errors.New("Option ,inline needs a map with string keys in struct " + st.String())
 				}
 				inlineMap = info.Num
+			case reflect.Ptr:
+				// allow only pointer to struct
+				if kind := field.Type.Elem().Kind(); kind != reflect.Struct {
+					return nil, errors.New("Option ,inline allows a pointer only to a struct, was given pointer to " + kind.String())
+				}
+
+				field.Type = field.Type.Elem()
+				fallthrough
 			case reflect.Struct:
 				sinfo, err := getStructInfo(field.Type)
 				if err != nil {
@@ -765,7 +804,7 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 					fieldsList = append(fieldsList, finfo)
 				}
 			default:
-				panic("Option ,inline needs a struct value or map field")
+				panic("Option ,inline needs a struct value or a pointer to a struct or map field")
 			}
 			continue
 		}

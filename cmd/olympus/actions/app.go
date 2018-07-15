@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/garyburd/redigo/redis"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
 	"github.com/gobuffalo/buffalo/middleware/csrf"
@@ -17,6 +16,7 @@ import (
 	"github.com/gomods/athens/pkg/eventlog"
 	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/storage"
+	"github.com/gomodule/redigo/redis"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 )

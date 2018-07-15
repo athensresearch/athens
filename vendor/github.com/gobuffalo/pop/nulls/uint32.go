@@ -14,6 +14,8 @@ type UInt32 struct {
 	Valid  bool // Valid is true if Int is not NULL
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the uint32 is not valid, otherwise it returns the uint32 value.
 func (ns UInt32) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -71,6 +73,8 @@ func (ns *UInt32) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *UInt32) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

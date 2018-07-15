@@ -2,16 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/apache/thrift"
-  packages = ["lib/go/thrift"]
-  revision = "b2a4d4ae21c789b689dd162deb819665567f481c"
-  version = "0.10.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
-  revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
   branch = "master"
@@ -22,7 +16,11 @@
 [[projects]]
   branch = "master"
   name = "github.com/crossdock/crossdock-go"
-  packages = [".","assert","require"]
+  packages = [
+    ".",
+    "assert",
+    "require"
+  ]
   revision = "049aabb0122b03bc9bd30cab8f3f91fb60166361"
 
 [[projects]]
@@ -32,10 +30,10 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -45,9 +43,19 @@
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
-  packages = [".","ext","log"]
+  packages = [
+    ".",
+    "ext",
+    "log"
+  ]
   revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
   version = "v1.0.2"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -70,20 +78,33 @@
 [[projects]]
   branch = "master"
   name = "github.com/prometheus/common"
-  packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
-  revision = "2e54d0b93cba2fd133edc32211dcc32c06ef72ca"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "d811d2e9bf898806ecfb6ef6296774b13ffc314c"
 
 [[projects]]
   branch = "master"
   name = "github.com/prometheus/procfs"
-  packages = [".","xfs"]
-  revision = "b15cd069a83443be3154b719d0cc9fe8117f09fb"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs"
+  ]
+  revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","require","suite"]
-  revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
-  version = "v1.2.0"
+  packages = [
+    "assert",
+    "require",
+    "suite"
+  ]
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   name = "github.com/uber-go/atomic"
@@ -93,15 +114,13 @@
 
 [[projects]]
   name = "github.com/uber/jaeger-lib"
-  packages = ["metrics","metrics/prometheus","metrics/testutils"]
-  revision = "5519f3beabf28707fca8d3f47f9cff87dad48d96"
-  version = "v1.3.0"
-
-[[projects]]
-  name = "github.com/uber/tchannel-go"
-  packages = [".","internal/argreader","relay","thrift","thrift/gen-go/meta","tnet","tos","trand","typed"]
-  revision = "7bcb33f4bb908c21374f8bfdc9d4b1ebcbb8dab0"
-  version = "v1.8.1"
+  packages = [
+    "metrics",
+    "metrics/prometheus",
+    "metrics/testutils"
+  ]
+  revision = "4267858c0679cd4e47cefed8d7f70fd386cfb567"
+  version = "v1.4.0"
 
 [[projects]]
   name = "go.uber.org/atomic"
@@ -117,19 +136,29 @@
 
 [[projects]]
   name = "go.uber.org/zap"
-  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
-  revision = "35aad584952c3e7020db7b839f6b102de6271f89"
-  version = "v1.7.1"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore"
+  ]
+  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["bpf","context","context/ctxhttp","internal/iana","internal/socket","ipv4","ipv6"]
-  revision = "434ec0c7fe3742c984919a691b2018a6e9694425"
+  packages = [
+    "context",
+    "context/ctxhttp"
+  ]
+  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7a06a767b8089d38c4676b92b49cab2020b7507e7d5ea2738533c9a9865782ad"
+  inputs-digest = "f9dcfaf37a785c5dac1e20c29605eda29a83ba9c6f8842e92960dc94c8c4ff80"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -2,6 +2,7 @@ package pop
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"sync"
@@ -27,6 +28,30 @@ func newSQLBuilder(q Query, m *Model, addColumns ...string) *sqlBuilder {
 	}
 }
 
+var (
+	regexpMatchLimit    = regexp.MustCompile(`(?i).*\s+limit\s+[0-9]*(\s?,\s?[0-9]*)?$`)
+	regexpMatchOffset   = regexp.MustCompile(`(?i).*\s+offset\s+[0-9]*$`)
+	regexpMatchRowsOnly = regexp.MustCompile(`(?i).*\s+rows only`)
+	regexpMatchNames    = regexp.MustCompile("(?i).*;+.*") // https://play.golang.org/p/FAmre5Sjin5
+)
+
+func hasLimitOrOffset(sqlString string) bool {
+	trimmedSQL := strings.TrimSpace(sqlString)
+	if regexpMatchLimit.MatchString(trimmedSQL) {
+		return true
+	}
+
+	if regexpMatchOffset.MatchString(trimmedSQL) {
+		return true
+	}
+
+	if regexpMatchRowsOnly.MatchString(trimmedSQL) {
+		return true
+	}
+
+	return false
+}
+
 func (sq *sqlBuilder) String() string {
 	if sq.sql == "" {
 		sq.compile()
@@ -50,7 +75,14 @@ var inRegex = regexp.MustCompile(`(?i)in\s*\(\s*\?\s*\)`)
 func (sq *sqlBuilder) compile() {
 	if sq.sql == "" {
 		if sq.Query.RawSQL.Fragment != "" {
-			sq.sql = sq.Query.RawSQL.Fragment
+			if sq.Query.Paginator != nil && !hasLimitOrOffset(sq.Query.RawSQL.Fragment) {
+				sq.sql = sq.buildPaginationClauses(sq.Query.RawSQL.Fragment)
+			} else {
+				if sq.Query.Paginator != nil {
+					log.Println("Warning: Query already contains pagination")
+				}
+				sq.sql = sq.Query.RawSQL.Fragment
+			}
 		} else {
 			sq.sql = sq.buildSelectSQL()
 		}
@@ -115,9 +147,7 @@ func (sq *sqlBuilder) buildWhereClauses(sql string) string {
 	wc := sq.Query.whereClauses
 	if len(wc) > 0 {
 		sql = fmt.Sprintf("%s WHERE %s", sql, wc.Join(" AND "))
-		for _, arg := range wc.Args() {
-			sq.args = append(sq.args, arg)
-		}
+		sq.args = append(sq.args, wc.Args()...)
 	}
 	return sql
 }
@@ -127,9 +157,7 @@ func (sq *sqlBuilder) buildJoinClauses(sql string) string {
 	if len(oc) > 0 {
 		sql += " " + oc.String()
 		for i := range oc {
-			for _, arg := range oc[i].Arguments {
-				sq.args = append(sq.args, arg)
-			}
+			sq.args = append(sq.args, oc[i].Arguments...)
 		}
 	}
 
@@ -147,9 +175,7 @@ func (sq *sqlBuilder) buildGroupClauses(sql string) string {
 		}
 
 		for i := range hc {
-			for _, arg := range hc[i].Arguments {
-				sq.args = append(sq.args, arg)
-			}
+			sq.args = append(sq.args, hc[i].Arguments...)
 		}
 	}
 
@@ -159,10 +185,15 @@ func (sq *sqlBuilder) buildGroupClauses(sql string) string {
 func (sq *sqlBuilder) buildOrderClauses(sql string) string {
 	oc := sq.Query.orderClauses
 	if len(oc) > 0 {
-		sql = fmt.Sprintf("%s ORDER BY %s", sql, oc.Join(", "))
-		for _, arg := range oc.Args() {
-			sq.args = append(sq.args, arg)
+		orderSQL := oc.Join(", ")
+		if regexpMatchNames.MatchString(orderSQL) {
+			warningMsg := fmt.Sprintf("Warning: Order clause(s) contains invalid characters: %s", orderSQL)
+			log.Println(warningMsg)
+			return sql
 		}
+
+		sql = fmt.Sprintf("%s ORDER BY %s", sql, orderSQL)
+		sq.args = append(sq.args, oc.Args()...)
 	}
 	return sql
 }
@@ -183,16 +214,20 @@ var columnCacheMutex = sync.Mutex{}
 
 func (sq *sqlBuilder) buildColumns() columns.Columns {
 	tableName := sq.Model.TableName()
+	asName := sq.Model.As
+	if asName == "" {
+		asName = strings.Replace(tableName, ".", "_", -1)
+	}
 	acl := len(sq.AddColumns)
 	if acl <= 0 {
 		columnCacheMutex.Lock()
 		cols, ok := columnCache[tableName]
 		columnCacheMutex.Unlock()
 		//if alias is different, remake columns
-		if ok && cols.TableAlias == sq.Model.As {
+		if ok && cols.TableAlias == asName {
 			return cols
 		}
-		cols = columns.ColumnsForStructWithAlias(sq.Model.Value, tableName, sq.Model.As)
+		cols = columns.ForStructWithAlias(sq.Model.Value, tableName, asName)
 		columnCacheMutex.Lock()
 		columnCache[tableName] = cols
 		columnCacheMutex.Unlock()

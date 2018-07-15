@@ -16,12 +16,6 @@ type SelectTag struct {
 }
 
 func (s SelectTag) String() string {
-	for _, x := range s.SelectOptions {
-		if _, ok := s.selectedValueCache[template.HTMLEscaper(x.Value)]; ok {
-			x.Selected = true
-		}
-		s.Append(x.String())
-	}
 	return s.Tag.String()
 }
 
@@ -31,7 +25,7 @@ func (s SelectTag) HTML() template.HTML {
 }
 
 // NewSelectTag constructs a new `<select>` tag.
-func NewSelectTag(opts tags.Options) *SelectTag {
+func NewSelectTag(opts tags.Options) *tags.Tag {
 	so := parseSelectOptions(opts)
 	selected := opts["value"]
 	delete(opts, "value")
@@ -70,17 +64,27 @@ func NewSelectTag(opts tags.Options) *SelectTag {
 		selectedMap[template.HTMLEscaper(selected)] = struct{}{}
 	}
 
+	delete(opts, "tag_only")
+
 	st := &SelectTag{
 		Tag:                tags.New("select", opts),
 		SelectOptions:      so,
 		SelectedValue:      selected,
 		selectedValueCache: selectedMap,
 	}
-	return st
+
+	for _, x := range st.SelectOptions {
+		if _, ok := st.selectedValueCache[template.HTMLEscaper(x.Value)]; ok {
+			x.Selected = true
+		}
+		st.Append(x.String())
+	}
+
+	return st.Tag
 }
 
 // SelectTag constructs a new `<select>` tag from a form.
-func (f Form) SelectTag(opts tags.Options) *SelectTag {
+func (f Form) SelectTag(opts tags.Options) *tags.Tag {
 	return NewSelectTag(opts)
 }
 

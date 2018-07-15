@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/gobuffalo/pop/columns"
+	"github.com/gobuffalo/pop/nulls"
 )
 
 // Association represents a definition of a model association
@@ -14,6 +15,17 @@ type Association interface {
 	Interface() interface{}
 	Constraint() (string, []interface{})
 	InnerAssociations() InnerAssociations
+	Skipped() bool
+}
+
+// associationSkipable is a helper struct that helps
+// to include skippable behavior in associations.
+type associationSkipable struct {
+	skipped bool
+}
+
+func (a *associationSkipable) Skipped() bool {
+	return a.skipped
 }
 
 // associationComposite adds the ability for a Association to
@@ -37,20 +49,82 @@ type InnerAssociation struct {
 // InnerAssociations is a group of InnerAssociation.
 type InnerAssociations []InnerAssociation
 
-// AssociationSortable a type to be sortable.
+// AssociationSortable allows a type to be sortable.
 type AssociationSortable interface {
 	OrderBy() string
 	Association
 }
 
+// AssociationBeforeCreatable allows an association to be created before
+// the parent structure.
+type AssociationBeforeCreatable interface {
+	BeforeInterface() interface{}
+	BeforeSetup() error
+	Association
+}
+
+// AssociationAfterCreatable allows an association to be created after
+// the parent structure.
+type AssociationAfterCreatable interface {
+	AfterInterface() interface{}
+	AfterSetup() error
+	Association
+}
+
+// AssociationCreatableStatement a association that defines
+// create statements on database.
+type AssociationCreatableStatement interface {
+	Statements() []AssociationStatement
+	Association
+}
+
+// AssociationStatement a type that represents a statement to be
+// executed.
+type AssociationStatement struct {
+	Statement string
+	Args      []interface{}
+}
+
 // Associations a group of model associations.
 type Associations []Association
 
-// SkippedAssociation an empty association used to indicate
-// an association should not be queried.
-var SkippedAssociation = (Association)(nil)
+// AssociationsBeforeCreatable returns all associations that implement AssociationBeforeCreatable
+// interface. Belongs To association is an example of this implementation.
+func (a Associations) AssociationsBeforeCreatable() []AssociationBeforeCreatable {
+	before := []AssociationBeforeCreatable{}
+	for i := range a {
+		if _, ok := a[i].(AssociationBeforeCreatable); ok {
+			before = append(before, a[i].(AssociationBeforeCreatable))
+		}
+	}
+	return before
+}
 
-// associationParams a wrapper for associations definition
+// AssociationsAfterCreatable returns all associations that implement AssociationAfterCreatable
+// interface. Has Many and Has One associations are example of this implementation.
+func (a Associations) AssociationsAfterCreatable() []AssociationAfterCreatable {
+	after := []AssociationAfterCreatable{}
+	for i := range a {
+		if _, ok := a[i].(AssociationAfterCreatable); ok {
+			after = append(after, a[i].(AssociationAfterCreatable))
+		}
+	}
+	return after
+}
+
+// AssociationsCreatableStatement returns all associations that implement AssociationCreatableStament
+// interface. Many To Many association is an example of this implementation.
+func (a Associations) AssociationsCreatableStatement() []AssociationCreatableStatement {
+	stm := []AssociationCreatableStatement{}
+	for i := range a {
+		if _, ok := a[i].(AssociationCreatableStatement); ok {
+			stm = append(stm, a[i].(AssociationCreatableStatement))
+		}
+	}
+	return stm
+}
+
+// associationParams is a wrapper for associations definition
 // and creation.
 type associationParams struct {
 	field             reflect.StructField // an association field defined in model.
@@ -65,22 +139,17 @@ type associationParams struct {
 // see the builder defined in ./has_many_association.go as a guide of how to use it.
 type associationBuilder func(associationParams) (Association, error)
 
-// nullable means this type is a nullable association field.
-type nullable interface {
-	Interface() interface{}
-}
-
 // fieldIsNil validates if a field has a nil reference. Also
 // it validates if a field implements nullable interface and
 // it has a nil value.
 func fieldIsNil(f reflect.Value) bool {
-	null := (*nullable)(nil)
-	t := reflect.TypeOf(f.Interface())
-	if t.Implements(reflect.TypeOf(null).Elem()) {
-		m := reflect.ValueOf(f.Interface()).MethodByName("Interface")
-		out := m.Call([]reflect.Value{})
-		idValue := out[0].Interface()
-		return idValue == nil
+	if n := nulls.New(f.Interface()); n != nil {
+		return n.Interface() == nil
 	}
 	return f.Interface() == nil
+}
+
+func isZero(i interface{}) bool {
+	v := reflect.ValueOf(i)
+	return v.Interface() == reflect.Zero(v.Type()).Interface()
 }

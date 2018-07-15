@@ -10,6 +10,8 @@ import (
 // that supports proper JSON encoding/decoding.
 type String sql.NullString
 
+// Interface implements the nullable interface. It returns nil if
+// the string is not valid, otherwise it returns the string value.
 func (ns String) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -61,6 +63,8 @@ func (ns *String) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *String) UnmarshalText(text []byte) error {
 	ns.Valid = false
 	t := string(text)

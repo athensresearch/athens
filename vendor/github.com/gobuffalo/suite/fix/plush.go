@@ -8,6 +8,7 @@ import (
 	"github.com/gobuffalo/plush"
 	"github.com/gobuffalo/uuid"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func render(file packr.File) (string, error) {
@@ -23,8 +24,17 @@ func render(file packr.File) (string, error) {
 		},
 		"uuidNamed": uuidNamed,
 		"now":       time.Now,
+		"hash":      hash,
 	}))
+}
 
+func hash(s string, opts map[string]interface{}, help plush.HelperContext) (string, error) {
+	cost := bcrypt.DefaultCost
+	if i, ok := opts["cost"].(int); ok {
+		cost = i
+	}
+	ph, err := bcrypt.GenerateFromPassword([]byte(s), cost)
+	return string(ph), err
 }
 
 func uuidNamed(name string, help plush.HelperContext) uuid.UUID {

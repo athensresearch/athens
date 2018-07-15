@@ -6,18 +6,17 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
-	// Load CockroachdbQL Go driver
+	// Load CockroachdbQL/postgres Go driver
+	// also loads github.com/lib/pq
 	_ "github.com/cockroachdb/cockroach-go/crdb"
-	_ "github.com/lib/pq"
 
+	"github.com/gobuffalo/fizz"
+	"github.com/gobuffalo/fizz/translators"
 	"github.com/gobuffalo/pop/columns"
-	"github.com/gobuffalo/pop/fizz"
-	"github.com/gobuffalo/pop/fizz/translators"
 	"github.com/markbates/going/defaults"
 	"github.com/pkg/errors"
 )
@@ -28,6 +27,10 @@ type cockroach struct {
 	translateCache    map[string]string
 	mu                sync.Mutex
 	ConnectionDetails *ConnectionDetails
+}
+
+func (p *cockroach) Name() string {
+	return "cockroach"
 }
 
 func (p *cockroach) Details() *ConnectionDetails {
@@ -55,10 +58,8 @@ func (p *cockroach) Create(s store, model *Model, cols columns.Columns) error {
 		}
 		model.setID(id.ID)
 		return nil
-	case "UUID":
-		return genericCreate(s, model, cols)
 	}
-	return errors.Errorf("can not use %s as a primary key type!", keyType)
+	return genericCreate(s, model, cols)
 }
 
 func (p *cockroach) Update(s store, model *Model, cols columns.Columns) error {
@@ -146,20 +147,8 @@ func (p *cockroach) TranslateSQL(sql string) string {
 	if csql, ok := p.translateCache[sql]; ok {
 		return csql
 	}
-	curr := 1
-	out := make([]byte, 0, len(sql))
-	for i := 0; i < len(sql); i++ {
-		if sql[i] == '?' {
-			str := "$" + strconv.Itoa(curr)
-			for _, char := range str {
-				out = append(out, byte(char))
-			}
-			curr++
-		} else {
-			out = append(out, sql[i])
-		}
-	}
-	csql := string(out)
+	csql := sqlx.Rebind(sqlx.DOLLAR, sql)
+
 	p.translateCache[sql] = csql
 	return csql
 }
@@ -238,12 +227,16 @@ func (p *cockroach) TruncateAll(tx *Connection) error {
 		return err
 	}
 
-	table_names := make([]string, len(tables))
-	for i, t := range tables {
-		table_names[i] = t.TableName
+	if len(tables) == 0 {
+		return nil
 	}
 
-	return tx.RawQuery(fmt.Sprintf("truncate %s cascade;", strings.Join(table_names, ", "))).Exec()
+	tableNames := make([]string, len(tables))
+	for i, t := range tables {
+		tableNames[i] = t.TableName
+	}
+
+	return tx.RawQuery(fmt.Sprintf("truncate %s cascade;", strings.Join(tableNames, ", "))).Exec()
 }
 
 func newCockroach(deets *ConnectionDetails) dialect {

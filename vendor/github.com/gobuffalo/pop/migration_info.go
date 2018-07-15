@@ -14,6 +14,8 @@ type Migration struct {
 	Direction string
 	// Type of migration (sql)
 	Type string
+	// DB type (all|postgres|mysql...)
+	DBType string
 	// Runner function to run/execute the migration
 	Runner func(Migration, *Connection) error
 }

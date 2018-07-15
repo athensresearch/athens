@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gobuffalo/pop/associations"
 	"github.com/gobuffalo/uuid"
@@ -19,7 +20,8 @@ var rLimit = regexp.MustCompile("(?i)(limit [0-9]+)$")
 //
 //	c.Find(&User{}, 1)
 func (c *Connection) Find(model interface{}, id interface{}) error {
-	return Q(c).Find(model, id)
+	q := Q(c)
+	return q.Find(model, id)
 }
 
 // Find the first record of the model in the database with a particular id.
@@ -46,7 +48,8 @@ func (q *Query) Find(model interface{}, id interface{}) error {
 //
 //	c.First(&User{})
 func (c *Connection) First(model interface{}) error {
-	return Q(c).First(model)
+	q := Q(c)
+	return q.First(model)
 }
 
 // First record of the model in the database that matches the query.
@@ -67,7 +70,9 @@ func (q *Query) First(model interface{}) error {
 	}
 
 	if q.eager {
-		return q.eagerAssociations(model)
+		err = q.eagerAssociations(model)
+		q.disableEager()
+		return err
 	}
 	return nil
 }
@@ -76,7 +81,8 @@ func (q *Query) First(model interface{}) error {
 //
 //	c.Last(&User{})
 func (c *Connection) Last(model interface{}) error {
-	return Q(c).Last(model)
+	q := Q(c)
+	return q.Last(model)
 }
 
 // Last record of the model in the database that matches the query.
@@ -85,7 +91,7 @@ func (c *Connection) Last(model interface{}) error {
 func (q *Query) Last(model interface{}) error {
 	err := q.Connection.timeFunc("Last", func() error {
 		q.Limit(1)
-		q.Order("id desc")
+		q.Order("created_at DESC, id DESC")
 		m := &Model{Value: model}
 		if err := q.Connection.Dialect.SelectOne(q.Connection.Store, m, *q); err != nil {
 			return err
@@ -98,7 +104,9 @@ func (q *Query) Last(model interface{}) error {
 	}
 
 	if q.eager {
-		return q.eagerAssociations(model)
+		err = q.eagerAssociations(model)
+		q.disableEager()
+		return err
 	}
 
 	return nil
@@ -108,7 +116,8 @@ func (q *Query) Last(model interface{}) error {
 //
 //	c.All(&[]User{})
 func (c *Connection) All(models interface{}) error {
-	return Q(c).All(models)
+	q := Q(c)
+	return q.All(models)
 }
 
 // All retrieves all of the records in the database that match the query.
@@ -118,18 +127,10 @@ func (q *Query) All(models interface{}) error {
 	err := q.Connection.timeFunc("All", func() error {
 		m := &Model{Value: models}
 		err := q.Connection.Dialect.SelectMany(q.Connection.Store, m, *q)
-		if err == nil && q.Paginator != nil {
-			ct, err := q.Count(models)
-			if err == nil {
-				q.Paginator.TotalEntriesSize = ct
-				st := reflect.ValueOf(models).Elem()
-				q.Paginator.CurrentEntriesSize = st.Len()
-				q.Paginator.TotalPages = (q.Paginator.TotalEntriesSize / q.Paginator.PerPage)
-				if q.Paginator.TotalEntriesSize%q.Paginator.PerPage > 0 {
-					q.Paginator.TotalPages = q.Paginator.TotalPages + 1
-				}
-			}
+		if err != nil {
+			return err
 		}
+		err = q.paginateModel(models)
 		if err != nil {
 			return err
 		}
@@ -141,9 +142,31 @@ func (q *Query) All(models interface{}) error {
 	}
 
 	if q.eager {
-		return q.eagerAssociations(models)
+		err = q.eagerAssociations(models)
+		q.disableEager()
+		return err
 	}
 
+	return nil
+}
+
+func (q *Query) paginateModel(models interface{}) error {
+	if q.Paginator == nil {
+		return nil
+	}
+
+	ct, err := q.Count(models)
+	if err != nil {
+		return err
+	}
+
+	q.Paginator.TotalEntriesSize = ct
+	st := reflect.ValueOf(models).Elem()
+	q.Paginator.CurrentEntriesSize = st.Len()
+	q.Paginator.TotalPages = (q.Paginator.TotalEntriesSize / q.Paginator.PerPage)
+	if q.Paginator.TotalEntriesSize%q.Paginator.PerPage > 0 {
+		q.Paginator.TotalPages = q.Paginator.TotalPages + 1
+	}
 	return nil
 }
 
@@ -155,7 +178,9 @@ func (q *Query) All(models interface{}) error {
 func (c *Connection) Load(model interface{}, fields ...string) error {
 	q := Q(c)
 	q.eagerFields = fields
-	return q.eagerAssociations(model)
+	err := q.eagerAssociations(model)
+	q.disableEager()
+	return err
 }
 
 func (q *Query) eagerAssociations(model interface{}) error {
@@ -175,18 +200,22 @@ func (q *Query) eagerAssociations(model interface{}) error {
 		return err
 	}
 
-	assos, err := associations.AssociationsForStruct(model, q.eagerFields...)
-
+	assos, err := associations.ForStruct(model, q.eagerFields...)
 	if err != nil {
 		return err
 	}
 
+	//disable eager mode for current connection.
+	q.eager = false
+	q.Connection.eager = false
+
 	for _, association := range assos {
-		if association == associations.SkippedAssociation {
+		if association.Skipped() {
 			continue
 		}
 
 		query := Q(q.Connection)
+
 		whereCondition, args := association.Constraint()
 		query = query.Where(whereCondition, args...)
 
@@ -221,8 +250,9 @@ func (q *Query) eagerAssociations(model interface{}) error {
 		innerAssociations := association.InnerAssociations()
 		for _, inner := range innerAssociations {
 			v = reflect.Indirect(reflect.ValueOf(model)).FieldByName(inner.Name)
-			q.eagerFields = []string{inner.Fields}
-			err = q.eagerAssociations(v.Addr().Interface())
+			innerQuery := Q(query.Connection)
+			innerQuery.eagerFields = []string{inner.Fields}
+			err = innerQuery.eagerAssociations(v.Addr().Interface())
 			if err != nil {
 				return err
 			}
@@ -236,8 +266,32 @@ func (q *Query) eagerAssociations(model interface{}) error {
 //
 // 	q.Where("name = ?", "mark").Exists(&User{})
 func (q *Query) Exists(model interface{}) (bool, error) {
-	i, err := q.Count(model)
-	return i != 0, err
+	tmpQuery := Q(q.Connection)
+	q.Clone(tmpQuery) //avoid meddling with original query
+
+	var res bool
+
+	err := tmpQuery.Connection.timeFunc("Exists", func() error {
+		tmpQuery.Paginator = nil
+		tmpQuery.orderClauses = clauses{}
+		tmpQuery.limitResults = 0
+		query, args := tmpQuery.ToSQL(&Model{Value: model})
+
+		// when query contains custom selected fields / executed using RawQuery,
+		// sql may already contains limit and offset
+		if rLimitOffset.MatchString(query) {
+			foundLimit := rLimitOffset.FindString(query)
+			query = query[0 : len(query)-len(foundLimit)]
+		} else if rLimit.MatchString(query) {
+			foundLimit := rLimit.FindString(query)
+			query = query[0 : len(query)-len(foundLimit)]
+		}
+
+		existsQuery := fmt.Sprintf("SELECT EXISTS (%s)", query)
+		Log(existsQuery, args...)
+		return q.Connection.Store.Get(&res, existsQuery, args...)
+	})
+	return res, err
 }
 
 // Count the number of records in the database.
@@ -259,7 +313,7 @@ func (q Query) Count(model interface{}) (int, error) {
 //	q.Where("sex = ?", "f").Count(&User{}, "name")
 func (q Query) CountByField(model interface{}, field string) (int, error) {
 	tmpQuery := Q(q.Connection)
-	q.Clone(tmpQuery) //avoid mendling with original query
+	q.Clone(tmpQuery) //avoid meddling with original query
 
 	res := &rowCount{}
 
@@ -279,7 +333,7 @@ func (q Query) CountByField(model interface{}, field string) (int, error) {
 			query = query[0 : len(query)-len(foundLimit)]
 		}
 
-		countQuery := fmt.Sprintf("select count(%s) as row_count from (%s) a", field, query)
+		countQuery := fmt.Sprintf("SELECT COUNT(%s) AS row_count FROM (%s) a", field, query)
 		Log(countQuery, args...)
 		return q.Connection.Store.Get(res, countQuery, args...)
 	})
@@ -288,4 +342,23 @@ func (q Query) CountByField(model interface{}, field string) (int, error) {
 
 type rowCount struct {
 	Count int `db:"row_count"`
+}
+
+// Select allows to query only fields passed as parameter.
+// c.Select("field1", "field2").All(&model)
+// => SELECT field1, field2 FROM models
+func (c *Connection) Select(fields ...string) *Query {
+	return c.Q().Select(fields...)
+}
+
+// Select allows to query only fields passed as parameter.
+// c.Select("field1", "field2").All(&model)
+// => SELECT field1, field2 FROM models
+func (q *Query) Select(fields ...string) *Query {
+	for _, f := range fields {
+		if strings.TrimSpace(f) != "" {
+			q.addColumns = append(q.addColumns, f)
+		}
+	}
+	return q
 }

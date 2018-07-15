@@ -4,10 +4,12 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"io/ioutil"
 
+	"github.com/gobuffalo/fizz"
 	"github.com/gobuffalo/pop/columns"
-	"github.com/gobuffalo/pop/fizz"
 	"github.com/gobuffalo/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -16,6 +18,7 @@ func init() {
 }
 
 type dialect interface {
+	Name() string
 	URL() string
 	MigrationURL() string
 	Details() *ConnectionDetails
@@ -54,13 +57,17 @@ func genericCreate(s store, model *Model, cols columns.Columns) error {
 			return errors.WithStack(err)
 		}
 		return nil
-	case "UUID":
-		if model.ID() == emptyUUID {
-			u, err := uuid.NewV4()
-			if err != nil {
-				return errors.WithStack(err)
+	case "UUID", "string":
+		if keyType == "UUID" {
+			if model.ID() == emptyUUID {
+				u, err := uuid.NewV4()
+				if err != nil {
+					return errors.WithStack(err)
+				}
+				model.setID(u)
 			}
-			model.setID(u)
+		} else if model.ID() == "" {
+			return fmt.Errorf("missing ID value")
 		}
 		w := cols.Writeable()
 		w.Add("id")
@@ -124,5 +131,33 @@ func genericSelectMany(s store, models *Model, query Query) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+func genericLoadSchema(deets *ConnectionDetails, migrationURL string, r io.Reader) error {
+	// Open DB connection on the target DB
+	db, err := sqlx.Open(deets.Dialect, migrationURL)
+	if err != nil {
+		return errors.WithMessage(err, fmt.Sprintf("unable to load schema for %s", deets.Database))
+	}
+	defer db.Close()
+
+	// Get reader contents
+	contents, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	if len(contents) == 0 {
+		fmt.Printf("schema is empty for %s, skipping\n", deets.Database)
+		return nil
+	}
+
+	_, err = db.Exec(string(contents))
+	if err != nil {
+		return errors.WithMessage(err, fmt.Sprintf("unable to load schema for %s", deets.Database))
+	}
+
+	fmt.Printf("loaded schema for %s\n", deets.Database)
 	return nil
 }

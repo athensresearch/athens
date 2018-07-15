@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gobuffalo/fizz"
+	"github.com/gobuffalo/fizz/translators"
 	"github.com/gobuffalo/pop/columns"
-	"github.com/gobuffalo/pop/fizz"
-	"github.com/gobuffalo/pop/fizz/translators"
 	"github.com/markbates/going/defaults"
 	// Load SQLite3 CGo driver
 	_ "github.com/mattn/go-sqlite3"
@@ -31,6 +31,10 @@ type sqlite struct {
 	gil               *sync.Mutex
 	smGil             *sync.Mutex
 	ConnectionDetails *ConnectionDetails
+}
+
+func (m *sqlite) Name() string {
+	return "sqlite3"
 }
 
 func (m *sqlite) Details() *ConnectionDetails {

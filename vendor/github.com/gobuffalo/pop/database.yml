@@ -5,6 +5,7 @@ mysql:
   port: {{ envOr "MYSQL_PORT" "3306"  }}
   user: {{ envOr "MYSQL_USER"  "root"  }}
   password: {{ envOr "MYSQL_PASSWORD"  "root"  }}
+  encoding: "utf8mb4_general_ci"
 
 mysql_travis:
   dialect: "mysql"
@@ -13,6 +14,7 @@ mysql_travis:
   port: {{ envOr "MYSQL_PORT" "3306"  }}
   user: {{ envOr "MYSQL_USER"  "root"  }}
   password: {{ envOr "MYSQL_PASSWORD"  ""  }}
+  encoding: "utf8mb4_general_ci"
 
 postgres:
   url: "postgres://postgres:postgres@localhost:5432/pop_test?sslmode=disable"

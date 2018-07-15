@@ -7,6 +7,6 @@ In no particular order:
 - [Buffalo](https://gobuffalo.io)
 - [mgo](https://github.com/globalsign/mgo)
 - [Testify](https://github.com/stretchr/testify)
-- [redigo](https://github.com/garyburd/redigo)
+- [redigo](https://github.com/gomodule/redigo)
 - [Protocol Buffers](https://github.com/golang/protobuf)
 - [Gocraft](https://github.com/gocraft/work)

@@ -26,7 +26,19 @@ var associationBuilders = map[string]associationBuilder{}
 // associations like has_many, belongs_to, has_one.
 // it throws an error when it finds a field that does
 // not exist for a model.
+//
+// Deprecated: use ForStruct instead.
 func AssociationsForStruct(s interface{}, fields ...string) (Associations, error) {
+	fmt.Println(`Warning: AssociationsForStruct is deprecated, and will be removed in a future version. Please use ForStruct instead.`)
+	return ForStruct(s, fields...)
+}
+
+// ForStruct returns all associations for
+// the struct specified. It takes into account tags
+// associations like has_many, belongs_to, has_one.
+// it throws an error when it finds a field that does
+// not exist for a model.
+func ForStruct(s interface{}, fields ...string) (Associations, error) {
 	associations := Associations{}
 	innerAssociations := InnerAssociations{}
 

@@ -14,6 +14,8 @@ type Int struct {
 	Valid bool // Valid is true if Int is not NULL
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the int is not valid, otherwise it returns the int value.
 func (ns Int) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -62,6 +64,8 @@ func (ns *Int) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Int) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

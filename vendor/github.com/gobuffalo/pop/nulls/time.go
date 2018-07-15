@@ -13,6 +13,8 @@ type Time struct {
 	Valid bool // Valid is true if Time is not NULL
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the Time is not valid, otherwise it returns the Time value.
 func (ns Time) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -68,6 +70,8 @@ func (ns *Time) UnmarshalJSON(text []byte) error {
 	return err
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Time) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

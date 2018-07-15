@@ -28,6 +28,7 @@ package mgo
 
 import (
 	"sync"
+	"time"
 )
 
 var stats *Stats
@@ -77,15 +78,19 @@ func ResetStats() {
 //
 // TODO outdated fields ?
 type Stats struct {
-	Clusters     int
-	MasterConns  int
-	SlaveConns   int
-	SentOps      int
-	ReceivedOps  int
-	ReceivedDocs int
-	SocketsAlive int
-	SocketsInUse int
-	SocketRefs   int
+	Clusters            int
+	MasterConns         int
+	SlaveConns          int
+	SentOps             int
+	ReceivedOps         int
+	ReceivedDocs        int
+	SocketsAlive        int
+	SocketsInUse        int
+	SocketRefs          int
+	TimesSocketAcquired int
+	TimesWaitedForPool  int
+	TotalPoolWaitTime   time.Duration
+	PoolTimeouts        int
 }
 
 func (stats *Stats) cluster(delta int) {
@@ -152,6 +157,28 @@ func (stats *Stats) socketRefs(delta int) {
 	if stats != nil {
 		statsMutex.Lock()
 		stats.SocketRefs += delta
+		statsMutex.Unlock()
+	}
+}
+
+func (stats *Stats) noticeSocketAcquisition(waitTime time.Duration) {
+	if stats != nil {
+		statsMutex.Lock()
+		stats.TimesSocketAcquired++
+		stats.TotalPoolWaitTime += waitTime
+		if waitTime > 0 {
+			stats.TimesWaitedForPool++
+		}
+		statsMutex.Unlock()
+	}
+}
+
+func (stats *Stats) noticePoolTimeout(waitTime time.Duration) {
+	if stats != nil {
+		statsMutex.Lock()
+		stats.TimesWaitedForPool++
+		stats.PoolTimeouts++
+		stats.TotalPoolWaitTime += waitTime
 		statsMutex.Unlock()
 	}
 }

@@ -14,6 +14,8 @@ type Int32 struct {
 	Valid bool // Valid is true if Int32 is not NULL
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the int32 is not valid, otherwise it returns the int32 value.
 func (ns Int32) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -71,6 +73,8 @@ func (ns *Int32) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Int32) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

@@ -45,6 +45,12 @@ func groupByHelper(size int, underlying interface{}) (*groupBy, error) {
 	group := []reflect.Value{}
 	switch u.Kind() {
 	case reflect.Array, reflect.Slice:
+		if u.Len() == size {
+			return &groupBy{
+				group: []reflect.Value{u},
+			}, nil
+		}
+
 		groupSize := u.Len() / size
 		if u.Len()%size != 0 {
 			groupSize++

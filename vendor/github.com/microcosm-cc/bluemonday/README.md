@@ -140,7 +140,7 @@ func main() {
 
 We ship two default policies:
 
-1. `bluemonday.StrictPolicy()` which can be thought of as equivalent to stripping all HTML elements and their attributes as it has nothing on it's whitelist. An example usage scenario would be blog post titles where HTML tags are not expected at all and if they are then the elements *and* the content of the elements should be stripped. This is a *very* strict policy.
+1. `bluemonday.StrictPolicy()` which can be thought of as equivalent to stripping all HTML elements and their attributes as it has nothing on its whitelist. An example usage scenario would be blog post titles where HTML tags are not expected at all and if they are then the elements *and* the content of the elements should be stripped. This is a *very* strict policy.
 2. `bluemonday.UGCPolicy()` which allows a broad selection of HTML elements and attributes that are safe for user generated content. Note that this policy does *not* whitelist iframes, object, embed, styles, script, etc. An example usage scenario would be blog post bodies where a variety of formatting is expected along with the potential for TABLEs and IMGs.
 
 ## Policy Building
@@ -273,7 +273,7 @@ We also bundle some helpers to simplify policy building:
 // Permits the "dir", "id", "lang", "title" attributes globally
 p.AllowStandardAttributes()
 
-// Permits the "img" element and it's standard attributes
+// Permits the "img" element and its standard attributes
 p.AllowImages()
 
 // Permits ordered and unordered lists, and also definition lists

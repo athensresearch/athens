@@ -176,9 +176,6 @@ func (d *decoder) readDocTo(out reflect.Value) {
 	switch outk {
 	case reflect.Map:
 		keyType = outt.Key()
-		if keyType.Kind() != reflect.String {
-			panic("BSON map must have string keys. Got: " + outt.String())
-		}
 		if keyType != typeString {
 			convertKey = true
 		}
@@ -240,7 +237,42 @@ func (d *decoder) readDocTo(out reflect.Value) {
 			if d.readElemTo(e, kind) {
 				k := reflect.ValueOf(name)
 				if convertKey {
-					k = k.Convert(keyType)
+					mapKeyType := out.Type().Key()
+					mapKeyKind := mapKeyType.Kind()
+
+					switch mapKeyKind {
+					case reflect.Int:
+						fallthrough
+					case reflect.Int8:
+						fallthrough
+					case reflect.Int16:
+						fallthrough
+					case reflect.Int32:
+						fallthrough
+					case reflect.Int64:
+						fallthrough
+					case reflect.Uint:
+						fallthrough
+					case reflect.Uint8:
+						fallthrough
+					case reflect.Uint16:
+						fallthrough
+					case reflect.Uint32:
+						fallthrough
+					case reflect.Uint64:
+						fallthrough
+					case reflect.Float32:
+						fallthrough
+					case reflect.Float64:
+						parsed := d.parseMapKeyAsFloat(k, mapKeyKind)
+						k = reflect.ValueOf(parsed)
+					case reflect.String:
+						mapKeyType = keyType
+					default:
+						panic("BSON map must have string or decimal keys. Got: " + outt.String())
+					}
+
+					k = k.Convert(mapKeyType)
 				}
 				out.SetMapIndex(k, e)
 			}
@@ -274,6 +306,16 @@ func (d *decoder) readDocTo(out reflect.Value) {
 		corrupted()
 	}
 	d.docType = docType
+}
+
+func (decoder) parseMapKeyAsFloat(k reflect.Value, mapKeyKind reflect.Kind) float64 {
+	parsed, err := strconv.ParseFloat(k.String(), 64)
+	if err != nil {
+		panic("Map key is defined to be a decimal type (" + mapKeyKind.String() + ") but got error " +
+			err.Error())
+	}
+
+	return parsed
 }
 
 func (d *decoder) readArrayDocTo(out reflect.Value) {

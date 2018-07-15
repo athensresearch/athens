@@ -14,6 +14,8 @@ type Float32 struct {
 	Valid   bool // Valid is true if Float32 is not NULL
 }
 
+// Interface implements the nullable interface. It returns nil if
+// the float32 is not valid, otherwise it returns the float32 value.
 func (ns Float32) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -71,6 +73,8 @@ func (ns *Float32) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Float32) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

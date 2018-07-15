@@ -16,11 +16,13 @@ var Connections = map[string]*Connection{}
 // Connection represents all of the necessary details for
 // talking with a datastore
 type Connection struct {
-	ID      string
-	Store   store
-	Dialect dialect
-	Elapsed int64
-	TX      *Tx
+	ID          string
+	Store       store
+	Dialect     dialect
+	Elapsed     int64
+	TX          *Tx
+	eager       bool
+	eagerFields []string
 }
 
 func (c *Connection) String() string {
@@ -35,6 +37,11 @@ func (c *Connection) URL() string {
 // MigrationURL returns the datasource connection string used for running the migrations
 func (c *Connection) MigrationURL() string {
 	return c.Dialect.MigrationURL()
+}
+
+// MigrationTableName returns the name of the table to track migrations
+func (c *Connection) MigrationTableName() string {
+	return c.Dialect.Details().MigrationTableName()
 }
 
 // NewConnection creates a new connection, and sets it's `Dialect`
@@ -89,12 +96,14 @@ func (c *Connection) Open() error {
 	if c.Store != nil {
 		return nil
 	}
-	db, err := sqlx.Open(c.Dialect.Details().Dialect, c.Dialect.URL())
-	db.SetMaxOpenConns(c.Dialect.Details().Pool)
+	details := c.Dialect.Details()
+	db, err := sqlx.Open(details.Dialect, c.Dialect.URL())
+	db.SetMaxOpenConns(details.Pool)
+	db.SetMaxIdleConns(details.IdlePool)
 	if err == nil {
 		c.Store = &dB{db}
 	}
-	return errors.Wrap(err, "coudn't connection to database")
+	return errors.Wrap(err, "couldn't connect to database")
 }
 
 // Close destroys an active datasource connection
@@ -146,6 +155,15 @@ func (c *Connection) NewTransaction() (*Connection, error) {
 	return cn, nil
 }
 
+func (c *Connection) copy() *Connection {
+	return &Connection{
+		ID:      randx.String(30),
+		Store:   c.Store,
+		Dialect: c.Dialect,
+		TX:      c.TX,
+	}
+}
+
 // Rollback will open a new transaction and automatically rollback that transaction
 // when the inner function returns, regardless. This can be useful for tests, etc...
 func (c *Connection) Rollback(fn func(tx *Connection)) error {
@@ -173,15 +191,21 @@ func (c *Connection) Q() *Query {
 	return Q(c)
 }
 
+// disableEager disables eager mode for current connection.
+func (c *Connection) disableEager() {
+	c.eager = false
+	c.eagerFields = []string{}
+}
+
 // TruncateAll truncates all data from the datasource
 func (c *Connection) TruncateAll() error {
 	return c.Dialect.TruncateAll(c)
 }
 
 func (c *Connection) timeFunc(name string, fn func() error) error {
-	now := time.Now()
+	start := time.Now()
 	err := fn()
-	atomic.AddInt64(&c.Elapsed, int64(time.Now().Sub(now)))
+	atomic.AddInt64(&c.Elapsed, int64(time.Since(start)))
 	if err != nil {
 		return errors.WithStack(err)
 	}

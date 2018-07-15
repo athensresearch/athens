@@ -1,0 +1,50 @@
+language: go
+
+dist: trusty
+
+sudo: required
+
+go:
+  - 1.9
+  - "1.10"
+  - tip
+
+install:
+ - go get -t -v ./...
+
+before_script:
+    - go get -v -tags sqlite github.com/gobuffalo/pop/soda
+    # travis hangs when trying to create mysql db using soda. not sure why
+    - mysql -e 'create database pop_test;'
+    - soda create -e "postgres"
+    - soda create -e "sqlite"
+    - soda migrate -e "mysql_travis"
+    - soda migrate -e "postgres"
+    - soda migrate -e "sqlite"
+
+script: go test -tags sqlite ./... -v
+
+global_env:
+  - MYSQL_USER="travis"
+  - MYSQL_PASSWORD=""
+  - POSTGRES_PASSWORD=""
+
+env:
+  - SODA_DIALECT="postgres"
+  - SODA_DIALECT="mysql_travis"
+  - SODA_DIALECT="sqlite"
+
+services:
+  - mysql
+
+addons:
+  postgresql: "9.5"
+  apt:
+    sources:
+      - mysql-5.7-trusty
+    packages:
+      - mysql-server
+
+matrix:
+  allow_failures:
+    - go: 'tip'

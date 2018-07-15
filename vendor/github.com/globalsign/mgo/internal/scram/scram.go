@@ -91,7 +91,7 @@ func NewClient(newHash func() hash.Hash, user, pass string) *Client {
 // Out returns the data to be sent to the server in the current step.
 func (c *Client) Out() []byte {
 	if c.out.Len() == 0 {
-		return nil
+		return []byte{}
 	}
 	return c.out.Bytes()
 }

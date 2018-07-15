@@ -49,6 +49,9 @@ func (c *Context) Has(key string) bool {
 	return c.Value(key) != nil
 }
 
+// Export all the known values in the context.
+// Note this can't reach up into other implemenations
+// of context.Context.
 func (c *Context) export() map[string]interface{} {
 	m := map[string]interface{}{}
 	if c.outer != nil {

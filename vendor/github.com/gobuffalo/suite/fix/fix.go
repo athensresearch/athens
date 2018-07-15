@@ -19,6 +19,9 @@ func Init(box packr.Box) error {
 		}
 
 		x, err := render(file)
+		if err != nil {
+			return errors.Wrap(errors.WithStack(err), path)
+		}
 
 		sc := Scenarios{}
 		_, err = toml.Decode(x, &sc)

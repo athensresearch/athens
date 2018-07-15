@@ -42,7 +42,6 @@ type mongoSocket struct {
 	sync.Mutex
 	server         *mongoServer // nil when cached
 	conn           net.Conn
-	timeout        time.Duration
 	addr           string // For debugging only.
 	nextRequestId  uint32
 	replyFuncs     map[uint32]replyFunc
@@ -54,7 +53,10 @@ type mongoSocket struct {
 	dead           error
 	serverInfo     *mongoServerInfo
 	closeAfterIdle bool
+	lastTimeUsed   time.Time // for time based idle socket release
 	sendMeta       sync.Once
+
+	dialInfo *DialInfo
 }
 
 type queryOpFlags uint32
@@ -180,15 +182,16 @@ type requestInfo struct {
 	replyFunc replyFunc
 }
 
-func newSocket(server *mongoServer, conn net.Conn, timeout time.Duration) *mongoSocket {
+func newSocket(server *mongoServer, conn net.Conn, info *DialInfo) *mongoSocket {
 	socket := &mongoSocket{
 		conn:       conn,
 		addr:       server.Addr,
 		server:     server,
 		replyFuncs: make(map[uint32]replyFunc),
+		dialInfo:   info,
 	}
 	socket.gotNonce.L = &socket.Mutex
-	if err := socket.InitialAcquire(server.Info(), timeout); err != nil {
+	if err := socket.InitialAcquire(server.Info(), info); err != nil {
 		panic("newSocket: InitialAcquire returned error: " + err.Error())
 	}
 	stats.socketsAlive(+1)
@@ -222,7 +225,7 @@ func (socket *mongoSocket) ServerInfo() *mongoServerInfo {
 // InitialAcquire obtains the first reference to the socket, either
 // right after the connection is made or once a recycled socket is
 // being put back in use.
-func (socket *mongoSocket) InitialAcquire(serverInfo *mongoServerInfo, timeout time.Duration) error {
+func (socket *mongoSocket) InitialAcquire(serverInfo *mongoServerInfo, dialInfo *DialInfo) error {
 	socket.Lock()
 	if socket.references > 0 {
 		panic("Socket acquired out of cache with references")
@@ -234,7 +237,7 @@ func (socket *mongoSocket) InitialAcquire(serverInfo *mongoServerInfo, timeout t
 	}
 	socket.references++
 	socket.serverInfo = serverInfo
-	socket.timeout = timeout
+	socket.dialInfo = dialInfo
 	stats.socketsInUse(+1)
 	stats.socketRefs(+1)
 	socket.Unlock()
@@ -287,7 +290,8 @@ func (socket *mongoSocket) Release() {
 // SetTimeout changes the timeout used on socket operations.
 func (socket *mongoSocket) SetTimeout(d time.Duration) {
 	socket.Lock()
-	socket.timeout = d
+	socket.dialInfo.ReadTimeout = d
+	socket.dialInfo.WriteTimeout = d
 	socket.Unlock()
 }
 
@@ -300,24 +304,37 @@ const (
 
 func (socket *mongoSocket) updateDeadline(which deadlineType) {
 	var when time.Time
-	if socket.timeout > 0 {
-		when = time.Now().Add(socket.timeout)
-	}
-	whichstr := ""
+	var whichStr string
 	switch which {
 	case readDeadline | writeDeadline:
-		whichstr = "read/write"
+		if socket.dialInfo.roundTripTimeout() == 0 {
+			return
+		}
+		whichStr = "read/write"
+		when = time.Now().Add(socket.dialInfo.roundTripTimeout())
 		socket.conn.SetDeadline(when)
+
 	case readDeadline:
-		whichstr = "read"
+		if socket.dialInfo.ReadTimeout == zeroDuration {
+			return
+		}
+		whichStr = "read"
+		when = time.Now().Add(socket.dialInfo.ReadTimeout)
 		socket.conn.SetReadDeadline(when)
+
 	case writeDeadline:
-		whichstr = "write"
+		if socket.dialInfo.WriteTimeout == zeroDuration {
+			return
+		}
+		whichStr = "write"
+		when = time.Now().Add(socket.dialInfo.WriteTimeout)
 		socket.conn.SetWriteDeadline(when)
+
 	default:
 		panic("invalid parameter to updateDeadline")
 	}
-	debugf("Socket %p to %s: updated %s deadline to %s ahead (%s)", socket, socket.addr, whichstr, socket.timeout, when)
+
+	debugf("Socket %p to %s: updated %s deadline to %s", socket, socket.addr, whichStr, when)
 }
 
 // Close terminates the socket use.

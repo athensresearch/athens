@@ -1,7 +1,6 @@
 package pop
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -14,9 +13,7 @@ type HavingClause struct {
 type havingClauses []HavingClause
 
 func (c HavingClause) String() string {
-	sql := fmt.Sprintf("%s", c.Condition)
-
-	return sql
+	return c.Condition
 }
 
 func (c havingClauses) String() string {

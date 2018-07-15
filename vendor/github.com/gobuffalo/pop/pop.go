@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// AvailableDialects lists the available database dialects
 var AvailableDialects = []string{"postgres", "mysql", "cockroach"}
 
 // Debug mode, to toggle verbose log traces
@@ -37,4 +38,14 @@ var Log = func(s string, args ...interface{}) {
 		}
 		logger.Println(s)
 	}
+}
+
+// DialectSupported checks support for the given database dialect
+func DialectSupported(d string) bool {
+	for _, ad := range AvailableDialects {
+		if ad == d {
+			return true
+		}
+	}
+	return false
 }

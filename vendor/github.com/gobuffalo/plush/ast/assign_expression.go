@@ -11,5 +11,12 @@ type AssignExpression struct {
 func (ae *AssignExpression) expressionNode() {}
 
 func (ae *AssignExpression) String() string {
-	return fmt.Sprintf("%s = %s", ae.Name.String(), ae.Value.String())
+	n, v := "?", "?"
+	if ae.Name != nil {
+		n = ae.Name.String()
+	}
+	if ae.Value != nil {
+		v = ae.Value.String()
+	}
+	return fmt.Sprintf("%s = %s", n, v)
 }

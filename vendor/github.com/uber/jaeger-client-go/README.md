@@ -3,7 +3,7 @@
 # Jaeger Bindings for Go OpenTracing API
 
 Instrumentation library that implements an
-[OpenTracing](http://opentracing.io) Tracer for Jaeger (http://jaegertracing.io).
+[OpenTracing](http://opentracing.io) Tracer for Jaeger (https://jaegertracing.io).
 
 **IMPORTANT**: The library's import path is based on its original location under `github.com/uber`. Do not try to import it as `github.com/jaegertracing`, it will not compile. We might revisit this in the next major release.
   * :white_check_mark: `import "github.com/uber/jaeger-client-go"`
@@ -41,6 +41,28 @@ make install
 See tracer initialization examples in [godoc](https://godoc.org/github.com/uber/jaeger-client-go/config#pkg-examples)
 and [config/example_test.go](./config/example_test.go).
 
+### Environment variables
+
+The tracer can be initialized with values coming from environment variables. None of the env vars are required
+and all of them can be overriden via direct setting of the property on the configuration object.
+
+Property| Description
+--- | ---
+JAEGER_SERVICE_NAME | The service name
+JAEGER_AGENT_HOST | The hostname for communicating with agent via UDP
+JAEGER_AGENT_PORT | The port for communicating with agent via UDP
+JAEGER_REPORTER_LOG_SPANS | Whether the reporter should also log the spans
+JAEGER_REPORTER_MAX_QUEUE_SIZE | The reporter's maximum queue size
+JAEGER_REPORTER_FLUSH_INTERVAL | The reporter's flush interval (ms)
+JAEGER_SAMPLER_TYPE | The sampler type
+JAEGER_SAMPLER_PARAM | The sampler parameter (number)
+JAEGER_SAMPLER_MANAGER_HOST_PORT | The host name and port when using the remote controlled sampler
+JAEGER_SAMPLER_MAX_OPERATIONS | The maximum number of operations that the sampler will keep track of
+JAEGER_SAMPLER_REFRESH_INTERVAL | How often the remotely controlled sampler will poll jaeger-agent for the appropriate sampling strategy
+JAEGER_TAGS | A comma separated list of `name = value` tracer level tags, which get added to all reported spans. The value can also refer to an environment variable using the format `${envVarName:default}`, where the `:default` is optional, and identifies a value to be used if the environment variable cannot be found
+JAEGER_DISABLED | Whether the tracer is disabled or not. If true, the default `opentracing.NoopTracer` is used.
+JAEGER_RPC_METRICS | Whether to store RPC metrics
+
 ### Closing the tracer via `io.Closer`
 
 The constructor function for Jaeger Tracer returns the tracer itself and an `io.Closer` instance.
@@ -48,7 +70,7 @@ It is recommended to structure your `main()` so that it calls the `Close()` func
 before exiting, e.g.
 
 ```go
-tracer, closer, err := cfg.New(...)
+tracer, closer, err := cfg.NewTracer(...)
 defer closer.Close()
 ```
 
@@ -79,8 +101,9 @@ import (
 )
 
     metricsFactory := prometheus.New()
-    tracer, closer, err := new(config.Configuration).New(
-        "your-service-name",
+    tracer, closer, err := config.Configuration{
+        ServiceName: "your-service-name",
+    }.NewTracer(
         config.Metrics(metricsFactory),
     )
 ```

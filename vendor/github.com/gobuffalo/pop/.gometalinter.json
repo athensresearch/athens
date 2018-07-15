@@ -1,0 +1,4 @@
+{
+    "Enable": ["vet", "golint", "goimports", "deadcode", "gotype", "ineffassign", "misspell", "nakedret", "unconvert", "megacheck", "varcheck"]
+}
+  

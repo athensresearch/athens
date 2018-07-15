@@ -4,6 +4,12 @@ Suite is a package meant to make testing [gobuffalo.io](http://gobuffalo.io) app
 
 ## Setup
 
+This is the entry point into your unit testing suite. The `Test_ActionSuite(t *testing.T)` function is
+compatible with the `go test` command, and it should:
+
+- Create and configure your new test suite instance (`ActionSuite` in this case)
+- Call `suite.Run` with the `*testing.T` passed by the Go testing system, and your new `ActionSuite` instance
+
 ```go
 package actions_test
 
@@ -25,6 +31,20 @@ func Test_ActionSuite(t *testing.T) {
 ```
 
 ## Usage
+
+This is where you write your actual test logic. The rules for test names are similar, but not the same, as with `go test`:
+
+- Each test is a method on your `*ActionSuite`
+- Test method names should start with `Test` (note the upper case `T`)
+- Test methods should have no arguments
+
+A few additional notes:
+
+- To avoid race conditions on the testing database, always use the `ActionSuite` variable called `DB` to access the database (not your production app's database)
+- You can access the raw `*testing.T` value if needed with `as.T()`
+- `ActionSuite` has support for [`testify`](https://github.com/stretchr/testify)'s [`require` package](https://godoc.org/github.com/stretchr/testify/require) and [`assert` package](https://godoc.org/github.com/stretchr/testify/assert)
+- ... So try to use one of those instead packages of using the raw methods on the `*testing.T`
+- The default database that `suite` will connect to is called `testing` in your [database.yml](https://github.com/markbates/pop#connecting-to-databases)
 
 ```go
 package actions_test
@@ -98,7 +118,7 @@ func (as *ActionSuite) Test_TodosResource_Update() {
 
 ## Fixtures (Test Data)
 
-Often it is useful to load a series of data into the database at the start of the test to make testing. For example, you need to have a user in the database to log a person into the application, or you need some data in the database to test destroying that data. Fixtures let us solve these problems easily.
+Often it is useful to load a series of data into the database at the start of the test to make testing easier. For example, you need to have a user in the database to log a person into the application, or you need some data in the database to test destroying that data. Fixtures let us solve these problems easily.
 
 ### Usage
 

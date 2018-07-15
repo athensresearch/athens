@@ -138,7 +138,7 @@ func New(options Options) *Cors {
 	// Allowed Headers
 	if len(options.AllowedHeaders) == 0 {
 		// Use sensible defaults
-		c.allowedHeaders = []string{"Origin", "Accept", "Content-Type"}
+		c.allowedHeaders = []string{"Origin", "Accept", "Content-Type", "X-Requested-With"}
 	} else {
 		// Origin is always appended as some browsers will always request for this header at preflight
 		c.allowedHeaders = convert(append(options.AllowedHeaders, "Origin"), http.CanonicalHeaderKey)

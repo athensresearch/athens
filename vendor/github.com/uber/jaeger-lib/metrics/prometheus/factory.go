@@ -31,12 +31,25 @@ type Factory struct {
 	cache      *vectorCache
 	buckets    []float64
 	normalizer *strings.Replacer
+	separator  Separator
 }
 
 type options struct {
 	registerer prometheus.Registerer
 	buckets    []float64
+	separator  Separator
 }
+
+// Separator represents the namespace separator to use
+type Separator rune
+
+const (
+	// SeparatorUnderscore uses an underscore as separator
+	SeparatorUnderscore Separator = '_'
+
+	// SeparatorColon uses a colon as separator
+	SeparatorColon = ':'
+)
 
 // Option is a function that sets some option for the Factory constructor.
 type Option func(*options)
@@ -57,6 +70,14 @@ func WithBuckets(buckets []float64) Option {
 	}
 }
 
+// WithSeparator returns an option that sets the default separator for the namespace
+// If not used, we fallback to underscore.
+func WithSeparator(separator Separator) Option {
+	return func(opts *options) {
+		opts.separator = separator
+	}
+}
+
 func applyOptions(opts []Option) *options {
 	options := new(options)
 	for _, o := range opts {
@@ -64,6 +85,9 @@ func applyOptions(opts []Option) *options {
 	}
 	if options.registerer == nil {
 		options.registerer = prometheus.DefaultRegisterer
+	}
+	if options.separator == '\x00' {
+		options.separator = SeparatorUnderscore
 	}
 	return options
 }
@@ -83,6 +107,7 @@ func New(opts ...Option) *Factory {
 			cache:      newVectorCache(options.registerer),
 			buckets:    options.buckets,
 			normalizer: strings.NewReplacer(".", "_", "-", "_"),
+			separator:  options.separator,
 		},
 		"",  // scope
 		nil) // tags
@@ -93,6 +118,7 @@ func newFactory(parent *Factory, scope string, tags map[string]string) *Factory 
 		cache:      parent.cache,
 		buckets:    parent.buckets,
 		normalizer: parent.normalizer,
+		separator:  parent.separator,
 		scope:      scope,
 		tags:       tags,
 	}
@@ -165,8 +191,12 @@ func (g *gauge) Update(v int64) {
 	g.gauge.Set(float64(v))
 }
 
+type observer interface {
+	Observe(v float64)
+}
+
 type timer struct {
-	histogram prometheus.Histogram
+	histogram observer
 }
 
 func (t *timer) Record(v time.Duration) {
@@ -180,7 +210,7 @@ func (f *Factory) subScope(name string) string {
 	if name == "" {
 		return f.normalize(f.scope)
 	}
-	return f.normalize(f.scope + ":" + name)
+	return f.normalize(f.scope + string(f.separator) + name)
 }
 
 func (f *Factory) normalize(v string) string {

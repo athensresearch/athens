@@ -6,7 +6,7 @@ This package implements the `github.com/gobuffalo/buffalo/worker.Worker` interfa
 
 ```go
 import "github.com/gobuffalo/gocraft-work-adapter"
-import "github.com/garyburd/redigo/redis"
+import "github.com/gomodule/redigo/redis"
 
 // ...
 

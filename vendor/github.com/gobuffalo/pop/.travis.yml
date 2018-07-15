@@ -11,19 +11,18 @@ go:
   - tip
 
 install:
- - go get -t -v ./...
+  - go get -t -v ./...
 
 before_script:
-    - go build -v -tags sqlite -o tsoda ./soda
-    # travis hangs when trying to create mysql db using soda. not sure why
-    - mysql -e 'create database pop_test;'
-    - ./tsoda create -e "postgres"
-    - ./tsoda create -e "sqlite"
-    - ./tsoda migrate -e "mysql_travis"
-    - ./tsoda migrate -e "postgres"
-    - ./tsoda migrate -e "sqlite"
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
+  - go build -v -tags sqlite -o tsoda ./soda
+  - ./tsoda create -e $SODA_DIALECT
+  - ./tsoda migrate -e $SODA_DIALECT
 
-script: go test -tags sqlite ./... -v
+script:
+#  - gometalinter --vendor --deadline=5m ./...
+  - go test -tags sqlite ./... -v
 
 global_env:
   - MYSQL_USER="travis"

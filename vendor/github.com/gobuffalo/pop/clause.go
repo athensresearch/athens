@@ -22,9 +22,7 @@ func (c clauses) Join(sep string) string {
 
 func (c clauses) Args() (args []interface{}) {
 	for _, clause := range c {
-		for _, arg := range clause.Arguments {
-			args = append(args, arg)
-		}
+		args = append(args, clause.Arguments...)
 	}
 	return
 }

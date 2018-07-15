@@ -473,15 +473,51 @@ func (p *parser) parseIfExpression() ast.Expression {
 
 	expression.Block = p.parseBlockStatement()
 
-	if p.peekTokenIs(token.ELSE) {
+	for p.peekTokenIs(token.ELSE) {
 		p.nextToken()
 
-		if !p.expectPeek(token.LBRACE) {
-			return nil
-		}
+		if p.peekTokenIs(token.IF) {
+			p.nextToken()
 
-		expression.ElseBlock = p.parseBlockStatement()
+			ifElseExp := p.parseElseIfExpression()
+
+			if ifElseExp == nil {
+				return nil
+			}
+
+			expression.ElseIf = append(expression.ElseIf, ifElseExp)
+		} else {
+			if !p.expectPeek(token.LBRACE) {
+				return nil
+			}
+
+			expression.ElseBlock = p.parseBlockStatement()
+		}
 	}
+
+	return expression
+}
+
+func (p *parser) parseElseIfExpression() *ast.ElseIfExpression {
+	// fmt.Println("parseElseIfExpression")
+	expression := &ast.ElseIfExpression{TokenAble: ast.TokenAble{p.curToken}}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	expression.Block = p.parseBlockStatement()
 
 	return expression
 }

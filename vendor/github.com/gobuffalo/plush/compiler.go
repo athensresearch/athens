@@ -182,13 +182,31 @@ func (c *compiler) evalIfExpression(node *ast.IfExpression) (interface{}, error)
 		}
 	}
 
-	var r interface{}
 	if c.isTruthy(con) {
 		return c.evalBlockStatement(node.Block)
-	} else {
-		if node.ElseBlock != nil {
-			return c.evalBlockStatement(node.ElseBlock)
+	}
+
+	return c.evalElseAndElseIfExpressions(node)
+}
+
+func (c *compiler) evalElseAndElseIfExpressions(node *ast.IfExpression) (interface{}, error) {
+	// fmt.Println("evalElseIfExpression")
+	var r interface{}
+	for _, eiNode := range node.ElseIf {
+		eiCon, err := c.evalExpression(eiNode.Condition)
+		if err != nil {
+			if errors.Cause(err) != ErrUnknownIdentifier {
+				return nil, errors.WithStack(err)
+			}
 		}
+
+		if c.isTruthy(eiCon) {
+			return c.evalBlockStatement(eiNode.Block)
+		}
+	}
+
+	if node.ElseBlock != nil {
+		return c.evalBlockStatement(node.ElseBlock)
 	}
 
 	return r, nil
@@ -503,7 +521,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		}
 
 		hc := func(arg reflect.Type) {
-			if arg.Name() == helperContextKind {
+			if arg.ConvertibleTo(reflect.TypeOf(HelperContext{})) {
 				hargs := HelperContext{
 					Context:  c.ctx,
 					compiler: c,
@@ -512,13 +530,12 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 				args = append(args, reflect.ValueOf(hargs))
 				return
 			}
-			if arg.Name() == "Data" {
-				args = append(args, reflect.ValueOf(c.ctx.export()))
+			if arg.ConvertibleTo(reflect.TypeOf(map[string]interface{}{})) {
+				args = append(args, reflect.ValueOf(map[string]interface{}{}))
 				return
 			}
-			if arg.Kind() == reflect.Map {
-				args = append(args, reflect.ValueOf(map[string]interface{}{}))
-			}
+			rv := reflect.Indirect(reflect.New(arg))
+			args = append(args, rv)
 		}
 
 		if len(args) < rtNumIn {
@@ -545,6 +562,7 @@ func (c *compiler) evalCallExpression(node *ast.CallExpression) (interface{}, er
 		if len(args) < rtNumIn {
 			return nil, errors.WithStack(errors.Errorf("%s too few arguments (%d for %d) - %+v", node.String(), len(args), rtNumIn, args))
 		}
+
 	} else {
 		// Variadic func
 		nodeArgs := node.Arguments

@@ -1,6 +1,8 @@
 package pop
 
 import (
+	"fmt"
+
 	"github.com/gobuffalo/packr"
 	"github.com/pkg/errors"
 )
@@ -35,16 +37,26 @@ func (fm *MigrationBox) findMigrations() error {
 			return errors.WithStack(err)
 		}
 		matches := mrx.FindAllStringSubmatch(info.Name(), -1)
-		if matches == nil || len(matches) == 0 {
+		if len(matches) == 0 {
 			return nil
 		}
 		m := matches[0]
+		var dbType string
+		if m[3] == "" {
+			dbType = "all"
+		} else {
+			dbType = m[3][1:]
+			if !DialectSupported(dbType) {
+				return fmt.Errorf("unsupported dialect %s", dbType)
+			}
+		}
 		mf := Migration{
 			Path:      p,
 			Version:   m[1],
 			Name:      m[2],
-			Direction: m[3],
-			Type:      m[4],
+			DBType:    dbType,
+			Direction: m[4],
+			Type:      m[5],
 			Runner: func(mf Migration, tx *Connection) error {
 				content, err := migrationContent(mf, tx, f)
 				if err != nil {

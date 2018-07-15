@@ -28,13 +28,17 @@ type ConnectionDetails struct {
 	User string
 	// The password of the database user. Example: "password"
 	Password string
+	// The encoding to use to create the database and communicate with it.
+	Encoding string
 	// Instead of specifying each individual piece of the
 	// connection you can instead just specify the URL of the
 	// database. Example: "postgres://postgres:postgres@localhost:5432/pop_test?sslmode=disable"
 	URL string
 	// Defaults to 0 "unlimited". See https://golang.org/pkg/database/sql/#DB.SetMaxOpenConns
-	Pool    int
-	Options map[string]string
+	Pool int
+	// Defaults to 0 "unlimited". See https://golang.org/pkg/database/sql/#DB.SetMaxIdleConns
+	IdlePool int
+	Options  map[string]string
 }
 
 var dialectX = regexp.MustCompile(`\s+:\/\/`)
@@ -90,6 +94,7 @@ func (cd *ConnectionDetails) Finalize() error {
 			cd.User = cfg.User
 			cd.Password = cfg.Passwd
 			cd.Database = cfg.DBName
+			cd.Encoding = defaults.String(cfg.Collation, "utf8_general_ci")
 			addr := strings.TrimSuffix(strings.TrimPrefix(cfg.Addr, "("), ")")
 			if cfg.Net == "unix" {
 				cd.Port = "socket"
@@ -139,4 +144,9 @@ func (cd *ConnectionDetails) RetryLimit() int {
 		return 100
 	}
 	return i
+}
+
+// MigrationTableName returns the name of the table to track migrations
+func (cd *ConnectionDetails) MigrationTableName() string {
+	return defaults.String(cd.Options["migration_table_name"], "schema_migration")
 }

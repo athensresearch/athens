@@ -1,12 +1,16 @@
 package pop
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Query is the main value that is used to build up a query
 // to be executed against the `Connection`.
 type Query struct {
 	RawSQL                  *clause
 	limitResults            int
+	addColumns              []string
 	eager                   bool
 	eagerFields             []string
 	whereClauses            clauses
@@ -20,6 +24,8 @@ type Query struct {
 	Connection              *Connection
 }
 
+// Clone will fill targetQ query with the connection used in q, if
+// targetQ is not empty, Clone will override all the fields.
 func (q *Query) Clone(targetQ *Query) {
 	rawSQL := *q.RawSQL
 	targetQ.RawSQL = &rawSQL
@@ -69,8 +75,11 @@ func (q *Query) RawQuery(stmt string, args ...interface{}) *Query {
 //
 // 	c.Eager().Find(model, 1) // will load all associations for model.
 // 	c.Eager("Books").Find(model, 1) // will load only Book association for model.
-func (c *Connection) Eager(fields ...string) *Query {
-	return Q(c).Eager(fields...)
+func (c *Connection) Eager(fields ...string) *Connection {
+	con := c.copy()
+	con.eager = true
+	con.eagerFields = append(c.eagerFields, fields...)
+	return con
 }
 
 // Eager will enable load associations of the model.
@@ -85,13 +94,20 @@ func (q *Query) Eager(fields ...string) *Query {
 	return q
 }
 
+// disableEager disables eager mode for current query and Connection.
+func (q *Query) disableEager() {
+	q.Connection.eager, q.eager = false, false
+	q.Connection.eagerFields, q.eagerFields = []string{}, []string{}
+}
+
 // Where will append a where clause to the query. You may use `?` in place of
 // arguments.
 //
 // 	c.Where("id = ?", 1)
 // 	q.Where("id in (?)", 1, 2, 3)
 func (c *Connection) Where(stmt string, args ...interface{}) *Query {
-	return Q(c).Where(stmt, args...)
+	q := Q(c)
+	return q.Where(stmt, args...)
 }
 
 // Where will append a where clause to the query. You may use `?` in place of
@@ -103,6 +119,14 @@ func (q *Query) Where(stmt string, args ...interface{}) *Query {
 	if q.RawSQL.Fragment != "" {
 		fmt.Println("Warning: Query is setup to use raw SQL")
 		return q
+	}
+	if inRegex.MatchString(stmt) {
+		var inq []string
+		for i := 0; i < len(args); i++ {
+			inq = append(inq, "?")
+		}
+		qs := fmt.Sprintf("(%s)", strings.Join(inq, ","))
+		stmt = strings.Replace(stmt, "(?)", qs, 1)
 	}
 	q.whereClauses = append(q.whereClauses, clause{stmt, args})
 	return q
@@ -141,8 +165,10 @@ func (q *Query) Limit(limit int) *Query {
 // Q will create a new "empty" query from the current connection.
 func Q(c *Connection) *Query {
 	return &Query{
-		RawSQL:     &clause{},
-		Connection: c,
+		RawSQL:      &clause{},
+		Connection:  c,
+		eager:       c.eager,
+		eagerFields: c.eagerFields,
 	}
 }
 
@@ -156,5 +182,8 @@ func (q Query) ToSQL(model *Model, addColumns ...string) (string, []interface{})
 // ToSQLBuilder returns a new `SQLBuilder` that can be used to generate SQL,
 // get arguments, and more.
 func (q Query) toSQLBuilder(model *Model, addColumns ...string) *sqlBuilder {
+	if len(q.addColumns) != 0 {
+		addColumns = q.addColumns
+	}
 	return newSQLBuilder(q, model, addColumns...)
 }

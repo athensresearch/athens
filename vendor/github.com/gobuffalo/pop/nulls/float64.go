@@ -11,6 +11,8 @@ import (
 // that supports proper JSON encoding/decoding.
 type Float64 sql.NullFloat64
 
+// Interface implements the nullable interface. It returns nil if
+// the float64 is not valid, otherwise it returns the float64 value.
 func (ns Float64) Interface() interface{} {
 	if !ns.Valid {
 		return nil
@@ -67,6 +69,8 @@ func (ns *Float64) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
 func (ns *Float64) UnmarshalText(text []byte) error {
 	return ns.UnmarshalJSON(text)
 }

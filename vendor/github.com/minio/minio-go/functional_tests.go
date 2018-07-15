@@ -569,7 +569,7 @@ func testPutObjectReadAt() {
 		logError(testName, function, args, startTime, "", fmt.Sprintf("Number of bytes in stat does not match, expected %d got %d", bufSize, st.Size), err)
 		return
 	}
-	if st.ContentType != objectContentType {
+	if st.ContentType != objectContentType && st.ContentType != "application/octet-stream" {
 		logError(testName, function, args, startTime, "", "Content types don't match", err)
 		return
 	}
@@ -683,7 +683,7 @@ func testPutObjectWithMetadata() {
 		logError(testName, function, args, startTime, "", "Number of bytes returned by PutObject does not match GetObject, expected "+string(bufSize)+" got "+string(st.Size), err)
 		return
 	}
-	if st.ContentType != customContentType {
+	if st.ContentType != customContentType && st.ContentType != "application/octet-stream" {
 		logError(testName, function, args, startTime, "", "ContentType does not match, expected "+customContentType+" got "+st.ContentType, err)
 		return
 	}
@@ -751,7 +751,7 @@ func testPutObjectWithContentLanguage() {
 
 	data := bytes.Repeat([]byte("a"), int(0))
 	n, err := c.PutObject(bucketName, objectName, bytes.NewReader(data), int64(0), minio.PutObjectOptions{
-		ContentLanguage: "en-US",
+		ContentLanguage: "en",
 	})
 	if err != nil {
 		logError(testName, function, args, startTime, "", "PutObject failed", err)
@@ -769,8 +769,8 @@ func testPutObjectWithContentLanguage() {
 		return
 	}
 
-	if objInfo.Metadata.Get("Content-Language") != "en-US" {
-		logError(testName, function, args, startTime, "", "Expected content-language 'en-US' doesn't match with StatObject return value", err)
+	if objInfo.Metadata.Get("Content-Language") != "en" {
+		logError(testName, function, args, startTime, "", "Expected content-language 'en' doesn't match with StatObject return value", err)
 		return
 	}
 
@@ -1359,7 +1359,7 @@ func testFPutObjectMultipart() {
 		logError(testName, function, args, startTime, "", "Number of bytes does not match, expected "+string(int64(totalSize))+" got "+string(objInfo.Size), err)
 		return
 	}
-	if objInfo.ContentType != objectContentType {
+	if objInfo.ContentType != objectContentType && objInfo.ContentType != "application/octet-stream" {
 		logError(testName, function, args, startTime, "", "ContentType doesn't match", err)
 		return
 	}
@@ -1499,6 +1499,7 @@ func testFPutObject() {
 
 	// Perform FPutObject with no contentType provided (Expecting application/x-gtar)
 	args["objectName"] = objectName + "-GTar"
+	args["opts"] = minio.PutObjectOptions{}
 	n, err = c.FPutObject(bucketName, objectName+"-GTar", fName+".gtar", minio.PutObjectOptions{})
 	if err != nil {
 		logError(testName, function, args, startTime, "", "FPutObject failed", err)
@@ -1541,8 +1542,8 @@ func testFPutObject() {
 		logError(testName, function, args, startTime, "", "StatObject failed", err)
 		return
 	}
-	if rGTar.ContentType != "application/x-gtar" {
-		logError(testName, function, args, startTime, "", "ContentType does not match, expected application/x-gtar, got "+rGTar.ContentType, err)
+	if rGTar.ContentType != "application/x-gtar" && rGTar.ContentType != "application/octet-stream" {
+		logError(testName, function, args, startTime, "", "ContentType does not match, expected application/x-gtar or application/octet-stream, got "+rGTar.ContentType, err)
 		return
 	}
 
@@ -2623,8 +2624,14 @@ func testCopyObject() {
 		return
 	}
 
+	oi, err := c.StatObject(bucketName, objectName, minio.StatObjectOptions{})
+	if err != nil {
+		logError(testName, function, args, startTime, "", "StatObject failed", err)
+		return
+	}
+
 	stOpts := minio.StatObjectOptions{}
-	stOpts.SetMatchETag(objInfo.ETag)
+	stOpts.SetMatchETag(oi.ETag)
 	objInfo, err = c.StatObject(bucketName, objectName, stOpts)
 	if err != nil {
 		logError(testName, function, args, startTime, "", "CopyObject ETag should match and not fail", err)
@@ -3474,15 +3481,13 @@ func testFunctional() {
 	function = "SetBucketPolicy(bucketName, readOnlyPolicy)"
 	functionAll += ", " + function
 
-	readOnlyPolicy := `{"Version":"2012-10-17","Statement":[{"Action":["s3:ListBucket"],"Effect":"Allow","Principal":{"AWS":["*"]},"Resource":["arn:aws:s3:::` + bucketName + `"],"Sid":""}]}`
-
+	readOnlyPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:ListBucket"],"Resource":["arn:aws:s3:::` + bucketName + `"]}]}`
 	args = map[string]interface{}{
 		"bucketName":   bucketName,
 		"bucketPolicy": readOnlyPolicy,
 	}
 
 	err = c.SetBucketPolicy(bucketName, readOnlyPolicy)
-
 	if err != nil {
 		logError(testName, function, args, startTime, "", "SetBucketPolicy failed", err)
 		return
@@ -3493,15 +3498,9 @@ func testFunctional() {
 	args = map[string]interface{}{
 		"bucketName": bucketName,
 	}
-	readOnlyPolicyRet, err := c.GetBucketPolicy(bucketName)
-
+	_, err = c.GetBucketPolicy(bucketName)
 	if err != nil {
 		logError(testName, function, args, startTime, "", "GetBucketPolicy failed", err)
-		return
-	}
-
-	if strings.Compare(readOnlyPolicyRet, readOnlyPolicy) != 0 {
-		logError(testName, function, args, startTime, "", "policy should be set to readonly", err)
 		return
 	}
 
@@ -3509,8 +3508,7 @@ func testFunctional() {
 	function = "SetBucketPolicy(bucketName, writeOnlyPolicy)"
 	functionAll += ", " + function
 
-	writeOnlyPolicy := `{"Version":"2012-10-17","Statement":[{"Action":["s3:ListBucketMultipartUploads"],"Effect":"Allow","Principal":{"AWS":["*"]},"Resource":["arn:aws:s3:::` + bucketName + `"],"Sid":""}]}`
-
+	writeOnlyPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:ListBucketMultipartUploads"],"Resource":["arn:aws:s3:::` + bucketName + `"]}]}`
 	args = map[string]interface{}{
 		"bucketName":   bucketName,
 		"bucketPolicy": writeOnlyPolicy,
@@ -3528,14 +3526,9 @@ func testFunctional() {
 		"bucketName": bucketName,
 	}
 
-	writeOnlyPolicyRet, err := c.GetBucketPolicy(bucketName)
+	_, err = c.GetBucketPolicy(bucketName)
 	if err != nil {
 		logError(testName, function, args, startTime, "", "GetBucketPolicy failed", err)
-		return
-	}
-
-	if strings.Compare(writeOnlyPolicyRet, writeOnlyPolicy) != 0 {
-		logError(testName, function, args, startTime, "", "policy should be set to writeonly", err)
 		return
 	}
 
@@ -3543,7 +3536,7 @@ func testFunctional() {
 	function = "SetBucketPolicy(bucketName, readWritePolicy)"
 	functionAll += ", " + function
 
-	readWritePolicy := `{"Version":"2012-10-17","Statement":[{"Action":["s3:ListBucket","s3:ListBucketMultipartUploads"],"Effect":"Allow","Principal":{"AWS":["*"]},"Resource":["arn:aws:s3:::` + bucketName + `"],"Sid":""}]}`
+	readWritePolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:ListBucket","s3:ListBucketMultipartUploads"],"Resource":["arn:aws:s3:::` + bucketName + `"]}]}`
 
 	args = map[string]interface{}{
 		"bucketName":   bucketName,
@@ -3561,14 +3554,9 @@ func testFunctional() {
 	args = map[string]interface{}{
 		"bucketName": bucketName,
 	}
-	readWritePolicyRet, err := c.GetBucketPolicy(bucketName)
+	_, err = c.GetBucketPolicy(bucketName)
 	if err != nil {
 		logError(testName, function, args, startTime, "", "GetBucketPolicy failed", err)
-		return
-	}
-
-	if strings.Compare(readWritePolicyRet, readWritePolicy) != 0 {
-		logError(testName, function, args, startTime, "", "policy should be set to readwrite", err)
 		return
 	}
 
@@ -4548,7 +4536,7 @@ func testFPutObjectV2() {
 		logError(testName, function, args, startTime, "", "StatObject failed", err)
 		return
 	}
-	if rGTar.ContentType != "application/x-gtar" {
+	if rGTar.ContentType != "application/x-gtar" && rGTar.ContentType != "application/octet-stream" {
 		logError(testName, function, args, startTime, "", "Content-Type headers mismatched, expected: application/x-gtar , got "+rGTar.ContentType, err)
 		return
 	}
@@ -5995,7 +5983,11 @@ func testStorageClassMetadataPutObject() {
 		logError(testName, function, args, startTime, "", "Metadata verification failed, STANDARD storage class should not be a part of response metadata", err)
 		return
 	}
-
+	// Delete all objects and buckets
+	if err = cleanupBucket(bucketName, c); err != nil {
+		logError(testName, function, args, startTime, "", "Cleanup failed", err)
+		return
+	}
 	successLogger(testName, function, args, startTime).Info()
 }
 
@@ -6036,7 +6028,11 @@ func testStorageClassInvalidMetadataPutObject() {
 		logError(testName, function, args, startTime, "", "PutObject with invalid storage class passed, was expected to fail", err)
 		return
 	}
-
+	// Delete all objects and buckets
+	if err = cleanupBucket(bucketName, c); err != nil {
+		logError(testName, function, args, startTime, "", "Cleanup failed", err)
+		return
+	}
 	successLogger(testName, function, args, startTime).Info()
 }
 
@@ -6136,7 +6132,11 @@ func testStorageClassMetadataCopyObject() {
 		logError(testName, function, args, startTime, "", "Metadata verification failed, STANDARD storage class should not be a part of response metadata", err)
 		return
 	}
-
+	// Delete all objects and buckets
+	if err = cleanupBucket(bucketName, c); err != nil {
+		logError(testName, function, args, startTime, "", "Cleanup failed", err)
+		return
+	}
 	successLogger(testName, function, args, startTime).Info()
 }
 
@@ -6497,7 +6497,7 @@ func testFunctionalV2() {
 	function = "SetBucketPolicy(bucketName, bucketPolicy)"
 	functionAll += ", " + function
 
-	readWritePolicy := `{"Version": "2012-10-17","Statement": [{"Action": ["s3:ListBucketMultipartUploads,s3:ListBucket"],"Effect": "Allow","Principal": {"AWS": ["*"]},"Resource": ["arn:aws:s3:::` + bucketName + `/*"],"Sid": ""}]}`
+	readWritePolicy := `{"Version": "2012-10-17","Statement": [{"Action": ["s3:ListBucketMultipartUploads", "s3:ListBucket"],"Effect": "Allow","Principal": {"AWS": ["*"]},"Resource": ["arn:aws:s3:::` + bucketName + `"],"Sid": ""}]}`
 
 	args = map[string]interface{}{
 		"bucketName":   bucketName,
@@ -6558,9 +6558,9 @@ func testFunctionalV2() {
 		return
 	}
 
-	objectName_noLength := objectName + "-nolength"
-	args["objectName"] = objectName_noLength
-	n, err = c.PutObject(bucketName, objectName_noLength, bytes.NewReader(buf), int64(len(buf)), minio.PutObjectOptions{ContentType: "binary/octet-stream"})
+	objectNameNoLength := objectName + "-nolength"
+	args["objectName"] = objectNameNoLength
+	n, err = c.PutObject(bucketName, objectNameNoLength, bytes.NewReader(buf), int64(len(buf)), minio.PutObjectOptions{ContentType: "binary/octet-stream"})
 	if err != nil {
 		logError(testName, function, args, startTime, "", "PutObject failed", err)
 		return
@@ -7382,12 +7382,12 @@ func testListObjects() {
 			return
 		}
 		if objInfo.Key == objectName1 && objInfo.StorageClass != "STANDARD" {
-			logError(testName, function, args, startTime, "", "ListObjects doesn't return expected storage class", err)
-			return
+			// Ignored as Gateways (Azure/GCS etc) wont return storage class
+			ignoredLog(testName, function, args, startTime, "ListObjects doesn't return expected storage class").Info()
 		}
 		if objInfo.Key == objectName2 && objInfo.StorageClass != "REDUCED_REDUNDANCY" {
-			logError(testName, function, args, startTime, "", "ListObjects doesn't return expected storage class", err)
-			return
+			// Ignored as Gateways (Azure/GCS etc) wont return storage class
+			ignoredLog(testName, function, args, startTime, "ListObjects doesn't return expected storage class").Info()
 		}
 	}
 
@@ -7398,12 +7398,12 @@ func testListObjects() {
 			return
 		}
 		if objInfo.Key == objectName1 && objInfo.StorageClass != "STANDARD" {
-			logError(testName, function, args, startTime, "", "ListObjectsV2 doesn't return expected storage class", err)
-			return
+			// Ignored as Gateways (Azure/GCS etc) wont return storage class
+			ignoredLog(testName, function, args, startTime, "ListObjectsV2 doesn't return expected storage class").Info()
 		}
 		if objInfo.Key == objectName2 && objInfo.StorageClass != "REDUCED_REDUNDANCY" {
-			logError(testName, function, args, startTime, "", "ListObjectsV2 doesn't return expected storage class", err)
-			return
+			// Ignored as Gateways (Azure/GCS etc) wont return storage class
+			ignoredLog(testName, function, args, startTime, "ListObjectsV2 doesn't return expected storage class").Info()
 		}
 	}
 

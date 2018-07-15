@@ -16,11 +16,13 @@ type UUID struct {
 	Valid bool
 }
 
-func (ns UUID) Interface() interface{} {
-	if !ns.Valid {
+// Interface implements the nullable interface. It returns nil if
+// the UUID is not valid, otherwise it returns the UUID value.
+func (u UUID) Interface() interface{} {
+	if !u.Valid {
 		return nil
 	}
-	return ns.UUID
+	return u.UUID
 }
 
 // NewUUID returns a new, properly instantiated
@@ -52,18 +54,18 @@ func (u *UUID) Scan(src interface{}) error {
 
 // MarshalJSON marshals the underlying value to a
 // proper JSON representation.
-func (ns UUID) MarshalJSON() ([]byte, error) {
-	if ns.Valid {
-		return json.Marshal(ns.UUID.String())
+func (u UUID) MarshalJSON() ([]byte, error) {
+	if u.Valid {
+		return json.Marshal(u.UUID.String())
 	}
 	return json.Marshal(nil)
 }
 
 // UnmarshalJSON will unmarshal a JSON value into
 // the propert representation of that value.
-func (ns *UUID) UnmarshalJSON(text []byte) error {
-	ns.Valid = false
-	ns.UUID = uuid.Nil
+func (u *UUID) UnmarshalJSON(text []byte) error {
+	u.Valid = false
+	u.UUID = uuid.Nil
 	if string(text) == "null" {
 		return nil
 	}
@@ -72,16 +74,18 @@ func (ns *UUID) UnmarshalJSON(text []byte) error {
 	s = strings.TrimPrefix(s, "\"")
 	s = strings.TrimSuffix(s, "\"")
 
-	u, err := uuid.FromString(s)
+	us, err := uuid.FromString(s)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ns.UUID = u
-	ns.Valid = true
+	u.UUID = us
+	u.Valid = true
 
 	return nil
 }
 
-func (ns *UUID) UnmarshalText(text []byte) error {
-	return ns.UnmarshalJSON(text)
+// UnmarshalText will unmarshal text value into
+// the propert representation of that value.
+func (u *UUID) UnmarshalText(text []byte) error {
+	return u.UnmarshalJSON(text)
 }

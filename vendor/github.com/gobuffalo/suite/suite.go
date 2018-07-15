@@ -52,7 +52,7 @@ func (as *Action) JSON(u string, args ...interface{}) *willie.JSON {
 }
 
 func (as *Action) SetupTest() {
-	as.App.SessionStore = newSessionStore()
+	as.App.SessionStore = NewSessionStore()
 	s, _ := as.App.SessionStore.New(nil, as.App.SessionName)
 	as.Session = &buffalo.Session{
 		Session: s,

@@ -10,7 +10,7 @@ type sessionStore struct {
 	sessions map[string]*sessions.Session
 }
 
-func newSessionStore() sessions.Store {
+func NewSessionStore() sessions.Store {
 	return &sessionStore{
 		sessions: map[string]*sessions.Session{},
 	}

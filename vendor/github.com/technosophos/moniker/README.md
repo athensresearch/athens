@@ -1,4 +1,5 @@
 # Monicker: Generate Cute Random Names
+[![Stability: Maintenance](https://masterminds.github.io/stability/maintenance.svg)](https://masterminds.github.io/stability/maintenance.html)
 
 Monicker is a tiny Go library for automatically naming things.
 

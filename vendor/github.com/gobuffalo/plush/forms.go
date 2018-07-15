@@ -60,9 +60,8 @@ func helper(opts tags.Options, help HelperContext, fn func(opts tags.Options) he
 	if help.Value("authenticity_token") != nil && opts["method"] != "GET" {
 		form.SetAuthenticityToken(fmt.Sprint(help.Value("authenticity_token")))
 	}
-	ctx := help.Context.New()
-	ctx.Set(hn, form)
-	s, err := help.BlockWith(ctx)
+	help.Context.Set(hn, form)
+	s, err := help.Block()
 	if err != nil {
 		return "", err
 	}

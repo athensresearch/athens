@@ -26,142 +26,9 @@ type Paginator struct {
 	TotalPages int `json:"total_pages"`
 }
 
-func (pagination Paginator) Tag(opts Options) (*Tag, error) {
-	// return an empty div if there is only 1 page
-	if pagination.TotalPages <= 1 {
-		return New("div", Options{}), nil
-	}
-
-	path, class, wing := extractBaseOptions(opts)
-	opts["class"] = strings.Join([]string{class, "pagination"}, " ")
-	t := New("ul", opts)
-
-	barLength := wing*2 + 1
-	center := wing + 1
-	loopStart := 1
-	loopEnd := pagination.TotalPages
-
-	li, err := pagination.addPrev(opts, path)
-	if err != nil {
-		return t, errors.WithStack(err)
-	}
-	t.Append(li)
-
-	if pagination.TotalPages > barLength {
-		loopEnd = barLength - 2       // range 1 ~ center
-		if pagination.Page > center { /// range center
-			loopStart = pagination.Page - wing + 2
-			loopEnd = loopStart + barLength - 5
-			li, err := pageLI("1", 1, path, pagination)
-			if err != nil {
-				return t, errors.WithStack(err)
-			}
-			t.Append(li)
-			t.Append(pageLIDummy())
-		}
-		if pagination.Page > (pagination.TotalPages - wing - 1) {
-			loopEnd = pagination.TotalPages
-			loopStart = pagination.TotalPages - barLength + 3
-		}
-	}
-
-	for i := loopStart; i <= loopEnd; i++ {
-		li, err := pageLI(strconv.Itoa(i), i, path, pagination)
-		if err != nil {
-			return t, errors.WithStack(err)
-		}
-		t.Append(li)
-	}
-
-	if pagination.TotalPages > loopEnd {
-		t.Append(pageLIDummy())
-		label := strconv.Itoa(pagination.TotalPages)
-		li, err := pageLI(label, pagination.TotalPages, path, pagination)
-		if err != nil {
-			return t, errors.WithStack(err)
-		}
-		t.Append(li)
-	}
-
-	li, err = pagination.addNext(opts, path)
-	if err != nil {
-		return t, errors.WithStack(err)
-	}
-	t.Append(li)
-
-	return t, nil
-}
-
-func (pagination Paginator) addPrev(opts Options, path string) (*Tag, error) {
-	showPrev := true
-
-	if b, ok := opts["showPrev"].(bool); ok {
-		showPrev = b
-		delete(opts, "showPrev")
-	}
-
-	if !showPrev {
-		return nil, nil
-	}
-
-	page := pagination.Page - 1
-	prevContent := "&laquo;"
-
-	if opts["previousContent"] != nil {
-		prevContent = opts["previousContent"].(string)
-	}
-
-	return pageLI(prevContent, page, path, pagination)
-}
-
-func (pagination Paginator) addNext(opts Options, path string) (*Tag, error) {
-	showNext := true
-
-	if b, ok := opts["showNext"].(bool); ok {
-		showNext = b
-		delete(opts, "showNext")
-	}
-
-	if !showNext {
-		return nil, nil
-	}
-
-	page := pagination.Page + 1
-	nextContent := "&raquo;"
-
-	if opts["nextContent"] != nil {
-		nextContent = opts["nextContent"].(string)
-	}
-
-	return pageLI(nextContent, page, path, pagination)
-}
-
-func extractBaseOptions(opts Options) (string, string, int) {
-	var path string
-	if p, ok := opts["path"]; ok {
-		path = p.(string)
-		delete(opts, "path")
-	}
-
-	var class string
-	if cl, ok := opts["class"]; ok {
-		class = cl.(string)
-		delete(opts, "path")
-	}
-
-	wing := 5
-	if w, ok := opts["wingLength"]; ok {
-		wing = w.(int)
-		delete(opts, "wingLength")
-	}
-
-	return path, class, wing
-}
-
-func Pagination(pagination interface{}, opts Options) (*Tag, error) {
-	if p, ok := pagination.(Paginator); ok {
-		return p.Tag(opts)
-	}
+//TagFromPagination receives a pagination interface{} and attempts to get
+//Paginator properties from it before generating the tag.
+func (p Paginator) TagFromPagination(pagination interface{}, opts Options) (*Tag, error) {
 	rv := reflect.ValueOf(pagination)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
@@ -172,11 +39,6 @@ func Pagination(pagination interface{}, opts Options) (*Tag, error) {
 	}
 
 	s := structs.New(rv.Interface())
-
-	p := Paginator{
-		Page:    1,
-		PerPage: 20,
-	}
 
 	if f, ok := s.FieldOk("Page"); ok {
 		p.Page = f.Value().(int)
@@ -209,39 +71,205 @@ func Pagination(pagination interface{}, opts Options) (*Tag, error) {
 	return p.Tag(opts)
 }
 
+//Tag generates the pagination html Tag
+func (p Paginator) Tag(opts Options) (*Tag, error) {
+	// return an empty div if there is only 1 page
+	if p.TotalPages <= 1 {
+		return New("div", Options{}), nil
+	}
+
+	path, class, wing := extractBaseOptions(opts)
+	opts["class"] = strings.Join([]string{class, "pagination"}, " ")
+
+	t := New("ul", opts)
+
+	barLength := wing*2 + 1
+	center := wing + 1
+	loopStart := 1
+	loopEnd := p.TotalPages
+
+	li, err := p.addPrev(opts, path)
+	if err != nil {
+		return t, errors.WithStack(err)
+	}
+	t.Append(li)
+
+	if p.TotalPages > barLength {
+		loopEnd = barLength - 2 // range 1 ~ center
+		if p.Page > center {    /// range center
+			loopStart = p.Page - wing + 2
+			loopEnd = loopStart + barLength - 5
+			li, err := pageLI("1", 1, path, p)
+			if err != nil {
+				return t, errors.WithStack(err)
+			}
+			t.Append(li)
+			t.Append(pageLIDummy())
+		}
+		if p.Page > (p.TotalPages - wing - 1) {
+			loopEnd = p.TotalPages
+			loopStart = p.TotalPages - barLength + 3
+		}
+	}
+
+	for i := loopStart; i <= loopEnd; i++ {
+		li, err := pageLI(strconv.Itoa(i), i, path, p)
+		if err != nil {
+			return t, errors.WithStack(err)
+		}
+		t.Append(li)
+	}
+
+	if p.TotalPages > loopEnd {
+		t.Append(pageLIDummy())
+		label := strconv.Itoa(p.TotalPages)
+		li, err := pageLI(label, p.TotalPages, path, p)
+		if err != nil {
+			return t, errors.WithStack(err)
+		}
+		t.Append(li)
+	}
+
+	li, err = p.addNext(opts, path)
+	if err != nil {
+		return t, errors.WithStack(err)
+	}
+	t.Append(li)
+
+	return t, nil
+}
+
+//Pagination builds pagination Tag based on a passed pagintation interface
+func Pagination(pagination interface{}, opts Options) (*Tag, error) {
+	if p, ok := pagination.(Paginator); ok {
+		return p.Tag(opts)
+	}
+
+	p := Paginator{
+		Page:    1,
+		PerPage: 20,
+	}
+
+	return p.TagFromPagination(pagination, opts)
+}
+
+func (p Paginator) addPrev(opts Options, path string) (*Tag, error) {
+	showPrev := true
+
+	if b, ok := opts["showPrev"].(bool); ok {
+		showPrev = b
+		delete(opts, "showPrev")
+	}
+
+	if !showPrev {
+		return nil, nil
+	}
+
+	page := p.Page - 1
+	prevContent := "&laquo;"
+
+	if opts["previousContent"] != nil {
+		prevContent = opts["previousContent"].(string)
+	}
+
+	return pageLI(prevContent, page, path, p)
+}
+
+func (p Paginator) addNext(opts Options, path string) (*Tag, error) {
+	showNext := true
+
+	if b, ok := opts["showNext"].(bool); ok {
+		showNext = b
+		delete(opts, "showNext")
+	}
+
+	if !showNext {
+		return nil, nil
+	}
+
+	page := p.Page + 1
+	nextContent := "&raquo;"
+
+	if opts["nextContent"] != nil {
+		nextContent = opts["nextContent"].(string)
+	}
+
+	return pageLI(nextContent, page, path, p)
+}
+
+func extractBaseOptions(opts Options) (string, string, int) {
+	var path string
+	if p, ok := opts["path"]; ok {
+		path = p.(string)
+		delete(opts, "path")
+	}
+
+	var class string
+	if cl, ok := opts["class"]; ok {
+		class = cl.(string)
+		delete(opts, "path")
+	}
+
+	wing := 5
+	if w, ok := opts["wingLength"]; ok {
+		wing = w.(int)
+		delete(opts, "wingLength")
+	}
+
+	return path, class, wing
+}
+
 func pageLI(text string, page int, path string, pagination Paginator) (*Tag, error) {
 
-	lio := Options{}
+	classes := []string{"page-item"}
+
 	if page == pagination.Page {
-		lio["class"] = "active"
+		classes = append(classes, "active")
 	}
-	li := New("li", lio)
+
+	li := New("li", Options{})
+	defer func() {
+		li.Options["class"] = strings.Join(classes, " ")
+	}()
+
 	if page == 0 || page > pagination.TotalPages {
-		li.Options["class"] = "disabled"
+		classes = append(classes, "disabled")
 		li.Append(New("span", Options{
-			"body": text,
+			"body":  text,
+			"class": "page-link",
 		}))
 		return li, nil
 	}
 
-	u, err := url.Parse(path)
-	q := u.Query()
-	q.Set("page", strconv.Itoa(page))
-	u.RawQuery = q.Encode()
-	ao := Options{
-		"href": u.String(),
-	}
-	a := New("a", ao)
-	a.Append(text)
-	li.Append(a)
+	url, err := urlFor(path, page)
 	if err != nil {
 		return li, errors.WithStack(err)
 	}
+
+	li.Append(New("a", Options{
+		"href":  url,
+		"class": "page-link",
+		"body":  text,
+	}))
+
 	return li, nil
 }
 
+func urlFor(path string, page int) (string, error) {
+	u, err := url.Parse(path)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("page", strconv.Itoa(page))
+	u.RawQuery = q.Encode()
+
+	return u.String(), err
+}
+
 func pageLIDummy() *Tag {
-	li := New("li", Options{"class": "disabled"})
+	li := New("li", Options{"class": "page-item disabled"})
 	a := New("a", Options{"body": "..."})
 	li.Append(a)
 	return li
