@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gobuffalo/buffalo"
@@ -12,11 +11,7 @@ import (
 	"github.com/markbates/goth/providers/github"
 )
 
-func init() {
-	app, err := App()
-	if err != nil {
-		log.Fatal(err)
-	}
+func initializeAuth(app *buffalo.App) {
 	gothic.Store = app.SessionStore
 
 	goth.UseProviders(

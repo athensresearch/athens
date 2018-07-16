@@ -8,6 +8,7 @@ import (
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
 	"github.com/gobuffalo/buffalo/middleware/ssl"
+	"github.com/gobuffalo/buffalo/render"
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gobuffalo/gocraft-work-adapter"
 	"github.com/gobuffalo/packr"
@@ -50,6 +51,19 @@ func init() {
 		panic(err)
 	}
 	gopath = g
+
+	proxy = render.New(render.Options{
+		// HTML layout to be used for all HTML requests:
+		HTMLLayout:       "application.html",
+		JavaScriptLayout: "application.js",
+
+		// Box containing all of the templates:
+		TemplatesBox: packr.NewBox("../templates/proxy"),
+		AssetsBox:    assetsBox,
+
+		// Add template helpers here:
+		Helpers: render.Helpers{},
+	})
 }
 
 // App is where all routes and middleware for buffalo
@@ -95,6 +109,7 @@ func App() (*buffalo.App, error) {
 			app.Use(middleware.ParameterLogger)
 		}
 		initializeTracing(app)
+		initializeAuth(app)
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
 		if env.EnableCSRFProtection() {
