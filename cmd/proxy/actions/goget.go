@@ -29,7 +29,8 @@ func goGetMeta(c buffalo.Context, getter cdnmetadata.Getter) error {
 	}
 	loc, err := getter.Get(params.Module)
 	if err != nil {
-		return c.Error(http.StatusNotFound, fmt.Errorf("module %s does not exist", params.Module))
+		msg := fmt.Sprintf("module %s does not exist", params.Module)
+		return c.Render(http.StatusNotFound, proxy.JSON(msg))
 	}
 	c.Set("redirectLoc", loc)
 	c.Set("module", params.Module)

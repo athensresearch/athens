@@ -26,7 +26,8 @@ func VersionInfoHandler(getter storage.Getter, eng *render.Engine) func(c buffal
 		}
 		version, err := getter.Get(params.Module, params.Version)
 		if storage.IsNotFoundError(err) {
-			return c.Error(http.StatusNotFound, fmt.Errorf("%s@%s not found", params.Module, params.Version))
+			msg := fmt.Sprintf("%s@%s not found", params.Module, params.Version)
+			return c.Render(http.StatusNotFound, eng.JSON(msg))
 		} else if err != nil {
 			return err
 		}

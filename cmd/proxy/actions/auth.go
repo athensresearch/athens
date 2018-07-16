@@ -28,7 +28,7 @@ func authCallback(store user.Store) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
 		usr, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 		if err != nil {
-			return c.Error(401, err)
+			return c.Render(401, proxy.JSON(err.Error()))
 		}
 		// Do something with the user, maybe register them/sign them in
 		var u *user.User
@@ -39,10 +39,10 @@ func authCallback(store user.Store) func(c buffalo.Context) error {
 				u = user.FromGothic(&usr)
 				e := store.Save(u)
 				if e != nil {
-					return c.Error(500, e)
+					return c.Render(500, proxy.JSON(e.Error()))
 				}
 			}
-			return c.Error(500, err)
+			return c.Render(500, proxy.JSON(err.Error()))
 		}
 		return c.Render(200, proxy.JSON(u))
 	}

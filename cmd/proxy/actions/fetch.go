@@ -60,11 +60,11 @@ func fetchHandler(store storage.Saver) func(c buffalo.Context) error {
 
 		saveErr := store.Save(c, moduleName, version, modBytes, zipBytes, infoBytes)
 		if storage.IsVersionAlreadyExistsErr(saveErr) {
-			return c.Error(http.StatusConflict, saveErr)
+			return c.Render(http.StatusConflict, proxy.JSON(saveErr.Error()))
 		} else if err != nil {
 			return errors.WithStack(err)
 		}
 
-		return c.Render(http.StatusOK, proxy.String(err.Error()))
+		return c.Render(http.StatusOK, proxy.JSON(err.Error()))
 	}
 }

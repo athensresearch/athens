@@ -117,7 +117,7 @@ func App(config *AppConfig) (*buffalo.App, error) {
 		// Download Protocol
 		app.GET(download.PathList, download.ListHandler(config.Storage, renderEng))
 		app.GET(download.PathVersionInfo, download.VersionInfoHandler(config.Storage, renderEng))
-		app.GET(download.PathVersionModule, download.VersionModuleHandler(config.Storage))
+		app.GET(download.PathVersionModule, download.VersionModuleHandler(config.Storage, renderEng))
 		app.GET(download.PathVersionZip, download.VersionZipHandler(config.Storage))
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
