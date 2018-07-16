@@ -2,15 +2,11 @@ package gcp
 
 import (
 	"bytes"
-	"context"
 	"io/ioutil"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/storage"
-	"github.com/gomods/athens/pkg/config"
 	athensStorage "github.com/gomods/athens/pkg/storage"
-	"google.golang.org/api/option"
 )
 
 func (g *GcpTests) TestNewWithCredentials() {
@@ -27,9 +23,6 @@ func (g *GcpTests) TestSaveGetListExistsRoundTrip() {
 
 	g.T().Run("Save to storage", func(t *testing.T) {
 		err = store.Save(g.context, g.module, g.version, mod, bytes.NewReader(zip), info)
-		r.NoError(err)
-		// check save was successful
-		err = exists(g.context, g.options, g.bucket, g.module, g.version)
 		r.NoError(err)
 	})
 
@@ -95,23 +88,4 @@ func (g *GcpTests) TestNotFounds() {
 		modNotFoundErr := athensStorage.ErrNotFound{Module: "nothing/to/see/here"}
 		r.EqualError(modNotFoundErr, err.Error())
 	})
-}
-
-func exists(ctx context.Context, cred option.ClientOption, bucket, mod, ver string) error {
-	client, err := storage.NewClient(ctx, cred)
-	if err != nil {
-		return err
-	}
-	bkt := client.Bucket(bucket)
-
-	if _, err := bkt.Object(config.PackageVersionedName(mod, ver, "mod")).Attrs(ctx); err != nil {
-		return err
-	}
-	if _, err := bkt.Object(config.PackageVersionedName(mod, ver, "info")).Attrs(ctx); err != nil {
-		return err
-	}
-	if _, err := bkt.Object(config.PackageVersionedName(mod, ver, "zip")).Attrs(ctx); err != nil {
-		return err
-	}
-	return nil
 }

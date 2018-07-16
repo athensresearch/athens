@@ -12,7 +12,7 @@ import (
 
 // Storage implements the (./pkg/storage).Backend interface
 type Storage struct {
-	bucket       *storage.BucketHandle
+	bucket       Bucket
 	baseURI      *url.URL
 	closeStorage func() error
 }
@@ -36,10 +36,10 @@ func NewWithCredentials(ctx context.Context, cred option.ClientOption) (*Storage
 	if err != nil {
 		return nil, err
 	}
-	bkt := storage.Bucket(bucketname)
+	bkt := gcpBucket{storage.Bucket(bucketname)}
 
 	return &Storage{
-		bucket:       bkt,
+		bucket:       &bkt,
 		baseURI:      u,
 		closeStorage: storage.Close,
 	}, nil
