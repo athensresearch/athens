@@ -2,9 +2,17 @@ package minio
 
 import (
 	"fmt"
+
+	"github.com/gomods/athens/pkg/storage"
 )
 
 func (v *storageImpl) Delete(module, version string) error {
+	if !v.Exists(module, version) {
+		return storage.ErrVersionNotFound{
+			Module:  module,
+			Version: version,
+		}
+	}
 	versionedPath := v.versionLocation(module, version)
 
 	modPath := fmt.Sprintf("%s/go.mod", versionedPath)
