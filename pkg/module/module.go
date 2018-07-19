@@ -16,11 +16,6 @@ const (
 	gitIgnoreFilename = ".gitignore"
 )
 
-type file struct {
-	Name string
-	Body string
-}
-
 // MakeZip takes dir and module info and generates vgo valid zip
 // the dir must end with a "/"
 func MakeZip(fs afero.Fs, dir, module, version string) *io.PipeReader {

@@ -25,7 +25,6 @@ import (
 
 const (
 	fetchRepoURI string = "https://api.github.com/repos/%s/%s/tarball/%s"
-	tmpFileName         = "%s-%s-%s" // owner-repo-ref
 )
 
 type gitFetcher struct {
