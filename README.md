@@ -80,5 +80,5 @@ The Athens project would not be possible without the amazing projects it builds 
 This project follows the [Contributor Covenant](https://www.contributor-covenant.org/) (English version [here](https://www.contributor-covenant.org/version/1/4/code-of-conduct)) code of conduct.
 
 If you have concerns, notice a code of conduct violation, or otherwise would like to talk about something
-related to this code of conduct, please reach out to me, Aaron Schlesinger on the [Gophers Slack](https://gophers.slack.com/. My username is `arschles`. Note that in the future, we will be expanding the
+related to this code of conduct, please reach out to me, Aaron Schlesinger on the [Gophers Slack](https://gophers.slack.com/). My username is `arschles`. Note that in the future, we will be expanding the
 ways that you can contact us regarding the code of conduct.
