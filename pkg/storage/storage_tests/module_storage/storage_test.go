@@ -12,6 +12,7 @@ import (
 	"context"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/suite"
 	"github.com/gomods/athens/pkg/storage"
@@ -77,6 +78,7 @@ func (d *TestSuites) TestStorages() {
 		d.testNotFound(store)
 		d.testGetSaveListRoundTrip(store)
 		d.testList(store)
+		d.testDelete(store)
 
 		// TODO: more tests to come
 
@@ -121,4 +123,36 @@ func (d *TestSuites) testGetSaveListRoundTrip(ts storage.TestSuite) {
 	r.NoError(err, hrn)
 	r.Equal(d.zip, zipContent, hrn)
 	r.Equal(d.info, gotten.Info, hrn)
+}
+
+func (d *TestSuites) testDelete(ts storage.TestSuite) {
+	r := d.Require()
+	version := "delete" + time.Now().String()
+	err := ts.Storage().Save(context.Background(), d.module, version, d.mod, bytes.NewReader(d.zip), d.info)
+	r.NoError(err)
+
+	tests := []struct {
+		module  string
+		version string
+		want    error
+	}{
+		{
+			module:  "does/not/exist",
+			version: "v1.0.0",
+			want: storage.ErrVersionNotFound{
+				Module:  "does/not/exist",
+				Version: "v1.0.0",
+			},
+		},
+		{
+			module:  d.module,
+			version: version,
+		},
+	}
+	for _, test := range tests {
+		err := ts.Storage().Delete(test.module, test.version)
+		r.Equal(test.want, err)
+		exists := ts.Storage().Exists(test.module, test.version)
+		r.Equal(false, exists)
+	}
 }
