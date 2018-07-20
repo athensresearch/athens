@@ -4,12 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/gomods/athens/pkg/config"
-	s "github.com/gomods/athens/pkg/storage"
-	multierror "github.com/hashicorp/go-multierror"
 	"google.golang.org/api/iterator"
 )
 
@@ -18,35 +14,22 @@ type gcpBucket struct {
 	*storage.BucketHandle
 }
 
-func (b *gcpBucket) Delete(ctx context.Context, module, version string) error {
-	if exists := b.Exists(ctx, module, version); !exists {
-		return s.ErrVersionNotFound{Module: module, Version: version}
-	}
-	var errs error
-	if err := b.Object(config.PackageVersionedName(module, version, "mod")).Delete(ctx); err != nil {
-		errs = multierror.Append(errs, err)
-	}
-	if err := b.Object(config.PackageVersionedName(module, version, "info")).Delete(ctx); err != nil {
-		errs = multierror.Append(errs, err)
-	}
-	if err := b.Object(config.PackageVersionedName(module, version, "zip")).Delete(ctx); err != nil {
-		errs = multierror.Append(errs, err)
-	}
-	return errs
+func (b *gcpBucket) Delete(ctx context.Context, path string) error {
+	return b.Object(path).Delete(ctx)
 }
 
-func (b *gcpBucket) Open(ctx context.Context, module, version, extension string) (io.ReadCloser, error) {
-	return b.Object(config.PackageVersionedName(module, version, extension)).NewReader(ctx)
+func (b *gcpBucket) Open(ctx context.Context, path string) (io.ReadCloser, error) {
+	return b.Object(path).NewReader(ctx)
 }
 
-func (b *gcpBucket) Write(ctx context.Context, module, version, extension string) io.WriteCloser {
-	return b.Object(config.PackageVersionedName(module, version, extension)).NewWriter(ctx)
+func (b *gcpBucket) Write(ctx context.Context, path string) io.WriteCloser {
+	return b.Object(path).NewWriter(ctx)
 }
 
-func (b *gcpBucket) ListVersions(ctx context.Context, module string) ([]string, error) {
-	it := b.Objects(ctx, &storage.Query{Prefix: module})
+func (b *gcpBucket) List(ctx context.Context, prefix string) ([]string, error) {
+	it := b.Objects(ctx, &storage.Query{Prefix: prefix})
 
-	versions := make([]string, 0, 10)
+	res := []string{}
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
@@ -55,25 +38,13 @@ func (b *gcpBucket) ListVersions(ctx context.Context, module string) ([]string, 
 		if err != nil {
 			return nil, fmt.Errorf("could not iterate over query: %s", err)
 		}
-
-		// kinda hacky looking at this time
-		if strings.HasSuffix(attrs.Name, ".info") {
-			segments := strings.Split(attrs.Name, "/")
-			// version should be last segment w/ .info suffix
-			last := segments[len(segments)-1]
-			version := strings.TrimSuffix(last, ".info")
-			versions = append(versions, version)
-		}
+		res = append(res, attrs.Name)
 	}
 
-	if len(versions) < 1 {
-		return nil, s.ErrNotFound{Module: module}
-	}
-
-	return versions, nil
+	return res, nil
 }
 
-func (b *gcpBucket) Exists(ctx context.Context, module, version string) bool {
-	_, err := b.Object(config.PackageVersionedName(module, version, "mod")).Attrs(ctx)
+func (b *gcpBucket) Exists(ctx context.Context, path string) bool {
+	_, err := b.Object(path).Attrs(ctx)
 	return err == nil
 }

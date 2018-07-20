@@ -10,9 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
-	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
-	multierror "github.com/hashicorp/go-multierror"
+	moduploader "github.com/gomods/athens/pkg/storage/module"
 )
 
 // Storage implements (github.com/gomods/athens/pkg/storage).Saver and
@@ -76,43 +75,20 @@ func (s Storage) BaseURL() *url.URL {
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
 func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
-	errChan := make(chan error, 3)
-
-	tctx, cancel := context.WithTimeout(ctx, env.Timeout())
-	defer cancel()
-
-	go s.upload(tctx, errChan, module, version, "mod", bytes.NewReader(mod))
-	go s.upload(tctx, errChan, module, version, "zip", zip)
-	go s.upload(tctx, errChan, module, version, "info", bytes.NewReader(info))
-
-	var errors error
-	for i := 0; i < 3; i++ {
-		err := <-errChan
-		if err != nil {
-			errors = multierror.Append(errors, err)
-		}
-	}
-	close(errChan)
-
-	return errors
+	err := moduploader.Upload(ctx, module, version, bytes.NewReader(info), bytes.NewReader(mod), zip, s.upload)
+	// TODO: take out lease on the /list file and add the version to it
+	//
+	// Do that only after module source+metadata is uploaded
+	return err
 }
 
-func (s *Storage) upload(ctx context.Context, errChan chan<- error, module, version, name string, content io.Reader) {
-	save := func() error {
-		key := config.PackageVersionedName(module, version, name)
-		upParams := &s3manager.UploadInput{
-			Bucket: &s.bucket,
-			Key:    &key,
-			Body:   content,
-		}
-		_, err := s.uploader.UploadWithContext(ctx, upParams)
-		return err
+func (s *Storage) upload(ctx context.Context, path, contentType string, stream io.Reader) error {
+	upParams := &s3manager.UploadInput{
+		Bucket:      &s.bucket,
+		Key:         &path,
+		Body:        stream,
+		ContentType: &contentType,
 	}
-
-	select {
-	case errChan <- save():
-	case <-ctx.Done():
-		errChan <- fmt.Errorf("uploading %s/%s.%s timed out", module, version, name)
-
-	}
+	_, err := s.uploader.UploadWithContext(ctx, upParams)
+	return err
 }

@@ -7,9 +7,8 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
-	multierror "github.com/hashicorp/go-multierror"
+	moduploader "github.com/gomods/athens/pkg/storage/module"
 )
 
 type client interface {
@@ -57,34 +56,9 @@ func (s Storage) BaseURL() *url.URL {
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
 func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
-	tctx, cancel := context.WithTimeout(ctx, env.Timeout())
-	defer cancel()
-
-	const numUpload = 3
-	errChan := make(chan error, numUpload)
-
-	go s.uploadStream(tctx, errChan, module, version, "info", bytes.NewReader(info), "application/json")
-	go s.uploadStream(tctx, errChan, module, version, "mod", bytes.NewReader(mod), "text/plain")
-	go s.uploadStream(tctx, errChan, module, version, "zip", zip, "application/octet-stream")
-
-	var errors error
-	for i := 0; i < numUpload; i++ {
-		err := <-errChan
-		if err != nil {
-			errors = multierror.Append(errors, err)
-		}
-	}
-	close(errChan)
+	err := moduploader.Upload(ctx, module, version, bytes.NewReader(info), bytes.NewReader(mod), zip, s.cl.UploadWithContext)
 	// TODO: take out lease on the /list file and add the version to it
 	//
 	// Do that only after module source+metadata is uploaded
-	return errors
-}
-
-func (s *Storage) uploadStream(ctx context.Context, errChan chan<- error, module, version, ext string, stream io.Reader, contentType string) {
-	select {
-	case errChan <- s.cl.UploadWithContext(ctx, config.PackageVersionedName(module, version, ext), contentType, stream):
-	case <-ctx.Done():
-		errChan <- fmt.Errorf("uploading %s/%s.%s timed out", module, version, ext)
-	}
+	return err
 }
