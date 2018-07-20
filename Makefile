@@ -1,6 +1,7 @@
 .PHONY: build
 build:
 	cd cmd/proxy && buffalo build
+	cd cmd/olympus && buffalo build
 
 .PHONY: run
 run: build
@@ -26,9 +27,11 @@ dev:
 	docker-compose -p athensdev up -d mongo
 	docker-compose -p athensdev up -d redis
 	docker-compose -p athensdev up -d minio
+	docker-compose -p athensdev up -d jaeger
 	echo "sleeping for a bit to wait for the DB to come up"
 	sleep 5
 
 .PHONY: dev-teardown
 dev-teardown:
 	docker-compose -p athensdev down
+	docker volume prune
