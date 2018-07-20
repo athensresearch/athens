@@ -107,7 +107,6 @@ func App(config *AppConfig) (*buffalo.App, error) {
 		}
 		app.Use(T.Middleware())
 
-		app.GET("/", homeHandler)
 		app.GET("/diff/{lastID}", diffHandler(config.Storage, config.EventLog))
 		app.GET("/feed/{lastID}", feedHandler(config.Storage))
 		app.GET("/eventlog/{sequence_id}", eventlogHandler(config.EventLog))
