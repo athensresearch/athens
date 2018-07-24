@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"context"
 	"errors"
 
 	"github.com/gomods/athens/pkg/storage"
@@ -119,5 +120,5 @@ func exists(event Event, log []Event, checker storage.Checker) bool {
 		}
 	}
 
-	return checker.Exists(event.Module, event.Version)
+	return checker.Exists(context.TODO(), event.Module, event.Version)
 }

@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -163,6 +164,6 @@ type ModuleStorageChecker struct {
 	Module string
 }
 
-func (s ModuleStorageChecker) Exists(module, version string) bool {
+func (s ModuleStorageChecker) Exists(ctx context.Context, module, version string) bool {
 	return module == s.Module
 }

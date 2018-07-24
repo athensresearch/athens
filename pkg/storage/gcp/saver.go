@@ -18,7 +18,7 @@ import (
 // Uploaded files are publicly accessable in the storage bucket as per
 // an ACL rule.
 func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
-	if exists := s.Exists(module, version); exists {
+	if exists := s.Exists(ctx, module, version); exists {
 		return stg.ErrVersionAlreadyExists{Module: module, Version: version}
 	}
 

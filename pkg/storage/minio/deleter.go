@@ -1,13 +1,14 @@
 package minio
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func (v *storageImpl) Delete(module, version string) error {
-	if !v.Exists(module, version) {
+func (v *storageImpl) Delete(ctx context.Context, module, version string) error {
+	if !v.Exists(ctx, module, version) {
 		return storage.ErrVersionNotFound{
 			Module:  module,
 			Version: version,

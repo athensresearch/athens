@@ -30,7 +30,7 @@ func GetProcessCacheMissJob(s storage.Backend, w worker.Worker, mf *module.Filte
 			return module.NewErrModuleExcluded(mod)
 		}
 
-		if s.Exists(mod, version) {
+		if s.Exists(context.TODO(), mod, version) {
 			return nil
 		}
 

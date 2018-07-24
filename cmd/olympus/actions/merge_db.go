@@ -36,7 +36,7 @@ func mergeDB(ctx context.Context, originURL string, diff dbDiff, eLog eventlog.E
 		}
 	}
 	for _, deleted := range diff.Deleted {
-		if err := delete(deleted, eLog, storage); err != nil {
+		if err := delete(ctx, deleted, eLog, storage); err != nil {
 			errors = multierror.Append(errors, err)
 		}
 	}
@@ -81,7 +81,7 @@ func deprecate(ctx context.Context, event eventlog.Event, originURL string, eLog
 		return err // can't deprecate something that's already deleted
 	}
 	// delete from the CDN
-	if err := storage.Delete(event.Module, event.Version); err != nil {
+	if err := storage.Delete(ctx, event.Module, event.Version); err != nil {
 		log.Printf("error deleting event module %s/%s from CDN (%s)", event.Module, event.Version, err)
 		return err
 	}
@@ -94,9 +94,9 @@ func deprecate(ctx context.Context, event eventlog.Event, originURL string, eLog
 	return nil
 }
 
-func delete(event eventlog.Event, eLog eventlog.Eventlog, storage storage.Backend) error {
+func delete(ctx context.Context, event eventlog.Event, eLog eventlog.Eventlog, storage storage.Backend) error {
 	// delete in the CDN
-	if err := storage.Delete(event.Module, event.Version); err != nil {
+	if err := storage.Delete(ctx, event.Module, event.Version); err != nil {
 		log.Printf("error deleting event module %s/%s from CDN (%s)", event.Module, event.Version, err)
 		return err
 	}
