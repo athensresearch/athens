@@ -100,7 +100,7 @@ func (d *TestSuites) testList(ts storage.TestSuite) {
 	}
 	// append version from save-get roundtrip
 	versions = append([]string{d.version}, versions...)
-	retVersions, err := ts.Storage().List(d.module)
+	retVersions, err := ts.Storage().List(context.Background(), d.module)
 	r.NoError(err, hrn)
 	r.Equal(versions, retVersions, hrn)
 }
@@ -109,7 +109,7 @@ func (d *TestSuites) testGetSaveListRoundTrip(ts storage.TestSuite) {
 	r := d.Require()
 	hrn := ts.StorageHumanReadableName()
 	ts.Storage().Save(context.Background(), d.module, d.version, d.mod, bytes.NewReader(d.zip), d.info)
-	listedVersions, err := ts.Storage().List(d.module)
+	listedVersions, err := ts.Storage().List(context.Background(), d.module)
 	r.NoError(err, hrn)
 	r.Equal(1, len(listedVersions), hrn)
 	retVersion := listedVersions[0]

@@ -1,11 +1,12 @@
 package minio
 
 import (
+	"context"
 	"sort"
 	"strings"
 )
 
-func (l *storageImpl) List(module string) ([]string, error) {
+func (l *storageImpl) List(ctx context.Context, module string) ([]string, error) {
 	dict := make(map[string]struct{})
 
 	doneCh := make(chan struct{})

@@ -31,8 +31,8 @@ func (n noOpConnectedBackend) Exists(module, version string) bool {
 func (n noOpConnectedBackend) Get(module, vsn string) (*Version, error) {
 	return n.backend.Get(module, vsn)
 }
-func (n noOpConnectedBackend) List(module string) ([]string, error) {
-	return n.backend.List(module)
+func (n noOpConnectedBackend) List(ctx context.Context, module string) ([]string, error) {
+	return n.backend.List(ctx, module)
 }
 func (n noOpConnectedBackend) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
 	return n.backend.Save(ctx, module, version, mod, zip, info)

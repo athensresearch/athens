@@ -24,7 +24,7 @@ func ListHandler(lister storage.Lister, eng *render.Engine) func(c buffalo.Conte
 		if err != nil {
 			return err
 		}
-		versions, err := lister.List(mod)
+		versions, err := lister.List(c, mod)
 		if storage.IsNotFoundError(err) {
 			return c.Render(http.StatusNotFound, eng.JSON(err.Error()))
 		} else if err != nil {

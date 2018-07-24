@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"strings"
 
 	"github.com/globalsign/mgo/bson"
@@ -8,7 +9,7 @@ import (
 )
 
 // List lists all versions of a module
-func (s *ModuleStore) List(module string) ([]string, error) {
+func (s *ModuleStore) List(ctx context.Context, module string) ([]string, error) {
 	c := s.s.DB(s.d).C(s.c)
 	result := make([]storage.Module, 0)
 	err := c.Find(bson.M{"module": module}).All(&result)

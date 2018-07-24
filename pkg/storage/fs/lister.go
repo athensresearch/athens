@@ -1,10 +1,12 @@
 package fs
 
 import (
+	"context"
+
 	"github.com/spf13/afero"
 )
 
-func (l *storageImpl) List(module string) ([]string, error) {
+func (l *storageImpl) List(ctx context.Context, module string) ([]string, error) {
 	loc := l.moduleLocation(module)
 	fileInfos, err := afero.ReadDir(l.filesystem, loc)
 	if err != nil {

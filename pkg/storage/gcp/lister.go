@@ -9,8 +9,7 @@ import (
 
 // List implements the (./pkg/storage).Lister interface
 // It returns a list of versions, if any, for a given module
-func (s *Storage) List(module string) ([]string, error) {
-	ctx := context.Background()
+func (s *Storage) List(ctx context.Context, module string) ([]string, error) {
 	paths, err := s.bucket.List(ctx, module)
 	if err != nil {
 		return nil, err
