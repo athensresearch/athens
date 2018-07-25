@@ -6,10 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/spf13/afero"
 )
 
-func (s *storageImpl) Save(_ context.Context, module, vsn string, mod []byte, zip io.Reader, info []byte) error {
+func (s *storageImpl) Save(ctx context.Context, module, vsn string, mod []byte, zip io.Reader, info []byte) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.fs.Save")
+	defer sp.Finish()
 	dir := s.versionLocation(module, vsn)
 	// TODO: 777 is not the best filemode, use something better
 
