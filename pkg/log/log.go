@@ -35,7 +35,8 @@ func New(cloudProvider, level string) *Logger {
 
 // SystemErr Entry implementation.
 func (l *Logger) SystemErr(err error) {
-	l.Logger.Error(err)
+	e := &entry{Entry: logrus.NewEntry(l.Logger)}
+	e.SystemErr(err)
 }
 
 // WithFields Entry implementation.

@@ -1,17 +1,19 @@
 package paths
 
 import (
-	"fmt"
-
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/errors"
 )
 
 // GetModule gets the module from the path of a ?go-get=1 request
 func GetModule(c buffalo.Context) (string, error) {
+	const op errors.Op = "paths.GetModule"
+
 	module := c.Param("module")
 	if module == "" {
-		return "", fmt.Errorf("module missing")
+		return "", errors.E(op, "missing module parameter")
 	}
+
 	return module, nil
 }
 
@@ -24,13 +26,15 @@ type AllPathParams struct {
 
 // GetAllParams fetches the path patams from c and returns them
 func GetAllParams(c buffalo.Context) (*AllPathParams, error) {
+	const op errors.Op = "paths.GetAllParams"
 	mod, err := GetModule(c)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	version := c.Param("version")
 	if version == "" {
-		return nil, fmt.Errorf("version not found")
+		return nil, errors.E(op, "missing version paramater")
 	}
+
 	return &AllPathParams{Module: mod, Version: version}, nil
 }

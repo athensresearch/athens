@@ -1,6 +1,7 @@
 package log
 
 import (
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,5 +37,32 @@ func (e *entry) WithFields(fields map[string]interface{}) Entry {
 }
 
 func (e *entry) SystemErr(err error) {
-	e.Entry.Error(err)
+	athensErr, ok := err.(errors.Error)
+	if !ok {
+		e.Error(err)
+		return
+	}
+
+	ent := e.WithFields(errFields(athensErr))
+	switch errors.Severity(err) {
+	case logrus.WarnLevel:
+		ent.Warnf("%v", err)
+	case logrus.InfoLevel:
+		ent.Infof("%v", err)
+	case logrus.DebugLevel:
+		ent.Debugf("%v", err)
+	default:
+		ent.Errorf("%v", err)
+	}
+}
+
+func errFields(err errors.Error) logrus.Fields {
+	f := logrus.Fields{}
+	f["operation"] = err.Op
+	f["kind"] = errors.KindText(err)
+	f["module"] = err.Module
+	f["version"] = err.Version
+	f["ops"] = errors.Ops(err)
+
+	return f
 }
