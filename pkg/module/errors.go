@@ -1,6 +1,10 @@
 package module
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gomods/athens/pkg/errors"
+)
 
 // ErrModuleExcluded is error returned when processing of error is skipped
 // due to filtering rules
@@ -15,4 +19,10 @@ func (e *ErrModuleExcluded) Error() string {
 // NewErrModuleExcluded creates new ErrModuleExcluded
 func NewErrModuleExcluded(module string) error {
 	return &ErrModuleExcluded{module: module}
+}
+
+// NewErrModuleAlreadyFetched returns an error indicating that a module has already been
+// fetched
+func NewErrModuleAlreadyFetched(op errors.Op, mod, ver string) error {
+	return errors.E(op, errors.M(mod), errors.V(ver), errors.KindAlreadyExists)
 }
