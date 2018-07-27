@@ -13,6 +13,7 @@ import (
 	"github.com/gomods/athens/pkg/cdn/metadata/azurecdn"
 	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/download"
+	"github.com/gomods/athens/pkg/download/goget"
 	"github.com/gomods/athens/pkg/eventlog"
 	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/storage"
@@ -114,8 +115,9 @@ func App(config *AppConfig) (*buffalo.App, error) {
 		app.POST("/cachemiss", cachemissHandler(w))
 		app.POST("/push", pushNotificationHandler(w))
 
+		dp := goget.New()
 		// Download Protocol
-		app.GET(download.PathList, download.ListHandler(config.Storage, renderEng))
+		app.GET(download.PathList, download.ListHandler(dp, lggr, renderEng))
 		app.GET(download.PathVersionInfo, download.VersionInfoHandler(config.Storage, renderEng))
 		app.GET(download.PathVersionModule, download.VersionModuleHandler(config.Storage, renderEng))
 		app.GET(download.PathVersionZip, download.VersionZipHandler(config.Storage, renderEng, lggr))

@@ -7,29 +7,31 @@ import (
 	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
+	"github.com/gomods/athens/pkg/errors"
+	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/paths"
-	"github.com/gomods/athens/pkg/storage"
-	errs "github.com/pkg/errors"
 )
 
 // PathList URL.
 const PathList = "/{module:.+}/@v/list"
 
 // ListHandler implements GET baseURL/module/@v/list
-func ListHandler(lister storage.Lister, eng *render.Engine) func(c buffalo.Context) error {
+func ListHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) func(c buffalo.Context) error {
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("listHandler")
 		mod, err := paths.GetModule(c)
 		if err != nil {
-			return err
+			lggr.SystemErr(err)
+			return c.Render(500, nil)
 		}
-		versions, err := lister.List(c, mod)
-		if storage.IsNotFoundError(err) {
-			return c.Render(http.StatusNotFound, eng.JSON(err.Error()))
-		} else if err != nil {
-			return errs.WithStack(err)
+
+		versions, err := dp.List(c, mod)
+		if err != nil {
+			lggr.SystemErr(err)
+			return c.Render(errors.Kind(err), eng.JSON(errors.KindText(err)))
 		}
+
 		return c.Render(http.StatusOK, eng.String(strings.Join(versions, "\n")))
 	}
 }

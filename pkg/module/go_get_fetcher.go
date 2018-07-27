@@ -49,7 +49,7 @@ func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
 	}
 
 	// setup the module with barebones stuff
-	if err := prepareStructure(g.fs, modPath); err != nil {
+	if err := Dummy(g.fs, modPath); err != nil {
 		// TODO: return a ref for cleaning up the goPathRoot
 		// https://github.com/gomods/athens/issues/329
 		ref.Clear()
@@ -68,18 +68,21 @@ func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
 	return newDiskRef(g.fs, cachePath, ver), err
 }
 
-// Hacky thing makes vgo not to complain
-func prepareStructure(fs afero.Fs, repoRoot string) error {
+// Dummy Hacky thing makes vgo not to complain
+func Dummy(fs afero.Fs, repoRoot string) error {
+	const op errors.Op = "module.Dummy"
 	// vgo expects go.mod file present with module statement or .go file with import comment
 	gomodPath := filepath.Join(repoRoot, "go.mod")
 	gomodContent := []byte("module mod")
 	if err := afero.WriteFile(fs, gomodPath, gomodContent, 0666); err != nil {
-		return err
+		return errors.E(op, err)
 	}
-
 	sourcePath := filepath.Join(repoRoot, "mod.go")
 	sourceContent := []byte("package mod")
-	return afero.WriteFile(fs, sourcePath, sourceContent, 0666)
+	if err := afero.WriteFile(fs, sourcePath, sourceContent, 0666); err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 // given a filesystem, gopath, repository root, module and version, runs 'vgo get'
