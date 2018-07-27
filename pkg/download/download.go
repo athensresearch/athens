@@ -74,7 +74,13 @@ func (p *protocol) fillCache(ctx context.Context, mod, ver string) (*storage.Ver
 }
 
 func (p *protocol) Latest(ctx context.Context, mod string) (*storage.RevInfo, error) {
-	return p.dp.Latest(ctx, mod)
+	const op errors.Op = "protocol.Latest"
+	info, err := p.dp.Latest(ctx, mod)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	return info, nil
 }
 
 func (p *protocol) GoMod(ctx context.Context, mod, ver string) ([]byte, error) {
@@ -104,5 +110,11 @@ func (p *protocol) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, err
 }
 
 func (p *protocol) Version(ctx context.Context, mod, ver string) (*storage.Version, error) {
-	return p.dp.Version(ctx, mod, ver)
+	const op errors.Op = "protocol.Version"
+	v, err := p.dp.Version(ctx, mod, ver)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	return v, nil
 }

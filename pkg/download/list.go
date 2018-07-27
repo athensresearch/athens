@@ -17,18 +17,20 @@ const PathList = "/{module:.+}/@v/list"
 
 // ListHandler implements GET baseURL/module/@v/list
 func ListHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) func(c buffalo.Context) error {
+	const op errors.Op = "download.ListHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("listHandler")
+		defer sp.Finish()
 		mod, err := paths.GetModule(c)
 		if err != nil {
-			lggr.SystemErr(err)
+			lggr.SystemErr(errors.E(op, err))
 			return c.Render(500, nil)
 		}
 
 		versions, err := dp.List(c, mod)
 		if err != nil {
-			lggr.SystemErr(err)
+			lggr.SystemErr(errors.E(op, err))
 			return c.Render(errors.Kind(err), eng.JSON(errors.KindText(err)))
 		}
 

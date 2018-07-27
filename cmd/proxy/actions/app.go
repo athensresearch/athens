@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"github.com/spf13/afero"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
@@ -81,8 +80,6 @@ func App() (*buffalo.App, error) {
 			return nil, err
 		}
 
-		fetcher := module.NewGoGetFetcher(env.GoBinPath(), afero.NewOsFs())
-
 		worker, err := getWorker(store, mf)
 		if err != nil {
 			return nil, err
@@ -129,7 +126,7 @@ func App() (*buffalo.App, error) {
 		}
 		app.Use(T.Middleware())
 
-		if err := addProxyRoutes(app, store, fetcher, mf, lggr); err != nil {
+		if err := addProxyRoutes(app, store, mf, lggr); err != nil {
 			err = fmt.Errorf("error adding proxy routes (%s)", err)
 			return nil, err
 		}

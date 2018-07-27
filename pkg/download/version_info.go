@@ -19,17 +19,16 @@ const PathVersionInfo = "/{module:.+}/@v/{version}.info"
 func VersionInfoHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
 	return func(c buffalo.Context) error {
 		const op errors.Op = "download.versionInfoHandler"
-
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("versionInfoHandler")
-
+		defer sp.Finish()
 		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
 		if err != nil {
 			err := errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
 			c.Render(http.StatusInternalServerError, nil)
 		}
-
+		verInfo.Zip.Close()
 		var revInfo storage.RevInfo
 		if err := json.Unmarshal(verInfo.Info, &revInfo); err != nil {
 			return err

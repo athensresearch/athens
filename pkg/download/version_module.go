@@ -17,19 +17,25 @@ const PathVersionModule = "/{module:.+}/@v/{version}.mod"
 func VersionModuleHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
 	return func(c buffalo.Context) error {
 		const op errors.Op = "download.VersionModuleHandler"
-
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("versionModuleHandler")
-
+		defer sp.Finish()
 		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
 		if err != nil {
-			err := errors.E(op, errors.M(mod), errors.V(ver), err)
+			err = errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
-			c.Render(http.StatusInternalServerError, nil)
+			c.Render(errors.Kind(err), nil)
+		}
+		verInfo.Zip.Close()
+		status := http.StatusOK
+		_, err = c.Response().Write(verInfo.Mod)
+		if err != nil {
+			err = errors.E(op, errors.M(mod), errors.V(ver), err)
+			status = http.StatusInternalServerError
+			lggr.SystemErr(err)
 		}
 
-		c.Response().WriteHeader(http.StatusOK)
-		_, err = c.Response().Write(verInfo.Mod)
-		return err
+		c.Response().WriteHeader(status)
+		return nil
 	}
 }

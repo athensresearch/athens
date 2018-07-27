@@ -109,8 +109,8 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 
 	o, err := cmd.CombinedOutput()
 	if err != nil {
-		// github quota exceeded
 		errMsg := fmt.Sprintf("%v : %s", err, o)
+		// github quota exceeded
 		if isLimitHit(o) {
 			return packagePath, errors.E("module.getSources", errMsg, errors.KindRateLimit)
 		}

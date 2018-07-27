@@ -21,27 +21,20 @@ func VersionZipHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffal
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("versionZipHandler")
-
-		lggr.Println("===getModuleVersion")
+		defer sp.Finish()
 		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
 		if err != nil {
-			lggr.Println("===carolyn found an error", err)
-
 			err := errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
 			return c.Render(http.StatusInternalServerError, nil)
 		}
 
-		lggr.Println("===Copy")
 		status := http.StatusOK
 		_, err = io.Copy(c.Response(), verInfo.Zip)
 		if err != nil {
-			lggr.Println("===Copy errored out", err)
 			status = http.StatusInternalServerError
 			lggr.SystemErr(errors.E(op, errors.M(mod), errors.V(ver), err))
 		}
-
-		lggr.Println("===writeheader")
 
 		c.Response().WriteHeader(status)
 		return nil

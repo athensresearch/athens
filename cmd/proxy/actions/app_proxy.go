@@ -12,7 +12,6 @@ import (
 func addProxyRoutes(
 	app *buffalo.App,
 	storage storage.Backend,
-	fetcher module.Fetcher,
 	mf *module.Filter,
 	lggr *log.Logger,
 ) error {
