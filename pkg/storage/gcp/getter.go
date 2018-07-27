@@ -7,6 +7,7 @@ import (
 
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Get retrieves a module at a specific version from storage as a (./pkg/storage).Version
@@ -14,6 +15,8 @@ import (
 // The caller is responsible for calling close on the Zip ReadCloser
 func (s *Storage) Get(module, version string) (*storage.Version, error) {
 	ctx := context.TODO()
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Get")
+	defer sp.Finish()
 	if exists := s.Exists(ctx, module, version); !exists {
 		return nil, storage.ErrVersionNotFound{Module: module, Version: version}
 	}

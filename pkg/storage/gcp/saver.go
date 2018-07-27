@@ -8,6 +8,7 @@ import (
 
 	stg "github.com/gomods/athens/pkg/storage"
 	moduploader "github.com/gomods/athens/pkg/storage/module"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Save uploads the module's .mod, .zip and .info files for a given version
@@ -18,6 +19,8 @@ import (
 // Uploaded files are publicly accessable in the storage bucket as per
 // an ACL rule.
 func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Save")
+	defer sp.Finish()
 	if exists := s.Exists(ctx, module, version); exists {
 		return stg.ErrVersionAlreadyExists{Module: module, Version: version}
 	}
@@ -30,6 +33,8 @@ func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, 
 }
 
 func (s *Storage) upload(ctx context.Context, path, contentType string, stream io.Reader) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.upload")
+	defer sp.Finish()
 	wc := s.bucket.Write(ctx, path)
 	defer func(wc io.WriteCloser) {
 		if err := wc.Close(); err != nil {

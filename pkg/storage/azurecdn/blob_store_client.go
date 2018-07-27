@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 )
 
@@ -26,6 +28,8 @@ func newBlobStoreClient(accountURL *url.URL, accountName, accountKey, containerN
 }
 
 func (c *azureBlobStoreClient) UploadWithContext(ctx context.Context, path, contentType string, content io.Reader) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.azurecdn.UploadWithContext")
+	defer sp.Finish()
 	blobURL := c.containerURL.NewBlockBlobURL(path)
 	emptyMeta := map[string]string{}
 	emptyBlobAccessCond := azblob.BlobAccessConditions{}

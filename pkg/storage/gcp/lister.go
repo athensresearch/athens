@@ -5,11 +5,14 @@ import (
 	"strings"
 
 	"github.com/gomods/athens/pkg/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // List implements the (./pkg/storage).Lister interface
 // It returns a list of versions, if any, for a given module
 func (s *Storage) List(ctx context.Context, module string) ([]string, error) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.List")
+	defer sp.Finish()
 	paths, err := s.bucket.List(ctx, module)
 	if err != nil {
 		return nil, err

@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	"github.com/gomods/athens/pkg/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func (v *storageImpl) Delete(ctx context.Context, module, version string) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.minio.Delete")
+	defer sp.Finish()
 	if !v.Exists(ctx, module, version) {
 		return storage.ErrVersionNotFound{
 			Module:  module,

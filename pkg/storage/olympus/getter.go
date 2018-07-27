@@ -2,9 +2,12 @@ package olympus
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/storage"
@@ -12,8 +15,10 @@ import (
 
 // Get a specific version of a module
 func (s *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
-	// TODO: fetch from endpoint
+	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.olympus.Get")
+	defer sp.Finish()
 
+	// TODO: fetch from endpoint
 	modURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "mod"))
 	zipURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "zip"))
 	infoURI := fmt.Sprintf("%s/%s", s.url, config.PackageVersionedName(module, vsn, "info"))

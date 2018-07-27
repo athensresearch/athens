@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/gomods/athens/pkg/config/env"
 	moduploader "github.com/gomods/athens/pkg/storage/module"
 )
@@ -56,6 +58,8 @@ func (s Storage) BaseURL() *url.URL {
 
 // Save implements the (github.com/gomods/athens/pkg/storage).Saver interface.
 func (s *Storage) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.azurecdn.Save")
+	sp.Finish()
 	err := moduploader.Upload(ctx, module, version, bytes.NewReader(info), bytes.NewReader(mod), zip, s.cl.UploadWithContext)
 	// TODO: take out lease on the /list file and add the version to it
 	//

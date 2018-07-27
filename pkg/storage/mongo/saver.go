@@ -6,10 +6,13 @@ import (
 	"io/ioutil"
 
 	"github.com/gomods/athens/pkg/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Save stores a module in mongo storage.
-func (s *ModuleStore) Save(_ context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
+func (s *ModuleStore) Save(ctx context.Context, module, version string, mod []byte, zip io.Reader, info []byte) error {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.mongo.Save")
+	defer sp.Finish()
 	zipBytes, err := ioutil.ReadAll(zip)
 	if err != nil {
 		return err

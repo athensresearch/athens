@@ -1,15 +1,19 @@
 package minio
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gomods/athens/pkg/storage"
 	minio "github.com/minio/minio-go"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
+	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.minio.Get")
+	defer sp.Finish()
 	versionedPath := v.versionLocation(module, version)
 	modPath := fmt.Sprintf("%s/go.mod", versionedPath)
 	modReader, err := v.minioClient.GetObject(v.bucketName, modPath, minio.GetObjectOptions{})
