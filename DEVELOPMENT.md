@@ -3,7 +3,7 @@
 Both the registry and the proxy are written using the [Buffalo](https://gobuffalo.io/) framework. We chose
 this framework to make it as straightforward as possible to get your development environment up and running.
 
-You'll need Buffalo [v0.11.0](https://github.com/gobuffalo/buffalo/releases/tag/v0.11.0) or later to get started on Athens,
+You'll need Buffalo [v0.12.4](https://github.com/gobuffalo/buffalo/releases/tag/v0.12.4) or later to get started on Athens,
 so be sure to download the CLI and put it into your `PATH`.
 
 # Services that Athens Needs
