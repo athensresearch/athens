@@ -49,7 +49,7 @@ func (p *protocol) List(ctx context.Context, mod string) ([]string, error) {
 func (p *protocol) Info(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.Info"
 	v, err := p.s.Get(mod, ver)
-	if errors.ErrNotFound(err) {
+	if storage.IsNotFoundError(err) {
 		v, err = p.fillCache(ctx, mod, ver)
 	}
 	if err != nil {
@@ -80,7 +80,7 @@ func (p *protocol) Latest(ctx context.Context, mod string) (*storage.RevInfo, er
 func (p *protocol) GoMod(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.GoMod"
 	v, err := p.s.Get(mod, ver)
-	if errors.ErrNotFound(err) {
+	if storage.IsNotFoundError(err) {
 		v, err = p.fillCache(ctx, mod, ver)
 	}
 	if err != nil {
@@ -93,7 +93,7 @@ func (p *protocol) GoMod(ctx context.Context, mod, ver string) ([]byte, error) {
 func (p *protocol) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, error) {
 	const op errors.Op = "protocol.Zip"
 	v, err := p.s.Get(mod, ver)
-	if errors.ErrNotFound(err) {
+	if storage.IsNotFoundError(err) {
 		v, err = p.fillCache(ctx, mod, ver)
 	}
 	if err != nil {

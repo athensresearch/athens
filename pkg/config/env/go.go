@@ -22,8 +22,8 @@ func GoPath() (string, error) {
 	return env, nil
 }
 
-// GoBinPath returns the path to Go's executable binary
-// this binary must have Go Modules enabled.
+// GoBinPath returns the path to the go binary to use, defined by
+// GO_BINARY_PATH. This value can be a name on the PATH, or the full path
 func GoBinPath() string {
-	return envy.Get("GO_BIN_PATH", "vgo")
+	return envy.Get("GO_BINARY_PATH", "go")
 }

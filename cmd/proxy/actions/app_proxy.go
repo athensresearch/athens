@@ -12,6 +12,7 @@ import (
 func addProxyRoutes(
 	app *buffalo.App,
 	storage storage.Backend,
+	fetcher module.Fetcher,
 	mf *module.Filter,
 	lggr *log.Logger,
 ) error {
@@ -20,9 +21,10 @@ func addProxyRoutes(
 	dp := download.New(goget.New(), storage)
 	// Download Protocol
 	app.GET(download.PathList, download.ListHandler(dp, lggr, proxy))
-	app.GET(download.PathVersionInfo, cacheMissHandler(download.VersionInfoHandler(storage, proxy), app.Worker, mf, lggr))
-	app.GET(download.PathVersionModule, cacheMissHandler(download.VersionModuleHandler(storage, proxy), app.Worker, mf, lggr))
-	app.GET(download.PathVersionZip, cacheMissHandler(download.VersionZipHandler(storage, proxy, lggr), app.Worker, mf, lggr))
+	app.GET(download.PathLatest, download.LatestHandler(dp, lggr, proxy))
+	app.GET(download.PathVersionInfo, download.VersionInfoHandler(dp, lggr, proxy))
+	app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, proxy))
+	app.GET(download.PathVersionZip, download.VersionZipHandler(dp, lggr, proxy))
 
 	app.POST("/admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
 	return nil

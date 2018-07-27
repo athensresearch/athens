@@ -19,11 +19,11 @@ type goGetFetcher struct {
 }
 
 // NewGoGetFetcher creates fetcher which uses go get tool to fetch modules
-func NewGoGetFetcher(goBinaryName string, fs afero.Fs) (Fetcher, error) {
+func NewGoGetFetcher(goBinaryName string, fs afero.Fs) Fetcher {
 	return &goGetFetcher{
 		fs:           fs,
 		goBinaryName: goBinaryName,
-	}, nil
+	}
 }
 
 // Fetch downloads the sources and returns path where it can be found. Make sure to call Clear
@@ -97,11 +97,12 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	gopathEnv := fmt.Sprintf("GOPATH=%s", gopath)
 	cacheEnv := fmt.Sprintf("GOCACHE=%s", filepath.Join(gopath, "cache"))
 	disableCgo := "CGO_ENABLED=0"
+	enableGoModules := "GO111MODULE=on"
 
 	cmd := exec.Command(goBinaryName, "get", fullURI)
 	// PATH is needed for vgo to recognize vcs binaries
 	// this breaks windows.
-	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), gopathEnv, cacheEnv, disableCgo}
+	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), gopathEnv, cacheEnv, disableCgo, enableGoModules}
 	cmd.Dir = repoRoot
 
 	packagePath := filepath.Join(gopath, "src", "mod", "cache", "download", module, "@v")
@@ -109,11 +110,12 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	o, err := cmd.CombinedOutput()
 	if err != nil {
 		// github quota exceeded
+		errMsg := fmt.Sprintf("%v : %s", err, o)
 		if isLimitHit(o) {
-			return packagePath, errors.E("module.getSources", err, errors.KindRateLimit)
+			return packagePath, errors.E("module.getSources", errMsg, errors.KindRateLimit)
 		}
 		// another error in the output
-		return packagePath, err
+		return packagePath, errors.E("module.getSources", errMsg)
 	}
 	// make sure the expected files exist
 	return packagePath, checkFiles(fs, packagePath, version)

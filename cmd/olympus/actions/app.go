@@ -115,12 +115,12 @@ func App(config *AppConfig) (*buffalo.App, error) {
 		app.POST("/cachemiss", cachemissHandler(w))
 		app.POST("/push", pushNotificationHandler(w))
 
-		dp := goget.New()
 		// Download Protocol
+		dp := download.New(goget.New(), config.Storage)
 		app.GET(download.PathList, download.ListHandler(dp, lggr, renderEng))
-		app.GET(download.PathVersionInfo, download.VersionInfoHandler(config.Storage, renderEng))
-		app.GET(download.PathVersionModule, download.VersionModuleHandler(config.Storage, renderEng))
-		app.GET(download.PathVersionZip, download.VersionZipHandler(config.Storage, renderEng, lggr))
+		app.GET(download.PathVersionInfo, download.VersionInfoHandler(dp, lggr, renderEng))
+		app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, renderEng))
+		app.GET(download.PathVersionZip, download.VersionZipHandler(dp, lggr, renderEng))
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

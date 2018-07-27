@@ -1,39 +1,35 @@
 package download
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
-	"github.com/gomods/athens/pkg/paths"
-	"github.com/gomods/athens/pkg/storage"
+	"github.com/gomods/athens/pkg/errors"
+	"github.com/gomods/athens/pkg/log"
 )
 
 // PathVersionModule URL.
 const PathVersionModule = "/{module:.+}/@v/{version}.mod"
 
 // VersionModuleHandler implements GET baseURL/module/@v/version.mod
-func VersionModuleHandler(getter storage.Getter, eng *render.Engine) func(c buffalo.Context) error {
+func VersionModuleHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
 	return func(c buffalo.Context) error {
+		const op errors.Op = "download.VersionModuleHandler"
+
 		sp := buffet.SpanFromContext(c)
 		sp.SetOperationName("versionModuleHandler")
-		params, err := paths.GetAllParams(c)
-		if err != nil {
-			return err
-		}
 
-		version, err := getter.Get(params.Module, params.Version)
-		if storage.IsNotFoundError(err) {
-			msg := fmt.Sprintf("%s@%s not found", params.Module, params.Version)
-			return c.Render(http.StatusNotFound, eng.JSON(msg))
-		} else if err != nil {
-			return err
+		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
+		if err != nil {
+			err := errors.E(op, errors.M(mod), errors.V(ver), err)
+			lggr.SystemErr(err)
+			c.Render(http.StatusInternalServerError, nil)
 		}
 
 		c.Response().WriteHeader(http.StatusOK)
-		_, err = c.Response().Write(version.Mod)
+		_, err = c.Response().Write(verInfo.Mod)
 		return err
 	}
 }

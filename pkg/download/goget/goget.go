@@ -47,7 +47,7 @@ func (gg *goget) List(ctx context.Context, mod string) ([]string, error) {
 type listResp struct {
 	Path     string
 	Version  string
-	Versions []string `json:"omitempty"`
+	Versions []string `json:",omitempty"`
 	Time     time.Time
 }
 
@@ -55,7 +55,7 @@ func (gg *goget) Info(ctx context.Context, mod string, ver string) ([]byte, erro
 	const op errors.Op = "goget.Info"
 	v, err := gg.Version(ctx, mod, ver)
 	if err != nil {
-		return nil, errors.E(op)
+		return nil, errors.E(op, err)
 	}
 	v.Zip.Close()
 
@@ -139,7 +139,7 @@ func (gg *goget) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, error
 
 func (gg *goget) Version(ctx context.Context, mod, ver string) (*storage.Version, error) {
 	const op errors.Op = "goget.Version"
-	fetcher, _ := module.NewGoGetFetcher(gg.goBinPath, gg.fs) // TODO: remove err from func call
+	fetcher := module.NewGoGetFetcher(gg.goBinPath, gg.fs)
 	ref, err := fetcher.Fetch(mod, ver)
 	if err != nil {
 		return nil, errors.E(op, err)
