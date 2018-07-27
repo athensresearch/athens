@@ -120,7 +120,7 @@ func (gg *goget) GoMod(ctx context.Context, mod string, ver string) ([]byte, err
 	const op errors.Op = "goget.Info"
 	v, err := gg.Version(ctx, mod, ver)
 	if err != nil {
-		return nil, errors.E(op)
+		return nil, errors.E(op, err)
 	}
 	v.Zip.Close()
 
@@ -131,7 +131,7 @@ func (gg *goget) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, error
 	const op errors.Op = "goget.Info"
 	v, err := gg.Version(ctx, mod, ver)
 	if err != nil {
-		return nil, errors.E(op)
+		return nil, errors.E(op, err)
 	}
 
 	return v.Zip, nil
