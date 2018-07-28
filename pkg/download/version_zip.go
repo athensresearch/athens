@@ -19,8 +19,7 @@ func VersionZipHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffal
 	const op errors.Op = "download.VersionZipHandler"
 
 	return func(c buffalo.Context) error {
-		sp := buffet.SpanFromContext(c)
-		sp.SetOperationName("versionZipHandler")
+		sp := buffet.SpanFromContext(c).SetOperationName("versionZipHandler")
 		defer sp.Finish()
 		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
 		if err != nil {

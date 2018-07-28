@@ -19,8 +19,7 @@ const PathList = "/{module:.+}/@v/list"
 func ListHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) func(c buffalo.Context) error {
 	const op errors.Op = "download.ListHandler"
 	return func(c buffalo.Context) error {
-		sp := buffet.SpanFromContext(c)
-		sp.SetOperationName("listHandler")
+		sp := buffet.SpanFromContext(c).SetOperationName("listHandler")
 		defer sp.Finish()
 		mod, err := paths.GetModule(c)
 		if err != nil {

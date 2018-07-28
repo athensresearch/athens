@@ -15,10 +15,9 @@ const PathVersionModule = "/{module:.+}/@v/{version}.mod"
 
 // VersionModuleHandler implements GET baseURL/module/@v/version.mod
 func VersionModuleHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
+	const op errors.Op = "download.VersionModuleHandler"
 	return func(c buffalo.Context) error {
-		const op errors.Op = "download.VersionModuleHandler"
-		sp := buffet.SpanFromContext(c)
-		sp.SetOperationName("versionModuleHandler")
+		sp := buffet.SpanFromContext(c).SetOperationName("VersionModuleHandler")
 		defer sp.Finish()
 		mod, ver, verInfo, err := getModuleVersion(c, lggr, dp)
 		if err != nil {
