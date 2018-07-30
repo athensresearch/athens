@@ -11,8 +11,8 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
-	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.minio.Get")
+func (v *storageImpl) Get(ctx context.Context, module, version string) (*storage.Version, error) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.minio.Get")
 	defer sp.Finish()
 	versionedPath := v.versionLocation(module, version)
 	modPath := fmt.Sprintf("%s/go.mod", versionedPath)

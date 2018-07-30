@@ -28,8 +28,8 @@ func (n noOpConnectedBackend) Exists(ctx context.Context, module, version string
 	return n.backend.Exists(ctx, module, version)
 }
 
-func (n noOpConnectedBackend) Get(module, vsn string) (*Version, error) {
-	return n.backend.Get(module, vsn)
+func (n noOpConnectedBackend) Get(ctx context.Context, module, vsn string) (*Version, error) {
+	return n.backend.Get(ctx, module, vsn)
 }
 func (n noOpConnectedBackend) List(ctx context.Context, module string) ([]string, error) {
 	return n.backend.List(ctx, module)

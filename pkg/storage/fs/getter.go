@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (v *storageImpl) Get(module, version string) (*storage.Version, error) {
-	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.fs.Get")
+func (v *storageImpl) Get(ctx context.Context, module, version string) (*storage.Version, error) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.fs.Get")
 	defer sp.Finish()
 	versionedPath := v.versionLocation(module, version)
 	mod, err := afero.ReadFile(v.filesystem, filepath.Join(versionedPath, "go.mod"))

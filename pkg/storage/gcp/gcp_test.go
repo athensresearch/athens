@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -27,7 +28,7 @@ func (g *GcpTests) TestSaveGetListExistsRoundTrip() {
 	})
 
 	g.T().Run("Get from storage", func(t *testing.T) {
-		version, err := store.Get(g.module, g.version)
+		version, err := store.Get(context.Background(), g.module, g.version)
 		r.NoError(err)
 		defer version.Zip.Close()
 
@@ -74,7 +75,7 @@ func (g *GcpTests) TestNotFounds() {
 	r.NoError(err)
 
 	g.T().Run("Get module version not found", func(t *testing.T) {
-		_, err = store.Get("never", "there")
+		_, err = store.Get(context.Background(), "never", "there")
 		versionNotFoundErr := athensStorage.ErrVersionNotFound{Module: "never", Version: "there"}
 		r.EqualError(versionNotFoundErr, err.Error())
 	})

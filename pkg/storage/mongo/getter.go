@@ -12,8 +12,8 @@ import (
 )
 
 // Get a specific version of a module
-func (s *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
-	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.mongo.Get")
+func (s *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Version, error) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.mongo.Get")
 	defer sp.Finish()
 	c := s.s.DB(s.d).C(s.c)
 	result := &storage.Module{}

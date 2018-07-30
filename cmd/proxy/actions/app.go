@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gobuffalo/buffalo"
@@ -66,6 +67,7 @@ func init() {
 // should be defined. This is the nerve center of your
 // application.
 func App() (*buffalo.App, error) {
+	ctx := context.Background()
 	store, err := GetStorage()
 	mf := module.NewFilter()
 	if err != nil {
@@ -77,7 +79,7 @@ func App() (*buffalo.App, error) {
 		return nil, err
 	}
 
-	worker, err := getWorker(store, mf)
+	worker, err := getWorker(ctx, store, mf)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +137,7 @@ func App() (*buffalo.App, error) {
 	return app, nil
 }
 
-func getWorker(s storage.Backend, mf *module.Filter) (worker.Worker, error) {
+func getWorker(ctx context.Context, s storage.Backend, mf *module.Filter) (worker.Worker, error) {
 	port := env.RedisQueuePortWithDefault(":6379")
 	w := gwa.New(gwa.Options{
 		Pool: &redis.Pool{
@@ -155,7 +157,7 @@ func getWorker(s storage.Backend, mf *module.Filter) (worker.Worker, error) {
 		MaxFails: env.WorkerMaxFails(),
 	}
 
-	if err := w.RegisterWithOptions(FetcherWorkerName, opts, GetProcessCacheMissJob(s, w, mf)); err != nil {
+	if err := w.RegisterWithOptions(FetcherWorkerName, opts, GetProcessCacheMissJob(ctx, s, w, mf)); err != nil {
 		return nil, err
 	}
 

@@ -19,7 +19,7 @@ const (
 )
 
 // GetProcessCacheMissJob processes queue of cache misses and downloads sources from active Olympus
-func GetProcessCacheMissJob(s storage.Backend, w worker.Worker, mf *module.Filter) worker.Handler {
+func GetProcessCacheMissJob(ctx context.Context, s storage.Backend, w worker.Worker, mf *module.Filter) worker.Handler {
 	return func(args worker.Args) (err error) {
 		mod, version, err := parseArgs(args)
 		if err != nil {
@@ -30,18 +30,18 @@ func GetProcessCacheMissJob(s storage.Backend, w worker.Worker, mf *module.Filte
 			return module.NewErrModuleExcluded(mod)
 		}
 
-		if s.Exists(context.TODO(), mod, version) {
+		if s.Exists(ctx, mod, version) {
 			return nil
 		}
 
 		// get module info
-		v, err := getModuleInfo(mod, version)
+		v, err := getModuleInfo(ctx, mod, version)
 		if err != nil {
 			return err
 		}
 		defer v.Zip.Close()
 
-		return s.Save(context.Background(), mod, version, v.Mod, v.Zip, v.Info)
+		return s.Save(ctx, mod, version, v.Mod, v.Zip, v.Info)
 	}
 }
 
@@ -59,9 +59,9 @@ func parseArgs(args worker.Args) (string, string, error) {
 	return module, version, nil
 }
 
-func getModuleInfo(module, version string) (*storage.Version, error) {
+func getModuleInfo(ctx context.Context, module, version string) (*storage.Version, error) {
 	os := olympusStore.NewStorage(GetOlympusEndpoint())
-	return os.Get(module, version)
+	return os.Get(ctx, module, version)
 }
 
 // GetOlympusEndpoint returns global endpoint with override in mind

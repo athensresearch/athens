@@ -13,8 +13,8 @@ import (
 )
 
 // Get a specific version of a module
-func (r *ModuleStore) Get(module, vsn string) (*storage.Version, error) {
-	sp, _ := opentracing.StartSpanFromContext(context.TODO(), "storage.rdbms.Get")
+func (r *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Version, error) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.rdbms.Get")
 	defer sp.Finish()
 	result := models.Module{}
 	query := r.conn.Where("module = ?", module).Where("version = ?", vsn)

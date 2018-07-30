@@ -87,7 +87,7 @@ func (d *TestSuites) TestStorages() {
 }
 
 func (d *TestSuites) testNotFound(ts storage.TestSuite) {
-	_, err := ts.Storage().Get("some", "unknown")
+	_, err := ts.Storage().Get(context.Background(), "some", "unknown")
 	d.Require().Equal(true, storage.IsNotFoundError(err), "Invalid error type for %s: %#v", ts.StorageHumanReadableName(), err)
 }
 
@@ -114,7 +114,7 @@ func (d *TestSuites) testGetSaveListRoundTrip(ts storage.TestSuite) {
 	r.Equal(1, len(listedVersions), hrn)
 	retVersion := listedVersions[0]
 	r.Equal(d.version, retVersion, hrn)
-	gotten, err := ts.Storage().Get(d.module, d.version)
+	gotten, err := ts.Storage().Get(context.Background(), d.module, d.version)
 	r.NoError(err, hrn)
 	defer gotten.Zip.Close()
 	// TODO: test the time
