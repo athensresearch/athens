@@ -144,9 +144,5 @@ func getWorker(store storage.Backend, eLog eventlog.Eventlog) (worker.Worker, er
 		MaxFails: env.WorkerMaxFails(),
 	}
 
-	if err := w.RegisterWithOptions(DownloadHandlerName, opts, GetPackageDownloaderJob(store, eLog, w)); err != nil {
-		return nil, err
-	}
-
 	return w, w.RegisterWithOptions(PushNotificationHandlerName, opts, GetProcessPushNotificationJob(store, eLog))
 }

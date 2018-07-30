@@ -25,6 +25,5 @@ func addProxyRoutes(
 	app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, proxy))
 	app.GET(download.PathVersionZip, download.VersionZipHandler(dp, lggr, proxy))
 
-	app.POST("/admin/fetch/{module:[a-zA-Z./]+}/{owner}/{repo}/{ref}/{version}", fetchHandler(storage))
 	return nil
 }
