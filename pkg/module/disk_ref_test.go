@@ -17,8 +17,9 @@ func (m *ModuleSuite) TestDiskRefReadAndClear() {
 	)
 	r := m.Require()
 
+	packagePath := getPackagePath(root, mod)
 	// create a new disk ref using the filesystem
-	diskRef := newDiskRef(m.fs, root, version)
+	diskRef := newDiskRef(m.fs, root, mod, version)
 
 	// ensure that reading fails, because there are no files
 	ver, err := diskRef.Read()
@@ -26,9 +27,9 @@ func (m *ModuleSuite) TestDiskRefReadAndClear() {
 	r.NotNil(err)
 
 	// create all the files the disk ref expects
-	r.NoError(createAndWriteFile(m.fs, filepath.Join(root, version+".info"), info))
-	r.NoError(createAndWriteFile(m.fs, filepath.Join(root, version+".mod"), mod))
-	r.NoError(createAndWriteFile(m.fs, filepath.Join(root, version+".zip"), zip))
+	r.NoError(createAndWriteFile(m.fs, filepath.Join(packagePath, version+".info"), info))
+	r.NoError(createAndWriteFile(m.fs, filepath.Join(packagePath, version+".mod"), mod))
+	r.NoError(createAndWriteFile(m.fs, filepath.Join(packagePath, version+".zip"), zip))
 
 	// read from the disk ref - this time it should succeed
 	ver, err = diskRef.Read()
@@ -39,11 +40,22 @@ func (m *ModuleSuite) TestDiskRefReadAndClear() {
 	r.NoError(err)
 	r.Equal(zip, string(zipBytes))
 
+	// Validate that the root dir still exists
+	fInfo, err := m.fs.Stat(root)
+	r.NotNil(fInfo)
+	r.Nil(err)
+
 	// clear the disk ref and expect it to fail again
 	r.NoError(diskRef.Clear())
 	ver, err = diskRef.Read()
 	r.Nil(ver)
 	r.NotNil(err)
+
+	// The root dir should not exist after a clear
+	fInfo, err = m.fs.Stat(root)
+	r.Nil(fInfo)
+	r.NotNil(err)
+
 }
 
 // creates filename with fs, writes data to the file, and closes the file,

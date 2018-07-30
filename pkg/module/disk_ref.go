@@ -2,7 +2,7 @@ package module
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/gomods/athens/pkg/storage"
@@ -15,14 +15,16 @@ import (
 // Do not create this struct directly. use newDiskRef
 type diskRef struct {
 	root    string
+	module  string
 	fs      afero.Fs
 	version string
 }
 
-func newDiskRef(fs afero.Fs, root, version string) *diskRef {
+func newDiskRef(fs afero.Fs, root, module, version string) *diskRef {
 	return &diskRef{
 		fs:      fs,
 		root:    root,
+		module:  module,
 		version: version,
 	}
 }
@@ -31,6 +33,20 @@ func newDiskRef(fs afero.Fs, root, version string) *diskRef {
 //
 // You should always call this function after you fetch a module into a DiskRef
 func (d *diskRef) Clear() error {
+
+	// This is required because vgo ensures dependencies are read-only
+	// See https://github.com/golang/go/issues/24111 and
+	// https://go-review.googlesource.com/c/vgo/+/96978
+	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		return d.fs.Chmod(path, 0770)
+	}
+	err := afero.Walk(d.fs, d.root, walkFn)
+	if err != nil {
+		return err
+	}
 	return d.fs.RemoveAll(d.root)
 }
 
@@ -38,30 +54,23 @@ func (d *diskRef) Clear() error {
 func (d *diskRef) Read() (*storage.Version, error) {
 	var ver storage.Version
 
-	infoFile, err := d.fs.Open(filepath.Join(d.root, fmt.Sprintf("%s.info", d.version)))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer infoFile.Close()
+	packagePath := getPackagePath(d.root, d.module)
 
-	info, err := ioutil.ReadAll(infoFile)
+	infoFile := filepath.Join(packagePath, fmt.Sprintf("%s.info", d.version))
+	info, err := afero.ReadFile(d.fs, infoFile)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	ver.Info = info
 
-	modFile, err := d.fs.Open(filepath.Join(d.root, fmt.Sprintf("%s.mod", d.version)))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer modFile.Close()
-	mod, err := ioutil.ReadAll(modFile)
+	modFile := filepath.Join(packagePath, fmt.Sprintf("%s.mod", d.version))
+	mod, err := afero.ReadFile(d.fs, modFile)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	ver.Mod = mod
 
-	sourceFile, err := d.fs.Open(filepath.Join(d.root, fmt.Sprintf("%s.zip", d.version)))
+	sourceFile, err := d.fs.Open(filepath.Join(packagePath, fmt.Sprintf("%s.zip", d.version)))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

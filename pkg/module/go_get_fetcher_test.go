@@ -1,8 +1,9 @@
 package module
 
 import (
-	"github.com/spf13/afero"
 	"io/ioutil"
+
+	"github.com/spf13/afero"
 )
 
 func (s *ModuleSuite) TestNewGoGetFetcher() {

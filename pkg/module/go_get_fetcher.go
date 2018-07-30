@@ -29,43 +29,35 @@ func NewGoGetFetcher(goBinaryName string, fs afero.Fs) Fetcher {
 // Fetch downloads the sources and returns path where it can be found. Make sure to call Clear
 // on the returned Ref when you are done with it
 func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
-	ref := noopRef{}
 
 	// setup the GOPATH
 	goPathRoot, err := afero.TempDir(g.fs, "", "athens")
 	if err != nil {
-		// TODO: return a ref for cleaning up the goPathRoot
-		// https://github.com/gomods/athens/issues/329
-		ref.Clear()
-		return ref, err
+		return nil, err
 	}
 	sourcePath := filepath.Join(goPathRoot, "src")
 	modPath := filepath.Join(sourcePath, getRepoDirName(mod, ver))
 	if err := g.fs.MkdirAll(modPath, os.ModeDir|os.ModePerm); err != nil {
-		// TODO: return a ref for cleaning up the goPathRoot
-		// https://github.com/gomods/athens/issues/329
-		ref.Clear()
-		return ref, err
+		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
+		diskRef.Clear()
+		return nil, err
 	}
 
 	// setup the module with barebones stuff
 	if err := Dummy(g.fs, modPath); err != nil {
-		// TODO: return a ref for cleaning up the goPathRoot
-		// https://github.com/gomods/athens/issues/329
-		ref.Clear()
-		return ref, err
-	}
-
-	cachePath, err := getSources(g.goBinaryName, g.fs, goPathRoot, modPath, mod, ver)
-	if err != nil {
-		// TODO: return a ref that cleans up the goPathRoot
-		// https://github.com/gomods/athens/issues/329
-		ref.Clear()
+		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
+		diskRef.Clear()
 		return nil, err
 	}
-	// TODO: make sure this ref also cleans up the goPathRoot
-	// https://github.com/gomods/athens/issues/329
-	return newDiskRef(g.fs, cachePath, ver), err
+
+	err = getSources(g.goBinaryName, g.fs, goPathRoot, modPath, mod, ver)
+	if err != nil {
+		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
+		diskRef.Clear()
+		return nil, err
+	}
+
+	return newDiskRef(g.fs, goPathRoot, mod, ver), nil
 }
 
 // Dummy Hacky thing makes vgo not to complain
@@ -86,10 +78,8 @@ func Dummy(fs afero.Fs, repoRoot string) error {
 }
 
 // given a filesystem, gopath, repository root, module and version, runs 'vgo get'
-// on module@version from the repoRoot with GOPATH=gopath, and returns the location
-// of the module cache. returns a non-nil error if anything went wrong. always returns
-// the location of the module cache so you can delete it if necessary
-func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, version string) (string, error) {
+// on module@version from the repoRoot with GOPATH=gopath, and returns a non-nil error if anything went wrong.
+func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, version string) error {
 	uri := strings.TrimSuffix(module, "/")
 
 	fullURI := fmt.Sprintf("%s@%s", uri, version)
@@ -104,21 +94,19 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	// this breaks windows.
 	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), gopathEnv, cacheEnv, disableCgo, enableGoModules}
 	cmd.Dir = repoRoot
-
-	packagePath := filepath.Join(gopath, "src", "mod", "cache", "download", module, "@v")
-
 	o, err := cmd.CombinedOutput()
 	if err != nil {
 		errMsg := fmt.Sprintf("%v : %s", err, o)
 		// github quota exceeded
 		if isLimitHit(o) {
-			return packagePath, errors.E("module.getSources", errMsg, errors.KindRateLimit)
+			return errors.E("module.getSources", errMsg, errors.KindRateLimit)
 		}
 		// another error in the output
-		return packagePath, errors.E("module.getSources", errMsg)
+		return errors.E("module.getSources", errMsg)
 	}
 	// make sure the expected files exist
-	return packagePath, checkFiles(fs, packagePath, version)
+	packagePath := getPackagePath(gopath, module)
+	return checkFiles(fs, packagePath, version)
 }
 
 func checkFiles(fs afero.Fs, path, version string) error {
@@ -146,4 +134,9 @@ func isLimitHit(o []byte) bool {
 func getRepoDirName(repoURI, version string) string {
 	escapedURI := strings.Replace(repoURI, "/", "-", -1)
 	return fmt.Sprintf("%s-%s", escapedURI, version)
+}
+
+// getPackagePath returns the path to the module cache given the gopath and module name
+func getPackagePath(gopath, module string) string {
+	return filepath.Join(gopath, "src", "mod", "cache", "download", module, "@v")
 }
