@@ -10,6 +10,7 @@
 # with the -dry-run option to check for any conflicts in versions or digests
 # which on any exit code > 0 would suggest that action should be taken
 # before a pull request can be merged.
+set -xeuo pipefail
 
 ChangedFiles=`git diff --name-only master`
 

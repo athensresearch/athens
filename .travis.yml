@@ -16,22 +16,15 @@ env:
     - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
     - CODE_COV=1
     - GO_BINARY_PATH=vgo
-script:
-  - test -z $(gofmt -s -l $GO_FILES | tee /dev/stderr)            # Fail if a .go file hasn't been formatted with gofmt
-  - golint -set_exit_status $(go list ./... | grep -v '/mocks')   # Linter
-  - ./scripts/check_deps.sh                                       # Check for Gopkg.* in PR and run dep ensure -dry-run on changes
-  - go test -race -coverprofile cover.out -covermode atomic ./... # Run all the tests with the race detector and code coverage enabled
+    - TMPDIR=/tmp/
 before_script:
-  - mkdir bin
-  - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)   # All the .go files, excluding vendor/
-  - go get github.com/golang/lint/golint
-  - go get github.com/golang/dep/cmd/dep
+  - make setup-dev-env
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
-  - ./scripts/get_buffalo.sh
-  - go get -u -v golang.org/x/vgo
   - buffalo db create
   - buffalo db migrate up
+script:
+  - make verify test-unit
 after_success:
   - if [ "${CODE_COV}" == "1" ]; then
       curl -s https://codecov.io/bash -o codecov && bash codecov -X fix;

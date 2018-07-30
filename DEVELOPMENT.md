@@ -6,6 +6,11 @@ this framework to make it as straightforward as possible to get your development
 You'll need Buffalo [v0.12.4](https://github.com/gobuffalo/buffalo/releases/tag/v0.12.4) or later to get started on Athens,
 so be sure to download the CLI and put it into your `PATH`.
 
+See our [Contributing Guide](CONTRIBUTING.md) for tips on how to submit a pull request when you are ready.
+
+# Initial Development Environment Setup
+Athens relies on having a few tools installed locally. Run `make setup-dev-env` to install them.
+
 # Services that Athens Needs
 
 Both the proxy and the registry rely on several services (i.e. databases, etc...) to function
