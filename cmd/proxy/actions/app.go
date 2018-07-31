@@ -40,15 +40,7 @@ var ENV = env.GoEnvironmentWithDefault("development")
 // T is the translator to use
 var T *i18n.Translator
 
-var gopath string
-
 func init() {
-	g, err := env.GoPath()
-	if err != nil {
-		panic(err)
-	}
-	gopath = g
-
 	proxy = render.New(render.Options{
 		// HTML layout to be used for all HTML requests:
 		HTMLLayout:       "application.html",
