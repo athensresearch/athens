@@ -14,7 +14,7 @@ func GetModule(c buffalo.Context) (string, error) {
 		return "", errors.E(op, "missing module parameter")
 	}
 
-	return module, nil
+	return DecodePath(module)
 }
 
 // AllPathParams holds the module and version in the path of a ?go-get=1
