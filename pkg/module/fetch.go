@@ -20,7 +20,6 @@ func Fetch(ctx context.Context, s storage.Backend, fetcher Fetcher, mod, version
 	if err != nil {
 		return err
 	}
-	defer moduleRef.Clear()
 
 	// pretend like moduleLoc has $version.info, $version.mod and $version.zip in it :)
 	module, err := moduleRef.Read()

@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -21,6 +22,22 @@ type diskRef struct {
 	version string
 }
 
+type zipReadCloser struct {
+	zip io.ReadCloser
+	ref *diskRef
+}
+
+// Close closes the zip file handle and clears up disk space used by the underlying disk ref
+// It is the caller's responsibility to call this method to free up utilized disk space
+func (rc *zipReadCloser) Close() error {
+	rc.zip.Close()
+	return clearFiles(rc.ref.fs, rc.ref.root)
+}
+
+func (rc *zipReadCloser) Read(p []byte) (n int, err error) {
+	return rc.zip.Read(p)
+}
+
 func newDiskRef(fs afero.Fs, root, module, version string) *diskRef {
 	return &diskRef{
 		fs:      fs,
@@ -30,11 +47,10 @@ func newDiskRef(fs afero.Fs, root, module, version string) *diskRef {
 	}
 }
 
-// Clear is the Ref interface implementation. It deletes all module data from disk
-//
-// You should always call this function after you fetch a module into a DiskRef
-func (d *diskRef) Clear() error {
-	const op errors.Op = "diskRef.Clear"
+// clearFiles deletes all data from the given fs at path root
+// This function must be called when zip is closed to cleanup the entire GOPATH created by the diskref
+func clearFiles(fs afero.Fs, root string) error {
+	const op errors.Op = "clearFiles"
 	// This is required because vgo ensures dependencies are read-only
 	// See https://github.com/golang/go/issues/24111 and
 	// https://go-review.googlesource.com/c/vgo/+/96978
@@ -42,13 +58,13 @@ func (d *diskRef) Clear() error {
 		if err != nil {
 			return err
 		}
-		return d.fs.Chmod(path, 0770)
+		return fs.Chmod(path, 0770)
 	}
-	err := afero.Walk(d.fs, d.root, walkFn)
+	err := afero.Walk(fs, root, walkFn)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	err = d.fs.RemoveAll(d.root)
+	err = fs.RemoveAll(root)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -88,7 +104,7 @@ func (d *diskRef) Read() (*storage.Version, error) {
 	//
 	// if we close, then the caller will panic, and the alternative to make this work is
 	// that we read into memory and return an io.ReadCloser that reads out of memory
-	ver.Zip = sourceFile
+	ver.Zip = &zipReadCloser{sourceFile, d}
 
 	return &ver, nil
 }

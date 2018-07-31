@@ -38,22 +38,19 @@ func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
 	sourcePath := filepath.Join(goPathRoot, "src")
 	modPath := filepath.Join(sourcePath, getRepoDirName(mod, ver))
 	if err := g.fs.MkdirAll(modPath, os.ModeDir|os.ModePerm); err != nil {
-		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
-		diskRef.Clear()
+		clearFiles(g.fs, goPathRoot)
 		return nil, err
 	}
 
 	// setup the module with barebones stuff
 	if err := Dummy(g.fs, modPath); err != nil {
-		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
-		diskRef.Clear()
+		clearFiles(g.fs, goPathRoot)
 		return nil, err
 	}
 
 	err = getSources(g.goBinaryName, g.fs, goPathRoot, modPath, mod, ver)
 	if err != nil {
-		diskRef := newDiskRef(g.fs, goPathRoot, "", "")
-		diskRef.Clear()
+		clearFiles(g.fs, goPathRoot)
 		return nil, err
 	}
 
