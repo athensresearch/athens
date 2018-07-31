@@ -12,5 +12,5 @@ import (
 func (s *Storage) Exists(ctx context.Context, module, version string) bool {
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Exists")
 	defer sp.Finish()
-	return s.bucket.Exists(ctx, config.PackageVersionedName(module, version, ".mod"))
+	return s.bucket.Exists(ctx, config.PackageVersionedName(module, version, "mod"))
 }
