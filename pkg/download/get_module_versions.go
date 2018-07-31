@@ -12,9 +12,7 @@ func getModuleVersion(c buffalo.Context, lggr *log.Logger, dp Protocol) (string,
 	const op errors.Op = "download.getModuleVersion"
 	params, err := paths.GetAllParams(c)
 	if err != nil {
-		// if there is an error, then the Buffalo handler paths
-		// are not set up well.
-		panic(err)
+		return "", "", nil, errors.E(op, err, errors.KindBadRequest)
 	}
 
 	versionInfo, err := dp.Version(c, params.Module, params.Version)

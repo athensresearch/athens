@@ -25,7 +25,7 @@ func VersionInfoHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffa
 		if err != nil {
 			err := errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
-			c.Render(http.StatusInternalServerError, nil)
+			return c.Render(errors.Kind(err), nil)
 		}
 		verInfo.Zip.Close()
 		var revInfo storage.RevInfo

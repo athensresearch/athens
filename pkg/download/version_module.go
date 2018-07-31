@@ -1,8 +1,6 @@
 package download
 
 import (
-	"net/http"
-
 	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
@@ -23,18 +21,12 @@ func VersionModuleHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buf
 		if err != nil {
 			err = errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
-			c.Render(errors.Kind(err), nil)
+			return c.Render(errors.Kind(err), nil)
 		}
 		verInfo.Zip.Close()
-		status := http.StatusOK
-		_, err = c.Response().Write(verInfo.Mod)
-		if err != nil {
-			err = errors.E(op, errors.M(mod), errors.V(ver), err)
-			status = http.StatusInternalServerError
-			lggr.SystemErr(err)
-		}
 
-		c.Response().WriteHeader(status)
-		return nil
+		// Calling c.Response().Write will write the header directly
+		// and we would get a 0 status in the buffalo logs.
+		return c.Render(200, eng.String(string(verInfo.Mod)))
 	}
 }

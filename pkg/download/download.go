@@ -65,12 +65,13 @@ func (p *protocol) fillCache(ctx context.Context, mod, ver string) (*storage.Ver
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
+	defer v.Zip.Close()
 	err = p.s.Save(ctx, mod, ver, v.Mod, v.Zip, v.Info)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	return v, nil
+	return p.s.Get(ctx, mod, ver)
 }
 
 func (p *protocol) Latest(ctx context.Context, mod string) (*storage.RevInfo, error) {

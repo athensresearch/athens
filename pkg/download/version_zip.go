@@ -2,7 +2,6 @@ package download
 
 import (
 	"io"
-	"net/http"
 
 	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
@@ -25,17 +24,18 @@ func VersionZipHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffal
 		if err != nil {
 			err := errors.E(op, errors.M(mod), errors.V(ver), err)
 			lggr.SystemErr(err)
-			return c.Render(http.StatusInternalServerError, nil)
+			return c.Render(errors.Kind(err), nil)
 		}
+		defer verInfo.Zip.Close()
 
-		status := http.StatusOK
+		// Calling c.Response().Write will write the header directly
+		// and we would get a 0 status in the buffalo logs.
+		c.Render(200, nil)
 		_, err = io.Copy(c.Response(), verInfo.Zip)
 		if err != nil {
-			status = http.StatusInternalServerError
 			lggr.SystemErr(errors.E(op, errors.M(mod), errors.V(ver), err))
 		}
 
-		c.Response().WriteHeader(status)
 		return nil
 	}
 }
