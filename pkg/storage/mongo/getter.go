@@ -1,19 +1,19 @@
 package mongo
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
 	"strings"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Get a specific version of a module
 func (s *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Version, error) {
-	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.mongo.Get")
+	const op errors.Op = "mongo.Get"
+	sp, _ := opentracing.StartSpanFromContext(ctx, "storage.mongo.Get")
 	defer sp.Finish()
 	c := s.s.DB(s.d).C(s.c)
 	result := &storage.Module{}
@@ -24,9 +24,17 @@ func (s *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Ver
 		}
 		return nil, err
 	}
+
+	zipName := s.gridFileName(module, vsn)
+	fs := s.s.DB(s.d).GridFS("fs")
+	f, err := fs.Open(zipName)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
 	return &storage.Version{
 		Mod:  result.Mod,
-		Zip:  ioutil.NopCloser(bytes.NewReader(result.Zip)),
+		Zip:  f,
 		Info: result.Info,
 	}, nil
 }

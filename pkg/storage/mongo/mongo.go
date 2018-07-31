@@ -1,6 +1,8 @@
 package mongo
 
 import (
+	"strings"
+
 	"github.com/globalsign/mgo"
 )
 
@@ -40,4 +42,8 @@ func (m *ModuleStore) Connect() error {
 	}
 	c := m.s.DB(m.d).C(m.c)
 	return c.EnsureIndex(index)
+}
+
+func (m *ModuleStore) gridFileName(mod, ver string) string {
+	return strings.Replace(mod, "/", "_", -1) + "_" + ver + ".zip"
 }
