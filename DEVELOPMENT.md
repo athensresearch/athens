@@ -25,7 +25,9 @@ it easy to get up and running:
 That's it! After the `make dev` command is done, everything will be up and running and you can move
 on to the next step.
 
-If you want to stop everything at any time, run `make dev-teardown`.
+If you want to stop everything at any time, run `make down`.
+
+Note that `make dev` only runs the minimum amount of dependencies needed for things to work. If you'd like to run all the possible dependencies run `make alldeps` or directly the services available in the `docker-compose.yml` file.
 
 # Run the Proxy or the Registry
 
