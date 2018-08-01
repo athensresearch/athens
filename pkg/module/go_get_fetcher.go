@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gomods/athens/pkg/errors"
-	pkgerrors "github.com/pkg/errors"
+	"github.com/gomods/athens/pkg/paths"
 	"github.com/spf13/afero"
 )
 
@@ -29,29 +29,29 @@ func NewGoGetFetcher(goBinaryName string, fs afero.Fs) Fetcher {
 // Fetch downloads the sources and returns path where it can be found. Make sure to call Clear
 // on the returned Ref when you are done with it
 func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
-
+	const op errors.Op = "goGetFetcher.Fetch"
 	// setup the GOPATH
 	goPathRoot, err := afero.TempDir(g.fs, "", "athens")
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	sourcePath := filepath.Join(goPathRoot, "src")
 	modPath := filepath.Join(sourcePath, getRepoDirName(mod, ver))
 	if err := g.fs.MkdirAll(modPath, os.ModeDir|os.ModePerm); err != nil {
 		clearFiles(g.fs, goPathRoot)
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	// setup the module with barebones stuff
 	if err := Dummy(g.fs, modPath); err != nil {
 		clearFiles(g.fs, goPathRoot)
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	err = getSources(g.goBinaryName, g.fs, goPathRoot, modPath, mod, ver)
 	if err != nil {
 		clearFiles(g.fs, goPathRoot)
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	return newDiskRef(g.fs, goPathRoot, mod, ver), nil
@@ -77,6 +77,7 @@ func Dummy(fs afero.Fs, repoRoot string) error {
 // given a filesystem, gopath, repository root, module and version, runs 'vgo get'
 // on module@version from the repoRoot with GOPATH=gopath, and returns a non-nil error if anything went wrong.
 func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, version string) error {
+	const op errors.Op = "module.getSources"
 	uri := strings.TrimSuffix(module, "/")
 
 	fullURI := fmt.Sprintf("%s@%s", uri, version)
@@ -96,27 +97,37 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 		errMsg := fmt.Sprintf("%v : %s", err, o)
 		// github quota exceeded
 		if isLimitHit(o) {
-			return errors.E("module.getSources", errMsg, errors.KindRateLimit)
+			return errors.E(op, errMsg, errors.KindRateLimit)
 		}
 		// another error in the output
-		return errors.E("module.getSources", errMsg)
+		return errors.E(op, errMsg)
 	}
 	// make sure the expected files exist
-	packagePath := getPackagePath(gopath, module)
-	return checkFiles(fs, packagePath, version)
+	encmod, err := paths.EncodePath(module)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	packagePath := getPackagePath(gopath, encmod)
+	err = checkFiles(fs, packagePath, version)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	return nil
 }
 
 func checkFiles(fs afero.Fs, path, version string) error {
+	const op errors.Op = "module.checkFiles"
 	if _, err := fs.Stat(filepath.Join(path, version+".mod")); err != nil {
-		return pkgerrors.WithMessage(err, fmt.Sprintf("%s.mod not found in %s", version, path))
+		return errors.E(op, fmt.Sprintf("%s.mod not found in %s", version, path))
 	}
 
 	if _, err := fs.Stat(filepath.Join(path, version+".zip")); err != nil {
-		return pkgerrors.WithMessage(err, fmt.Sprintf("%s.zip not found in %s", version, path))
+		return errors.E(op, fmt.Sprintf("%s.mod not found in %s", version, path))
 	}
 
 	if _, err := fs.Stat(filepath.Join(path, version+".info")); err != nil {
-		return pkgerrors.WithMessage(err, fmt.Sprintf("%s.info not found in %s", version, path))
+		return errors.E(op, fmt.Sprintf("%s.mod not found in %s", version, path))
 	}
 
 	return nil
