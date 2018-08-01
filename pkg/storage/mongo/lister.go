@@ -5,12 +5,14 @@ import (
 	"strings"
 
 	"github.com/globalsign/mgo/bson"
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // List lists all versions of a module
 func (s *ModuleStore) List(ctx context.Context, module string) ([]string, error) {
+	const op errors.Op = "mongo.List"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.mongo.List")
 	defer sp.Finish()
 	c := s.s.DB(s.d).C(s.c)
@@ -18,7 +20,7 @@ func (s *ModuleStore) List(ctx context.Context, module string) ([]string, error)
 	err := c.Find(bson.M{"module": module}).All(&result)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			err = storage.ErrNotFound{Module: module}
+			err = errors.E(op, err, errors.M(module), errors.KindNotFound)
 		}
 		return nil, err
 	}

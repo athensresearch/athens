@@ -2,10 +2,10 @@ package gcp
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"cloud.google.com/go/storage"
+	"github.com/gomods/athens/pkg/errors"
 	"google.golang.org/api/iterator"
 )
 
@@ -15,11 +15,22 @@ type gcpBucket struct {
 }
 
 func (b *gcpBucket) Delete(ctx context.Context, path string) error {
-	return b.Object(path).Delete(ctx)
+	const op errors.Op = "gcpBucket.Delete"
+	err := b.Object(path).Delete(ctx)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	return nil
 }
 
 func (b *gcpBucket) Open(ctx context.Context, path string) (io.ReadCloser, error) {
-	return b.Object(path).NewReader(ctx)
+	const op errors.Op = "gcpBucket.Open"
+	rc, err := b.Object(path).NewReader(ctx)
+	if err != nil {
+		return rc, errors.E(op, err, errors.M(path))
+	}
+	return rc, nil
 }
 
 func (b *gcpBucket) Write(ctx context.Context, path string) io.WriteCloser {
@@ -27,6 +38,7 @@ func (b *gcpBucket) Write(ctx context.Context, path string) io.WriteCloser {
 }
 
 func (b *gcpBucket) List(ctx context.Context, prefix string) ([]string, error) {
+	const op errors.Op = "gcpBucket.List"
 	it := b.Objects(ctx, &storage.Query{Prefix: prefix})
 
 	res := []string{}
@@ -36,7 +48,7 @@ func (b *gcpBucket) List(ctx context.Context, prefix string) ([]string, error) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("could not iterate over query: %s", err)
+			return nil, errors.E(op, err)
 		}
 		res = append(res, attrs.Name)
 	}

@@ -91,7 +91,7 @@ func E(op Op, args ...interface{}) error {
 		}
 	}
 	if e.Err == nil {
-		e.Err = errors.New("no error message provided")
+		e.Err = errors.New(KindText(e))
 	}
 	return e
 }

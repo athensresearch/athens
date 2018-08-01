@@ -20,7 +20,7 @@ func (s *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Ver
 	err := c.Find(bson.M{"module": module, "version": vsn}).One(result)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			err = storage.ErrVersionNotFound{Module: module, Version: vsn}
+			err = errors.E(op, errors.M(module), errors.V(vsn), errors.KindNotFound)
 		}
 		return nil, err
 	}

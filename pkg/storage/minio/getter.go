@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
 	minio "github.com/minio/minio-go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -48,9 +49,10 @@ func (v *storageImpl) Get(ctx context.Context, module, version string) (*storage
 }
 
 func transformNotFoundErr(module, version string, err error) error {
+	const op errors.Op = "minio.transformNotFoundErr"
 	if eresp, ok := err.(minio.ErrorResponse); ok {
 		if eresp.StatusCode == http.StatusNotFound {
-			return storage.ErrVersionNotFound{Module: module, Version: version}
+			return errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 		}
 	}
 	return err

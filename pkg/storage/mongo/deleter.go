@@ -5,7 +5,6 @@ import (
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/gomods/athens/pkg/errors"
-	"github.com/gomods/athens/pkg/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -15,10 +14,7 @@ func (s *ModuleStore) Delete(ctx context.Context, module, version string) error 
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.mongo.Delete")
 	defer sp.Finish()
 	if !s.Exists(ctx, module, version) {
-		return storage.ErrVersionNotFound{
-			Module:  module,
-			Version: version,
-		}
+		return errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 	db := s.s.DB(s.d)
 	c := db.C(s.c)
