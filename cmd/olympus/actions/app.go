@@ -113,7 +113,11 @@ func App(config *AppConfig) (*buffalo.App, error) {
 	app.POST("/push", pushNotificationHandler(w))
 
 	// Download Protocol
-	dp := download.New(goget.New(), config.Storage)
+	gg, err := goget.New()
+	if err != nil {
+		return nil, err
+	}
+	dp := download.New(gg, config.Storage)
 	app.GET(download.PathList, download.ListHandler(dp, lggr, renderEng))
 	app.GET(download.PathVersionInfo, download.VersionInfoHandler(dp, lggr, renderEng))
 	app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, renderEng))

@@ -3,6 +3,8 @@ package goget
 import (
 	"context"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type testCase struct {
@@ -23,7 +25,8 @@ var tt = []testCase{
 }
 
 func TestList(t *testing.T) {
-	dp := New()
+	dp, err := New()
+	require.NoError(t, err, "failed to create protocol")
 	ctx := context.Background()
 
 	for _, tc := range tt {

@@ -19,11 +19,15 @@ type goGetFetcher struct {
 }
 
 // NewGoGetFetcher creates fetcher which uses go get tool to fetch modules
-func NewGoGetFetcher(goBinaryName string, fs afero.Fs) Fetcher {
+func NewGoGetFetcher(goBinaryName string, fs afero.Fs) (Fetcher, error) {
+	const op errors.Op = "module.NewGoGetFetcher"
+	if err := validGoBinary(goBinaryName); err != nil {
+		return nil, errors.E(op, err)
+	}
 	return &goGetFetcher{
 		fs:           fs,
 		goBinaryName: goBinaryName,
-	}
+	}, nil
 }
 
 // Fetch downloads the sources and returns path where it can be found. Make sure to call Clear
@@ -147,4 +151,14 @@ func getRepoDirName(repoURI, version string) string {
 // getPackagePath returns the path to the module cache given the gopath and module name
 func getPackagePath(gopath, module string) string {
 	return filepath.Join(gopath, "src", "mod", "cache", "download", module, "@v")
+}
+
+func validGoBinary(name string) error {
+	const op errors.Op = "module.validGoBinary"
+	err := exec.Command(name).Run()
+	_, ok := err.(*exec.ExitError)
+	if err != nil && !ok {
+		return errors.E(op, err)
+	}
+	return nil
 }
