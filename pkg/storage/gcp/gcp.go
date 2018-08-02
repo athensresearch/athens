@@ -3,11 +3,13 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"cloud.google.com/go/storage"
 	"github.com/gomods/athens/pkg/config/env"
-	"google.golang.org/api/option"
+	"github.com/gomods/athens/pkg/errors"
+	"google.golang.org/api/googleapi"
 )
 
 // Storage implements the (./pkg/storage).Backend interface
@@ -15,34 +17,51 @@ type Storage struct {
 	bucket       Bucket
 	baseURI      *url.URL
 	closeStorage func() error
+	projectID    string
 }
 
-// NewWithCredentials returns a new Storage instance authenticated using the provided
-// ClientOptions. The bucket name to be used will be loaded from the
+// New returns a new Storage instance backed by a Google Cloud Storage bucket.
+// The bucket name to be used will be loaded from the
 // environment variable ATHENS_STORAGE_GCP_BUCKET.
 //
-// The ClientOptions should provide permissions sufficient to read, write and
-// delete objects in google cloud storage for your project.
-func NewWithCredentials(ctx context.Context, cred option.ClientOption) (*Storage, error) {
-	storage, err := storage.NewClient(ctx, cred)
+// If you're not running on GCP, set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+// to the path of your service account file. If you're running on GCP (e.g. AppEngine),
+// credentials will be automatically provided.
+// See https://cloud.google.com/docs/authentication/getting-started.
+func New(ctx context.Context) (*Storage, error) {
+	const op errors.Op = "gcp.New"
+	storage, err := storage.NewClient(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could not create new storage client: %s", err)
+		return nil, errors.E(op, fmt.Errorf("could not create new storage client: %s", err))
 	}
-	bucketname, err := env.GcpBucketName()
+	bucketname, err := env.GCPBucketName()
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	u, err := url.Parse(fmt.Sprintf("https://storage.googleapis.com/%s", bucketname))
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	bkt := gcpBucket{storage.Bucket(bucketname)}
+	err = bkt.Create(ctx, env.GCPProjectID(), nil)
+	if err != nil && !bucketExistsErr(err) {
+		return nil, errors.E(op, err)
+	}
 
 	return &Storage{
 		bucket:       &bkt,
 		baseURI:      u,
 		closeStorage: storage.Close,
 	}, nil
+}
+
+func bucketExistsErr(err error) bool {
+	apiErr, ok := err.(*googleapi.Error)
+	if !ok {
+		return false
+	}
+
+	return apiErr.Code == http.StatusConflict
 }
 
 func newWithBucket(bkt Bucket, uri *url.URL) *Storage {
@@ -68,4 +87,9 @@ func (s *Storage) BaseURL() *url.URL {
 // for completness.
 func (s *Storage) Close() error {
 	return s.closeStorage()
+}
+
+// Connect is noop.
+func (s *Storage) Connect() error {
+	return nil
 }
