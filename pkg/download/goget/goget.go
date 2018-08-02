@@ -97,27 +97,26 @@ func (gg *goget) list(op errors.Op, mod string) (*listResp, error) {
 	}
 	defer gg.fs.RemoveAll(hackyPath)
 	err = module.Dummy(gg.fs, hackyPath)
+
 	cmd := exec.Command(
 		gg.goBinPath,
 		"list", "-m", "-versions", "-json",
 		config.FmtModVer(mod, "latest"),
 	)
 	cmd.Dir = hackyPath
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
-	bts, err := cmd.CombinedOutput()
+	err = cmd.Run()
 	if err != nil {
-		errFmt := fmt.Errorf("%v: %s", err, bts)
-		return nil, errors.E(op, errFmt)
-	}
-
-	// ugly hack until go cli implements -quiet flag.
-	// https://github.com/golang/go/issues/26628
-	if bytes.HasPrefix(bts, []byte("go: finding")) {
-		bts = bts[bytes.Index(bts, []byte{'\n'}):]
+		err = fmt.Errorf("%v: %s", err, stderr)
+		return nil, errors.E(op, err)
 	}
 
 	var lr listResp
-	err = json.Unmarshal(bts, &lr)
+	err = json.NewDecoder(stdout).Decode(&lr)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
