@@ -93,10 +93,10 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  branch = "master"
   name = "github.com/bketelsen/buffet"
   packages = ["."]
-  revision = "338531d2dcd9545cf4e0f2e0bb7a4dd486595e17"
-  version = "v0.1.5"
+  revision = "2959027395a6a33e8b18b8169b2896d1bfb558c3"
 
 [[projects]]
   branch = "master"
@@ -921,6 +921,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8dce3e075320b50eb647b0e09252f4ae981df99cee607453acf87b03492d8248"
+  inputs-digest = "a286330690cfc254c2432be9ede8cd7755f5501dae6858213ac7e4f25506379f"
   solver-name = "gps-cdcl"
   solver-version = 1

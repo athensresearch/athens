@@ -116,3 +116,7 @@
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "1.14.12"
+
+[[constraint]]
+  name = "github.com/bketelsen/buffet"
+  branch = "master"

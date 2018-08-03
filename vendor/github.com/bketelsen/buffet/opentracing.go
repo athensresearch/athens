@@ -1,6 +1,7 @@
 package buffet
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
@@ -103,4 +104,14 @@ func ChildSpan(opname string, c buffalo.Context) opentracing.Span {
 func operation(s string) string {
 	chunks := strings.Split(s, ".")
 	return chunks[len(chunks)-1]
+}
+
+// ChildSpanFromContext takes an opname and context.Context and returns a span
+// NB: Using this function will not mean that buffalo metadata won't be attached to the traces in the new Span
+func ChildSpanFromContext(opname string, ctx context.Context) opentracing.Span {
+	psp := opentracing.SpanFromContext(ctx)
+	sp := tracer.StartSpan(
+		opname,
+		opentracing.ChildOf(psp.Context()))
+	return sp
 }
