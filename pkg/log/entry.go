@@ -22,8 +22,6 @@ type Entry interface {
 
 	// SystemErr is a method that disects the error
 	// and logs the appropriate level and fields for it.
-	// TODO(marwan-at-work): When we have our own Error struct
-	// this method will be very useful.
 	SystemErr(err error)
 }
 
