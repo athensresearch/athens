@@ -28,7 +28,7 @@ func initializeTracing(app *buffalo.App) {
 	time.Sleep(100 * time.Millisecond)
 	metricsFactory := prometheus.New()
 	tracer, _, err := cfg.New(
-		"athens", //serviceName,
+		"athens.proxy", //serviceName,
 
 		config.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)),
 	)
