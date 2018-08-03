@@ -1,7 +1,5 @@
 services:
-  - mongodb
-  - postgresql
-  - redis-server
+  - docker
 language: go
 install: false
 go:
@@ -15,8 +13,9 @@ env:
     - MINIO_SECRET_KEY=minio123
     - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
     - CODE_COV=1
-    - GO_BINARY_PATH=vgo
     - TMPDIR=/tmp/
+    - GO_SOURCE=${TMPDIR}go
+    - GO_BINARY_PATH=${TMPDIR}go/bin/go
 before_script:
   - make setup-dev-env
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
@@ -24,7 +23,7 @@ before_script:
   - buffalo db create
   - buffalo db migrate up
 script:
-  - make verify test-unit
+  - make verify test-unit test-e2e
 after_success:
   - if [ "${CODE_COV}" == "1" ]; then
       curl -s https://codecov.io/bash -o codecov && bash codecov -X fix;

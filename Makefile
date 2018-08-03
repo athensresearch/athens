@@ -14,6 +14,7 @@ docs:
 .PHONY: setup-dev-env
 setup-dev-env:
 	./scripts/get_dev_tools.sh
+	$(MAKE) dev
 
 .PHONY: verify
 verify:
@@ -29,6 +30,10 @@ test:
 .PHONY: test-unit
 test-unit:
 	./scripts/test_unit.sh
+
+.PHONY: test-e2e
+test-e2e:
+	./scripts/test_e2e.sh
 
 .PHONY: olympus-docker
 olympus-docker:
