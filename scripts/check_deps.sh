@@ -12,7 +12,8 @@
 # before a pull request can be merged.
 set -xeuo pipefail
 
-ChangedFiles=`git diff --name-only master`
+git remote set-branches --add origin master && git fetch
+ChangedFiles=`git diff --name-only origin/master`
 
 # in the casse that ChangedFiles contains Gopkg run dep ensure
 case "$ChangedFiles" in
