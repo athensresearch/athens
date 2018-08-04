@@ -150,7 +150,7 @@ func getRepoDirName(repoURI, version string) string {
 
 // getPackagePath returns the path to the module cache given the gopath and module name
 func getPackagePath(gopath, module string) string {
-	return filepath.Join(gopath, "src", "mod", "cache", "download", module, "@v")
+	return filepath.Join(gopath, "pkg", "mod", "cache", "download", module, "@v")
 }
 
 func validGoBinary(name string) error {

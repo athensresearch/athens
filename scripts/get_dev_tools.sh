@@ -7,7 +7,7 @@ set -xeuo pipefail
 go get github.com/golang/lint/golint
 go get github.com/golang/dep/cmd/dep
 
-GO_VERSION="go1.11beta2"
+GO_VERSION="go1.11beta3"
 GO_SOURCE=${GO_SOURCE:=$(go env GOPATH)/src/golang.org/x/go}
 mkdir -p $(dirname $GO_SOURCE)
 if [[ ! -d $GO_SOURCE ]]; then
