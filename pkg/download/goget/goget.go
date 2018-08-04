@@ -75,7 +75,7 @@ func (gg *goget) Latest(ctx context.Context, mod string) (*storage.RevInfo, erro
 	const op errors.Op = "goget.Latest"
 	lr, err := gg.list(op, mod)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	pseudoInfo := strings.Split(lr.Version, "-")
