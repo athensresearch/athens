@@ -34,8 +34,8 @@ Note that `make dev` only runs the minimum amount of dependencies needed for thi
 As you know from reading the [README](./README.md) (if you didn't read the whole thing, that's ok. Just read the
 introduction), the Athens project is made up of two components:
 
-1. [Package Registry](https://github.com/gomods/athens/wiki/The-Central-Package-Registry-(Olympus))
-2. [Edge Proxy](https://github.com/gomods/athens/wiki/Proxies-(Zeus))
+1. [Package Registry](./REGISTRY.md)
+2. [Edge Proxy](./PROXY.md)
 
 To run the registry:
 
