@@ -16,7 +16,7 @@ import (
 const PathVersionInfo = "/{module:.+}/@v/{version}.info"
 
 // VersionInfoHandler implements GET baseURL/module/@v/version.info
-func VersionInfoHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
+func VersionInfoHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.versionInfoHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c).SetOperationName("versionInfoHandler")

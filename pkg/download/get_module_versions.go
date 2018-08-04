@@ -8,7 +8,7 @@ import (
 	"github.com/gomods/athens/pkg/storage"
 )
 
-func getModuleVersion(c buffalo.Context, lggr *log.Logger, dp Protocol) (string, string, *storage.Version, error) {
+func getModuleVersion(c buffalo.Context, lggr log.Entry, dp Protocol) (string, string, *storage.Version, error) {
 	const op errors.Op = "download.getModuleVersion"
 	params, err := paths.GetAllParams(c)
 	if err != nil {

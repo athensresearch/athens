@@ -16,7 +16,7 @@ import (
 const PathList = "/{module:.+}/@v/list"
 
 // ListHandler implements GET baseURL/module/@v/list
-func ListHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) func(c buffalo.Context) error {
+func ListHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.ListHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c).SetOperationName("listHandler")

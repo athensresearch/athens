@@ -118,10 +118,8 @@ func App(config *AppConfig) (*buffalo.App, error) {
 		return nil, err
 	}
 	dp := download.New(gg, config.Storage)
-	app.GET(download.PathList, download.ListHandler(dp, lggr, renderEng))
-	app.GET(download.PathVersionInfo, download.VersionInfoHandler(dp, lggr, renderEng))
-	app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, renderEng))
-	app.GET(download.PathVersionZip, download.VersionZipHandler(dp, lggr, renderEng))
+	opts := &download.HandlerOpts{Protocol: dp, Logger: lggr, Engine: renderEng}
+	download.RegisterHandlers(app, opts)
 
 	app.ServeFiles("/", assetsBox) // serve files from the public directory
 

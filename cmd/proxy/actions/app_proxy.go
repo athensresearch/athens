@@ -11,23 +11,20 @@ import (
 
 func addProxyRoutes(
 	app *buffalo.App,
-	storage storage.Backend,
+	s storage.Backend,
 	mf *module.Filter,
-	lggr *log.Logger,
+	l *log.Logger,
 ) error {
 	app.GET("/", proxyHomeHandler)
 
+	// Download Protocol
 	gg, err := goget.New()
 	if err != nil {
 		return err
 	}
-	dp := download.New(gg, storage)
-	// Download Protocol
-	app.GET(download.PathList, download.ListHandler(dp, lggr, proxy))
-	app.GET(download.PathLatest, download.LatestHandler(dp, lggr, proxy))
-	app.GET(download.PathVersionInfo, download.VersionInfoHandler(dp, lggr, proxy))
-	app.GET(download.PathVersionModule, download.VersionModuleHandler(dp, lggr, proxy))
-	app.GET(download.PathVersionZip, download.VersionZipHandler(dp, lggr, proxy))
+	p := download.New(gg, s)
+	opts := &download.HandlerOpts{Protocol: p, Logger: l, Engine: proxy}
+	download.RegisterHandlers(app, opts)
 
 	return nil
 }

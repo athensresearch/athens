@@ -15,7 +15,7 @@ import (
 const PathLatest = "/{module:.+}/@latest"
 
 // LatestHandler implements GET baseURL/module/@latest
-func LatestHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) func(c buffalo.Context) error {
+func LatestHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.LatestHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c)

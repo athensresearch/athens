@@ -12,7 +12,7 @@ import (
 const PathVersionModule = "/{module:.+}/@v/{version}.mod"
 
 // VersionModuleHandler implements GET baseURL/module/@v/version.mod
-func VersionModuleHandler(dp Protocol, lggr *log.Logger, eng *render.Engine) buffalo.Handler {
+func VersionModuleHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.VersionModuleHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c).SetOperationName("VersionModuleHandler")
