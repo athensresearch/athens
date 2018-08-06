@@ -1,3 +1,5 @@
+![Athens Banner](./docs/static/banner.png)
+
 # Welcome Gophers!
 
 Welcome to the Athens project! We're building all things Go package repository in here. 
