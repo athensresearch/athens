@@ -1,6 +1,8 @@
 package actions
 
 import (
+	stdlog "log"
+
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
 	"github.com/gobuffalo/buffalo/middleware/csrf"
@@ -127,6 +129,27 @@ func App(config *AppConfig) (*buffalo.App, error) {
 }
 
 func getWorker(store storage.Backend, eLog eventlog.Eventlog) (worker.Worker, error) {
+	workerType := env.OlympusBackgroundWorkerType()
+	switch workerType {
+	case "redis":
+		return registerRedis(store, eLog)
+	case "memory":
+		return registerInMem(store, eLog)
+	default:
+		stdlog.Printf("Provided background worker type %s. Expected redis|memory. Defaulting to memory", workerType)
+		return registerInMem(store, eLog)
+	}
+}
+
+func registerInMem(store storage.Backend, eLog eventlog.Eventlog) (worker.Worker, error) {
+	w := worker.NewSimple()
+	if err := w.Register(PushNotificationHandlerName, GetProcessPushNotificationJob(store, eLog)); err != nil {
+		return nil, err
+	}
+	return w, nil
+}
+
+func registerRedis(store storage.Backend, eLog eventlog.Eventlog) (worker.Worker, error) {
 	port := env.OlympusRedisQueuePortWithDefault(":6379")
 	w := gwa.New(gwa.Options{
 		Pool: &redis.Pool{
