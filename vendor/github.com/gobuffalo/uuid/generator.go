@@ -165,7 +165,7 @@ func (g *rfc4122Generator) NewV3(ns UUID, name string) UUID {
 // NewV4 returns random generated UUID.
 func (g *rfc4122Generator) NewV4() (UUID, error) {
 	u := UUID{}
-	if _, err := g.rand.Read(u[:]); err != nil {
+	if _, err := io.ReadFull(g.rand, u[:]); err != nil {
 		return Nil, err
 	}
 	u.SetVersion(V4)
@@ -188,7 +188,8 @@ func (g *rfc4122Generator) getClockSequence() (uint64, uint16, error) {
 	var err error
 	g.clockSequenceOnce.Do(func() {
 		buf := make([]byte, 2)
-		if _, err = g.rand.Read(buf); err != nil {
+
+		if _, err = io.ReadFull(g.rand, buf); err != nil {
 			return
 		}
 		g.clockSequence = binary.BigEndian.Uint16(buf)
@@ -222,7 +223,7 @@ func (g *rfc4122Generator) getHardwareAddr() ([]byte, error) {
 
 		// Initialize hardwareAddr randomly in case
 		// of real network interfaces absence.
-		if _, err = g.rand.Read(g.hardwareAddr[:]); err != nil {
+		if _, err = io.ReadFull(g.rand, g.hardwareAddr[:]); err != nil {
 			return
 		}
 		// Set multicast bit as recommended by RFC 4122
