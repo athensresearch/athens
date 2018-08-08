@@ -11,6 +11,27 @@ See our [Contributing Guide](CONTRIBUTING.md) for tips on how to submit a pull r
 # Initial Development Environment Setup
 Athens relies on having a few tools installed locally. Run `make setup-dev-env` to install them.
 
+### Go version
+Athens is developed on Go1.11+.
+
+If you have a stable version of go running, then a later version of go can be downloaded.
+
+For example, to get `go1.11beta3`, run the following commands which won't affect your stable version
+```
+go get golang.org/dl/go1.11beta3
+go1.11beta3 download
+```
+
+To point Athens to `go1.11beta3` or to a different version
+set the following environment variable
+
+```
+GO_BINARY_PATH=go1.11beta3
+or whichever binary you want to use with athens
+```
+
+### Dependencies
+
 # Services that Athens Needs
 
 Both the proxy and the registry rely on several services (i.e. databases, etc...) to function
