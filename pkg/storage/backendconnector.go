@@ -28,8 +28,14 @@ func (n noOpConnectedBackend) Exists(ctx context.Context, module, version string
 	return n.backend.Exists(ctx, module, version)
 }
 
-func (n noOpConnectedBackend) Get(ctx context.Context, module, vsn string) (*Version, error) {
-	return n.backend.Get(ctx, module, vsn)
+func (n noOpConnectedBackend) Info(ctx context.Context, module, vsn string) ([]byte, error) {
+	return n.backend.Info(ctx, module, vsn)
+}
+func (n noOpConnectedBackend) GoMod(ctx context.Context, module, vsn string) ([]byte, error) {
+	return n.backend.GoMod(ctx, module, vsn)
+}
+func (n noOpConnectedBackend) Zip(ctx context.Context, module, vsn string) (io.ReadCloser, error) {
+	return n.backend.Zip(ctx, module, vsn)
 }
 func (n noOpConnectedBackend) List(ctx context.Context, module string) ([]string, error) {
 	return n.backend.List(ctx, module)

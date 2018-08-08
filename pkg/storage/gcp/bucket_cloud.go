@@ -58,5 +58,12 @@ func (b *gcpBucket) List(ctx context.Context, prefix string) ([]string, error) {
 
 func (b *gcpBucket) Exists(ctx context.Context, path string) bool {
 	_, err := b.Object(path).Attrs(ctx)
-	return err == nil
+	if err == nil {
+		return true
+	} else if err == storage.ErrObjectNotExist {
+		return false
+	}
+
+	// TODO: this means that something errored out and we should return false, err
+	return false
 }

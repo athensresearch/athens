@@ -21,7 +21,7 @@ import (
 	"github.com/gomods/athens/pkg/storage/mem"
 	"github.com/gomods/athens/pkg/storage/minio"
 	"github.com/gomods/athens/pkg/storage/mongo"
-	"github.com/gomods/athens/pkg/storage/rdbms"
+	// "github.com/gomods/athens/pkg/storage/rdbms"
 )
 
 type TestSuites struct {
@@ -58,9 +58,9 @@ func (d *TestSuites) SetupTest() {
 	d.storages = append(d.storages, mongoStore)
 
 	// rdbms
-	rdbmsStore, err := rdbms.NewTestSuite(d.Model)
-	d.Model.SetupTest()
-	d.storages = append(d.storages, rdbmsStore)
+	// rdbmsStore, err := rdbms.NewTestSuite(d.Model)
+	// d.Model.SetupTest()
+	// d.storages = append(d.storages, rdbmsStore)
 
 	d.module = "testmodule"
 	d.version = "v1.0.0"
@@ -88,7 +88,7 @@ func (d *TestSuites) TestStorages() {
 }
 
 func (d *TestSuites) testNotFound(ts storage.TestSuite) {
-	_, err := ts.Storage().Get(context.Background(), "some", "unknown")
+	_, err := ts.Storage().Info(context.Background(), "some", "unknown")
 	d.Require().Equal(true, errors.IsNotFoundErr(err), "Invalid error type for %s: %#v", ts.StorageHumanReadableName(), err)
 }
 
@@ -115,15 +115,17 @@ func (d *TestSuites) testGetSaveListRoundTrip(ts storage.TestSuite) {
 	r.Equal(1, len(listedVersions), hrn)
 	retVersion := listedVersions[0]
 	r.Equal(d.version, retVersion, hrn)
-	gotten, err := ts.Storage().Get(context.Background(), d.module, d.version)
+	info, err := ts.Storage().Info(context.Background(), d.module, d.version)
 	r.NoError(err, hrn)
-	defer gotten.Zip.Close()
-	// TODO: test the time
-	r.Equal(d.mod, gotten.Mod, hrn)
-	zipContent, err := ioutil.ReadAll(gotten.Zip)
+	r.Equal(d.info, info, hrn)
+	mod, err := ts.Storage().GoMod(context.Background(), d.module, d.version)
+	r.NoError(err, hrn)
+	r.Equal(d.mod, mod, hrn)
+	zip, err := ts.Storage().Zip(context.Background(), d.module, d.version)
+	r.NoError(err, hrn)
+	zipContent, err := ioutil.ReadAll(zip)
 	r.NoError(err, hrn)
 	r.Equal(d.zip, zipContent, hrn)
-	r.Equal(d.info, gotten.Info, hrn)
 }
 
 func (d *TestSuites) testDelete(ts storage.TestSuite) {

@@ -61,7 +61,21 @@ func parseArgs(args worker.Args) (string, string, error) {
 
 func getModuleInfo(ctx context.Context, module, version string) (*storage.Version, error) {
 	os := olympusStore.NewStorage(GetOlympusEndpoint())
-	return os.Get(ctx, module, version)
+	var v storage.Version
+	var err error
+	v.Info, err = os.Info(ctx, module, version)
+	if err != nil {
+		return nil, err
+	}
+	v.Mod, err = os.GoMod(ctx, module, version)
+	if err != nil {
+		return nil, err
+	}
+	v.Zip, err = os.Zip(ctx, module, version)
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
 }
 
 // GetOlympusEndpoint returns global endpoint with override in mind

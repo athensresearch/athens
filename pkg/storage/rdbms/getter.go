@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"io"
 	"io/ioutil"
 
 	"github.com/gomods/athens/pkg/errors"
@@ -31,4 +32,19 @@ func (r *ModuleStore) Get(ctx context.Context, module, vsn string) (*storage.Ver
 		Zip:  ioutil.NopCloser(bytes.NewReader(result.Zip)),
 		Info: result.Info,
 	}, nil
+}
+
+// Info will panic.
+func (r *ModuleStore) Info(ctx context.Context, module, vsn string) ([]byte, error) {
+	panic("")
+}
+
+// GoMod will panic.
+func (r *ModuleStore) GoMod(ctx context.Context, module, vsn string) ([]byte, error) {
+	panic("")
+}
+
+// Zip will panic.
+func (r *ModuleStore) Zip(ctx context.Context, module, vsn string) (io.ReadCloser, error) {
+	panic("")
 }

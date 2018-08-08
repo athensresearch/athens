@@ -48,30 +48,34 @@ func (p *protocol) List(ctx context.Context, mod string) ([]string, error) {
 
 func (p *protocol) Info(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.Info"
-	v, err := p.s.Get(ctx, mod, ver)
+	info, err := p.s.Info(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		v, err = p.fillCache(ctx, mod, ver)
+		err = p.fillCache(ctx, mod, ver)
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+		info, err = p.s.Info(ctx, mod, ver)
 	}
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	return v.Info, nil
+	return info, nil
 }
 
-func (p *protocol) fillCache(ctx context.Context, mod, ver string) (*storage.Version, error) {
+func (p *protocol) fillCache(ctx context.Context, mod, ver string) error {
 	const op errors.Op = "protocol.fillCache"
 	v, err := p.dp.Version(ctx, mod, ver)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return errors.E(op, err)
 	}
 	defer v.Zip.Close()
 	err = p.s.Save(ctx, mod, ver, v.Mod, v.Zip, v.Info)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return errors.E(op, err)
 	}
 
-	return p.s.Get(ctx, mod, ver)
+	return nil
 }
 
 func (p *protocol) Latest(ctx context.Context, mod string) (*storage.RevInfo, error) {
@@ -86,39 +90,58 @@ func (p *protocol) Latest(ctx context.Context, mod string) (*storage.RevInfo, er
 
 func (p *protocol) GoMod(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.GoMod"
-	v, err := p.s.Get(ctx, mod, ver)
+	goMod, err := p.s.GoMod(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		v, err = p.fillCache(ctx, mod, ver)
+		err = p.fillCache(ctx, mod, ver)
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+		goMod, err = p.s.GoMod(ctx, mod, ver)
 	}
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	return v.Mod, nil
+	return goMod, nil
 }
 
 func (p *protocol) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, error) {
 	const op errors.Op = "protocol.Zip"
-	v, err := p.s.Get(ctx, mod, ver)
+	zip, err := p.s.Zip(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		v, err = p.fillCache(ctx, mod, ver)
+		err = p.fillCache(ctx, mod, ver)
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+		zip, err = p.s.Zip(ctx, mod, ver)
 	}
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	return v.Zip, nil
+	return zip, nil
 }
 
 func (p *protocol) Version(ctx context.Context, mod, ver string) (*storage.Version, error) {
 	const op errors.Op = "protocol.Version"
-	v, err := p.s.Get(ctx, mod, ver)
-	if errors.IsNotFoundErr(err) {
-		v, err = p.fillCache(ctx, mod, ver)
-	}
+	info, err := p.Info(ctx, mod, ver)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	return v, nil
+	goMod, err := p.GoMod(ctx, mod, ver)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	zip, err := p.s.Zip(ctx, mod, ver)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	return &storage.Version{
+		Info: info,
+		Mod:  goMod,
+		Zip:  zip,
+	}, nil
 }
