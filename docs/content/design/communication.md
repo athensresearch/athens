@@ -50,10 +50,12 @@ Now that all proxies and olympus are aware of module M at version v1.0, they can
 ### Private Code
 
 There are times when you do not want the mighty gods of Olympus to know about your desires. E.g:
+
 - You are requesting a private module,
 - Communication between the proxy and Olympus is disabled.
 
 In this case
+
 - User contacts proxy asking for a private module.
 - Proxy detects this repo is private and checks its storage. It does not find it there.
 - Proxy contacts internal VCS directly.
