@@ -3,7 +3,7 @@ services:
 language: go
 install: false
 go:
-  - "1.10.x"
+  - "1.11beta3"
 env:
   global:
     - PATH=${PATH}:./bin
@@ -14,8 +14,6 @@ env:
     - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
     - CODE_COV=1
     - TMPDIR=/tmp/
-    - GO_SOURCE=${TMPDIR}go
-    - GO_BINARY_PATH=${TMPDIR}go/bin/go
     - ATHENS_DIR=${GOPATH}/src/github.com/gomods/athens
 
 before_script:
