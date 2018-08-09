@@ -16,14 +16,19 @@ env:
     - TMPDIR=/tmp/
     - GO_SOURCE=${TMPDIR}go
     - GO_BINARY_PATH=${TMPDIR}go/bin/go
+    - ATHENS_DIR=${GOPATH}/src/github.com/gomods/athens
+
 before_script:
+  - mkdir -p $ATHENS_DIR && rsync -azr . $ATHENS_DIR && cd $ATHENS_DIR
   - make setup-dev-env
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
   - buffalo db create
   - buffalo db migrate up
+
 script:
   - make verify test-unit test-e2e
+
 after_success:
   - if [ "${CODE_COV}" == "1" ]; then
       curl -s https://codecov.io/bash -o codecov && bash codecov -X fix;
