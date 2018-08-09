@@ -91,3 +91,6 @@ This project follows the [Contributor Covenant](https://www.contributor-covenant
 If you have concerns, notice a code of conduct violation, or otherwise would like to talk about something
 related to this code of conduct, please reach out to me, Aaron Schlesinger on the [Gophers Slack](https://gophers.slack.com/). My username is `arschles`. Note that in the future, we will be expanding the
 ways that you can contact us regarding the code of conduct.
+
+---
+Athens banner attributed to Golda Manuel
