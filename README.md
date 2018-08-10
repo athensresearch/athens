@@ -2,12 +2,12 @@
 
 # Welcome Gophers!
 
-Welcome to the Athens project! We're building all things Go package repository in here. 
+Welcome to the Athens project! We're building all things Go package repository in here.
 
-1. [Package Registry](./REGISTRY.md)
-2. [Edge Proxy](./PROXY.md)
+1. [Package Registry](https://docs.gomods.io/design/registry/)
+2. [Edge Proxy](https://docs.gomods.io/design/proxy/)
 
-If you want more of a tl;dr on the project, check out [this quick introduction](https://medium.com/@arschles/project-athens-c80606497ce1)
+See our documentation site [https://docs.gomods.io](https://docs.gomods.io) for more details on the project.
 
 # Project Status
 
@@ -29,7 +29,7 @@ Although the project is in development, here's where we're going:
 The package registry and the edge proxy both implement the [vgo download protocol](https://medium.com/@arschles/project-athens-the-download-protocol-2b346926a818), but each one
 is intended for different purposes.
 
-The registry will be hosted globally, and will be "always on" for folks. Anyone will be able to 
+The registry will be hosted globally, and will be "always on" for folks. Anyone will be able to
 configure their machine to do a `go get` (right now, it's a `vgo get`) and have it request
 packages from the registry.
 
@@ -67,14 +67,14 @@ If you're not ready to contribute code yet, there are plenty of other great ways
 - Get familiar with the system. There's lots to read about. Here are some places to start:
     - [Gentle Introduction to the Project](https://medium.com/@arschles/project-athens-c80606497ce1) - the basics of why we started this project
     - [The Download Protocol](https://medium.com/@arschles/project-athens-the-download-protocol-2b346926a818) - the core API that the registry and proxies implement and CLIs use to download packages
-    - [Registry Design](./REGISTRY.md) - what the registry is and how it works
-    - [Proxy Design](./PROXY.md) - what the proxy is and how it works
+    - [Registry Design](https://docs.gomods.io/design/registry/) - what the registry is and how it works
+    - [Proxy Design](https://docs.gomods.io/design/proxy/) - what the proxy is and how it works
     - [vgo wiki](https://github.com/golang/go/wiki/vgo) - context and details on how Go dependency management works in general
     - ["Go and Versioning"](https://research.swtch.com/vgo) - long papers on Go dependency management details, internals, etc...
 
 # Built on the Shoulders of Giants
 
-The Athens project would not be possible without the amazing projects it builds on. Please see 
+The Athens project would not be possible without the amazing projects it builds on. Please see
 [SHOULDERS.md](./SHOULDERS.md) to see a list of them.
 
 # Coding Guidlines

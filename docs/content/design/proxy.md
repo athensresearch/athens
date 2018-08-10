@@ -5,7 +5,7 @@ date: 2018-02-11T15:59:56-05:00
 
 ## The Athens Proxy
 
-The Athens project has two components, the [central registry](./REGISTRY.md) and edge proxies.
+The Athens project has two components, the [central registry](/design/registry/) and edge proxies.
 This document details the latter.
 
 ## The Role of the Proxy
