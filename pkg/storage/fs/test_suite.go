@@ -46,6 +46,6 @@ func (ts *TestSuite) StorageHumanReadableName() string {
 }
 
 // Cleanup tears down test
-func (ts *TestSuite) Cleanup() {
-	ts.Require().NoError(ts.fs.RemoveAll(ts.rootDir))
+func (ts *TestSuite) Cleanup() error {
+	return ts.fs.RemoveAll(ts.rootDir)
 }

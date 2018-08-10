@@ -2,6 +2,8 @@ package env
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/gobuffalo/envy"
 )
@@ -56,10 +58,15 @@ func MongoPassword() (string, error) {
 	return env, nil
 }
 
-// MongoConnectionTimeoutWithDefault returns Athens Mongo Storage connection timeout defined by MONGO_CONN_TIMEOUT_SEC.
+// MongoConnectionTimeoutSecWithDefault returns Athens Mongo Storage connection timeout defined by MONGO_CONN_TIMEOUT_SEC.
 // Values are in seconds.
-func MongoConnectionTimeoutWithDefault(value string) string {
-	return envy.Get("MONGO_CONN_TIMEOUT_SEC", value)
+func MongoConnectionTimeoutSecWithDefault(defTimeout int) time.Duration {
+	timeoutConf := envy.Get("MONGO_CONN_TIMEOUT_SEC", strconv.Itoa(defTimeout))
+	timeout, err := strconv.ParseInt(timeoutConf, 10, 32)
+	if err != nil {
+		return time.Duration(defTimeout) * time.Second
+	}
+	return time.Duration(timeout) * time.Second
 }
 
 // MongoSSLWithDefault returns Athens Mongo Storage SSL flag defined by MONGO_SSL.

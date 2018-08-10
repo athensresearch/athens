@@ -4,5 +4,5 @@ package storage
 type TestSuite interface {
 	Storage() Backend
 	StorageHumanReadableName() string
-	Cleanup()
+	Cleanup() error
 }

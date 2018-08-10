@@ -3,6 +3,7 @@ package mongo
 import (
 	"fmt"
 
+	"github.com/globalsign/mgo"
 	"github.com/gobuffalo/suite"
 	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/storage"
@@ -11,11 +12,22 @@ import (
 // TestSuite implements storage.TestSuite interface
 type TestSuite struct {
 	*suite.Model
-	storage storage.Backend
+	storage *ModuleStore
 }
 
 // NewTestSuite creates a common test suite
 func NewTestSuite(model *suite.Model) (storage.TestSuite, error) {
+	ms, err := newTestStore()
+	if err != nil {
+		return nil, err
+	}
+	return &TestSuite{
+		storage: ms,
+		Model:   model,
+	}, err
+}
+
+func newTestStore() (*ModuleStore, error) {
 	muri, err := env.MongoURI()
 	if err != nil {
 		return nil, err
@@ -26,12 +38,7 @@ func NewTestSuite(model *suite.Model) (storage.TestSuite, error) {
 		return nil, fmt.Errorf("Mongo storage is nil")
 	}
 
-	err = mongoStore.Connect()
-
-	return &TestSuite{
-		storage: mongoStore,
-		Model:   model,
-	}, err
+	return mongoStore, mongoStore.Connect()
 }
 
 // Storage retrieves initialized storage backend
@@ -45,5 +52,16 @@ func (ts *TestSuite) StorageHumanReadableName() string {
 }
 
 // Cleanup tears down test
-func (ts *TestSuite) Cleanup() {
+func (ts *TestSuite) Cleanup() error {
+	muri, err := env.MongoURI()
+	if err != nil {
+		return err
+	}
+	timeout := env.MongoConnectionTimeoutSecWithDefault(1)
+	s, err := mgo.DialWithTimeout(muri, timeout)
+	defer s.Close()
+	if err != nil {
+		return err
+	}
+	return s.DB("athens").C("modules").DropCollection()
 }

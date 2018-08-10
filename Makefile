@@ -39,6 +39,8 @@ test-e2e:
 olympus-docker:
 	docker build -t gopackages/olympus -f cmd/olympus/Dockerfile .
 
+bench:
+	./scripts/benchmark.sh
 
 .PHONY: alldeps
 alldeps:

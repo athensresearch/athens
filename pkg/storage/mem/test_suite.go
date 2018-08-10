@@ -32,5 +32,6 @@ func (ts *TestSuite) StorageHumanReadableName() string {
 }
 
 // Cleanup tears down test
-func (ts *TestSuite) Cleanup() {
+func (ts *TestSuite) Cleanup() error {
+	return nil
 }

@@ -42,12 +42,16 @@ func (ts *TestSuite) StorageHumanReadableName() string {
 }
 
 // Cleanup tears down test
-func (ts *TestSuite) Cleanup() {
+func (ts *TestSuite) Cleanup() error {
 	minioClient, _ := minio.New(ts.endpoint, ts.accessKeyID, ts.secretAccessKey, false)
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 	objectCh := minioClient.ListObjectsV2(ts.bucketName, "", true, doneCh)
 	for object := range objectCh {
-		ts.Require().NoError(minioClient.RemoveObject(ts.bucketName, object.Key))
+		//TODO: could return multi error and clean other objects
+		if err := minioClient.RemoveObject(ts.bucketName, object.Key); err != nil {
+			return err
+		}
 	}
+	return nil
 }
