@@ -12,7 +12,7 @@ Run `make setup-dev-env` to install local developer tools and run necessary
 services, such as mongodb, for the end-to-end tests.
 
 ## Unit Tests
-Run `make test-unit` to run the unit tests.
+For further details see [DEVELOPMENT.md](DEVELOPMENT.md#L84)
 
 ## End-to-End Tests
 End-to-End tests (e2e) are tests from the user perspective that validate that
