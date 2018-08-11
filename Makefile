@@ -40,6 +40,7 @@ olympus-docker:
 	docker build -t gomods/olympus -f cmd/olympus/Dockerfile .
 
 .PHONY: proxy-docker
+proxy-docker:
 	# TODO: this needs to change to gomods/proxy
 	docker build -t gomods/athens -f cmd/proxy/Dockerfile .
 
