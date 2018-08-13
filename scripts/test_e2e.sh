@@ -29,6 +29,7 @@ buffalo dev &
 while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000)" != "200" ]]; do sleep 5; done
 
 # Clone our test repo
+TMPDIR=$(mktemp -d)
 TEST_SOURCE=${TMPDIR}happy-path
 rm -fr ${TEST_SOURCE} 2> /dev/null || true
 git clone https://github.com/athens-artifacts/happy-path.git ${TEST_SOURCE}

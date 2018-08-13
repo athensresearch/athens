@@ -13,7 +13,6 @@ env:
     - MINIO_SECRET_KEY=minio123
     - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
     - CODE_COV=1
-    - TMPDIR=/tmp/
     - ATHENS_DIR=${GOPATH}/src/github.com/gomods/athens
 
 before_script:
