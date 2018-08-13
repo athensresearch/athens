@@ -13,7 +13,7 @@ import (
 
 const (
 	// OlympusGlobalEndpoint is a default olympus DNS address
-	OlympusGlobalEndpoint = "olympus.gomods.io"
+	OlympusGlobalEndpoint = "http://localhost:3001"
 	// OlympusGlobalEndpointOverrideKey overrides default olympus settings
 	OlympusGlobalEndpointOverrideKey = "OLYMPUS_GLOBAL_ENDPOINT"
 )

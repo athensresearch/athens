@@ -2,11 +2,11 @@ package module
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/gomods/athens/pkg/config/env"
+	"github.com/gomods/athens/pkg/errors"
 )
 
 var (
@@ -65,11 +65,15 @@ func (f *Filter) AddRule(path string, rule FilterRule) {
 
 // ShouldProcess evaluates path and determines if module should be communicated or not
 func (f *Filter) ShouldProcess(path string) bool {
-	segs := getPathSegments(path)
-	rule := f.shouldProcess(segs...)
-
+	rule := f.Rule(path)
 	// process everything unless it's excluded
 	return rule != Exclude
+}
+
+// Rule returns the filter rule to be applied to the given path
+func (f *Filter) Rule(path string) FilterRule {
+	segs := getPathSegments(path)
+	return f.shouldProcess(segs...)
 }
 
 func (f *Filter) ensurePath(path string) {
@@ -125,7 +129,6 @@ func (f *Filter) initFromConfig() {
 			continue
 		}
 
-		fmt.Printf("SPLIT %v %#v\n", len(split), split)
 		ruleSign := strings.TrimSpace(split[0])
 		rule := Default
 		switch ruleSign {
@@ -133,6 +136,8 @@ func (f *Filter) initFromConfig() {
 			rule = Include
 		case "-":
 			rule = Exclude
+		case "P":
+			rule = Private
 		default:
 			continue
 		}
@@ -167,12 +172,14 @@ func newRule(r FilterRule) ruleNode {
 	return rn
 }
 
+const op errors.Op = "module.getConfigLines"
+
 func getConfigLines() ([]string, error) {
-	configName := env.IncludeExcludeFileName()
+	configName := env.FilterConfigurationFileName()
 
 	f, err := os.Open(configName)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	defer f.Close()
 

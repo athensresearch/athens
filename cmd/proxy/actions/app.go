@@ -116,6 +116,7 @@ func App() (*buffalo.App, error) {
 		app.Stop(err)
 	}
 	app.Use(T.Middleware())
+	app.Use(newFilterMiddleware(mf))
 
 	if err := addProxyRoutes(app, store, mf, lggr); err != nil {
 		err = fmt.Errorf("error adding proxy routes (%s)", err)
