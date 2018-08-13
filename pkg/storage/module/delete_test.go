@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gobuffalo/envy"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -32,11 +31,10 @@ func (d *DeleteTests) TestDeleteTimeout() {
 
 	err := Delete(context.Background(), "mx", "1.1.1", delWithTimeout)
 
-	me := err.(*multierror.Error)
-	r.Equal(3, len(me.WrappedErrors()))
-	r.Contains(me.Error(), "deleting mx.1.1.1.info failed: context deadline exceeded")
-	r.Contains(me.Error(), "deleting mx.1.1.1.zip failed: context deadline exceeded")
-	r.Contains(me.Error(), "deleting mx.1.1.1.mod failed: context deadline exceeded")
+	r.Error(err, "deleter returned at least one error")
+	r.Contains(err.Error(), "deleting mx.1.1.1.info failed: context deadline exceeded")
+	r.Contains(err.Error(), "deleting mx.1.1.1.zip failed: context deadline exceeded")
+	r.Contains(err.Error(), "deleting mx.1.1.1.mod failed: context deadline exceeded")
 }
 
 func (d *DeleteTests) TestDeleteError() {
@@ -44,11 +42,8 @@ func (d *DeleteTests) TestDeleteError() {
 
 	err := Delete(context.Background(), "mx", "1.1.1", delWithErr)
 
-	me := err.(*multierror.Error)
-	r.Equal(3, len(me.WrappedErrors()))
-	r.Contains(me.Error(), "some err")
-	r.Contains(me.Error(), "some err")
-	r.Contains(me.Error(), "some err")
+	r.Error(err, "deleter returned at least one error")
+	r.Contains(err.Error(), "some err")
 }
 
 func delWithTimeout(ctx context.Context, path string) error {

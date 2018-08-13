@@ -5,10 +5,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gomods/athens/pkg/errors"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func (l *storageImpl) List(ctx context.Context, module string) ([]string, error) {
+	const op errors.Op = "minio.List"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.minio.List")
 	defer sp.Finish()
 	dict := make(map[string]struct{})
@@ -19,7 +21,7 @@ func (l *storageImpl) List(ctx context.Context, module string) ([]string, error)
 	objectCh := l.minioClient.ListObjectsV2(l.bucketName, searchPrefix, false, doneCh)
 	for object := range objectCh {
 		if object.Err != nil {
-			return nil, object.Err
+			return nil, errors.E(op, object.Err)
 		}
 		parts := strings.Split(object.Key, "/")
 		ver := parts[len(parts)-2]

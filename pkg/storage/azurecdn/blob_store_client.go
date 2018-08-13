@@ -5,16 +5,16 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
+	"github.com/gomods/athens/pkg/errors"
+	"github.com/opentracing/opentracing-go"
 )
 
 type azureBlobStoreClient struct {
 	containerURL *azblob.ContainerURL
 }
 
-func newBlobStoreClient(accountURL *url.URL, accountName, accountKey, containerName string) (*azureBlobStoreClient, error) {
+func newBlobStoreClient(accountURL *url.URL, accountName, accountKey, containerName string) *azureBlobStoreClient {
 	cred := azblob.NewSharedKeyCredential(accountName, accountKey)
 	pipe := azblob.NewPipeline(cred, azblob.PipelineOptions{})
 	serviceURL := azblob.NewServiceURL(*accountURL, pipe)
@@ -24,10 +24,11 @@ func newBlobStoreClient(accountURL *url.URL, accountName, accountKey, containerN
 	// This container must exist
 	containerURL := serviceURL.NewContainerURL(containerName)
 	cl := &azureBlobStoreClient{containerURL: &containerURL}
-	return cl, nil
+	return cl
 }
 
 func (c *azureBlobStoreClient) UploadWithContext(ctx context.Context, path, contentType string, content io.Reader) error {
+	const op errors.Op = "azurecdn.UploadWithContext"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.azurecdn.UploadWithContext")
 	defer sp.Finish()
 	blobURL := c.containerURL.NewBlockBlobURL(path)
@@ -49,5 +50,8 @@ func (c *azureBlobStoreClient) UploadWithContext(ctx context.Context, path, cont
 		AccessConditions: emptyBlobAccessCond,
 	}
 	_, err := azblob.UploadStreamToBlockBlob(ctx, content, blobURL, uploadStreamOpts)
-	return err
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gobuffalo/envy"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -33,24 +32,18 @@ func (u *UploadTests) TestUploadTimeout() {
 	r := u.Require()
 	rd := bytes.NewReader([]byte("123"))
 	err := Upload(context.Background(), "mx", "1.1.1", rd, rd, rd, uplWithTimeout)
-
-	me := err.(*multierror.Error)
-	r.Equal(3, len(me.WrappedErrors()))
-	r.Contains(me.Error(), "uploading mx.1.1.1.info failed: context deadline exceeded")
-	r.Contains(me.Error(), "uploading mx.1.1.1.zip failed: context deadline exceeded")
-	r.Contains(me.Error(), "uploading mx.1.1.1.mod failed: context deadline exceeded")
+	r.Error(err, "deleter returned at least one error")
+	r.Contains(err.Error(), "uploading mx.1.1.1.info failed: context deadline exceeded")
+	r.Contains(err.Error(), "uploading mx.1.1.1.zip failed: context deadline exceeded")
+	r.Contains(err.Error(), "uploading mx.1.1.1.mod failed: context deadline exceeded")
 }
 
 func (u *UploadTests) TestUploadError() {
 	r := u.Require()
 	rd := bytes.NewReader([]byte("123"))
 	err := Upload(context.Background(), "mx", "1.1.1", rd, rd, rd, uplWithErr)
-
-	me := err.(*multierror.Error)
-	r.Equal(3, len(me.WrappedErrors()))
-	r.Contains(me.Error(), "some err")
-	r.Contains(me.Error(), "some err")
-	r.Contains(me.Error(), "some err")
+	r.Error(err, "deleter returned at least one error")
+	r.Contains(err.Error(), "some err")
 }
 
 func uplWithTimeout(ctx context.Context, path, contentType string, stream io.Reader) error {
