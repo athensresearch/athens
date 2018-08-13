@@ -5,12 +5,18 @@
 # the olympus docker image
 FROM gobuffalo/buffalo:v0.11.0 as builder
 
-RUN mkdir -p $GOPATH/src/github.com/gomods/athens
-WORKDIR $GOPATH/src/github.com/gomods/athens
-ADD . .
+RUN mkdir -p $GOPATH/src/github.com/gomods/athens/cmd/olympus
 WORKDIR $GOPATH/src/github.com/gomods/athens/cmd/olympus
 
-RUN buffalo build -s -o /bin/app
+# this will cache the npm install step, unless package.json changes
+ADD cmd/olympus/package.json .
+ADD cmd/olympus/yarn.lock .
+RUN yarn install --no-progress
+
+WORKDIR $GOPATH/src/github.com/gomods/athens
+ADD . .
+
+RUN cd cmd/olympus && buffalo build -s -o /bin/app
 
 FROM alpine
 RUN apk add --no-cache bash
