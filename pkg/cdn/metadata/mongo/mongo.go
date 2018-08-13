@@ -1,6 +1,9 @@
 package mongo
 
-import "github.com/globalsign/mgo"
+import (
+	"github.com/globalsign/mgo"
+	"github.com/gomods/athens/pkg/errors"
+)
 
 // MetadataStore represents a Mongo backed metadata store.
 type MetadataStore struct {
@@ -19,9 +22,10 @@ func NewStorage(url, dbName string) *MetadataStore {
 
 // Connect conntect the the newly created mongo backend.
 func (m *MetadataStore) Connect() error {
+	const op errors.Op = "mongoCDN.Connect"
 	s, err := mgo.Dial(m.url)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	m.session = s
 
@@ -35,5 +39,9 @@ func (m *MetadataStore) Connect() error {
 		Sparse:     true,
 	}
 	c := m.session.DB(m.db).C(m.col)
-	return c.EnsureIndex(index)
+	err = c.EnsureIndex(index)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }

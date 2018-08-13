@@ -5,13 +5,15 @@ import (
 
 	"github.com/gobuffalo/uuid"
 	"github.com/gomods/athens/pkg/cdn/metadata"
+	"github.com/gomods/athens/pkg/errors"
 )
 
 // Save stores a module in mongo storage.
 func (s *MetadataStore) Save(module, redirectURL string) error {
+	const op errors.Op = "mongoCDN.Save"
 	id, err := uuid.NewV4()
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	t := time.Now().UTC()
 	m := &metadata.CDNMetadataEntry{
@@ -23,5 +25,9 @@ func (s *MetadataStore) Save(module, redirectURL string) error {
 	}
 
 	c := s.session.DB(s.db).C(s.col)
-	return c.Insert(m)
+	err = c.Insert(m)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
