@@ -149,9 +149,6 @@ func getWorker(ctx context.Context, s storage.Backend, mf *module.Filter) (worke
 		MaxFails: env.WorkerMaxFails(),
 	}
 
-	if err := w.RegisterWithOptions(FetcherWorkerName, opts, GetProcessCacheMissJob(ctx, s, w, mf)); err != nil {
-		return nil, err
-	}
+	return nil, w.RegisterWithOptions(FetcherWorkerName, opts, GetProcessCacheMissJob(ctx, s, w, mf))
 
-	return w, w.RegisterWithOptions(ReporterWorkerName, opts, GetCacheMissReporterJob(w, mf))
 }

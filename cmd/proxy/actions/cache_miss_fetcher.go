@@ -26,10 +26,6 @@ func GetProcessCacheMissJob(ctx context.Context, s storage.Backend, w worker.Wor
 			return err
 		}
 
-		if !mf.ShouldProcess(mod) {
-			return module.NewErrModuleExcluded(mod)
-		}
-
 		if s.Exists(ctx, mod, version) {
 			return nil
 		}
