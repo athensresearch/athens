@@ -53,7 +53,7 @@ func (s *ModuleSuite) TestGoGetFetcherFetch() {
 	r.Nil(ver)
 }
 
-func ExampleFetch() {
+func ExampleFetcher() {
 	repoURI := "github.com/arschles/assert"
 	version := "v1.0.0"
 	goBinaryName := env.GoBinPath()

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gomods/athens/pkg/config"
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
 	multierror "github.com/hashicorp/go-multierror"
 )
@@ -21,6 +22,7 @@ type Downloader func(ctx context.Context, timeout time.Duration, baseURL, module
 // Download downloads the module/version from url. Returns a storage.Version
 // representing the downloaded module/version or a non-nil error if something went wrong
 func Download(ctx context.Context, timeout time.Duration, baseURL, module, version string) (*storage.Version, error) {
+	const op errors.Op = "module.Download"
 	tctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -77,18 +79,18 @@ func Download(ctx context.Context, timeout time.Duration, baseURL, module, versi
 	}()
 	wg.Wait()
 
-	var errors error
+	var errs error
 	if infoErr != nil {
-		errors = multierror.Append(errors, infoErr)
+		errs = multierror.Append(errs, infoErr)
 	}
 	if modErr != nil {
-		errors = multierror.Append(errors, modErr)
+		errs = multierror.Append(errs, modErr)
 	}
 	if zipErr != nil {
-		errors = multierror.Append(errors, zipErr)
+		errs = multierror.Append(errs, zipErr)
 	}
-	if errors != nil {
-		return nil, errors
+	if errs != nil {
+		return nil, errors.E(op, errs)
 	}
 
 	ver := storage.Version{
@@ -105,31 +107,34 @@ func getBytes(rb io.ReadCloser) ([]byte, error) {
 }
 
 func getResBody(req *http.Request, timeout time.Duration) (io.ReadCloser, error) {
+	const op errors.Op = "module.getResBody"
 	client := http.Client{Timeout: timeout}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	return res.Body, nil
 }
 
 func getRequest(ctx context.Context, baseURL, module, version, ext string) (*http.Request, error) {
+	const op errors.Op = "module.getRequest"
 	u, err := join(baseURL, module, version, ext)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	req = req.WithContext(ctx)
 	return req, nil
 }
 
 func join(baseURL string, module, version, ext string) (string, error) {
+	const op errors.Op = "module.join"
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return "", err
+		return "", errors.E(op, err)
 	}
 	packageVersionedName := config.PackageVersionedName(module, version, ext)
 	u.Path = path.Join(u.Path, packageVersionedName)

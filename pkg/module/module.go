@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gomods/athens/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/afero"
 )
@@ -34,9 +35,10 @@ func MakeZip(fs afero.Fs, dir, module, version string) *io.PipeReader {
 }
 
 func walkFunc(fs afero.Fs, zw *zip.Writer, dir, module, version string, ignoreParser ignore.IgnoreParser) filepath.WalkFunc {
+	const op errors.Op = "module.walkFunc"
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil || info == nil || info.IsDir() {
-			return err
+			return errors.E(op, err)
 		}
 
 		fileName := getFileName(path, dir, module, version)
@@ -47,16 +49,19 @@ func walkFunc(fs afero.Fs, zw *zip.Writer, dir, module, version string, ignorePa
 
 		fileContent, err := afero.ReadFile(fs, path)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 
 		f, err := zw.Create(fileName)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 
 		_, err = f.Write(fileContent)
-		return err
+		if err != nil {
+			return errors.E(op, err)
+		}
+		return nil
 	}
 }
 
