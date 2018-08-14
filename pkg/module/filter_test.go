@@ -55,16 +55,16 @@ func (t *FilterTests) Test_OnlyAllowed() {
 	r.Equal(Exclude, f.Rule("bitbucket.com/a/b"))
 }
 
-func (t *FilterTests) Test_Private() {
+func (t *FilterTests) Test_Direct() {
 	r := t.Require()
 
 	f := NewFilter()
 	f.AddRule("github.com/a/b/c", Exclude)
-	f.AddRule("github.com/a/b", Private)
+	f.AddRule("github.com/a/b", Direct)
 	f.AddRule("github.com/a", Include)
 	f.AddRule("", Exclude)
 
 	r.Equal(Include, f.Rule("github.com/a"))
-	r.Equal(Private, f.Rule("github.com/a/b"))
+	r.Equal(Direct, f.Rule("github.com/a/b"))
 	r.Equal(Exclude, f.Rule("github.com/a/b/c/d"))
 }

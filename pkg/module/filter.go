@@ -134,8 +134,8 @@ func (f *Filter) initFromConfig() {
 			rule = Include
 		case "-":
 			rule = Exclude
-		case "P":
-			rule = Private
+		case "D":
+			rule = Direct
 		default:
 			continue
 		}

@@ -28,7 +28,7 @@ func newTestFilter() *module.Filter {
 	f := module.NewFilter()
 	f.AddRule("github.com/gomods/athens/", module.Include)
 	f.AddRule("github.com/athens-artifacts/no-tags", module.Exclude)
-	f.AddRule("github.com/athens-artifacts", module.Private)
+	f.AddRule("github.com/athens-artifacts", module.Direct)
 	return f
 }
 
