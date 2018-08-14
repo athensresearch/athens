@@ -63,17 +63,15 @@ func (f *Filter) AddRule(path string, rule FilterRule) {
 	latest.next[last] = rn
 }
 
-// ShouldProcess evaluates path and determines if module should be communicated or not
-func (f *Filter) ShouldProcess(path string) bool {
-	rule := f.Rule(path)
-	// process everything unless it's excluded
-	return rule != Exclude
-}
-
 // Rule returns the filter rule to be applied to the given path
 func (f *Filter) Rule(path string) FilterRule {
 	segs := getPathSegments(path)
-	return f.shouldProcess(segs...)
+	rule := f.getAssociatedRule(segs...)
+	if rule == Default {
+		rule = Include
+	}
+
+	return rule
 }
 
 func (f *Filter) ensurePath(path string) {
@@ -88,7 +86,7 @@ func (f *Filter) ensurePath(path string) {
 	}
 }
 
-func (f *Filter) shouldProcess(path ...string) FilterRule {
+func (f *Filter) getAssociatedRule(path ...string) FilterRule {
 	if len(path) == 0 {
 		return f.root.rule
 	}
