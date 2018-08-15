@@ -91,7 +91,7 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	disableCgo := "CGO_ENABLED=0"
 	enableGoModules := "GO111MODULE=on"
 
-	cmd := exec.Command(goBinaryName, "get", fullURI)
+	cmd := exec.Command(goBinaryName, "mod", "download", fullURI)
 	// PATH is needed for vgo to recognize vcs binaries
 	// this breaks windows.
 	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), gopathEnv, cacheEnv, disableCgo, enableGoModules}
