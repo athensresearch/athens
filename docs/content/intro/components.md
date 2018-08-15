@@ -7,7 +7,7 @@ From a very high-level view, we recognize 4 major components of the system.
 
 ### Client 
 
-The client is a user, powered by go binary with module support. At the moment of writing this document, it is `go1.11beta3`
+The client is a user, powered by go binary with module support. At the moment of writing this document, it is `go1.11rc1`
 
 ### VCS 
 

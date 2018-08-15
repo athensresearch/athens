@@ -20,7 +20,7 @@ So, if you look back to "architecture" above, there are a few discrete "things" 
 
 ## Does Athens integrate with the go toolchain?
 
-Athens is currently supported by the Go 1.11beta3 toolchain via the [download protocol](/intro/protocol/).
+Athens is currently supported by the Go 1.11rc1 toolchain via the [download protocol](/intro/protocol/).
 
 For the TL;DR of the protocol, it's a REST API that lets the go toolchain (i.e. go get) see lists of versions and fetch source code for a specific version.
 

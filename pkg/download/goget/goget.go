@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/gomods/athens/pkg/config"
@@ -78,13 +77,7 @@ func (gg *goget) Latest(ctx context.Context, mod string) (*storage.RevInfo, erro
 		return nil, errors.E(op, err)
 	}
 
-	pseudoInfo := strings.Split(lr.Version, "-")
-	if len(pseudoInfo) < 3 {
-		return nil, errors.E(op, fmt.Errorf("malformed pseudoInfo %v", lr.Version))
-	}
 	return &storage.RevInfo{
-		Name:    pseudoInfo[2],
-		Short:   pseudoInfo[2],
 		Time:    lr.Time,
 		Version: lr.Version,
 	}, nil
