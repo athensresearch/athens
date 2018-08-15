@@ -19,8 +19,8 @@ type Filter struct {
 }
 
 // NewFilter creates new filter based on rules defined in a configuration file
-// WARNING: this is not concurrency safe
-// Configuration consists of two operations + for include and - for exclude
+// WARNING: this is not concurrently safe
+// Configuration consists of two operations: + for include and - for exclude
 // e.g.
 //    - github.com/a
 //    + github.com/a/b
@@ -170,9 +170,8 @@ func newRule(r FilterRule) ruleNode {
 	return rn
 }
 
-const op errors.Op = "module.getConfigLines"
-
 func getConfigLines() ([]string, error) {
+	const op errors.Op = "module.getConfigLines"
 	configName := env.FilterConfigurationFileName()
 
 	f, err := os.Open(configName)
