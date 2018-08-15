@@ -9,12 +9,13 @@ import (
 
 type MongoTests struct {
 	suite.Suite
-	storage storage.BackendConnector
+	storage storage.Backend
 }
 
 func (d *MongoTests) SetupTest() {
-	store := NewStorage("mongodb://127.0.0.1:27017")
-	store.Connect()
+	store, err := NewStorage("mongodb://127.0.0.1:27017")
+
+	d.NoError(err)
 
 	store.s.DB(store.d).C(store.c).RemoveAll(nil)
 	d.storage = store

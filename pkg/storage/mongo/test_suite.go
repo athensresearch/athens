@@ -33,12 +33,12 @@ func newTestStore() (*ModuleStore, error) {
 		return nil, err
 	}
 
-	mongoStore := NewStorage(muri)
-	if mongoStore == nil {
-		return nil, fmt.Errorf("Mongo storage is nil")
+	mongoStore, err := NewStorage(muri)
+	if err != nil {
+		return nil, fmt.Errorf("Not able to connect to mongo storage")
 	}
 
-	return mongoStore, mongoStore.Connect()
+	return mongoStore, nil
 }
 
 // Storage retrieves initialized storage backend

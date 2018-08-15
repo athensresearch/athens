@@ -48,8 +48,5 @@ func getStorage() (storage.Backend, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating storage (%s)", err)
 	}
-	if err := storage.Connect(); err != nil {
-		return nil, fmt.Errorf("unable to connect to backing store: %v", err)
-	}
 	return storage, nil
 }

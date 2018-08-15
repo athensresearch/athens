@@ -88,8 +88,3 @@ func (s *Storage) BaseURL() *url.URL {
 func (s *Storage) Close() error {
 	return s.closeStorage()
 }
-
-// Connect is noop.
-func (s *Storage) Connect() error {
-	return nil
-}

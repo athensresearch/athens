@@ -12,11 +12,11 @@ import (
 
 var (
 	l          sync.Mutex
-	memStorage storage.BackendConnector
+	memStorage storage.Backend
 )
 
 // NewStorage creates new in-memory storage using the afero.NewMemMapFs() in memory file system
-func NewStorage() (storage.BackendConnector, error) {
+func NewStorage() (storage.Backend, error) {
 	const op errors.Op = "mem.NewStorage"
 	l.Lock()
 	defer l.Unlock()
@@ -35,6 +35,5 @@ func NewStorage() (storage.BackendConnector, error) {
 	if err != nil {
 		return nil, errors.E(op, fmt.Errorf("could not create storage from memory fs (%s)", err))
 	}
-	memStorage = storage.NoOpBackendConnector(s)
-	return memStorage, nil
+	return s, nil
 }

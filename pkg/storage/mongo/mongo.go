@@ -16,18 +16,25 @@ type ModuleStore struct {
 	url string
 }
 
-// NewStorage returns an unconnected Mongo backed storage
-// that satisfies the Backend interface.  You must call
-// Connect() on the returned store before using it.
-func NewStorage(url string) *ModuleStore {
-	return &ModuleStore{url: url}
+// NewStorage returns a connected Mongo backed storage
+// that satisfies the Backend interface.
+func NewStorage(url string) (*ModuleStore, error) {
+	const op errors.Op = "fs.NewStorage"
+	ms := &ModuleStore{url: url}
+
+	err := ms.connect()
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return ms, nil
+
 }
 
-// Connect conntect the the newly created mongo backend.
-func (m *ModuleStore) Connect() error {
-	const op errors.Op = "mongo.Connect"
+func (m *ModuleStore) connect() error {
+	const op errors.Op = "mongo.connect"
 	timeout := env.MongoConnectionTimeoutSecWithDefault(1)
 	s, err := mgo.DialWithTimeout(m.url, timeout)
+
 	if err != nil {
 		return errors.E(op, err)
 	}

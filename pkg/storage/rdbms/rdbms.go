@@ -2,6 +2,7 @@ package rdbms
 
 import (
 	"github.com/gobuffalo/pop"
+	"github.com/gomods/athens/pkg/errors"
 )
 
 // ModuleStore represents a rdbms(postgres, mysql, sqlite, cockroachdb) backed storage backend.
@@ -10,28 +11,31 @@ type ModuleStore struct {
 	connectionName string // settings name from database.yml
 }
 
-// NewRDBMSStorage  returns an unconnected RDBMS Module Storage
-// that satisfies the Storage interface. You must call
-// Connect() on the returned store before using it.
-// connectionName
-func NewRDBMSStorage(connectionName string) *ModuleStore {
-	return &ModuleStore{
+// NewRDBMSStorage  returns a connected RDBMS Module Storage
+// that satisfies the Storage interface.
+func NewRDBMSStorage(connectionName string) (*ModuleStore, error) {
+	const op errors.Op = "rdbms.NewRDBMSStorage"
+
+	ms := &ModuleStore{
 		connectionName: connectionName,
 	}
+	err := ms.connect()
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return ms, nil
 }
 
 // NewRDBMSStorageWithConn  returns a connected RDBMS Module Storage
-// that satisfies the Storage interface. You must call
-// Connect() on the returned store before using it.
-// connectionName
+// that satisfies the Storage interface.
 func NewRDBMSStorageWithConn(connection *pop.Connection) *ModuleStore {
-	return &ModuleStore{
+	ms := &ModuleStore{
 		conn: connection,
 	}
+	return ms
 }
 
-// Connect creates connection to rdmbs backend.
-func (r *ModuleStore) Connect() error {
+func (r *ModuleStore) connect() error {
 	c, err := pop.Connect(r.connectionName)
 	if err != nil {
 		return err

@@ -17,7 +17,7 @@ import (
 )
 
 // GetStorage returns storage backend based on env configuration
-func GetStorage() (storage.BackendConnector, error) {
+func GetStorage() (storage.Backend, error) {
 	storageType := env.StorageTypeWithDefault("memory")
 	var storageRoot string
 	var err error
@@ -30,7 +30,7 @@ func GetStorage() (storage.BackendConnector, error) {
 		if err != nil {
 			return nil, err
 		}
-		return mongo.NewStorage(storageRoot), nil
+		return mongo.NewStorage(storageRoot)
 	case "disk":
 		storageRoot, err = env.DiskRoot()
 		if err != nil {
@@ -40,13 +40,13 @@ func GetStorage() (storage.BackendConnector, error) {
 		if err != nil {
 			return nil, fmt.Errorf("could not create new storage from os fs (%s)", err)
 		}
-		return storage.NoOpBackendConnector(s), nil
+		return s, nil
 	case "postgres", "sqlite", "cockroach", "mysql":
 		storageRoot, err = env.RdbmsName()
 		if err != nil {
 			return nil, err
 		}
-		return rdbms.NewRDBMSStorage(storageRoot), nil
+		return rdbms.NewRDBMSStorage(storageRoot)
 	case "minio":
 		endpoint, err := env.MinioEndpoint()
 		if err != nil {
@@ -65,8 +65,7 @@ func GetStorage() (storage.BackendConnector, error) {
 		if useSSLVar := env.MinioSSLWithDefault("yes"); strings.ToLower(useSSLVar) == "no" {
 			useSSL = false
 		}
-		s, err := minio.NewStorage(endpoint, accessKeyID, secretAccessKey, bucketName, useSSL)
-		return storage.NoOpBackendConnector(s), err
+		return minio.NewStorage(endpoint, accessKeyID, secretAccessKey, bucketName, useSSL)
 	case "gcp":
 		return gcp.New(context.Background())
 	default:

@@ -9,7 +9,7 @@ import (
 
 type RDBMSTestSuite struct {
 	*suite.Model
-	storage storage.BackendConnector
+	storage storage.Backend
 }
 
 func (rd *RDBMSTestSuite) SetupTest() {
