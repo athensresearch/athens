@@ -47,7 +47,7 @@ return registryDetails.baseURL
 
 The important part of this algorithm is `lookupOnRegistry`. That function queries an endpoint on the registry that either:
 
-- Returns 404 if it has `MxV1` in the registry
+- Returns 404 if it doesn't have `MxV1` in the registry
 - Returns the base URL for MxV1 if it has `MxV1` in the registry
 
 Finally, if `MxV1` is fetched from a registry server, a background job will be created to periodically check `MxV1` for deletions and/or deprecations. In the event that one happens, the proxy will delete it from the cache.
