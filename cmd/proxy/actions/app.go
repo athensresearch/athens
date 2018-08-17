@@ -114,7 +114,10 @@ func App() (*buffalo.App, error) {
 	}
 	app.Use(T.Middleware())
 	app.Use(newFilterMiddleware(mf))
-
+	user, pass, ok := env.BasicAuth()
+	if ok {
+		app.Use(basicAuth(user, pass))
+	}
 	if err := addProxyRoutes(app, store, mf, lggr); err != nil {
 		err = fmt.Errorf("error adding proxy routes (%s)", err)
 		return nil, err
