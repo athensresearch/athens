@@ -113,7 +113,9 @@ func App() (*buffalo.App, error) {
 		app.Stop(err)
 	}
 	app.Use(T.Middleware())
-	app.Use(newFilterMiddleware(mf))
+	if !env.FilterOff() {
+		app.Use(newFilterMiddleware(mf))
+	}
 	user, pass, ok := env.BasicAuth()
 	if ok {
 		app.Use(basicAuth(user, pass))
