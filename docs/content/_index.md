@@ -40,7 +40,7 @@ $env:GOPROXY = "http://127.0.0.1:3000"
 ```
 
 
-Now, you when you build and run this example application, **go** will fetch dependencies via Athens!
+Now, when you build and run this example application, **go** will fetch dependencies via Athens!
 
 ```console
 $ git clone https://github.com/athens-artifacts/happy-path.git
