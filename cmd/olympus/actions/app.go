@@ -114,6 +114,7 @@ func App(config *AppConfig) (*buffalo.App, error) {
 	app.GET("/eventlog/{sequence_id}", eventlogHandler(config.EventLog))
 	app.POST("/cachemiss", cachemissHandler(w))
 	app.POST("/push", pushNotificationHandler(w))
+	app.GET("/healthz", healthHandler)
 
 	// Download Protocol
 	gg, err := goget.New()

@@ -14,6 +14,7 @@ func addProxyRoutes(
 	l *log.Logger,
 ) error {
 	app.GET("/", proxyHomeHandler)
+	app.GET("/healthz", healthHandler)
 
 	// Download Protocol
 	gg, err := goget.New()
