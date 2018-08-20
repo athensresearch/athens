@@ -15,7 +15,7 @@ import (
 type input struct {
 	name          string
 	cloudProvider string
-	level         string
+	level         logrus.Level
 	fields        logrus.Fields
 	logFunc       func(e Entry)
 	output        string
@@ -25,7 +25,7 @@ var testCases = []input{
 	{
 		name:          "gcp_debug",
 		cloudProvider: "GCP",
-		level:         "debug",
+		level:         logrus.DebugLevel,
 		fields:        logrus.Fields{},
 		logFunc:       func(e Entry) { e.Infof("info message") },
 		output:        `{"message":"info message","severity":"info","timestamp":"%v"}` + "\n",
@@ -33,7 +33,7 @@ var testCases = []input{
 	{
 		name:          "gcp_error",
 		cloudProvider: "GCP",
-		level:         "debug",
+		level:         logrus.DebugLevel,
 		fields:        logrus.Fields{},
 		logFunc:       func(e Entry) { e.Errorf("err message") },
 		output:        `{"message":"err message","severity":"error","timestamp":"%v"}` + "\n",
@@ -41,7 +41,7 @@ var testCases = []input{
 	{
 		name:          "gcp_empty",
 		cloudProvider: "GCP",
-		level:         "error",
+		level:         logrus.ErrorLevel,
 		fields:        logrus.Fields{},
 		logFunc:       func(e Entry) { e.Infof("info message") },
 		output:        ``,
@@ -49,7 +49,7 @@ var testCases = []input{
 	{
 		name:          "gcp_fields",
 		cloudProvider: "GCP",
-		level:         "debug",
+		level:         logrus.DebugLevel,
 		fields:        logrus.Fields{"field1": "value1", "field2": 2},
 		logFunc:       func(e Entry) { e.Debugf("debug message") },
 		output:        `{"field1":"value1","field2":2,"message":"debug message","severity":"debug","timestamp":"%v"}` + "\n",
@@ -57,7 +57,7 @@ var testCases = []input{
 	{
 		name:          "gcp_logs",
 		cloudProvider: "GCP",
-		level:         "debug",
+		level:         logrus.DebugLevel,
 		fields:        logrus.Fields{},
 		logFunc:       func(e Entry) { e.Warnf("warn message") },
 		output:        `{"message":"warn message","severity":"warning","timestamp":"%v"}` + "\n",
@@ -65,7 +65,7 @@ var testCases = []input{
 	{
 		name:          "default",
 		cloudProvider: "default",
-		level:         "debug",
+		level:         logrus.DebugLevel,
 		fields:        logrus.Fields{"xyz": "abc", "abc": "xyz"},
 		logFunc:       func(e Entry) { e.Warnf("warn message") },
 		output:        `{"abc":"xyz","level":"warning","msg":"warn message","time":"%v","xyz":"abc"}` + "\n",
