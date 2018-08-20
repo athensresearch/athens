@@ -83,6 +83,9 @@ func App() (*buffalo.App, error) {
 		WorkerOff:   true, // TODO(marwan): turned off until worker is being used.
 		Logger:      log.Buffalo(),
 	})
+	if prefix := env.AthensPathPrefix(); prefix != "" {
+		app = app.Group(prefix)
+	}
 
 	// Automatically redirect to SSL
 	app.Use(ssl.ForceSSL(secure.Options{
