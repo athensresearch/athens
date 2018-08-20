@@ -74,9 +74,5 @@ func (r *Registry) SetPointer(deploymentID, pointer string) error {
 	}
 
 	enc := json.NewEncoder(f)
-	if err := enc.Encode(&data); err != nil {
-		return err
-	}
-
-	return nil
+	return enc.Encode(&data)
 }
