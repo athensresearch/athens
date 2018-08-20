@@ -66,6 +66,10 @@ func App() (*buffalo.App, error) {
 		return nil, err
 	}
 
+	// mount .netrc to home dir
+	// to have access to private repos.
+	initializeNETRC()
+
 	worker, err := getWorker(ctx, store)
 	if err != nil {
 		return nil, err
