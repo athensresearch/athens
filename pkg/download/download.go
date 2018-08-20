@@ -3,6 +3,7 @@ package download
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
@@ -33,13 +34,44 @@ type Protocol interface {
 type protocol struct {
 	s  storage.Backend
 	dp Protocol
+	ch chan *job
+}
+
+type job struct {
+	mod, ver string
+	done     chan error
 }
 
 // New takes an upstream Protocol and storage
 // it always prefers storage, otherwise it goes to upstream
 // and fills the storage with the results.
-func New(dp Protocol, s storage.Backend) Protocol {
-	return &protocol{dp: dp, s: s}
+func New(dp Protocol, s storage.Backend, workers int) Protocol {
+	ch := make(chan *job)
+	p := &protocol{dp: dp, s: s, ch: ch}
+	p.start(workers)
+	return p
+}
+
+func (p *protocol) start(numWorkers int) {
+	for i := 0; i < numWorkers; i++ {
+		go p.listen()
+	}
+}
+
+func (p *protocol) listen() {
+	for j := range p.ch {
+		j.done <- p.fillCache(j.mod, j.ver)
+	}
+}
+
+func (p *protocol) request(mod, ver string) error {
+	j := &job{
+		mod:  mod,
+		ver:  ver,
+		done: make(chan error),
+	}
+	p.ch <- j
+	return <-j.done
 }
 
 func (p *protocol) List(ctx context.Context, mod string) ([]string, error) {
@@ -50,7 +82,7 @@ func (p *protocol) Info(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.Info"
 	info, err := p.s.Info(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		err = p.fillCache(ctx, mod, ver)
+		err = p.request(mod, ver)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}
@@ -63,8 +95,10 @@ func (p *protocol) Info(ctx context.Context, mod, ver string) ([]byte, error) {
 	return info, nil
 }
 
-func (p *protocol) fillCache(ctx context.Context, mod, ver string) error {
+func (p *protocol) fillCache(mod, ver string) error {
 	const op errors.Op = "protocol.fillCache"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
 	v, err := p.dp.Version(ctx, mod, ver)
 	if err != nil {
 		return errors.E(op, err)
@@ -92,7 +126,7 @@ func (p *protocol) GoMod(ctx context.Context, mod, ver string) ([]byte, error) {
 	const op errors.Op = "protocol.GoMod"
 	goMod, err := p.s.GoMod(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		err = p.fillCache(ctx, mod, ver)
+		err = p.request(mod, ver)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}
@@ -109,7 +143,7 @@ func (p *protocol) Zip(ctx context.Context, mod, ver string) (io.ReadCloser, err
 	const op errors.Op = "protocol.Zip"
 	zip, err := p.s.Zip(ctx, mod, ver)
 	if errors.IsNotFoundErr(err) {
-		err = p.fillCache(ctx, mod, ver)
+		err = p.request(mod, ver)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}

@@ -121,7 +121,7 @@ func App(config *AppConfig) (*buffalo.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	dp := download.New(gg, config.Storage)
+	dp := download.New(gg, config.Storage, env.GoGetWorkers())
 	opts := &download.HandlerOpts{Protocol: dp, Logger: lggr, Engine: renderEng}
 	download.RegisterHandlers(app, opts)
 
