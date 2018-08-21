@@ -18,7 +18,7 @@ func TestMongo(t *testing.T) {
 }
 
 func (m *MongoTests) SetupTest() {
-	store, err := NewLog("mongodb://127.0.0.1:27017")
+	store, err := NewLog("mongodb://127.0.0.1:27017", "")
 	if err != nil {
 		panic(err)
 	}

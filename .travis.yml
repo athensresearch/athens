@@ -11,7 +11,7 @@ env:
     - GO_ENV=test_postgres
     - MINIO_ACCESS_KEY=minio
     - MINIO_SECRET_KEY=minio123
-    - ATHENS_MONGO_STORAGE_URL=mongodb://127.0.0.1:27017
+    - ATHENS_MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017
     - CODE_COV=1
     - ATHENS_DIR=${GOPATH}/src/github.com/gomods/athens
 

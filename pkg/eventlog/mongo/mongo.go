@@ -1,39 +1,46 @@
 package mongo
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"net"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/eventlog"
 )
 
 // Log is event log fetched from backing mongo database
 type Log struct {
-	s   *mgo.Session
-	db  string // database
-	col string // collection
-	url string
+	s        *mgo.Session
+	db       string // database
+	col      string // collection
+	url      string
+	certPath string
 }
 
 // NewLog creates event log from backing mongo database
-func NewLog(url string) (*Log, error) {
-	return NewLogWithCollection(url, "eventlog")
+func NewLog(url, certPath string) (*Log, error) {
+	return NewLogWithCollection(url, certPath, "eventlog")
 }
 
 // NewLogWithCollection creates event log from backing mongo database
-func NewLogWithCollection(url, collection string) (*Log, error) {
+func NewLogWithCollection(url, certPath, collection string) (*Log, error) {
 	m := &Log{
-		url: url,
-		col: collection,
-		db:  "athens",
+		url:      url,
+		col:      collection,
+		db:       "athens",
+		certPath: certPath,
 	}
 	return m, m.Connect()
 }
 
 // Connect establishes a session to the mongo cluster.
 func (m *Log) Connect() error {
-	s, err := mgo.Dial(m.url)
+	s, err := m.newSession()
 	if err != nil {
 		return err
 	}
@@ -107,4 +114,37 @@ func (m *Log) Clear(id string) error {
 
 	_, err := c.RemoveAll(bson.M{"_id": bson.M{"$lte": id}})
 	return err
+}
+
+func (m *Log) newSession() (*mgo.Session, error) {
+	tlsConfig := &tls.Config{}
+
+	dialInfo, err := mgo.ParseURL(m.url)
+	if err != nil {
+		return nil, err
+	}
+
+	dialInfo.Timeout = env.MongoConnectionTimeoutSecWithDefault(1)
+
+	if m.certPath != "" {
+		roots := x509.NewCertPool()
+		cert, err := ioutil.ReadFile(m.certPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if ok := roots.AppendCertsFromPEM(cert); !ok {
+			return nil, fmt.Errorf("failed to parse certificate from: %s", m.certPath)
+		}
+
+		// TODO: Support for custom CAs #540
+		tlsConfig.InsecureSkipVerify = true
+		tlsConfig.ClientCAs = roots
+
+		dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+			return tls.Dial("tcp", addr.String(), tlsConfig)
+		}
+	}
+
+	return mgo.DialWithInfo(dialInfo)
 }

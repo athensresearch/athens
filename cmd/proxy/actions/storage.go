@@ -26,11 +26,13 @@ func GetStorage() (storage.Backend, error) {
 	case "memory":
 		return mem.NewStorage()
 	case "mongo":
-		storageRoot, err = env.MongoURI()
+		connectionString, err := env.MongoConnectionString()
 		if err != nil {
 			return nil, err
 		}
-		return mongo.NewStorage(storageRoot)
+
+		certPath := env.MongoCertPath()
+		return mongo.NewStorageWithCert(connectionString, certPath)
 	case "disk":
 		storageRoot, err = env.DiskRoot()
 		if err != nil {

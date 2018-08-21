@@ -8,14 +8,20 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
-// MongoURI returns Athens Mongo Storage URI defined by ATHENS_MONGO_STORAGE_URL
-func MongoURI() (string, error) {
-	env, err := envy.MustGet("ATHENS_MONGO_STORAGE_URL")
+// MongoConnectionString returns Athens Mongo Storage connection string defined by ATHENS_MONGO_CONNECTION_STRING
+func MongoConnectionString() (string, error) {
+	env, err := envy.MustGet("ATHENS_MONGO_CONNECTION_STRING")
 	if err != nil {
-		return "", fmt.Errorf("missing mongo URL: %s", err)
+		return "", fmt.Errorf("missing mongo connection string: %s", err)
 	}
 
 	return env, nil
+}
+
+// MongoCertPath returns Athens Mongo Storage cert path string defined by ATHENS_MONGO_CERT_PATH
+func MongoCertPath() string {
+	env := envy.Get("ATHENS_MONGO_CERT_PATH", "")
+	return env
 }
 
 // MongoHost returns Athens Mongo host defined by MONGO_HOST
