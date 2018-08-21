@@ -1,4 +1,4 @@
-package actions
+package middleware
 
 import (
 	"net/http"
@@ -7,18 +7,22 @@ import (
 
 	"github.com/bketelsen/buffet"
 	"github.com/gobuffalo/buffalo"
+	"github.com/gomods/athens/pkg/config/env"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/module"
 	"github.com/gomods/athens/pkg/paths"
 )
 
-func newFilterMiddleware(mf *module.Filter) buffalo.MiddlewareFunc {
+// NewFilterMiddleware builds a middleware function that implements the filters configured in
+// the filter file.
+func NewFilterMiddleware(mf *module.Filter) buffalo.MiddlewareFunc {
 	const op errors.Op = "actions.FilterMiddleware"
 
 	return func(next buffalo.Handler) buffalo.Handler {
 		return func(c buffalo.Context) error {
 			sp := buffet.SpanFromContext(c).SetOperationName("filterMiddleware")
 			defer sp.Finish()
+
 			mod, err := paths.GetModule(c)
 
 			if err != nil {
@@ -56,5 +60,5 @@ func isPseudoVersion(version string) bool {
 }
 
 func redirectToOlympusURL(u *url.URL) string {
-	return strings.TrimSuffix(GetOlympusEndpoint(), "/") + u.Path
+	return strings.TrimSuffix(env.GetOlympusEndpoint(), "/") + u.Path
 }

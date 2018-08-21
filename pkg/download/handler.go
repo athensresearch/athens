@@ -31,7 +31,6 @@ func LogEntryHandler(ph ProtocolHandler, opts *HandlerOpts) buffalo.Handler {
 			"http-path":   req.URL.Path,
 			"http-url":    req.URL.String(),
 		})
-
 		handler := ph(opts.Protocol, ent, opts.Engine)
 
 		return handler(c)

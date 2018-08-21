@@ -7,9 +7,19 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
+const (
+	// OlympusGlobalEndpoint is a default olympus DNS address
+	OlympusGlobalEndpoint = "http://localhost:3001"
+)
+
 // OlympusGlobalEndpointWithDefault returns Olympus global endpoint defined by OLYMPUS_GLOBAL_ENDPOINT.
 func OlympusGlobalEndpointWithDefault(value string) string {
 	return envy.Get("OLYMPUS_GLOBAL_ENDPOINT", value)
+}
+
+// GetOlympusEndpoint returns global endpoint with override in mind
+func GetOlympusEndpoint() string {
+	return OlympusGlobalEndpointWithDefault(OlympusGlobalEndpoint)
 }
 
 // AthensMaxConcurrency retrieves maximal level of concurrency based on ATHENS_MAX_CONCURRENCY.

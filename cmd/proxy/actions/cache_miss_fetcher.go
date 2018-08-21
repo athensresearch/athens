@@ -10,13 +10,6 @@ import (
 	olympusStore "github.com/gomods/athens/pkg/storage/olympus"
 )
 
-const (
-	// OlympusGlobalEndpoint is a default olympus DNS address
-	OlympusGlobalEndpoint = "http://localhost:3001"
-	// OlympusGlobalEndpointOverrideKey overrides default olympus settings
-	OlympusGlobalEndpointOverrideKey = "OLYMPUS_GLOBAL_ENDPOINT"
-)
-
 // GetProcessCacheMissJob processes queue of cache misses and downloads sources from active Olympus
 func GetProcessCacheMissJob(ctx context.Context, s storage.Backend, w worker.Worker) worker.Handler {
 	return func(args worker.Args) (err error) {
@@ -55,7 +48,7 @@ func parseArgs(args worker.Args) (string, string, error) {
 }
 
 func getModuleInfo(ctx context.Context, module, version string) (*storage.Version, error) {
-	os := olympusStore.NewStorage(GetOlympusEndpoint())
+	os := olympusStore.NewStorage(env.GetOlympusEndpoint())
 	var v storage.Version
 	var err error
 	v.Info, err = os.Info(ctx, module, version)
@@ -71,9 +64,4 @@ func getModuleInfo(ctx context.Context, module, version string) (*storage.Versio
 		return nil, err
 	}
 	return &v, nil
-}
-
-// GetOlympusEndpoint returns global endpoint with override in mind
-func GetOlympusEndpoint() string {
-	return env.OlympusGlobalEndpointWithDefault(OlympusGlobalEndpoint)
 }
