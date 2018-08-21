@@ -9,19 +9,13 @@ services:
     image: mongo:3.7.9-jessie
     ports:
       - 27017:27017
-  mysql:
-    image: bitnami/mysql:5.7.21-r7
-    ports:
-      - "3306:3306"
-    environment:
-      - "ALLOW_EMPTY_PASSWORD=yes"
-      - "MYSQL_USER=vgp"
-      - "MYSQL_PASSWORD=vgp"
-      - "MYSQL_DATABASE=athens"
   postgres:
     image: postgres:9.6.9-alpine
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
   minio:
     image: minio/minio:latest
     command: server /data

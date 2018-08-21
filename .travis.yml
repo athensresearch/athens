@@ -7,8 +7,8 @@ go:
 env:
   global:
     - PATH=${PATH}:./bin
-    - POP_PATH=$PWD/cmd/proxy
-    - GO_ENV=test_postgres
+    - POP_PATH=$PWD/cmd/olympus
+    - GO_ENV=test
     - MINIO_ACCESS_KEY=minio
     - MINIO_SECRET_KEY=minio123
     - ATHENS_MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017
@@ -20,8 +20,9 @@ before_script:
   - make setup-dev-env
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
-  - buffalo db create
-  - buffalo db migrate up
+  - buffalo db create -e $GO_ENV -d -c $POP_PATH/database.yml
+  - buffalo db migrate up -e $GO_ENV -d -c $POP_PATH/database.yml
+
 
 script:
   - make verify test-unit test-e2e

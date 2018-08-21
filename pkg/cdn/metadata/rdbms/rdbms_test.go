@@ -1,5 +1,9 @@
 package rdbms
 
+import (
+	"github.com/gobuffalo/envy"
+)
+
 func (rd *RDBMSTestSuite) TestGetSaveRoundTrip() {
 	r := rd.Require()
 	err := rd.storage.Save(module, redirectURL)
@@ -12,7 +16,7 @@ func (rd *RDBMSTestSuite) TestGetSaveRoundTrip() {
 
 func (rd *RDBMSTestSuite) TestNewRDBMSStorage() {
 	r := rd.Require()
-	e := "development"
+	e := envy.Get("GO_ENV", "test")
 	getterSaver := NewStorage(e)
 	getterSaver.Connect()
 

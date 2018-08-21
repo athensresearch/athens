@@ -119,12 +119,6 @@ func App() (*buffalo.App, error) {
 		csrfMiddleware := csrf.New
 		app.Use(csrfMiddleware)
 	}
-
-	// Wraps each request in a transaction.
-	//  c.Value("tx").(*pop.PopTransaction)
-	// Remove to disable this.
-	// app.Use(middleware.PopTransaction(models.DB))
-
 	// Setup and use translations:
 	if T, err = i18n.New(packr.NewBox("../locales"), "en-US"); err != nil {
 		app.Stop(err)

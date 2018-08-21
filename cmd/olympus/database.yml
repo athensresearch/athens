@@ -1,29 +1,22 @@
 development:
-  dialect: "mysql"
+  dialect: "postgres"
   database: athens
   host: 127.0.0.1
-  port: 3306
-  user: vgp
-  password: vgp
-
-test_postgres:
-  dialect: "postgres"
-  database: athens_development
+  port: 5432
   user: postgres
-  password: ''
+  password: postgres
+
+test:
+  dialect: "postgres"
+  database: athens_test
+  user: postgres
+  password: postgres
+  port: 5432
   host: 127.0.0.1
   pool: 5
 
-test:
-  dialect: "mysql"
-  database: athens
-  host: 127.0.0.1
-  port: 3306
-  user: vgp
-  password: vgp
-  
 production:
-  dialect: "mysql"
+  dialect: "postgres"
   database: olympusdb
   host: {{ env "DB_HOST" }}
   port: {{ env "DB_PORT" }}

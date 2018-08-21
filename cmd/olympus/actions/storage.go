@@ -8,7 +8,6 @@ import (
 	"github.com/gomods/athens/pkg/storage/fs"
 	"github.com/gomods/athens/pkg/storage/mem"
 	"github.com/gomods/athens/pkg/storage/mongo"
-	"github.com/gomods/athens/pkg/storage/rdbms"
 	"github.com/spf13/afero"
 )
 
@@ -35,12 +34,6 @@ func GetStorage() (storage.Backend, error) {
 		}
 		certPath := env.MongoCertPath()
 		return mongo.NewStorageWithCert(connectionString, certPath)
-	case "postgres", "sqlite", "cockroach", "mysql":
-		connectionName, err := env.RdbmsName()
-		if err != nil {
-			return nil, err
-		}
-		return rdbms.NewRDBMSStorage(connectionName)
 	default:
 		return nil, fmt.Errorf("storage type %s is unknown", storageType)
 	}
