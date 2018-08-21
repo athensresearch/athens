@@ -3,7 +3,8 @@ title: "Intro"
 date: 2018-02-11T16:52:23-05:00
 ---
 
-![Athens logo](/banner.png)
+<img src="/banner.png" width="600" alt="Athens Logo"/>
+
 
 ## Welcome to Athens
 
