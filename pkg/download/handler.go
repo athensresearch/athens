@@ -4,6 +4,7 @@ import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gomods/athens/pkg/log"
+	"github.com/gomods/athens/pkg/middleware"
 	"github.com/sirupsen/logrus"
 )
 
@@ -44,9 +45,14 @@ func RegisterHandlers(app *buffalo.App, opts *HandlerOpts) {
 	if opts == nil || opts.Protocol == nil || opts.Engine == nil || opts.Logger == nil {
 		panic("absolutely unacceptable handler opts")
 	}
+	noCacheMw := middleware.CacheControl("no-cache, no-store, must-revalidate")
 
-	app.GET(PathList, LogEntryHandler(ListHandler, opts))
-	app.GET(PathLatest, LogEntryHandler(LatestHandler, opts))
+	listHandler := LogEntryHandler(ListHandler, opts)
+	app.GET(PathList, noCacheMw(listHandler))
+
+	latestHandler := LogEntryHandler(LatestHandler, opts)
+	app.GET(PathLatest, noCacheMw(latestHandler))
+
 	app.GET(PathVersionInfo, LogEntryHandler(VersionInfoHandler, opts))
 	app.GET(PathVersionModule, LogEntryHandler(VersionModuleHandler, opts))
 	app.GET(PathVersionZip, LogEntryHandler(VersionZipHandler, opts))
