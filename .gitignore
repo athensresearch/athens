@@ -28,3 +28,4 @@ tmp
 cmd/olympus/bin
 cmd/proxy/bin
 .idea
+.DS_Store
