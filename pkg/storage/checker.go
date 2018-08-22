@@ -6,5 +6,5 @@ import "context"
 type Checker interface {
 	// Exists checks whether or not module in specified version is present
 	// in the backing storage
-	Exists(ctx context.Context, module, version string) bool
+	Exists(ctx context.Context, module, version string) (bool, error)
 }

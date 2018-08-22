@@ -164,6 +164,6 @@ type ModuleStorageChecker struct {
 	Module string
 }
 
-func (s ModuleStorageChecker) Exists(ctx context.Context, module, version string) bool {
-	return module == s.Module
+func (s ModuleStorageChecker) Exists(ctx context.Context, module, version string) (bool, error) {
+	return module == s.Module, nil
 }

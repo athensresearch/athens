@@ -13,7 +13,11 @@ func (v *storageImpl) Delete(ctx context.Context, module, version string) error 
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.fs.Delete")
 	defer sp.Finish()
 	versionedPath := v.versionLocation(module, version)
-	if !v.Exists(ctx, module, version) {
+	exists, err := v.Exists(ctx, module, version)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	if !exists {
 		return errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 	return v.filesystem.RemoveAll(versionedPath)

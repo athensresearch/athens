@@ -12,9 +12,15 @@ func (v *storageImpl) Delete(ctx context.Context, module, version string) error 
 	const op errors.Op = "minio.Delete"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.minio.Delete")
 	defer sp.Finish()
-	if !v.Exists(ctx, module, version) {
+	exists, err := v.Exists(ctx, module, version)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	if !exists {
 		return errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
+
 	versionedPath := v.versionLocation(module, version)
 
 	modPath := fmt.Sprintf("%s/go.mod", versionedPath)
@@ -28,7 +34,7 @@ func (v *storageImpl) Delete(ctx context.Context, module, version string) error 
 	}
 
 	infoPath := fmt.Sprintf("%s/%s.info", versionedPath, version)
-	err := v.minioClient.RemoveObject(v.bucketName, infoPath)
+	err = v.minioClient.RemoveObject(v.bucketName, infoPath)
 	if err != nil {
 		return errors.E(op, err)
 	}

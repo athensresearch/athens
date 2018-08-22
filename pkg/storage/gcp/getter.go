@@ -16,7 +16,11 @@ func (s *Storage) Info(ctx context.Context, module, version string) ([]byte, err
 	const op errors.Op = "gcp.Info"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Info")
 	defer sp.Finish()
-	if !s.Exists(ctx, module, version) {
+	exists, err := s.Exists(ctx, module, version)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 
@@ -37,7 +41,11 @@ func (s *Storage) GoMod(ctx context.Context, module, version string) ([]byte, er
 	const op errors.Op = "gcp.GoMod"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.GoMod")
 	defer sp.Finish()
-	if !s.Exists(ctx, module, version) {
+	exists, err := s.Exists(ctx, module, version)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 
@@ -59,7 +67,11 @@ func (s *Storage) Zip(ctx context.Context, module, version string) (io.ReadClose
 	const op errors.Op = "gcp.Zip"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Zip")
 	defer sp.Finish()
-	if !s.Exists(ctx, module, version) {
+	exists, err := s.Exists(ctx, module, version)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 

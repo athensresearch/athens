@@ -2,12 +2,16 @@ package actions
 
 import (
 	"context"
-	"errors"
 
 	"github.com/gobuffalo/buffalo/worker"
 	"github.com/gomods/athens/pkg/config/env"
+	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
 	olympusStore "github.com/gomods/athens/pkg/storage/olympus"
+)
+
+const (
+	op errors.Op = "GetProcessCacheMissJob"
 )
 
 // GetProcessCacheMissJob processes queue of cache misses and downloads sources from active Olympus
@@ -18,14 +22,18 @@ func GetProcessCacheMissJob(ctx context.Context, s storage.Backend, w worker.Wor
 			return err
 		}
 
-		if s.Exists(ctx, mod, version) {
+		moduleExists, err := s.Exists(ctx, mod, version)
+		if err != nil {
+			return errors.E(op, err)
+		}
+		if moduleExists {
 			return nil
 		}
 
 		// get module info
 		v, err := getModuleInfo(ctx, mod, version)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		defer v.Zip.Close()
 
@@ -36,12 +44,12 @@ func GetProcessCacheMissJob(ctx context.Context, s storage.Backend, w worker.Wor
 func parseArgs(args worker.Args) (string, string, error) {
 	module, ok := args[workerModuleKey].(string)
 	if !ok {
-		return "", "", errors.New("module name not specified")
+		return "", "", errors.E(op, "module name not specified")
 	}
 
 	version, ok := args[workerVersionKey].(string)
 	if !ok {
-		return "", "", errors.New("version not specified")
+		return "", "", errors.E(op, "module name not specified")
 	}
 
 	return module, version, nil

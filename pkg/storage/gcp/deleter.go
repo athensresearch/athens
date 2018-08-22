@@ -16,7 +16,11 @@ func (s *Storage) Delete(ctx context.Context, module, version string) error {
 	const op errors.Op = "gcp.Delete"
 	sp, ctx := opentracing.StartSpanFromContext(ctx, "storage.gcp.Delete")
 	defer sp.Finish()
-	if exists := s.bucket.Exists(ctx, config.PackageVersionedName(module, version, "mod")); !exists {
+	exists, err := s.bucket.Exists(ctx, config.PackageVersionedName(module, version, "mod"))
+	if err != nil {
+		return errors.E(op, err)
+	}
+	if !exists {
 		return errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
 	}
 

@@ -17,5 +17,5 @@ type Bucket interface {
 	// List returns a slice of paths for a prefix and any error
 	List(ctx context.Context, prefix string) ([]string, error)
 	// Exists returns true if the file exists
-	Exists(ctx context.Context, path string) bool
+	Exists(ctx context.Context, path string) (bool, error)
 }

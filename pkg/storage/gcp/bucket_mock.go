@@ -88,11 +88,11 @@ func (m *bucketMock) List(ctx context.Context, prefix string) ([]string, error) 
 	return res, nil
 }
 
-func (m *bucketMock) Exists(ctx context.Context, path string) bool {
+func (m *bucketMock) Exists(ctx context.Context, path string) (bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	_, found := m.db[path]
-	return found
+	return found, nil
 }
 
 func (m *bucketMock) ReadClosed() bool {

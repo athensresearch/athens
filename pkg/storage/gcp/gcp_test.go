@@ -44,7 +44,9 @@ func (g *GcpTests) TestSaveGetListExistsRoundTrip() {
 	})
 
 	g.T().Run("Module exists", func(t *testing.T) {
-		r.Equal(true, g.store.Exists(g.context, g.module, g.version))
+		exists, err := g.store.Exists(g.context, g.module, g.version)
+		r.NoError(err)
+		r.Equal(true, exists)
 	})
 
 	g.T().Run("Resources closed", func(t *testing.T) {
@@ -63,7 +65,8 @@ func (g *GcpTests) TestDeleter() {
 	err = g.store.Delete(g.context, g.module, version)
 	r.NoError(err)
 
-	exists := g.store.Exists(g.context, g.module, version)
+	exists, err := g.store.Exists(g.context, g.module, version)
+	r.NoError(err)
 	r.Equal(false, exists)
 }
 
@@ -80,7 +83,9 @@ func (g *GcpTests) TestNotFounds() {
 	})
 
 	g.T().Run("Exists module version not found", func(t *testing.T) {
-		r.Equal(false, g.store.Exists(g.context, "never", "there"))
+		exists, err := g.store.Exists(g.context, "never", "there")
+		r.NoError(err)
+		r.Equal(false, exists)
 	})
 
 	g.T().Run("List not found", func(t *testing.T) {
