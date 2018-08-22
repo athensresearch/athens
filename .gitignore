@@ -27,3 +27,4 @@ tmp
 .vs
 cmd/olympus/bin
 cmd/proxy/bin
+.idea
