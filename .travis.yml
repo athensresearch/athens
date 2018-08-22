@@ -7,7 +7,6 @@ go:
 env:
   global:
     - PATH=${PATH}:./bin
-    - POP_PATH=$PWD/cmd/olympus
     - GO_ENV=test
     - MINIO_ACCESS_KEY=minio
     - MINIO_SECRET_KEY=minio123
@@ -20,8 +19,6 @@ before_script:
   - make setup-dev-env
   - wget "https://dl.minio.io/server/minio/release/linux-amd64/minio"
   - chmod +x minio && nohup ./minio server . &
-  - buffalo db create -e $GO_ENV -d -c $POP_PATH/database.yml
-  - buffalo db migrate up -e $GO_ENV -d -c $POP_PATH/database.yml
 
 
 script:

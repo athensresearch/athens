@@ -24,7 +24,6 @@ First and foremost, a proxy exposes the same vgo download protocol as the regist
 
 - In-memory
 - Disk
-- RDBMS
 - Cloud blob storage
 
 Users who want to target a proxy configure their `vgo` CLI to point to the proxy, and then execute commands as normal.

@@ -1,8 +1,0 @@
-create_table("modules", func(t) {
-	t.Column("id", "uuid", {"primary": true})
-	t.Column("module", "text", {})
-	t.Column("version", "text", {})
-	t.Column("mod", "blob", {})
-	t.Column("zip", "blob", {})
-  t.Column("info", "blob", {})
-})

@@ -16,24 +16,14 @@ func DiskRoot() (string, error) {
 	return env, nil
 }
 
-// RdbmsName returns RDBMS storage name defined by ATHENS_RDBMS_STORAGE_NAME
-func RdbmsName() (string, error) {
-	env, err := envy.MustGet("ATHENS_RDBMS_STORAGE_NAME")
-	if err != nil {
-		return "", fmt.Errorf("missing RDBMS storage name: %s", err)
-	}
-
-	return env, nil
-}
-
 // StorageType returns storage type used by Athens with error if env is not set.
-// Possible values are memory, disk, mongo, postgres, sqlite, cockroach, mysql
+// Possible values are memory, disk, mongo
 func StorageType() (string, error) {
 	return envy.MustGet("ATHENS_STORAGE_TYPE")
 }
 
 // StorageTypeWithDefault returns storage type used by Athens with default value if env is not set.
-// Possible values are memory, disk, mongo, postgres, sqlite, cockroach, mysql
+// Possible values are memory, disk, mongo
 func StorageTypeWithDefault(value string) string {
 	return envy.Get("ATHENS_STORAGE_TYPE", value)
 }

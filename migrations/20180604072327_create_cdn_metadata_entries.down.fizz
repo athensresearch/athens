@@ -1,1 +1,0 @@
-drop_table("cdn_metadata_entries")

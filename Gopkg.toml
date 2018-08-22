@@ -42,10 +42,6 @@
   version = "1.10.6"
 
 [[constraint]]
-  name = "github.com/gobuffalo/pop"
-  version = "4.3.0"
-
-[[constraint]]
   name = "github.com/gobuffalo/suite"
   version = "2.1.0"
 

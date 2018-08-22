@@ -51,7 +51,6 @@ bench:
 
 .PHONY: alldeps
 alldeps:
-	docker-compose -p athensdev up -d postgres
 	docker-compose -p athensdev up -d mongo
 	docker-compose -p athensdev up -d redis
 	docker-compose -p athensdev up -d minio
