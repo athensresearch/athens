@@ -67,7 +67,7 @@ buffalo dev
 
 To run the proxy:
 
-```consols
+```console
 cd cmd/proxy
 buffalo dev
 ```
