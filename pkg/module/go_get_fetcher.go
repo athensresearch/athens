@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/gomods/athens/pkg/errors"
@@ -83,18 +84,10 @@ func Dummy(fs afero.Fs, repoRoot string) error {
 func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, version string) error {
 	const op errors.Op = "module.getSources"
 	uri := strings.TrimSuffix(module, "/")
-
 	fullURI := fmt.Sprintf("%s@%s", uri, version)
 
-	gopathEnv := fmt.Sprintf("GOPATH=%s", gopath)
-	cacheEnv := fmt.Sprintf("GOCACHE=%s", filepath.Join(gopath, "cache"))
-	disableCgo := "CGO_ENABLED=0"
-	enableGoModules := "GO111MODULE=on"
-
 	cmd := exec.Command(goBinaryName, "mod", "download", fullURI)
-	// PATH is needed for vgo to recognize vcs binaries
-	// this breaks windows.
-	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), gopathEnv, cacheEnv, disableCgo, enableGoModules}
+	cmd.Env = prepareEnv(gopath)
 	cmd.Dir = repoRoot
 	o, err := cmd.CombinedOutput()
 	if err != nil {
@@ -118,6 +111,23 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	}
 
 	return nil
+}
+
+func prepareEnv(gopath string) []string {
+	pathEnv := fmt.Sprintf("PATH=%s", os.Getenv("PATH"))
+	gopathEnv := fmt.Sprintf("GOPATH=%s", gopath)
+	cacheEnv := fmt.Sprintf("GOCACHE=%s", filepath.Join(gopath, "cache"))
+	disableCgo := "CGO_ENABLED=0"
+	enableGoModules := "GO111MODULE=on"
+	cmdEnv := []string{pathEnv, gopathEnv, cacheEnv, disableCgo, enableGoModules}
+
+	// add Windows specific ENV VARS
+	if runtime.GOOS == "windows" {
+		cmdEnv = append(cmdEnv, fmt.Sprintf("USERPROFILE=%s", os.Getenv("USERPROFILE")))
+		cmdEnv = append(cmdEnv, fmt.Sprintf("SystemRoot=%s", os.Getenv("SystemRoot")))
+	}
+
+	return cmdEnv
 }
 
 func checkFiles(fs afero.Fs, path, version string) error {
