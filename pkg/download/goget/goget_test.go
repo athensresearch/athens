@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -43,6 +44,38 @@ func TestList(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, tc.tags, versions)
 		})
+	}
+}
+
+func TestConcurrentLists(t *testing.T) {
+	dp, err := New()
+	require.NoError(t, err, "failed to create protocol")
+	ctx := context.Background()
+
+	pkg := "github.com/athens-artifacts/samplelib"
+	var pkgErr error
+
+	subPkg := "github.com/athens-artifacts/samplelib/types"
+	var subPkgErr error
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		_, pkgErr = dp.List(ctx, pkg)
+		wg.Done()
+	}()
+	go func() {
+		_, subPkgErr = dp.List(ctx, subPkg)
+		wg.Done()
+	}()
+	wg.Wait()
+
+	if pkgErr != nil {
+		t.Fatalf("expected version listing of %v to succeed but got %v", pkg, pkgErr)
+	}
+
+	if subPkgErr == nil {
+		t.Fatalf("expected version listing of %v to fail because it's a subdirectory", subPkg)
 	}
 }
 

@@ -43,19 +43,19 @@ func (g *goGetFetcher) Fetch(mod, ver string) (Ref, error) {
 	sourcePath := filepath.Join(goPathRoot, "src")
 	modPath := filepath.Join(sourcePath, getRepoDirName(mod, ver))
 	if err := g.fs.MkdirAll(modPath, os.ModeDir|os.ModePerm); err != nil {
-		clearFiles(g.fs, goPathRoot)
+		ClearFiles(g.fs, goPathRoot)
 		return nil, errors.E(op, err)
 	}
 
 	// setup the module with barebones stuff
 	if err := Dummy(g.fs, modPath); err != nil {
-		clearFiles(g.fs, goPathRoot)
+		ClearFiles(g.fs, goPathRoot)
 		return nil, errors.E(op, err)
 	}
 
 	err = getSources(g.goBinaryName, g.fs, goPathRoot, modPath, mod, ver)
 	if err != nil {
-		clearFiles(g.fs, goPathRoot)
+		ClearFiles(g.fs, goPathRoot)
 		return nil, errors.E(op, err)
 	}
 
@@ -87,7 +87,7 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	fullURI := fmt.Sprintf("%s@%s", uri, version)
 
 	cmd := exec.Command(goBinaryName, "mod", "download", fullURI)
-	cmd.Env = prepareEnv(gopath)
+	cmd.Env = PrepareEnv(gopath)
 	cmd.Dir = repoRoot
 	o, err := cmd.CombinedOutput()
 	if err != nil {
@@ -113,7 +113,10 @@ func getSources(goBinaryName string, fs afero.Fs, gopath, repoRoot, module, vers
 	return nil
 }
 
-func prepareEnv(gopath string) []string {
+// PrepareEnv will return all the appropriate
+// environment variables for a Go Command to run
+// successfully (such as GOPATH, GOCACHE, PATH etc)
+func PrepareEnv(gopath string) []string {
 	pathEnv := fmt.Sprintf("PATH=%s", os.Getenv("PATH"))
 	gopathEnv := fmt.Sprintf("GOPATH=%s", gopath)
 	cacheEnv := fmt.Sprintf("GOCACHE=%s", filepath.Join(gopath, "cache"))

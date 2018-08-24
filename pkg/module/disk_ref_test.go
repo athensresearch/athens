@@ -63,7 +63,7 @@ func (m *ModuleSuite) TestDiskRefClearFail() {
 	root := "testroot"
 	r := m.Require()
 	// This should fail because we haven't created any files
-	err := clearFiles(m.fs, root)
+	err := ClearFiles(m.fs, root)
 	r.EqualError(err, "open testroot: file does not exist")
 }
 
@@ -86,7 +86,7 @@ func (m *ModuleSuite) TestDiskRefClearSuccess() {
 	r.NoError(err)
 
 	// Now clear the files
-	err = clearFiles(m.fs, root)
+	err = ClearFiles(m.fs, root)
 	r.NoError(err)
 
 	// Validate the file has been deleted

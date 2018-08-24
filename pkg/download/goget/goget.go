@@ -102,6 +102,13 @@ func (gg *goget) list(op errors.Op, mod string) (*listResp, error) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
+	gopath, err := afero.TempDir(gg.fs, "", "athens")
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	defer module.ClearFiles(gg.fs, gopath)
+	cmd.Env = module.PrepareEnv(gopath)
+
 	err = cmd.Run()
 	if err != nil {
 		err = fmt.Errorf("%v: %s", err, stderr)
