@@ -13,6 +13,7 @@ env:
     - ATHENS_MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017
     - CODE_COV=1
     - ATHENS_DIR=${GOPATH}/src/github.com/gomods/athens
+    - REGISTRY=carolynvs/ # Temporary workaround until we have access to the gomods/ registry
 
 before_script:
   - mkdir -p $ATHENS_DIR && rsync -azr . $ATHENS_DIR && cd $ATHENS_DIR
@@ -30,3 +31,13 @@ after_success:
     else
       echo codecov not enabled;
     fi
+
+before_deploy:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+deploy:
+  provider: script
+  script: make docker-push
+  on:
+    repo: gomods/athens
+    all_branches: true
