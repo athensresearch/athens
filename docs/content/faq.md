@@ -54,3 +54,17 @@ And, sidenote - we don't have many concrete details on this aforementioned found
 currently coordinating with hosting providers on these questions.
 
 One final note - we use "caching" in lots of our docs, and that's technically wrong because no data is evicted or expires. We'll need to update that terminology.
+
+## Can the proxy authenticate to private repositories?
+
+_tldr: yes, with proper authentication configuration defined on the Athens proxy host._
+
+When the GOPROXY environment variable is set on the client-side, the go 1.11+ cli 
+does not attempt to request the meta tags, via a request that looks like `https://example.org/pkg/foo?go-get=1`. 
+
+Internally Athens uses `go get` under the hood (`go mod download` to be exact) 
+without the GOPROXY environment variable set so that `go` will in turn request 
+the meta tags using the standard authentication mechanisms supported by `go`. 
+Therefore, if `go` before v1.11 worked for you, then go 1.11+ with GOPROXY
+should work as well, provided that the Athens proxy host is configured with the 
+proper authentication.
