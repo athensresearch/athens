@@ -16,7 +16,7 @@ func (s *Storage) List(ctx context.Context, module string) ([]string, error) {
 	defer sp.Finish()
 	paths, err := s.bucket.List(ctx, module)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err, errors.M(module))
 	}
 	versions := extractVersions(paths)
 	if len(versions) < 1 {

@@ -18,7 +18,7 @@ func (s *Storage) Info(ctx context.Context, module, version string) ([]byte, err
 	defer sp.Finish()
 	exists, err := s.Exists(ctx, module, version)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
@@ -26,12 +26,12 @@ func (s *Storage) Info(ctx context.Context, module, version string) ([]byte, err
 
 	infoReader, err := s.bucket.Open(ctx, config.PackageVersionedName(module, version, "info"))
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	infoBytes, err := ioutil.ReadAll(infoReader)
 	infoReader.Close()
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("could not read bytes of info file: %s", err))
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	return infoBytes, nil
 }
@@ -43,7 +43,7 @@ func (s *Storage) GoMod(ctx context.Context, module, version string) ([]byte, er
 	defer sp.Finish()
 	exists, err := s.Exists(ctx, module, version)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
@@ -51,12 +51,12 @@ func (s *Storage) GoMod(ctx context.Context, module, version string) ([]byte, er
 
 	modReader, err := s.bucket.Open(ctx, config.PackageVersionedName(module, version, "mod"))
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	modBytes, err := ioutil.ReadAll(modReader)
 	modReader.Close()
 	if err != nil {
-		return nil, errors.E(op, fmt.Errorf("could not get new reader for mod file: %s", err))
+		return nil, errors.E(op, fmt.Errorf("could not get new reader for mod file: %s", err), errors.M(module), errors.V(version))
 	}
 
 	return modBytes, nil
@@ -69,7 +69,7 @@ func (s *Storage) Zip(ctx context.Context, module, version string) (io.ReadClose
 	defer sp.Finish()
 	exists, err := s.Exists(ctx, module, version)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 	if !exists {
 		return nil, errors.E(op, errors.M(module), errors.V(version), errors.KindNotFound)
@@ -77,7 +77,7 @@ func (s *Storage) Zip(ctx context.Context, module, version string) (io.ReadClose
 
 	zipReader, err := s.bucket.Open(ctx, config.PackageVersionedName(module, version, "zip"))
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 
 	return zipReader, nil

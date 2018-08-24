@@ -63,7 +63,7 @@ func (s *ModuleStore) Zip(ctx context.Context, module, vsn string) (io.ReadClose
 		if err == mgo.ErrNotFound {
 			kind = errors.KindNotFound
 		}
-		return nil, errors.E(op, err, kind)
+		return nil, errors.E(op, err, kind, errors.M(module), errors.V(vsn))
 	}
 
 	return f, nil

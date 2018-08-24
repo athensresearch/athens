@@ -26,7 +26,7 @@ func (v *storageImpl) Exists(ctx context.Context, module, version string) (bool,
 	}
 
 	if err != nil {
-		return false, errors.E(op, err)
+		return false, errors.E(op, err, errors.M(module), errors.V(version))
 	}
 
 	return true, nil

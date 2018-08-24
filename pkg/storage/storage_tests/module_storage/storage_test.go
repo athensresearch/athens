@@ -36,7 +36,7 @@ type TestSuites struct {
 func (d *TestSuites) SetupTest() {
 	ra := d.Require()
 
-	//
+	// file system
 	fsTests, err := fs.NewTestSuite(d.Model)
 	ra.NoError(err)
 	d.storages = append(d.storages, fsTests)
@@ -71,6 +71,7 @@ func TestModuleStorages(t *testing.T) {
 func (d *TestSuites) TestStorages() {
 	for _, store := range d.storages {
 		d.testNotFound(store)
+		d.testKindNotFound(store)
 		d.testGetSaveListRoundTrip(store)
 		d.testList(store)
 		d.testDelete(store)
@@ -84,6 +85,34 @@ func (d *TestSuites) TestStorages() {
 func (d *TestSuites) testNotFound(ts storage.TestSuite) {
 	_, err := ts.Storage().Info(context.Background(), "some", "unknown")
 	d.Require().Equal(true, errors.IsNotFoundErr(err), "Invalid error type for %s: %#v", ts.StorageHumanReadableName(), err)
+}
+
+func (d *TestSuites) testKindNotFound(ts storage.TestSuite) {
+	s := ts.Storage()
+	mod, ver := "xxx", "yyy"
+	ctx := context.Background()
+	r := d.Require()
+	hrn := ts.StorageHumanReadableName()
+
+	err := s.Delete(ctx, mod, ver)
+	r.Error(err, hrn)
+	r.Equal(errors.KindNotFound, errors.Kind(err), hrn)
+
+	_, err = s.GoMod(ctx, mod, ver)
+	r.Error(err, hrn)
+	r.Equal(errors.KindNotFound, errors.Kind(err), hrn)
+
+	_, err = s.Info(ctx, mod, ver)
+	r.Error(err, hrn)
+	r.Equal(errors.KindNotFound, errors.Kind(err), hrn)
+
+	_, err = s.List(ctx, mod)
+	r.Error(err, hrn)
+	r.Equal(errors.KindNotFound, errors.Kind(err), hrn)
+
+	_, err = s.Zip(ctx, mod, ver)
+	r.Error(err, hrn)
+	r.Equal(errors.KindNotFound, errors.Kind(err), hrn)
 }
 
 func (d *TestSuites) testList(ts storage.TestSuite) {

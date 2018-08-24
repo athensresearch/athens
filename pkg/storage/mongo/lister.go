@@ -27,6 +27,10 @@ func (s *ModuleStore) List(ctx context.Context, module string) ([]string, error)
 	}
 
 	versions := make([]string, len(result))
+	if len(result) == 0 {
+		return versions, errors.E(op, errors.M(module), errors.KindNotFound)
+	}
+
 	for i, r := range result {
 		versions[i] = r.Version
 	}

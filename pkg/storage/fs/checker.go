@@ -16,7 +16,7 @@ func (v *storageImpl) Exists(ctx context.Context, module, version string) (bool,
 	versionedPath := v.versionLocation(module, version)
 	exists, err := afero.Exists(v.filesystem, filepath.Join(versionedPath, "go.mod"))
 	if err != nil {
-		return false, errors.E(op, err)
+		return false, errors.E(op, errors.M(module), errors.V(version), err)
 	}
 
 	return exists, nil

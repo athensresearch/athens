@@ -2,6 +2,7 @@ package fs
 
 import (
 	"context"
+	"os"
 
 	"github.com/gomods/athens/pkg/errors"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -15,7 +16,12 @@ func (l *storageImpl) List(ctx context.Context, module string) ([]string, error)
 	loc := l.moduleLocation(module)
 	fileInfos, err := afero.ReadDir(l.filesystem, loc)
 	if err != nil {
-		return nil, errors.E(op, err)
+		kind := errors.KindUnexpected
+		if os.IsNotExist(err) {
+			kind = errors.KindNotFound
+		}
+
+		return nil, errors.E(op, errors.M(module), err, kind)
 	}
 	ret := []string{}
 	for _, fileInfo := range fileInfos {
