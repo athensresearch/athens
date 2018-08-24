@@ -3,8 +3,8 @@ package mongo
 import (
 	"context"
 	"io"
-	"strings"
 
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
@@ -20,10 +20,11 @@ func (s *ModuleStore) Info(ctx context.Context, module, vsn string) ([]byte, err
 	result := &storage.Module{}
 	err := c.Find(bson.M{"module": module, "version": vsn}).One(result)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			err = errors.E(op, errors.M(module), errors.V(vsn), errors.KindNotFound)
+		kind := errors.KindUnexpected
+		if err == mgo.ErrNotFound {
+			kind = errors.KindNotFound
 		}
-		return nil, err
+		return nil, errors.E(op, kind, errors.M(module), errors.V(vsn), err)
 	}
 
 	return result.Info, nil
@@ -38,10 +39,11 @@ func (s *ModuleStore) GoMod(ctx context.Context, module, vsn string) ([]byte, er
 	result := &storage.Module{}
 	err := c.Find(bson.M{"module": module, "version": vsn}).One(result)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			err = errors.E(op, errors.M(module), errors.V(vsn), errors.KindNotFound)
+		kind := errors.KindUnexpected
+		if err == mgo.ErrNotFound {
+			kind = errors.KindNotFound
 		}
-		return nil, err
+		return nil, errors.E(op, kind, errors.M(module), errors.V(vsn), err)
 	}
 
 	return result.Mod, nil
@@ -57,7 +59,11 @@ func (s *ModuleStore) Zip(ctx context.Context, module, vsn string) (io.ReadClose
 	fs := s.s.DB(s.d).GridFS("fs")
 	f, err := fs.Open(zipName)
 	if err != nil {
-		return nil, errors.E(op, err)
+		kind := errors.KindUnexpected
+		if err == mgo.ErrNotFound {
+			kind = errors.KindNotFound
+		}
+		return nil, errors.E(op, err, kind)
 	}
 
 	return f, nil

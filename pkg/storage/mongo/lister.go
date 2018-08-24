@@ -2,8 +2,8 @@ package mongo
 
 import (
 	"context"
-	"strings"
 
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/storage"
@@ -19,10 +19,11 @@ func (s *ModuleStore) List(ctx context.Context, module string) ([]string, error)
 	result := make([]storage.Module, 0)
 	err := c.Find(bson.M{"module": module}).All(&result)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			err = errors.E(op, err, errors.M(module), errors.KindNotFound)
+		kind := errors.KindUnexpected
+		if err == mgo.ErrNotFound {
+			kind = errors.KindNotFound
 		}
-		return nil, err
+		return nil, errors.E(op, kind, errors.M(module), err)
 	}
 
 	versions := make([]string, len(result))
