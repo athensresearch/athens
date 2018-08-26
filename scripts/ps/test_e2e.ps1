@@ -3,12 +3,14 @@
 Get-Process -Name *buffalo*
 $repoDir = Join-Path $PSScriptRoot ".." | Join-Path -ChildPath ".."
 if (-not (Test-Path env:GO_BINARY_PATH)) { $env:GO_BINARY_PATH = "go" }
+
 $globalTmpDir = [System.IO.Path]::GetTempPath()
 $tmpDirName = [GUID]::NewGuid()
 $testGoPath = Join-Path $globalTmpDir $tmpDirName
 
-$origGOPATH = $env:GOPATH
-$origGOPROXY = $env:GOPROXY
+$origGOPATH = if (Test-Path env:GOPATH) {$env:GOPATH} else {$null}
+$origGOPROXY = if (Test-Path env:GOPROXY) {$env:GOPROXY} else {$null}
+$origGO111MODULE = if (Test-Path env:GO111MODULE) {$env:GO111MODULE} else {$null}
 
 New-Item $testGoPath -ItemType Directory | Out-Null
 $goModCache = Join-Path $testGoPath "pkg" | Join-Path -ChildPath "mod"
@@ -24,12 +26,13 @@ function stopProcesses () {
 }
 
 function teardown () {
-  # Cleanup after our tests
-  $env:GOPATH = $origGOPATH
-  $env:GOPROXY = $origGOPROXY
-
+  # Cleanup ENV after our tests
+  if ($origGOPATH) {$env:GOPATH = $origGOPATH} else {Remove-Item env:GOPATH}
+  if ($origGOPROXY) {$env:GOPROXY = $origGOPROXY} else {Remove-Item env:GOPROXY}
+  if ($origGO111MODULE) {$env:GO111MODULE = $origGO111MODULE} else {Remove-Item env:GO111MODULE}
+  # stop buffalo
   stopProcesses
-  # clean test gopath
+  # clear test gopath
   Get-ChildItem -Path $testGoPath -Recurse | Remove-Item -Recurse -Force -Confirm:$false
   
   Pop-Location 
