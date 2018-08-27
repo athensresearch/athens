@@ -99,6 +99,11 @@ func App() (*buffalo.App, error) {
 		Logger:      blggr,
 	})
 	if prefix := env.AthensPathPrefix(); prefix != "" {
+		// certain Ingress Controllers (such as GCP Load Balancer)
+		// can not send custom headers and therefore if the proxy
+		// is running behind a prefix as well as some authentication
+		// mechanism, we should allow the plain / to return 200.
+		app.GET("/", healthHandler)
 		app = app.Group(prefix)
 	}
 
