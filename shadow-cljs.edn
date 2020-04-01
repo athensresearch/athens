@@ -6,7 +6,10 @@
                 :output-dir      "resources/public/js/compiled"
                 :asset-path      "/js/compiled"
                 :modules         {:app {:init-fn athens.core/init
-                                        :preloads [devtools.preload]}}
+                                        :preloads [devtools.preload
+                                                   day8.re-frame-10x.preload]}}
+                :dev             {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
+                                                                       day8.re-frame.tracing.trace-enabled? true}}}
                 :devtools        {:http-root    "resources/public"
-                                  :http-port    8280
+                                  :http-port    3000
                                   }}}}
