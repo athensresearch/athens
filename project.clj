@@ -12,6 +12,7 @@
                  [cljs-ajax "0.8.0"]
                  [day8.re-frame/http-fx "v0.2.0"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
+                 [metosin/reitit "0.4.2"]
                  ]
 
   :plugins [

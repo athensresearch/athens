@@ -3,6 +3,7 @@
             [clojure.edn :as edn]
             [re-posh.core :as re-posh]
             [re-frame.core :as re-frame]
+            ;[reitit.core :as reitit]
             ))
 
 ; ajax deserializes JSON string into Clojure vector for us
@@ -16,17 +17,18 @@
     (map #(cons :db/add %) x)))
 
 
-(def schema {:node/title     {:db/unique :db.unique/identity}
+(def schema {:block/uid      {:db/unique :db.unique/identity}
+             :node/title     {:db/unique :db.unique/identity}
              :attrs/lookup   {:db/cardinality :db.cardinality/many}
              :block/children {:db/cardinality :db.cardinality/many
                               :db/valueType :db.type/ref}
-;             :block/uid      {:db/unique :db.unique/identity}
              })
              
 
 (def init-rfdb
   {:user/name "Jeff"
    :user/email "tangj12@gmail.com"
+   :current-route nil
    :loading {}
    :errors {}})
 

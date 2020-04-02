@@ -1,6 +1,8 @@
 {:lein   true
 
- :nrepl {:port 8777}
+ :nrepl {:port 8777
+         ;:init-ns athens.core
+         }
 
  :builds {:app {:target          :browser
                 :output-dir      "resources/public/js/compiled"
@@ -8,8 +10,15 @@
                 :modules         {:app {:init-fn athens.core/init
                                         :preloads [devtools.preload
                                                    day8.re-frame-10x.preload]}}
-                :dev             {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                                       day8.re-frame.tracing.trace-enabled? true}}}
+                :dev             {:compiler-options
+                                  {:closure-defines {re-frame.trace.trace-enabled?        true
+                                                     day8.re-frame.tracing.trace-enabled? true}}
+                                  ;{:pretty-print true}
+                                  
+                                  }
                 :devtools        {:http-root    "resources/public"
                                   :http-port    3000
-                                  }}}}
+                                  :repl-init-ns athens.core
+                                  ;; :repl-pprint true
+                                  }
+                }}}

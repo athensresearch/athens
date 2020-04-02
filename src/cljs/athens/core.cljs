@@ -1,16 +1,15 @@
 (ns athens.core
   (:require
-   [reagent.core :as reagent]
-   [re-frame.core :as rf]
-   [re-posh.core :as rp]   
    [athens.events]
    [athens.subs]
    [athens.views :as views]
    [athens.config :as config]
    [athens.db :as db]
+   [athens.router :as router]
+   [reagent.core :as reagent]
+   [re-frame.core :as rf]
+   [re-posh.core :as rp]
    ))
-
-;(def tmp (rp/subscribe [:node/all]))
 
 (defn dev-setup []
   (when config/debug?
@@ -18,6 +17,7 @@
 
 (defn ^:dev/after-load mount-root []
   (rf/clear-subscription-cache!)
+  (router/init-routes!)
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 

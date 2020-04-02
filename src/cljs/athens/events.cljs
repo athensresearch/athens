@@ -1,8 +1,8 @@
 (ns athens.events
   (:require
    [athens.db :as db]
-   [re-frame.core :as re-frame :refer [reg-event-db reg-event-fx reg-sub]]
-   [re-posh.core :as re-posh :refer [reg-event-ds]]
+   [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-sub]]
+   [re-posh.core :as rp :refer [reg-event-ds]]
    [day8.re-frame.tracing :refer-macros [fn-traced]]
    [day8.re-frame.http-fx]
    [ajax.core :refer [json-request-format json-response-format]]
@@ -17,7 +17,7 @@
            {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
 
 ;(def dsdb-uri "https://raw.githubusercontent.com/tangjeff0/athens/master/data/help-db.json")
-(def dsdb-uri "https://raw.githubusercontent.com/tangjeff0/roam/master/small-db.json")
+(def dsdb-uri "https://raw.githubusercontent.com/tangjeff0/athens/master/data/ego-db.json")
 
 (reg-event-fx
  :load-dsdb
