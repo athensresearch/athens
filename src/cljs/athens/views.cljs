@@ -14,7 +14,7 @@
   (let [nodes (subscribe [:nodes])]
     (fn []
       [:div
-       [:h1 "All Pages Panel"]
+       ;[:h1 "All Pages Panel"]
        [:ul
         (for [[e title id] @nodes]
           ^{:key e} [:li [:a
@@ -35,7 +35,7 @@
   (let [current-route (subscribe [:current-route])]
     (fn []
       [:div
-       [:h1 "Hello World"]
+       ;[:h1 "Hello World"]
        [:p "Current Route: " [:b (-> @current-route :path)]]
        [match-panel (-> @current-route :data :name)]
        ])))

@@ -5,19 +5,13 @@
 
 (def parser
   (insta/parser
-   "S = c | link | bref (*| hash*)
-    <c> = #'\\w+'
+   "S = c | link | bref | hash
+    <c> = #'(\\w|\\s)+'
     link = <'[['> c <']]'>
-    hash = '#' c | '#[[' c ']]'
+    hash = <'#'> c | <'#'> <'[['> c <']]'>
     bref = <'(('> c <'))'>
    "))
 
-; [[foo]] query [:node/title "foo"] to find :block/uid
-; ((bar)) query [:block/uid "bar"] to find :block/string
-
-; does it make sense to do subscriptions here ? kinda complects things, but
-; im creating the hiccup anwyays
-; not sure how to show transclusions :3
 (defn transform
   "Returns a hiccup vector"
   [tree]
@@ -30,17 +24,20 @@
                [:a {:href (rfee/href :page {:id (:block/uid @id)})} title]
                [:span {:style {:color "gray"}} "]]"]
                ]))
+    :hash (fn [title]
+            (let [id (subscribe [:block/uid [:node/title title]])]
+              [:a {:style {:color "gray" :text-decoration "none"}
+                   :href (rfee/href :page {:id (:block/uid @id)})}
+               (str "#"  title)]))
     :bref (fn [id]
             (let [string (subscribe [:block/string [:block/uid id]])]
               [:span
-               [:a {:href (rfee/href :page {:id id})} (:block/string @string)]])
-            )}
+               [:a {:href (rfee/href :page {:id id})} (:block/string @string)]]))}
    tree))
 
 
 (defn parse [str]
   (let [result (parser str)]
-    ;(when-not (insta/failure? result) (prn "transform" (vec (transform result))))
     (if (insta/failure? result)
       [:span {:style {:color "red"}} str]
       [:span (vec (transform result))])))

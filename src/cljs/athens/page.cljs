@@ -25,7 +25,7 @@
     (fn []
       (let [node (subscribe [:node [:block/uid (-> @current-route :path-params :id)]])]
         [:div
-         [:h1 "Page Panel"]
+         ;; [:h1 "Page Panel"]
          (if (:node/title @node)
            [:div
             [:h2 (:node/title @node)]
