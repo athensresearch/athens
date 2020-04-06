@@ -6,6 +6,7 @@
    [athens.config :as config]
    [athens.db :as db]
    [athens.router :as router]
+   [athens.parser :refer [parser]]
    [reagent.core :as reagent]
    [re-frame.core :as rf]
    [re-posh.core :as rp]

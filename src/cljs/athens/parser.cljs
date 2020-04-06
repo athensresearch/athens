@@ -31,16 +31,16 @@
                [:span {:style {:color "gray"}} "]]"]
                ]))
     :bref (fn [id]
-            (let [b-string (subscribe [:block/string [:block/uid id]])]
+            (let [string (subscribe [:block/string [:block/uid id]])]
               [:span
-               [:a {:href (rfee/href :page {:id id})} (:block/string @b-string)]])
+               [:a {:href (rfee/href :page {:id id})} (:block/string @string)]])
             )}
    tree))
 
 
 (defn parse [str]
   (let [result (parser str)]
-    (when-not (insta/failure? result) (prn "transform" (vec (transform result))))
+    ;(when-not (insta/failure? result) (prn "transform" (vec (transform result))))
     (if (insta/failure? result)
       [:span {:style {:color "red"}} str]
       [:span (vec (transform result))])))

@@ -12,7 +12,6 @@
    (:user/name db)
    ))
 
-
 ;; datascript queries
 (reg-query-sub
  :nodes
@@ -42,3 +41,27 @@
 (reg-pull-sub
  :block/children
  '[:block/uid :block/string {:block/children ...}])
+
+(reg-pull-sub
+ :block/_children
+ '[:block/uid :block/string :node/title {:block/_children ...}])
+
+; layer 3 subscriptions
+
+(reg-sub
+ :parents
+ (fn [[_ identifier] _]
+   (subscribe [:block/_children identifier]))
+ 
+ ; can flatten and reverse the tree because only ever one parent when going backwards
+ ; from reverse lookup
+ (fn [block query-v _]
+   (reverse
+    (rest
+     (loop [b block
+            res []]
+       (if (:node/title b)
+         (conj res b)
+         (recur (first (:block/_children b))
+                (conj res (dissoc b :block/_children)))))))))
+

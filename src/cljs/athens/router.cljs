@@ -15,14 +15,27 @@
  (fn-traced [db]
    (:current-route db)))
 
-
 ;; events
+(reg-event-fx
+ :navigate
+ (fn [_ [_ & route]]
+   {:navigate! route}))
+
 (reg-event-db
  :navigated
  (fn-traced [db [_ new-match]]
    (let [old-match   (:current-route db)
          controllers (rfc/apply-controllers (:controllers old-match) new-match)]
      (assoc db :current-route (assoc new-match :controllers controllers)))))
+
+;; effects
+
+(reg-fx
+ :navigate!
+ (fn [route]
+   (apply rfee/push-state route)))
+
+;; router definition
 
 (def routes
   ["/"
