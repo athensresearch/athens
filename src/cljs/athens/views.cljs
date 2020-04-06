@@ -1,7 +1,7 @@
 (ns athens.views
   (:require
    [athens.subs]
-   [athens.components.page :as page]
+   [athens.page :as page]
    [re-frame.core :as rf :refer [subscribe dispatch]]
    [reitit.frontend :as rfe]
    [reitit.frontend.easy :as rfee]
@@ -16,8 +16,10 @@
       [:div
        [:h1 "All Pages Panel"]
        [:ul
-        (for [[e title b-uid] @nodes]
-          ^{:key e} [:li [:a {:href (rfee/href :page {:block-uid b-uid})} title]])]])))
+        (for [[e title id] @nodes]
+          ^{:key e} [:li [:a
+                          {:href (rfee/href :page {:id id})}
+                          title]])]])))
 
 (defn home-panel []
   [:h1 "Home Panel"])

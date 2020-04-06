@@ -29,7 +29,7 @@
    [""      {:name :home}]
    ["about" {:name :about}]
    ["pages" {:name :pages}]
-   ["page/:block-uid" {:name :page}]
+   ["page/:id" {:name :page}]
    ])
 
 (def router
@@ -39,9 +39,7 @@
 
 (defn on-navigate [new-match]
   (when new-match
-    (do (prn "on-navigate ->")
-        (cljs.pprint/pprint new-match)
-        (dispatch [:navigated new-match]))))
+    (dispatch [:navigated new-match])))
 
 (defn init-routes! []
   (prn "Initializing routes")

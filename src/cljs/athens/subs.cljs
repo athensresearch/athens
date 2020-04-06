@@ -5,12 +5,15 @@
    [day8.re-frame.tracing :refer-macros [fn-traced]]
    ))
 
+; re-frame subscriptions
 (reg-sub
  :user/name
  (fn [db _]
    (:user/name db)
    ))
 
+
+;; datascript queries
 (reg-query-sub
  :nodes
  '[:find ?e ?t ?b
@@ -19,6 +22,7 @@
    [?e :block/uid ?b]
    ])
 
+;; datascript pulls
 (reg-pull-sub
  :node
  '[*])
@@ -28,10 +32,13 @@
  '[:block/uid])
 
 (reg-pull-sub
+ :block/string
+ '[:block/string])
+
+(reg-pull-sub
  :blocks
  '[:block/string {:block/children ...}])
 
 (reg-pull-sub
  :block/children
  '[:block/uid :block/string {:block/children ...}])
-

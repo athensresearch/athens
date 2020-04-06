@@ -13,6 +13,7 @@
                  [day8.re-frame/http-fx "v0.2.0"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [metosin/reitit "0.4.2"]
+                 [instaparse "1.4.10"]
                  ]
 
   :plugins [
@@ -36,7 +37,8 @@
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
-            "karma"        ["with-profile" "prod" "do"
+            "test"         ["shell" "karma" "start" "--single-run"]
+            "karma"        ["do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "karma-test"]
                             ["shell" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
 
