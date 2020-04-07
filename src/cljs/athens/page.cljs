@@ -19,29 +19,50 @@
              [:div {:style {:margin-left 20}}
               [render-blocks uid]]])))])))
 
+; TODO: make the regex a rule function in subs
+(defn make-pattern [str]
+  (re-pattern (str "\\[\\[" str "\\]\\]")))
+
+(defn node-page [node]
+  (fn [node]
+    (let [linked-refs (subscribe [:linked-refs2 (make-pattern str)])]
+      [:div
+       [:h2 (:node/title node)]
+       [render-blocks (:block/uid node)]
+       [:div
+        [:h3 "Linked References"]
+        (for [lr @linked-refs]
+          (let [{:block/keys [uid string children] :node/keys [title]} lr]
+            (pr "LR" lr)
+            [:div string])
+          )]
+       ])))
+
+
+(defn block-page [node]
+  (fn [node]
+    (let [parents (subscribe [:block/_children2 [:block/uid (:block/uid node)]])]
+      [:div
+       (for [b @parents]
+         (let [{:block/keys [uid string] :node/keys [title]} b]
+           ^{:key uid}
+           [:span {:style {:color "gray"}}            
+            [:span
+             [:span {:style {:cursor "pointer"}
+                     :on-click #(dispatch [:navigate :page {:id uid}])}
+              (or string title)]
+             [:span " > "]]]))
+       [:h2 (str "• " (:block/string node))]
+       [:div {:style {:margin-left 20}}
+        [render-blocks (:block/uid node)]]])))
 
 (defn main []
   (let [current-route (subscribe [:current-route])]
     (fn []
       (let [node (subscribe [:node [:block/uid (-> @current-route :path-params :id)]])]
         [:div
-         ;; [:h1 "Page Panel"]
+          [:h1 "Page Panel"]
          (if (:node/title @node)
-           [:div
-            [:h2 (:node/title @node)]
-            [render-blocks (-> @current-route :path-params :id)]]
-           [:div
-            (let [parents (subscribe [:parents [:block/uid (:block/uid @node)]])]
-              [:div {:style {:color "gray"}}
-               (for [b @parents]
-                 (let [{:block/keys [uid string] :node/keys [title]} b]
-                   ^{:key uid}
-                   [:span
-                    [:span {:style {:cursor "pointer"}
-                            :on-click #(dispatch [:navigate :page {:id uid}])}
-                     (or string title)]
-                    [:span " > "]]))])
-            [:h2 (str "• " (:block/string @node))]
-            [:div {:style {:margin-left 20}}
-             [render-blocks (-> @current-route :path-params :id)]]])
+           [node-page @node]
+           [block-page @node])
          ]))))

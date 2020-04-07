@@ -16,14 +16,11 @@
    :rules [{:when :seen? :events :get-dsdb-success :halt? true}
            {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
 
-;(def dsdb-uri "https://raw.githubusercontent.com/tangjeff0/athens/master/data/help-db.json")
-(def dsdb-uri "https://raw.githubusercontent.com/tangjeff0/athens/master/data/ego-db.json")
-
 (reg-event-fx
  :load-dsdb
  (fn [{:keys [db]} [_ params]]
    {:http-xhrio {:method          :get
-                 :uri             dsdb-uri
+                 :uri             db/dsdb-ego
                  :headers         {}
                  :response-format (json-response-format {:keywords? true})
                  :on-success      [:get-dsdb-success]

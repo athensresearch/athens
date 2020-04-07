@@ -16,6 +16,8 @@
     (map #(map edn/read-string %) x)
     (map #(cons :db/add %) x)))
 
+(def dsdb-help "https://raw.githubusercontent.com/tangjeff0/athens/master/data/help-db.json")
+(def dsdb-ego "https://raw.githubusercontent.com/tangjeff0/athens/master/data/ego-db.json")
 
 (def schema {:block/uid      {:db/unique :db.unique/identity}
              :node/title     {:db/unique :db.unique/identity}

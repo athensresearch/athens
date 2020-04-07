@@ -14,12 +14,19 @@
   (let [nodes (subscribe [:nodes])]
     (fn []
       [:div
-       ;[:h1 "All Pages Panel"]
-       [:ul
-        (for [[e title id] @nodes]
-          ^{:key e} [:li [:a
-                          {:href (rfee/href :page {:id id})}
-                          title]])]])))
+       [:table {:style {:width "100%"}}
+        [:thead
+         [:tr
+          [:th {:style {:text-align "left"}} "Page"]
+          [:th {:style {:text-align "left"}} "Last Edit"]
+          [:th {:style {:text-align "left"}} "Created At"]]]
+        [:tbody
+         (for [[_ title id create-t edit-t] @nodes]
+           ^{:key id}
+           [:tr
+            [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id id})} title]]
+            [:td (.toLocaleString  (js/Date. create-t))]
+            [:td (.toLocaleString  (js/Date. edit-t))]])]]])))
 
 (defn home-panel []
   [:h1 "Home Panel"])

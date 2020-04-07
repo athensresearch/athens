@@ -21,12 +21,13 @@
             (let [id (subscribe [:block/uid [:node/title title]])]
               [:span
                [:span {:style {:color "gray"}} "[["]
-               [:a {:href (rfee/href :page {:id (:block/uid @id)})} title]
+               [:a {:href (rfee/href :page {:id (:block/uid @id)})
+                    :style {:text-decoration "none" :color "dodgerblue"}} title]
                [:span {:style {:color "gray"}} "]]"]
                ]))
     :hash (fn [title]
             (let [id (subscribe [:block/uid [:node/title title]])]
-              [:a {:style {:color "gray" :text-decoration "none"}
+              [:a {:style {:color "gray" :text-decoration "none" :font-weight "bold"}
                    :href (rfee/href :page {:id (:block/uid @id)})}
                (str "#"  title)]))
     :bref (fn [id]
