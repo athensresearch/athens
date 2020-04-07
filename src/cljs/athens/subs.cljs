@@ -52,32 +52,54 @@
 
 (rf/reg-sub
  :block/_children2
- (fn [[_ identifier] _]
-   (subscribe [:block/_children identifier]))
- (fn [block _]
-   (reverse
-    (rest
-     (loop [b block
-            res []]
-       (if (:node/title b)
-         (conj res b)
-         (recur (first (:block/_children b))
-                (conj res (dissoc b :block/_children)))))))))
+  (fn [[_ id] _]
+   (subscribe [:block/_children id]))
+  (fn [block _] ; find path from nested block to origin node
+    (reverse
+     (rest
+      (loop [b block
+             res []]
+        (if (:node/title b)
+          (conj res b)
+          (recur (first (:block/_children b))
+                 (conj res (dissoc b :block/_children)))))))))
 
 
 (reg-query-sub
- :linked-refs
- '[:find ?e
+ :node/refs
+ '[:find ?id
    :in $ ?regex
    :where
    [?e :block/string ?s]
-   [(re-find ?regex ?s)]])
+   [(re-find ?regex ?s)]
+   [?e :block/uid ?id]])
 
-(rp/reg-sub
- :linked-refs2
- (fn [[_ identifier]]
-   (subscribe [:linked-refs identifier]))
- (fn [ids _]
-   {:type :pull-many
-    :pattern '[:node/title :block/uid :block/string :block/children {:block/_children ...}]
-    :ids (reduce into [] ids)}))
+;; (rp/reg-sub
+;;  :node/refs2
+;;  (fn [[_ regex]]
+;;    (subscribe [:node/refs regex]))
+;;  (fn [ids _] ; for all refs, find their parents with reverse lookup
+;;    {:type :pull-many
+;;     :pattern '[:node/title :block/uid :block/string {:block/_children ...}]
+;;     :ids (reduce into [] ids)}))
+
+;; (rf/reg-sub
+;;  :node/refs3
+;;  (fn [[_ regex]]
+;;    (subscribe [:node/refs2 regex]))
+;;  (fn [blocks _]
+;;    ;; flatten paths like in :block/_children2 (except keep node/title)
+;;    ;; then normalize refs through group by :node/title
+;;    (->> blocks
+;;         (map (fn [block]
+;;                (reverse
+;;                 (loop [b block
+;;                        res []]
+;;                   (if (:node/title b)
+;;                     (conj res (dissoc b :block/children))
+;;                     (recur (first (:block/_children b))
+;;                            (conj res (dissoc b :block/_children))))))))
+;;         (group-by #(:node/title (first %)))
+;;         (reduce-kv (fn [m k v]
+;;                      (assoc m k (map rest v))) {} ))
+;;    ))
