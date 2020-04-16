@@ -1,4 +1,14 @@
 (defproject athens "0.1.0-SNAPSHOT"
+
+  :description "Open-Source Roam"
+
+  :url "https://github.com/tangjeff0/athens"
+
+  :license {:name "Eclipse Public License - v 1.0"
+            :url "http://www.eclipse.org/legal/epl-v10.html"
+            :distribution :repo
+            :comments "same as Clojure"}
+
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.597"
                   :exclusions [com.google.javascript/closure-compiler-unshaded
