@@ -10,37 +10,42 @@
 
 ;; -- Initialization ------------------------------------------------
 
-(defn boot-flow []
-  {:first-dispatch
-   [:load-dsdb]
-   :rules [{:when :seen? :events :get-dsdb-success :halt? true}
-           {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
+;; (defn boot-flow []
+;;   {:first-dispatch
+;;    [:load-dsdb]
+;;    :rules [{:when :seen? :events :get-dsdb-success :halt? true}
+;;            {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
 
-(reg-event-fx
- :load-dsdb
- (fn [{:keys [db]} [_ params]]
-   {:http-xhrio {:method          :get
-                 :uri             db/dsdb-ego
-                 :headers         {}
-                 :response-format (json-response-format {:keywords? true})
-                 :on-success      [:get-dsdb-success]
-                 :on-failure      [:api-request-error :load-dsdb]}
-    :db         (assoc-in db [:loading :dsdb] true)}))
+;; (reg-event-fx
+;;  :load-dsdb
+;;  (fn [{:keys [db]} [_ params]]
+;;    {:http-xhrio {:method          :get
+;;                  :uri             db/dsdb-help
+;;                  :headers         {}
+;;                  :response-format (json-response-format {:keywords? true})
+;;                  :on-success      [:get-dsdb-success]
+;;                  :on-failure      [:api-request-error :load-dsdb]}
+;;     :db         (assoc-in db [:loading :dsdb] true)}))
 
-(reg-event-fx
- :boot-async
- (fn-traced [_ _]
-   {:async-flow (boot-flow)}))
+(reg-event-ds
+ :upload-dsdb
+ (fn-traced [_ [event json-str]]
+            (db/str-to-db-tx json-str)))
+
+;; (reg-event-fx
+;;  :boot-async
+;;  (fn-traced [_ _]
+;;             {:async-flow (boot-flow)}))
 
 (reg-event-db
  :init-rfdb
  (fn [_ _]
    db/init-rfdb))
 
-(reg-event-ds
- :init-dsdb
- (fn [_ _]
-   db/init-dsdb))
+;; (reg-event-ds
+;;  :init-dsdb
+;;  (fn [_ _]
+;;    db/init-dsdb))
 
 ;; -- Request Handlers -----------------------------------------------------------
 (reg-event-ds

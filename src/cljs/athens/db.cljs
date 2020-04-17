@@ -7,17 +7,18 @@
             ))
 
 ; ajax deserializes JSON string into Clojure vector for us
-(defn str-to-db-tx [json-str]  
+(defn str-to-db-tx [json-str]
+  (js-debugger)
   (as-> json-str x
-    ;(.parse js/JSON json-str)
-    ;(js->clj x)
-    (partition 3 x) ; chunk into 3-tuples
-    (rest x) ; drop first tuple which is (?e ?a ?v)
+    (js/JSON.parse json-str)
+    (js->clj x)
+    (partition 3 x)             ; chunk into 3-tuples
+    (rest x)                    ; drop first tuple which is (?e ?a ?v)
     (map #(map edn/read-string %) x)
     (map #(cons :db/add %) x)))
 
-(def dsdb-help "https://raw.githubusercontent.com/tangjeff0/athens/master/data/help-db.json")
-(def dsdb-ego "https://raw.githubusercontent.com/tangjeff0/athens/master/data/ego-db.json")
+;; (def dsdb-help "https://raw.githubusercontent.com/tangjeff0/athens/master/data/help-db.json")
+;; (def dsdb-ego "https://raw.githubusercontent.com/tangjeff0/athens/master/data/ego-db.json")
 
 (def schema {:block/uid      {:db/unique :db.unique/identity}
              :node/title     {:db/unique :db.unique/identity}

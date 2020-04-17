@@ -24,7 +24,7 @@
 
 (defn init []
   (rf/dispatch-sync [:init-rfdb])
-  (rf/dispatch-sync [:init-dsdb])
-  (rf/dispatch-sync [:boot-async])
+  ;; (rf/dispatch-sync [:init-dsdb])
+  ;; (rf/dispatch-sync [:boot-async])
   (dev-setup)
   (mount-root))
