@@ -48,6 +48,7 @@
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
             "test"         ["shell" "karma" "start" "--single-run"]
+            "gh-pages"     ["shell" "yarn" "gh-pages" "-d" "resources/public"]
             "karma"        ["do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "karma-test"]
                             ["shell" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
