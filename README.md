@@ -20,12 +20,10 @@ Once your OS recognizes your `java` sdk, you have `lein` and `yarn`, simply clon
 
 ## Built With
 
-- [datascript](https://github.com/tonsky/datascript) frontend port of Datomic database
-- [re-frame](https://github.com/day8/re-frame) for reactive state management (CLJS's redux)
-- [re-posh](https://github.com/denistakeda/re-posh) re-frame + datascript
-- [reitit](https://github.com/metosin/reitit) for routing
-- [shadow-cljs](https://github.com/thheller/shadow-cljs) for JS transpiling and hot reload
-- [instaparse](https://github.com/Engelberg/instaparse) for format and link parsing
+See [Athens vs Roam Tech Stack](https://roamresearch.com/#/app/ego/page/V81KJmS5L) for more background.
+
+![img](doc/athens-vs-roam-tech-stack.png)
+
 
 # Roadmap / Objectives
 
@@ -41,4 +39,4 @@ Send a message in the #athens channel of the [Roam Slack](https://roamresearch.s
 
 ---
 
-![Athens](https://www.greeka.com/photos/attica/athens/hero/athens-1920.jpg)
+![Athens](doc/athens-1920.jpg)
