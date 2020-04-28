@@ -24,6 +24,7 @@
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [metosin/reitit "0.4.2"]
                  [instaparse "1.4.10"]
+                 [devcards "0.2.6"]
                  ]
 
   :plugins [
@@ -42,6 +43,8 @@
 
   :aliases {"dev"          ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "app"]]
+            "devcards"     ["with-profile" "dev" "do"
+                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "prod"         ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "release" "app"]]
             "build-report" ["with-profile" "prod" "do"

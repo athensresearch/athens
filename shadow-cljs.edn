@@ -1,7 +1,5 @@
 {:lein   true
- :nrepl {:port 8777
-         ;:init-ns athens.core
-         }
+ :nrepl {:port 8777}
  :builds {:app {:target          :browser
                 :output-dir      "resources/public/js/compiled"
                 :asset-path      "/js/compiled"
@@ -13,9 +11,13 @@
                                                      day8.re-frame.tracing.trace-enabled? true}}}
                 :devtools        {:http-root    "resources/public"
                                   :http-port    3000
-                                  :repl-init-ns athens.core
-                                  ;; :repl-pprint true
-                                  }}
+                                  :repl-init-ns athens.core}}
+          :devcards         {:asset-path "js/devcards"
+                             :modules {:main {:init-fn athens.devcards/main}}
+                             :compiler-options {:devcards true}
+                             :output-dir "resources/public/js/devcards"
+                             :target :browser}
+
           :karma-test {:target :karma
                        :ns-regexp "-test$"
                        :output-to "target/karma-test.js"}}}
