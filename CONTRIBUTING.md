@@ -4,7 +4,7 @@ If you're looking for somewhere to start contributing, check out the issues tagg
 
 These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
-Before contributing, please first read the [Code of Conduct](https://github.com/tangjeff0/athens/blob/master/CODE_OF_CONDUCT.md).
+Before contributing, please first read the [Code of Conduct](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md).
 
 ## Communication Channels
 
