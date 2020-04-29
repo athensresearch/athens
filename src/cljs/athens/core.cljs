@@ -24,7 +24,8 @@
 
 (defn init []
   (rf/dispatch-sync [:init-rfdb])
-  ;; (rf/dispatch-sync [:init-dsdb])
-  ;; (rf/dispatch-sync [:boot-async])
+  ;; when dev, download datoms directly
+  (when config/debug?
+    (rf/dispatch-sync [:get-datoms]))
   (dev-setup)
   (mount-root))

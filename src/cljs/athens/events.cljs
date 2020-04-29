@@ -1,62 +1,70 @@
 (ns athens.events
   (:require
    [athens.db :as db]
-   [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-sub]]
+   [datascript.core :as d]
+   [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx reg-sub]]
    [re-posh.core :as rp :refer [reg-event-ds]]
    [day8.re-frame.tracing :refer-macros [fn-traced]]
-   [day8.re-frame.http-fx]
-   [ajax.core :refer [json-request-format json-response-format]]
-   [day8.re-frame.async-flow-fx]))
+   [cljs-http.client :as http]
+   [cljs.core.async :refer [go <!]]
 
-;; -- Initialization ------------------------------------------------
+    ;; not using yet but might eventually when boots become more complex
+    ;; boilerplate for it as bottom of file
+    ;; [day8.re-frame.async-flow-fx]
+   ))
 
-;; (defn boot-flow []
-;;   {:first-dispatch
-;;    [:load-dsdb]
-;;    :rules [{:when :seen? :events :get-dsdb-success :halt? true}
-;;            {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
+(reg-event-db
+  :init-rfdb
+  (fn [_ _]
+    db/rfdb))
 
-;; (reg-event-fx
-;;  :load-dsdb
-;;  (fn [{:keys [db]} [_ params]]
-;;    {:http-xhrio {:method          :get
-;;                  :uri             db/dsdb-help
-;;                  :headers         {}
-;;                  :response-format (json-response-format {:keywords? true})
-;;                  :on-success      [:get-dsdb-success]
-;;                  :on-failure      [:api-request-error :load-dsdb]}
-;;     :db         (assoc-in db [:loading :dsdb] true)}))
+(reg-fx
+  :http
+  (fn [{:keys [url method opts on-success on-failure]}]
+    (go
+      (let [http-fn (case method
+                      :post http/post :get http/get
+                      :put http/put :delete http/delete)
+            res     (<! (http-fn url opts))
+            {:keys [success body] :as all} res]
+        (if success
+          (dispatch (conj on-success body))
+          (dispatch (conj on-failure all)))))))
+
+(reg-event-fx
+  :get-datoms
+  (fn [_ _]
+    {:http {:method :post
+            :url db/ego-url
+            :opts {}
+            :on-success [:parse-datoms]
+            :on-failure [:alert-failure]}}))
 
 (reg-event-ds
- :upload-dsdb
- (fn-traced [_ [event json-str]]
-            (db/str-to-db-tx json-str)))
+  :parse-datoms
+  (fn-traced [_ [event json-str]]
+             (d/reset-conn! db/dsdb (d/empty-db db/schema)) ;; TODO: refactor to an effect
+             (let [res (db/str-to-db-tx json-str)]
+               (js/console.log res)
+               res)))
 
-;; (reg-event-fx
+(reg-event-db
+  :alert-failure
+  (fn-traced [db error]
+    (assoc-in db [:errors] error)))
+
+(reg-event-db
+  :clear-errors
+  (fn-traced [db]
+             (assoc-in db [:errors] {})))
+
+;;(reg-event-fx
 ;;  :boot-async
 ;;  (fn-traced [_ _]
 ;;             {:async-flow (boot-flow)}))
 
-(reg-event-db
- :init-rfdb
- (fn [_ _]
-   db/init-rfdb))
-
-;; (reg-event-ds
-;;  :init-dsdb
-;;  (fn [_ _]
-;;    db/init-dsdb))
-
-;; -- Request Handlers -----------------------------------------------------------
-(reg-event-ds
- :get-dsdb-success
- (fn-traced [_ [request-type response]]
-            (db/str-to-db-tx response)
-            ))
-
-(reg-event-db
- :api-request-error
- (fn-traced [db [_ request-type response]]
-   (-> db
-       (assoc-in [:errors request-type] (get-in response [:response :errors]))
-       (assoc-in [:loading request-type] false))))
+;;(defn boot-flow []
+;;  {:first-dispatch
+;;          [:load-dsdb]
+;;   :rules [{:when :seen? :events :get-dsdb-success :halt? true}
+;;           {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})

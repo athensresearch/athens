@@ -8,21 +8,23 @@
 
 ; re-frame subscriptions
 (rf/reg-sub
- :user/name
+ :user
  (fn [db _]
-   (:user/name db)
+   (:user db)
    ))
+
+(rf/reg-sub
+  :errors
+  (fn [db _]
+    (:errors db)
+    ))
 
 ;; datascript queries
 (reg-query-sub
  :nodes
- '[:find ?e ?t ?b ?et ?ct
+ '[:find ?e
    :where
-   [?e :node/title ?t]
-   [?e :block/uid ?b]
-   [?e :create/time ?ct]
-   [?e :edit/time ?et]
-   ])
+   [?e :node/title ?t]])
 
 ;; datascript pulls
 (reg-pull-sub
@@ -64,6 +66,14 @@
           (recur (first (:block/_children b))
                  (conj res (dissoc b :block/_children)))))))))
 
+(rp/reg-sub
+ :pull-nodes
+ (fn [[_ _]]
+   (subscribe [:nodes]))
+ (fn [nodes _]
+   {:type :pull-many
+    :pattern '[*]
+    :ids (reduce into [] nodes)}))
 
 (reg-query-sub
  :node/refs
@@ -73,6 +83,8 @@
    [?e :block/string ?s]
    [(re-find ?regex ?s)]
    [?e :block/uid ?id]])
+
+
 
 ;; (rp/reg-sub
 ;;  :node/refs2
