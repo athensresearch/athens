@@ -1,17 +1,16 @@
 (ns athens.events
   (:require
-   [athens.db :as db]
-   [datascript.core :as d]
-   [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx reg-sub]]
-   [re-posh.core :as rp :refer [reg-event-ds]]
-   [day8.re-frame.tracing :refer-macros [fn-traced]]
-   [cljs-http.client :as http]
-   [cljs.core.async :refer [go <!]]
-
+    [athens.db :as db]
+    [datascript.core :as d]
+    [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx reg-sub]]
+    [re-posh.core :as rp :refer [reg-event-ds]]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
+    [cljs-http.client :as http]
+    [cljs.core.async :refer [go <!]]
     ;; not using yet but might eventually when boots become more complex
     ;; boilerplate for it as bottom of file
     ;; [day8.re-frame.async-flow-fx]
-   ))
+    ))
 
 (reg-event-db
   :init-rfdb
@@ -34,9 +33,9 @@
 (reg-event-fx
   :get-datoms
   (fn [_ _]
-    {:http {:method :post
-            :url db/ego-url
-            :opts {}
+    {:http {:method :get
+            :url db/athens-url
+            :opts {:with-credentials? false}
             :on-success [:parse-datoms]
             :on-failure [:alert-failure]}}))
 
@@ -44,9 +43,7 @@
   :parse-datoms
   (fn-traced [_ [event json-str]]
              (d/reset-conn! db/dsdb (d/empty-db db/schema)) ;; TODO: refactor to an effect
-             (let [res (db/str-to-db-tx json-str)]
-               (js/console.log res)
-               res)))
+             (db/str-to-db-tx json-str)))
 
 (reg-event-db
   :alert-failure

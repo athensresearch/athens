@@ -2,7 +2,7 @@
 
   :description "Open-Source Roam"
 
-  :url "https://github.com/tangjeff0/athens"
+  :url "https://github.com/athensresearch/athens"
 
   :license {:name "Eclipse Public License - v 1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"
@@ -23,11 +23,9 @@
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [metosin/reitit "0.4.2"]
                  [instaparse "1.4.10"]
-                 [devcards "0.2.6"]
-                 ]
+                 [devcards "0.2.6"]]
 
-  :plugins [
-            [lein-shell "0.5.0"]]
+  :plugins [[lein-shell "0.5.0"]]
 
   :min-lein-version "2.5.3"
 
@@ -61,7 +59,7 @@
                    [day8.re-frame/re-frame-10x "0.5.1"]
                    [day8.re-frame/tracing "0.5.3"]]
     :source-paths ["dev"]}
-
-   :prod { :dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}}
+   :prod
+   {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}}
 
   :prep-tasks [])
