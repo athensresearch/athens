@@ -6,7 +6,7 @@
 
 (defn render-blocks [block-uid]
   (fn [block-uid]
-    (let [block (subscribe [:block/children [:block/uid block-uid]])]
+    (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
       [:div
        (doall
         (for [ch (:block/children @block)]
@@ -71,8 +71,7 @@
          (for [id (reduce into [] @unlinked-refs)]
            ^{:key id}
            [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
-            [block-page id]])]]
-       ])))
+            [block-page id]])]]])))
 
 (defn main []
   (let [current-route (subscribe [:current-route])]

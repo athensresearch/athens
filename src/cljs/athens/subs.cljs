@@ -1,19 +1,18 @@
 (ns athens.subs
   (:require
-   [re-frame.core :as rf :refer [subscribe]]
-   [re-posh.core :as rp :refer [reg-query-sub reg-pull-sub reg-pull-many-sub]]
+   [re-frame.core :as re-frame]
+   [re-posh.core :as re-posh :refer [subscribe reg-query-sub reg-pull-sub reg-pull-many-sub]]
    [day8.re-frame.tracing :refer-macros [fn-traced]]))
-; note: not refering reg-sub because re-posh and re-frame have different reg-subs
+;; note: not refering reg-sub because re-posh and re-frame have different reg-subs
 
-
-; re-frame subscriptions
-(rf/reg-sub
+;; re-frame subscriptions
+(re-frame/reg-sub
  :user
  (fn [db _]
    (:user db)
    ))
 
-(rf/reg-sub
+(re-frame/reg-sub
   :errors
   (fn [db _]
     (:errors db)
@@ -22,9 +21,18 @@
 ;; datascript queries
 (reg-query-sub
  :nodes
- '[:find ?e
+ '[:find [?e ...]
    :where
    [?e :node/title ?t]])
+
+(reg-query-sub
+  :node/refs
+  '[:find ?id
+    :in $ ?regex
+    :where
+    [?e :block/string ?s]
+    [(re-find ?regex ?s)]
+    [?e :block/uid ?id]])
 
 ;; datascript pulls
 (reg-pull-sub
@@ -44,15 +52,24 @@
  '[:block/string {:block/children ...}])
 
 (reg-pull-sub
- :block/children
- '[:block/uid :block/string {:block/children ...}])
+  :block/children
+  '[:block/uid :block/string :block/order {:block/children ...}])
 
-; layer 3 subscriptions
+(re-frame/reg-sub
+  :block/children-sorted
+  (fn [[_ id] _]
+    (subscribe [:block/children id]))
+  (fn [block _]
+    (assoc block :block/children
+                 (sort-by :block/order (:block/children block))))) ;; TODO sort children recursively
+
 (reg-pull-sub
- :block/_children
- '[:block/uid :block/string :node/title {:block/_children ...}])
+  :block/_children
+  '[:block/uid :block/string :node/title {:block/_children ...}])
 
-(rf/reg-sub
+;; layer 3 subscriptions
+
+(re-frame/reg-sub
  :block/_children2
   (fn [[_ id] _]
    (subscribe [:block/_children id]))
@@ -66,25 +83,13 @@
           (recur (first (:block/_children b))
                  (conj res (dissoc b :block/_children)))))))))
 
-(rp/reg-sub
+(re-posh/reg-sub
  :pull-nodes
- (fn [[_ _]]
-   (subscribe [:nodes]))
- (fn [nodes _]
+ :<- [:nodes]
+ (fn-traced [nodes _]
    {:type :pull-many
     :pattern '[*]
-    :ids (reduce into [] nodes)}))
-
-(reg-query-sub
- :node/refs
- '[:find ?id
-   :in $ ?regex
-   :where
-   [?e :block/string ?s]
-   [(re-find ?regex ?s)]
-   [?e :block/uid ?id]])
-
-
+    :ids nodes}))
 
 ;; (rp/reg-sub
 ;;  :node/refs2
