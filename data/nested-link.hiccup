@@ -1,0 +1,21 @@
+;; a Roam block with the following text should produce the hiccup that follows
+
+;; INPUT
+;; {{[[TODO]]}} work on [[Deep Transclusions]] and [[Nested [[Links]]]]
+
+;; OUTPUT
+[:span
+ [:span [:label.check-container [:input {:type "checkbox"}] [:span.checkmark]]]
+ " work on "
+ [:span.rm-page-ref-brackets "[["]
+ [:span.rm-page-ref.rm-page-ref-link-color "Deep Transclusions"]
+ [:span.rm-page-ref-brackets "]]"]
+ " and "
+ [:span.rm-page-ref-brackets "[["]
+ [:span.rm-page-ref.rm-page-ref-link-color
+  [:span
+   "Nested "
+   [:span.rm-page-ref-brackets "[["]
+   [:span.rm-page-ref.rm-page-ref-link-color "Links"]
+   [:span.rm-page-ref-brackets "]]"]]]
+ [:span.rm-page-ref-brackets "]]"]]
