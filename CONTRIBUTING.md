@@ -15,8 +15,8 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
 ## Development Environment
 
 1. Download a `java` JDK. You can download the most [current version](https://www.oracle.com/java/technologies/javase-downloads.html) or access the [JDK archives](https://jdk.java.net/archive/).
-2. Download a package manager: [yarn](https://www.npmjs.com/package/yarn) or [npm](https://www.npmjs.com/get-npm). 
-3. Download and install the lein package manager (lein installs the correct version of Clojure for you). Detailed instructions for Linux, macOS, and Windows are below.
+2. Download `yarn`: [yarn](https://www.npmjs.com/package/yarn). 
+3. Install `lein` (build automation and dependency management tool for Clojure). You can either use a [package manager](https://github.com/technomancy/leiningen/wiki/Packaging) such as Homebrew or Chocolatey, or you can download from the command line. Detailed instructions for installing from the command line on Linux, macOS, and Windows are below.
 
 ### On Linux:
    * Install curl command
@@ -59,10 +59,8 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
    
    It should take a while to run, as it will download some resources it needs the first time. See the note at the end of this section if you are having issues.
 
-4. Clone the repo found [here](https://github.com/athensresearch/athens). Change directory to the athens folder and run one of the following commands:
+4. Clone the repo found [here](https://github.com/athensresearch/athens). Change directory to the athens folder and run:
 > ```yarn install```
-
-> ```npm install```
 
    After installing all packages and dependencies, start leiningen.
 > ```lein dev```
@@ -70,7 +68,7 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
    Open [localhost:3000](http://localhost:3000) in your browser and you should be good to go!
 
 ### Trouble Setting Up Your Dev Environment?
-If you are having trouble getting your dev environment set up, first go through the steps found [here](https://purelyfunctional.tv/guide/how-to-install-clojure/#windows-leiningen). If you are still having trouble, please let us know in the #athens channel in the Roam Slack.
+If you are having trouble getting your dev environment set up, first go through the steps found [here](https://purelyfunctional.tv/guide/how-to-install-clojure/). If you are still having trouble, please let us know in the #athens channel in the Roam Slack.
 
 ## Clojure
 
