@@ -9,7 +9,7 @@
   (insta/parser
    "S = c | link | bref | hash
     <c> = #'(\\w|\\s)+'
-    link = <'[['> c <']]'>
+    link = <'[['> c <']]'>  | <'[['> S? link S? <']]'>
     hash = <'#'> c | <'#'> <'[['> c <']]'>
     bref = <'(('> c <'))'>
    "))
