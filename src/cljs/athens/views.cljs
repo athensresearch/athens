@@ -5,6 +5,11 @@
    [re-frame.core :as rf :refer [subscribe dispatch]]
    [reitit.frontend :as rfe]
    [reitit.frontend.easy :as rfee]
+   [reagent.core :refer [atom]]
+
+   [datascript.core :as d]
+   [athens.db]
+
    ))
 
 (defn about-panel []
@@ -67,6 +72,43 @@
      :page  page/main
      pages-panel)])
 
+(defn search-box []
+  ;; FIXME don't use globals, pass db as argument. E.g. via services map
+  (let [*matches (atom [])]
+    [:div {:style {:position "relative"
+                   :display "inline-block"}}
+     [:input#find-or-create-input.bp3-input
+      {:type "search"
+                                        ; :value "",
+       :placeholder (str (rand-int 100) "Find or Create Page"),
+       :on-change (fn [e]
+                    (let [v (.. e -target -value)]
+                      (let [db (d/db athens.db/dsdb)
+                            matches (take 10
+                                          (d/q '[:find [(pull ?node [:db/id :block/string :node/title #_(comment "what else here?") * ]) ...]
+                                                 :in $ ?query-pattern
+                                                 :where
+                                                 (or
+                                                  [?node :node/title ?txt]
+                                                  [?node :block/string ?txt])
+                                                 [(re-find ?query-pattern  ?txt)]]
+                                               db
+                                               ;; Options https://clojuredocs.org/clojure.core/re-pattern
+                                               (re-pattern (str "(?i)" v))))]
+                        (reset! *matches matches))
+                      ))}]
+     [:div {
+            :style {:background-color "white"
+                    :position "absolute"
+                    :z-index 99
+                    :top "100%"
+                    :left 0
+                    :right 0}}
+      [(fn []
+         [:ul (for [[i item] (map-indexed list @*matches)]
+                ;; TODO highlight match
+                [:li {:key i} (pr-str item)])])]]]))
+
 (defn main-panel []
   (let [current-route (subscribe [:current-route])]
     (fn []
@@ -76,4 +118,5 @@
        [:div
         [:a {:href (rfee/href :pages)} "All /pages"]
         [:span {:style {:margin 0 :margin-left 10}} "Current Route: " [:b (-> @current-route :path)]]]
+       [search-box]
        [match-panel (-> @current-route :data :name)]])))
