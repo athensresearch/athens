@@ -73,19 +73,21 @@
      pages-panel)])
 
 (defn search-box []
-  ;; FIXME don't use globals, pass db as argument. E.g. via services map
   (let [*matches (atom [])]
     [:div {:style {:position "relative"
                    :display "inline-block"}}
      [:input#find-or-create-input.bp3-input
       {:type "search"
-                                        ; :value "",
-       :placeholder (str (rand-int 100) "Find or Create Page"),
+       :placeholder "Find or Create Page",
        :on-change (fn [e]
                     (let [v (.. e -target -value)]
+                      ;; FIXME don't use globals, pass db as argument. E.g. via services map
                       (let [db (d/db athens.db/dsdb)
                             matches (take 10
-                                          (d/q '[:find [(pull ?node [:db/id :block/string :node/title #_(comment "what else here?") * ]) ...]
+                                          (d/q '[:find [(pull ?node [:db/id
+                                                                     :block/string
+                                                                     :node/title #_(comment "what else here?")
+                                                                     *]) ...]
                                                  :in $ ?query-pattern
                                                  :where
                                                  (or
@@ -93,7 +95,8 @@
                                                   [?node :block/string ?txt])
                                                  [(re-find ?query-pattern  ?txt)]]
                                                db
-                                               ;; Options https://clojuredocs.org/clojure.core/re-pattern
+                                               ;; Case insensitive search, other options
+                                               ;; here https://clojuredocs.org/clojure.core/re-pattern
                                                (re-pattern (str "(?i)" v))))]
                         (reset! *matches matches))
                       ))}]
