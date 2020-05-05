@@ -72,45 +72,60 @@
      :page  page/main
      pages-panel)])
 
+(defn highlight-match [query txt]
+  (let [query-pattern (re-pattern (str "(?i)"  "((?<=" query ")|(?=" query "))"))]
+    (map-indexed (fn [i part]
+           (if (re-find query-pattern part)
+             [:span {:key i :style {:background-color "yellow"}} part]
+             part))
+         (clojure.string/split txt query-pattern))))
+
 (defn search-box []
-  (let [*matches (atom [])]
+  (let [*cache (atom {})
+        *match (atom nil)]
     [:div {:style {:position "relative"
                    :display "inline-block"}}
      [:input#find-or-create-input.bp3-input
       {:type "search"
        :placeholder "Find or Create Page",
        :on-change (fn [e]
-                    (let [v (.. e -target -value)]
+                    (let [query (.. e -target -value)]
                       ;; FIXME don't use globals, pass db as argument. E.g. via services map
-                      (let [db (d/db athens.db/dsdb)
-                            matches (take 10
-                                          (d/q '[:find [(pull ?node [:db/id
-                                                                     :block/string
-                                                                     :node/title #_(comment "what else here?")
-                                                                     *]) ...]
-                                                 :in $ ?query-pattern
-                                                 :where
-                                                 (or
-                                                  [?node :node/title ?txt]
-                                                  [?node :block/string ?txt])
-                                                 [(re-find ?query-pattern  ?txt)]]
-                                               db
-                                               ;; Case insensitive search, other options
-                                               ;; here https://clojuredocs.org/clojure.core/re-pattern
-                                               (re-pattern (str "(?i)" v))))]
-                        (reset! *matches matches))
+                      (let [result (when-not (clojure.string/blank? query)
+                                      (or (get @*cache query)
+                                          (let [db (d/db athens.db/dsdb)
+                                                result
+                                                (vec (take 10
+                                                           (d/q '[:find [(pull ?node [:db/id
+                                                                                      :block/string
+                                                                                      :node/title #_(comment "what else here?")
+                                                                                      *]) ...]
+                                                                  :in $ ?query-pattern
+                                                                  :where
+                                                                  (or
+                                                                   [?node :node/title ?txt]
+                                                                   [?node :block/string ?txt])
+                                                                  [(re-find ?query-pattern  ?txt)]]
+                                                                db
+                                                                ;; Case insensitive search, other options
+                                                                ;; here https://clojuredocs.org/clojure.core/re-pattern
+                                                                (re-pattern (str "(?i)" query)))))]
+                                            (swap! *cache assoc query result)
+                                            result)))]
+                        (reset! *match [query result]))
                       ))}]
-     [:div {
-            :style {:background-color "white"
+     [:div {:style {:background-color "white"
                     :position "absolute"
                     :z-index 99
                     :top "100%"
                     :left 0
                     :right 0}}
       [(fn []
-         [:ul (for [[i item] (map-indexed list @*matches)]
-                ;; TODO highlight match
-                [:li {:key i} (pr-str item)])])]]]))
+         (let [[query items] @*match]
+           [:ul (for [[i {:keys [:block/string node/title]}] (map-indexed list items)]
+                  ;; TODO highlight match
+                  [:li {:key i}
+                   (highlight-match query (or string title))])]))]]]))
 
 (defn main-panel []
   (let [current-route (subscribe [:current-route])]
