@@ -122,9 +122,11 @@
                     :right 0}}
       [(fn []
          (let [[query items] @*match]
+           ;; TODO display "Create new page '<query>'" when there is no match
            [:ul (for [[i {:keys [:block/string node/title]}] (map-indexed list items)]
-                  ;; TODO highlight match
                   [:li {:key i}
+                   ;; TODO format block
+                   ;; TODO Open block on click
                    (highlight-match query (or string title))])]))]]]))
 
 (defn main-panel []
