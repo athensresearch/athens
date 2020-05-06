@@ -52,6 +52,20 @@
     [:div
      [:h1 "Home Panel"]]))
 
+(defn left-sidebar
+  []
+  (fn []
+    (let [favorites (subscribe [:favorites])
+          current-route (subscribe [:current-route])]
+      [:div {:style {:margin "0 10px" :max-width 250}}
+       [:div [:a {:href (rfee/href :pages)} "All /pages"]]
+       [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
+       [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
+       [:ol {:style {:padding 0 :margin 0 :list-style-type "none"}}
+        (for [[_order title bid] @favorites]
+          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]
+       ])))
+
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
@@ -74,9 +88,6 @@
       [alert]
       (if @loading
         [:h4 "Loading... (at least it'll be faster than Roam)"]
-        [:div
-         ;;[:h1 (str "Hello World")]
-         [:div
-          [:a {:href (rfee/href :pages)} "All /pages"]
-          [:span {:style {:margin 0 :margin-left 10}} "Current Route: " [:b (-> @current-route :path)]]]
+        [:div {:style {:display "flex"}}
+         [left-sidebar]
          [match-panel (-> @current-route :data :name)]]))))
