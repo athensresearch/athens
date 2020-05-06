@@ -72,8 +72,32 @@
      :page  page/main
      pages-panel)])
 
+(defn re-case-insensitive
+  "More options here https://clojuredocs.org/clojure.core/re-pattern"
+  [query]
+  (re-pattern (str "(?i)" query)))
+
+(defn search-in-block-title [db query]
+  (d/q '[:find [(pull ?node [:db/id :node/title]) ...]
+         :in $ ?query-pattern
+         :where
+         [?node :node/title ?txt]
+         [(re-find ?query-pattern ?txt)]]
+       db
+       (re-case-insensitive query)))
+
+(defn search-in-block-content [db query]
+  (d/q '[:find [(pull ?node [:db/id
+                             :block/string]) ...]
+         :in $ ?query-pattern
+         :where
+         [?node :block/string ?txt]
+         [(re-find ?query-pattern ?txt)]]
+       db
+       (re-case-insensitive query)))
+
 (defn highlight-match [query txt]
-  (let [query-pattern (re-pattern (str "(?i)"  "((?<=" query ")|(?=" query "))"))]
+  (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
     (map-indexed (fn [i part]
            (if (re-find query-pattern part)
              [:span {:key i :style {:background-color "yellow"}} part]
@@ -90,44 +114,35 @@
        :placeholder "Find or Create Page",
        :on-change (fn [e]
                     (let [query (.. e -target -value)]
-                      ;; FIXME don't use globals, pass db as argument. E.g. via services map
                       (let [result (when-not (clojure.string/blank? query)
-                                      (or (get @*cache query)
-                                          (let [db (d/db athens.db/dsdb)
-                                                result
-                                                (vec (take 10
-                                                           (d/q '[:find [(pull ?node [:db/id
-                                                                                      :block/string
-                                                                                      :node/title #_(comment "what else here?")
-                                                                                      *]) ...]
-                                                                  :in $ ?query-pattern
-                                                                  :where
-                                                                  (or
-                                                                   [?node :node/title ?txt]
-                                                                   [?node :block/string ?txt])
-                                                                  [(re-find ?query-pattern  ?txt)]]
-                                                                db
-                                                                ;; Case insensitive search, other options
-                                                                ;; here https://clojuredocs.org/clojure.core/re-pattern
-                                                                (re-pattern (str "(?i)" query)))))]
+                                     (or (get @*cache query)
+                                         ;; FIXME don't use globals, pass db as argument. E.g. via services map
+                                         (let [db (d/db athens.db/dsdb)
+                                               result (cond-> {:titles (search-in-block-title db query)}
+                                                        (count query)
+                                                        (assoc :blocks (search-in-block-content db query))
+                                                        )]
                                             (swap! *cache assoc query result)
                                             result)))]
                         (reset! *match [query result]))
                       ))}]
-     [:div {:style {:background-color "white"
-                    :position "absolute"
-                    :z-index 99
-                    :top "100%"
-                    :left 0
-                    :right 0}}
-      [(fn []
-         (let [[query items] @*match]
-           ;; TODO display "Create new page '<query>'" when there is no match
-           [:ul (for [[i {:keys [:block/string node/title]}] (map-indexed list items)]
-                  [:li {:key i}
-                   ;; TODO format block
-                   ;; TODO Open block on click
-                   (highlight-match query (or string title))])]))]]]))
+     [(fn []
+        (let [[query {:keys [titles blocks] :as result}] @*match]
+          (when result
+            ;; FIXME correct design here
+            [:div {:style {:background-color "#e0e0e0" ;; light gray
+                           :position "absolute"
+                           :z-index 99
+                           :top "100%"
+                           :width "800px"
+                           :left 0
+                           :right 0}}
+             ;; TODO display "Create new page '<query>'" when there is no match
+             [:ul (for [[i {:keys [:block/string node/title]}] (map-indexed list (take 40 (concat (take 20 titles) blocks)))]
+                    [:li {:key i}
+                     ;; TODO format block
+                     ;; TODO Open block on click
+                     (highlight-match query (or string title))])]])))]]))
 
 (defn main-panel []
   (let [current-route (subscribe [:current-route])]
