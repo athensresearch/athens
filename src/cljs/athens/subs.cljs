@@ -41,6 +41,14 @@
     [(re-find ?regex ?s)]
     [?e :block/uid ?id]])
 
+(reg-query-sub
+  :page/sidebar
+  '[:find ?order ?title ?bid
+    :where
+    [?e :page/sidebar ?order]
+    [?e :node/title ?title]
+    [?e :block/uid ?bid]])
+
 ;; datascript pulls
 (reg-pull-sub
  :node
@@ -96,6 +104,15 @@
    {:type :pull-many
     :pattern '[*]
     :ids nodes}))
+
+(re-frame/reg-sub
+  :favorites
+  :<- [:page/sidebar]
+  (fn-traced [nodes _]
+    (->> nodes
+         (into [])
+         (sort-by first))
+    ))
 
 ;; (rp/reg-sub
 ;;  :node/refs2
