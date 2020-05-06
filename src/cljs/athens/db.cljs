@@ -74,7 +74,7 @@
 
 (defonce rfdb {:user "Jeff"
                :current-route nil
-               :loading {}
+               :loading true
                :errors {}})
 
 (defonce dsdb (d/create-conn schema))

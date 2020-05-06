@@ -68,12 +68,15 @@
      pages-panel)])
 
 (defn main-panel []
-  (let [current-route (subscribe [:current-route])]
+  (let [current-route (subscribe [:current-route])
+        loading (subscribe [:loading])]
     (fn []
-      [:div
-       [alert]
-       ;;[:h1 (str "Hello World")]
-       [:div
-        [:a {:href (rfee/href :pages)} "All /pages"]
-        [:span {:style {:margin 0 :margin-left 10}} "Current Route: " [:b (-> @current-route :path)]]]
-       [match-panel (-> @current-route :data :name)]])))
+      [alert]
+      (if @loading
+        [:h4 "Loading... (at least it'll be faster than Roam)"]
+        [:div
+         ;;[:h1 (str "Hello World")]
+         [:div
+          [:a {:href (rfee/href :pages)} "All /pages"]
+          [:span {:style {:margin 0 :margin-left 10}} "Current Route: " [:b (-> @current-route :path)]]]
+         [match-panel (-> @current-route :data :name)]]))))
