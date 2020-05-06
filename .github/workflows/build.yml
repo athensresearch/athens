@@ -1,0 +1,45 @@
+name: build
+
+on: [push
+    , pull_request
+    ]
+
+jobs:
+
+  # scratch:
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - name: Git checkout
+  #       uses: actions/checkout@v1
+  #       with:
+  #         fetch-depth: 1
+  #         submodules: 'true'
+  #
+  #     - name: Scratch
+  #       run: |
+  #         echo "Scratch"
+  test:
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+ 
+      - name: Cache deps
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+                ${{ runner.os }}-maven-
+      - name: Fetch deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          lein deps
+      - name: Run tests
+        run: |
+          script/test/jvm

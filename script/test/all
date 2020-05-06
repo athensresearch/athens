@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+script/test/jvm
+
+# script/test/node
+#
+# echo "Compiling binary for native test"
+# script/compile
+# script/test/native
