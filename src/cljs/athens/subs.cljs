@@ -1,5 +1,6 @@
 (ns athens.subs
   (:require
+   [athens.blocks :as blocks]
    [re-frame.core :as re-frame]
    [re-posh.core :as re-posh :refer [subscribe reg-query-sub reg-pull-sub reg-pull-many-sub]]
    [day8.re-frame.tracing :refer-macros [fn-traced]]))
@@ -55,38 +56,12 @@
   :block/children
   '[:block/uid :block/string :block/order {:block/children ...}])
 
-(defn sort-block [block]
-  (if-let [children (seq (:block/children block))]
-     (assoc block :block/children
-            (sort-by :block/order (map sort-block children)))
-     block))
-
-(comment
-  ;; TODO move this test to unit tests https://github.com/athensresearch/athens/issues/15
-  (= (sort-block {:block/children [{:block/order 2
-                                    :block/children [{:block/order 4}
-                                                     {:block/order 3 }
-                                                     {:block/order 5}]}
-                                   {:block/order 1
-                                    :block/children [{:block/order 4}
-                                                     {:block/order 3 }
-                                                     {:block/order 6}]}]})
-
-     {:block/children [{:block/order 1
-                        :block/children [{:block/order 3 }
-                                         {:block/order 4}
-                                         {:block/order 6}]}
-                       {:block/order 2
-                        :block/children [{:block/order 3 }
-                                         {:block/order 4}
-                                         {:block/order 5}]}]}))
-
 (re-frame/reg-sub
   :block/children-sorted
   (fn [[_ id] _]
     (subscribe [:block/children id]))
   (fn [block _]
-    (sort-block block)))
+    (blocks/sort-block block)))
 
 (reg-pull-sub
   :block/_children
