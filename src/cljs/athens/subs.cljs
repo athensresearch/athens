@@ -19,6 +19,12 @@
     (:errors db)
     ))
 
+(re-frame/reg-sub
+  :loading
+  (fn [db _]
+    (:loading db)
+    ))
+
 ;; datascript queries
 (reg-query-sub
  :nodes

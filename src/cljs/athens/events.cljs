@@ -7,10 +7,7 @@
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
-    ;; not using yet but might eventually when boots become more complex
-    ;; boilerplate for it as bottom of file
-    ;; [day8.re-frame.async-flow-fx]
-    ))
+    [day8.re-frame.async-flow-fx]))
 
 (reg-event-db
   :init-rfdb
@@ -55,13 +52,18 @@
   (fn-traced [db]
              (assoc-in db [:errors] {})))
 
-;;(reg-event-fx
-;;  :boot-async
-;;  (fn-traced [_ _]
-;;             {:async-flow (boot-flow)}))
+(reg-event-db
+  :clear-loading
+  (fn-traced [db]
+    (assoc-in db [:loading] false)))
 
-;;(defn boot-flow []
-;;  {:first-dispatch
-;;          [:load-dsdb]
-;;   :rules [{:when :seen? :events :get-dsdb-success :halt? true}
-;;           {:when :seen? :events :api-request-error :dispatch [:app-failed-state] :halt? true}]})
+(defn boot-flow []
+  {:first-dispatch
+          [:get-datoms]
+   :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
+           {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
+
+(reg-event-fx
+  :boot
+  (fn-traced [_ _]
+    {:async-flow (boot-flow)}))

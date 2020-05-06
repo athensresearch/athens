@@ -26,6 +26,6 @@
   (rf/dispatch-sync [:init-rfdb])
   ;; when dev, download datoms directly
   (when config/debug?
-    (rf/dispatch-sync [:get-datoms]))
+    (rf/dispatch [:boot]))
   (dev-setup)
   (mount-root))
