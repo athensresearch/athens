@@ -29,7 +29,7 @@
 
   :min-lein-version "2.5.3"
 
-  :source-paths ["src/clj" "src/cljs"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
@@ -47,7 +47,8 @@
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
-            "test"         ["shell" "karma" "start" "--single-run"]
+            "test-jvm"     ["test"]
+            "test-karma"   ["shell" "karma" "start" "--single-run"]
             "gh-pages"     ["shell" "yarn" "gh-pages" "-d" "resources/public"]
             "karma"        ["do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "karma-test"]
