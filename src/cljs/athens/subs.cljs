@@ -68,7 +68,7 @@
 
 (reg-pull-sub
   :block/children
-  '[:block/uid :block/string :block/order {:block/children ...}])
+  '[:block/uid :block/string :block/order :block/open :db/id {:block/children ...}])
 
 (re-frame/reg-sub
   :block/children-sorted

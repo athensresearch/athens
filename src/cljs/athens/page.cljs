@@ -10,15 +10,39 @@
       [:div
        (doall
         (for [ch (:block/children @block)]
-          (let [{:block/keys [uid string children]} ch]
+          (let [{:block/keys [uid string open children] dbid :db/id} ch
+                children? (not (zero? (count children)))]
             ^{:key uid}
             [:div
-             [:span.controls {:style {:margin-right 5 :cursor "pointer"}
-                              :on-click #(dispatch [:navigate :page {:id uid}])}
-              "•"]
-             [:span (parse string)]
-             [:div {:style {:margin-left 20}}
-              [render-blocks uid]]])))])))
+             [:div.block {:style {:display "flex"}}
+              [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
+               (cond
+                 (and children? open) [:span.arrow-down {:style {:width        0 :height 0
+                                                                 :border-left  "5px solid transparent"
+                                                                 :border-right "5px solid transparent"
+                                                                 :border-top   "5px solid black"
+                                                                 :cursor "pointer"
+                                                                 :margin-top 4}
+                                                         :on-click #(dispatch [:block/toggle-open dbid open])}]
+                 (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
+                                                                        :border-top  "5px solid transparent"
+                                                                        :border-bottom "5px solid transparent"
+                                                                        :border-left   "5px solid black"
+                                                                        :cursor "pointer"
+                                                                        :margin-right 4}
+                                                                :on-click #(dispatch [:block/toggle-open dbid open])}]
+                 :else [:span {:style {:width 10}}])
+               [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
+                               :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
+                               :vertical-align "middle" :align-items "center" :justify-content "center"}}
+                [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
+                                            :cursor         "pointer" :display "inline-block" :background-color "black"
+                                            :vertical-align "middle"}
+                                 :on-click #(dispatch [:navigate :page {:id uid}])}]]]
+              [:span (parse string)]]
+             (when open
+               [:div {:style {:margin-left 20}}
+                [render-blocks uid]])])))])))
 
 ; match [[title]] or #title or #[[title]]
 (defn linked-pattern [string]
@@ -78,7 +102,7 @@
     (fn []
       (let [node (subscribe [:node [:block/uid (-> @current-route :path-params :id)]])]
         [:div
-          [:h1 "Page Panel"]
+          ;;[:h1 "Page Panel"]
          (if (:node/title @node)
            [node-page @node]
            [block-page (:block/uid @node)])]))))
