@@ -14,9 +14,12 @@ You will need:
 - `lein`: Clojure's main [package manager](https://leiningen.org/) (lein installs the correct version of Clojure for you)
 - `yarn` or `npm`: I'm using [yarn](https://www.npmjs.com/package/yarn)
 
-Because `yarn` and `lein` are straightforward, and the only system dependency needed is `java`, I don't think `docker` is critical for local development.
+Follow these steps:
 
-Once your OS recognizes your `java` sdk, you have `lein` and `yarn`, simply clone the repo, run `lein dev`, `yarn`, and go to [localhost:3000](http://localhost:3000).
+1. Clone the repo
+2. `yarn install`
+3. `lein dev`
+4. Go to [localhost:3000](http://localhost:3000)
 
 ## Built With
 
