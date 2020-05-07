@@ -42,6 +42,12 @@
              (d/reset-conn! db/dsdb (d/empty-db db/schema)) ;; TODO: refactor to an effect
              (db/str-to-db-tx json-str)))
 
+(reg-event-ds
+  :block/toggle-open
+  (fn-traced [_ [_event eid open-state]]
+    [[:db/add eid :block/open (not open-state)]]
+    ))
+
 (reg-event-db
   :alert-failure
   (fn-traced [db error]
