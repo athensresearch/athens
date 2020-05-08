@@ -2,8 +2,10 @@
 
 set -eo pipefail
 
+# Make sure all JS deps are available
 yarn
 
+# Build app (see shadow-cljs.edn config)
 lein prod
 
 RELEASE_NAME=${RELEASE_NAME:-"athens-app"}
