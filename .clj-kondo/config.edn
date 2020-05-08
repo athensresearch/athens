@@ -1,0 +1,24 @@
+{:linters {:unused-namespace
+           {:exclude [clj-kondo.impl.rewrite-clj-patch
+                      rewrite-clj.parser.core
+                      clj-kondo.impl.var-info-gen
+                      clj-kondo.impl.node.seq
+                      clj-kondo.impl.profiler]}
+           :unresolved-symbol
+           {:exclude [(clj-kondo.impl.utils/one-of)]}
+           :unused-referred-var
+           {:exclude {clojure.test [is deftest testing]}}
+           :type-mismatch
+           {:level :warning
+            :namespaces
+            {clj-kondo.core {print! {:arities {1 {:args [:map]
+                                                  :ret :nil}}}
+                             run! {:arities {1 {:args [:map]
+                                                :ret :map}}}}
+             clj-kondo.impl.config #include "../src/clj_kondo/impl/config.types.edn"
+             clj-kondo.impl.findings #include "../src/clj_kondo/impl/findings.types.edn"}}
+           :missing-docstring {:level :off}
+           :unsorted-required-namespaces {:level :warning}}
+ :lint-as {me.raynes.conch/programs clojure.core/declare
+           me.raynes.conch/let-programs clojure.core/let}
+ :output {:exclude-files ["src/clj_kondo/impl/rewrite_clj_patch.clj"]}}
