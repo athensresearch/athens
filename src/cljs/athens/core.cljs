@@ -25,7 +25,8 @@
 (defn init []
   (rf/dispatch-sync [:init-rfdb])
   ;; when dev, download datoms directly
-  (when config/debug?
+  ;; FIXME without this dispatch nothing works, so enabling it for now
+  (when true #_config/debug?
     (rf/dispatch [:boot]))
   (dev-setup)
   (mount-root))

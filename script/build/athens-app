@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Make sure all JS deps are available
+yarn
+
+# Build app (see shadow-cljs.edn config)
+lein prod
+
+RELEASE_NAME=${RELEASE_NAME:-"athens-app"}
+
+# Clean before
+rm -rf $RELEASE_NAME
+
+cp -R resources/public $RELEASE_NAME
+
+tar -zcvf $RELEASE_NAME.tar.gz $RELEASE_NAME
+
+# Clean after
+rm -rf $RELEASE_NAME
+
+
