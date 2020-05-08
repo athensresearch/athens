@@ -11,7 +11,7 @@
        (doall
         (for [ch (:block/children @block)]
           (let [{:block/keys [uid string open children] dbid :db/id} ch
-                children? (not (zero? (count children)))]
+                children? (not-empty children)]
             ^{:key uid}
             [:div
              [:div.block {:style {:display "flex"}}
@@ -61,8 +61,8 @@
     (let [node (subscribe [:node [:block/uid id]])
           parents (subscribe [:block/_children2 [:block/uid id]])]
       [:div
-       [:span {:style {:color "gray"} }
-        (interpose " > " 
+       [:span {:style {:color "gray"}}
+        (interpose " > "
                    (map (fn [b]
                           (let [{:block/keys [uid string] :node/keys [title]} b]
                             ^{:key uid}
