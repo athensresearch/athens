@@ -90,15 +90,16 @@ jobs:
         id: athens-version
         run: |
           ATHENS_VERSION=$(echo $GITHUB_SHA | head -c 7)
-          echo "##[set-output name=version;]${ATHENS_VERSION}"
+          echo "##[set-output name=version;]${ATHENS_VERSION}"          
+          echo "##[set-output name=release-name;]athens-app-${ATHENS_VERSION}"
           
       - name: Release 
         run: |
-          RELEASE_NAME=athens-app-${{ steps.athens-version.outputs.version }} script/build/athens-app
+          RELEASE_NAME=${{ steps.athens-version.outputs.release-name }} script/build/athens-app
           
       - uses: actions/upload-artifact@v1
         with:
           name: app
-          path: ${{ steps.athens-version.outputs.version }}.tar.gz
+          path: ${{ steps.athens-version.outputs.release-name }}.tar.gz
 
           
