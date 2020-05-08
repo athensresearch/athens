@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-# lein prod
+lein prod
 
 RELEASE_NAME=${RELEASE_NAME:-"athens-app"}
 
