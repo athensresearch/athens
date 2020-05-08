@@ -43,3 +43,21 @@ jobs:
       - name: Run tests
         run: |
           script/test/jvm
+          
+  lint:
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+ 
+      - uses: DeLaGuardo/setup-clj-kondo@v1
+        with:
+          version: '2020.04.05'
+          
+      - name: Lint 
+        run: |
+          script/lint

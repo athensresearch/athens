@@ -14,3 +14,11 @@
 # shadow-cljs cache, port files
 /.shadow-cljs/
 .idea/
+
+.clj-kondo/.cache
+
+# Mac OS files
+.DS_Store
+
+# Emacs files
+.#*
