@@ -61,3 +61,44 @@ jobs:
       - name: Lint 
         run: |
           script/lint
+
+  build-app:
+    needs: [test]
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+  
+      - name: Cache deps
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+                ${{ runner.os }}-maven-
+      - name: Fetch deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          lein deps
+          
+      - name: Athens version
+        id: athens-version
+        run: |
+          ATHENS_VERSION=$(echo $GITHUB_SHA | head -c 7)
+          echo "##[set-output name=version;]${ATHENS_VERSION}"
+          
+      - name: Release 
+        run: |
+          RELEASE_NAME=${{ steps.athens-version.outputs.version }} script/build/athens-app
+          
+      - uses: actions/upload-artifact@v1
+        with:
+          name: app
+          path: ${{ steps.athens-version.outputs.version }}.tar.gz
+
+          
