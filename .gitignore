@@ -14,3 +14,9 @@
 # shadow-cljs cache, port files
 /.shadow-cljs/
 .idea/
+
+# Mac OS files
+.DS_Store
+
+# Emacs files
+.#*
