@@ -94,7 +94,7 @@ jobs:
           
       - name: Release 
         run: |
-          RELEASE_NAME=${{ steps.athens-version.outputs.version }} script/build/athens-app
+          RELEASE_NAME=athens-app-${{ steps.athens-version.outputs.version }} script/build/athens-app
           
       - uses: actions/upload-artifact@v1
         with:
