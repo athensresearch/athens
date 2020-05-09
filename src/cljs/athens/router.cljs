@@ -1,12 +1,12 @@
 (ns athens.router
   (:require
-   [athens.views :as views]
+   #_[athens.views :as views]
+   [day8.re-frame.tracing :refer-macros [fn-traced]]
    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-db reg-event-fx reg-fx]]
-   [reitit.frontend :as rfe]
-   [reitit.frontend.easy :as rfee]
-   [reitit.frontend.controllers :as rfc]
    [reitit.coercion.spec :as rss]
-   [day8.re-frame.tracing :refer-macros [fn-traced]]))
+   [reitit.frontend :as rfe]
+   [reitit.frontend.controllers :as rfc]
+   [reitit.frontend.easy :as rfee]))
 
 ;; subs
 (reg-sub

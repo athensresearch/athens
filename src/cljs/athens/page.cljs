@@ -1,10 +1,10 @@
 (ns athens.page
   (:require [athens.parser :refer [parse]]
-            [reagent.core :as reagent]
             [re-frame.core :refer [subscribe dispatch]]
-            [reitit.frontend.easy :as rfee]))
+            #_[reitit.frontend.easy :as rfee]
+            #_[reagent.core :as reagent]))
 
-(defn render-blocks [block-uid]
+(defn render-blocks []
   (fn [block-uid]
     (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
       [:div
@@ -56,7 +56,7 @@
 (defn unlinked-pattern [string]
   (re-pattern (str "[^\\[|#]" string)))
 
-(defn block-page [id]
+(defn block-page []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])
           parents (subscribe [:block/_children2 [:block/uid id]])]
@@ -75,7 +75,7 @@
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
-(defn node-page [node]
+(defn node-page []
   (fn [node]
     (let [linked-refs   (subscribe [:node/refs (linked-pattern   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]

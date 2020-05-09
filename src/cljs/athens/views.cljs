@@ -1,9 +1,9 @@
 (ns athens.views
   (:require
-   [athens.subs]
    [athens.page :as page]
+   [athens.subs]
    [re-frame.core :as rf :refer [subscribe dispatch]]
-   [reitit.frontend :as rfe]
+   #_[reitit.frontend :as rfe]
    [reitit.frontend.easy :as rfee]
    ))
 
@@ -70,15 +70,15 @@
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
   (let [errors (subscribe [:errors])]
-    (when (not (empty? @errors))
-                (js/alert (str @errors))
-                (dispatch [:clear-errors]))))
+    (when (seq @errors)
+      (js/alert (str @errors))
+      (dispatch [:clear-errors]))))
 
 (defn match-panel [name]
   [(case name
      :about about-panel
      :pages pages-panel
-     :page  page/main
+     :page page/main
      pages-panel)])
 
 (defn main-panel []

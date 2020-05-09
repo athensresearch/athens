@@ -1,13 +1,13 @@
 (ns athens.events
   (:require
     [athens.db :as db]
-    [datascript.core :as d]
-    [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx reg-sub]]
-    [re-posh.core :as rp :refer [reg-event-ds]]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
-    [day8.re-frame.async-flow-fx]))
+    [datascript.core :as d]
+    [day8.re-frame.async-flow-fx]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
+    [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx]]
+    [re-posh.core :as rp :refer [reg-event-ds]]))
 
 (reg-event-db
   :init-rfdb
@@ -38,7 +38,7 @@
 
 (reg-event-ds
   :parse-datoms
-  (fn-traced [_ [event json-str]]
+  (fn-traced [_ [_ json-str]]
              (d/reset-conn! db/dsdb (d/empty-db db/schema)) ;; TODO: refactor to an effect
              (db/str-to-db-tx json-str)))
 

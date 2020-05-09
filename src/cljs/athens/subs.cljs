@@ -1,9 +1,10 @@
 (ns athens.subs
   (:require
    [athens.blocks :as blocks]
+   [day8.re-frame.tracing :refer-macros [fn-traced]]
    [re-frame.core :as re-frame]
-   [re-posh.core :as re-posh :refer [subscribe reg-query-sub reg-pull-sub reg-pull-many-sub]]
-   [day8.re-frame.tracing :refer-macros [fn-traced]]))
+   [re-posh.core :as re-posh :refer [subscribe reg-query-sub reg-pull-sub ;; reg-pull-many-sub
+                                     ]]))
 ;; note: not refering reg-sub because re-posh and re-frame have different reg-subs
 
 ;; re-frame subscriptions
