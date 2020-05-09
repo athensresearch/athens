@@ -1,8 +1,8 @@
 (ns athens.db
-  (:require [datascript.core :as d]
-            [clojure.edn :as edn]
+  (:require [clojure.edn :as edn]
+            [datascript.core :as d]
+            #_[re-frame.core :as re-frame]
             [re-posh.core :as re-posh]
-            [re-frame.core :as re-frame]
             ))
 
 (def str-kw-mappings

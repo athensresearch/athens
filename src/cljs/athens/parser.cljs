@@ -1,7 +1,7 @@
 (ns athens.parser
   (:require [instaparse.core :as insta]
-            [reitit.frontend.easy :as rfee]
-            [re-frame.core :refer [subscribe]]))
+            [re-frame.core :refer [subscribe]]
+            [reitit.frontend.easy :as rfee]))
 
 (declare transform parse)
 

@@ -2,8 +2,8 @@
   (:require
     [cljsjs.react]
     [cljsjs.react.dom]
-    [reagent.core :as r :include-macros true]
-    [devcards.core :as devcards :include-macros true :refer [defcard]]))
+    [devcards.core :as devcards :include-macros true :refer [defcard]]
+    [reagent.core :as r :include-macros true]))
 
 (def bmi-data (r/atom {:height 180 :weight 80}))
 

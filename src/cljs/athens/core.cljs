@@ -1,15 +1,15 @@
 (ns athens.core
   (:require
+   [athens.config :as config]
+   #_[athens.db :as db]
    [athens.events]
+   #_[athens.parser :refer [parser]]
+   [athens.router :as router]
    [athens.subs]
    [athens.views :as views]
-   [athens.config :as config]
-   [athens.db :as db]
-   [athens.router :as router]
-   [athens.parser :refer [parser]]
-   [reagent.core :as reagent]
    [re-frame.core :as rf]
-   [re-posh.core :as rp]
+   [reagent.core :as reagent]
+   #_[re-posh.core :as rp]
    ))
 
 (defn dev-setup []
