@@ -8,7 +8,7 @@ Please refer to [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/
 
 ## Getting Started
 
-Comprehensive setup instructions can be found in [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md)
+Setup instructions can be found in [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md)
 You will need:
 - a `java` sdk: I'm using [openjdk 11.0.2](https://jdk.java.net/archive/)
 - `lein`: Clojure's main [package manager](https://leiningen.org/) (lein installs the correct version of Clojure for you)

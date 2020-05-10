@@ -18,6 +18,7 @@ The Athens Research Twitter is at [@AthensResearch](https://twitter.com/AthensRe
 These are generic instructions for setting up a development environment. [Here](#Setting-up-a-Mac-Development-environment) are the streamlined Mac steps.
 ### Setting up a Development Environment
 1. Download a `java` JDK. You can download the most [current version](https://www.oracle.com/java/technologies/javase-downloads.html) or access the [JDK archives](https://jdk.java.net/archive/).
+You should use version 11 or higher.
 2. Download `yarn`: [yarn](https://www.npmjs.com/package/yarn). 
 3. Install `lein` (build automation and dependency management tool for Clojure). You can either use a [package manager](https://github.com/technomancy/leiningen/wiki/Packaging) such as Homebrew or Chocolatey, or you can download from the command line. Detailed instructions for installing from the command line on Linux, macOS, and Windows are below.
 
