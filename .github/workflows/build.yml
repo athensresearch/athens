@@ -96,6 +96,20 @@ jobs:
       - name: Release 
         run: |
           RELEASE_NAME=${{ steps.athens-version.outputs.release-name }} script/build/athens-app
+
+      - uses: amondnet/now-deployment@v2
+        # add github secrets at https://github.com/athensresearch/athens/settings/secrets
+        with:
+          # only comment on pr events
+          github-comment: ${{ contains(github.event_name, 'pull_request') }}
+          # vercel token, generated here https://vercel.com/account/tokens
+          zeit-token: ${{ secrets.VERCEL_TOKEN }} 
+          # gh action built-in env
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # below two is based on vercel's project linking feature
+          # instructions: https://github.com/amondnet/now-deployment#project-linking
+          now-org-id: ${{ secrets.VERCEL_ORG_ID}}
+          now-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
           
       - uses: actions/upload-artifact@v1
         with:
