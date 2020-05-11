@@ -81,6 +81,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
           restore-keys: |
                 ${{ runner.os }}-maven-
+
       - name: Fetch deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
@@ -93,11 +94,18 @@ jobs:
           echo "##[set-output name=version;]${ATHENS_VERSION}"          
           echo "##[set-output name=release-name;]athens-app-${ATHENS_VERSION}"
           
-      - name: Release 
+      - name: Build app 
         run: |
           RELEASE_NAME=${{ steps.athens-version.outputs.release-name }} script/build/athens-app
 
-      - uses: amondnet/now-deployment@v2
+      - name: Upload app
+        uses: actions/upload-artifact@v1
+        with:
+          name: app
+          path: ${{ steps.athens-version.outputs.release-name }}.tar.gz
+
+      - name: Vercel deploy
+        uses: amondnet/now-deployment@v2
         # add github secrets at https://github.com/athensresearch/athens/settings/secrets
         with:
           # only comment on pr events
@@ -111,9 +119,6 @@ jobs:
           now-org-id: ${{ secrets.VERCEL_ORG_ID}}
           now-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
           
-      - uses: actions/upload-artifact@v1
-        with:
-          name: app
-          path: ${{ steps.athens-version.outputs.release-name }}.tar.gz
+
 
           
