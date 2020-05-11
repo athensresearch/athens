@@ -40,6 +40,21 @@ See [Athens vs Roam Tech Stack](https://roamresearch.com/#/app/ego/page/V81KJmS5
 
 Send a message in the #athens channel of the [Roam Slack](https://roamresearch.slack.com/join/shared_invite/enQtODg3NjIzODEwNDgwLTdhMjczMGYwN2YyNmMzMDcyZjViZDk0MTA2M2UxOGM5NTMxNDVhNDE1YWVkNTFjMGM4OTE3MTQ3MjEzNzE1MTA) or ping me on Twitter at [@tangjeff0](https://twitter.com/tangjeff0).
 
+
+
+<!-- display the social media buttons in your README -->
+[![alt text][1.1]][1] 
+[![alt text][2.1]][2] 
+
+<!-- Twitter Icon then link -->
+[1.1]: https://i.imgur.com/S41NYml.png
+[1]: https://twitter.com/AthensResearch
+
+<!-- Discord Icon then link -->
+[2.1]: https://i.imgur.com/lTIZXqW.png
+[2]: https://discord.gg/5D7af48
+
+
 ---
 
 ![Athens](doc/athens-1920.jpg)
