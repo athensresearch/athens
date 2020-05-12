@@ -4,12 +4,12 @@ Open-Source [Roam](http://roamresearch.com/). For more background, please read t
 
 # Contributing
 
-Please refer to [CONTRIBUTING.md](https://github.com/tangjeff0/athens/blob/master/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](https://github.com/tangjeff0/athens/blob/master/CODE_OF_CONDUCT.md).
+Please refer to [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md).
 
 ## Getting Started
 
+Setup instructions can be found in [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md)
 You will need:
-
 - a `java` sdk: I'm using [openjdk 11.0.2](https://jdk.java.net/archive/)
 - `lein`: Clojure's main [package manager](https://leiningen.org/) (lein installs the correct version of Clojure for you)
 - `yarn` or `npm`: I'm using [yarn](https://www.npmjs.com/package/yarn)

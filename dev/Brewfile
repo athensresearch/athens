@@ -1,0 +1,3 @@
+brew 'openjdk@11'
+brew 'leiningen'
+brew 'yarn'

@@ -10,15 +10,19 @@ Before contributing, please first read the [Code of Conduct](https://github.com/
 
 Most communication about Athens development happens in the #athens channel in the [Roam Slack](https://roamresearch.slack.com/join/shared_invite/enQtODg3NjIzODEwNDgwLTdhMjczMGYwN2YyNmMzMDcyZjViZDk0MTA2M2UxOGM5NTMxNDVhNDE1YWVkNTFjMGM4OTE3MTQ3MjEzNzE1MTA). 
 
-You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/tangjeff0). He posts regular updates about this project. We will make an Athens Research Twitter account later at a suitable time. 
+You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/tangjeff0). He posts regular updates about this project. 
+
+The Athens Research Twitter is at [@AthensResearch](https://twitter.com/AthensResearch)
 
 ## Development Environment
-
+These are generic instructions for setting up a development environment. [Here](#Setting-up-a-Mac-Development-environment) are the streamlined Mac steps.
+### Setting up a Development Environment
 1. Download a `java` JDK. You can download the most [current version](https://www.oracle.com/java/technologies/javase-downloads.html) or access the [JDK archives](https://jdk.java.net/archive/).
+You should use version 11 or higher.
 2. Download `yarn`: [yarn](https://www.npmjs.com/package/yarn). 
 3. Install `lein` (build automation and dependency management tool for Clojure). You can either use a [package manager](https://github.com/technomancy/leiningen/wiki/Packaging) such as Homebrew or Chocolatey, or you can download from the command line. Detailed instructions for installing from the command line on Linux, macOS, and Windows are below.
 
-### On Linux:
+#### On Linux:
    * Install curl command
 > ```sudo apt-get install -y curl```
    * Download the lein script
@@ -32,7 +36,7 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
    
    It should take a while to run, as it will download some resources it needs the first time. See the note at the end of this section if you are having issues.
 
-### On macOS:
+#### On macOS:
    * Download the lein script
 > ```curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein```
    * Move the lein script to the user programs directory
@@ -44,7 +48,7 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
 
    It should take a while to run, as it will download some resources it needs the first time. See the note at the end of this section if you are having issues.
 
-### On Windows:
+#### On Windows:
    * Download the lein.bat script
 > ```curl -O https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein.bat```
    * Create a bin directory for scripts
@@ -66,6 +70,18 @@ You can also reach out to Jeff on Twitter at [@tangjeff0](https://twitter.com/ta
 > ```lein dev```
 
    Open [localhost:3000](http://localhost:3000) in your browser and you should be good to go!
+
+### Setting up a Mac Development environment
+Here are instructions for setting up this repository on a Mac, using Homebrew and nvm.
+1. Install [Homebrew](https://brew.sh/)
+1. Install [Node Version Manager](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Run `git clone https://github.com/athensresearch/athens.git`
+1. `cd athens`
+1. `nvm use`
+1. `brew bundle install --no-lock --file=./dev/Brewfile`
+1. `yarn install`
+1. `lein dev`
+1. Open [localhost:3000](http://localhost:3000) in your browser and you should be good to go!
 
 ### Trouble Setting Up Your Dev Environment?
 If you are having trouble getting your dev environment set up, first go through the steps found [here](https://purelyfunctional.tv/guide/how-to-install-clojure/). If you are still having trouble, please let us know in the #athens channel in the Roam Slack.
