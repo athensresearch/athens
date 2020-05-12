@@ -1,59 +1,37 @@
 # Athens
 
-Open-Source [Roam](http://roamresearch.com/). For more background, please read the [Athens FAQ](https://roamresearch.com/#/app/ego/page/OaSVyM_nr) on my public Roam.
+Open-Source [Roam Research](http://roamresearch.com/).
+
+The [Athens FAQ](https://www.notion.so/athensresearch/Athens-Roadmap-096427f189b648729ae0acbdcefd4c6f) answers questions like:
+
+- "Why Clojure?"
+- "What's the roadmap?"
+- "What's the tech stack?"
 
 # Contributing
 
-Please refer to [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md).
+Athens is in development. If you want to run it, follow the setup instructions in [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md).
 
-## Getting Started
+# Community
 
-Setup instructions can be found in [CONTRIBUTING.md](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md)
-You will need:
-- a `java` sdk: I'm using [openjdk 11.0.2](https://jdk.java.net/archive/)
-- `lein`: Clojure's main [package manager](https://leiningen.org/) (lein installs the correct version of Clojure for you)
-- `yarn` or `npm`: I'm using [yarn](https://www.npmjs.com/package/yarn)
+If you have any input on how you want this project to unfold, please join our Discord.
 
-Follow these steps:
+Our Discord is a safe space, meant for learning and improvement (especially about Clojure!).
 
-1. Clone the repo
-2. `yarn install`
-3. `lein dev`
-4. Go to [localhost:3000](http://localhost:3000)
+We also talk about topics like visual & interactive knowledge graphs (HCI), knowledge markets (economics), open protocols (governance & philosophy), other applications of bi-directional links and graph DBs, and other Tools for Thought.
 
-## Built With
+You don't need to code to contribute. But it is encouraged 😉
 
-See [Athens vs Roam Tech Stack](https://roamresearch.com/#/app/ego/page/V81KJmS5L) for more background.
-
-![img](doc/athens-vs-roam-tech-stack.png)
-
-
-# Roadmap / Objectives
-
-- to provide a self-hosted option, easily deployable on your machine
-- to provide a hosted option using Datomic and their open-source license
-  - if hosted, maintaining best practices (such as end-to-end encryption) and complying with standards like GDPR
-- to provide a React Native mobile client
-- to begin development of an open protocol for bi-directional links between Roam and other open-source alternatives
-
-# Questions
-
-Send a message in the #athens channel of the [Roam Slack](https://roamresearch.slack.com/join/shared_invite/enQtODg3NjIzODEwNDgwLTdhMjczMGYwN2YyNmMzMDcyZjViZDk0MTA2M2UxOGM5NTMxNDVhNDE1YWVkNTFjMGM4OTE3MTQ3MjEzNzE1MTA) or ping me on Twitter at [@tangjeff0](https://twitter.com/tangjeff0).
-
-
-
-<!-- display the social media buttons in your README -->
 [![alt text][1.1]][1] 
 [![alt text][2.1]][2] 
 
-<!-- Twitter Icon then link -->
-[1.1]: https://i.imgur.com/S41NYml.png
-[1]: https://twitter.com/AthensResearch
-
 <!-- Discord Icon then link -->
-[2.1]: https://i.imgur.com/lTIZXqW.png
-[2]: https://discord.gg/5D7af48
+[1.1]: https://i.imgur.com/lTIZXqW.png
+[1]: https://discord.gg/5D7af48
 
+<!-- Twitter Icon then link -->
+[2.1]: https://i.imgur.com/S41NYml.png
+[2]: https://twitter.com/AthensResearch
 
 ---
 
