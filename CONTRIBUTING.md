@@ -79,7 +79,7 @@ Here are instructions for setting up this repository on a Mac, using Homebrew an
 1. `cd athens`
 1. `nvm use`
 1. `brew bundle install --no-lock --file=./dev/Brewfile`
-1. `npm install`
+1. `yarn install`
 1. `lein dev`
 1. Open [localhost:3000](http://localhost:3000) in your browser and you should be good to go!
 
