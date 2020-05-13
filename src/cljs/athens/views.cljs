@@ -2,6 +2,7 @@
   (:require
    [athens.page :as page]
    [athens.subs]
+   [athens.style :as style]
    [re-frame.core :as rf :refer [subscribe dispatch]]
    #_[reitit.frontend :as rfe]
    [reitit.frontend.easy :as rfee]
@@ -87,7 +88,11 @@
     (fn []
       [alert]
       (if @loading
-        [:h4 "Loading... (at least it'll be faster than Roam)"]
+        [:div
+          [style/loading-css]
+          [:h4 {:id "loading-text"} "Loading... (at least it'll be faster than Roam)"]
+        ]
         [:div {:style {:display "flex"}}
+         [style/main-css]
          [left-sidebar]
          [match-panel (-> @current-route :data :name)]]))))
