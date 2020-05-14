@@ -7,7 +7,7 @@
 (defn render-blocks []
   (fn [block-uid]
     (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
-      [:div
+      [:div {:class "content-block"}
        (doall
         (for [ch (:block/children @block)]
           (let [{:block/keys [uid string open children] dbid :db/id} ch

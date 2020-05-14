@@ -19,7 +19,7 @@
 
 (defn table
   [nodes]
-  [:table {:style {:width "60%" :margin-top 20}}
+  [:table {:style {:width "60%" :margin-top 20} :class "pages-table"}
    [:thead
     [:tr
      [:th {:style {:text-align "left"}} "Page"]
