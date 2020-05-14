@@ -13,17 +13,24 @@ These dependencies are needed to get Athens up and running. Follow the instructi
 1. [java 11 and lein](https://purelyfunctional.tv/guide/how-to-install-clojure/) (lein installs Clojure)
 1. [node 12](https://nodejs.org/en/download/) and [yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 
-To get Athens up and running run the following commands in the root directory of the project
+After you've got these dependencies, clone the git repository to your harddrive:
+```
+git clone https://github.com/athensresearch/athens.git
+```
+Then `cd athens/` and run the following commands.
 
-Pull javascript dependencies
+Pull javascript dependencies:
 ```
 yarn
 ```
 
-Pull java dependencies and build with
+Pull java dependencies and build with:
 ```
 lein dev
 ```
+
+When these scripts are done, your terminal will read `build complete`. Athens can be accessed by pointing a browser to `localhost:3000` on UNIX or `127.0.0.1:3000` on Windows.
+
 # Clojure Style Guide
 
 We are using [clj-kondo](https://github.com/borkdude/clj-kondo) with an [empty config](https://github.com/athensresearch/athens/issues/39#issuecomment-627231765).
