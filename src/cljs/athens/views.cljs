@@ -64,7 +64,7 @@
        [:div [:a {:href (rfee/href :pages)} "All /pages"]]
        [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
        [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ol {:style {:padding 0 :margin 0 :list-style-type "none"}}
+       [:ul {:class "left-sidebar"}
         (for [[_order title bid] @favorites]
           ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
 
