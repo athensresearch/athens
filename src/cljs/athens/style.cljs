@@ -1,5 +1,6 @@
-(ns athens.style (:require [garden.core :refer [css]]
-                           [garden.selectors :refer [nth-child]]))
+(ns athens.style 
+  (:require [garden.core :refer [css]]
+            [garden.selectors :refer [nth-child]]))
 
 (defn loading-css
   []
@@ -23,3 +24,4 @@
          {:padding 0
           :margin 0
           :list-style-type "none"}])])
+

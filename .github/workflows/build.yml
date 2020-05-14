@@ -27,7 +27,7 @@ jobs:
         with:
           fetch-depth: 1
           submodules: 'true'
- 
+
       - name: Cache deps
         uses: actions/cache@v1
         id: cache-deps
@@ -43,7 +43,7 @@ jobs:
       - name: Run tests
         run: |
           script/test/jvm
-          
+
   lint:
     # ubuntu 18.04 comes with lein + java8 installed
     runs-on: ubuntu-18.04
@@ -53,12 +53,12 @@ jobs:
         with:
           fetch-depth: 1
           submodules: 'true'
- 
+
       - uses: DeLaGuardo/setup-clj-kondo@v1
         with:
-          version: '2020.04.05'
-          
-      - name: Lint 
+          version: '2020.05.09'
+
+      - name: Lint
         run: |
           script/lint
 
@@ -72,7 +72,7 @@ jobs:
         with:
           fetch-depth: 1
           submodules: 'true'
-  
+
       - name: Cache deps
         uses: actions/cache@v1
         id: cache-deps
@@ -85,21 +85,19 @@ jobs:
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
           lein deps
-          
+
       - name: Athens version
         id: athens-version
         run: |
           ATHENS_VERSION=$(echo $GITHUB_SHA | head -c 7)
-          echo "##[set-output name=version;]${ATHENS_VERSION}"          
+          echo "##[set-output name=version;]${ATHENS_VERSION}"
           echo "##[set-output name=release-name;]athens-app-${ATHENS_VERSION}"
-          
-      - name: Release 
+
+      - name: Release
         run: |
           RELEASE_NAME=${{ steps.athens-version.outputs.release-name }} script/build/athens-app
-          
+
       - uses: actions/upload-artifact@v1
         with:
           name: app
           path: ${{ steps.athens-version.outputs.release-name }}.tar.gz
-
-          
