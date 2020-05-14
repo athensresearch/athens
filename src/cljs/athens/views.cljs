@@ -1,12 +1,11 @@
 (ns athens.views
   (:require
-   [athens.page :as page]
-   [athens.subs]
-   [athens.style :as style]
-   [re-frame.core :as rf :refer [subscribe dispatch]]
    #_[reitit.frontend :as rfe]
-   [reitit.frontend.easy :as rfee]
-   ))
+   [athens.page :as page]
+   [athens.style :as style]
+   [athens.subs]
+   [re-frame.core :as rf :refer [subscribe dispatch]]
+   [reitit.frontend.easy :as rfee]))
 
 (defn about-panel []
   [:div [:h1 "About Panel"]])

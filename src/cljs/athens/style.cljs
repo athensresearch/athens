@@ -1,4 +1,5 @@
-(ns athens.style (:require  [garden.core :refer [css]]))
+(ns athens.style (:require [clojure.string :as str]
+                           [garden.core :refer [css]]))
 
 (defn loading-css
   []
@@ -16,7 +17,7 @@
   []
   (fn []
     [:style
-      (clojure.string/join "" [
+      (str/join "" [
           (css [:body {:font-family "sans-serif"}])
           (css :.pages-table [
             :th {

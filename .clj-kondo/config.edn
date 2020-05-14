@@ -1,29 +1,8 @@
-{:linters {:unused-namespace
-           {:exclude [clj-kondo.impl.rewrite-clj-patch
-                      rewrite-clj.parser.core
-                      clj-kondo.impl.var-info-gen
-                      clj-kondo.impl.node.seq
-                      clj-kondo.impl.profiler]}
-           :unresolved-symbol
-           {:exclude [goog.DEBUG
-                      (clj-kondo.impl.utils/one-of)
-                      (devcards.core/defcard)
+{:linters {:unresolved-symbol
+           {:exclude [(devcards.core/defcard)
                       (devcards.core/defcard-rg)]}
            :unused-referred-var
            {:exclude {clojure.test [is deftest testing]}}
-           :type-mismatch
-           {:level :warning
-            :namespaces
-            {clj-kondo.core {print! {:arities {1 {:args [:map]
-                                                  :ret :nil}}}
-                             run! {:arities {1 {:args [:map]
-                                                :ret :map}}}}
-             clj-kondo.impl.config #include "../src/clj_kondo/impl/config.types.edn"
-             clj-kondo.impl.findings #include "../src/clj_kondo/impl/findings.types.edn"}}
-           :missing-docstring {:level :off}
            :unsorted-required-namespaces {:level :warning}}
- :lint-as {me.raynes.conch/programs clojure.core/declare
-           me.raynes.conch/let-programs clojure.core/let
-           day8.re-frame.tracing/fn-traced clojure.core/fn
-           day8.re-frame.tracing/defn-traced clojure.core/defn}
- :output {:exclude-files ["src/clj_kondo/impl/rewrite_clj_patch.clj"]}}
+ :lint-as {day8.re-frame.tracing/fn-traced clojure.core/fn
+           day8.re-frame.tracing/defn-traced clojure.core/defn}}
