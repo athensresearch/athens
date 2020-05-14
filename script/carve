@@ -5,11 +5,11 @@ set -eo pipefail
 # Find instructions here https://github.com/borkdude/carve/tree/7573fc781d1e82a91f638796224c6ae558fdbe05#usage
 
 if [[ -z "${CI}" ]]; then
+  clojure -A:carve --opts '{:paths ["src" "test"] :interactive? true}'
+else
   OUTPUT=$(clojure -A:carve --opts '{:paths ["src" "test"] :report true}')
   echo $OUTPUT
   echo $OUTPUT | grep -q "()"
-else
-  clojure -A:carve --opts '{:paths ["src" "test"] :interactive? true}'  
 fi
 
 $CMD
