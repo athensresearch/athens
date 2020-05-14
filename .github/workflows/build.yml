@@ -75,6 +75,20 @@ jobs:
       - name: Style 
         run: |
           script/style
+                 
+  carve:
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+          
+      - name: Carving unused vars 
+        run: |
+          script/carve
 
   build-app:
     needs: [test]
