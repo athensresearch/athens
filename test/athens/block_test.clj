@@ -1,6 +1,6 @@
 (ns athens.block-test
-  (:require [clojure.test :refer [deftest is]]
-            [athens.blocks :as blocks]))
+  (:require [athens.blocks :as blocks]
+            [clojure.test :refer [deftest is]]))
 
 
 (deftest sort-block-test
