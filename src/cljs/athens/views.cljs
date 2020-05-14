@@ -91,7 +91,7 @@
       (if @loading
         [:div
          [style/loading-css]
-         [:h4 {:id "loading-text"} "Loading... (at least it'll be faster than Roam)"]]
+         [:h4 {:id "loading-text"} "Loading database... (at least it'll be faster than Roam)"]]
         [:div {:style {:display "flex"}}
          [style/main-css]
          [left-sidebar]
