@@ -86,7 +86,8 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
           
-      - name: Carving unused vars 
+      - uses: DeLaGuardo/setup-clojure@2.0
+        name: Carving unused vars 
         run: |
           script/carve
 
