@@ -23,7 +23,8 @@
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [metosin/reitit "0.4.2"]
                  [instaparse "1.4.10"]
-                 [devcards "0.2.6"]]
+                 [devcards "0.2.6"]
+                 [garden "1.3.10"]]
 
   :plugins [[lein-shell "0.5.0"]]
 
