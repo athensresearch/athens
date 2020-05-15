@@ -82,19 +82,19 @@
       [:div
        [:h2 (:node/title node)]
        [render-blocks (:block/uid node)]
-       [:div
+       [:div.linked-references-wrapper
         [:h3 "Linked References"]
-        [:div
+        [:div.linked-references
          (for [id (reduce into [] @linked-refs)]
            ^{:key id}
-           [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
+           [:div.linked-reference
             [block-page id]])]]
-       [:div
+       [:div.unlinked-references-wrapper
         [:h3 "Unlinked References"]
-        [:div
+        [:div.unlinked-references
          (for [id (reduce into [] @unlinked-refs)]
            ^{:key id}
-           [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
+           [:div.unlinked-reference
             [block-page id]])]]])))
 
 (defn main []
