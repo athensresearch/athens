@@ -17,20 +17,8 @@
              [:div.block {:style {:display "flex"}}
               [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
                (cond
-                 (and children? open) [:span.arrow-down {:style {:width        0 :height 0
-                                                                 :border-left  "5px solid transparent"
-                                                                 :border-right "5px solid transparent"
-                                                                 :border-top   "5px solid black"
-                                                                 :cursor "pointer"
-                                                                 :margin-top 4}
-                                                         :on-click #(dispatch [:block/toggle-open dbid open])}]
-                 (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
-                                                                        :border-top  "5px solid transparent"
-                                                                        :border-bottom "5px solid transparent"
-                                                                        :border-left   "5px solid black"
-                                                                        :cursor "pointer"
-                                                                        :margin-right 4}
-                                                                :on-click #(dispatch [:block/toggle-open dbid open])}]
+                 (and children? open) [:span.arrow-down {:on-click #(dispatch [:block/toggle-open dbid open])}]
+                 (and children? (not open)) [:span.arrow-right {:on-click #(dispatch [:block/toggle-open dbid open])}]
                  :else [:span {:style {:width 10}}])
                [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
                                :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
@@ -56,6 +44,10 @@
 (defn unlinked-pattern [string]
   (re-pattern (str "[^\\[|#]" string)))
 
+
+(defn on-block-click [uid]
+  (dispatch [:navigate :page {:id uid}]))
+
 (defn block-page []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])
@@ -68,8 +60,8 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(dispatch [:navigate :page {:id uid}])}
-                             (or string title)]))
+                              :on-click #(on-block-click uid)
+                              (or string title)}]))
                         @parents))]
        [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
@@ -82,19 +74,19 @@
       [:div
        [:h2 (:node/title node)]
        [render-blocks (:block/uid node)]
-       [:div.linked-references-wrapper
+       [:div.lnk-refs-wrap
         [:h3 "Linked References"]
-        [:div.linked-references
+        [:div.lnk-refs
          (for [id (reduce into [] @linked-refs)]
            ^{:key id}
-           [:div.linked-reference
+           [:div.lnk-ref
             [block-page id]])]]
-       [:div.unlinked-references-wrapper
+       [:div.unl-refs-wrap
         [:h3 "Unlinked References"]
-        [:div.unlinked-references
+        [:div.unl-refs
          (for [id (reduce into [] @unlinked-refs)]
            ^{:key id}
-           [:div.unlinked-reference
+           [:div.unl-ref
             [block-page id]])]]])))
 
 (defn main []
