@@ -60,8 +60,8 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(on-block-click uid)
-                              (or string title)}]))
+                              :on-click #(on-block-click uid)}
+                             (or string title)]))
                         @parents))]
        [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
