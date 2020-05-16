@@ -5,6 +5,7 @@
 1. [Why Mentor](#why-contribute-as-a-mentor)
 1. [Clojure Learners](#clojure-learners)
 1. [Clojure Mentors](#clojure-mentors)
+1. [Sign Up](#sign-up)
 
 
 # Purpose
@@ -51,15 +52,14 @@ The people using Roam and Athens are not random people. The users of these apps 
 
 Note: This is **not** an exhaustive list.
 
-## lei2gh
-
-![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FEDPTductDn.png?alt=media&token=c281c7fd-e6e3-41af-88d0-5360d33029f3)
-
 ## clement
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FEFKDUTZDAd.png?alt=media&token=2a3ec642-4dc3-43de-8f35-f0a773f3cdab)
 
 ## jreinaldo
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FxGbiln7YKp.png?alt=media&token=b221ad24-2639-4557-ba2b-6836033e4bd1)
+
+## lei2gh
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FEDPTductDn.png?alt=media&token=c281c7fd-e6e3-41af-88d0-5360d33029f3)
 
 ## nathan
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FoMnTj34Z73.png?alt=media&token=b6a2632d-3877-44da-aafd-b361b36ece6d)
@@ -85,7 +85,7 @@ Note: This is **not** an exhaustive list.
 ## forrest
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FjSy5nAFTQ5.png?alt=media&token=a7db445a-ef95-4f47-b161-777f0c11ef6f)
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FMFsw2TJy76.png?alt=media&token=9b5c86bf-aab4-431a-b7e3-798f65e214c8)
-![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FpxscrXA87K.png?alt=media&token=36a29cbe-b088-4664-bad8-ee0305d0279c)
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fego%2FgzqIzIkiD3.png?alt=media&token=b3445e14-62b0-4820-bd95-fc0858c49111)
 
 # Clojure Mentors
 
@@ -100,3 +100,11 @@ Note: This is **not** an exhaustive list.
 
 ## tomisme
 ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2Fabt7Y9du9S.png?alt=media&token=35f75885-7d54-429f-a176-beebb9918af2)
+
+# Sign Up
+
+## Mentors
+https://athensresearch.typeform.com/to/TcGMWl
+
+## Learners
+https://athensresearch.typeform.com/to/P486SB
