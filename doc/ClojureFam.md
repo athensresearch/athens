@@ -1,3 +1,7 @@
+> “The object of education is to teach us to love what is beautiful.”
+
+— Plato, *The Republic*
+
 # Table of Contents
 
 1. [Purpose](#purpose)
