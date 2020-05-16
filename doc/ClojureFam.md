@@ -1,3 +1,12 @@
+# Table of Contents
+
+1. [Purpose](#purpose)
+1. [Program Overview](#program-overview)
+1. [Why Mentor](#why-contribute-as-a-mentor)
+1. [Clojure Learners](#clojure-learners)
+1. [Clojure Mentors](#clojure-mentors)
+
+
 # Purpose
 
 There is but one thing more joyful than programming Clojure. It is passing this joy onto others.
@@ -38,4 +47,56 @@ If you aren't aware, Roam Research is a note-taking app product built on Datascr
 
 The people using Roam and Athens are not random people. The users of these apps are hungry learners and auto-didacts who want to create and share knowledge. Many have non-trivial programming experience and work at top tier startups and corporations in Silicon Valley. They simply haven't used Clojure before. This is all to say that ClojureFam could be a great recruiting pipeline for your company :)
 
-# Athenians 💜 Aspiring Clojurians
+# Clojure Learners
+
+Note: This is **not** an exhaustive list.
+
+## lei2gh
+
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FEDPTductDn.png?alt=media&token=c281c7fd-e6e3-41af-88d0-5360d33029f3)
+
+## clement
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FEFKDUTZDAd.png?alt=media&token=2a3ec642-4dc3-43de-8f35-f0a773f3cdab)
+
+## jreinaldo
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FxGbiln7YKp.png?alt=media&token=b221ad24-2639-4557-ba2b-6836033e4bd1)
+
+## nathan
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FoMnTj34Z73.png?alt=media&token=b6a2632d-3877-44da-aafd-b361b36ece6d)
+
+## persnicketypear
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FAQUqGGQGs4.png?alt=media&token=b636e6ad-4fe1-49de-83a2-12f4bfbaf117)
+
+## anshbansal
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2F5G_5rmi9gb.png?alt=media&token=bb27b2ee-0202-4727-a6dc-17c8bff456a3)
+
+## bardia
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FuPsEa8Delx.png?alt=media&token=76cfbe05-77a5-43b3-ad07-38d0ae3d8b92)
+
+## gunar
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FP8C8-hu1iV.png?alt=media&token=2c9de1ee-0509-41cb-82b0-143b1b68be55)
+
+## joel
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FCrifkZuJlB.png?alt=media&token=4993dcd4-4d53-4712-9dbc-3690e081edfa)
+
+## deftrade
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FKrtQLx5xdq.png?alt=media&token=e4aff8f7-49c6-4484-bdc2-7f14ee4d8f31)
+
+## forrest
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FjSy5nAFTQ5.png?alt=media&token=a7db445a-ef95-4f47-b161-777f0c11ef6f)
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FMFsw2TJy76.png?alt=media&token=9b5c86bf-aab4-431a-b7e3-798f65e214c8)
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FpxscrXA87K.png?alt=media&token=36a29cbe-b088-4664-bad8-ee0305d0279c)
+
+# Clojure Mentors
+
+## jeroen
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2F3dRv3Dr0fr.png?alt=media&token=02b2da5f-5b21-48ca-b1ba-0468c2983c4b)
+
+## teodor
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2F6wAW-RN_rj.png?alt=media&token=70b0269e-2ecb-4153-8912-d7886394cb0e)
+
+## avichal
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2FHmEj_WYEBg.png?alt=media&token=7c0e0780-8eee-4847-9f18-b82283d29d01)
+
+## tomisme
+![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fjefftang%2Fabt7Y9du9S.png?alt=media&token=35f75885-7d54-429f-a176-beebb9918af2)
