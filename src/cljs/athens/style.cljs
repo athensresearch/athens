@@ -11,14 +11,6 @@
     [:style
      (str/join "" [(css [:body
                          {:font-family "sans-serif"}])
-                   (css [:.controls
-                         {:height 5
-                          :width 5
-                          :border-radius "50%"
-                          :cursor "pointer"
-                          :display "inline-block"
-                          :background-color "black"
-                          :vertical-align "middle"}])
                    (css [:.arrow-down
                          {:width 0
                           :height 0

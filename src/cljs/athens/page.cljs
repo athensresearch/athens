@@ -53,9 +53,7 @@
                           :background-color "black"
                           :vertical-align "middle"}
                   :on-click #(on-block-click uid)}]]]
-              [:span.text
-               {:content-editable true}
-               (parse string)]]
+              [:span (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
@@ -87,8 +85,9 @@
                               :on-click #(on-block-click uid)}
                              (or string title)]))
                         @parents))]
-       [:h2
-        {:style {:margin 0}}
+       [:div
+        {:style {:margin 0}
+         :content-editable true}
         (str "• " (:block/string @node))]
        [:div
         {:style {:margin-left 20}}
@@ -99,7 +98,9 @@
     (let [linked-refs   (subscribe [:node/refs (linked-pattern   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
       [:div
-       [:h2 (:node/title node)]
+       [:h2
+        {:content-editable true}
+        (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div.lnk-refs-wrap
         [:h3 "Linked References"]
