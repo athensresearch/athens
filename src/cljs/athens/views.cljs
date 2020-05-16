@@ -21,9 +21,15 @@
   [:table {:style {:width "60%" :margin-top 20} :class "pages-table"}
    [:thead
     [:tr
-     [:th {:style {:text-align "left"}} "Page"]
-     [:th {:style {:text-align "left"}} "Last Edit"]
-     [:th {:style {:text-align "left"}} "Created At"]]]
+     [:th
+      {:style {:text-align "left"}}
+      "Page"]
+     [:th
+      {:style {:text-align "left"}}
+      "Last Edit"]
+     [:th
+      {:style {:text-align "left"}}
+      "Created At"]]]
    [:tbody
     (for [{id :db/id
            bid :block/uid
@@ -32,16 +38,22 @@
            e-time :edit/time} nodes]
       ^{:key id}
       [:tr
-       [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id bid})} title]]
-       [:td (.toLocaleString  (js/Date. c-time))]
-       [:td (.toLocaleString  (js/Date. e-time))]
-       ])]])
+       [:td
+        {:style {:height 24}}
+        [:a
+         {:href (rfee/href :page {:id bid})}
+         title]]
+       [:td
+        (.toLocaleString  (js/Date. c-time))]
+       [:td
+        (.toLocaleString  (js/Date. e-time))]])]])
 
 (defn pages-panel []
   (let [nodes (subscribe [:pull-nodes])]
     (fn []
       [:div
-       [:p "Upload your DB " [:a {:href ""} "(tutorial)"]]
+       [:p "Upload your DB "
+        [:a {:href ""} "(tutorial)"]]
        [:input {:type "file"
                 :name "file-input"
                 :on-change (fn [e] (file-cb e))}]
@@ -52,19 +64,33 @@
     [:div
      [:h1 "Home Panel"]]))
 
-(defn left-sidebar
-  []
+(defn left-sidebar []
   (fn []
     (let [favorites (subscribe [:favorites])
           current-route (subscribe [:current-route])]
-      [:div {:style {:margin "0 10px" :max-width 250}}
-       [:div [:a {:href (rfee/href :pages)} "All /pages"]]
-       [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
-       [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ol {:style {:padding 0 :margin 0 :list-style-type "none"}}
+      [:div
+       {:style {:margin "0 10px"
+                :max-width 250}}
+       [:div
+        [:a
+         {:href (rfee/href :pages)}
+         "All /pages"]]
+       [:div
+        [:span
+         "Current Route: "
+         [:b (-> @current-route :path)]]]
+       [:div
+        {:style {:border-bottom "1px solid gray"
+                 :margin "10px 0"}}]
+       [:ol
+        {:style {:padding 0
+                 :margin 0
+                 :list-style-type "none"}}
         (for [[_order title bid] @favorites]
-          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]
-       ])))
+          ^{:key bid} [:li
+                       [:a
+                        {:href (rfee/href :page {:id bid})}
+                        title]])]])))
 
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
@@ -89,9 +115,11 @@
       (if @loading
         [:div
          [style/loading-css]
-         [:h4 {:id "loading-text"} "Loading... (at least it'll be faster than Roam)"]
-         ]
-        [:div {:style {:display "flex"}}
+         [:h4
+          {:id "loading-text"}
+          "Loading... (at least it'll be faster than Roam)"]]
+        [:div
+         {:style {:display "flex"}}
          [style/main-css]
          [left-sidebar]
          [match-panel (-> @current-route :data :name)]]))))

@@ -18,26 +18,49 @@
                 children? (not-empty children)]
             ^{:key uid}
             [:div
-             [:div.block {:style {:display "flex"}
-                          :on-click #()}
-              [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
+             [:div.block
+              ;; TODO refactor into style.cljs
+              {:style {:display "flex"}
+               :on-click #()}
+              [:div.controls
+               ;; TODO refactor into style.cljs
+               {:style {:display "flex"
+                        :align-items "flex-start"
+                        :padding-top 5}}
                (cond
                  (and children? open) [:span.arrow-down {:on-click #(dispatch [:block/toggle-open dbid open])}]
                  (and children? (not open)) [:span.arrow-right {:on-click #(dispatch [:block/toggle-open dbid open])}]
                  :else [:span {:style {:width 10}}])
-               [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
-                               :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
-                               :vertical-align "middle" :align-items "center" :justify-content "center"}}
-                [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
-                                            :cursor         "pointer" :display "inline-block" :background-color "black"
-                                            :vertical-align "middle"}
-                                 :on-click #(on-block-click uid)}]]]
-              [:span.text {:content-editable true} (parse string)]]
+               [:span.bullet
+                ;; TODO refactor into style.cljs
+                {:style {:height 12
+                         :width 12
+                         :border-radius "50%"
+                         :margin-right 5
+                         :cursor "pointer"
+                         :display "flex"
+                         :background-color (if (not open) "lightgray" nil)
+                         :vertical-align "middle"
+                         :align-items "center"
+                         :justify-content "center"}}
+                [:span.controls
+                 ;; TODO refactor into style.cljs
+                 {:style {:height 5
+                          :width 5
+                          :border-radius "50%"
+                          :cursor "pointer"
+                          :display "inline-block"
+                          :background-color "black"
+                          :vertical-align "middle"}
+                  :on-click #(on-block-click uid)}]]]
+              [:span.text
+               {:content-editable true}
+               (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
 
-; match [[title]] or #title or #[[title]]
+                                        ; :match [[title]] or #title or #[[title]]
 (defn linked-pattern [string]
   (re-pattern (str "("
                    "\\[{2}" string "\\]{2}"
@@ -64,8 +87,11 @@
                               :on-click #(on-block-click uid)}
                              (or string title)]))
                         @parents))]
-       [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
-       [:div {:style {:margin-left 20}}
+       [:h2
+        {:style {:margin 0}}
+        (str "• " (:block/string @node))]
+       [:div
+        {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
 (defn node-page []

@@ -11,20 +11,17 @@
 (re-frame/reg-sub
  :user
  (fn [db _]
-   (:user db)
-   ))
+   (:user db)))
 
 (re-frame/reg-sub
-  :errors
-  (fn [db _]
-    (:errors db)
-    ))
+ :errors
+ (fn [db _]
+   (:errors db)))
 
 (re-frame/reg-sub
-  :loading
-  (fn [db _]
-    (:loading db)
-    ))
+ :loading
+ (fn [db _]
+   (:loading db)))
 
 ;; datascript queries
 (reg-query-sub
@@ -65,11 +62,17 @@
 
 (reg-pull-sub
  :blocks
- '[:block/string {:block/children ...}])
+ '[:block/string
+   {:block/children ...}])
 
 (reg-pull-sub
  :block/children
- '[:block/uid :block/string :block/order :block/open :db/id {:block/children ...}])
+ '[:block/uid
+   :block/string
+   :block/order
+   :block/open
+   :db/id
+   {:block/children ...}])
 
 (re-frame/reg-sub
   :block/children-sorted
@@ -79,8 +82,11 @@
     (blocks/sort-block block)))
 
 (reg-pull-sub
-  :block/_children
-  '[:block/uid :block/string :node/title {:block/_children ...}])
+ :block/_children
+ '[:block/uid
+   :block/string
+   :node/title
+   {:block/_children ...}])
 
 ;; layer 3 subscriptions
 
@@ -107,13 +113,12 @@
     :ids nodes}))
 
 (re-frame/reg-sub
-  :favorites
-  :<- [:page/sidebar]
-  (fn-traced [nodes _]
-    (->> nodes
-         (into [])
-         (sort-by first))
-    ))
+ :favorites
+ :<- [:page/sidebar]
+ (fn-traced [nodes _]
+            (->> nodes
+                 (into [])
+                 (sort-by first))))
 
 ;; (rp/reg-sub
 ;;  :node/refs2

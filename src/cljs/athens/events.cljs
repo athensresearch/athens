@@ -64,9 +64,15 @@
 
 (defn boot-flow []
   {:first-dispatch
-          [:get-datoms]
-   :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
-           {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
+   [:get-datoms]
+   :rules [{:when :seen?
+            :events :parse-datoms
+            :dispatch [:clear-loading]
+            :halt? true}
+           {:when :seen?
+            :events :api-request-error
+            :dispatch [:alert-failure "Boot Error"]
+            :halt? true}]})
 
 (reg-event-fx
  :boot
