@@ -14,7 +14,7 @@
       [:div {:class "content-block"}
        (doall
         (for [ch (:block/children @block)]
-          (let [{:block/keys [uid string open children editing] dbid :db/id} ch
+          (let [{:block/keys [uid string open children] dbid :db/id} ch
                 children? (not-empty children)]
             ^{:key uid}
             [:div
@@ -32,11 +32,7 @@
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
                                  :on-click #(on-block-click uid)}]]]
-              (if editing
-                [:textarea.editing {:auto-focus true
-                                    :on-blur #(dispatch [:block/toggle-editing dbid editing])
-                                    :value (parse string)}]
-                [:span.text {:on-click #(dispatch [:block/toggle-editing dbid editing])} (parse string)])]
+              [:span.text {:content-editable true} (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))

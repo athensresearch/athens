@@ -47,12 +47,6 @@
  (fn-traced [_ [_event eid open-state]]
             [[:db/add eid :block/open (not open-state)]]))
 
-
-(reg-event-ds
- :block/toggle-editing
- (fn-traced [_ [_event eid editing-state]]
-            [[:db/add eid :block/editing (not editing-state)]]))
-
 (reg-event-db
  :alert-failure
  (fn-traced [db error]
