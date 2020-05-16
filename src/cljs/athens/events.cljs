@@ -43,15 +43,20 @@
              (db/str-to-db-tx json-str)))
 
 (reg-event-ds
-  :block/toggle-open
-  (fn-traced [_ [_event eid open-state]]
-    [[:db/add eid :block/open (not open-state)]]
-    ))
+ :block/toggle-open
+ (fn-traced [_ [_event eid open-state]]
+            [[:db/add eid :block/open (not open-state)]]))
+
+
+(reg-event-ds
+ :block/toggle-editing
+ (fn-traced [_ [_event eid editing-state]]
+            [[:db/add eid :block/editing (not editing-state)]]))
 
 (reg-event-db
-  :alert-failure
-  (fn-traced [db error]
-    (assoc-in db [:errors] error)))
+ :alert-failure
+ (fn-traced [db error]
+            (assoc-in db [:errors] error)))
 
 (reg-event-db
   :clear-errors
@@ -70,6 +75,6 @@
            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
 
 (reg-event-fx
-  :boot
-  (fn-traced [_ _]
-    {:async-flow (boot-flow)}))
+ :boot
+ (fn-traced [_ _]
+            {:async-flow (boot-flow)}))

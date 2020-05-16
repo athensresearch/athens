@@ -68,8 +68,8 @@
  '[:block/string {:block/children ...}])
 
 (reg-pull-sub
-  :block/children
-  '[:block/uid :block/string :block/order :block/open :db/id {:block/children ...}])
+ :block/children
+ '[:block/uid :block/string :block/order :block/open :block/editing :db/id {:block/children ...}])
 
 (re-frame/reg-sub
   :block/children-sorted

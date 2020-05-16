@@ -4,17 +4,22 @@
             #_[reitit.frontend.easy :as rfee]
             #_[reagent.core :as reagent]))
 
+
+(defn on-block-click [uid]
+  (dispatch [:navigate :page {:id uid}]))
+
 (defn render-blocks []
   (fn [block-uid]
     (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
       [:div {:class "content-block"}
        (doall
         (for [ch (:block/children @block)]
-          (let [{:block/keys [uid string open children] dbid :db/id} ch
+          (let [{:block/keys [uid string open children editing] dbid :db/id} ch
                 children? (not-empty children)]
             ^{:key uid}
             [:div
-             [:div.block {:style {:display "flex"}}
+             [:div.block {:style {:display "flex"}
+                          :on-click #()}
               [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
                (cond
                  (and children? open) [:span.arrow-down {:on-click #(dispatch [:block/toggle-open dbid open])}]
@@ -26,8 +31,12 @@
                 [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
-                                 :on-click #(dispatch [:navigate :page {:id uid}])}]]]
-              [:span (parse string)]]
+                                 :on-click #(on-block-click uid)}]]]
+              (if editing
+                [:textarea.editing {:auto-focus true
+                                    :on-blur #(dispatch [:block/toggle-editing dbid editing])
+                                    :value (parse string)}]
+                [:span.text {:on-click #(dispatch [:block/toggle-editing dbid editing])} (parse string)])]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
@@ -43,10 +52,6 @@
 ; also excludes [title] :(
 (defn unlinked-pattern [string]
   (re-pattern (str "[^\\[|#]" string)))
-
-
-(defn on-block-click [uid]
-  (dispatch [:navigate :page {:id uid}]))
 
 (defn block-page []
   (fn [id]
