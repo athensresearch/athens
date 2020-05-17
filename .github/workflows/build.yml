@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
 	  node-version: '12'
-        run |
+        run: |
 	  yarn install
   	  
       - name: Run tests
