@@ -42,7 +42,7 @@ jobs:
           lein deps
       - name: Run tests
         run: |
-          script/test/jvm
+          script/test/all
 
   lint:
     # ubuntu 18.04 comes with lein + java8 installed

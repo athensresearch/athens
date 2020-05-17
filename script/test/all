@@ -3,6 +3,7 @@
 set -eo pipefail
 
 script/test/jvm
+script/test/cljsc
 
 # script/test/node
 #
