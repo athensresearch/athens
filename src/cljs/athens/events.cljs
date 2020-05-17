@@ -1,8 +1,10 @@
 (ns athens.events
   (:require
     [athens.db :as db]
+    [athens.patterns :as patterns]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
+    [clojure.string :as str]
     [datascript.core :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
@@ -45,8 +47,40 @@
 (reg-event-ds
   :block/toggle-open
   (fn-traced [_ [_event eid open-state]]
-    [[:db/add eid :block/open (not open-state)]]
-    ))
+    [[:db/add eid :block/open (not open-state)]]))
+
+(defn node-with-title
+  [ds title]
+  (d/q '[:find ?e .
+         :in $ ?title
+         :where [?e :node/title ?title]]
+    ds title))
+
+(defn referencing-blocks
+  [ds title]
+  (d/q '[:find ?e ?s
+         :in $ ?regex
+         :where
+         [?e :block/string ?s]
+         [(re-find ?regex ?s)]]
+    ds (patterns/linked title)))
+
+(defn rename-refs-tx
+  [old-title new-title [eid s]]
+  (let [new-s (str/replace
+                s
+                (patterns/linked old-title)
+                (str "$1$3$4" new-title "$2$5"))]
+    [:db/add eid :block/string new-s]))
+
+(reg-event-ds
+  :node/rename
+  (fn-traced [ds [_ old-title new-title]]
+    (let [eid (node-with-title ds old-title)
+          blocks (referencing-blocks ds old-title)]
+      (->> blocks
+           (map (partial rename-refs-tx old-title new-title))
+           (into [[:db/add eid :node/title new-title]])))))
 
 (reg-event-db
   :alert-failure

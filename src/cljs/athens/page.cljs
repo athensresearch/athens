@@ -1,5 +1,6 @@
 (ns athens.page
   (:require [athens.parser :refer [parse]]
+            [athens.patterns :as patterns]
             [athens.router :refer [navigate-page toggle-open]]
             [re-frame.core :refer [subscribe dispatch]]
             #_[reitit.frontend.easy :as rfee]
@@ -45,18 +46,6 @@
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
 
-; match [[title]] or #title or #[[title]]
-(defn linked-pattern [string]
-  (re-pattern (str "("
-                   "\\[{2}" string "\\]{2}"
-                   "|" "#" string
-                   "|" "#" "\\[{2}" string "\\[{2}"
-                   ")")))
-
-; also excludes [title] :(
-(defn unlinked-pattern [string]
-  (re-pattern (str "[^\\[|#]" string)))
-
 (defn block-page []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])
@@ -80,8 +69,8 @@
 
 (defn node-page []
   (fn [node]
-    (let [linked-refs   (subscribe [:node/refs (linked-pattern   (:node/title node))])
-          unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
+    (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
+          unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
       [:div
        [:h2
         {:content-editable true} (:node/title node)]
