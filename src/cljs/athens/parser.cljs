@@ -54,9 +54,7 @@
   (let [result (parser str)]
     (if (insta/failure? result)
       [:span
-       {:style {:color "red"}
-        :content-editable true}
+       {:style {:color "red"}}
        str]
       [:span
-       {:content-editable true}
        (vec (transform result))])))

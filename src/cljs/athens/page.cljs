@@ -4,10 +4,6 @@
             #_[reitit.frontend.easy :as rfee]
             #_[reagent.core :as reagent]))
 
-
-(defn on-block-click [uid]
-  (dispatch [:navigate :page {:id uid}]))
-
 (defn render-blocks []
   (fn [block-uid]
     (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
@@ -52,7 +48,7 @@
                           :display "inline-block"
                           :background-color "black"
                           :vertical-align "middle"}
-                  :on-click #(on-block-click uid)}]]]
+                  :on-click #(dispatch [:navigate :page {:id uid}])}]]]
               [:span (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
@@ -82,12 +78,11 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(on-block-click uid)}
+                              :on-click #(dispatch [:navigate :page {:id uid}])}
                              (or string title)]))
                         @parents))]
        [:div
-        {:style {:margin 0}
-         :content-editable true}
+        {:style {:margin 0}}
         (str "• " (:block/string @node))]
        [:div
         {:style {:margin-left 20}}
@@ -99,7 +94,6 @@
           unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
       [:div
        [:h2
-        {:content-editable true}
         (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div.lnk-refs-wrap
