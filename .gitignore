@@ -22,3 +22,7 @@
 
 # Emacs files
 .#*
+.dir-locals.el
+
+# Doo test runner
+doo-index.html

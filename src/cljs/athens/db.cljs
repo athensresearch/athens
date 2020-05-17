@@ -47,8 +47,8 @@
        (map #(map edn/read-string %))
        (map #(cons :db/add %))))
 
-(defn json-str-to-edn
-  "Convert a JSON str to EDN. May receive JSON through an HTTP request or file upload."
+(defn json-str-to-vector
+  "Convert a JSON str to a clojure vector. May receive JSON through an HTTP request or file upload."
   [json-str]
   (->> json-str
        (js/JSON.parse)
@@ -57,10 +57,10 @@
 (defn str-to-db-tx
   "Deserializes a JSON string into EDN and then Datoms."
   [json-str]
-  (let [edn-data (json-str-to-edn json-str)]
-    (if (coll? (first edn-data))
-      (parse-hms edn-data)
-      (parse-tuples edn-data))))
+  (let [-vector (json-str-to-vector json-str)]
+    (if (coll? (first -vector))
+      (parse-hms -vector)
+      (parse-tuples -vector))))
 
 (def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")

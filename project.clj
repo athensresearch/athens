@@ -31,6 +31,7 @@
   :min-lein-version "2.5.3"
 
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
+  :test-paths ["test/clj" "test/cljs" "test/cljc"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
@@ -49,6 +50,7 @@
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
             "test-jvm"     ["test"]
+            "test-cljsc"    ["doo" "node" "node-test" "once"]
             "test-karma"   ["shell" "karma" "start" "--single-run"]
             "gh-pages"     ["shell" "yarn" "gh-pages" "-d" "resources/public"]
             "karma"        ["do"
@@ -60,8 +62,23 @@
    {:dependencies [[binaryage/devtools "1.0.0"]
                    [day8.re-frame/re-frame-10x "0.5.1"]
                    [day8.re-frame/tracing "0.5.3"]]
+    :plugins [[cider/cider-nrepl "0.24.0"]
+              [lein-doo "0.1.11"]
+              [lein-cljsbuild "1.1.7"]]
+
+    :repl-options {:init-ns ^:skip-aot user
+                   :nrepl-middleware [shadow.cljs.devtools.server.nrepl/cljs-load-file
+                                      shadow.cljs.devtools.server.nrepl/cljs-eval
+                                      shadow.cljs.devtools.server.nrepl/cljs-select]}
     :source-paths ["dev"]}
    :prod
    {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}}
+
+  :cljsbuild {:builds [{:id "node-test"
+                        :source-paths ["src" "test/cljs" "test/cljc"]
+                        :compiler {:main athens.test-runner
+                                   :output-to "resources/public/js/compiled/athens_test.js"
+                                   :target :nodejs
+                                   :optimizations :none}}]}
 
   :prep-tasks [])

@@ -31,6 +31,18 @@ lein dev
 
 When these scripts are done, your terminal will read `build complete`. Athens can be accessed by pointing a browser to `localhost:3000` on UNIX or `127.0.0.1:3000` on Windows.
 
+
+You can also run the tests and see if everything is working as expected.
+```
+lein test-cljsc
+```
+
+During development you might want to let the tests running and watching for the `test/cljs` and `test/cljc`.
+
+```
+lein doo node node-test
+```
+
 # Clojure Style Guide
 
 We are using [clj-kondo](https://github.com/borkdude/clj-kondo) with an [empty config](https://github.com/athensresearch/athens/issues/39#issuecomment-627231765).
