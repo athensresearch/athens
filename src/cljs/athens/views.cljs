@@ -25,9 +25,15 @@
   [:table (style/+pages-table {})
    [:thead
     [:tr
-     [:th {:style {:text-align "left"}} "Page"]
-     [:th {:style {:text-align "left"}} "Last Edit"]
-     [:th {:style {:text-align "left"}} "Created At"]]]
+     [:th
+      {:style {:text-align "left"}}
+      "Page"]
+     [:th
+      {:style {:text-align "left"}}
+      "Last Edit"]
+     [:th
+      {:style {:text-align "left"}}
+      "Created At"]]]
    [:tbody
     (for [{id :db/id
            bid :block/uid
@@ -36,7 +42,11 @@
            e-time :edit/time} nodes]
       ^{:key id}
       [:tr
-       [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id bid})} title]]
+       [:td
+        {:style {:height 24}}
+        [:a
+         {:href (rfee/href :page {:id bid})}
+         title]]
        [:td (date-string c-time)]
        [:td (date-string e-time)]])]])
 
