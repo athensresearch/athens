@@ -1,9 +1,10 @@
 (ns athens.db
-  (:require [clojure.edn :as edn]
-            [datascript.core :as d]
-            #_[re-frame.core :as re-frame]
-            [re-posh.core :as re-posh]
-            ))
+  (:require
+    [clojure.edn :as edn]
+    [datascript.core :as d]
+    #_[re-frame.core :as re-frame]
+    [re-posh.core :as re-posh]))
+
 
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
@@ -24,8 +25,11 @@
    "users" nil
    "heading" :block/heading})
 
-(defn convert-key [k]
+
+(defn convert-key
+  [k]
   (get str-kw-mappings k k))
+
 
 (defn parse-hms
   "Parses JSON retrieved from Roam's \"Export all as JSON\". Not fully functional."
@@ -38,6 +42,7 @@
                   %)
          hms)))
 
+
 (defn parse-tuples
   "Parse tuples exported via method specified in https://roamresearch.com/#/app/ego/page/eJ14YtH2G."
   [tuples]
@@ -47,12 +52,14 @@
        (map #(map edn/read-string %))
        (map #(cons :db/add %))))
 
+
 (defn json-str-to-edn
   "Convert a JSON str to EDN. May receive JSON through an HTTP request or file upload."
   [json-str]
   (->> json-str
        (js/JSON.parse)
        (js->clj)))
+
 
 (defn str-to-db-tx
   "Deserializes a JSON string into EDN and then Datoms."
@@ -62,20 +69,25 @@
       (parse-hms edn-data)
       (parse-tuples edn-data))))
 
+
 (def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
-(def schema {:block/uid      {:db/unique :db.unique/identity}
-             :node/title     {:db/unique :db.unique/identity}
-             :attrs/lookup   {:db/cardinality :db.cardinality/many}
-             :block/children {:db/cardinality :db.cardinality/many
-                              :db/valueType :db.type/ref}})
+
+(def schema
+  {:block/uid      {:db/unique :db.unique/identity}
+   :node/title     {:db/unique :db.unique/identity}
+   :attrs/lookup   {:db/cardinality :db.cardinality/many}
+   :block/children {:db/cardinality :db.cardinality/many
+                    :db/valueType :db.type/ref}})
+
 
 (defonce rfdb {:user "Jeff"
                :current-route nil
                :loading true
                :errors {}})
+
 
 (defonce dsdb (d/create-conn schema))
 (re-posh/connect! dsdb)

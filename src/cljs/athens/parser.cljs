@@ -1,18 +1,22 @@
 (ns athens.parser
-  (:require [instaparse.core :as insta]
-            [re-frame.core :refer [subscribe]]
-            [reitit.frontend.easy :as rfee]))
+  (:require
+    [instaparse.core :as insta]
+    [re-frame.core :refer [subscribe]]
+    [reitit.frontend.easy :as rfee]))
+
 
 (declare transform parse)
 
+
 (def parser
   (insta/parser
-   "S = c | link | bref | hash
+    "S = c | link | bref | hash
     <c> = #'(\\w|\\s)+'
     link = <'[['> c <']]'>
     hash = <'#'> c | <'#'> <'[['> c <']]'>
     bref = <'(('> c <'))'>
    "))
+
 
 (defn transform
   "Transforms instaparse output to hiccup."
@@ -25,8 +29,7 @@
                 [:span {:style {:color "gray"}} "[["]
                 [:a {:href  (rfee/href :page {:id (:block/uid @id)})
                      :style {:text-decoration "none" :color "dodgerblue"}} title]
-                [:span {:style {:color "gray"}} "]]"]
-                ]))
+                [:span {:style {:color "gray"}} "]]"]]))
      :hash (fn [title]
              (let [id (subscribe [:block/uid [:node/title title]])]
                [:a {:style {:color "gray" :text-decoration "none" :font-weight "bold"}
@@ -39,7 +42,8 @@
     tree))
 
 
-(defn parse [str]
+(defn parse
+  [str]
   (let [result (parser str)]
     (if (insta/failure? result)
       [:span

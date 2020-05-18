@@ -9,10 +9,12 @@
     [re-frame.core :as rf :refer [dispatch reg-fx reg-event-db reg-event-fx]]
     [re-posh.core :as rp :refer [reg-event-ds]]))
 
+
 (reg-event-db
   :init-rfdb
   (fn-traced [_ _]
-    db/rfdb))
+             db/rfdb))
+
 
 (reg-fx
   :http
@@ -27,6 +29,7 @@
           (dispatch (conj on-success body))
           (dispatch (conj on-failure all)))))))
 
+
 (reg-event-fx
   :get-datoms
   (fn [_ _]
@@ -36,40 +39,47 @@
             :on-success [:parse-datoms]
             :on-failure [:alert-failure]}}))
 
+
 (reg-event-ds
   :parse-datoms
   (fn-traced [_ [_ json-str]]
              (d/reset-conn! db/dsdb (d/empty-db db/schema)) ;; TODO: refactor to an effect
              (db/str-to-db-tx json-str)))
 
+
 (reg-event-ds
   :block/toggle-open
   (fn-traced [_ [_event eid open-state]]
-    [[:db/add eid :block/open (not open-state)]]
-    ))
+             [[:db/add eid :block/open (not open-state)]]))
+
 
 (reg-event-db
   :alert-failure
   (fn-traced [db error]
-    (assoc-in db [:errors] error)))
+             (assoc-in db [:errors] error)))
+
 
 (reg-event-db
   :clear-errors
   (fn-traced [db]
              (assoc-in db [:errors] {})))
 
+
 (reg-event-db
   :clear-loading
   (fn-traced [db]
-    (assoc-in db [:loading] false)))
+             (assoc-in db [:loading] false)))
 
-(defn boot-flow []
+
+(defn boot-flow
+  []
   {:first-dispatch
-          [:get-datoms]
+   [:get-datoms]
    :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
+
 
 (reg-event-fx
   :boot
   (fn-traced [_ _]
-    {:async-flow (boot-flow)}))
+             {:async-flow (boot-flow)}))
