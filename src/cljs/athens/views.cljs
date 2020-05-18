@@ -60,13 +60,29 @@
   (fn []
     (let [favorites (subscribe [:favorites])
           current-route (subscribe [:current-route])]
-      [:div {:style {:margin "0 10px" :max-width 250}}
-       [:div [:a {:href (rfee/href :pages)} "All /pages"]]
-       [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
-       [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ul (style/+left-sidebar {})
+      [:div
+       {:style {:margin "0 10px"
+                :max-width 250}}
+       [:div
+        [:a
+         {:href (rfee/href :pages)}
+         "All /pages"]]
+       [:div
+        [:span
+         {:style {}}
+         "Current Route: "
+         [:b
+          (-> @current-route :path)]]]
+       [:div
+        {:style {:border-bottom "1px solid gray"
+                 :margin "10px 0"}}]
+       [:ul
+        (style/+left-sidebar {})
         (for [[_order title bid] @favorites]
-          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
+          ^{:key bid} [:li
+                       [:a
+                        {:href (rfee/href :page {:id bid})}
+                        title]])]])))
 
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
