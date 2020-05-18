@@ -28,7 +28,7 @@
           :margin 0
           :list-style-type "none"}])])
 
-;; Functions that add styles to an element. Perfer to directly add styles when possible, otherwise
+;; Functions that add styles to an element. Prefer to directly add styles when possible, otherwise
 ;; use classes, and style above.
 
 (defn +left-sidebar [attrs]
