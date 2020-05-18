@@ -61,13 +61,6 @@
        [table @nodes]])))
 
 
-(defn home-panel
-  []
-  (fn []
-    [:div
-     [:h1 "Home Panel"]]))
-
-
 (defn left-sidebar
   []
   (fn []
