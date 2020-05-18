@@ -91,7 +91,7 @@
       (if @loading
         [:div
          [style/loading-css]
-         [:h4 {:id "loading-text"} "Loading database..."]]
+         [:h4#loading-text "Loading database..."]]
         [:div {:style {:display "flex"}}
          [style/main-css]
          [left-sidebar]
