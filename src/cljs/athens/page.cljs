@@ -85,7 +85,8 @@
     (let [node (subscribe [:node [:block/uid id]])
           parents (subscribe [:block/_children2 [:block/uid id]])]
       [:div
-       [:span {:style {:color "gray"}}
+       [:span
+        {:style {:color "gray"}}
         (interpose " > "
                    (map (fn [b]
                           (let [{:block/keys [uid string] :node/keys [title]} b]
@@ -97,8 +98,10 @@
                         @parents))]
        [:h2
         {:content-editable true
-         :style {:margin 0}} (str "• " (:block/string @node))]
-       [:div {:style {:margin-left 20}}
+         :style {:margin 0}}
+        (str "• " (:block/string @node))]
+       [:div
+        {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
 (defn node-page []
