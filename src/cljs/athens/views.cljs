@@ -17,12 +17,12 @@
     (.readAsText fr file)))
 
 (defn- date-string [x] (if (< x 1)
-                         [:span {:class "unknown-date"} "(unknown date)"]
+                         [:span (style/+unknown-date {}) "(unknown date)"]
                          (.toLocaleString  (js/Date. x))))
 
 (defn table
   [nodes]
-  [:table {:style {:width "60%" :margin-top 20} :class "pages-table"}
+  [:table (style/+pages-table {})
    [:thead
     [:tr
      [:th {:style {:text-align "left"}} "Page"]
@@ -64,7 +64,7 @@
        [:div [:a {:href (rfee/href :pages)} "All /pages"]]
        [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
        [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ul {:class "left-sidebar"}
+       [:ul (style/+left-sidebar {})
         (for [[_order title bid] @favorites]
           ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
 
