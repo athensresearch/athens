@@ -42,5 +42,10 @@
 (defn parse [str]
   (let [result (parser str)]
     (if (insta/failure? result)
-      [:span {:style {:color "red"}} str]
-      [:span (vec (transform result))])))
+      [:span
+       {:content-editable true
+        :style {:color "red"}}
+       str]
+      [:span
+       {:content-editable true}
+       (vec (transform result))])))
