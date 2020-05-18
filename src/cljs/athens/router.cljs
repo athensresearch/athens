@@ -54,6 +54,12 @@
   (when new-match
     (dispatch [:navigated new-match])))
 
+(defn navigate-page [uid]
+  (dispatch [:navigate :page {:id uid}]))
+
+(defn toggle-open [dbid open]
+  (dispatch [:block/toggle-open dbid open]))
+
 (defn init-routes! []
   (prn "Initializing routes")
   (rfee/start!

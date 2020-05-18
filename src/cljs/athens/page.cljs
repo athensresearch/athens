@@ -1,5 +1,6 @@
 (ns athens.page
   (:require [athens.parser :refer [parse]]
+            [athens.router :refer [navigate-page toggle-open]]
             [re-frame.core :refer [subscribe dispatch]]
             #_[reitit.frontend.easy :as rfee]
             #_[reagent.core :as reagent]))
@@ -23,14 +24,14 @@
                                                                  :border-top   "5px solid black"
                                                                  :cursor "pointer"
                                                                  :margin-top 4}
-                                                         :on-click #(dispatch [:block/toggle-open dbid open])}]
+                                                         :on-click #(toggle-open dbid open)}]
                  (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
                                                                         :border-top  "5px solid transparent"
                                                                         :border-bottom "5px solid transparent"
                                                                         :border-left   "5px solid black"
                                                                         :cursor "pointer"
                                                                         :margin-right 4}
-                                                                :on-click #(dispatch [:block/toggle-open dbid open])}]
+                                                                :on-click #(toggle-open dbid open)}]
                  :else [:span {:style {:width 10}}])
                [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
                                :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
@@ -38,7 +39,7 @@
                 [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
-                                 :on-click #(dispatch [:navigate :page {:id uid}])}]]]
+                                 :on-click #(navigate-block uid)}]]]
               [:span (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
@@ -68,7 +69,7 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(dispatch [:navigate :page {:id uid}])}
+                              :on-click #(on-block-click uid)}
                              (or string title)]))
                         @parents))]
        [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
