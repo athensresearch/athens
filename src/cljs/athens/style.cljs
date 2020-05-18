@@ -29,19 +29,52 @@
           :margin 0
           :list-style-type "none"}])])
 
+
+(defn with-classes
+  [& css-classes]
+  (fn f
+    ([] (f nil))
+    ([attrs]
+     (update attrs :class (partial str " ") (clojure.string/join " " css-classes)))))
+
+
+(defn with-style
+  [css-styling]
+  (fn f
+    ([] (f nil))
+    ([attrs]
+     (update attrs :style merge css-styling))))
+
+
+(comment
+
+  ;; Combine with-classes and with-style
+  (def +heavily-styled
+    (comp
+     (with-classes "strong" "happy")
+     (with-style {:color :green})))
+
+  ;; Usage:
+
+
+  [:h1 (+heavily-styled) "some statement"]
+
+  [:h1 (+heavily-styled {:on-click (fn [e] (js/alert "something else"))}) "some statement"]
+
+  )
+
+
 ;; Functions that add styles to an element. Perfer to directly add styles when possible, otherwise
 ;; use classes, and style above.
 
-(defn +left-sidebar
-  [attrs]
-  (update attrs :class (partial str " ") "left-sidebar"))
+
+(def +left-sidebar
+  (with-classes "left-sidebar"))
 
 
-(defn +pages-table
-  [attrs]
-  (update attrs :class (partial str " ") "pages-table"))
+(def +pages-table
+  (with-classes "pages-table"))
 
 
-(defn +unknown-date
-  [attrs]
-  (update attrs :style merge {:color "#595959"}))
+(def +unknown-date
+  (with-style {:color "#595959"}))
