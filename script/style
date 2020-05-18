@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Find other installation instructions here https://github.com/greglook/cljstyle/tree/f62fe9194b53b3d96e9d722a4723dce846d8b040#installation
+
+# REVIEW consider rewriting to babashka to make platform independent?
+
+curl -L -O https://github.com/greglook/cljstyle/releases/download/0.12.1/cljstyle_0.12.1_linux.tar.gz
+tar -zxvf cljstyle_0.12.1_linux.tar.gz
+
+./cljstyle check
