@@ -16,9 +16,13 @@
     (set! (.-onload fr) #(dispatch [:parse-datoms (.. % -target -result)]))
     (.readAsText fr file)))
 
+(defn- date-string [x] (if (< x 1)
+                         [:span (style/+unknown-date {}) "(unknown date)"]
+                         (.toLocaleString  (js/Date. x))))
+
 (defn table
   [nodes]
-  [:table {:style {:width "60%" :margin-top 20} :class "pages-table"}
+  [:table (style/+pages-table {})
    [:thead
     [:tr
      [:th {:style {:text-align "left"}} "Page"]
@@ -33,9 +37,8 @@
       ^{:key id}
       [:tr
        [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id bid})} title]]
-       [:td (.toLocaleString  (js/Date. c-time))]
-       [:td (.toLocaleString  (js/Date. e-time))]
-       ])]])
+       [:td (date-string c-time)]
+       [:td (date-string e-time)]])]])
 
 (defn pages-panel []
   (let [nodes (subscribe [:pull-nodes])]
@@ -61,10 +64,9 @@
        [:div [:a {:href (rfee/href :pages)} "All /pages"]]
        [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
        [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ol {:style {:padding 0 :margin 0 :list-style-type "none"}}
+       [:ul (style/+left-sidebar {})
         (for [[_order title bid] @favorites]
-          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]
-       ])))
+          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
 
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
@@ -88,9 +90,8 @@
       [alert]
       (if @loading
         [:div
-          [style/loading-css]
-          [:h4 {:id "loading-text"} "Loading... (at least it'll be faster than Roam)"]
-        ]
+         [style/loading-css]
+         [:h4 {:id "loading-text"} "Loading database..."]]
         [:div {:style {:display "flex"}}
          [style/main-css]
          [left-sidebar]
