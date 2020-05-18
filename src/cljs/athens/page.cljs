@@ -1,10 +1,12 @@
 (ns athens.page
-  (:require [athens.parser :refer [parse]]
-            [athens.patterns :as patterns]
-            [athens.router :refer [navigate-page toggle-open]]
-            [re-frame.core :refer [subscribe dispatch]]
-            #_[reitit.frontend.easy :as rfee]
-            #_[reagent.core :as reagent]))
+  (:require
+    [athens.parser :refer [parse]]
+    [athens.patterns :as patterns]
+    [athens.router :refer [navigate-page toggle-open]]
+    [re-frame.core :refer [subscribe dispatch]]
+    #_[reagent.core :as reagent]
+    #_[reitit.frontend.easy :as rfee]))
+
 
 (defn render-blocks []
   (fn [block-uid]
@@ -46,6 +48,7 @@
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
 
+
 (defn block-page []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])
@@ -66,6 +69,7 @@
          :style {:margin 0}} (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
+
 
 (defn node-page []
   (fn [node]
@@ -89,6 +93,7 @@
            ^{:key id}
            [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
             [block-page id]])]]])))
+
 
 (defn main []
   (let [current-route (subscribe [:current-route])]
