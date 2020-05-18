@@ -54,10 +54,14 @@
   (let [nodes (subscribe [:pull-nodes])]
     (fn []
       [:div
-       [:p "Upload your DB " [:a {:href ""} "(tutorial)"]]
-       [:input {:type "file"
-                :name "file-input"
-                :on-change (fn [e] (file-cb e))}]
+       [:p
+        "Upload your DB "
+        [:a {:href ""}
+         "(tutorial)"]]
+       [:input
+        {:type "file"
+         :name "file-input"
+         :on-change #(file-cb %)}]
        [table @nodes]])))
 
 (defn home-panel []
