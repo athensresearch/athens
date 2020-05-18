@@ -108,7 +108,8 @@
         [:div
          [style/loading-css]
          [:h4#loading-text "Loading database..."]]
-        [:div {:style {:display "flex"}}
+        [:div
+         {:style {:display "flex"}}
          [style/main-css]
          [left-sidebar]
          [match-panel (-> @current-route :data :name)]]))))
