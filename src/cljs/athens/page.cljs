@@ -53,14 +53,15 @@
                          :vertical-align   "middle"
                          :align-items      "center"
                          :justify-content  "center"}}
-                [:span.controls {:style    {:height           5
-                                            :width            5
-                                            :border-radius    "50%"
-                                            :cursor           "pointer"
-                                            :display          "inline-block"
-                                            :background-color "black"
-                                            :vertical-align   "middle"}
-                                 :on-click #(navigate-page uid)}]]]
+                [:span.controls
+                 {:style    {:height           5
+                             :width            5
+                             :border-radius    "50%"
+                             :cursor           "pointer"
+                             :display          "inline-block"
+                             :background-color "black"
+                             :vertical-align   "middle"}
+                  :on-click #(navigate-page uid)}]]]
               [:span (parse string)]]
              (when open
                [:div
