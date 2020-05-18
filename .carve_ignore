@@ -1,5 +1,9 @@
-; REVIEW Can some of these items be removed (later)?
+;; Init is called by shadow-cljs (https://github.com/athensresearch/athens/blob/c90f3023a1c4480b50ed61d07f973d8c29e08bf8/shadow-cljs.edn#L6)
+athens.core/init
+
+;; URLs can be used if we want to examine other DBs
 athens.db/help-url
 athens.db/ego-url
-athens.core/init
+
+;; str-kw-mappings will be used for JSON import (see https://github.com/athensresearch/athens/issues/31)
 user/str-kw-mappings
