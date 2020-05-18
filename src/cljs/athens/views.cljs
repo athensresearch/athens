@@ -50,11 +50,6 @@
                 :on-change (fn [e] (file-cb e))}]
        [table @nodes]])))
 
-(defn home-panel []
-  (fn []
-    [:div
-     [:h1 "Home Panel"]]))
-
 (defn left-sidebar
   []
   (fn []
