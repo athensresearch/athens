@@ -69,8 +69,7 @@
     [:div
      [:h1 "Home Panel"]]))
 
-(defn left-sidebar
-  []
+(defn left-sidebar []
   (fn []
     (let [favorites (subscribe [:favorites])
           current-route (subscribe [:current-route])]
