@@ -60,6 +60,7 @@
                 :on-change (fn [e] (file-cb e))}]
        [table @nodes]])))
 
+
 (defn left-sidebar
   []
   (fn []
