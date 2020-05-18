@@ -1,24 +1,32 @@
 (ns athens.views
   (:require
-   #_[reitit.frontend :as rfe]
-   [athens.page :as page]
-   [athens.style :as style]
-   [athens.subs]
-   [re-frame.core :as rf :refer [subscribe dispatch]]
-   [reitit.frontend.easy :as rfee]))
+    [athens.page :as page]
+    [athens.style :as style]
+    [athens.subs]
+    [re-frame.core :as rf :refer [subscribe dispatch]]
+    #_[reitit.frontend :as rfe]
+    [reitit.frontend.easy :as rfee]))
 
-(defn about-panel []
+
+(defn about-panel
+  []
   [:div [:h1 "About Panel"]])
 
-(defn file-cb [e]
+
+(defn file-cb
+  [e]
   (let [fr (js/FileReader.)
         file (.. e -target -files (item 0))]
     (set! (.-onload fr) #(dispatch [:parse-datoms (.. % -target -result)]))
     (.readAsText fr file)))
 
-(defn- date-string [x] (if (< x 1)
-                         [:span (style/+unknown-date {}) "(unknown date)"]
-                         (.toLocaleString  (js/Date. x))))
+
+(defn- date-string
+  [x]
+  (if (< x 1)
+    [:span (style/+unknown-date {}) "(unknown date)"]
+    (.toLocaleString  (js/Date. x))))
+
 
 (defn table
   [nodes]
@@ -40,7 +48,9 @@
        [:td (date-string c-time)]
        [:td (date-string e-time)]])]])
 
-(defn pages-panel []
+
+(defn pages-panel
+  []
   (let [nodes (subscribe [:pull-nodes])]
     (fn []
       [:div
@@ -50,10 +60,13 @@
                 :on-change (fn [e] (file-cb e))}]
        [table @nodes]])))
 
-(defn home-panel []
+
+(defn home-panel
+  []
   (fn []
     [:div
      [:h1 "Home Panel"]]))
+
 
 (defn left-sidebar
   []
@@ -68,6 +81,7 @@
         (for [[_order title bid] @favorites]
           ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
 
+
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
@@ -76,14 +90,18 @@
       (js/alert (str @errors))
       (dispatch [:clear-errors]))))
 
-(defn match-panel [name]
+
+(defn match-panel
+  [name]
   [(case name
      :about about-panel
      :pages pages-panel
      :page page/main
      pages-panel)])
 
-(defn main-panel []
+
+(defn main-panel
+  []
   (let [current-route (subscribe [:current-route])
         loading (subscribe [:loading])]
     (fn []
