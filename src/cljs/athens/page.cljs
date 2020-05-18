@@ -110,21 +110,28 @@
           unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
       [:div
        [:h2
-        {:content-editable true} (:node/title node)]
+        {:content-editable true}
+        (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
         [:div
          (for [id (reduce into [] @linked-refs)]
            ^{:key id}
-           [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
+           [:div
+            {:style {:background-color "lightblue"
+                     :margin "15px 0px"
+                     :padding 5}}
             [block-page id]])]]
        [:div
         [:h3 "Unlinked References"]
         [:div
          (for [id (reduce into [] @unlinked-refs)]
            ^{:key id}
-           [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
+           [:div
+            {:style {:background-color "lightblue"
+                     :margin "15px 0px"
+                     :padding 5}}
             [block-page id]])]]])))
 
 (defn main []
