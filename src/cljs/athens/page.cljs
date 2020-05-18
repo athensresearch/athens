@@ -39,7 +39,7 @@
                 [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
-                                 :on-click #(navigate-block uid)}]]]
+                                 :on-click #(navigate-page uid)}]]]
               [:span (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
@@ -69,10 +69,12 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(on-block-click uid)}
+                              :on-click #(navigate-page uid)}
                              (or string title)]))
                         @parents))]
-       [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
+       [:h2
+        {:content-editable true
+         :style {:margin 0}} (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
@@ -81,7 +83,8 @@
     (let [linked-refs   (subscribe [:node/refs (linked-pattern   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
       [:div
-       [:h2 (:node/title node)]
+       [:h2
+        {:content-editable true} (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
