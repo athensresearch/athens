@@ -51,7 +51,10 @@
            e-time :edit/time} nodes]
       ^{:key id}
       [:tr
-       [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id bid})} title]]
+       [:td
+        {:style {:height 24}}
+        [:a {:href (rfee/href :page {:id bid})}
+         title]]
        [:td (date-string c-time)]
        [:td (date-string e-time)]])]])
 
