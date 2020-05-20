@@ -34,9 +34,15 @@
   [:table (style/+pages-table {})
    [:thead
     [:tr
-     [:th {:style {:text-align "left"}} "Page"]
-     [:th {:style {:text-align "left"}} "Last Edit"]
-     [:th {:style {:text-align "left"}} "Created At"]]]
+     [:th
+      {:style {:text-align "left"}}
+      "Page"]
+     [:th
+      {:style {:text-align "left"}}
+      "Last Edit"]
+     [:th
+      {:style {:text-align "left"}}
+      "Created At"]]]
    [:tbody
     (for [{id :db/id
            bid :block/uid
