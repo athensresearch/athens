@@ -10,7 +10,8 @@
 
 (defn about-panel
   []
-  [:div [:h1 "About Panel"]])
+  [:div
+   [:h1 "About Panel"]])
 
 
 (defn file-cb
