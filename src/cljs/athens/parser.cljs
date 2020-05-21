@@ -10,12 +10,12 @@
 
 (def parser
   (insta/parser
-    "S = c | link | bref | hash
+   "S = c | link | bref | hash | bold
     <c> = #'(\\w|\\s)+'
     link = <'[['> c <']]'>
     hash = <'#'> c | <'#'> <'[['> c <']]'>
     bref = <'(('> c <'))'>
-   "))
+    bold = <'**'> c <'**'>"))
 
 
 (defn transform
