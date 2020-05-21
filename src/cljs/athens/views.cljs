@@ -1,16 +1,17 @@
 (ns athens.views
   (:require
-    [athens.page :as page]
-    [athens.style :as style]
-    [athens.subs]
-    [re-frame.core :as rf :refer [subscribe dispatch]]
-    #_[reitit.frontend :as rfe]
-    [reitit.frontend.easy :as rfee]))
+   [athens.page :as page]
+   [athens.style :as style]
+   [athens.subs]
+   [re-frame.core :as rf :refer [subscribe dispatch]]
+   #_[reitit.frontend :as rfe]
+   [reitit.frontend.easy :as rfee]))
 
 
 (defn about-panel
   []
-  [:div [:h1 "About Panel"]])
+  [:div
+   [:h1 "About Panel"]])
 
 
 (defn file-cb
@@ -33,9 +34,15 @@
   [:table (style/+pages-table {})
    [:thead
     [:tr
-     [:th {:style {:text-align "left"}} "Page"]
-     [:th {:style {:text-align "left"}} "Last Edit"]
-     [:th {:style {:text-align "left"}} "Created At"]]]
+     [:th
+      {:style {:text-align "left"}}
+      "Page"]
+     [:th
+      {:style {:text-align "left"}}
+      "Last Edit"]
+     [:th
+      {:style {:text-align "left"}}
+      "Created At"]]]
    [:tbody
     (for [{id :db/id
            bid :block/uid
@@ -44,7 +51,10 @@
            e-time :edit/time} nodes]
       ^{:key id}
       [:tr
-       [:td {:style {:height 24}} [:a {:href (rfee/href :page {:id bid})} title]]
+       [:td
+        {:style {:height 24}}
+        [:a {:href (rfee/href :page {:id bid})}
+         title]]
        [:td (date-string c-time)]
        [:td (date-string e-time)]])]])
 
@@ -54,18 +64,13 @@
   (let [nodes (subscribe [:pull-nodes])]
     (fn []
       [:div
-       [:p "Upload your DB " [:a {:href ""} "(tutorial)"]]
+       [:p
+        "Upload your DB " [:a {:href ""} "(tutorial)"]]
        [:input {:type "file"
                 :name "file-input"
                 :on-change (fn [e] (file-cb e))}]
        [table @nodes]])))
 
-
-(defn home-panel
-  []
-  (fn []
-    [:div
-     [:h1 "Home Panel"]]))
 
 
 (defn left-sidebar
