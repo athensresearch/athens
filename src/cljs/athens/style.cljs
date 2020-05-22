@@ -59,7 +59,7 @@
 
   [:h1 (+heavily-styled) "some statement"]
 
-  [:h1 (+heavily-styled {:on-click (fn [e] (js/alert "something else"))}) "some statement"]
+  [:h1 (+heavily-styled {:on-click (fn [_e] (js/alert "something else"))}) "some statement"]
 
   )
 
