@@ -3,7 +3,7 @@
     [athens.parser :refer [parse]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe]]
     #_[reagent.core :as reagent]
     #_[reitit.frontend.easy :as rfee]))
 
