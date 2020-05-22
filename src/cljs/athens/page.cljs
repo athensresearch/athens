@@ -75,27 +75,27 @@
 
 (defn title-comp [title]
   (let [s (reagent/atom {:editing false
-                         :current-title title
-                         :new-title title})
-        save! (fn [] (dispatch [:node/rename (:current-title @s) (:new-title @s)])
-                     (swap! s assoc :editing false))
-        cancel! (fn [] (swap! s #(-> %
-                                     (assoc :editing false)
-                                     (assoc :new-title (:current-title @s)))))]
+                         :current-title title})
+        save! (fn [new-title]
+                (dispatch [:node/rename (:current-title @s) new-title])
+                (swap! s assoc :editing false))
+        cancel! (fn [] (swap! s assoc :editing false))]
     (fn [title]
       (if (:editing @s)
-        [:input {:value (:new-title @s)
+        [:input {:default-value title
                  :auto-focus true
-                 :on-change #(swap! s assoc :new-title (-> % .-target .-value))
-                 :on-blur save!
-                 :on-key-down #(case (.-which %)
-                                 enter-keycode (save!) ; save on enter
-                                 esc-keycode (cancel!) ; cancel on esc
-                                 nil)}]
+                 :on-blur #(save! (-> % .-target .-value))
+                 :on-key-down #(cond
+                                 (= (.-keyCode %) enter-keycode)
+                                 (save! (-> % .-target .-value))
+
+                                 (= (.-keyCode %) esc-keycode)
+                                 (cancel!)
+
+                                 :else nil)}]
         [:h2 {:on-click (fn [_] (swap! s #(-> %
                                               (assoc :editing true)
-                                              (assoc :current-title title)
-                                              (assoc :new-title title))))}
+                                              (assoc :current-title title))))}
          title]))))
 
 (defn node-page []
