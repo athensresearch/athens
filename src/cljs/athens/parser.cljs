@@ -46,13 +46,11 @@
   [string]
   (let [result (parser string)]
     (if (insta/failure? result)
-      (let [failure (insta/get-failure result)
-            {:keys [line column reason]} failure]
-        [:span
-         {:content-editable true
-          :title (str "parse error at line " line " col " column ": " reason)
-          :style {:color "red"}}
-         string])
+      [:span
+       {:content-editable true
+        :title (pr-str (insta/get-failure result))
+        :style {:color "red"}}
+       string]
       [:span
        {:content-editable true}
        (vec (transform result))])))
