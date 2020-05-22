@@ -70,6 +70,9 @@
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
+(def enter-keycode 13)
+(def esc-keycode 27)
+
 (defn title-comp [title]
   (let [s (reagent/atom {:editing false
                          :current-title title
@@ -86,8 +89,8 @@
                  :on-change #(swap! s assoc :new-title (-> % .-target .-value))
                  :on-blur save!
                  :on-key-down #(case (.-which %)
-                                 13 (save!) ; save on enter
-                                 27 (cancel!) ; cancel on esc
+                                 enter-keycode (save!) ; save on enter
+                                 esc-keycode (cancel!) ; cancel on esc
                                  nil)}]
         [:h2 {:on-click (fn [_] (swap! s #(-> %
                                               (assoc :editing true)
