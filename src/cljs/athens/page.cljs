@@ -70,7 +70,7 @@
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
-(defn title [title]
+(defn title-comp [title]
   (let [s (reagent/atom {:editing false
                          :current-title title
                          :new-title title})
@@ -100,7 +100,7 @@
     (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
       [:div
-       [title (:node/title node)]
+       [title-comp (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
