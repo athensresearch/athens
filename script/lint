@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-# Find installation instructions here https://github.com/borkdude/clj-kondo/blob/554d7d93e2eb78ff21cfbbee4a084c4b6e089411/doc/install.md
+# This script depends on clj-kondo. Installation instructions for clj-kondo are linked to in CONTRIBUTING.md.
 
 # TODO remove this when all warnings have been fixed
 clj-kondo --lint src || echo "
