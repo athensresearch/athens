@@ -3,8 +3,8 @@
     [athens.parser :refer [parse]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
-    [re-frame.core :refer [subscribe]]
-    #_[reagent.core :as reagent]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as reagent]
     #_[reitit.frontend.easy :as rfee]))
 
 
@@ -70,14 +70,37 @@
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
+(defn title [title]
+  (let [s (reagent/atom {:editing false
+                         :current-title title
+                         :new-title title})
+        save! (fn [] (dispatch [:node/rename (:current-title @s) (:new-title @s)])
+                     (swap! s assoc :editing false))
+        cancel! (fn [] (swap! s #(-> %
+                                     (assoc :editing false)
+                                     (assoc :new-title (:current-title @s)))))]
+    (fn [title]
+      (if (:editing @s)
+        [:input {:value (:new-title @s)
+                 :auto-focus true
+                 :on-change #(swap! s assoc :new-title (-> % .-target .-value))
+                 :on-blur save!
+                 :on-key-down #(case (.-which %)
+                                 13 (save!) ; save on enter
+                                 27 (cancel!) ; cancel on esc
+                                 nil)}]
+        [:h2 {:on-click (fn [_] (swap! s #(-> %
+                                              (assoc :editing true)
+                                              (assoc :current-title title)
+                                              (assoc :new-title title))))}
+         title]))))
 
 (defn node-page []
   (fn [node]
     (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
       [:div
-       [:h2
-        {:content-editable true} (:node/title node)]
+       [title (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
