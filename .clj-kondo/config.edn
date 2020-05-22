@@ -1,4 +1,6 @@
-{:linters {:unresolved-symbol
+{:linters {:unresolved-namespace
+           {:exclude [clojure.string]}
+           :unresolved-symbol
            {:exclude [(devcards.core/defcard)
                       (devcards.core/defcard-rg)]}
            :unused-referred-var
