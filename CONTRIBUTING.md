@@ -33,7 +33,11 @@ When these scripts are done, your terminal will read `build complete`. Athens ca
 
 # Clojure Style Guide
 
-We are using [clj-kondo](https://github.com/borkdude/clj-kondo) with an [empty config](https://github.com/athensresearch/athens/issues/39#issuecomment-627231765).
+We are linting Clojure code using [clj-kondo](https://github.com/borkdude/clj-kondo). Our clj-kondo configuration is in [`.clj-kondo/config.edn`](.clj-kondo/config.edn).
+
+For this linting to work, you will need to install `clj-kondo`. Instructions are in [`clj-kondo`’s installation guide](https://github.com/borkdude/clj-kondo/blob/master/doc/install.md) ([permalink](https://github.com/borkdude/clj-kondo/blob/7e7190b0bf673a6778c3b2cbf7c61f42cd57ee03/doc/install.md)).
+
+To see the problems reported by clj-kondo, run `script/lint`. Your editor may also be able to integrate with clj-kondo’s output. For example, if you use [Calva](https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva) for VS Code, then clj-kondo’s messages are reported in the Problems panel.
 
 # Git Style Guide
 

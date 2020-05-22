@@ -1,11 +1,11 @@
 (ns athens.page
   (:require
-   [athens.parser :refer [parse]]
-   [athens.patterns :as patterns]
-   [athens.router :refer [navigate-page toggle-open]]
-   [re-frame.core :refer [subscribe dispatch]]
-   #_[reagent.core :as reagent]
-   #_[reitit.frontend.easy :as rfee]))
+    [athens.parser :refer [parse]]
+    [athens.patterns :as patterns]
+    [athens.router :refer [navigate-page toggle-open]]
+    [re-frame.core :refer [subscribe]]
+    #_[reagent.core :as reagent]
+    #_[reitit.frontend.easy :as rfee]))
 
 
 (defn render-blocks []
