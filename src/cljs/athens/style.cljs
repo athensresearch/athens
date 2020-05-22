@@ -1,14 +1,14 @@
 (ns athens.style
   (:require
-   [garden.core :refer [css]]
-   [garden.selectors :refer [nth-child]]))
+    [garden.core :refer [css]]
+    [garden.selectors :refer [nth-child]]))
 
 ;; Styles for the loading screen
 (defn loading-css
   []
   [:style (css
-           [:body {:font-family "sans-serif"
-                   :font-size "1.3rem"}])])
+            [:body {:font-family "sans-serif"
+                    :font-size "1.3rem"}])])
 
 ;; Styles for the main app.
 (defn main-css

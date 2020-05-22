@@ -49,7 +49,6 @@
                 [render-blocks uid]])])))])))
 
 
-
 (defn block-page []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])

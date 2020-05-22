@@ -1,11 +1,11 @@
 (ns athens.views
   (:require
-   [athens.page :as page]
-   [athens.style :as style]
-   [athens.subs]
-   [re-frame.core :as rf :refer [subscribe dispatch]]
-   #_[reitit.frontend :as rfe]
-   [reitit.frontend.easy :as rfee]))
+    [athens.page :as page]
+    [athens.style :as style]
+    [athens.subs]
+    [re-frame.core :as rf :refer [subscribe dispatch]]
+    #_[reitit.frontend :as rfe]
+    [reitit.frontend.easy :as rfee]))
 
 
 (defn about-panel
@@ -70,7 +70,6 @@
                 :name "file-input"
                 :on-change (fn [e] (file-cb e))}]
        [table @nodes]])))
-
 
 
 (defn left-sidebar
