@@ -1,11 +1,11 @@
-(ns athens.parse-helper-test
+(ns athens.parse-transform-helper-test
   (:require
-    [athens.parse-helper :as parse-helper]
+    [athens.parse-transform-helper :refer [combine-adjacent-strings]]
     [clojure.test :refer [deftest is are]]))
 
 
 (deftest combine-adjacent-strings-tests
-  (are [x y] (= x (parse-helper/combine-adjacent-strings y))
+  (are [x y] (= x (combine-adjacent-strings y))
     []
     , []
     ["some text"]
