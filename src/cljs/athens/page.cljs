@@ -3,8 +3,8 @@
     [athens.parser :refer [parse]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
-    [re-frame.core :refer [subscribe]]
-    #_[reagent.core :as reagent]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as reagent]
     #_[reitit.frontend.easy :as rfee]))
 
 
@@ -71,13 +71,42 @@
         [render-blocks (:block/uid @node)]]])))
 
 
+(def enter-keycode 13)
+(def esc-keycode 27)
+
+
+(defn title-comp [title]
+  (let [s (reagent/atom {:editing false
+                         :current-title title})
+        save! (fn [new-title]
+                (swap! s assoc :editing false)
+                (dispatch [:node/rename (:current-title @s) new-title]))
+        cancel! (fn [] (swap! s assoc :editing false))]
+    (fn [title]
+      (if (:editing @s)
+        [:input {:default-value title
+                 :auto-focus true
+                 :on-blur #(save! (-> % .-target .-value))
+                 :on-key-down #(cond
+                                 (= (.-keyCode %) enter-keycode)
+                                 (save! (-> % .-target .-value))
+
+                                 (= (.-keyCode %) esc-keycode)
+                                 (cancel!)
+
+                                 :else nil)}]
+        [:h2 {:on-click (fn [_] (swap! s #(-> %
+                                              (assoc :editing true)
+                                              (assoc :current-title title))))}
+         title]))))
+
+
 (defn node-page []
   (fn [node]
     (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
       [:div
-       [:h2
-        {:content-editable true} (:node/title node)]
+       [title-comp (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
