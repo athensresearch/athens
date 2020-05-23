@@ -70,8 +70,10 @@
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
+
 (def enter-keycode 13)
 (def esc-keycode 27)
+
 
 (defn title-comp [title]
   (let [s (reagent/atom {:editing false
@@ -97,6 +99,7 @@
                                               (assoc :editing true)
                                               (assoc :current-title title))))}
          title]))))
+
 
 (defn node-page []
   (fn [node]
