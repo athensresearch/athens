@@ -77,8 +77,8 @@
   (let [s (reagent/atom {:editing false
                          :current-title title})
         save! (fn [new-title]
-                (dispatch [:node/rename (:current-title @s) new-title])
-                (swap! s assoc :editing false))
+                (swap! s assoc :editing false)
+                (dispatch [:node/rename (:current-title @s) new-title]))
         cancel! (fn [] (swap! s assoc :editing false))]
     (fn [title]
       (if (:editing @s)
