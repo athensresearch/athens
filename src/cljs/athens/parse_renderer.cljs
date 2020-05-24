@@ -20,7 +20,8 @@
                    ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
                    (let [collapsed-contents (combine-adjacent-strings raw-contents)]
                      (concat [:span {:class "block"}] collapsed-contents)))
-     :any-chars  (fn [& chars] (clojure.string/join chars))
+     :any-chars  (fn [& chars]
+                   (clojure.string/join chars))
      :block-link (fn [title]
                    (let [id (subscribe [:block/uid [:node/title title]])]
                      [:span {:class "block-link"}
@@ -40,7 +41,7 @@
                           :href  (rfee/href :page {:id (:block/uid @id)})}
                       (str "#" tag-name)]))
      :bold       (fn [text]
-                   [:strong text])}
+                   [:strong {:class "bold"} text])}
     tree))
 
 
