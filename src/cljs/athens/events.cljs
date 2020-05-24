@@ -82,14 +82,38 @@
     [:db/add eid :block/string new-s]))
 
 
-(reg-event-ds
-  :node/rename
-  (fn-traced [ds [_ old-title new-title]]
-             (let [eid (node-with-title ds old-title)
-                   blocks (referencing-blocks ds old-title)]
-               (->> blocks
-                    (map (partial rename-refs-tx old-title new-title))
-                    (into [[:db/add eid :node/title new-title]])))))
+(defn rename-tx
+  [ds old-title new-title]
+  (let [eid (node-with-title ds old-title)
+        blocks (referencing-blocks ds old-title)]
+    (->> blocks
+         (map (partial rename-refs-tx old-title new-title))
+         (into [[:db/add eid :node/title new-title]]))))
+
+
+(reg-event-fx
+  :node/renamed
+  [(rp/inject-cofx :ds)]
+  (fn-traced [{:keys [db ds]} [_ old-title new-title]]
+             (when (not= old-title new-title)
+               (if (node-with-title ds new-title)
+                 {:db (assoc db :merge-prompt {:active true
+                                               :old-title old-title
+                                               :new-title new-title})}
+                 {:transact (rename-tx ds old-title new-title)}))))
+
+
+; TODO create datascript transactions to merge two pages
+(reg-event-fx
+  :node/merged
+  (fn-traced [{:keys [db ds]} [_ old-title new-title]]
+             {:db (dissoc db :merge-prompt)}))
+
+
+(reg-event-db
+  :node/merge-canceled
+  (fn-traced [db _]
+             (dissoc db :merge-prompt)))
 
 
 (reg-event-db
