@@ -1,8 +1,12 @@
 (ns athens.page
-  (:require [athens.parser :refer [parse]]
-            [re-frame.core :refer [subscribe dispatch]]
-            #_[reitit.frontend.easy :as rfee]
-            #_[reagent.core :as reagent]))
+  (:require
+    [athens.parser :refer [parse]]
+    [athens.patterns :as patterns]
+    [athens.router :refer [navigate-page toggle-open]]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as reagent]
+    #_[reitit.frontend.easy :as rfee]))
+
 
 (defn render-blocks []
   (fn [block-uid]
@@ -23,14 +27,14 @@
                                                                  :border-top   "5px solid black"
                                                                  :cursor "pointer"
                                                                  :margin-top 4}
-                                                         :on-click #(dispatch [:block/toggle-open dbid open])}]
+                                                         :on-click #(toggle-open dbid open)}]
                  (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
                                                                         :border-top  "5px solid transparent"
                                                                         :border-bottom "5px solid transparent"
                                                                         :border-left   "5px solid black"
                                                                         :cursor "pointer"
                                                                         :margin-right 4}
-                                                                :on-click #(dispatch [:block/toggle-open dbid open])}]
+                                                                :on-click #(toggle-open dbid open)}]
                  :else [:span {:style {:width 10}}])
                [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
                                :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
@@ -38,23 +42,12 @@
                 [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
-                                 :on-click #(dispatch [:navigate :page {:id uid}])}]]]
+                                 :on-click #(navigate-page uid)}]]]
               [:span (parse string)]]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
 
-; match [[title]] or #title or #[[title]]
-(defn linked-pattern [string]
-  (re-pattern (str "("
-                   "\\[{2}" string "\\]{2}"
-                   "|" "#" string
-                   "|" "#" "\\[{2}" string "\\[{2}"
-                   ")")))
-
-; also excludes [title] :(
-(defn unlinked-pattern [string]
-  (re-pattern (str "[^\\[|#]" string)))
 
 (defn block-page []
   (fn [id]
@@ -68,19 +61,52 @@
                             ^{:key uid}
                             [:span
                              {:style {:cursor "pointer"}
-                              :on-click #(dispatch [:navigate :page {:id uid}])}
+                              :on-click #(navigate-page uid)}
                              (or string title)]))
                         @parents))]
-       [:h2 {:style {:margin 0}} (str "• " (:block/string @node))]
+       [:h2
+        {:content-editable true
+         :style {:margin 0}} (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
+
+(def enter-keycode 13)
+(def esc-keycode 27)
+
+
+(defn title-comp [title]
+  (let [s (reagent/atom {:editing false
+                         :current-title title})
+        save! (fn [new-title]
+                (swap! s assoc :editing false)
+                (dispatch [:node/rename (:current-title @s) new-title]))
+        cancel! (fn [] (swap! s assoc :editing false))]
+    (fn [title]
+      (if (:editing @s)
+        [:input {:default-value title
+                 :auto-focus true
+                 :on-blur #(save! (-> % .-target .-value))
+                 :on-key-down #(cond
+                                 (= (.-keyCode %) enter-keycode)
+                                 (save! (-> % .-target .-value))
+
+                                 (= (.-keyCode %) esc-keycode)
+                                 (cancel!)
+
+                                 :else nil)}]
+        [:h2 {:on-click (fn [_] (swap! s #(-> %
+                                              (assoc :editing true)
+                                              (assoc :current-title title))))}
+         title]))))
+
+
 (defn node-page []
   (fn [node]
-    (let [linked-refs   (subscribe [:node/refs (linked-pattern   (:node/title node))])
-          unlinked-refs (subscribe [:node/refs (unlinked-pattern (:node/title node))])]
+    (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
+          unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
       [:div
-       [:h2 (:node/title node)]
+       [title-comp (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
         [:h3 "Linked References"]
@@ -96,6 +122,7 @@
            ^{:key id}
            [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
             [block-page id]])]]])))
+
 
 (defn main []
   (let [current-route (subscribe [:current-route])]
