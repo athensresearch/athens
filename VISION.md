@@ -1,5 +1,5 @@
 - [A Self-Hosted Athens](#a-self-hosted-athens)
-- [An Invidual Memex](#an-invidual-memex)
+- [An Individual Memex](#an-individual-memex)
 - [A Collective Memex](#a-collective-memex)
   - [A Protocol for Bi-directionality](#a-protocol-for-bi-directionality)
   - [A Protocol for Knowledge Markets](#a-protocol-for-knowledge-markets)
