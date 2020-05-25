@@ -43,7 +43,7 @@ When participating in the Athens community, you are agreeing to embody Athens's 
 
 Athenians are free to invite others to the Athens Discord, but the Core Team and Guardians reserve the right to revoke this permission.
 
-This would be necessary in case there were growing pains from premature scaling or in the case of bad actors trying to disrupt the Athens Discord with spam bots.
+This would be necessary in case there were growing pains from premature scaling or in the case of bad actors trying to disrupt the Athens Discord with spambots.
 
 This is also why invites expire after 24 hours by default.
 
