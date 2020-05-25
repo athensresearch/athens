@@ -1,128 +1,119 @@
-# Contributor Covenant Code of Conduct
+# Table of Contents
 
-## Our Pledge
+- [Table of Contents](#table-of-contents)
+- [Values](#values)
+  - [Collaboration](#collaboration)
+  - [Learning](#learning)
+- [Athens Discord](#athens-discord)
+  - [Inviting](#inviting)
+  - [Kicking and Banning](#kicking-and-banning)
+  - [Auto-Moderation](#auto-moderation)
+  - [Pruning](#pruning)
+- [Discord Official](#discord-official)
+  - [Discord Guidelines](#discord-guidelines)
+  - [Discord Terms of Service](#discord-terms-of-service)
+  - [Discord Privacy Policy](#discord-privacy-policy)
 
-We as members, contributors, and leaders pledge to make participation in our
-community a harassment-free experience for everyone, regardless of age, body
-size, visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socio-economic status,
-nationality, personal appearance, race, religion, or sexual identity
-and orientation.
+If you disagree with Athens's values, Athens's Discord guidelines, or the official Discord policies, you have two options: [Voice or Exit](https://www.youtube.com/watch?v=cOubCHLXT6A).
 
-We pledge to act and interact in ways that contribute to an open, welcoming,
-diverse, inclusive, and healthy community.
+# Values
+> Don’t explain your philosophy. Embody it.
 
-## Our Standards
+— Epictetus
 
-Examples of behavior that contributes to a positive environment for our
-community include:
+Athens is not just a product. Athens is a community for collaboration and learning.
 
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologizing to those affected by our mistakes,
-  and learning from the experience
-* Focusing on what is best not just for us as individuals, but for the
-  overall community
+When participating in the Athens community, you are agreeing to embody Athens's values. But values and communities become real through actions, not words. As Athens matures, we will add epics and hero's journeys that exemplify Athens's values to this page.
 
-Examples of unacceptable behavior include:
+## Collaboration
 
-* The use of sexualized language or imagery, and sexual attention or
-  advances of any kind
-* Trolling, insulting or derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or email
-  address, without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+> Associate with people who are likely to improve you.
 
-## Enforcement Responsibilities
+— Seneca
 
-Community leaders are responsible for clarifying and enforcing our standards of
-acceptable behavior and will take appropriate and fair corrective action in
-response to any behavior that they deem inappropriate, threatening, offensive,
-or harmful.
+## Learning
 
-Community leaders have the right and responsibility to remove, edit, or reject
-comments, commits, code, wiki edits, issues, and other contributions that are
-not aligned to this Code of Conduct, and will communicate reasons for moderation
-decisions when appropriate.
+> The object of education is to teach us to love what is beautiful.
 
-## Scope
+— Plato
 
-This Code of Conduct applies within all community spaces, and also applies when
-an individual is officially representing the community in public spaces.
-Examples of representing our community include using an official e-mail address,
-posting via an official social media account, or acting as an appointed
-representative at an online or offline event.
+# Athens Discord
 
-## Enforcement
+## Inviting
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-[INSERT CONTACT METHOD].
-All complaints will be reviewed and investigated promptly and fairly.
+Athenians are free to invite others to the Athens Discord, but the Core Team and Guardians reserve the right to revoke this permission.
 
-All community leaders are obligated to respect the privacy and security of the
-reporter of any incident.
+This would be necessary in case there were growing pains from premature scaling or in the case of bad actors trying to disrupt the Athens Discord with spambots.
 
-## Enforcement Guidelines
+This is also why invites expire after 24 hours by default.
 
-Community leaders will follow these Community Impact Guidelines in determining
-the consequences for any action they deem in violation of this Code of Conduct:
+## Kicking and Banning
 
-### 1. Correction
+If there are spambots or members severely transgressing the Athens values and guidelines, it is the responsibility of Guardians and Core Team members to kick or ban these bad actors.
 
-**Community Impact**: Use of inappropriate language or other behavior deemed
-unprofessional or unwelcome in the community.
+If it is unclear why the kick or ban was necessary, a DM will be sent to follow-up on this event and clarify the rationale.
 
-**Consequence**: A private, written warning from community leaders, providing
-clarity around the nature of the violation and an explanation of why the
-behavior was inappropriate. A public apology may be requested.
+Kicking removes the user from the server. The user can be re-invited and then rejoin.
 
-### 2. Warning
+Banning is a permanent removal from the server. Particularly effective for spambots.
 
-**Community Impact**: A violation through a single incident or series
-of actions.
+## Auto-Moderation
 
-**Consequence**: A warning with consequences for continued behavior. No
-interaction with the people involved, including unsolicited interaction with
-those enforcing the Code of Conduct, for a specified period of time. This
-includes avoiding interactions in community spaces as well as external channels
-like social media. Violating these terms may lead to a temporary or
-permanent ban.
+[Probot](probot.io) is used for auto-moderation.
 
-### 3. Temporary Ban
+It warns members in the following cases:
 
-**Community Impact**: A serious violation of community standards, including
-sustained inappropriate behavior.
+- Emoji spam
+- Duplicated text
+- Bad words
+- Spammed caps (70% > caps)
+- Mass mention (@everyone)
 
-**Consequence**: A temporary ban from any sort of interaction or public
-communication with the community for a specified period of time. No public or
-private interaction with the people involved, including unsolicited interaction
-with those enforcing the Code of Conduct, is allowed during this period.
-Violating these terms may lead to a permanent ban.
+It warns members and deletes messages in the following cases:
 
-### 4. Permanent Ban
+- Spam (5 messages / 5 sec)
 
-**Community Impact**: Demonstrating a pattern of violation of community
-standards, including sustained inappropriate behavior,  harassment of an
-individual, or aggression toward or disparagement of classes of individuals.
+## Pruning
 
-**Consequence**: A permanent ban from any sort of public interaction within
-the community.
+Collaboration implies participation. Members of the Discord who do not message after a certain number of days are "pruned" and will need to be re-invited to rejoin the Discord.
 
-## Attribution
+# Discord Official
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage],
-version 2.0, available at
-https://www.contributor-covenant.org/version/2/0/code_of_conduct.html.
+## Discord Guidelines
 
-Community Impact Guidelines were inspired by [Mozilla's code of conduct
-enforcement ladder](https://github.com/mozilla/diversity).
+You agree to the official Discord [Guidelines](https://discord.com/guidelines) while using Discord. Evidence of the following may result in the termination of your account from the Discord platform:
 
-[homepage]: https://www.contributor-covenant.org
+- harassment
+- spam
+- pornography of minors
+- violation of rights
+- promotion of self-harm or suicide
+- animal cruelty
+- threatening to harm others
+- distributing viruses
+- shaming or degrading others
+- attempting to steal
+- doing anything illegal
 
-For answers to common questions about this code of conduct, see the FAQ at
-https://www.contributor-covenant.org/faq. Translations are available at
-https://www.contributor-covenant.org/translations.
+## Discord Terms of Service
+
+You agree to the official Discord [Terms of Service](https://discord.com/terms) while using Discord.
+
+As Athens is an open-source technology project, one section worth emphasizing is the section on intellectual property.
+
+> As an example, you agree not to use the Service in order to:
+
+> violate the contractual, personal, intellectual property or other rights of any party including using, uploading, transmitting, distributing, or otherwise making available any information made available through the Service in any manner that infringes any copyright, trademark, patent, trade secret, or other right of any party (including rights of privacy or publicity)
+
+If you believe your intellectual property rights have been violated, please email the Athens team immediately at researchathens@gmail.com.
+
+## Discord Privacy Policy
+
+You agree to the official Discord [Privacy Policy](https://discord.com/privacy) while using Discord.
+
+Discord collects the following information:
+
+- information you provide, which includes but is not limited to: username, email address, messages, images, transient VOIP data, or other content sent via chat
+- IP address, device ID, and your activities within the Services
+- information through other Services such as Twitter and Facebook, if connected
+- information on cookies
