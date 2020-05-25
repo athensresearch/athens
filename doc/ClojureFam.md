@@ -44,7 +44,7 @@ The Clojure community is friendly and welcoming like no other. Ask a question on
 
 So why take part in the ClojureFam program?
 
-Questions come and go. Libraries and side-projects get abandoned. The flux of people can make us lose track of the individuals.
+Questions come and go. Libraries and side-projects get abandoned. The flux of people can make us lose track of individuals.
 
 As a ClojureFam mentor, you have the chance to connect personally to motivated programmers, who are learning Clojure primarily to contribute to Athens.
 
