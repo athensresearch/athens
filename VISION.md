@@ -122,6 +122,6 @@ And that we need to start getting exponential returns on collective intelligence
 
 Lastly, the final Athens vision is for everyone, one day, to learn how to learn anything.
 
-To do that, it is mission critical to create a space and culture where we can [work with one another and learn from one another](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md).
+To do that, it is mission-critical to create a space and culture where we can [work with one another and learn from one another](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md).
 
 That is the meta-project. Memexes, protocols, and Athens are just a means of getting there.
