@@ -15,7 +15,7 @@ This document can be read alongside [Athens Vision Mindmap v2](https://www.notio
 
 Roam Research is a "note-taking tool for networked thought." Roam creates value because it allows users to create knowledge associatively, divergently, and then emergently.
 
-This is more important now than ever before because in the past few decades we've seen an exponential growth in data and information. However, our ability to make sense of these inputs, to convert data and information to knowledge and wisdom, is already capped by the mainstream tools today.
+This is more important now than ever before because in the past few decades we've seen exponential growth in data and information. However, our ability to make sense of these inputs, to convert data and information to knowledge and wisdom, is already capped by the mainstream tools today.
 
 Using a graph database, bi-directional links, and hypertext transclusions, Roam enables users to create and traverse knowledge in a way that mirrors how humans organically create knowledge — associatively and contextually.
 
