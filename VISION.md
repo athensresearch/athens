@@ -35,7 +35,7 @@ A self-hosted, open-source Athens solves this privacy and security problem.
 
 # An Individual Memex
 
-The closest approximations we have to the brain are Tools for Networked Thought and neural networks. Both of these are graphs networks with bi-directional data flows.
+The closest approximations we have to the brain are Tools for Networked Thought and neural networks. Both of these are graph networks with bi-directional data flows.
 
 What makes Tools for *Networked* Thought different from normal Tools for Thought is that they have bi-directional links and transclusions (which are just richer bi-directional links).
 
