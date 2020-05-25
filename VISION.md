@@ -31,7 +31,7 @@ This isn't about Roam's ethics, either. This is about users putting their second
 
 A self-hosted Athens solves this privacy and security problem.
 
-# An Invidual Memex
+# An Individual Memex
 
 The closest approximations we have to the brain are Roam and neural networks. Both of these are graphs with bi-directional data flows.
 
