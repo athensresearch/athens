@@ -55,7 +55,7 @@ If it is unclear why the kick or ban was necessary, a DM will be sent to follow-
 
 Kicking removes the user from the server. The user can be re-invited and then rejoin.
 
-Banning is a permanent removal from the server. Particularly effective for spam bots.
+Banning is a permanent removal from the server. Particularly effective for spambots.
 
 ## Auto-Moderation
 
