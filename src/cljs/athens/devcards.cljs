@@ -1,9 +1,9 @@
 (ns athens.devcards
   (:require
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [athens-devcards.db]
     [athens-devcards.sci-boxes]
+    [cljsjs.react]
+    [cljsjs.react.dom]
     [devcards.core :as devcards :include-macros true :refer [defcard]]
     [reagent.core :as r :include-macros true]))
 

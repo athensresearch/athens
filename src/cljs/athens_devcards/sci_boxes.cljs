@@ -1,12 +1,18 @@
 (ns athens-devcards.sci-boxes
   (:require
-   [clojure.string :as str]
-   [devcards.core :refer [defcard defcard-rg]]
-   [reagent.core :as rg]
-   [sci.core :as sci]))
+    [clojure.string :as str]
+    [devcards.core :refer [defcard defcard-rg]]
+    [reagent.core :as rg]
+    [sci.core :as sci]))
+
 
 (def log js/console.log)
-(defn trace [x] (log x) x)
+
+
+(defn trace
+  [x]
+  (log x) x)
+
 
 (defcard "
   # An experiment in connecting mini SCI environments
@@ -31,9 +37,11 @@
    - `spit`/`slurp` to IPFS etc.
   ")
 
+
 (defcard sci
   "## Small Clojure Interpreter
    https://github.com/borkdude/sci")
+
 
 (defn remove-from-vec
   "Returns a new vector with the element at 'index' removed.
@@ -42,11 +50,14 @@
   [v index]
   (vec (concat (subvec v 0 index) (subvec v (inc index)))))
 
-(defn index-of [col val]
+
+(defn index-of
+  [col val]
   (first (keep-indexed (fn [idx x]
                          (when (= x val)
                            idx))
                        col)))
+
 
 (defcard sci-examples
   (for [[s opts]
@@ -60,6 +71,7 @@
            (when opts
              {:opts opts}))))
 
+
 (def key-code->key
   {8   :backspace
    9   :tab
@@ -67,8 +79,11 @@
    57  :left-paren
    219 :left-brace})
 
-(def empty-box {:str-content ""
-                :children-ids []})
+
+(def empty-box
+  {:str-content ""
+   :children-ids []})
+
 
 (defcard "
   ## Experiment #1
@@ -86,6 +101,7 @@
   BACKSPACE in an empty box deletes it
   ")
 
+
 (defonce box-state*
   (rg/atom {:next-id 4
             :boxes {0 (merge empty-box {:children-ids [1 3]
@@ -96,29 +112,38 @@
                     2 (merge empty-box {:str-content "I am just a 🍃"})
                     3 (merge empty-box {:str-content ":sci (:message *1)"})}}))
 
+
 (defcard box-state* box-state*)
 
-(defn get-parent-id [boxes child-id]
+
+(defn get-parent-id
+  [boxes child-id]
   (some (fn [[id box]]
           (when (some #{child-id} (:children-ids box))
             id))
         boxes))
 
-(defn sci-node? [{:keys [str-content]}]
+
+(defn sci-node?
+  [{:keys [str-content]}]
   (str/starts-with? str-content ":sci"))
 
-(defn eval-box [{:keys [str-content] :as box} parent]
+
+(defn eval-box
+  [{:keys [str-content] :as box} parent]
   (if-not (sci-node? box)
     box
     (let [code (subs str-content 4)
           result (try
                    (sci/eval-string code {:bindings {'*1 (:result parent)}})
                    (catch js/Error e
-                    (trace e)))]
+                     (trace e)))]
       (assoc box :result result))))
 
+
 ;; very naive depth-first search, probably buggy
-(defn next-box-id [boxes visited id]
+(defn next-box-id
+  [boxes visited id]
   (if (not (visited id))
     id
     (let [go-up #(when-let [parent-id (get-parent-id boxes id)]
@@ -137,7 +162,9 @@
             unvisited-sibling
             (go-up)))))))
 
-(defn eval-all-boxes [boxes]
+
+(defn eval-all-boxes
+  [boxes]
   (loop [boxes boxes
          visited #{}
          id 0]
@@ -150,18 +177,24 @@
         boxes'
         (recur boxes' visited' id')))))
 
-(defn add-child [{:keys [children-ids] :as box} idx id]
+
+(defn add-child
+  [{:keys [children-ids] :as box} idx id]
   (let [new-idx (inc idx)]
     (assoc box :children-ids (apply conj
-                               (subvec children-ids 0 new-idx)
-                               id
-                               (subvec children-ids new-idx)))))
+                                    (subvec children-ids 0 new-idx)
+                                    id
+                                    (subvec children-ids new-idx)))))
 
-(defn remove-child [parent child-id]
+
+(defn remove-child
+  [parent child-id]
   (let [idx (index-of (:children-ids parent) child-id)]
     (update parent :children-ids remove-from-vec idx)))
 
-(defn add-sibling [{:keys [next-id boxes] :as state} id]
+
+(defn add-sibling
+  [{:keys [next-id boxes] :as state} id]
   (let [parent-id (get-parent-id boxes id)
         siblings (get-in boxes [parent-id :children-ids])
         idx (index-of siblings id)]
@@ -171,27 +204,37 @@
         (update :boxes assoc next-id empty-box)
         (update :boxes eval-all-boxes))))
 
-(defn delete-box [{:keys [boxes] :as state} id]
+
+(defn delete-box
+  [{:keys [boxes] :as state} id]
   (let [parent-id (get-parent-id boxes id)]
     (-> state
         (update-in [:boxes parent-id] remove-child id)
         (update :boxes dissoc id)
         (update :boxes eval-all-boxes))))
 
-(defn update-box-content [boxes id value]
+
+(defn update-box-content
+  [boxes id value]
   (update boxes id assoc :str-content value))
 
-(defn handle-return-key! [e id]
+
+(defn handle-return-key!
+  [e id]
   (.preventDefault e)
   (swap! box-state* add-sibling id))
 
-(defn handle-backspace-key! [e id]
+
+(defn handle-backspace-key!
+  [e id]
   (let [{:keys [str-content]} (get-in @box-state* [:boxes id])]
     (when (empty? str-content)
       (.preventDefault e)
       (swap! box-state* delete-box id))))
 
-(defn handle-box-key-down! [e id]
+
+(defn handle-box-key-down!
+  [e id]
   (let [key-code (.-keyCode e)
         shift? (.-shiftKey e)
         k (key-code->key key-code)]
@@ -201,7 +244,9 @@
       :backspace (handle-backspace-key! e id)
       nil)))
 
-(defn handle-box-change! [e id]
+
+(defn handle-box-change!
+  [e id]
   (let [target (.-target e)
         value (.-value target)]
     (swap! box-state*
@@ -209,15 +254,19 @@
                 (update :boxes update-box-content id value)
                 (update :boxes eval-all-boxes)))))
 
-(defn sci-result-component [result]
+
+(defn sci-result-component
+  [result]
   (when result
     (let [{:keys [hiccup]} result]
       (if hiccup
         hiccup
         (str result)))))
 
+
 ;; resulting :hiccup could be malformed, catch errors & allow retry
-(defn sci-result-wrapper []
+(defn sci-result-wrapper
+  []
   (let [err* (rg/atom nil)]
     (rg/create-class
       {:component-did-catch (fn [err info]
@@ -232,7 +281,9 @@
                                [:button {:on-click #(reset! err* nil)}
                                 "re-render"]]])))})))
 
-(defn box-component [id]
+
+(defn box-component
+  [id]
   (let [{:keys [boxes]} @box-state*
         {:keys [str-content children-ids result] :as box} (get boxes id)]
     [:div
@@ -249,6 +300,7 @@
        (into [:div {:style {:margin-left "1rem"}}]
              (for [id children-ids]
                [box-component id])))]))
+
 
 (defcard-rg boxes
   (do
