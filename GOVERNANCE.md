@@ -1,3 +1,5 @@
+# Table of Contents
+
 - [Overview](#overview)
 - [Roles and Responsibilities](#roles-and-responsibilities)
   - [Benevolent Dictator](#benevolent-dictator)
