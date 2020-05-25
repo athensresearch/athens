@@ -1,6 +1,5 @@
 # Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [A Self-Hosted Athens](#a-self-hosted-athens)
 - [An Individual Memex](#an-individual-memex)
 - [A Collective Memex](#a-collective-memex)
