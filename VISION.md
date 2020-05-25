@@ -13,41 +13,41 @@ This document can be read alongside [Athens Vision Mindmap v2](https://www.notio
 
 # A Self-Hosted Athens
 
-Roam Research is a "note-taking tool for networked thought." Roam creates value because it allows users to create knowledge associatively, divergently, and then emergently.
+We've recently seen an explosion in Tools for *Networked* Thought like [Roam Research](http://roamresearch.com/), [Obsidian](https://obsidian.md/), [Semilattice](https://www.semilattice.xyz/), and [so on](https://www.notion.so/Networked-Note-taking-app-a131b468fc6f43218fb8105430304709) and [so forth](https://twitter.com/patrick_oshag/status/1264299702738173954?s=20). These tools create value because they allow users to create knowledge associatively, divergently, and then emergently.
 
 This is more important now than ever before because in the past few decades we've seen exponential growth in data and information. However, our ability to make sense of these inputs, to convert data and information to knowledge and wisdom, is already capped by the mainstream tools today.
 
-Using a graph database, bi-directional links, and hypertext transclusions, Roam enables users to create and traverse knowledge in a way that mirrors how humans organically create knowledge — associatively and contextually.
+Using a graph database, bi-directional links, and hypertext transclusions, these tools enable users to create and traverse knowledge in a way that mirrors how humans organically create knowledge — associatively and contextually.
 
-By breaking out of the "file-and-cabinet" hierarchical paradigm that most computer systems use — note-taking apps,  filesystems, HTML documents, etc. — Roam users can more easily create meaningful relationships about the world we live in. Not only that, users can then more easily recontextualize relationships, allowing ideas to compose and refactor in emergent ways. This leads to the creation of more insights, more interdisciplinary insights, and generative insights: insights that create more interdisciplinary insights.
+These "knowledge graphs" break out of the "file-and-cabinet" hierarchical paradigm that most computer systems use — note-taking apps of the last few decades,  filesystems, HTML documents, etc. Users using Tools for Networked Thought can more easily create meaningful relationships about the world we live in. Not only that, these users can then more easily recontextualize relationships, allowing ideas to compose and refactor in emergent ways. This leads to the creation of more insights, more interdisciplinary insights, and generative insights: insights that create more interdisciplinary insights.
 
-In short, we are currently experiencing diminishing and marginal returns on information. Roam promises exponential and compound returns.
+In short, we are currently experiencing diminishing and marginal returns on information. Tools for Networked Thought promise exponential and compound returns.
 
-That's Roam. But this is Athens. So why Athens, why open-source? Because Roam always should've been open-source.
+Those are the other Tools for Networked Thought. But this is Athens. So why Athens, why open-source? Because Tools for Networked Thought should be open-source.
 
-Many users already report that they are getting massive returns on their Roam databases. They've found perhaps the currently closest approximation to [Vannevar Bush's memex](https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/). Users right now are putting their entire personal lives, unencrypted, on Roam and therefore Google Firebase.
+Many users already report that they are getting massive returns on their knowledge graphs. They've found perhaps the currently closest approximation to [Vannevar Bush's memex](https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/). For some of these tools, users right now are putting their entire personal lives, unencrypted, in a public cloud.
 
-This isn't about Roam's ethics, either. This is about users putting their second brains — their entire lives — on a public cloud. In plain-text. To be summoned at will by the government ([Facebook Transparency](https://transparency.facebook.com/government-data-requests/country/US), [Google Transparency](https://transparencyreport.google.com/user-data/overview?hl=en)).
+This isn't about any specific company's ethics, either. This is about users putting their second brains — their entire lives — on a public cloud. In plain-text. To be summoned at will by the government ([Facebook Transparency](https://transparency.facebook.com/government-data-requests/country/US), [Google Transparency](https://transparencyreport.google.com/user-data/overview?hl=en)).
 
-A self-hosted Athens solves this privacy and security problem.
+A self-hosted, open-source Athens solves this privacy and security problem.
 
 # An Individual Memex
 
-The closest approximations we have to the brain are Roam and neural networks. Both of these are graphs with bi-directional data flows.
+The closest approximations we have to the brain are Tools for Networked Thought and neural networks. Both of these are graphs networks with bi-directional data flows.
 
-What makes Roam different from other Tools for Thought is bi-directional links and transclusions (which are just richer bi-directional links).
+What makes Tools for *Networked* Thought different from normal Tools for Thought is that they have bi-directional links and transclusions (which are just richer bi-directional links).
 
-Of course, it's not *just* bi-directional links. Any note-taking app can support bi-directional links with some string parsing. It's also the fact that Roam is built on top of a graph database.
+Of course, it's not *just* bi-directional links. Any note-taking app can support bi-directional links with some string parsing. It's also the fact that many of these tools are built on top of a graph database.
 
 To acquire exponential returns on knowledge, we will need to be able to navigate and manipulate exponentially large datasets. Datasets that approach Wikipedia and Google scale.
 
-We will need specific features like graph visualizations as well as an industrial data query language (Datalog) that can represent and operate on thousands if not millions of nodes and blocks.
+We will need specific features like graph visualizations as well as an industrial data query language (Datalog) that can represent and operate on thousands if not millions of nodes, blocks, and edges.
 
 Knowledge at scale requires a data model that is more robust than a collection of markdown files.
 
 Athens has implemented bi-directional links and transclusions. This can be and has been done in under 100 lines of Clojure and Datascript.
 
-Everything else — the sidebar, queries, the graph visualization — are being redesigned from the ground up.
+Everything else — contextual panes and previews, queries on your graph database, the graph visualization itself — are green fields. There are no established best practice for how to interact with a knowledge graph, let alone represent it.
 
 - How might tables and queries in Athens be as powerful as tables in Airtable, Notion, or Excel?
 - How might we more fully leverage our spatial and visual senses with a dynamic and interactive knowledge graph? See [interactive graph visualization (#21)](https://github.com/athensresearch/athens/issues/21).
