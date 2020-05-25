@@ -49,7 +49,7 @@ This is also why invites expire after 24 hours by default.
 
 ## Kicking and Banning
 
-If there are spam bots or members severely transgressing the Athens values and guidelines, it is the responsibility of Guardians and Core Team members to kick or ban these bad actors.
+If there are spambots or members severely transgressing the Athens values and guidelines, it is the responsibility of Guardians and Core Team members to kick or ban these bad actors.
 
 If it is unclear why the kick or ban was necessary, a DM will be sent to follow-up on this event and clarify the rationale.
 
