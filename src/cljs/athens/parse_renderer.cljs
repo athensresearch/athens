@@ -51,10 +51,8 @@
   (let [result (parser/block-parser string)]
     (if (insta/failure? result)
       [:span
-       {:content-editable true
-        :title (pr-str (insta/get-failure result))
+       {:title (pr-str (insta/get-failure result))
         :style {:color "red"}}
        string]
       [:span
-       {:content-editable true}
        (vec (transform result))])))

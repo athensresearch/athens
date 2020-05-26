@@ -64,9 +64,8 @@
                               :on-click #(navigate-page uid)}
                              (or string title)]))
                         @parents))]
-       [:h2
-        {:content-editable true
-         :style {:margin 0}} (str "• " (:block/string @node))]
+       [:h2 {:style {:margin 0}}
+        (str "• " (:block/string @node))]
        [:div {:style {:margin-left 20}}
         [render-blocks (:block/uid @node)]]])))
 
