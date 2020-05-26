@@ -44,11 +44,11 @@ The Clojure community is friendly and welcoming like no other. Ask a question on
 
 So why take part in the ClojureFam program?
 
-Questions come and go. Libraries and side-projects get abandoned. The flux of people can make us lose track of the individuals.
+Questions come and go. Libraries and side-projects get abandoned. The flux of people can make us lose track of individuals.
 
-As a ClojureFam mentor, you have the chance to connect personally to motivated programmers, who are learning Clojure primarily to contribute to Athens Research.
+As a ClojureFam mentor, you have the chance to connect personally to motivated programmers, who are learning Clojure primarily to contribute to Athens.
 
-If you aren't aware, Roam Research is a note-taking app product built on Datascript. It is currently the hottest startup in Silicon Valley. Because of scalability issues, they closed their beta, effectively leaving tens of thousands of users eagerly waiting outside the gates. Athens is an open-source version of this trailblazing technology.
+If you weren't aware, Roam Research is a note-taking app for "networked thought", built with Clojurescript and Datascript. It is currently the hottest startup in Silicon Valley. Because of scalability issues, they closed their beta, effectively leaving tens of thousands of users eagerly waiting outside the gates. Athens is an open-source version that is inspired by Roam.
 
 The people using Roam and Athens are not random people. The users of these apps are hungry learners and auto-didacts who want to create and share knowledge. Many have non-trivial programming experience and work at top tier startups and corporations in Silicon Valley. They simply haven't used Clojure before. This is all to say that ClojureFam could be a great recruiting pipeline for your company :)
 
