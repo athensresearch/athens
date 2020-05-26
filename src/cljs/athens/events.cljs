@@ -40,7 +40,7 @@
         :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
         :clear (do (js/clearTimeout (get @timers id))
                    (swap! timers dissoc id))))))
-                   
+
 
 (reg-event-fx
   :get-datoms
@@ -109,7 +109,11 @@
                (if (node-with-title ds new-title)
                  {:db (assoc db :merge-prompt {:active true
                                                :old-title old-title
-                                               :new-title new-title})}
+                                               :new-title new-title})
+                  :timeout {:action :start
+                            :id :merge-prompt
+                            :wait 7000
+                            :event [:node/merge-canceled]}}
                  {:transact (rename-tx ds old-title new-title)}))))
 
 

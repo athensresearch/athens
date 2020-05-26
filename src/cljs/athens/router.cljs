@@ -21,14 +21,19 @@
     {:navigate! route}))
 
 
-(reg-event-db
+(reg-event-fx
   :navigated
-  (fn [db [_ new-match]]
+  (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
           node (subscribe [:node [:block/uid (-> new-match :path-params :id)]])] ;; TODO make the page title query work when zoomed in on a block
       (set! (.-title js/document) (or (:node/title @node) "Athens Research")) ;; TODO make this side effect explicit
-      (assoc db :current-route (assoc new-match :controllers controllers)))))
+      {:db (-> db
+               (assoc :current-route (assoc new-match :controllers controllers))
+               (dissoc :merge-prompt))
+       :timeout {:action :clear
+                 :id :merge-prompt}})))
+
 
 ;; effects
 
