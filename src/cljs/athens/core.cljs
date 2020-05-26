@@ -3,7 +3,7 @@
     [athens.config :as config]
     #_[athens.db :as db]
     [athens.events]
-    #_[athens.parser :refer [parser]]
+    #_[athens.parse-renderer :refer [parse-and-render]]
     [athens.router :as router]
     [athens.subs]
     [athens.views :as views]
