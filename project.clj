@@ -24,6 +24,7 @@
                  [metosin/reitit "0.4.2"]
                  [instaparse "1.4.10"]
                  [devcards "0.2.6"]
+                 [borkdude/sci "0.0.13-alpha.22"]
                  [garden "1.3.10"]]
 
   :plugins [[lein-shell "0.5.0"]]
