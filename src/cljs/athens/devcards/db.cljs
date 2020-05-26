@@ -1,6 +1,8 @@
-(ns athens-devcards.db
+(ns athens.devcards.db
   (:require
     [athens.db]
+    [cljsjs.react]
+    [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard]]))
 
 

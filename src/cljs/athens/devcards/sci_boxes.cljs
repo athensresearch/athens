@@ -1,7 +1,9 @@
-(ns athens-devcards.sci-boxes
+(ns athens.devcards.sci-boxes
   (:require
+    [cljsjs.react]
+    [cljsjs.react.dom]
     [clojure.string :as str]
-    [devcards.core :refer [defcard defcard-rg]]
+    [devcards.core :as devcards :refer [defcard defcard-rg]]
     [reagent.core :as rg]
     [sci.core :as sci]))
 
