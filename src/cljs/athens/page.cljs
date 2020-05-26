@@ -1,6 +1,6 @@
 (ns athens.page
   (:require
-    [athens.parser :refer [parse]]
+    [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
     [re-frame.core :refer [subscribe dispatch]]
@@ -43,7 +43,7 @@
                                             :cursor         "pointer" :display "inline-block" :background-color "black"
                                             :vertical-align "middle"}
                                  :on-click #(navigate-page uid)}]]]
-              [:span (parse string)]]
+              [:span (parse-and-render string)]]
              (when open
                [:div {:style {:margin-left 20}}
                 [render-blocks uid]])])))])))
