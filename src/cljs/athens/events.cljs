@@ -32,6 +32,16 @@
           (dispatch (conj on-failure all)))))))
 
 
+(reg-fx
+  :timeout
+  (let [timers (atom {})]
+    (fn [{:keys [action id event wait]}]
+      (case action
+        :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
+        :clear (do (js/clearTimeout (get @timers id))
+                   (swap! timers dissoc id))))))
+                   
+
 (reg-event-fx
   :get-datoms
   (fn [_ _]
