@@ -117,17 +117,58 @@
                  {:transact (rename-tx ds old-title new-title)}))))
 
 
-; TODO create datascript transactions to merge two pages
+(defn count-children
+  [ds title]
+  (d/q '[:find (count ?children) .
+         :in $ ?title
+         :where [?e :node/title ?title]
+                [?e :block/children ?children]]
+    ds title))
+
+
+(defn get-children-eids
+  [ds title]
+  (d/q '[:find [?children ...]
+         :in $ ?title
+         :where [?e :node/title ?title]
+                [?e :block/children ?children]]
+    ds title))
+
+
+(defn move-blocks-tx
+  [ds from-title to-title]
+  (let [block-count (count-children ds to-title)
+        block-eids (get-children-eids ds from-title)]
+    (mapcat (fn [eid]
+              (let [order (:block/order (d/pull ds [:block/order] eid))]
+                [[:db/add [:node/title to-title] :block/children eid]
+                 [:db/add eid :block/order (+ order block-count)]]))
+            block-eids)))
+
+
 (reg-event-fx
   :node/merged
-  (fn-traced [{:keys [db ds]} [_ old-title new-title]]
-             {:db (dissoc db :merge-prompt)}))
+  (fn-traced [{:keys [db ds]} [_ primary-title secondary-title]]
+             {:db (dissoc db :merge-prompt)
+              :timeout {:action :clear
+                        :id :merge-prompt}
+              :transact (let [tx (concat [[:db.fn/retractEntity [:node/title secondary-title]]]
+                                         (move-blocks-tx ds secondary-title primary-title)
+                                         (rename-tx ds primary-title secondary-title))]
+                          (println tx)
+                          tx)}))
+
+(concat [[:db.fn/retractEntity [:node/title "Athens Change Log"]]]
+        (move-blocks-tx @db/dsdb "Athens Change Log" "type")
+        (rename-tx @db/dsdb "type" "Athens Change Log"))
 
 
-(reg-event-db
+(reg-event-fx
   :node/merge-canceled
-  (fn-traced [db _]
-             (dissoc db :merge-prompt)))
+  (fn-traced [{:keys [db]} _]
+             {:db (dissoc db :merge-prompt)
+              :timeout {:action :clear
+                        :id :merge-prompt}}))
 
 
 (reg-event-db
