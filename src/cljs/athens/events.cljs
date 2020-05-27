@@ -122,8 +122,8 @@
   (d/q '[:find (count ?children) .
          :in $ ?title
          :where [?e :node/title ?title]
-                [?e :block/children ?children]]
-    ds title))
+         [?e :block/children ?children]]
+       ds title))
 
 
 (defn get-children-eids
@@ -131,8 +131,8 @@
   (d/q '[:find [?children ...]
          :in $ ?title
          :where [?e :node/title ?title]
-                [?e :block/children ?children]]
-    ds title))
+         [?e :block/children ?children]]
+       ds title))
 
 
 (defn move-blocks-tx
@@ -148,19 +148,14 @@
 
 (reg-event-fx
   :node/merged
+  [(rp/inject-cofx :ds)]
   (fn-traced [{:keys [db ds]} [_ primary-title secondary-title]]
              {:db (dissoc db :merge-prompt)
               :timeout {:action :clear
                         :id :merge-prompt}
-              :transact (let [tx (concat [[:db.fn/retractEntity [:node/title secondary-title]]]
-                                         (move-blocks-tx ds secondary-title primary-title)
-                                         (rename-tx ds primary-title secondary-title))]
-                          (println tx)
-                          tx)}))
-
-(concat [[:db.fn/retractEntity [:node/title "Athens Change Log"]]]
-        (move-blocks-tx @db/dsdb "Athens Change Log" "type")
-        (rename-tx @db/dsdb "type" "Athens Change Log"))
+              :transact (concat [[:db.fn/retractEntity [:node/title secondary-title]]]
+                                (move-blocks-tx ds secondary-title primary-title)
+                                (rename-tx ds primary-title secondary-title))}))
 
 
 (reg-event-fx
