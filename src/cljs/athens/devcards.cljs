@@ -2,6 +2,7 @@
   (:require
     [athens.devcards.db]
     [athens.devcards.sci-boxes]
+    [athens.views.components.block]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :as devcards :include-macros true :refer [defcard]]
