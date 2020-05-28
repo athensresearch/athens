@@ -2,7 +2,7 @@
   (:require
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-db reg-event-fx reg-fx]]
+    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
     [reitit.frontend.controllers :as rfc]
