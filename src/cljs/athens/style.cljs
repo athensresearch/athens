@@ -1,14 +1,14 @@
 (ns athens.style
   (:require
-    [garden.core :refer [css]]
-    [garden.selectors :refer [nth-child]]))
+   [garden.core :refer [css]]
+   [garden.selectors :refer [nth-child]]))
 
 ;; Styles for the loading screen
 (defn loading-css
   []
   [:style (css
-            [:body {:font-family "sans-serif"
-                    :font-size "1.3rem"}])])
+           [:body {:font-family "sans-serif"
+                   :font-size "1.3rem"}])])
 
 ;; Styles for the main app.
 (defn main-css
@@ -59,9 +59,7 @@
 
   [:h1 (+heavily-styled) "some statement"]
 
-  [:h1 (+heavily-styled {:on-click (fn [_e] (js/alert "something else"))}) "some statement"]
-
-  )
+  [:h1 (+heavily-styled {:on-click (fn [_e] (js/alert "something else"))}) "some statement"])
 
 
 ;; Functions that add styles to an element. Prefer to directly add styles when possible, otherwise
@@ -78,3 +76,39 @@
 
 (def +unknown-date
   (with-style {:color "#595959"}))
+
+
+;;;;;;;;;;;;;;;; Style Guide ;;;;;;;;;;;;;;;;
+
+(def COLORS {:blue "#0075E1" ;; links          
+             :orange "#F9A132" ;; highlights
+             :red "#D20000" ;; warnings
+             :green "#009E23" ;; confirmation
+             :dark-gray "#322F38" ;; headings
+             :warm-gray "#433F38"  ;; body text
+             :ivory "#EFEDEB" ;; borders and panels
+             :white "#FFFFFF"})
+  
+(def OPACITIES {:100 1
+                :75 0.75
+                :50 0.5
+                :25 0.25
+                :1 0.1})
+
+(def HEADERS)
+
+;; Utilities
+(def +blue-bg
+  (with-style {:background (COLORS :blue)}))
+
+(def +red-bg
+  (with-style {:background (COLORS :red)}))
+
+(def +orange-bg
+  (with-style {:background (COLORS :orange)}))
+
+(def +green-bg
+  (with-style {:background (COLORS :green)}))
+
+; (def +blue-bg
+;   (with-style {:background (COLORS :blue)}))
