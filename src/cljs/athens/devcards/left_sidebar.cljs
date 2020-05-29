@@ -1,4 +1,4 @@
-(ns athens.devcards.block
+(ns athens.devcards.left-sidebar
   (:require
     [athens.db :as db]
     [cljsjs.react]
