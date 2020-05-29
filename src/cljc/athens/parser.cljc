@@ -1,5 +1,6 @@
 (ns athens.parser
   (:require
+    [athens.parse-transform-helper :refer [combine-adjacent-strings]]   
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
        :clj [instaparse.core :as insta :refer [defparser]])))
 
@@ -30,3 +31,21 @@
    
    <any-char> = #'\\w|\\W'
    ")
+
+
+(defn transform-to-ast
+  "Transforms the Instaparse output tree to an abstract syntax tree for Athens markup."
+  [tree]
+  (insta/transform
+    {:block      (fn [& raw-contents]
+                    ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
+                   (into [:block] (combine-adjacent-strings raw-contents)))
+     :any-chars  (fn [& chars]
+                   (clojure.string/join chars))}
+    tree))
+
+
+(defn parse-to-ast
+  "Converts a string of block syntax to an abstract syntax tree for Athens markup."
+  [string]
+  (transform-to-ast (block-parser string)))

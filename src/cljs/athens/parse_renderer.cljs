@@ -1,6 +1,5 @@
 (ns athens.parse-renderer
   (:require
-    [athens.parse-transform-helper :refer [combine-adjacent-strings]]
     [athens.parser :as parser]
     [instaparse.core :as insta]
     [re-frame.core :refer [subscribe]]
@@ -16,12 +15,8 @@
   "Transforms Instaparse output to Hiccup."
   [tree]
   (insta/transform
-    {:block      (fn [& raw-contents]
-                   ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
-                   (let [collapsed-contents (combine-adjacent-strings raw-contents)]
-                     (concat [:span {:class "block"}] collapsed-contents)))
-     :any-chars  (fn [& chars]
-                   (clojure.string/join chars))
+    {:block      (fn [& contents]
+                   (concat [:span {:class "block"}] contents))
      :block-link (fn [title]
                    (let [id (subscribe [:block/uid [:node/title title]])]
                      [:span {:class "block-link"}
@@ -48,7 +43,7 @@
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string]
-  (let [result (parser/block-parser string)]
+  (let [result (parser/parse-to-ast string)]
     (if (insta/failure? result)
       [:span
        {:title (pr-str (insta/get-failure result))
