@@ -32,6 +32,16 @@
           (dispatch (conj on-failure all)))))))
 
 
+(reg-fx
+  :timeout
+  (let [timers (atom {})]
+    (fn [{:keys [action id event wait]}]
+      (case action
+        :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
+        :clear (do (js/clearTimeout (get @timers id))
+                   (swap! timers dissoc id))))))
+
+
 (reg-event-fx
   :get-datoms
   (fn [_ _]
@@ -82,14 +92,78 @@
     [:db/add eid :block/string new-s]))
 
 
-(reg-event-ds
-  :node/rename
-  (fn-traced [ds [_ old-title new-title]]
-             (let [eid (node-with-title ds old-title)
-                   blocks (referencing-blocks ds old-title)]
-               (->> blocks
-                    (map (partial rename-refs-tx old-title new-title))
-                    (into [[:db/add eid :node/title new-title]])))))
+(defn rename-tx
+  [ds old-title new-title]
+  (let [eid (node-with-title ds old-title)
+        blocks (referencing-blocks ds old-title)]
+    (->> blocks
+         (map (partial rename-refs-tx old-title new-title))
+         (into [[:db/add eid :node/title new-title]]))))
+
+
+(reg-event-fx
+  :node/renamed
+  [(rp/inject-cofx :ds)]
+  (fn-traced [{:keys [db ds]} [_ old-title new-title]]
+             (when (not= old-title new-title)
+               (if (node-with-title ds new-title)
+                 {:db (assoc db :merge-prompt {:active true
+                                               :old-title old-title
+                                               :new-title new-title})
+                  :timeout {:action :start
+                            :id :merge-prompt
+                            :wait 7000
+                            :event [:node/merge-canceled]}}
+                 {:transact (rename-tx ds old-title new-title)}))))
+
+
+(defn count-children
+  [ds title]
+  (d/q '[:find (count ?children) .
+         :in $ ?title
+         :where [?e :node/title ?title]
+         [?e :block/children ?children]]
+       ds title))
+
+
+(defn get-children-eids
+  [ds title]
+  (d/q '[:find [?children ...]
+         :in $ ?title
+         :where [?e :node/title ?title]
+         [?e :block/children ?children]]
+       ds title))
+
+
+(defn move-blocks-tx
+  [ds from-title to-title]
+  (let [block-count (count-children ds to-title)
+        block-eids (get-children-eids ds from-title)]
+    (mapcat (fn [eid]
+              (let [order (:block/order (d/pull ds [:block/order] eid))]
+                [[:db/add [:node/title to-title] :block/children eid]
+                 [:db/add eid :block/order (+ order block-count)]]))
+            block-eids)))
+
+
+(reg-event-fx
+  :node/merged
+  [(rp/inject-cofx :ds)]
+  (fn-traced [{:keys [db ds]} [_ primary-title secondary-title]]
+             {:db (dissoc db :merge-prompt)
+              :timeout {:action :clear
+                        :id :merge-prompt}
+              :transact (concat [[:db.fn/retractEntity [:node/title secondary-title]]]
+                                (move-blocks-tx ds secondary-title primary-title)
+                                (rename-tx ds primary-title secondary-title))}))
+
+
+(reg-event-fx
+  :node/merge-canceled
+  (fn-traced [{:keys [db]} _]
+             {:db (dissoc db :merge-prompt)
+              :timeout {:action :clear
+                        :id :merge-prompt}}))
 
 
 (reg-event-db
