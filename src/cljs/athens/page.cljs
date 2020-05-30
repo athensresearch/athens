@@ -79,7 +79,7 @@
                          :current-title title})
         save! (fn [new-title]
                 (swap! s assoc :editing false)
-                (dispatch [:node/rename (:current-title @s) new-title]))
+                (dispatch [:node/renamed (:current-title @s) new-title]))
         cancel! (fn [] (swap! s assoc :editing false))]
     (fn [title]
       (if (:editing @s)
@@ -100,11 +100,27 @@
          title]))))
 
 
+(defn merge-prompt
+  [{:keys [old-title new-title]}]
+  [:div {:style {:background "red"
+                 :color "white"}}
+    (str "\"" new-title "\" already exists, merge pages?")
+    [:a {:on-click #(dispatch [:node/merged old-title new-title])
+         :style {:margin-left "30px"}}
+     "yes"]
+    [:a {:on-click #(dispatch [:node/merge-canceled])
+         :style {:margin-left "30px"}}
+     "no"]])
+
+
 (defn node-page []
   (fn [node]
     (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
-          unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])]
+          unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])
+          merge         (subscribe [:merge-prompt])]
       [:div
+       (when (get @merge :active false)
+         [merge-prompt @merge])
        [title-comp (:node/title node)]
        [render-blocks (:block/uid node)]
        [:div
