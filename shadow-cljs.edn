@@ -8,7 +8,8 @@
                                                    day8.re-frame-10x.preload]}}
                 :compiler-options {:source-map true
                                    :source-map-detail-level :all
-                                   :source-map-include-sources-content true}
+                                   :source-map-include-sources-content true
+                                   :infer-externs :auto}
 
                 :dev             {:compiler-options
                                   {:closure-defines {re-frame.trace.trace-enabled?        true
@@ -18,7 +19,8 @@
                                   :repl-init-ns athens.core}}
           :devcards         {:asset-path "js/devcards"
                              :modules {:main {:init-fn athens.devcards/main}}
-                             :compiler-options {:devcards true}
+                             :compiler-options {:devcards true
+                                                :infer-externs :auto}
                              :output-dir "resources/public/js/devcards"
                              :target :browser}
 
