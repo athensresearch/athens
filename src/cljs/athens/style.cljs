@@ -109,6 +109,3 @@
 
 (def +green-bg
   (with-style {:background (COLORS :green)}))
-
-; (def +blue-bg
-;   (with-style {:background (COLORS :blue)}))

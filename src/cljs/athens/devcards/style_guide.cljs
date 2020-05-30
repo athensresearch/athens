@@ -5,43 +5,48 @@
    [cljsjs.react.dom]
    [devcards.core :refer-macros [defcard defcard-rg]]
    [garden.core :refer [css]]
-   [garden.stylesheet :refer [at-import]]
-   ;;material-ui-icons
-   ))
-
-
+   [garden.stylesheet :refer [at-import]]))
 
 (def log js/console.log)
+
+(def +flex-center
+  (s/with-style {:display "flex" :flex-direction "column" :justify-content "center" :align-items "center"}))
+
+(def +flex-space-between
+  (s/with-style {:display "flex" :align-items "center" :justify-content "space-between"}))
+
+;; Colors
+
+(def +colors-container
+  (comp +flex-space-between
+        (s/with-style {:background "#E5E5E5"
+                       :padding 20})))
 
 (def +circle (s/with-style {:width 80
                             :height 80
                             :border-radius 40}))
 
+(def colors
+  [:blue :orange :red :green
+   :dark-gray :warm-gray :ivory :white])
 
-(def +flex-center
-  (s/with-style {:display "flex" :flex-direction "column" :justify-content "center" :align-items "center"}))
-
-
-
+;; TODO: refactor
 (defcard-rg Colors
-            [:div {:style {:display "flex" :justify-content "space-between"}}
-             [:div (+flex-center)
-              [:div ((comp +circle s/+blue-bg))]
-              [:span "Blue"]
-              [:span (:blue s/COLORS)]]
-             [:div (+flex-center)
-              [:div ((comp +circle s/+orange-bg))]
-              [:span "Orange"]
-              [:span (:orange s/COLORS)]]
-             [:div (+flex-center)
-              [:div ((comp +circle s/+red-bg))]
-              [:span "Red"]
-              [:span (:red s/COLORS)]]
-             [:div (+flex-center)
-              [:div ((comp +circle s/+green-bg))]
-              [:span "Green"]
-              [:span (:green s/COLORS)]]])
+  [:div (+colors-container)
+   (for [c colors]
+     [:div (+flex-center)
+      [:div {:style {:background-color (c s/COLORS)
+                     :width            80
+                     :height           80
+                     :border-radius    40}}]
+      [:span c]
+      [:span (c s/COLORS)]])]
+  {}
+  {:padding false})
 
+;; Types
+
+;; TODO: refactor to athens.style
 (defn main-css
   []
   [:style (css
@@ -62,48 +67,34 @@
                   :line-height "16px"
                   :text-transform "uppercase"}])])
 
-(def +flex-space-between
-  (s/with-style {:display "flex" :align-items "center" :justify-content "space-between"}))
-
 (def types [:h1 :h2 :h3 :h4 :h5])
 
 (defcard-rg Serif-Types
-            [:div
-             [main-css]
-             (for [t types]
-               ^{:key t}
-               [:div (+flex-space-between)
-                [:span t]
-                [t "Welcome to Athens"]])
-             ])
+  [:div
+   [main-css]
+   (for [t types]
+     ^{:key t}
+     [:div (+flex-space-between)
+      [:span t]
+      [t "Welcome to Athens"]])])
 
-(defcard Font "Not sure how to import fonts, e.g.
-```
-https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700
-```
-resources
-- https://cljdoc.org/d/garden/garden/1.3.10/api/garden.stylesheet
-- https://gist.github.com/paulkoegel/1c17be411c26d959fc6d75776d86e4f8
-")
+(defcard Font "Not sure how to import fonts.
+
+  resources
+  - https://fonts.googleapis.com/css2?family=IBM+Plex+Sans
+  - https://fonts.google.com/specimen/IBM+Plex+Sans
+  - https://cljdoc.org/d/garden/garden/1.3.10/api/garden.stylesheet
+  - https://gist.github.com/paulkoegel/1c17be411c26d959fc6d75776d86e4f8")
 
 
 (defcard-rg Material-UI-Icons
-            "Not sure how to import icons. Get the error:
-            ```
-            [:devcards] Build failure:\nThe required JS dependency \"material-ui/SvgIcon\" is not available, it was required by \"node_modules/material-ui-icons/AccessAlarm.js\".\n\nSearch in:\n        /Users/jefftang/code/athens/athens/node_modules\nYou probably need to run:\n  npm install material-ui/SvgIcon\n
+  "Not sure how to import Material UI icons.
+  - Author of shadow-cljs has https://github.com/cljsjs/packages/tree/master/material-ui-icons
+  - but this library was deprecated on npm https://www.npmjs.com/package/material-ui-icons
 
-            ```
-
-            But I get the follow error when I try to install
-            ```
-            yarn add material-ui/SvgIcon\nyarn add v1.22.4\n[1/4] \uD83D\uDD0D  Resolving packages...\nerror Command failed.\nExit code: 128\nCommand: git\nArguments: ls-remote --tags --heads ssh://git@github.com/material-ui/SvgIcon.git\nDirectory: /Users/jefftang/code/athens/athens\nOutput:\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n
-            ```
-
-            I tried creating a shim file like the rest of the `cljsjs` files.
-
-            resources
-            - https://shadow-cljs.github.io/docs/UsersGuide.html#cljsjs
-            - https://github.com/cljsjs/packages/tree/master/material-ui-icons
-
-
-            ")
+  resources
+  - https://shadow-cljs.github.io/docs/UsersGuide.html#cljsjs
+  - https://shadow-cljs.github.io/docs/UsersGuide.html#infer-externs
+  - https://github.com/cljsjs/packages/tree/master/material-ui-icons
+  - https://material-ui.com/components/icons/#svg-material-icons
+  - https://www.npmjs.com/package/@material-ui/icons")
