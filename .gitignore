@@ -17,6 +17,9 @@
 
 .clj-kondo/.cache
 
+# cache directory for dependencies installed with deps.edn
+.cpcache
+
 # Mac OS files
 .DS_Store
 
