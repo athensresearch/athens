@@ -12,15 +12,19 @@
 (defparser block-parser
   "(* This first rule is the top-level one. *)
    block = ( syntax-in-block / any-char )*
-   (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a block-link before interpreting it as raw characters. *)
+   (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
    
-   <syntax-in-block> = (block-link | block-ref | hashtag | bold)
+   <syntax-in-block> = (page-link | block-ref | hashtag | url-link | bold)
    
-   block-link = <'[['> any-chars <']]'>
+   page-link = <'[['> any-chars <']]'>
    
    block-ref = <'(('> any-chars <'))'>
    
    hashtag = <'#'> any-chars | <'#'> <'[['> any-chars <']]'>
+   
+   url-link = url-link-text url-link-url
+   <url-link-text> = <'['> any-chars <']'>
+   <url-link-url> = <'('> any-chars <')'>
    
    bold = <'**'> any-chars <'**'>
    
@@ -54,6 +58,8 @@
     {:block      (fn [& raw-contents]
                     ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
                    (into [:block] (combine-adjacent-strings raw-contents)))
+     :url-link   (fn [text url]
+                   [:url-link {:url url} text])
      :any-chars  (fn [& chars]
                    (clojure.string/join chars))}
     tree))
