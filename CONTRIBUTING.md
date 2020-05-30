@@ -10,21 +10,25 @@ Issues tagged "[good first issue](https://github.com/athensresearch/athens/issue
 
 These dependencies are needed to get Athens up and running. Follow the instructions in the links.
 
-1. [java 11 and lein](https://purelyfunctional.tv/guide/how-to-install-clojure/) (lein installs Clojure)
-1. [node 12](https://nodejs.org/en/download/) and [yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
+1. [Java 11 and Leiningen](https://purelyfunctional.tv/guide/how-to-install-clojure/) (Leiningen installs Clojure)
+1. [Node 12](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 
-After you've got these dependencies, clone the git repository to your harddrive:
+After you've got these dependencies, clone the Git repository to your hard drive:
+
 ```
 git clone https://github.com/athensresearch/athens.git
 ```
+
 Then `cd athens/` and run the following commands.
 
-Pull javascript dependencies:
+Pull JavaScript dependencies:
+
 ```
 yarn
 ```
 
-Pull java dependencies and build with:
+Pull Java dependencies and build with:
+
 ```
 lein dev
 ```
@@ -44,7 +48,6 @@ To see the problems reported by clj-kondo, run `script/lint`. Your editor may al
 ## Commits
 
 Follow guidelines from [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Specifically, begin each commit with one of the following types:
-
 
 ```
 build:
@@ -73,13 +76,13 @@ feat: implement new right side bar
 
 Do not just write an issue because you have a question/problem. If you think you are missing some information, ask in the #engineering or #learning channel of the Discord.
 
-On the other hand, if you believe there is an issue with source code, please write an actionable issue with this [template](https://github.com/athensresearch/athens/issues/new?title=Descriptive+issue+title&body=%23%23%23%23+Description%0AA+clear+and+concise+description+of+what+the+issue+is+about.%0A%0A%23%23%23%23+Screenshots%0A!%5BShaq+Kitty+Wiggle%5D(https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif)%0A%0A%23%23%23%23+Files%0AA+list+of+relevant+files+for+this+issue.+This+will+help+people+navigate+the+project+and+offer+some+clues+of+where+to+start.%0A%0A%23%23%23%23+To+Reproduce%0AIf+this+issue+is+describing+a+bug,+include+some+steps+to+reproduce+the+behavior.%0A%0A%23%23%23%23+Tasks%0AInclude+specific+tasks+in+the+order+they+need+to+be+done+in.+Include+links+to+specific+lines+of+code+where+the+task+should+happen+at.%0A-+%5B+%5D+Task+1%0A-+%5B+%5D+Task+2%0A-+%5B+%5D+Task+3%0A%0ARemember+to+use+labels.).
+On the other hand, if you believe there is an issue with source code, please write an actionable issue with this [template](<https://github.com/athensresearch/athens/issues/new?title=Descriptive+issue+title&body=%23%23%23%23+Description%0AA+clear+and+concise+description+of+what+the+issue+is+about.%0A%0A%23%23%23%23+Screenshots%0A!%5BShaq+Kitty+Wiggle%5D(https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif)%0A%0A%23%23%23%23+Files%0AA+list+of+relevant+files+for+this+issue.+This+will+help+people+navigate+the+project+and+offer+some+clues+of+where+to+start.%0A%0A%23%23%23%23+To+Reproduce%0AIf+this+issue+is+describing+a+bug,+include+some+steps+to+reproduce+the+behavior.%0A%0A%23%23%23%23+Tasks%0AInclude+specific+tasks+in+the+order+they+need+to+be+done+in.+Include+links+to+specific+lines+of+code+where+the+task+should+happen+at.%0A-+%5B+%5D+Task+1%0A-+%5B+%5D+Task+2%0A-+%5B+%5D+Task+3%0A%0ARemember+to+use+labels.>).
 
 Better yet, submit a pull request.
 
 ## Pull Requests
 
-If your PR is related to other issue(s), reference it by issue number. You can close issues smoothly with [Github keywords](https://help.github.com/en/enterprise/2.16/user/github/managing-your-work-on-github/closing-issues-using-keywords):
+If your PR is related to other issue(s), reference it by issue number. You can close issues smoothly with [GitHub keywords](https://help.github.com/en/enterprise/2.16/user/github/managing-your-work-on-github/closing-issues-using-keywords):
 
 ```
 close #1
