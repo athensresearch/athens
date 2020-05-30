@@ -1,14 +1,14 @@
 (ns athens.style
   (:require
-   [garden.core :refer [css]]
-   [garden.selectors :refer [nth-child]]))
+    [garden.core :refer [css]]
+    [garden.selectors :refer [nth-child]]))
 
 ;; Styles for the loading screen
 (defn loading-css
   []
   [:style (css
-           [:body {:font-family "sans-serif"
-                   :font-size "1.3rem"}])])
+            [:body {:font-family "sans-serif"
+                    :font-size "1.3rem"}])])
 
 ;; Styles for the main app.
 (defn main-css
@@ -80,20 +80,24 @@
 
 ;;;;;;;;;;;;;;;; Style Guide ;;;;;;;;;;;;;;;;
 
-(def COLORS {:blue "#0075E1" ;; links          
-             :orange "#F9A132" ;; highlights
-             :red "#D20000" ;; warnings
-             :green "#009E23" ;; confirmation
-             :dark-gray "#322F38" ;; headings
-             :warm-gray "#433F38"  ;; body text
-             :ivory "#EFEDEB" ;; borders and panels
-             :white "#FFFFFF"})
-  
-(def OPACITIES {:100 1
-                :75 0.75
-                :50 0.5
-                :25 0.25
-                :1 0.1})
+(def COLORS
+  {:blue "#0075E1" ;; links          
+   :orange "#F9A132" ;; highlights
+   :red "#D20000" ;; warnings
+   :green "#009E23" ;; confirmation
+   :dark-gray "#322F38" ;; headings
+   :warm-gray "#433F38"  ;; body text
+   :ivory "#EFEDEB" ;; borders and panels
+   :white "#FFFFFF"})
+
+
+(def OPACITIES
+  {:100 1
+   :75 0.75
+   :50 0.5
+   :25 0.25
+   :1 0.1})
+
 
 (def HEADERS)
 
@@ -101,11 +105,14 @@
 (def +blue-bg
   (with-style {:background (COLORS :blue)}))
 
+
 (def +red-bg
   (with-style {:background (COLORS :red)}))
 
+
 (def +orange-bg
   (with-style {:background (COLORS :orange)}))
+
 
 (def +green-bg
   (with-style {:background (COLORS :green)}))

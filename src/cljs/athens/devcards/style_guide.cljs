@@ -1,16 +1,19 @@
 (ns athens.devcards.style-guide
   (:require
-   [athens.style :as s]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :refer-macros [defcard defcard-rg]]
-   [garden.core :refer [css]]
-   [garden.stylesheet :refer [at-import]]))
+    [athens.style :as s]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :refer-macros [defcard defcard-rg]]
+    [garden.core :refer [css]]
+    #_[garden.stylesheet :refer [at-import]]))
+
 
 (def log js/console.log)
 
+
 (def +flex-center
   (s/with-style {:display "flex" :flex-direction "column" :justify-content "center" :align-items "center"}))
+
 
 (def +flex-space-between
   (s/with-style {:display "flex" :align-items "center" :justify-content "space-between"}))
@@ -22,9 +25,11 @@
         (s/with-style {:background "#E5E5E5"
                        :padding 20})))
 
+
 (def +circle (s/with-style {:width 80
                             :height 80
                             :border-radius 40}))
+
 
 (def colors
   [:blue :orange :red :green
@@ -67,7 +72,9 @@
                   :line-height "16px"
                   :text-transform "uppercase"}])])
 
+
 (def types [:h1 :h2 :h3 :h4 :h5])
+
 
 (defcard-rg Serif-Types
   [:div
@@ -77,6 +84,7 @@
      [:div (+flex-space-between)
       [:span t]
       [t "Welcome to Athens"]])])
+
 
 (defcard Font "Not sure how to import fonts.
 

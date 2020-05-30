@@ -1,12 +1,12 @@
 (ns athens.devcards
   (:require
-   [athens.devcards.db]
-   [athens.devcards.sci-boxes]
-   [athens.devcards.style-guide]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :as devcards :include-macros true :refer [defcard]]
-   [reagent.core :as r :include-macros true]))
+    [athens.devcards.db]
+    [athens.devcards.sci-boxes]
+    [athens.devcards.style-guide]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :as devcards :include-macros true :refer [defcard]]
+    [reagent.core :as r :include-macros true]))
 
 
 (def bmi-data (r/atom {:height 180 :weight 80}))
