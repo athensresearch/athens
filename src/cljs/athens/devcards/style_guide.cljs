@@ -50,7 +50,7 @@
 (defn main-css
   []
   [:style (css
-            [:* {:font-family "Serif"}]
+            [:* {:font-family "IBM Plex Sans"}]
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"}]
