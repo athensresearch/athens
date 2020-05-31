@@ -1,5 +1,6 @@
 (ns athens.style
   (:require
+    [athens.lib.dom.attributes :refer [with-classes with-style]]
     [garden.core :refer [css]]
     [garden.selectors :refer [nth-child]]))
 
@@ -28,40 +29,6 @@
          {:padding 0
           :margin 0
           :list-style-type "none"}])])
-
-
-(defn with-classes
-  [& css-classes]
-  (fn f
-    ([] (f nil))
-    ([attrs]
-     (update attrs :class (partial str " ") (clojure.string/join " " css-classes)))))
-
-
-(defn with-style
-  [css-styling]
-  (fn f
-    ([] (f nil))
-    ([attrs]
-     (update attrs :style merge css-styling))))
-
-
-(comment
-
-  ;; Combine with-classes and with-style
-  (def +heavily-styled
-    (comp
-     (with-classes "strong" "happy")
-     (with-style {:color :green})))
-
-  ;; Usage:
-
-
-  [:h1 (+heavily-styled) "some statement"]
-
-  [:h1 (+heavily-styled {:on-click (fn [_e] (js/alert "something else"))}) "some statement"]
-
-  )
 
 
 ;; Functions that add styles to an element. Prefer to directly add styles when possible, otherwise
