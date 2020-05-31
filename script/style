@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-# Find other installation instructions here https://github.com/greglook/cljstyle/tree/f62fe9194b53b3d96e9d722a4723dce846d8b040#installation
+# This script depends on cljstyle. Installation instructions for cljstyle are linked to in CONTRIBUTING.md.
 
 # REVIEW consider rewriting to babashka to make platform independent?
 
