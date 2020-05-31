@@ -43,11 +43,7 @@ When these scripts are done, your terminal will read `build complete`. Athens ca
 
 To open this project’s devcards:
 
-1.  Instead of `lein dev`, start a local server like this:
-
-    ```
-    lein devcards
-    ```
+1.  Run `lein dev` like in the previous step.
 
 2.  Open http://localhost:3000/cards.html.
 
