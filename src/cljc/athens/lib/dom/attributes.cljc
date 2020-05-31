@@ -40,7 +40,8 @@
   (def +heavily-styled
     (comp
      (with-classes "strong" "happy")
-     (with-style {:color :green})))
+     (with-style {:color :green
+                  :background :white})))
 
   ;; Usage:
 
@@ -72,18 +73,11 @@
                          map-or-fn)
 
               :else
-              (throw (ex-info (str "Expected map or function, got " (class map-or-fn))
-                              {:attributes attributes}))))
+              (throw (ex-info (str "Expected map or function") {:value map-or-fn}))))
           {} attributes))
 
 
 (comment
-
-  (def +heavily-styled
-    (comp
-     (with-classes "strong" "happy")
-     (with-style {:color :green
-                  :background :white})))
 
   (with-attributes
     +heavily-styled
