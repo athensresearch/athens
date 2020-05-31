@@ -47,7 +47,7 @@
 
   [:h1 (+heavily-styled) "some statement"]
 
-  [:h1 (+heavily-styled {:on-click (fn [_e] (js/alert "something else"))}) "some statement"]
+  [:h1 (+heavily-styled {:on-click (fn [_e] #_(js/alert "something else"))}) "some statement"]
 
   )
 
@@ -82,18 +82,13 @@
   (def +heavily-styled
     (comp
      (with-classes "strong" "happy")
-     (with-style {:color :green})))
-
-
-  (def +heavily-styled
-    (comp
-     (with-classes "strong" "happy")
-     (with-style {:color :green})))
-
+     (with-style {:color :green
+                  :background :white})))
 
   (with-attributes
     +heavily-styled
     {:class "foo bar"}
-    {:class "baz poo"} ;;
+    {:class "baz poo"}
+    {:style {:color :red}}
     )
   )
