@@ -34,23 +34,18 @@
     ([attrs] (merge-styles attrs styles))))
 
 
-(comment
-
-  ;; Combine with-classes and with-style
-  (def +heavily-styled
-    (comp
-     (with-classes "strong" "happy")
-     (with-style {:color :green
-                  :background :white})))
-
-  ;; Usage:
-
-
-  [:h1 (+heavily-styled) "some statement"]
-
-  [:h1 (+heavily-styled {:on-click (fn [_e] #_(js/alert "something else"))}) "some statement"]
-
-  )
+(defn with-styles
+  ([map-or-fn]
+   (if (fn? map-or-fn)
+     (with-styles (map-or-fn))
+     (if (:style map-or-fn)
+       map-or-fn
+       {:style map-or-fn})))
+  ([map-or-fn & more]
+   (reduce (fn [acc x]
+             (update acc :style merge (:style (with-styles x))))
+           (with-styles map-or-fn)
+           more)))
 
 
 (defn with-attributes
@@ -80,7 +75,6 @@
 (comment
 
   (with-attributes
-    +heavily-styled
     {:class "foo bar"}
     {:class "baz poo"}
     {:style {:color :red}}
