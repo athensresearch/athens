@@ -1,7 +1,24 @@
 (ns athens.lib.dom.attributes-test
   (:require
-    [athens.lib.dom.attributes :refer [with-attributes with-classes with-style]]
-    [clojure.test :refer [deftest is are]]))
+    [athens.lib.dom.attributes :refer [with-attributes with-classes with-style with-styles]]
+    [clojure.test :refer [deftest is are run-tests]]))
+
+
+(deftest with-styles-test
+  (def flex-style-map {:style {:display "flex"}})
+
+  (are [x] (= (with-styles x) flex-style-map)
+    {:display "flex"}
+    {:style {:display "flex"}}
+    (fn [] {:display "flex"})
+    (fn [] {:style {:display "flex"}}))
+
+  (def +justify-center (with-styles {:justify-content "center"}))
+  (def +align-center (with-styles {:align-items "center"}))
+
+  (is (= (with-styles flex-style-map +justify-center +align-center)
+         {:style {:display "flex" :justify-content "center" :align-items "center"}})
+      "Support infinity arity"))
 
 
 (def +heavily-styled
