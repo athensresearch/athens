@@ -51,10 +51,6 @@
 
 ;; Color Functions
 
-(def +link
-  (with-styles {:color (:link-color COLORS)}))
-
-
 (def +link-bg
   (with-styles {:background-color (:link-color COLORS)}))
 
@@ -68,10 +64,6 @@
   (with-styles {:box-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
 
 ;; Flex Functions
-
-(def +flex
-  (with-styles {:display "flex"}))
-
 
 (def +flex-center
   (with-styles {:display "flex" :justify-content "center" :align-items "center"}))

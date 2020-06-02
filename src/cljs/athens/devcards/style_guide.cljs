@@ -12,9 +12,6 @@
     [garden.core :refer [css]]))
 
 
-(def log js/console.log)
-
-
 (def +circle
   (with-styles {:width 80
                 :height 80
