@@ -28,7 +28,7 @@
           {:background-color "#E5E5E5" :padding 20 :border-radius 5})
    (for [c (keys COLORS)]
      ^{:key c}
-     [:div (with-styles +flex-center +flex-column {:width 150})
+     [:div (with-styles +flex-center +flex-column {:width 200 :padding "15px 0px"})
       [:div (with-styles +box-shadow +circle {:background-color (c COLORS)})]
       [:span c]
       [:span (with-styles +text-shadow {:color (c COLORS)}) (c COLORS)]])]
@@ -37,7 +37,7 @@
 
 
 (defcard-rg Opacities
-  [:div +flex-space-between
+  [:div +flex-space-around
    (for [o OPACITIES]
      ^{:key o}
      [:div (with-styles +flex-center +flex-column)
