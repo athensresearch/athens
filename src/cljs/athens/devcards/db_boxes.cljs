@@ -12,6 +12,7 @@
     [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+
 (def log js/console.log)
 
 
@@ -23,6 +24,7 @@
 (defcard "
   # An experiment in querying the datascript database")
 
+
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
    :node/title     {:db/unique :db.unique/identity}
@@ -30,35 +32,46 @@
    :block/children {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}})
 
+
 (defonce dsdb (d/create-conn schema))
 
-(comment
+
+(defonce loading? (atom true))
+
+
+(when @loading?
   (go
     (let [response (<! (http/get db/athens-url
                                  {:with-credentials? false}))]
       (->> response
            :body
            db/str-to-db-tx
-           (d/transact dsdb))))
-  nil)
+           (d/transact dsdb))
+
+      (reset! loading? false))))
 
 
-(def empty-box
-  {:str-content ""})
+(def initial-box
+  {:str-content
+    "(d/q '[:find ?e ?title
+            :where [?e :node/title ?title]]
+       @athens/db)"})
 
 
 (defonce box-state*
-  (rg/atom empty-box))
+  (rg/atom initial-box))
 
 
-(defcard box-state* box-state*)
+(defcard loading-initial-data loading?)
 
 
 (defn eval-box
   [{:keys [str-content] :as box}]
   (let [result (try (sci/eval-string str-content
                                      {:bindings {'athens/db dsdb
-                                                 'q d/q}})
+                                                 'd/q d/q
+                                                 'd/pull d/pull
+                                                 'd/pull-many d/pull-many}})
                     (catch js/Error e
                       (log e)
                       "error"))]
@@ -67,10 +80,7 @@
 
 (defn browser
   [result]
-  (if (seq result)
-    [:div (for [item result]
-            [:div (str item)])]
-    [:div (str result)]))
+  [:div (str result)])
 
 
 (defn result-wrapper
