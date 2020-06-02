@@ -130,5 +130,5 @@
             [:span.block-ref {:font-size     "16px"
                               :line-height   "32px"
                               :border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
-             [:&:hover {:background-color (opacify (hex->hsl (:highlight-color COLORS)) (second OPACITIES))
+             [:&:hover {:background-color (opacify (hex->hsl (:highlight-color COLORS)) (first OPACITIES))
                         :cursor           "alias"}]])])
