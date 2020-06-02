@@ -43,6 +43,10 @@
    :app-bg-color       "#FFFFFF"})
 
 
+(def HSL-COLORS
+  (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
+
+
 (def OPACITIES [0.1 0.25 0.5 0.75 1])
 
 
@@ -53,6 +57,7 @@
 
 (def +link-bg
   (with-styles {:background-color (:link-color COLORS)}))
+
 
 ;; Shadow Functions
 
@@ -130,5 +135,8 @@
             [:span.block-ref {:font-size     "16px"
                               :line-height   "32px"
                               :border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
-             [:&:hover {:background-color (opacify (hex->hsl (:highlight-color COLORS)) (first OPACITIES))
-                        :cursor           "alias"}]])])
+             [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
+                        :cursor           "alias"}]]
+            [:tbody
+             [:tr
+              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]])])
