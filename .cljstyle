@@ -1,3 +1,0 @@
-;; cljstyle configuration
-;; https://github.com/greglook/cljstyle/blob/master/doc/configuration.md
-{:indents {are [[:stair 0]]}}
