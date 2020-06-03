@@ -100,7 +100,7 @@
   (case mode
     :coll (map-indexed vector data)
     :map (seq data)
-    :tuples (map-indexed vector data)
+    :tuples (map-indexed (fn [idx data] (into [idx] data))  data)
     :maps (let [hs (headings data mode)]
             (for [row-idx (-> data count range)]
               (into [row-idx]
@@ -138,11 +138,11 @@
           (coll-of-maps? result)
           (table-view result :maps)
 
-          (tuples? result)
-          (table-view result :tuples)
-
           (map? result)
           (table-view result :map)
+
+          (tuples? result)
+          (table-view result :tuples)
 
           (coll? result)
           (table-view result :coll)
