@@ -155,7 +155,7 @@
              [:&:active {:color            "rgba(0, 117, 225)"
                          :background-color "rgba(0, 117, 225, 0.1)"}]
              [:&.primary {:color            "rgba(0, 117, 225)"
-                             :background-color "rgba(0, 117, 225, 0.1)"}
+                          :background-color "rgba(0, 117, 225, 0.1)"}
               [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
               [:&:active {:color "white"
                           :background-color "rgba(0, 117, 225, 1)"}]]])])

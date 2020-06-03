@@ -2,15 +2,10 @@
   (:require
     [athens.db]
     [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [+flex-center +flex-space-between +flex-space-around +flex-column +flex-wrap
-                          +text-shadow +box-shadow
-                          +link-bg
-                          style-guide-css COLORS OPACITIES]]
+    [athens.style :refer [style-guide-css]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]
-    [garden.core :refer [css]]))
-
+    [devcards.core :refer-macros [defcard-rg]]))
 
 
 (defcard-rg Import-Styles

@@ -28,7 +28,7 @@
                   (swap! pressed? not)
                   (load-real-db! conn))]
     (fn []
-      [:button {:disabled @pressed? :on-click handler} "Load Real Data"])))
+      [:button.primary {:disabled @pressed? :on-click handler} "Load Real Data"])))
 
 
 (defcard-rg Load-Real-DB

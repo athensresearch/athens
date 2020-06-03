@@ -42,7 +42,7 @@
 
 (defcard-rg Create-Page
   "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [:button {:on-click handler} "Create Page"])
+  [:button.primary {:on-click handler} "Create Page"])
 
 
 (defcard-rg Load-Real-DB
