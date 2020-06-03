@@ -1,4 +1,4 @@
-(ns athens.devcards.buttons
+(ns athens.devcards.athena
   (:require
     [athens.db]
     [athens.lib.dom.attributes :refer [with-styles]]
@@ -17,11 +17,14 @@
   [style-guide-css])
 
 
-(defcard-rg Button
-  [:button "Press Me"])
+(defn athena-prompt
+  []
+  [:button.primary (with-styles {:padding 0})
+   [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
+    "🔍"]
+   [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
+    "Find or Create a Page"]])
 
-(defcard-rg Disabled-Button
-  [:button {:disabled true} "Disabled"])
 
-(defcard-rg Primary-Button
-  [:button.primary "Press Me"])
+(defcard-rg Athena-Prompt
+  [athena-prompt])
