@@ -57,45 +57,103 @@
             :where [?e :node/title ?title]]
        @athens/db)"})
 
+(comment (d/q '[:find [(pull ?e [:node/title :block/uid]) ...]
+                :where [?e :node/title ?title]]
+            @athens/db))
+
 
 (defonce box-state*
   (rg/atom initial-box))
 
 
-(defcard loading-initial-data loading?)
-
-
 (defn eval-box
   [{:keys [str-content] :as box}]
-  (let [result (try (sci/eval-string str-content
-                                     {:bindings {'athens/db dsdb
-                                                 'd/q d/q
-                                                 'd/pull d/pull
-                                                 'd/pull-many d/pull-many}})
-                    (catch js/Error e
-                      (log e)
-                      "error"))]
-    (assoc box :result result)))
+  (let [bindings {'athens/db dsdb
+                  'd/q d/q
+                  'd/pull d/pull
+                  'd/pull-many d/pull-many}
+        [ok? result] (try
+                       [true (sci/eval-string str-content {:bindings bindings})]
+                       (catch js/Error e [false e]))]
+    (-> box
+        (assoc :result result)
+        (assoc :error (not ok?)))))
 
 
-(defn browser
+(defn headings
+  [data mode]
+  (case mode
+    :coll ["idx" "val"]
+    :map ["key" "val"]
+    :tuples (into ["idx"] (->> data
+                               (map count)
+                               (apply max)
+                               range))
+    :maps (into ["idx"] (->> data
+                             (mapcat keys)
+                             (distinct)))))
+
+
+
+(defn rows
+  [data mode]
+  (case mode
+    :coll (map-indexed vector data)
+    :map (seq data)
+    :tuples (map-indexed vector data)
+    :maps (let [hs (headings data mode)]
+            (for [row-idx (-> data count range)]
+              (into [row-idx]
+                (for [h (rest hs)]
+                  (get-in data [row-idx h] "")))))))
+
+
+(defn table-view
+  [data mode]
+  (let [hs (headings data mode)]
+    [:table
+     [:tr (for [h hs] [:th (str h)])]
+     (for [row (rows data mode)]
+       [:tr (for [cell row]
+              [:td (str cell)])])]))
+
+
+
+(defn coll-of-maps?
+  [x]
+  (and (coll? x)
+       (every? map? x)))
+
+
+(defn tuples?
+  [x]
+  (and (coll? x)
+       (every? coll? x)))
+
+
+(defn browser-component
   [result]
-  [:div (str result)])
+  [:div (cond
 
+          (coll-of-maps? result)
+          (table-view result :maps)
 
-(defn result-wrapper
-  []
-  (let [err* (rg/atom nil)]
-    (rg/create-class
-      {:component-did-catch (fn [err info]
-                              (reset! err* [err info]))
-       :reagent-render (fn [result]
-                         (if (nil? @err*)
-                           [browser result]
-                           (let [[_ info] @err*]
-                             [:div
-                              [:code (str info)]])))})))
+          (tuples? result)
+          (table-view result :tuples)
 
+          (map? result)
+          (table-view result :map)
+
+          (coll? result)
+          (table-view result :coll)
+
+          :else
+          (str result))])
+
+(defn error-component
+  [error]
+  [:div {:style {:color "red"}}
+   (str error)])
 
 (defn handle-box-change!
   [e]
@@ -107,14 +165,16 @@
 
 (defn box-component
   []
-  (let [{:keys [str-content result]} @box-state*]
+  (let [{:keys [str-content result error]} @box-state*]
     [:div
      [:textarea {:value str-content
                  :on-change handle-box-change!
                  :style {:width "100%"
                          :min-height "150px"
                          :resize :none}}]
-     [result-wrapper result]]))
+     (if-not error
+       (browser-component result)
+       (error-component result))]))
 
 
 (defcard-rg box
