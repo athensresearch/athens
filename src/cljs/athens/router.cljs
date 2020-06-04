@@ -66,6 +66,11 @@
     (dispatch [:navigated new-match])))
 
 
+(defn navigate
+  [page]
+  (dispatch [:navigate page]))
+
+
 (defn navigate-page
   [uid]
   (dispatch [:navigate :page {:id uid}]))

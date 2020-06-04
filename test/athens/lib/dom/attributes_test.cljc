@@ -1,6 +1,6 @@
 (ns athens.lib.dom.attributes-test
   (:require
-    [athens.lib.dom.attributes :refer [with-attributes with-classes with-style with-styles]]
+    [athens.lib.dom.attributes :refer [with-attributes with-classes with-styles]]
     [clojure.test :refer [deftest is are run-tests]]))
 
 
@@ -18,14 +18,7 @@
 
   (is (= (with-styles flex-style-map +justify-center +align-center)
          {:style {:display "flex" :justify-content "center" :align-items "center"}})
-      "Support infinity arity"))
-
-
-(def +heavily-styled
-  (comp
-    (with-classes "strong" "happy")
-    (with-style {:color :green
-                 :background :white})))
+      "Support infinite arity"))
 
 
 (deftest attributes-test
@@ -51,10 +44,4 @@
 
     {:something-else 1}
     {:something-else 2}
-    {:something-else 2}
-
-    +heavily-styled
-    {:style {:color :red}}
-    {:class "strong happy"
-     :style {:color :red
-             :background :white}}))
+    {:something-else 2}))

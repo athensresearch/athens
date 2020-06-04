@@ -1,12 +1,12 @@
 (ns athens.devcards
   (:require
+    [athens.devcards.all-pages]
     [athens.devcards.athena]
     [athens.devcards.buttons]
     [athens.devcards.db]
     [athens.devcards.left-sidebar]
     [athens.devcards.sci-boxes]
     [athens.devcards.style-guide]
-    [athens.devcards.table]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core]))
