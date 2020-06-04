@@ -59,6 +59,9 @@
   (with-styles {:background-color (:link-color COLORS)}))
 
 
+(def +link
+  (with-styles {:color (:link-color COLORS) :cursor "pointer"}))
+
 ;; Shadow Functions
 
 (def +text-shadow
