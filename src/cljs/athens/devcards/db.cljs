@@ -5,28 +5,48 @@
     [cljs.core.async :refer [go <!]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer [defcard]]
-    [posh.reagent :refer [posh! transact!]]))
+    [datascript.core :as d]
+    [devcards.core :refer [defcard defcard-rg]]
+    [posh.reagent :refer [posh! transact!]]
+    [reagent.core :as r]))
 
 
-(defcard athens-dsdb
-  "Indices are omitted because they include all the datoms
-  Could probably use this and `load-db` as generic helpers for any componenets that use posh."
-  (dissoc @db/dsdb :eavt :aevt :avet))
-
-
-(defn load-db
-  []
+(defn load-real-db!
+  [conn]
   (go
     (let [res (<! (http/get db/athens-url {:with-credentials? false}))
           {:keys [success body]} res]
       (if success
-        (transact! db/dsdb (db/str-to-db-tx body))
+        (transact! conn (db/str-to-db-tx body))
         (js/alert "Failed to retrieve data from GitHub")))))
 
 
-;; TODO: Use mount to manage state?
-(defn -main
+(defn load-real-db-button
+  [conn]
+  (let [pressed? (r/atom false)
+        handler (fn []
+                  (swap! pressed? not)
+                  (load-real-db! conn))]
+    (fn []
+      [:button {:disabled @pressed? :on-click handler} "Load Real Data"])))
+
+
+(defcard-rg Load-Real-DB
+  "Downloads the ego db. Takes a few seconds."
+  [load-real-db-button db/dsdb])
+
+
+(defcard athens-dsdb
+  "The main Athens dsdb:"
+  db/dsdb)
+
+
+(defn new-conn
   []
-  (posh! db/dsdb)
-  (load-db))
+  (d/create-conn db/schema))
+
+
+(defn posh-conn!
+  [conn]
+  (posh! conn))
+
