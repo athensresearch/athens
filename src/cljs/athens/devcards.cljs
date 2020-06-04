@@ -1,6 +1,9 @@
 (ns athens.devcards
   (:require
+    [athens.devcards.athena]
+    [athens.devcards.buttons]
     [athens.devcards.db]
+    [athens.devcards.left-sidebar]
     [athens.devcards.sci-boxes]
     [athens.devcards.style-guide]
     [athens.devcards.table]

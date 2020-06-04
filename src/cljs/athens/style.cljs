@@ -59,6 +59,9 @@
   (with-styles {:background-color (:link-color COLORS)}))
 
 
+(def +link
+  (with-styles {:color (:link-color COLORS) :cursor "pointer"}))
+
 ;; Shadow Functions
 
 (def +text-shadow
@@ -110,7 +113,8 @@
   []
   [:style (css
             [:* {:font-family "IBM Plex Sans, Sans-Serif"}]
-            [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em"}]
+            [:p :span {:color (:body-text-color COLORS)}]
+            [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em" :color (:header-text-color COLORS)}]
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"
@@ -139,4 +143,22 @@
                         :cursor           "alias"}]]
             [:tbody
              [:tr
-              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]])])
+              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
+            [:button {:cursor           "pointer"
+                      :padding          "6px 10px"
+                      :border-radius    "4px"
+                      :font-weight      "500"
+                      :border           "none"
+                      :color            "rgba(50, 47, 56, 1)"
+                      :background-color "transparent"}
+             [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
+                           :background-color "#EFEDEB"
+                           :cursor "default"}]
+             [:&:hover {:background-color "#EFEDEB"}]
+             [:&:active {:color            "rgba(0, 117, 225)"
+                         :background-color "rgba(0, 117, 225, 0.1)"}]
+             [:&.primary {:color            "rgba(0, 117, 225)"
+                          :background-color "rgba(0, 117, 225, 0.1)"}
+              [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
+              [:&:active {:color "white"
+                          :background-color "rgba(0, 117, 225, 1)"}]]])])
