@@ -1,6 +1,8 @@
 (ns athens.devcards.db-boxes
   (:require
     [athens.db :as db]
+    [athens.lib.dom.attributes :refer [with-styles]]
+    [athens.style :refer [style-guide-css]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
@@ -26,6 +28,10 @@
 (defn trace
   [x]
   (log x) x)
+
+
+(defcard-rg Import-Styles
+  [style-guide-css])
 
 
 (defcard "
@@ -109,6 +115,7 @@
   []
   (swap! box-state* update :limit + 10))
 
+
 (defn load-real-db!
   [conn]
   (go
@@ -127,7 +134,7 @@
                   (swap! pressed? not)
                   (load-real-db! conn))]
     (fn []
-      [:button {:disabled @pressed? :on-click handler} "Load Real Data"])))
+      [:button.primary {:disabled @pressed? :on-click handler} "Load Real Data"])))
 
 
 (defcard-rg Load-Real-DB
@@ -283,19 +290,22 @@
   [data mode limit]
   (let [hs (headings data mode)
         rows (get-rows data mode)]
-    [:table
-     [:thead
-      [:tr (for [h hs]
-             ^{:key (str "heading-" h)}
-             [:th (str h)])]]
-     [:tbody
-      (for [row (if (= mode :map)
-                  rows
-                  (take limit rows))]
-        ^{:key (str "row-" (-> row first :idx))}
-        [:tr (for [{:keys [idx heading] :as c} row]
-               ^{:key (str idx heading)}
-               [:td (cell c)])])]]))
+    [:div (with-styles {:font-size "12px"
+                        :overflow-x "auto"})
+     [:table
+      [:thead
+       [:tr (for [h hs]
+              ^{:key (str "heading-" h)}
+              [:th (str h)])]]
+      [:tbody
+       (for [row (if (= mode :map)
+                   rows
+                   (take limit rows))]
+         ^{:key (str "row-" (-> row first :idx))}
+         [:tr (for [{:keys [idx heading] :as c} row]
+                ^{:key (str idx heading)}
+                [:td (with-styles {:background-color "none"})
+                 (cell c)])])]]]))
 
 
 (defn coll-of-maps?
@@ -333,9 +343,9 @@
                     (not (map? result))
                     (< limit (count result)))
            [:span (str "Showing " limit " out of " (count result) " rows ")
-                  [:a {:on-click increase-limit!
-                       :style {:cursor :pointer}}
-                      "load more"]])]])
+            [:a {:on-click increase-limit!
+                 :style {:cursor :pointer}}
+             "load more"]])]])
 
 
 (defn error-component
@@ -391,7 +401,9 @@
                  :on-key-down handle-box-key-down!
                  :style {:width "100%"
                          :min-height "150px"
-                         :resize :none}}]
+                         :resize :none
+                         :font-size "12px"
+                         :font-family "IBM Plex Mono"}}]
      (if-not error
        (browser-component result limit)
        (error-component result))]))
