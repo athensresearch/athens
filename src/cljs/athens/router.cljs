@@ -26,8 +26,10 @@
   (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (subscribe [:node [:block/uid (-> new-match :path-params :id)]])] ;; TODO make the page title query work when zoomed in on a block
-      (set! (.-title js/document) (or (:node/title @node) "Athens Research")) ;; TODO make this side effect explicit
+          node (subscribe [:node [:block/uid (-> new-match :path-params :id)]]) ;; TODO make the page title query work when zoomed in on a block
+          node-title (:node/title @node)
+          page-title (str (or node-title "untitled") " – Athens")]
+      (set! (.-title js/document) page-title) ;; TODO make this side effect explicit
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
                (dissoc :merge-prompt))
