@@ -31,7 +31,6 @@
       [:button.primary {:disabled @pressed? :on-click handler} "Load Real Data"])))
 
 
-
 (defcard-rg Load-Real-DB
   "Downloads the ego db. Takes a few seconds."
   [load-real-db-button db/dsdb])
