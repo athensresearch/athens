@@ -89,7 +89,7 @@
             [:button "All Pages"]
             [:button "Graph Overview"]]
            [:div (with-styles +flex-column-align-start)
-            [:span.small (with-styles {:opacity 0.5}) "Favorites"]
+            [:span.small (with-styles {:opacity 0.5}) "Shortcuts"]
             (for [[_order title uid] sorted-shortcuts]
               ^{:key uid}
               [:div (with-styles {:margin "8px 0"})
