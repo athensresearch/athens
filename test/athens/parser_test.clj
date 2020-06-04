@@ -4,7 +4,7 @@
     [clojure.test :refer [deftest is are]]))
 
 
-(deftest block-parser-tests
+(deftest parser-general-tests
   (are [x y] (= x (parse-to-ast y))
     [:block]
     ""
@@ -21,8 +21,50 @@
     [:block "[[text"]
     "[[text"
 
+    [:block [:block-ref "V8_jUYc-k"]]
+    "((V8_jUYc-k))"
+
+    [:block "it’s " [:bold "very"] " important"]
+    "it’s **very** important"))
+
+
+(deftest parser-hashtag-tests
+  (are [x y] (= x (parse-to-ast y))
+    [:block "some " [:hashtag "me"] " time"]
+    "some #me time"
+
+    [:block "that’s " [:hashtag "very cool"] ", yeah"]
+    "that’s #[[very cool]], yeah"
+
+    [:block "Ends after " [:hashtag "words_are_over"] "!"]
+    "Ends after #words_are_over!"
+
+    [:block "learn " [:hashtag "官话"] "?"]
+    "learn #官话?"
+
+    [:block "learn " [:hashtag "اَلْعَرَبِيَّةُ"] " in a year"]
+    "learn #اَلْعَرَبِيَّةُ in a year"))
+
+
+(deftest parser-url-link-tests
+  (are [x y] (= x (parse-to-ast y))
     [:block [:url-link {:url "https://example.com/"} "an example"]]
-    "[an example](https://example.com/)"))
+    "[an example](https://example.com/)"
+
+    [:block [:url-link {:url "https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top"} "example"]]
+    "[example](https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top)"
+
+    [:block [:url-link {:url "https://en.wikipedia.org/wiki/(_)_(film)"} "( )"]]
+    "[( )](https://en.wikipedia.org/wiki/(_)_(film))"
+
+    [:block [:url-link {:url "https://example.com/open_paren_'('"} "escaped ("]]
+    "[escaped (](https://example.com/open_paren_'\\(')"
+
+    [:block [:url-link {:url "https://example.com/close)open(close)"} "escaped )()"]]
+    "[escaped )()](https://example.com/close\\)open\\(close\\))"
+
+    [:block [:url-link {:url "https://example.com/close)open(close)"} "combining escaping and nesting"]]
+    "[combining escaping and nesting](https://example.com/close\\)open(close))"))
 
 
 (deftest combine-adjacent-strings-tests
