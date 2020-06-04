@@ -21,13 +21,6 @@
       "Support infinite arity"))
 
 
-(def +heavily-styled
-  (comp
-    (with-classes "strong" "happy")
-    (with-styles {:color :green
-                  :background :white})))
-
-
 (deftest attributes-test
   (are [x y z] (= (with-attributes x y) z)
 
@@ -51,10 +44,4 @@
 
     {:something-else 1}
     {:something-else 2}
-    {:something-else 2}
-
-    +heavily-styled
-    {:style {:color :red}}
-    {:class "strong happy"
-     :style {:color :red
-             :background :white}}))
+    {:something-else 2}))
