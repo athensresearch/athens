@@ -1,11 +1,13 @@
 (ns athens.views
   (:require
+    [athens.db :as db]
+    [athens.devcards.all-pages :refer [table]]
+    [athens.devcards.left-sidebar :refer [left-sidebar]]
+    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.page :as page]
     [athens.style :as style]
     [athens.subs]
-    [re-frame.core :as rf :refer [subscribe dispatch]]
-    #_[reitit.frontend :as rfe]
-    [reitit.frontend.easy :as rfee]))
+    [re-frame.core :as rf :refer [subscribe dispatch]]))
 
 
 (defn about-panel
@@ -22,68 +24,16 @@
     (.readAsText fr file)))
 
 
-(defn- date-string
-  [x]
-  (if (< x 1)
-    [:span (style/+unknown-date {}) "(unknown date)"]
-    (.toLocaleString  (js/Date. x))))
-
-
-(defn table
-  [nodes]
-  [:table (style/+pages-table {})
-   [:thead
-    [:tr
-     [:th
-      {:style {:text-align "left"}}
-      "Page"]
-     [:th
-      {:style {:text-align "left"}}
-      "Last Edit"]
-     [:th
-      {:style {:text-align "left"}}
-      "Created At"]]]
-   [:tbody
-    (for [{id :db/id
-           bid :block/uid
-           title :node/title
-           c-time :create/time
-           e-time :edit/time} nodes]
-      ^{:key id}
-      [:tr
-       [:td
-        {:style {:height 24}}
-        [:a {:href (rfee/href :page {:id bid})}
-         title]]
-       [:td (date-string c-time)]
-       [:td (date-string e-time)]])]])
-
-
 (defn pages-panel
   []
-  (let [nodes (subscribe [:pull-nodes])]
-    (fn []
-      [:div
-       [:p
-        "Upload your DB " [:a {:href ""} "(tutorial)"]]
-       [:input {:type "file"
-                :name "file-input"
-                :on-change (fn [e] (file-cb e))}]
-       [table @nodes]])))
-
-
-(defn left-sidebar
-  []
   (fn []
-    (let [favorites (subscribe [:favorites])
-          current-route (subscribe [:current-route])]
-      [:div {:style {:margin "0 10px" :max-width 250}}
-       [:div [:a {:href (rfee/href :pages)} "All /pages"]]
-       [:div [:span {:style {}} "Current Route: " [:b (-> @current-route :path)]]]
-       [:div {:style {:border-bottom "1px solid gray" :margin "10px 0"}}]
-       [:ul (style/+left-sidebar {})
-        (for [[_order title bid] @favorites]
-          ^{:key bid} [:li [:a {:href (rfee/href :page {:id bid})} title]])]])))
+    [:div
+     [:p
+      "Upload your DB " [:a {:href ""} "(tutorial)"]]
+     [:input {:type      "file"
+              :name      "file-input"
+              :on-change (fn [e] (file-cb e))}]
+     [table db/dsdb]]))
 
 
 (defn alert
@@ -97,11 +47,11 @@
 
 (defn match-panel
   [name]
-  [(case name
-     :about about-panel
-     :pages pages-panel
-     :page page/main
-     pages-panel)])
+  [:div (with-styles {:margin-left "400px" :min-width "500px" :max-width "900px"}) [(case name
+                                                                                      :about about-panel
+                                                                                      :pages pages-panel
+                                                                                      :page page/main
+                                                                                      pages-panel)]])
 
 
 (defn main-panel
@@ -109,12 +59,12 @@
   (let [current-route (subscribe [:current-route])
         loading (subscribe [:loading])]
     (fn []
-      [alert]
-      (if @loading
-        [:div
-         [style/loading-css]
-         [:h4 {:id "loading-text"} "Loading database..."]]
-        [:div {:style {:display "flex"}}
-         [style/main-css]
-         [left-sidebar]
-         [match-panel (-> @current-route :data :name)]]))))
+      [:<>
+       [style/style-guide-css]
+       [alert]
+       (if @loading
+         [:h1 "Loading Athens 😈"]
+         [:div style/+flex
+          [style/style-guide-css]
+          [left-sidebar db/dsdb]
+          [match-panel (-> @current-route :data :name)]])])))

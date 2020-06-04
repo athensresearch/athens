@@ -27,13 +27,6 @@
   (update attrs :style merge styles))
 
 
-(defn with-style
-  [styles]
-  (fn f
-    ([] (f nil))
-    ([attrs] (merge-styles attrs styles))))
-
-
 (defn with-styles
   ([map-or-fn]
    (if (fn? map-or-fn)

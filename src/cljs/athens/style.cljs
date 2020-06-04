@@ -1,35 +1,9 @@
 (ns athens.style
   (:require
-    [athens.lib.dom.attributes :refer [with-classes with-style with-styles]]
+    [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
     [garden.core :refer [css]]
-    [garden.selectors :refer [nth-child]]))
-
-;; Styles for the loading screen
-(defn loading-css
-  []
-  [:style (css
-            [:body {:font-family "sans-serif"
-                    :font-size "1.3rem"}])])
-
-;; Styles for the main app.
-(defn main-css
-  []
-  [:style
-   (css [:body {:font-family "sans-serif"}]
-        [:.pages-table
-         {:width "60%" :margin-top 20}
-         [:th {:font-weight "bold"
-               :min-width "11em"}]
-         [:td {:padding "2px"}]
-         [:tr
-          [:&
-           [(garden.selectors/& (nth-child :even)) {:background-color "#e8e8e8"}]]]
-         [:& {:border-spacing "0"}]]
-        [:.left-sidebar [:li {:padding-top "0.27em" :padding-bottom "0.27em"}]
-         {:padding 0
-          :margin 0
-          :list-style-type "none"}])])
+    [garden.selectors]))
 
 
 (def COLORS
@@ -73,6 +47,11 @@
 
 ;; Flex Functions
 
+
+(def +flex
+  (with-styles {:display "flex"}))
+
+
 (def +flex-center
   (with-styles {:display "flex" :justify-content "center" :align-items "center"}))
 
@@ -92,19 +71,25 @@
 (def +flex-column
   (with-styles {:display "flex" :flex-direction "column"}))
 
+
+;; Text Align
+
+(def +text-align-left
+  (with-styles {:text-align "left"}))
+
+
+(def +text-align-right
+  (with-styles {:text-align "right"}))
+
+
+;; Width and Height
+
+
+(def +width-100
+  (with-styles {:width "100%"}))
+
+
 ;; Class Functions
-
-(def +left-sidebar
-  (with-classes "left-sidebar"))
-
-
-(def +pages-table
-  (with-classes "pages-table"))
-
-
-(def +unknown-date
-  (with-style {:color "#595959"}))
-
 
 ;; Style Guide
 
@@ -112,9 +97,12 @@
 (defn style-guide-css
   []
   [:style (css
-            [:* {:font-family "IBM Plex Sans, Sans-Serif"}]
+            [:body {:margin 0}]
+            [:* {:font-family "IBM Plex Sans, Sans-Serif"
+                 :box-sizing "border-box"}]
             [:p :span {:color (:body-text-color COLORS)}]
-            [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em" :color (:header-text-color COLORS)}]
+            [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em"
+                                      :color (:header-text-color COLORS)}]
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"
@@ -144,13 +132,13 @@
             [:tbody
              [:tr
               [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
-            [:button {:cursor           "pointer"
-                      :padding          "6px 10px"
-                      :border-radius    "4px"
-                      :font-weight      "500"
-                      :border           "none"
-                      :color            "rgba(50, 47, 56, 1)"
-                      :background-color "transparent"}
+            [:button :input {:cursor           "pointer"
+                             :padding          "6px 10px"
+                             :border-radius    "4px"
+                             :font-weight      "500"
+                             :border           "none"
+                             :color            "rgba(50, 47, 56, 1)"
+                             :background-color "transparent"}
              [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
                            :background-color "#EFEDEB"
                            :cursor "default"}]

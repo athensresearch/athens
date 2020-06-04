@@ -1,9 +1,9 @@
-(ns athens.devcards.table
+(ns athens.devcards.all-pages
   (:require
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [style-guide-css COLORS]]
+    [athens.style :as style :refer [style-guide-css +text-align-right +text-align-left +link]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
@@ -20,12 +20,7 @@
   [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])])
 
 
-(defcard Instantiate-Dsdb
-  "Happens in the background
-
-  TODO: need to find a better way to do this")
-
-
+(defcard Instantiate-Dsdb)
 (defonce conn (new-conn))
 (posh-conn! conn)
 
@@ -49,22 +44,6 @@
   [load-real-db-button conn])
 
 
-(def +text-align-left
-  (with-styles {:text-align "left"}))
-
-
-(def +text-align-right
-  (with-styles {:text-align "right"}))
-
-
-(def +width-100
-  (with-styles {:width "100%"}))
-
-
-(def +link
-  (with-styles {:color (:link-color COLORS) :cursor "pointer"}))
-
-
 (defn- date-string
   [x]
   (if (< x 1)
@@ -73,13 +52,13 @@
 
 
 (defn table
-  []
+  [conn]
   (let [page-eids (q '[:find [?e ...]
                        :where
                        [?e :node/title ?t]]
                      conn)
         pages (pull-many conn '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
-    [:table +width-100
+    [:table
      [:thead
       [:tr
        [:th [:h5 +text-align-left "Title"]]
@@ -94,14 +73,17 @@
              children :block/children} @pages]
         ^{:key uid}
         [:tr
-         [:td (with-styles {:max-width "200px" :overflow-wrap "break-word"})
-          [:h4 (with-attributes +link {:on-click #(navigate-page uid)}) title]]
-         [:td (with-styles {:max-width "800px" :max-height "40px" :white-space "wrap" :overflow "hidden" :text-overflow "ellipsis" :display "block"} +text-align-left)
+         [:td
+          [:h4 (with-attributes
+                 (with-styles +link {:width "200px"})
+                 {:on-click #(navigate-page uid)})
+           title]]
+         [:td (with-styles {:width "700px" :max-height "40px" :white-space "wrap" :overflow "hidden" :text-overflow "ellipsis" :display "block"} +text-align-left)
           (clojure.string/join " " (map #(str "• " (:block/string %)) children))]
          [:td +text-align-right (date-string modified)]
          [:td +text-align-right (date-string created)]])]]))
 
 
 (defcard-rg Table
-  [table])
+  [table conn])
 
