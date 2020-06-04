@@ -47,11 +47,12 @@
 
 (defn match-panel
   [name]
-  [:div (with-styles {:margin-left "400px" :min-width "500px" :max-width "900px"}) [(case name
-                                                                                      :about about-panel
-                                                                                      :pages pages-panel
-                                                                                      :page page/main
-                                                                                      pages-panel)]])
+  [:div (with-styles {:margin-left "400px" :min-width "500px" :max-width "900px"})
+   [(case name
+      :about about-panel
+      :pages pages-panel
+      :page page/main
+      pages-panel)]])
 
 
 (defn main-panel
