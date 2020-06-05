@@ -307,6 +307,12 @@
          (error-component result))]))
 
 
+(defcard-rg Reset-to-all-pages
+  (fn []
+    [:button {:on-click #(update-box! (:str-content initial-box))}
+             "Reset"]))
+
+
 (defcard-rg Browse-db-box
   box-component
   box-state*
