@@ -207,20 +207,20 @@
 
 
 (defn box-component
-  []
-  (let [{:keys [str-content result error]} @box-state*]
-    [:div
-     [:textarea {:value str-content
-                 :on-change handle-box-change!
-                 :style {:width "100%"
-                         :min-height "150px"
-                         :resize :none}}]
-     (if-not error
-       (browser-component result)
-       (error-component result))]))
+  [box-state _]
+  (let [{:keys [str-content result error]} @box-state]
+      [:div
+       [:textarea {:value str-content
+                   :on-change handle-box-change!
+                   :style {:width "100%"
+                           :min-height "150px"
+                           :resize :none}}]
+       (if-not error
+         (browser-component result)
+         (error-component result))]))
 
 
-(defcard-rg box
-  (do
-    (swap! box-state* eval-box)
-    [box-component]))
+(defcard-rg Browse-db-box
+  box-component
+  box-state*
+  {:history true})
