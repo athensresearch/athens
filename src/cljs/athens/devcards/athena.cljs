@@ -30,8 +30,7 @@
 
 (dispatch [:init-rfdb])
 
-
-(defcard-rg Instantiate-dsdb)
+(defcard-rg Instantiate-Dsdb)
 (defonce conn (new-conn))
 (posh-conn! conn)
 
@@ -123,6 +122,7 @@
      :right    0
      :overflow-y "auto"
      :max-height "500px"}))
+
 
 
 (def +athena-input
