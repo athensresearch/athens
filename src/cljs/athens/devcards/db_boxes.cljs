@@ -189,10 +189,6 @@
     :maps (maps-rows data)))
 
 
-;; When mode is :map or :maps we can look at the keys to determine the operation
-;; When mode is :tuples, :coll or :else we might have to analyze the query
-
-
 (defn attr-unique?
   [attr]
   (contains? (get db/schema attr) :db/unique))
@@ -326,7 +322,6 @@
         pos (.-selectionStart t)]
     (.preventDefault e)
     (update-box! (insert-tab v pos))
-    ;(set! (.-value t) (insert-tab v pos))
     (set! (.-selectionEnd t) (+ 2 pos))))
 
 
