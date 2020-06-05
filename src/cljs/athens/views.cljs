@@ -30,9 +30,9 @@
     [:div
      [:p
       "Upload your DB " [:a {:href ""} "(tutorial)"]]
-     [:input {:type      "file"
-              :name      "file-input"
-              :on-change (fn [e] (file-cb e))}]
+     [:input.input-file {:type      "file"
+                         :name      "file-input"
+                         :on-change (fn [e] (file-cb e))}]
      [table db/dsdb]]))
 
 
