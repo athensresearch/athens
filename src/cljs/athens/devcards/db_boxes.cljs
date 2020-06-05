@@ -15,6 +15,12 @@
     [cljs.core.async.macros :refer [go]]))
 
 
+(def key-code->key
+  {8   :backspace
+   9   :tab
+   13  :return})
+
+
 (def log js/console.log)
 
 
@@ -50,6 +56,24 @@
     (-> box
         (assoc :result result)
         (assoc :error (not ok?)))))
+
+
+(defn eval-box!
+  []
+  (swap! box-state* eval-box))
+
+
+(defn update-box!
+  [s]
+  (swap! box-state* assoc :str-content s))
+
+
+(defn update-and-eval-box!
+  [s]
+  (swap! box-state*
+         #(-> %
+              (assoc :str-content s)
+              (eval-box))))
 
 
 (defn load-real-db!
@@ -187,14 +211,6 @@
      :db.type/ref))
 
 
-(defn update-box!
-  [s]
-  (swap! box-state*
-         #(-> %
-              (assoc :str-content s)
-              (eval-box))))
-
-
 (defn pull-entity-str
   ([id]
    (str "(d/pull @athens/db '[*] " id ")"))
@@ -207,12 +223,12 @@
   (if value
     (cond
       (= :db/id attr)
-      [:a {:on-click #(update-box! (pull-entity-str (or id value)))
+      [:a {:on-click #(update-and-eval-box! (pull-entity-str (or id value)))
            :style {:cursor :pointer}}
        (str value)]
 
       (attr-unique? attr)
-      [:a {:on-click #(update-box! (pull-entity-str attr value))
+      [:a {:on-click #(update-and-eval-box! (pull-entity-str attr value))
            :style {:cursor :pointer}}
        (str value)]
 
@@ -293,24 +309,59 @@
   (update-box! (-> e .-target .-value)))
 
 
+(defn handle-return-key!
+  [e]
+  (.preventDefault e)
+  (eval-box!))
+
+
+(defn insert-tab
+  [s pos]
+  (str (subs s 0 pos) "  " (subs s pos)))
+
+
+(defn handle-tab-key!
+  [e]
+  (let [t (.-target e)
+        v (.-value t)
+        pos (.-selectionStart t)]
+    (.preventDefault e)
+    (update-box! (insert-tab v pos))
+    ;(set! (.-value t) (insert-tab v pos))
+    (set! (.-selectionEnd t) (+ 2 pos))))
+
+
+(defn handle-box-key-down!
+  [e]
+  (let [key-code (.-keyCode e)
+        shift? (.-shiftKey e)
+        k (key-code->key key-code)]
+    (case k
+      :return (when shift?
+                (handle-return-key! e))
+      :tab (handle-tab-key! e)
+      nil)))
+
+
 (defn box-component
   [box-state _]
   (let [{:keys [str-content result error]} @box-state]
-      [:div
-       [:textarea {:value str-content
-                   :on-change handle-box-change!
-                   :style {:width "100%"
-                           :min-height "150px"
-                           :resize :none}}]
-       (if-not error
-         (browser-component result)
-         (error-component result))]))
+    [:div
+     [:textarea {:value str-content
+                 :on-change handle-box-change!
+                 :on-key-down handle-box-key-down!
+                 :style {:width "100%"
+                         :min-height "150px"
+                         :resize :none}}]
+     (if-not error
+       (browser-component result)
+       (error-component result))]))
 
 
 (defcard-rg Reset-to-all-pages
   (fn []
-    [:button {:on-click #(update-box! (:str-content initial-box))}
-             "Reset"]))
+    [:button {:on-click #(update-and-eval-box! (:str-content initial-box))}
+     "Reset"]))
 
 
 (defcard-rg Browse-db-box
