@@ -124,7 +124,6 @@
      :max-height "500px"}))
 
 
-
 (def +athena-input
   (with-styles {:width "100%"
                 :border 0
@@ -170,13 +169,13 @@
         athena? (subscribe [:athena])
         handler (fn [e]
                   (let [query (.. e -target -value)]
-                    (let [result (when-not (clojure.string/blank? query)
-                                   (or (get @*cache query)
-                                       (let [result (cond-> {:pages (search-in-block-title db query)}
-                                                      (count query) (assoc :blocks (search-in-block-content db query)))]
-                                         (swap! *cache assoc query result)
-                                         result)))]
-                      (reset! *match [query result]))))]
+                    (if (clojure.string/blank? query)
+                      (reset! *match [query nil])
+                      (let [result (or (get @*cache query)
+                                       (cond-> {:pages (search-in-block-title db query)}
+                                         (count query) (assoc :blocks (search-in-block-content db query))))]
+                        (swap! *cache assoc query result)
+                        (reset! *match [query result])))))]
     (when @athena?
       [:div +container
        [:div {:style {:box-shadow "inset 0px -1px 0px rgba(0, 0, 0, 0.1)"}}
