@@ -29,7 +29,36 @@
 
 
 (defcard "
-  # An experiment in browsing the datascript database")
+  # An experiment in browsing the datascript database
+
+  You can use these devcards to explore the Athens datascript database.
+
+  Initial data:
+  - Start by loading initial data with the \"Load Real Data\" button.
+  - This will load some sample datoms from the ego.datoms file
+
+  Executing queries:
+  - The browse-box uses [sci](https://github.com/borkdude/sci) to execute datascript queries.
+  - In addition to the (non-side-effecting) clojure.core functions, the following bindings are available:
+  - `athens/db` -> the datascript connection, dereference (`@`) to get the current database value
+  - `d/q` -> for querying the database
+  - `d/pull` -> pull one or more attributes of an entity, returns a map
+  - `d/pull-many` -> like `d/pull`, but pulls many entities at once
+  - Execute the query by pressing `shift-enter`
+
+  Browsing:
+  - The browser is a simple html table translating the query result into rows and cells.
+  - Browsing is possible if you've used a pull expression (in a query or with `d/pull` or `d/pull-many`).
+  - If you click a link, it will generate a new query and evaluate it.
+
+  History:
+  - Devcards keeps a history for us. Use the arrows at the bottom to navigate back to earlier states.
+
+  Possible improvements:
+  - Right now navigation is only possible by using a pull expression. By analysing queries it might also be possible for all other queries.
+  - No transctions are currently allowed, but this can easily be changed by adding `d/transact` to sci's bindings.
+  - There is absolutely no styling, some minimal styling would probably make reading the table easier.
+  ")
 
 
 (def initial-box
