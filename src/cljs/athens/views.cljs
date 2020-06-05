@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.devcards.all-pages :refer [table]]
+    [athens.devcards.athena :refer [athena]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.lib.dom.attributes :refer [with-styles]]
     [athens.page :as page]
@@ -30,9 +31,9 @@
     [:div
      [:p
       "Upload your DB " [:a {:href ""} "(tutorial)"]]
-     [:input {:type      "file"
-              :name      "file-input"
-              :on-change (fn [e] (file-cb e))}]
+     [:input.input-file {:type      "file"
+                         :name      "file-input"
+                         :on-change (fn [e] (file-cb e))}]
      [table db/dsdb]]))
 
 
@@ -63,6 +64,7 @@
       [:<>
        [style/style-guide-css]
        [alert]
+       [athena db/dsdb]
        (if @loading
          [:h1 "Loading Athens 😈"]
          [:div style/+flex
