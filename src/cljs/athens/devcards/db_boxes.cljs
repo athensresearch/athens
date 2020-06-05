@@ -36,7 +36,8 @@
   {:str-content
    "(d/q '[:find [(pull ?e [*]) ...]
        :where [?e :node/title]]
-    @athens/db)"})
+    @athens/db)"
+   :limit 10})
 
 
 (defonce box-state*
@@ -74,6 +75,10 @@
               (assoc :str-content s)
               (eval-box))))
 
+
+(defn increase-limit!
+  []
+  (swap! box-state* update :limit + 10))
 
 (defn load-real-db!
   [conn]
@@ -180,7 +185,7 @@
                :idx idx})))))
 
 
-(defn rows
+(defn get-rows
   [data mode]
   (case mode
     :coll (coll-rows data)
@@ -246,15 +251,18 @@
 
 
 (defn table-view
-  [data mode]
-  (let [hs (headings data mode)]
+  [data mode limit]
+  (let [hs (headings data mode)
+        rows (get-rows data mode)]
     [:table
      [:thead
       [:tr (for [h hs]
              ^{:key (str "heading-" h)}
              [:th (str h)])]]
      [:tbody
-      (for [row (rows data mode)]
+      (for [row (if (= mode :map)
+                  rows
+                  (take limit rows))]
         ^{:key (str "row-" (-> row first :idx))}
         [:tr (for [{:keys [idx heading] :as c} row]
                ^{:key (str idx heading)}
@@ -274,23 +282,31 @@
 
 
 (defn browser-component
-  [result]
-  [:div (cond
+  [result limit]
+  [:div
+   [:div (cond
 
-          (coll-of-maps? result)
-          (table-view result :maps)
+           (coll-of-maps? result)
+           (table-view result :maps limit)
 
-          (map? result)
-          (table-view result :map)
+           (map? result)
+           (table-view result :map limit)
 
-          (tuples? result)
-          (table-view result :tuples)
+           (tuples? result)
+           (table-view result :tuples limit)
 
-          (coll? result)
-          (table-view result :coll)
+           (coll? result)
+           (table-view result :coll limit)
 
-          :else
-          (str result))])
+           :else
+           (str result))]
+   [:div (when (and (coll? result)
+                    (not (map? result))
+                    (< limit (count result)))
+           [:span (str "Showing " limit " out of " (count result) " rows ")
+                  [:a {:on-click increase-limit!
+                       :style {:cursor :pointer}}
+                      "load more"]])]])
 
 
 (defn error-component
@@ -339,7 +355,7 @@
 
 (defn box-component
   [box-state _]
-  (let [{:keys [str-content result error]} @box-state]
+  (let [{:keys [str-content result error limit]} @box-state]
     [:div
      [:textarea {:value str-content
                  :on-change handle-box-change!
@@ -348,13 +364,14 @@
                          :min-height "150px"
                          :resize :none}}]
      (if-not error
-       (browser-component result)
+       (browser-component result limit)
        (error-component result))]))
 
 
 (defcard-rg Reset-to-all-pages
   (fn []
-    [:button {:on-click #(update-and-eval-box! (:str-content initial-box))}
+    [:button {:on-click #(do (reset! box-state* initial-box)
+                             (eval-box!))}
      "Reset"]))
 
 
