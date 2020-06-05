@@ -39,21 +39,14 @@
   [load-real-db-button conn])
 
 
-(def open? (r/atom false))
-
-
 (defn athena-prompt
-  []
+  [open?]
   [:button.primary (with-attributes (with-styles {:padding 0})
                      {:on-click #(swap! open? not)})
    [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
     "🔍"]
    [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
     "Find or Create a Page"]])
-
-
-(defcard-rg Athena-Prompt
-  [athena-prompt])
 
 
 (defn re-case-insensitive
@@ -132,14 +125,14 @@
                 :line-height    "49px"
                 :letter-spacing "-0.03em"
                 :color          "#433F38"
-                :opacity        0.25
+                ;;:background-color "white"
                 :padding "25px 0 25px 35px"
                 :cursor "text"}))
 
 
 (defn recent
   []
-  [:div (with-styles {:padding "0px 18px 0px 32px"} +flex-space-between)
+  [:div (with-styles {:padding "0px 18px 0px 32px" :background-color "white"} +flex-space-between)
    [:h5 "Recent"]
    [:div
     [:span "Press "]
@@ -149,9 +142,18 @@
      "shift + enter"]
     [:span " to open in right sidebar."]]])
 
+(def +container
+  (with-styles +depth-64
+               {:width "784px"
+                :border-radius "4px"
+                :display "inline-block"
+                :position "fixed"
+                :top "50%"
+                :left "50%"
+                :transform "translate(-50%, -50%)"}))
 
 (defn athena
-  []
+  [open?]
   (let [*cache (r/atom {})
         *match (r/atom nil)
         handler (fn [e]
@@ -165,29 +167,37 @@
                                          (swap! *cache assoc query result)
                                          result)))]
                       (reset! *match [query result]))))]
-    [:div (with-styles +depth-64 {:width "784px" :border-radius "4px" :position "relative" :display "inline-block" })
-     [:div {:style {:box-shadow "inset 0px -1px 0px rgba(0, 0, 0, 0.1)"}}
-      [:input (with-attributes +athena-input
-                               {:type        "search"
-                                :placeholder "Find or Create Page",
-                                :on-change   handler})]]
-     [recent]
-     [(fn []
-        (let [[query {:keys [pages blocks] :as result}] @*match]
-          (when result
-            [:div (with-styles +query)
-             (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
-               (let [parent (:block/parent x)
-                     page-title (or (:node/title parent) (:node/title x))
-                     block-uid (or (:block/uid parent) (:block/uid x))
-                     block-string (:block/string x)]
-                 [:div (with-attributes {:class "athena-result" :key i :on-click #(navigate-page block-uid)})
-                  [:div
-                   [:h4 (highlight-match query page-title)]
-                   (when block-string
-                     [:span (highlight-match query block-string)])]
-                  [:h4 (with-styles {:margin-left "auto"}) "➡️"]]))])))]]))
+    (when @open?
+      [:div +container
+       [:div {:style {:box-shadow "inset 0px -1px 0px rgba(0, 0, 0, 0.1)"}}
+        [:input (with-attributes +athena-input
+                                 {:type        "search"
+                                  :placeholder "Find or Create Page",
+                                  :on-change   handler})]]
+       [recent]
+       [(fn []
+          (let [[query {:keys [pages blocks] :as result}] @*match]
+            (when result
+              [:div (with-styles +query)
+               (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
+                 (let [parent (:block/parent x)
+                       page-title (or (:node/title parent) (:node/title x))
+                       block-uid (or (:block/uid parent) (:block/uid x))
+                       block-string (:block/string x)]
+                   [:div (with-attributes {:class "athena-result" :key i :on-click #(navigate-page block-uid)})
+                    [:div
+                     [:h4 (highlight-match query page-title)]
+                     (when block-string
+                       [:span (highlight-match query block-string)])]
+                    [:h4 (with-styles {:margin-left "auto"}) "➡️"]]))])))]])))
 
 
-(defcard-rg Athena
-  [athena])
+;;(defcard-rg Athena
+;;  [athena])
+
+(def open? (r/atom false))
+
+(defcard-rg Athena-Prompt
+  [:<>
+   [athena-prompt open?]
+   [athena open?]])
