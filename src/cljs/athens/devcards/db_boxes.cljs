@@ -97,36 +97,94 @@
                              (distinct)))))
 
 
-; there is code here that makes me weep. have to refactor this
+(defn coll-rows
+  [coll]
+  (let [row (fn [[idx value]]
+              [{:value idx
+                :heading "idx"
+                :idx idx}
+               {:value value
+                :heading "val"
+                :idx idx}])]
+    (->> coll
+         (map-indexed vector)
+         (map row))))
+
+
+(defn map-rows
+  [m]
+  (let [row (fn [[k v]]
+              [{:value k
+                :heading "key"
+                :idx k}
+               {:value v
+                :attr k
+                :heading "val"
+                :idx k}])]
+    (map row m)))
+
+
+; still not very clean
+(defn tuple-rows
+  [tuples]
+  (let [row (fn [[idx values]]
+              (into
+                [{:value idx
+                  :heading "idx"
+                  :idx idx}]
+                (map-indexed
+                  (fn [heading value]
+                    {:value value
+                     :heading (str heading)
+                     :idx idx})
+                  values)))]
+    (->> tuples
+         (map-indexed vector)
+         (map row))))
+
+
+(defn maps-rows
+  [ms]
+  (let [hs (headings ms :maps)]
+    (for [idx (-> ms count range)]
+      (into [{:value idx
+              :heading "idx"
+              :idx idx}]
+            (for [h (rest hs)]
+              {:value (get-in ms [idx h])
+               :attr h
+               :heading (str h)
+               :idx idx})))))
+
+
 (defn rows
   [data mode]
   (case mode
-    :coll (->> data
-               (map-indexed vector)
-               (map (fn [x] {:item x})))
-
-    :map (->> data
-              (map (fn [[k v]] [{:item k} {:item v :attr k}])))
-
-    :tuples (->> data
-                 (map-indexed (fn [idx v]
-                                (into [{:item idx}]
-                                      (map (fn [x] {:item x}) v)))))
-
-    :maps (let [hs (headings data mode)]
-            (for [row-idx (-> data count range)]
-              (into [{:item row-idx}]
-                    (for [h (rest hs)]
-                      (when-let [item (get-in data [row-idx h])]
-                        {:item item
-                         :attr h})))))))
+    :coll (coll-rows data)
+    :map (map-rows data)
+    :tuples (tuple-rows data)
+    :maps (maps-rows data)))
 
 
 ;; When mode is :map or :maps we can look at the keys to determine the operation
 ;; When mode is :tuples, :coll or :else we might have to analyze the query
 
 
-(do db/schema)
+(defn attr-unique?
+  [attr]
+  (contains? (get db/schema attr) :db/unique))
+
+
+(defn attr-many?
+  [attr]
+  (= (get-in db/schema [attr :db/cardinality])
+     :db.cardinality/many))
+
+
+(defn attr-ref?
+  [attr]
+  (= (get-in db/schema [attr :db/valueType])
+     :db.type/ref))
 
 
 (defn update-box!
@@ -138,28 +196,58 @@
 
 
 (defn pull-entity-str
-  [id]
-  (str "(d/pull @athens/db '[*] " id ")"))
+  ([id]
+   (str "(d/pull @athens/db '[*] " id ")"))
+  ([attr id]
+   (str "(d/pull @athens/db '[*] [" attr " " (pr-str id) "])")))
 
 
 (defn cell
-  [{:keys [item attr]}]
-  (if (= :db/id attr)
-    [:a {:on-click #(update-box! (pull-entity-str item))}
-     (str item)]
-    (str item)))
+  [{:keys [value attr id]}]
+  (if value
+    (cond
+      (= :db/id attr)
+      [:a {:on-click #(update-box! (pull-entity-str (or id value)))
+           :style {:cursor :pointer}}
+       (str value)]
+
+      (attr-unique? attr)
+      [:a {:on-click #(update-box! (pull-entity-str attr value))
+           :style {:cursor :pointer}}
+       (str value)]
+
+      (and (attr-many? attr)
+           (attr-ref? attr))
+      [:ul (for [v value]
+             ^{:key v}
+             [:li (cell {:value v
+                         :attr :db/id
+                         :id (:db/id v)})])]
+
+      (attr-many? attr)
+      [:ul (for [v value]
+             ^{:key v}
+             [:li (cell {:value v})])]
+
+      :else
+      (str value))
+    ""))
 
 
 (defn table-view
   [data mode]
   (let [hs (headings data mode)]
     [:table
-     [:tr (for [h hs] [:th (str h)])]
-     (for [row (rows data mode)]
-       [:tr (for [item row]
-              (if item
-                [:td (cell item)]
-                [:td ""]))])]))
+     [:thead
+      [:tr (for [h hs]
+             ^{:key (str "heading-" h)}
+             [:th (str h)])]]
+     [:tbody
+      (for [row (rows data mode)]
+        ^{:key (str "row-" (-> row first :idx))}
+        [:tr (for [{:keys [idx heading] :as c} row]
+               ^{:key (str idx heading)}
+               [:td (cell c)])])]]))
 
 
 (defn coll-of-maps?
@@ -202,8 +290,7 @@
 
 (defn handle-box-change!
   [e]
-  (let [value (-> e .-target .-value)]
-    (update-box! value)))
+  (update-box! (-> e .-target .-value)))
 
 
 (defn box-component
