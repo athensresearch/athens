@@ -5,7 +5,6 @@
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as str]
     [datascript.core :as d]
     [devcards.core :as devcards :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
@@ -36,8 +35,8 @@
 (def initial-box
   {:str-content
    "(d/q '[:find [(pull ?e [*]) ...]
-            :where [?e :node/title]]
-      @athens/db)"})
+       :where [?e :node/title]]
+    @athens/db)"})
 
 
 (defonce box-state*
