@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.devcards.all-pages :refer [table]]
+    [athens.devcards.athena :refer [athena]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.lib.dom.attributes :refer [with-styles]]
     [athens.page :as page]
@@ -63,6 +64,7 @@
       [:<>
        [style/style-guide-css]
        [alert]
+       [athena db/dsdb]
        (if @loading
          [:h1 "Loading Athens 😈"]
          [:div style/+flex

@@ -18,6 +18,12 @@
              db/rfdb))
 
 
+(reg-event-db
+  :toggle-athena
+  (fn [db _]
+    (assoc db :athena (not (:athena db)))))
+
+
 (reg-fx
   :http
   (fn [{:keys [url method opts on-success on-failure]}]

@@ -45,6 +45,11 @@
 (def +box-shadow
   (with-styles {:box-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
 
+
+(def +depth-64
+  (with-styles {:box-shadow "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"}))
+
+
 ;; Flex Functions
 
 

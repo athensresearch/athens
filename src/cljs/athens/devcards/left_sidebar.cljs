@@ -9,6 +9,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
     [posh.reagent :refer [q transact!]]
+    [re-frame.core :as re-frame :refer [dispatch]]
     [reagent.core :as r]))
 
 
@@ -78,7 +79,7 @@
           ;; IF COLLAPSED
           [:div +left-sidebar-collapsed
            [:button {:on-click #(swap! open? not)} ">"]
-           [:button.primary "🔍"]
+           [:button.primary {:on-click #(dispatch [:toggle-athena])} "🔍"]
            [:div (with-styles {:margin-top "auto"} +flex-column)
             [:button (with-attributes (with-styles {:margin-bottom "5px"})
                        {:disabled true}) "🅰"]

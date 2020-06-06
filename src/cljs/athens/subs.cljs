@@ -15,6 +15,12 @@
 
 
 (re-frame/reg-sub
+  :app-db
+  (fn [db _]
+    db))
+
+
+(re-frame/reg-sub
   :errors
   (fn [db _]
     (:errors db)))
@@ -24,6 +30,12 @@
   :loading
   (fn [db _]
     (:loading db)))
+
+
+(re-frame/reg-sub
+  :athena
+  (fn [db _]
+    (:athena db)))
 
 
 (re-frame/reg-sub
