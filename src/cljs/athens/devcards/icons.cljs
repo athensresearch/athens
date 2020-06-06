@@ -26,16 +26,17 @@
    [:> mui-icons/DirectionsTwoTone]
    [:> mui-icons/DirectionsSharp]])
 
+
 (defcard-rg Styling-icons
   "Color, opacity, and other properties can be applied to icons by placing them in an element with those styles applied."
   [:div
-    [:span (with-styles {:color (:link-color COLORS)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:color (:highlight-color COLORS)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:color (:warning-color COLORS)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:color (:confirmation-color COLORS)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:opacity (nth OPACITIES 0)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:opacity (nth OPACITIES 1)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:opacity (nth OPACITIES 2)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:opacity (nth OPACITIES 3)}) (r/create-element mui-icons/Face)]
-    [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]])
+   [:span (with-styles {:color (:link-color COLORS)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:color (:highlight-color COLORS)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:color (:warning-color COLORS)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:color (:confirmation-color COLORS)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:opacity (nth OPACITIES 0)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:opacity (nth OPACITIES 1)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:opacity (nth OPACITIES 2)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:opacity (nth OPACITIES 3)}) (r/create-element mui-icons/Face)]
+   [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]])
