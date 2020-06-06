@@ -141,6 +141,8 @@
                                    :border-radius    "4px"
                                    :font-weight      "500"
                                    :border           "none"
+                                   :display          "inline-flex"
+                                   :align-items      "center"
                                    :color            "rgba(50, 47, 56, 1)"
                                    :background-color "transparent"}
              [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
