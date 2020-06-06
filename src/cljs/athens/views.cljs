@@ -72,5 +72,5 @@
           [style/style-guide-css]
           [left-sidebar db/dsdb]
           [:div
-            (with-styles {:flex "1 1 100%" :overflow-y "auto"})
-            [match-panel (-> @current-route :data :name)]]])])))
+           (with-styles {:flex "1 1 100%" :overflow-y "auto"})
+           [match-panel (-> @current-route :data :name)]]])])))

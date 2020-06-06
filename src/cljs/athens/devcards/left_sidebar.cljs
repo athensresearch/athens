@@ -44,8 +44,7 @@
      :padding            "32px 32px 16px 32px"
      :border-right-width "1px"
      :border-right-style "solid"
-     :border-right-color "#433f3880"
-     }))
+     :border-right-color "#433f3880"}))
 
 
 (def +left-sidebar-collapsed
