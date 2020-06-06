@@ -102,7 +102,9 @@
 (defn style-guide-css
   []
   [:style (css
-            [:body {:margin 0}]
+            [:body {:margin 0
+                    :font-size "16px"
+                    :line-height "32px"}]
             [:* {:font-family "IBM Plex Sans, Sans-Serif"
                  :box-sizing "border-box"}]
             [:p :span {:color (:body-text-color COLORS)}]
@@ -127,8 +129,7 @@
                   :line-height "16px"
                   :line-spacing "0.08em"
                   :text-transform "uppercase"}]
-            [:span {:font-size   "16px"
-                    :line-height "32px"}
+            [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
                          :cursor           "alias"}]]]
