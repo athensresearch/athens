@@ -53,10 +53,6 @@
 ;; Flex Functions
 
 
-(def +flex
-  (with-styles {:display "flex"}))
-
-
 (def +flex-center
   (with-styles {:display "flex" :justify-content "center" :align-items "center"}))
 
