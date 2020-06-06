@@ -40,16 +40,14 @@
 
 (def +left-sidebar
   (with-styles +flex-column-align-start
-    {:width              "288px"
+    {:flex               "0 0 288px"
      :padding            "32px 32px 16px 32px"
-     :border-right-width "1px"
-     :border-right-style "solid"
-     :border-right-color "#433f3880"}))
+     :box-shadow         "1px 0 #433f3880"}))
 
 
 (def +left-sidebar-collapsed
   (with-styles +left-sidebar
-    {:width "32px"
+    {:flex "0 0 32px"
      :padding "32px 0px"
      :overflow-x "hidden"}))
 
