@@ -3,7 +3,7 @@
     [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
     [garden.core :refer [css]]
-    [garden.selectors]))
+    [garden.selectors :as s]))
 
 
 (def COLORS
@@ -152,7 +152,14 @@
                           :background-color "rgba(0, 117, 225, 0.1)"}
               [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
               [:&:active {:color "white"
-                          :background-color "rgba(0, 117, 225, 1)"}]]]
+                          :background-color "rgba(0, 117, 225, 1)"}]]
+             [:svg {:font-size "145%"
+                    :vertical-align "-0.05em"}
+              [(s/& (s/not (s/last-child))) {:margin-inline-end "0.251em"}]
+              [(s/& (s/not (s/first-child))) {:margin-inline-start "0.251em"}]]]
+            [:.MuiSvgIcon-root {:font-size "145%"
+                                :vertical-align "-0.05em"
+                                :line-height "inherit"}]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
