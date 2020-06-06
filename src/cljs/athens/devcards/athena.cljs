@@ -1,5 +1,6 @@
 (ns athens.devcards.athena
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.events]
     [athens.lib.dom.attributes :refer [with-attributes with-styles]]
@@ -58,7 +59,7 @@
   [:button.primary (with-attributes (with-styles {:padding 0})
                      {:on-click #(dispatch [:toggle-athena])})
    [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
-    "🔍"]
+    [:> mui-icons/Search]]
    [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
     "Find or Create a Page"]])
 
@@ -198,7 +199,7 @@
                      [:h4 (highlight-match query page-title)]
                      (when block-string
                        [:span (highlight-match query block-string)])]
-                    [:h4 (with-styles {:margin-left "auto"}) "➡️"]]))])))]])))
+                    [:h4 (with-styles {:margin-left "auto"}) [:> mui-icons/ChevronRight]]]))])))]])))
 
 
 (defcard-rg Athena-Prompt

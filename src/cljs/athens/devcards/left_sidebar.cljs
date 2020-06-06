@@ -1,5 +1,6 @@
 (ns athens.devcards.left-sidebar
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.devcards.athena :refer [athena-prompt]]
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
@@ -72,22 +73,22 @@
 
           ;; IF COLLAPSED
           [:div +left-sidebar-collapsed
-           [:button {:on-click #(swap! open? not)} ">"]
-           [:button.primary {:on-click #(dispatch [:toggle-athena])} "🔍"]
+           [:button {:on-click #(swap! open? not)} [:> mui-icons/ChevronRight]]
+           [:button.primary {:on-click #(dispatch [:toggle-athena])} [:> mui-icons/Search]]
            [:div (with-styles {:margin-top "auto"} +flex-column)
             [:button (with-attributes (with-styles {:margin-bottom "5px"})
-                       {:disabled true}) "🅰"]
-            [:button {:disabled true} "❃"]]]
+                       {:disabled true}) [:> mui-icons/TextFormat]]
+            [:button {:disabled true} [:> mui-icons/Settings]]]]
 
           ;; IF EXPANDED
           [:div +left-sidebar
            [:div (with-styles {:margin-bottom "40px" :width "100%"} +flex-space-between)
             [athena-prompt]
-            [:button {:on-click #(swap! open? not)} "<"]]
+            [:button {:on-click #(swap! open? not)} [:> mui-icons/ChevronLeft]]]
            [:div (with-styles +flex-column-align-start {:margin-bottom "40px"})
-            [:button {:disabled true} "Daily Notes"]
-            [:button {:on-click #(navigate :home)} "All Pages"]
-            [:button {:disabled true} "Graph Overview"]]
+            [:button {:disabled true} [:> mui-icons/Today] [:span "Daily Notes"]]
+            [:button {:on-click #(navigate :home)} [:> mui-icons/FileCopy] [:span "All Pages"]]
+            [:button {:disabled true} [:> mui-icons/BubbleChart] [:span "Graph Overview"]]]
 
            ;; SHORTCUTS
            [:div (with-styles +flex-column-align-start +width-100 {:height "60vh"})
@@ -105,8 +106,8 @@
               [:h3 (with-styles {:font-family "'IBM Plex Serif', Sans-Serif"}) "Athens"]]]
             [:div (with-styles {:display "flex"})
              [:button (with-attributes (with-styles {:margin-right "16px"})
-                        {:disabled true}) "🅰"]
-             [:button {:disabled true} "❃"]]]])))))
+                        {:disabled true}) [:> mui-icons/TextFormat]]
+             [:button {:disabled true} [:> mui-icons/Settings]]]]])))))
 
 
 (defcard-rg Comments

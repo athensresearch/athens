@@ -3,7 +3,7 @@
     [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
     [garden.core :refer [css]]
-    [garden.selectors]))
+    [garden.selectors :as s]))
 
 
 (def COLORS
@@ -98,7 +98,9 @@
 (defn style-guide-css
   []
   [:style (css
-            [:body {:margin 0}]
+            [:body {:margin 0
+                    :font-size "16px"
+                    :line-height "32px"}]
             [:* {:font-family "IBM Plex Sans, Sans-Serif"
                  :box-sizing "border-box"}]
             [:p :span {:color (:body-text-color COLORS)}]
@@ -123,8 +125,7 @@
                   :line-height "16px"
                   :line-spacing "0.08em"
                   :text-transform "uppercase"}]
-            [:span {:font-size   "16px"
-                    :line-height "32px"}
+            [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
                          :cursor           "alias"}]]]
@@ -136,6 +137,8 @@
                                    :border-radius    "4px"
                                    :font-weight      "500"
                                    :border           "none"
+                                   :display          "inline-flex"
+                                   :align-items      "center"
                                    :color            "rgba(50, 47, 56, 1)"
                                    :background-color "transparent"}
              [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
@@ -148,7 +151,14 @@
                           :background-color "rgba(0, 117, 225, 0.1)"}
               [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
               [:&:active {:color "white"
-                          :background-color "rgba(0, 117, 225, 1)"}]]]
+                          :background-color "rgba(0, 117, 225, 1)"}]]
+             [:svg {:font-size "145%"
+                    :vertical-align "-0.05em"}
+              [(s/& (s/not (s/last-child))) {:margin-inline-end "0.251em"}]
+              [(s/& (s/not (s/first-child))) {:margin-inline-start "0.251em"}]]]
+            [:.MuiSvgIcon-root {:font-size "145%"
+                                :vertical-align "-0.05em"
+                                :line-height "inherit"}]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
