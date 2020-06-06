@@ -41,13 +41,10 @@
 (def +left-sidebar
   (with-styles +flex-column-align-start
     {:width              "288px"
-     :height             "100vh"
      :padding            "32px 32px 16px 32px"
      :border-right-width "1px"
      :border-right-style "solid"
      :border-right-color "#433f3880"
-     :position "fixed"                                      ;; TODO: doesn't work with DevCards
-     ;;:position "sticky"                                     ;; TODO: doesn't work with app
      }))
 
 

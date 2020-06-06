@@ -48,7 +48,7 @@
 
 (defn match-panel
   [name]
-  [:div (with-styles {:margin-left "400px" :min-width "500px" :max-width "900px"})
+  [:div (with-styles {:margin "5rem auto" :min-width "500px" :max-width "900px"})
    [(case name
       :about about-panel
       :pages pages-panel
@@ -66,8 +66,11 @@
        [alert]
        [athena db/dsdb]
        (if @loading
-         [:h1 "Loading Athens 😈"]
-         [:div style/+flex
+         [:h1 (with-styles {:margin-top "50vh" :text-align "center" :opacity "0.9"}) "Loading Athens 😈"]
+         [:div
+          (with-styles {:display "flex" :height "100vh"})
           [style/style-guide-css]
           [left-sidebar db/dsdb]
-          [match-panel (-> @current-route :data :name)]])])))
+          [:div
+            (with-styles {:flex "1 1 100%" :overflow-y "auto"})
+            [match-panel (-> @current-route :data :name)]]])])))
