@@ -51,6 +51,15 @@
     [:block [:url-link {:url "https://example.com/"} "an example"]]
     "[an example](https://example.com/)"
 
+    [:block [:url-link {:url "https://example.com/"} [:bold "bold"] " inside"]]
+    "[**bold** inside](https://example.com/)"
+
+    [:block [:url-link {:url "https://example.com/"} "no #hashtag or [[link]] inside"]]
+    "[no #hashtag or [[link]] inside](https://example.com/)"
+
+    [:block [:url-link {:url "https://example.com/"} "escaped ](#not-a-link)"]]
+    "[escaped \\](#not-a-link)](https://example.com/)"
+
     [:block [:url-link {:url "https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top"} "example"]]
     "[example](https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top)"
 
@@ -64,7 +73,17 @@
     "[escaped )()](https://example.com/close\\)open\\(close\\))"
 
     [:block [:url-link {:url "https://example.com/close)open(close)"} "combining escaping and nesting"]]
-    "[combining escaping and nesting](https://example.com/close\\)open(close))"))
+    "[combining escaping and nesting](https://example.com/close\\)open(close))"
+
+    [:block
+     "Multiple "
+     [:url-link {:url "https://example.com/a"} "links"]
+     " "
+     [:url-link {:url "#b"} "are detected"]
+     " as "
+     [:url-link {:url "https://example.com/c"} "separate"]
+     "."]
+    "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."))
 
 
 (deftest combine-adjacent-strings-tests
