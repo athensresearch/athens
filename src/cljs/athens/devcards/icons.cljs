@@ -9,10 +9,11 @@
     [devcards.core :refer-macros [defcard-rg]]))
 
 
-(defcard-rg Import-Styles
-  [style-guide-css])
+(defcard-rg Face
+  [:div
+   [:icon (r/create-element mui-icons/Face)]])
 
 
-(defcard-rg Icon
-  [:icon (r/as-element mui-icons/Face)])
-  
+(defcard-rg Settings
+  [:div
+   [:icon (r/create-element mui-icons/Settings)]])
