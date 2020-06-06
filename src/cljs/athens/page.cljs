@@ -1,5 +1,6 @@
 (ns athens.page
   (:require
+    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
@@ -144,6 +145,7 @@
     (fn []
       (let [node (subscribe [:node [:block/uid (-> @current-route :path-params :id)]])]
         [:div
+          (with-styles {:margin-left "40px" :margin-right "40px"})
           ;;[:h1 "Page Panel"]
          (if (:node/title @node)
            [node-page @node]
