@@ -25,7 +25,9 @@
    <hashtag-delimited> = <'#'> <'[['> #'[^\\]]+' <']]'>
    
    url-link = url-link-text url-link-url
-   <url-link-text> = <'['> any-chars <']'>
+   <url-link-text> = <'['> url-link-text-contents <']'>
+   url-link-text-contents = ( (bold | backslash-escaped-right-bracket) / any-char )*
+   <backslash-escaped-right-bracket> = <'\\\\'> ']'
    <url-link-url> = <'('> url-link-url-parts <')'>
    url-link-url-parts = url-link-url-part+
    <url-link-url-part> = (backslash-escaped-paren | '(' url-link-url-part* ')') / any-char
@@ -60,15 +62,17 @@
   "Transforms the Instaparse output tree to an abstract syntax tree for Athens markup."
   [tree]
   (insta/transform
-    {:block               (fn [& raw-contents]
-                             ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
-                            (into [:block] (combine-adjacent-strings raw-contents)))
-     :url-link            (fn [text url]
-                            [:url-link {:url url} text])
-     :url-link-url-parts  (fn [& chars]
-                            (clojure.string/join chars))
-     :any-chars           (fn [& chars]
-                            (clojure.string/join chars))}
+    {:block                  (fn [& raw-contents]
+                                ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
+                               (into [:block] (combine-adjacent-strings raw-contents)))
+     :url-link               (fn [text-contents url]
+                               (into [:url-link {:url url}] text-contents))
+     :url-link-text-contents (fn [& raw-contents]
+                               (combine-adjacent-strings raw-contents))
+     :url-link-url-parts     (fn [& chars]
+                               (clojure.string/join chars))
+     :any-chars              (fn [& chars]
+                               (clojure.string/join chars))}
     tree))
 
 
