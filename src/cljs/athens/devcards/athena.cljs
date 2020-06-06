@@ -1,20 +1,34 @@
 (ns athens.devcards.athena
   (:require
-    [athens.db]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
+    [athens.events]
     [athens.lib.dom.attributes :refer [with-attributes with-styles]]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [style-guide-css +flex-space-between]]
+    [athens.style :refer [style-guide-css +flex-space-between +depth-64]]
+    [athens.subs]
     [cljsjs.react]
     [cljsjs.react.dom]
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]))
 
 
 (defcard-rg Import-Styles
   [style-guide-css])
 
+
+(defcard-rg Instantiate-app-db
+  "Using re-frame, even though DevCards </3 re-frame. Not using re-frame elsewhere for subs, but will probably
+  need refactoring or real isolation later.
+
+  - https://github.com/athensresearch/athens/issues/126
+  - https://github.com/bhauman/devcards/issues/105
+  - https://github.com/bhauman/devcards/pull/131/
+  ")
+
+
+(dispatch [:init-rfdb])
 
 (defcard-rg Instantiate-Dsdb)
 (defonce conn (new-conn))
@@ -25,14 +39,14 @@
   []
   (let [n (inc (:max-eid @conn))
         n-child (inc n)]
-    (d/transact! conn [{:node/title     (str "Machine Page " n)
+    (d/transact! conn [{:node/title     (str "Test Page " n)
                         :block/uid      (str "uid-" n)
-                        :block/children [{:block/string (str "Machine Block" n-child) :block/uid (str "uid-" n-child)}]}])))
+                        :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
 
 
 (defcard-rg Create-Page
-  "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [:button.primary {:on-click handler} "Create Page"])
+  "Press button and then search \"test\" "
+  [:button.primary {:on-click handler} "Create Test Pages and Blocks"])
 
 
 (defcard-rg Load-Real-DB
@@ -40,9 +54,9 @@
 
 
 (defn athena-prompt
-  [open?]
+  []
   [:button.primary (with-attributes (with-styles {:padding 0})
-                     {:on-click #(swap! open? not)})
+                     {:on-click #(dispatch [:toggle-athena])})
    [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
     "🔍"]
    [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
@@ -97,24 +111,17 @@
                      part))
                  (clojure.string/split txt query-pattern))))
 
-;;(highlight-match query (or string title))
-
-(def log js/console.log)
-
 
 (def +query
-  (with-styles {:background-color "white"
-                :position "absolute"
-                :z-index  99
-                :top      "100%"
-                :left     0
-                :right    0
-                :overflow-y "auto"
-                :max-height "500px"}))
-
-
-(def +depth-64
-  (with-styles {:box-shadow "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"}))
+  (with-styles +depth-64
+    {:background-color "white"
+     :position "absolute"
+     :z-index  99
+     :top      "100%"
+     :left     0
+     :right    0
+     :overflow-y "auto"
+     :max-height "500px"}))
 
 
 (def +athena-input
@@ -125,14 +132,13 @@
                 :line-height    "49px"
                 :letter-spacing "-0.03em"
                 :color          "#433F38"
-                ;;:background-color "white"
                 :padding "25px 0 25px 35px"
                 :cursor "text"}))
 
 
 (defn recent
   []
-  [:div (with-styles {:padding "0px 18px 0px 32px" :background-color "white"} +flex-space-between)
+  [:div (with-styles +flex-space-between {:padding "0px 18px 0px 32px" :background-color "white" :border-top "1px solid rgba(67, 63, 56, .5)"})
    [:h5 "Recent"]
    [:div
     [:span "Press "]
@@ -142,38 +148,41 @@
      "shift + enter"]
     [:span " to open in right sidebar."]]])
 
+
 (def +container
   (with-styles +depth-64
-               {:width "784px"
-                :border-radius "4px"
-                :display "inline-block"
-                :position "fixed"
-                :top "50%"
-                :left "50%"
-                :transform "translate(-50%, -50%)"}))
+    {:width         "784px"
+     :border-radius "4px"
+     :display       "inline-block"
+     :position      "fixed"
+     :top           "30%"
+     :left          "50%"
+     :transform     "translate(-50%, -50%)"
+     :z-index       2}))
+
 
 (defn athena
-  [open?]
+  [conn]
   (let [*cache (r/atom {})
         *match (r/atom nil)
+        db (d/db conn)
+        athena? (subscribe [:athena])
         handler (fn [e]
                   (let [query (.. e -target -value)]
-                    (let [result (when-not (clojure.string/blank? query)
-                                   (or (get @*cache query)
-                                       (let [db (d/db conn)
-                                             result (cond-> {:pages (search-in-block-title db query)}
-                                                      (count query)
-                                                      (assoc :blocks (search-in-block-content db query)))]
-                                         (swap! *cache assoc query result)
-                                         result)))]
-                      (reset! *match [query result]))))]
-    (when @open?
+                    (if (clojure.string/blank? query)
+                      (reset! *match [query nil])
+                      (let [result (or (get @*cache query)
+                                       (cond-> {:pages (search-in-block-title db query)}
+                                         (count query) (assoc :blocks (search-in-block-content db query))))]
+                        (swap! *cache assoc query result)
+                        (reset! *match [query result])))))]
+    (when @athena?
       [:div +container
        [:div {:style {:box-shadow "inset 0px -1px 0px rgba(0, 0, 0, 0.1)"}}
         [:input (with-attributes +athena-input
-                                 {:type        "search"
-                                  :placeholder "Find or Create Page",
-                                  :on-change   handler})]]
+                  {:type        "search"
+                   :placeholder "Find or Create Page",
+                   :on-change   handler})]]
        [recent]
        [(fn []
           (let [[query {:keys [pages blocks] :as result}] @*match]
@@ -192,12 +201,8 @@
                     [:h4 (with-styles {:margin-left "auto"}) "➡️"]]))])))]])))
 
 
-;;(defcard-rg Athena
-;;  [athena])
-
-(def open? (r/atom false))
-
 (defcard-rg Athena-Prompt
+  "Must press again to close. Doesn't go away if you click outside."
   [:<>
-   [athena-prompt open?]
-   [athena open?]])
+   [athena-prompt]
+   [athena conn]])
