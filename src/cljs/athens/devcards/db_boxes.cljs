@@ -22,14 +22,6 @@
    13  :return})
 
 
-(def log js/console.log)
-
-
-(defn trace
-  [x]
-  (log x) x)
-
-
 (defcard-rg Import-Styles
   [style-guide-css])
 
