@@ -4,8 +4,8 @@
     [athens.db]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [reagent.core :as r]
-    [devcards.core :refer-macros [defcard-rg]]))
+    [devcards.core :refer-macros [defcard-rg]])
+    [reagent.core :as r])
 
 
 (defcard-rg Standard-Icons
