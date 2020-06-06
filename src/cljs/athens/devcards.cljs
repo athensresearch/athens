@@ -4,6 +4,7 @@
     [athens.devcards.athena]
     [athens.devcards.buttons]
     [athens.devcards.db]
+    [athens.devcards.db-boxes]
     [athens.devcards.icons]
     [athens.devcards.left-sidebar]
     [athens.devcards.sci-boxes]

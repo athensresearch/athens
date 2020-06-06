@@ -78,7 +78,7 @@
                  (with-styles +link {:width "200px" :word-break "break-all"})
                  {:on-click #(navigate-page uid)})
            title]]
-         [:td (with-styles {:width "700px" :max-height "40px" :white-space "wrap" :overflow "hidden" :text-overflow "ellipsis" :display "block"} +text-align-left)
+         [:td (with-styles {:width "500px" :max-height "40px" :white-space "wrap" :overflow "hidden" :text-overflow "ellipsis" :display "block"} +text-align-left)
           (clojure.string/join " " (map #(str "• " (:block/string %)) children))]
          [:td +text-align-right (date-string modified)]
          [:td +text-align-right (date-string created)]])]]))
