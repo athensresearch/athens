@@ -10,16 +10,16 @@
 
 (defcard-rg Standard-Icons
   [:div
-   [:icon (r/create-element mui-icons/Face)]
-   [:icon (r/create-element mui-icons/Settings)]
-   [:icon (r/create-element mui-icons/Search)]])
+   [:span (r/create-element mui-icons/Face)]
+   [:span (r/create-element mui-icons/Settings)]
+   [:span (r/create-element mui-icons/Search)]])
 
 
 (defcard-rg Icon-Styles
   "Use different icon styles by appending one of Outlined, Rounded, TwoTone, or Sharp."
   [:div
-   [:icon (r/create-element mui-icons/Directions)]
-   [:icon (r/create-element mui-icons/DirectionsOutlined)]
-   [:icon (r/create-element mui-icons/DirectionsRounded)]
-   [:icon (r/create-element mui-icons/DirectionsTwoTone)]
-   [:icon (r/create-element mui-icons/DirectionsSharp)]])
+   [:span (r/create-element mui-icons/Directions)]
+   [:span (r/create-element mui-icons/DirectionsOutlined)]
+   [:span (r/create-element mui-icons/DirectionsRounded)]
+   [:span (r/create-element mui-icons/DirectionsTwoTone)]
+   [:span (r/create-element mui-icons/DirectionsSharp)]])
