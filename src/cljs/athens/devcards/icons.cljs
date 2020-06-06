@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
-    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
+    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.style :refer [COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
