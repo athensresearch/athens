@@ -131,33 +131,6 @@
             [:tbody
              [:tr
               [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
-            [:button :.input-file {:cursor           "pointer"
-                                   :padding          "6px 10px"
-                                   :border-radius    "4px"
-                                   :font-weight      "500"
-                                   :border           "none"
-                                   :display          "inline-flex"
-                                   :align-items      "center"
-                                   :color            "rgba(50, 47, 56, 1)"
-                                   :background-color "transparent"}
-             [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
-                           :background-color "#EFEDEB"
-                           :cursor "default"}]
-             [:&:hover {:background-color "#EFEDEB"}]
-             [:&:active {:color            "rgba(0, 117, 225)"
-                         :background-color "rgba(0, 117, 225, 0.1)"}]
-             [:&.primary {:color            "rgba(0, 117, 225)"
-                          :background-color "rgba(0, 117, 225, 0.1)"}
-              [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
-              [:&:active {:color "white"
-                          :background-color "rgba(0, 117, 225, 1)"}]]
-             [:svg {:font-size "145%"
-                    :vertical-align "-0.05em"}
-              [(s/& (s/not (s/last-child))) {:margin-inline-end "0.251em"}]
-              [(s/& (s/not (s/first-child))) {:margin-inline-start "0.251em"}]]]
-            [:.MuiSvgIcon-root {:font-size "145%"
-                                :vertical-align "-0.05em"
-                                :line-height "inherit"}]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
