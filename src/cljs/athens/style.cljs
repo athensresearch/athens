@@ -2,7 +2,7 @@
   (:require
     [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
-    [garden.core :refer [css]])
+    [garden.core :refer [css]]))
 
 
 (def COLORS
