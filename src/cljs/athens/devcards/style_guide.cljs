@@ -5,7 +5,7 @@
     [athens.style :refer [+flex-center +flex-space-between +flex-space-around +flex-column +flex-wrap
                           +text-shadow +box-shadow
                           +link-bg
-                          style-guide-css COLORS OPACITIES]]
+                          base-styles COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]))
@@ -19,7 +19,7 @@
 
 (defcard-rg Import-Styles
   "CSS is imported here"
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard-rg Colors

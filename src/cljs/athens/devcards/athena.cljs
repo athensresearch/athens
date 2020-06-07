@@ -5,7 +5,7 @@
     [athens.events]
     [athens.lib.dom.attributes :refer [with-attributes with-styles]]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [style-guide-css +flex-space-between +depth-64]]
+    [athens.style :refer [base-styles +flex-space-between +depth-64]]
     [athens.subs]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -16,7 +16,7 @@
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard-rg Instantiate-app-db

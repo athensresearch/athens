@@ -3,7 +3,7 @@
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [style-guide-css +text-align-right +text-align-left +link]]
+    [athens.style :as style :refer [base-styles +text-align-right +text-align-left +link]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
@@ -12,7 +12,7 @@
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard-rg Modify-Devcards

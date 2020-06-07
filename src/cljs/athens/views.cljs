@@ -62,14 +62,14 @@
         loading (subscribe [:loading])]
     (fn []
       [:<>
-       [style/style-guide-css]
+       [style/base-styles]
        [alert]
        [athena db/dsdb]
        (if @loading
          [:h1 (with-styles {:margin-top "50vh" :text-align "center" :opacity "0.9"}) "Loading Athens 😈"]
          [:div
           (with-styles {:display "flex" :height "100vh"})
-          [style/style-guide-css]
+          [style/base-styles]
           [left-sidebar db/dsdb]
           [:div
            (with-styles {:flex "1 1 100%" :overflow-y "auto"})

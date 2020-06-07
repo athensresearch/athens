@@ -3,7 +3,7 @@
     [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
     [garden.core :refer [css]]
-    [garden.selectors :as s]))
+    [stylefy.core :as stylefy]))
 
 
 (def COLORS
@@ -94,15 +94,14 @@
 
 ;; Style Guide
 
-
-(defn style-guide-css
+(defn base-styles
   []
   [:style (css
             [:body {:margin 0
+                    :font-family "IBM Plex Sans, Sans-Serif"
                     :font-size "16px"
                     :line-height "32px"}]
-            [:* {:font-family "IBM Plex Sans, Sans-Serif"
-                 :box-sizing "border-box"}]
+            [:* {:box-sizing "border-box"}]
             [:p :span {:color (:body-text-color COLORS)}]
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                       :color (:header-text-color COLORS)}]

@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [style-guide-css]]
+    [athens.style :refer [base-styles]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
@@ -23,7 +23,7 @@
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard "

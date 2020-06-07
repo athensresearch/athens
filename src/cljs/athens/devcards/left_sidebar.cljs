@@ -5,7 +5,7 @@
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [style-guide-css +link +flex-column +flex-space-between +width-100]]
+    [athens.style :refer [base-styles +link +flex-column +flex-space-between +width-100]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -15,7 +15,7 @@
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard-rg Instantiate-Dsdb)
