@@ -1,14 +1,16 @@
 (ns athens.devcards.all-pages
   (:require
-    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
-    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
-    [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles +text-align-right +text-align-left +link]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [devcards.core :refer [defcard defcard-rg]]
-    [garden.core :refer [css]]
-    [posh.reagent :refer [transact! pull-many q]]))
+   [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
+   [athens.lib.dom.attributes :refer [with-styles with-attributes]]
+   [athens.router :refer [navigate-page]]
+   [athens.style :as style :refer [base-styles +text-align-right +text-align-left +link HSL-COLORS COLORS OPACITIES]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [devcards.core :refer [defcard defcard-rg]]
+   [garden.color :refer [opacify]]
+   [garden.core :refer [css]]
+   [posh.reagent :refer [transact! pull-many q]]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (defcard-rg Import-Styles
@@ -51,6 +53,19 @@
     (.toLocaleString  (js/Date. x))))
 
 
+(def tables
+  {:width "100%"
+   :border-collapse "collapse"
+   ::stylefy/manual [[:tbody
+                      [:tr
+                       [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))
+                                  :border-radius "8px"}]
+                       [:td {:border-top (str "1px solid " (:panel-color COLORS))}]
+                       ]]
+                     [:td :th {:padding "8px"}]
+                     ]})
+
+
 (defn table
   [conn]
   (let [page-eids (q '[:find [?e ...]
@@ -58,7 +73,7 @@
                        [?e :node/title ?t]]
                      conn)
         pages (pull-many conn '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
-    [:table
+    [:table (use-style tables)
      [:thead
       [:tr
        [:th [:h5 +text-align-left "Title"]]

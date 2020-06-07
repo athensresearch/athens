@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
+    [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -14,7 +15,6 @@
    :padding          "6px 10px"
    :border-radius    "4px"
    :font-weight      "500"
-   :font-family      "IBM Plex Sans"
    :border           "none"
    :display          "inline-flex"
    :align-self       "flex-start"
@@ -40,6 +40,10 @@
                                   [:active {:color "white"
                                             :background-color "rgba(0, 117, 225, 1)"}]]}))
 
+(defn button [{:keys [disabled
+                      primary]} content]
+  [:button (use-style buttons {:disabled disabled}) content])
+
 
 (defcard-rg Button
   [:div
@@ -50,8 +54,9 @@
 
 
 (defcard-rg Disabled-Button
-  [:button (use-style buttons {:disabled true}) "Disabled"])
+  [button {:disabled true} "Disabled Button"])
 
 
 (defcard-rg Primary-Button
-  [:button.primary (use-style buttons-primary) "Press Me"])
+  [button {:primary true} "Primary Button"])
+  ;; [:button.primary (use-style buttons-primary) "Press Me"])

@@ -127,9 +127,6 @@
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
                          :cursor           "alias"}]]]
-            [:tbody
-             [:tr
-              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
