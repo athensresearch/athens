@@ -9,45 +9,44 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
+(def buttons
+  {:cursor "pointer"
+   :padding          "6px 10px"
+   :border-radius    "4px"
+   :font-weight      "500"
+   :font-family      "IBM Plex Sans"
+   :border           "none"
+   :display          "inline-flex"
+   :align-self       "flex-start"
+   :align-items      "center"
+   :color            "rgba(50, 47, 56, 1)"
+   :background-color "transparent"
+   ::stylefy/mode [[:hover {:background-color "#EFEDEB"}]
+                   [:active {:color "rgba(0, 117, 225)"
+                             :background-color "rgba(0, 117, 225, 0.1)"}]
+                   [:disabled {:color "rgba(0, 0, 0, 0.3)"
+                               :background-color "#EFEDEB"
+                               :cursor "default"}]]
+   ::stylefy/manual [[:svg {:font-size "145%"
+                            :vertical-align "-0.05em"}
+                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
+                      [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]]]})
 
 
-
-(def buttons {:cursor "pointer"
-              :padding          "6px 10px"
-              :border-radius    "4px"
-              :font-weight      "500"
-              :font-family      "IBM Plex Sans"
-              :border           "none"
-              :display          "inline-flex"
-              :align-self       "flex-start"
-              :align-items      "center"
-              :color            "rgba(50, 47, 56, 1)"
-              :background-color "transparent"
-              ::stylefy/mode [[:hover {:background-color "#EFEDEB"}]
-                              [:active {:color "rgba(0, 117, 225)"
-                                        :background-color "rgba(0, 117, 225, 0.1)"}]
-                              [:disabled {:color "rgba(0, 0, 0, 0.3)"
-                                          :background-color "#EFEDEB"
-                                          :cursor "default"}]]
-              ::stylefy/manual [[:svg {:font-size "145%"
-                                       :vertical-align "-0.05em"}
-                                 [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
-                                 [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]]]})
-
-(def buttons-primary (merge buttons {:color "rgba(0, 117, 225)"
-                           :background-color "rgba(0, 117, 225, 0.1)"
-                           ::stylefy/mode [
-                             [:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
-                             [:active {:color "white"
-                                       :background-color "rgba(0, 117, 225, 1)"}]]}))
+(def buttons-primary
+  (merge buttons {:color "rgba(0, 117, 225)"
+                  :background-color "rgba(0, 117, 225, 0.1)"
+                  ::stylefy/mode [[:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
+                                  [:active {:color "white"
+                                            :background-color "rgba(0, 117, 225, 1)"}]]}))
 
 
 (defcard-rg Button
   [:div
-    [:button (use-style buttons) [:> mui-icons/Face]]
-    [:button (use-style buttons) [:span "Press Me"]]
-    [:button (use-style buttons) [:> mui-icons/Face] [:span "Press Me"]]
-    [:button (use-style buttons) [:span "Press Me"] [:> mui-icons/Face]]])
+   [:button (use-style buttons) [:> mui-icons/Face]]
+   [:button (use-style buttons) [:span "Press Me"]]
+   [:button (use-style buttons) [:> mui-icons/Face] [:span "Press Me"]]
+   [:button (use-style buttons) [:span "Press Me"] [:> mui-icons/Face]]])
 
 
 (defcard-rg Disabled-Button
