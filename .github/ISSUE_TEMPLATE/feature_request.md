@@ -1,3 +1,12 @@
+---
+name: Feature Request
+about: Please submit features requests on our Discord
+title: ''
+labels: ''
+assignees: ''
+
+---
+
 **Please do not submit features through GitHub.**
 
 Instead, join our [Discord](https://discord.gg/HNmxvpm) and get feedback on your idea.
