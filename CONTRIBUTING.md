@@ -1,10 +1,6 @@
 # Contributing to Athens
 
-Not convinced you want to learn Clojure? Read this developer's [first month experience report](https://www.notion.so/athensresearch/Why-you-should-learn-Clojure-my-first-month-as-a-Clojurian-87e265099b1140d5b64ea503efab861c).
-
-No Clojure or programming experience? No worries. Read this [guide](https://www.notion.so/athensresearch/Onboarding-for-New-Clojurians-b34b38f30902448cae68afffa02425c1), join our Discord, and we'll find you a Clojure learning partner.
-
-Issues tagged "[good first issue](https://github.com/athensresearch/athens/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)" are… good first issues. (But we haven’t catalogued any yet. Sorry!)
+Whether you are a designer, developer, or none of the above, please see our [v1 Project Board](https://github.com/athensresearch/athens/projects/2) to get started!
 
 # Development Environment
 
@@ -128,25 +124,12 @@ style:
 test:
 ```
 
-After you specify the type, write a declarative statement in the present tense explaining what you did. Add additional detail in bullets below the header. Example:
-
-```
-feat: implement new right side bar
-
-- see issue for details on CSS library
-- TODO: fix padding
-```
+See some real examples in our [commit history](https://github.com/athensresearch/athens/commits/master).
 
 ## GitHub Issues
 
-Do not just write an issue because you have a question/problem. If you think you are missing some information, ask in the [#engineering] or [#learning] channel of the Discord.
+Please create issues using [our templates](https://github.com/athensresearch/athens/issues/new/choose). However, you will almost certainly get feedback and help faster in our [Discord](https://discord.gg/GCJaV3V)!
 
-[#engineering]: https://discord.com/channels/708122962422792194/708124156113321985
-[#learning]: https://discord.com/channels/708122962422792194/708375112537342025
-
-On the other hand, if you believe there is an issue with source code, please write an actionable issue with this [template](<https://github.com/athensresearch/athens/issues/new?title=Descriptive+issue+title&body=%23%23%23%23+Description%0AA+clear+and+concise+description+of+what+the+issue+is+about.%0A%0A%23%23%23%23+Screenshots%0A!%5BShaq+Kitty+Wiggle%5D(https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif)%0A%0A%23%23%23%23+Files%0AA+list+of+relevant+files+for+this+issue.+This+will+help+people+navigate+the+project+and+offer+some+clues+of+where+to+start.%0A%0A%23%23%23%23+To+Reproduce%0AIf+this+issue+is+describing+a+bug,+include+some+steps+to+reproduce+the+behavior.%0A%0A%23%23%23%23+Tasks%0AInclude+specific+tasks+in+the+order+they+need+to+be+done+in.+Include+links+to+specific+lines+of+code+where+the+task+should+happen+at.%0A-+%5B+%5D+Task+1%0A-+%5B+%5D+Task+2%0A-+%5B+%5D+Task+3%0A%0ARemember+to+use+labels.>).
-
-Better yet, submit a pull request.
 
 ## Pull Requests
 
@@ -158,4 +141,4 @@ fix #2
 resolve #2
 ```
 
-Those with merge permissions should "Squash and Merge" as a general rule of thumb. This makes reverts easier if they are needed.
+This repo only allows those with merge permissions to "Squash and Merge" PRs. This makes reverts easier if they are needed.
