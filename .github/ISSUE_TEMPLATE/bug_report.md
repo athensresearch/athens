@@ -1,3 +1,14 @@
+---
+name: Bug Report
+about: Report 🐞 Bugs
+title: ''
+labels: 'type: 🐞 bug'
+assignees: ''
+
+---
+
+*If you aren't sure about your bug, you can always join our [Discord](https://discord.gg/HNmxvpm) and ask in #agora or #engineering!*
+
 **Problem**
 
 [ Please provide a short and concise description of the bug. ]
