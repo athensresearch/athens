@@ -1,6 +1,9 @@
 # Contributing to Athens
 
-Whether you are a designer, developer, or none of the above, please see our [v1 Project Board](https://github.com/athensresearch/athens/projects/2) to get started!
+Whether you are a designer, developer, or have other superpowers, please see our [v1 Project Board](https://github.com/athensresearch/athens/projects/2) to see what we're working on.
+
+- The best place to reach us is the [Discord](https://discord.gg/GCJaV3V)! 👾
+- Read [Product Development at Athens](https://www.notion.so/athensresearch/Product-Development-at-Athens-4c99e37d1713441c99360668c39e5db7) to see our shipping philosophy. It's more nuanced than just "agile", with some inspiration from Basecamp. 🛠
 
 # Development Environment
 
