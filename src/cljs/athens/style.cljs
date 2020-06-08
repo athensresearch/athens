@@ -98,8 +98,8 @@
   [:style (css
             [:body {:margin 0
                     :font-family "IBM Plex Sans, Sans-Serif"
-                    :font-size "16px"
-                    :line-height "32px"}]
+                    :color (:body-text-color COLORS)
+                    :font-size "16px"}]
             [:* {:box-sizing "border-box"}]
             [:p :span {:color (:body-text-color COLORS)}]
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
@@ -107,21 +107,21 @@
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"
-                  :line-spacing "-0.03em"}]
+                  :letter-spacing "-0.03em"}]
             [:h2 {:font-size "38px"
                   :font-weight 500
                   :line-height "49px"
-                  :line-spacing "-0.03em"}]
+                  :letter-spacing "-0.03em"}]
             [:h3 {:font-size "28px"
                   :font-weight 500
                   :line-height "36px"
-                  :line-spacing "-0.02em"}]
+                  :letter-spacing "-0.02em"}]
             [:h4 {:font-size "21px"
                   :line-height "27px"}]
             [:h5 {:font-size "12px"
                   :font-weight 500
                   :line-height "16px"
-                  :line-spacing "0.08em"
+                  :letter-spacing "0.08em"
                   :text-transform "uppercase"}]
             [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
