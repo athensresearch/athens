@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Please submit features requests on our Discord
+about: Suggest a feature for this project
 title: ''
 labels: ''
 assignees: ''
