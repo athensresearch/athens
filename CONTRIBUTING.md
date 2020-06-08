@@ -1,10 +1,23 @@
 **Table of Contents**
+- [Contributing to Athens](#contributing-to-athens)
+- [Running Athens Locally](#running-athens-locally)
+- [Deploying Athens and Devcards](#deploying-athens-and-devcards)
+- [Connecting your REPL](#connecting-your-repl)
+- [Running CI Scripts Locally](#running-ci-scripts-locally)
+  * [Testing](#testing)
+  * [Linting](#linting)
+  * [Clojure Styling](#clojure-styling)
+  * [Unused Variable Checking](#unused-variable-checking)
+- [Git and GitHub Style Guide](#git-and-github-style-guide)
+  * [Commits](#commits)
+  * [Issues](#issues)
+  * [Pull Requests](#pull-requests)
 
 # Contributing to Athens
 
 Whether you are a designer, developer, or have other superpowers, please see our [v1 Project Board](https://github.com/athensresearch/athens/projects/2) to see what we're working on.
 
-- The best place to reach us is the [Discord](https://discord.gg/GCJaV3V)! 👾
+- The best place to reach us is our [Discord](https://discord.gg/GCJaV3V)! 👾
 - Read [Product Development at Athens](https://www.notion.so/athensresearch/Product-Development-at-Athens-4c99e37d1713441c99360668c39e5db7) to see our shipping philosophy. It's more nuanced than just "agile", with some inspiration from Basecamp. 🛠
 
 # Running Athens Locally
@@ -38,17 +51,29 @@ When these scripts are done, your terminal will read `build complete`. Athens ca
 
 # Deploying Athens and Devcards
 
-You should deploy your forked Athens and [Devcards](https://github.com/bhauman/devcards) if you are making pull requests to Athens. This will allow developers and designers to interact with your code, rather than just reading it.
+You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
 
 The official Athens Devcards can be found at https://athensresearch.github.io/athens/cards.html.
 
 To build and deploy Athens and Devcards:
 
-1. Run `lein dev` like in the previous step.
-1. Run `lein devcards` in a separate terminal. It's okay if you see warning logs. The ports required by `shadow-cljs` and `nREPL` are being used by `lein dev`, so `lein devcards` finds the next available ports.
-1. Open http://localhost:3000/ and http://localhost:3000/cards.html. You should see Athens and Devcards, respectively.
+1. Run `lein dev` as above. Your app is running at http://localhost:3000, and your shadow-cljs server is running at http://localhost:9630.
+1. Run `lein devcards` in a separate terminal. It's okay if you see warning logs. Because `lein dev` is already running, the Devcards build finds the next available ports — http://localhost:3001 and http://localhost:9631 for the app and shadow-cljs, respectively.
+1. Open http://localhost:3000/ and http://localhost:3001/cards.html. You should see Athens and Devcards, respectively.
 1. Run `lein gh-pages` in a third terminal.
-1. Open http://<YOUR_GITHUB>/github.io/athens/ and http://<YOUR_GITHUB>/github.io/athens/cards.html. Sometimes this takes a minute to be updated. If this works, then you have successfuly deployed Athens and Devcards. Now anyone can view and interact with your fork of Athens!
+1. Open http://<YOUR_GITHUB>/github.io/athens/ and http://<YOUR_GITHUB>/github.io/athens/cards.html. Sometimes this takes a minute to be updated. If both work, then you have successfuly deployed your Athens and Devcards for the world to see! 
+
+Notes:
+
+- If you are only developing on Athens and not Devcards, you only need to run `lein dev`.
+- If you are only developing on DevCards and not Athens, you only need to run `lein devcards`.
+- However, if you want to build both because you are testing a component on DevCards and Athens at the same time, you should run both.
+- If both builds are running, it doesn't matter which port you go to (i.e. `3000` or `3001`), because both HTTP servers can serve assets.
+- More docs should be written in the future on how to connect a REPL to either build, depending on your text editor.
+
+# Connecting your REPL
+
+- [ ] TODO: write this section for each editor (Cursive, CIDER, Calva, Fireplace, etc.)
 
 # Running CI Scripts Locally
 
@@ -56,7 +81,7 @@ After each submitted PR to Athens, GitHub Actions runs the continuous integratio
 
 However, it's a lot faster if you run these tests locally, so you don't have to submit a PR each time to make sure the workflow succeeds. You may need to install additional dependencies, though.
 
-## Unit tests — `clojure.test`
+## Testing
 
 No additional installation is needed. Just run this:
 
@@ -79,7 +104,7 @@ Ran 4 tests containing 16 assertions.
 0 failures, 0 errors.
 ```
 
-## Linting — `clj-kondo`
+## Linting
 
 We are linting Clojure code using [clj-kondo](https://github.com/borkdude/clj-kondo). Our clj-kondo configuration is in [`.clj-kondo/config.edn`](.clj-kondo/config.edn).
 
@@ -94,7 +119,7 @@ linting took 257ms, errors: 0, warnings: 0
 
 Your editor may also be able to integrate with clj-kondo’s output. For example, if you use [Calva](https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva) for VS Code, then clj-kondo’s messages are reported in the Problems panel.
 
-## Clojure Styling — `cljsstyle`
+## Clojure Styling
 
 To format your code or check that your code is formatted correctly, you will need to use `cljstyle`. Instructions for installing it are [in `cljstyle`’s README](https://github.com/greglook/cljstyle/tree/master#installation).
 
@@ -102,7 +127,7 @@ To check if your Clojure code is formatted correctly, run `cljstyle check`. If t
 
 To reformat all your Clojure files in place, run `cljstyle fix`.
 
-## Unused Variable Checking — `carve`
+## Unused Variable Checking
 
 To set this up, first make sure that a global `clojure` binary is installed. You won’t necessarily have a `clojure` binary installed just because you installed Leiningen.
 
