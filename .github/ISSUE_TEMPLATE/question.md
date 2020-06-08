@@ -1,7 +1,5 @@
-**Please do not ask questions on GitHub**
+**Please ask questions on our [Discord](https://discord.gg/HNmxvpm)**
 
-Instead, join our [Discord](https://discord.gg/HNmxvpm) and ask there.
-
-This saves our GitHub for features and avoids [noise pollution](https://github.com/syl20bnr/spacemacs/issues).
+This saves reduces the [noise pollution](https://github.com/syl20bnr/spacemacs/issues) of GitHub.
 
 Finally you will get a response far faster in our Discord, plus the Athenians are awesome :)
