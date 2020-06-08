@@ -1,29 +1,24 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+**Problem**
 
----
+[ Please provide a short and concise description of the bug. ]
 
-**version**
+**Expected Behavior**
 
-[ Please specify which version of Athens you're using (you can find the git ref in the name of the distribution). The documentation on the
-master branch may be ahead of the most released version.
+[ What is the behavior you expected to see? ]
 
-**platform**
+**Dependencies**
 
-[ Please specify which platform you are using Athens on (what browser, what JVM version) ]
+[ Please specify your environment and software dependencies, with versions. ]
 
-**problem**
+- Athens:
+- browser: 
+- JVM:
+- node.js: 
 
-[ Please provide a short and to the point description of the problem ]
+**To Reproduce**
 
-**repro**
+[ Please include steps to reproduce the behavior. ]
 
-[ Please provide a minimal working reproduction of the problem ]
+**Screenshots**
 
-**expected behavior**
-
-[ What is the behavior you expected to see? Please provide a minimal working example ]
+[ Particularly helpful for UI bugs. ]
