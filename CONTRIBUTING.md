@@ -1,3 +1,7 @@
+**Table of Contents**
+
+
+
 # Contributing to Athens
 
 Whether you are a designer, developer, or have other superpowers, please see our [v1 Project Board](https://github.com/athensresearch/athens/projects/2) to see what we're working on.
@@ -7,7 +11,7 @@ Whether you are a designer, developer, or have other superpowers, please see our
 
 # Development Environment
 
-## Getting Athens to run locally
+## Running Athens Locally
 
 These dependencies are needed to get Athens up and running. To install them, follow the instructions in the links.
 
@@ -36,7 +40,7 @@ lein dev
 
 When these scripts are done, your terminal will read `build complete`. Athens can then be accessed by pointing a browser to http://localhost:3000/ on UNIX or http://127.0.0.1:3000/ on Windows.
 
-## Viewing devcards
+## Running Devcards
 
 [Devcards](https://github.com/bhauman/devcards) are pages that show just one component of the web app, for the purpose of demonstrating or testing how that component looks when rendered with certain data.
 
@@ -49,13 +53,13 @@ To open this project’s devcards:
 3.  (optional) Using your fork, run `lein gh-pages` to see your own branch, e.g.
     https://tangjeff0.github.io/athens/cards.html
 
-## Running tests locally
+## Running CI Scripts Locally
 
-When you submit a pull request, the tests listed in `.github/workflows/build.yml` are run automatically and may report problems with your suggested changes.
+After each submitted PR to Athens, GitHub Actions runs the continuous integration workflow declared in `.github/workflows/build.yml`. This workflow runs scripts from [`script/`](script) to test, lint, and build Athens. You can see these workflows in practice in the [Actions tab](https://github.com/athensresearch/athens/actions/).
 
-If you want to run these tests without having to create a pull request, you’ll need to install a few more dependencies. When installed locally, some of these testing tools have modes that help you fix problems, not just identify them.
+However, it's a lot faster if you run these tests locally, so you don't have to submit a PR each time to make sure the workflow succeeds. You may need to install additional dependencies, though.
 
-### Unit tests: `lein test`
+### Unit tests — `clojure.test`
 
 No additional installation is needed. Just run this:
 
@@ -78,11 +82,11 @@ Ran 4 tests containing 16 assertions.
 0 failures, 0 errors.
 ```
 
-### Code style and lint checks: `script/lint`, `clj-kondo`
+### Linting — `clj-kondo`
 
 We are linting Clojure code using [clj-kondo](https://github.com/borkdude/clj-kondo). Our clj-kondo configuration is in [`.clj-kondo/config.edn`](.clj-kondo/config.edn).
 
-For this linting to work, you will need to install `clj-kondo`. Instructions are in [`clj-kondo`’s installation guide](https://github.com/borkdude/clj-kondo/blob/master/doc/install.md) ([permalink](https://github.com/borkdude/clj-kondo/blob/7e7190b0bf673a6778c3b2cbf7c61f42cd57ee03/doc/install.md)).
+For this linting to work, you will need to install `clj-kondo`. Instructions are in [`clj-kondo`’s installation guide](https://github.com/borkdude/clj-kondo/blob/master/doc/install.md).
 
 To see the problems reported by clj-kondo, run `script/lint`. Example run:
 
@@ -93,15 +97,15 @@ linting took 257ms, errors: 0, warnings: 0
 
 Your editor may also be able to integrate with clj-kondo’s output. For example, if you use [Calva](https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva) for VS Code, then clj-kondo’s messages are reported in the Problems panel.
 
-### Clojure code formatting: `script/style`, `cljstyle`
+### Clojure Styling — `cljsstyle`
 
-To format your code or check that your code is formatted correctly, you will need to use `cljstyle`. Instructions for installing it are [in `cljstyle`’s README](https://github.com/greglook/cljstyle/tree/master#installation) ([permalink](https://github.com/greglook/cljstyle/tree/b44e0d6bb50a73102d8f7ff08f75874de4d7f9f2#installation)).
+To format your code or check that your code is formatted correctly, you will need to use `cljstyle`. Instructions for installing it are [in `cljstyle`’s README](https://github.com/greglook/cljstyle/tree/master#installation).
 
 To check if your Clojure code is formatted correctly, run `cljstyle check`. If there is no output and the return code is zero, you’re good. You can also run `script/style`, but currently it only works if you’re running Linux.
 
 To reformat all your Clojure files in place, run `cljstyle fix`.
 
-### Unused variable checking: `script/carve`, Carve
+### Unused Variable Checking — `carve`
 
 To set this up, first make sure that a global `clojure` binary is installed. You won’t necessarily have a `clojure` binary installed just because you installed Leiningen.
 
