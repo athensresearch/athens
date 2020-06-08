@@ -1,8 +1,8 @@
 ---
 name: Question
-about: Do you need help with something?
+about: Do you need help or information?
 title: ''
-labels: ''
+labels: 'type: ❓ question'
 assignees: ''
 
 ---
