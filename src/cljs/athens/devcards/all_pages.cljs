@@ -9,8 +9,9 @@
    [devcards.core :refer [defcard defcard-rg]]
    [garden.color :refer [opacify]]
    [garden.core :refer [css]]
+   [garden.selectors :as selectors]
    [posh.reagent :refer [transact! pull-many q]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+   [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
 (defcard-rg Import-Styles
@@ -53,16 +54,51 @@
     (.toLocaleString  (js/Date. x))))
 
 
+(def table-cell-background-color-hover
+  (opacify (:panel-color HSL-COLORS) (first OPACITIES)))
+
+
 (def tables
   {:width "100%"
+   :text-align "left"
    :border-collapse "collapse"
-   ::stylefy/manual [[:tbody
+   ::stylefy/sub-styles {:thead {}
+                         :tr-item {}
+                         :th-title {}
+                         :th-body {}
+                         :th-date {:text-align "right"}
+                         :td-title {:width "15vw"
+                                    :min-width "10em"
+                                    :word-break "break-word"
+                                    :font-weight "500"
+                                    :font-size "21px"
+                                    :line-height "27px"}
+                         :td-body { }
+                         :body-preview {
+                                   :white-space "wrap"
+                                   :word-break "break-word"
+                                   :overflow "hidden"
+                                   :text-overflow "ellipsis"
+                                   :display "-webkit-box"
+                                   :-webkit-line-clamp "3"
+                                   :-webkit-box-orient "vertical" }
+                         :td-date {:text-align "right"
+                                   :opacity "0.75"
+                                   :font-size "12px"
+                                   :min-width "9em"}}
+   ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr
-                       [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))
-                                  :border-radius "8px"}]
                        [:td {:border-top (str "1px solid " (:panel-color COLORS))}]
+                       [:&:hover {:background-color table-cell-background-color-hover
+                                  :border-radius "8px"}
+                        ;; [:td {:border-top-color "transparent"}]
+                        [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
+                                                                     :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]
+                        [:td [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
+                                                                    :box-shadow "16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]]
                        ]]
                      [:td :th {:padding "8px"}]
+                     [:th [:h5 {:opacity "0.5"}]]
                      ]})
 
 
@@ -74,12 +110,12 @@
                      conn)
         pages (pull-many conn '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
     [:table (use-style tables)
-     [:thead
+     [:thead (use-sub-style tables :thead)
       [:tr
-       [:th [:h5 +text-align-left "Title"]]
-       [:th [:h5 +text-align-left "Body"]]
-       [:th [:h5 +text-align-right "Modified"]]
-       [:th [:h5 +text-align-right "Created"]]]]
+       [:th (use-sub-style tables :th-title)[:h5 "Title"]]
+       [:th (use-sub-style tables :th-body)[:h5 "Body"]]
+       [:th (use-sub-style tables :th-date)[:h5 "Modified"]]
+       [:th (use-sub-style tables :th-date)[:h5 "Created"]]]]
      [:tbody
       (for [{uid :block/uid
              title :node/title
@@ -87,16 +123,16 @@
              created :create/time
              children :block/children} @pages]
         ^{:key uid}
-        [:tr
-         [:td
-          [:h4 (with-attributes
-                 (with-styles +link {:width "200px" :word-break "break-all"})
-                 {:on-click #(navigate-page uid)})
-           title]]
-         [:td (with-styles {:width "500px" :max-height "40px" :white-space "wrap" :overflow "hidden" :text-overflow "ellipsis" :display "block"} +text-align-left)
-          (clojure.string/join " " (map #(str "• " (:block/string %)) children))]
-         [:td +text-align-right (date-string modified)]
-         [:td +text-align-right (date-string created)]])]]))
+        [:tr (use-sub-style tables :tr-item)
+         [:td (with-attributes
+                (use-sub-style tables :td-title)
+                (with-styles +link {})
+                {:on-click #(navigate-page uid)})
+           title]
+         [:td (use-sub-style tables :td-body)
+          [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
+         [:td (use-sub-style tables :td-date) (date-string modified)]
+         [:td (use-sub-style tables :td-date) (date-string created)]])]]))
 
 
 (defcard-rg Table
