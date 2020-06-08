@@ -1,20 +1,7 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+**Please do not submit features through GitHub.**
 
----
+Instead, join our [Discord](https://discord.gg/HNmxvpm) and get feedback on your idea.
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+Read our [Product Documents](https://www.notion.so/athensresearch/086983edefdd4bb982ab7a17c9d83d7b?v=dcf327b969864e04b21c7a1947bbdb28) and see our current [project board](https://github.com/athensresearch/athens/projects/2).
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Read our [VISION.md](https://github.com/athensresearch/athens/blob/master/VISION.md). Do you think your feature is v1, v2, or v3?
