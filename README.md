@@ -12,9 +12,9 @@ To learn more about this project, please see:
 - [Governance](GOVERNANCE.md) — BDFL + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
 
-# Contribute
+# Run or Contribute
 
-Athens is currently read-only and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md).
+Athens is currently **read-only** and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md).
 
 # Patronize Us
 
