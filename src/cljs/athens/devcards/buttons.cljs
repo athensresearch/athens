@@ -51,12 +51,14 @@
 
 ;; COMPONENTS
 
-(defn button [{:keys [disabled label]}]
-  [:button (use-style buttons-style {:disabled disabled})
+(defn button [{:keys [disabled label on-click-fn style]}]
+  [:button (use-style (merge style buttons-style) {:disabled disabled
+                                                   :on-click on-click-fn})
     [:<> (use-sub-style buttons-style :label) label]])
 
-(defn button-primary [{:keys [disabled label]}]
-  [:button (use-style buttons-primary-style {:disabled disabled})
+(defn button-primary [{:keys [disabled label on-click-fn style]}]
+  [:button (use-style (merge style buttons-primary-style) {:disabled disabled
+                                                           :on-click on-click-fn})
     [:<> (use-sub-style buttons-style :label) label]])
 
 
