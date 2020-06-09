@@ -7,6 +7,8 @@
   - [A Protocol for Knowledge Markets](#a-protocol-for-knowledge-markets)
 - [A Community for Collaboration and Learning](#a-community-for-collaboration-and-learning)
 
+---
+
 > There is nothing impossible to him (or her) who will try.
 
 — Alexander the Great
