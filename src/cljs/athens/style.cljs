@@ -123,6 +123,7 @@
                   :line-height "16px"
                   :letter-spacing "0.08em"
                   :text-transform "uppercase"}]
+            [:.MuiSvgIcon-root {:font-size "24px"}]
             [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
