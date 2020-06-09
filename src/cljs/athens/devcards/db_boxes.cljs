@@ -136,7 +136,11 @@
 
 (defcard-rg Modify-Devcards
   "Increase width to 90% for table"
-  [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])])
+  [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}]
+               [:.com-rigsomelight-devcards_rendered-card {:display "flex";
+                                                           :flex-direction "column-reverse"}])]);
+
+
 
 
 (defn headings
