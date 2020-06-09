@@ -1,18 +1,17 @@
-# Table of Contents
+**Table of Contents**
 
-- [Table of Contents](#table-of-contents)
 - [Values](#values)
-  - [Collaboration](#collaboration)
-  - [Learning](#learning)
+  * [Collaboration](#collaboration)
+  * [Learning](#learning)
 - [Athens Discord](#athens-discord)
-  - [Inviting](#inviting)
-  - [Kicking and Banning](#kicking-and-banning)
-  - [Auto-Moderation](#auto-moderation)
-  - [Pruning](#pruning)
+  * [Inviting](#inviting)
+  * [Kicking and Banning](#kicking-and-banning)
+  * [Auto-Moderation](#auto-moderation)
+  * [Pruning](#pruning)
 - [Discord Official](#discord-official)
-  - [Discord Guidelines](#discord-guidelines)
-  - [Discord Terms of Service](#discord-terms-of-service)
-  - [Discord Privacy Policy](#discord-privacy-policy)
+  * [Discord Guidelines](#discord-guidelines)
+  * [Discord Terms of Service](#discord-terms-of-service)
+  * [Discord Privacy Policy](#discord-privacy-policy)
 
 If you disagree with Athens's values, Athens's Discord guidelines, or the official Discord policies, you have two options: [Voice or Exit](https://www.youtube.com/watch?v=cOubCHLXT6A).
 
