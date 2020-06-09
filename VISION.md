@@ -1,11 +1,11 @@
 # Table of Contents
 
-- [A Self-Hosted Athens](#a-self-hosted-athens)
-- [An Individual Memex](#an-individual-memex)
-- [A Collective Memex](#a-collective-memex)
-  - [A Protocol for Bi-directionality](#a-protocol-for-bi-directionality)
-  - [A Protocol for Knowledge Markets](#a-protocol-for-knowledge-markets)
-- [A Community for Collaboration and Learning](#a-community-for-collaboration-and-learning)
+1. [A Self-Hosted Athens](#a-self-hosted-athens)
+1. [An Individual Memex](#an-individual-memex)
+1. [A Collective Memex](#a-collective-memex)
+   - [A Protocol for Bi-directionality](#a-protocol-for-bi-directionality)
+   - [A Protocol for Knowledge Markets](#a-protocol-for-knowledge-markets)
+1. [A Community for Collaboration and Learning](#a-community-for-collaboration-and-learning)
 
 ---
 
