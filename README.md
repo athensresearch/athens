@@ -8,9 +8,9 @@ To learn more about this project, please see:
 
 - [Our Notion Wiki](https://www.notion.so/athensresearch/Athens-Research-67e1c6068cb449ff935d10e882fd9b05)
 - [v1 Project Board](https://github.com/athensresearch/athens/projects/2) — the effective roadmap and what specifically is being developed.
-- [Vision](https://github.com/athensresearch/athens/blob/master/VISION.md) — individual and collective memexes — the Web as originally promised
-- [Governance](https://github.com/athensresearch/athens/blob/master/GOVERNANCE.md) — BDFL + Core Team + Guardians + Athenians
-- [Code of Conduct](https://github.com/athensresearch/athens/blob/master/CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
+- [Vision](VISION.md) — individual and collective memexes — the Web as originally promised
+- [Governance](GOVERNANCE.md) — BDFL + Core Team + Guardians + Athenians
+- [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
 
 # Contribute
 
