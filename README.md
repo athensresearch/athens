@@ -42,4 +42,4 @@ We also love [Future of Coding topics](https://futureofcoding.org/episodes/046#q
 
 ---
 
-![Athens](doc/athens-1920.jpg)
+![Athens](doc/athens-puk-patrick-unsplash.jpg)
