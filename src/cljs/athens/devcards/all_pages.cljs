@@ -1,9 +1,10 @@
 (ns athens.devcards.all-pages
   (:require
+   [athens.devcards.buttons :refer [button-primary]]
    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
    [athens.router :refer [navigate-page]]
-   [athens.style :as style :refer [base-styles +text-align-right +text-align-left +link HSL-COLORS COLORS OPACITIES]]
+   [athens.style :as style :refer [base-styles +link HSL-COLORS COLORS OPACITIES]]
    [cljsjs.react]
    [cljsjs.react.dom]
    [devcards.core :refer [defcard defcard-rg]]
@@ -40,7 +41,7 @@
 
 (defcard-rg Create-Page
   "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [:button.primary {:on-click handler} "Create Page"])
+  [button-primary {:on-click-fn handler :label "Create Page"}])
 
 
 (defcard-rg Load-Real-DB
