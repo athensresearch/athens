@@ -1,6 +1,7 @@
 (ns athens.devcards.athena
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.events]
     [athens.lib.dom.attributes :refer [with-attributes with-styles]]
@@ -47,7 +48,8 @@
 
 (defcard-rg Create-Page
   "Press button and then search \"test\" "
-  [:button.primary {:on-click handler} "Create Test Pages and Blocks"])
+  [button-primary {:on-click-fn handler
+                   :label "Create Test Pages and Blocks"}])
 
 
 (defcard-rg Load-Real-DB
@@ -56,12 +58,10 @@
 
 (defn athena-prompt
   []
-  [:button.primary (with-attributes (with-styles {:padding 0})
-                     {:on-click #(dispatch [:toggle-athena])})
-   [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
-    [:> mui-icons/Search]]
-   [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
-    "Find or Create a Page"]])
+  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+                   :label [:<>
+                            [:> mui-icons/Search]
+                            [:span "Find or Create a Page"]]}])
 
 
 (defn re-case-insensitive
