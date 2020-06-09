@@ -38,6 +38,7 @@
                       [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
                       [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]]]})
 
+
 (def buttons-primary-style
   (merge buttons-style {:color "rgba(0, 117, 225)"
                         :background-color "rgba(0, 117, 225, 0.1)"
@@ -51,15 +52,18 @@
 
 ;; COMPONENTS
 
-(defn button [{:keys [disabled label on-click-fn style]}]
+(defn button
+  [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge style buttons-style) {:disabled disabled
                                                    :on-click on-click-fn})
-    [:<> (use-sub-style buttons-style :label) label]])
+   [:<> (use-sub-style buttons-style :label) label]])
 
-(defn button-primary [{:keys [disabled label on-click-fn style]}]
+
+(defn button-primary
+  [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge style buttons-primary-style) {:disabled disabled
                                                            :on-click on-click-fn})
-    [:<> (use-sub-style buttons-style :label) label]])
+   [:<> (use-sub-style buttons-style :label) label]])
 
 
 ;; DEVCARDS
@@ -93,18 +97,18 @@
    [button-primary {:label "Button"}]
    [button-primary {:label [:> mui-icons/Face]}]
    [button-primary {:label [:<>
-                    [:> mui-icons/Face]
-                    [:span "Button"]]}]
+                            [:> mui-icons/Face]
+                            [:span "Button"]]}]
    [button-primary {:label [:<>
-                    [:span "Button"]
-                    [:> mui-icons/ChevronRight]]}]
+                            [:span "Button"]
+                            [:> mui-icons/ChevronRight]]}]
    [:hr]
    [button-primary {:disabled true :label "Button"}]
    [button-primary {:disabled true :label [:> mui-icons/Face]}]
    [button-primary {:disabled true :label [:<>
-                    [:> mui-icons/Face]
-                    [:span "Button"]]}]
+                                           [:> mui-icons/Face]
+                                           [:span "Button"]]}]
    [button-primary {:disabled true :label [:<>
-                    [:span "Button"]
-                    [:> mui-icons/ChevronRight]]}]])
+                                           [:span "Button"]
+                                           [:> mui-icons/ChevronRight]]}]])
 

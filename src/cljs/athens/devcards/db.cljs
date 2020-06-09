@@ -30,8 +30,8 @@
                   (load-real-db! conn))]
     (fn []
       [button-primary {:disabled @pressed?
-               :on-click-fn handler
-               :label "Load Real Data"}])))
+                       :on-click-fn handler
+                       :label "Load Real Data"}])))
 
 
 (defcard-rg Load-Real-DB

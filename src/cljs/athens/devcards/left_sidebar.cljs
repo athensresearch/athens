@@ -1,8 +1,8 @@
 (ns athens.devcards.left-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.devcards.buttons :refer [button button-primary]]
     [athens.devcards.athena :refer [athena-prompt]]
+    [athens.devcards.buttons :refer [button button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate navigate-page]]
@@ -96,8 +96,8 @@
                                             [:> mui-icons/Today]
                                             [:span "Daily Notes"]]}]
             [button {:on-click-fn #(navigate :home) :label [:<>
-                                            [:> mui-icons/FileCopy]
-                                            [:span "All Pages"]]}]
+                                                            [:> mui-icons/FileCopy]
+                                                            [:span "All Pages"]]}]
             [button {:disabled true :label [:<>
                                             [:> mui-icons/BubbleChart]
                                             [:span "Graph Overview"]]}]]
