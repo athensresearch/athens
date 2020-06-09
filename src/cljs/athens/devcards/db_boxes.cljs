@@ -7,6 +7,7 @@
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as str]
     [datascript.core :as d]
     [devcards.core :as devcards :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
@@ -142,6 +143,28 @@
 
 
 
+(defn attr-unique?
+  [attr]
+  (contains? (get db/schema attr) :db/unique))
+
+
+(defn attr-many?
+  [attr]
+  (= (get-in db/schema [attr :db/cardinality])
+     :db.cardinality/many))
+
+
+(defn attr-ref?
+  [attr]
+  (= (get-in db/schema [attr :db/valueType])
+     :db.type/ref))
+
+
+(defn attr-reverse?
+  [attr]
+  (when (keyword? attr)
+    (str/starts-with? (name attr) "_")))
+
 
 (defn headings
   [data mode]
@@ -171,6 +194,41 @@
          (map row))))
 
 
+(defn reverse-refs-for-attr
+  [attr eid]
+  (d/q '[:find [?parent ...]
+         :in $ ?attr ?eid
+         :where [?parent :block/children ?eid]]
+       @db/dsdb attr eid))
+
+
+(defn reverse-attr
+  [attr]
+  (keyword (str (namespace attr) "/_" (name attr))))
+
+
+(defn wrap-with-db-id
+  [eid]
+  {:db/id eid})
+
+
+(defn reverse-refs
+  [eid]
+  (let [ref-attrs (->> db/schema
+                       keys
+                       (filter attr-ref?))]
+    (into {}
+          (for [attr ref-attrs]
+            [(reverse-attr attr)
+             (map wrap-with-db-id (reverse-refs-for-attr attr eid))]))))
+
+
+(defn reverse-rows
+  [{:keys [:db/id]}]
+  (when id
+    (reverse-refs id)))
+
+
 (defn map-rows
   [m]
   (let [row (fn [[k v]]
@@ -181,7 +239,8 @@
                 :attr k
                 :heading "val"
                 :idx k}])]
-    (map row m)))
+    (concat (map row m)
+            (map row (reverse-rows m)))))
 
 
 ; still not very clean
@@ -226,23 +285,6 @@
     :maps (maps-rows data)))
 
 
-(defn attr-unique?
-  [attr]
-  (contains? (get db/schema attr) :db/unique))
-
-
-(defn attr-many?
-  [attr]
-  (= (get-in db/schema [attr :db/cardinality])
-     :db.cardinality/many))
-
-
-(defn attr-ref?
-  [attr]
-  (= (get-in db/schema [attr :db/valueType])
-     :db.type/ref))
-
-
 (defn pull-entity-str
   ([id]
    (str "(d/pull @athens/db '[*] " id ")"))
@@ -266,6 +308,13 @@
 
       (and (attr-many? attr)
            (attr-ref? attr))
+      [:ul (for [v value]
+             ^{:key v}
+             [:li (cell {:value v
+                         :attr :db/id
+                         :id (:db/id v)})])]
+
+      (attr-reverse? attr)
       [:ul (for [v value]
              ^{:key v}
              [:li (cell {:value v
