@@ -13,6 +13,8 @@
   * [Discord Terms of Service](#discord-terms-of-service)
   * [Discord Privacy Policy](#discord-privacy-policy)
 
+---
+
 If you disagree with Athens's values, Athens's Discord guidelines, or the official Discord policies, you have two options: [Voice or Exit](https://www.youtube.com/watch?v=cOubCHLXT6A).
 
 # Values
