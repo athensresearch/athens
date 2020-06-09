@@ -101,7 +101,6 @@
                     :color (:body-text-color COLORS)
                     :font-size "16px"}]
             [:* {:box-sizing "border-box"}]
-            [:p :span {:color (:body-text-color COLORS)}]
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                       :color (:header-text-color COLORS)}]
             [:h1 {:font-size "50px"
