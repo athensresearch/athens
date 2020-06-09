@@ -49,6 +49,8 @@ lein dev
 
 When these scripts are done, your terminal will read `build complete`. Athens can then be accessed by pointing a browser to http://localhost:3000/ on UNIX or http://127.0.0.1:3000/ on Windows.
 
+The right sidebar has [`re-frame-10-x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`.
+
 # Deploying Athens and Devcards
 
 You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
