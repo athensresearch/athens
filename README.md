@@ -14,7 +14,7 @@ To learn more about this project, please see:
 
 # Run or Contribute
 
-Athens is currently **read-only** and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](https://github.com/athensresearch/athens/blob/master/CONTRIBUTING.md).
+Athens is currently **read-only** and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](CONTRIBUTING.md).
 
 # Patronize Us
 
