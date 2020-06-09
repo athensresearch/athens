@@ -6,10 +6,10 @@
 
 To learn more about this project, please see:
 
-- [Our Notion Wiki](https://www.notion.so/athensresearch/Athens-Research-67e1c6068cb449ff935d10e882fd9b05)
-- [v1 Project Board](https://github.com/athensresearch/athens/projects/2) — the effective roadmap and what specifically is being developed.
-- [Vision](VISION.md) — individual and collective memexes — the Web as originally promised
-- [Governance](GOVERNANCE.md) — BDFL + Core Team + Guardians + Athenians
+- [Our Notion](https://www.notion.so/athensresearch/Athens-Research-67e1c6068cb449ff935d10e882fd9b05) — helpful docs like tutorials, updates, meeting notes
+- [v1 Project Board](https://github.com/athensresearch/athens/projects/2) — the effective roadmap and what specifically is being developed
+- [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
+- [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
 
 # Run or Contribute
