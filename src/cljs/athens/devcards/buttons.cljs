@@ -25,13 +25,14 @@
    :align-items      "center"
    :color            "rgba(50, 47, 56, 1)"
    :background-color "transparent"
+   :transition       "all 0.05s ease"
    ::stylefy/mode [[:hover {:background-color "#EFEDEB"}]
                    [:active {:color "rgba(0, 117, 225)"
                              :background-color "rgba(0, 117, 225, 0.1)"}]
                    [:disabled {:color "rgba(0, 0, 0, 0.3)"
                                :background-color "#EFEDEB"
                                :cursor "default"}]]
-   ::stylefy/sub-styles [[:label {}]]
+   ::stylefy/sub-styles [[:label {:color "inherit"}]]
    ::stylefy/manual [[:svg {:margin-block-start "-0.0835em"
                             :margin-block-end "-0.0835em"}
                       [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
@@ -42,7 +43,10 @@
                         :background-color "rgba(0, 117, 225, 0.1)"
                         ::stylefy/mode [[:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
                                         [:active {:color "white"
-                                                  :background-color "rgba(0, 117, 225, 1)"}]]}))
+                                                  :background-color "rgba(0, 117, 225, 1)"}]
+                                        [:disabled {:color "rgba(0, 0, 0, 0.3)"
+                                                    :background-color "#EFEDEB"
+                                                    :cursor "default"}]]}))
 
 
 ;; COMPONENTS
@@ -63,7 +67,7 @@
 
 
 (defcard-rg Default-Button
-  [:div (use-style {:display "flex" :align-items "center"})
+  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "8px"})
    [button {:label "Button"}]
    [button {:label [:> mui-icons/Face]}]
    [button {:label [:<>
@@ -71,23 +75,28 @@
                     [:span "Button"]]}]
    [button {:label [:<>
                     [:span "Button"]
-                    [:> mui-icons/ChevronRight]]}]])
-
-
-(defcard-rg Disabled-Button
-  [:div (use-style {:display "flex" :align-items "center"})
+                    [:> mui-icons/ChevronRight]]}]
    [button {:disabled true :label "Button"}]
    [button {:disabled true :label [:> mui-icons/Face]}]
    [button {:disabled true :label [:<>
-                    [:> mui-icons/Face]
-                    [:span "Button"]]}]
+                                   [:> mui-icons/Face]
+                                   [:span "Button"]]}]
    [button {:disabled true :label [:<>
-                    [:span "Button"]
-                    [:> mui-icons/ChevronRight]]}]])
+                                   [:span "Button"]
+                                   [:> mui-icons/ChevronRight]]}]])
 
 
 (defcard-rg Primary-Button
-  [:div (use-style {:display "flex" :align-items "center"})
+  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "8px"})
+   [button-primary {:label "Button"}]
+   [button-primary {:label [:> mui-icons/Face]}]
+   [button-primary {:label [:<>
+                    [:> mui-icons/Face]
+                    [:span "Button"]]}]
+   [button-primary {:label [:<>
+                    [:span "Button"]
+                    [:> mui-icons/ChevronRight]]}]
+   [:hr]
    [button-primary {:disabled true :label "Button"}]
    [button-primary {:disabled true :label [:> mui-icons/Face]}]
    [button-primary {:disabled true :label [:<>
@@ -96,3 +105,4 @@
    [button-primary {:disabled true :label [:<>
                     [:span "Button"]
                     [:> mui-icons/ChevronRight]]}]])
+
