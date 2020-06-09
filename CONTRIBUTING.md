@@ -3,6 +3,7 @@
 - [Running Athens Locally](#running-athens-locally)
 - [Deploying Athens and Devcards](#deploying-athens-and-devcards)
 - [Connecting your REPL](#connecting-your-repl)
+- [Using re-frame-10x](#using-re-frame-10x)
 - [Running CI Scripts Locally](#running-ci-scripts-locally)
   * [Testing](#testing)
   * [Linting](#linting)
@@ -49,8 +50,6 @@ lein dev
 
 When these scripts are done, your terminal will read `build complete`. Athens can then be accessed by pointing a browser to http://localhost:3000/ on UNIX or http://127.0.0.1:3000/ on Windows.
 
-The right sidebar has [`re-frame-10-x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`.
-
 # Deploying Athens and Devcards
 
 You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
@@ -76,6 +75,13 @@ Notes:
 # Connecting your REPL
 
 - [ ] TODO: write this section for each editor (Cursive, CIDER, Calva, Fireplace, etc.)
+
+# Using re-frame-10x
+
+The right sidebar has [`re-frame-10x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`.
+
+This is useful for inspecting the state of re-frame apps. However, we are currently reducing usage on re-frame-10x because it doesn't work well with datascript ([#139](https://github.com/athensresearch/athens/issues/139)).
+
 
 # Running CI Scripts Locally
 
