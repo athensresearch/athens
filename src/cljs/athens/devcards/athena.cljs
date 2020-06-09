@@ -61,7 +61,8 @@
   [button-primary {:on-click-fn #(dispatch [:toggle-athena])
                    :label [:<>
                            [:> mui-icons/Search]
-                           [:span "Find or Create a Page"]]}])
+                           [:span "Find or Create a Page"]]
+                   :style {:font-size "11px"}}])
 
 
 (defn re-case-insensitive
