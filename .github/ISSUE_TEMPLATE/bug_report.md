@@ -1,29 +1,35 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Bug Report
+about: Report 🐞 Bugs
 title: ''
-labels: ''
+labels: 'type: 🐞 bug'
 assignees: ''
 
 ---
 
-**version**
+*If you aren't sure about your bug, you can always join our [Discord](https://discord.gg/HNmxvpm) and ask in #agora or #engineering!*
 
-[ Please specify which version of Athens you're using (you can find the git ref in the name of the distribution). The documentation on the
-master branch may be ahead of the most released version.
+**Problem**
 
-**platform**
+[ Please provide a short and concise description of the bug. ]
 
-[ Please specify which platform you are using Athens on (what browser, what JVM version) ]
+**Expected Behavior**
 
-**problem**
+[ What is the behavior you expected to see? ]
 
-[ Please provide a short and to the point description of the problem ]
+**Dependencies**
 
-**repro**
+[ Please specify your environment and software dependencies, with versions. ]
 
-[ Please provide a minimal working reproduction of the problem ]
+- Athens:
+- browser: 
+- JVM:
+- node.js: 
 
-**expected behavior**
+**To Reproduce**
 
-[ What is the behavior you expected to see? Please provide a minimal working example ]
+[ Please include steps to reproduce the behavior. ]
+
+**Screenshots**
+
+[ Particularly helpful for UI bugs. ]
