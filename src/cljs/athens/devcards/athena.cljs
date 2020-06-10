@@ -10,28 +10,22 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [datascript.core :as d]
-    [devcards.core :refer-macros [defcard-rg]]
+    [devcards.core :refer-macros [defcard defcard-rg]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]))
+
+
+(defcard "
+## [Issue #126](https://github.com/athensresearch/athens/issues/126)
+")
 
 
 (defcard-rg Import-Styles
   [style-guide-css])
 
 
-(defcard-rg Instantiate-app-db
-  "Using re-frame, even though DevCards </3 re-frame. Not using re-frame elsewhere for subs, but will probably
-  need refactoring or real isolation later.
-
-  - https://github.com/athensresearch/athens/issues/126
-  - https://github.com/bhauman/devcards/issues/105
-  - https://github.com/bhauman/devcards/pull/131/
-  ")
-
-
+(defcard-rg Instantiate-DBs)
 (dispatch [:init-rfdb])
-
-(defcard-rg Instantiate-Dsdb)
 (defonce conn (new-conn))
 (posh-conn! conn)
 
@@ -46,7 +40,7 @@
 
 
 (defcard-rg Create-Page
-  "Press button and then search \"test\" "
+  "Creates pages and blocks with the string \"Test\" in them."
   [:button.primary {:on-click handler} "Create Test Pages and Blocks"])
 
 
@@ -183,7 +177,8 @@
         [:input (with-attributes +athena-input
                   {:type        "search"
                    :placeholder "Find or Create Page",
-                   :on-change   handler})]]
+                   :on-change   handler
+                   :auto-focus true})]]
        [recent]
        [(fn []
           (let [[query {:keys [pages blocks] :as result}] @*match]
@@ -203,7 +198,6 @@
 
 
 (defcard-rg Athena-Prompt
-  "Must press again to close. Doesn't go away if you click outside."
   [:<>
    [athena-prompt]
    [athena conn]])
