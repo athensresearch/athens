@@ -3,6 +3,7 @@
     [athens.devcards.all-pages]
     [athens.devcards.athena]
     [athens.devcards.buttons]
+    [athens.devcards.blocks]
     [athens.devcards.db]
     [athens.devcards.db-boxes]
     [athens.devcards.icons]
