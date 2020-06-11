@@ -1,22 +1,25 @@
 (ns athens.devcards.athena
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.events]
-    [athens.lib.dom.attributes :refer [with-attributes with-styles]]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [style-guide-css +flex-space-between +depth-64]]
+    [athens.style :refer [base-styles DEPTH-SHADOWS COLORS HSL-COLORS OPACITIES]]
     [athens.subs]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as str]
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
+    [garden.color :refer [opacify]]
     [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard-rg Instantiate-app-db
@@ -47,21 +50,125 @@
 
 (defcard-rg Create-Page
   "Press button and then search \"test\" "
-  [:button.primary {:on-click handler} "Create Test Pages and Blocks"])
+  [button-primary {:on-click-fn handler
+                   :label "Create Test Pages and Blocks"}])
 
 
 (defcard-rg Load-Real-DB
   [load-real-db-button conn])
 
 
+;; STYLES
+
+
+
+(def container-style
+  {:width         "784px"
+   :border-radius "4px"
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (opacify (:body-text-color HSL-COLORS) (first OPACITIES))]]
+   :display       "flex"
+   :flex-direction "column"
+   :background    (:app-bg-color HSL-COLORS)
+   :position      "fixed"
+   :overflow      "hidden"
+   :max-height    "60vh"
+   :top           "50%"
+   :left          "50%"
+   :transform     "translate(-50%, -50%)"
+   :z-index       2})
+
+
+(def athena-input-style
+  {:width "100%"
+   :border 0
+   :font-size      "38px"
+   :font-weight    "300"
+   :line-height    "49px"
+   :letter-spacing "-0.03em"
+   :border-radius "4px 4px 0 0"
+   :color          "#433F38"
+   :caret-color    (:link-color COLORS)
+   :padding "24px"
+   :cursor "text"
+   ::stylefy/mode {:focus {:outline "none"}
+                   "::placeholder" {:opacity (nth OPACITIES 2)}}})
+
+
+(def results-list-style
+  {:background    (:app-bg-color HSL-COLORS)
+   :overflow-y "auto"
+   :max-height "100%"})
+
+
+(def results-heading-style
+  {:padding "4px 18px"
+   :background (:app-bg-color HSL-COLORS)
+   :display "flex"
+   :position "sticky"
+   :top "0"
+   :justify-content "space-between"
+   :box-shadow [["0 1px 0 0 " (opacify (:body-text-color HSL-COLORS) 0.12)]]
+   :border-top [["1px solid" (opacify (:body-text-color HSL-COLORS) 0.12)]]})
+
+
+(def result-style
+  {:display "grid"
+   :grid-template "\"title icon\" \"preview icon\""
+   :grid-gap "0 12px"
+   :grid-template-columns "1fr auto"
+   :padding "8px 32px"
+   :background (opacify (:body-text-color HSL-COLORS) 0.02)
+   :transition "all .05s ease"
+   :border-top [["1px solid " (opacify (:body-text-color HSL-COLORS) 0.12)]]
+   ::stylefy/sub-styles {:title {:grid-area "title"
+                                 :font-size "16px"
+                                 :margin "0"
+                                 :color (:header-text-color COLORS)
+                                 :font-weight "500"}
+                         :preview {:grid-area "preview"
+                                   :white-space "wrap"
+                                   :word-break "break-word"
+                                   :overflow "hidden"
+                                   :text-overflow "ellipsis"
+                                   :display "-webkit-box"
+                                   :-webkit-line-clamp "1"
+                                   :-webkit-box-orient "vertical"
+                                   :color (opacify (:body-text-color COLORS) (nth OPACITIES 3))}
+                         :link-leader {:grid-area "icon"
+                                       :color "transparent"
+                                       :margin "auto auto"}}
+   ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
+                           :color (:app-bg-color COLORS)}}
+   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader {:color "inherit !important"}]]]})
+
+
+(def result-highlight-style
+  {:color "inherit"
+   :font-weight "500"})
+
+
+(def hint-style
+  {:color "inherit"
+   :opacity (nth OPACITIES 3)
+   :font-size "14px"
+   ::stylefy/manual [[:kbd {:text-transform "uppercase"
+                            :font-family "inherit"
+                            :font-size "12px"
+                            :font-weight 600
+                            :border "1px solid rgba(67, 63, 56, 0.25)"
+                            :border-radius "4px"
+                            :padding "0 4px"}]]})
+
+
+;; COMPONENTS
+
 (defn athena-prompt
   []
-  [:button.primary (with-attributes (with-styles {:padding 0})
-                     {:on-click #(dispatch [:toggle-athena])})
-   [:div (with-styles {:display "inline-block" :padding "6px 0 6px 8px"})
-    [:> mui-icons/Search]]
-   [:div (with-styles {:display "inline-block" :font-weight "normal" :padding "6px 16px" :color "#322F38"})
-    "Find or Create a Page"]])
+  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+                   :label [:<>
+                           [:> mui-icons/Search]
+                           [:span "Find or Create a Page"]]
+                   :style {:font-size "11px"}}])
 
 
 (defn re-case-insensitive
@@ -108,58 +215,19 @@
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
     (map-indexed (fn [i part]
                    (if (re-find query-pattern part)
-                     [:span {:key i :style {:background-color "#F9A132" :font-size "inherit" :line-height "inherit"}} part]
+                     [:span (use-style result-highlight-style {:key i}) part]
                      part))
                  (clojure.string/split txt query-pattern))))
 
 
-(def +query
-  (with-styles +depth-64
-    {:background-color "white"
-     :position "absolute"
-     :z-index  99
-     :top      "100%"
-     :left     0
-     :right    0
-     :overflow-y "auto"
-     :max-height "500px"}))
-
-
-(def +athena-input
-  (with-styles {:width "100%"
-                :border 0
-                :font-size      "38px"
-                :font-weight    "300"
-                :line-height    "49px"
-                :letter-spacing "-0.03em"
-                :color          "#433F38"
-                :padding "25px 0 25px 35px"
-                :cursor "text"}))
-
-
 (defn recent
   []
-  [:div (with-styles +flex-space-between {:padding "0px 18px 0px 32px" :background-color "white" :border-top "1px solid rgba(67, 63, 56, .5)"})
+  [:div (use-style results-heading-style)
    [:h5 "Recent"]
-   [:div
-    [:span "Press "]
-    [:span (with-styles {:text-transform "uppercase" :font-family "IBM Plex Sans Condensed" :font-size "12px" :font-weight 600
-                         :border "1px solid rgba(67, 63, 56, 0.25)" :border-radius "4px"
-                         :padding "0 4px"})
-     "shift + enter"]
-    [:span " to open in right sidebar."]]])
-
-
-(def +container
-  (with-styles +depth-64
-    {:width         "784px"
-     :border-radius "4px"
-     :display       "inline-block"
-     :position      "fixed"
-     :top           "30%"
-     :left          "50%"
-     :transform     "translate(-50%, -50%)"
-     :z-index       2}))
+   [:span (use-style hint-style)
+    "Press "
+    [:kbd "shift + enter"]
+    " to open in right sidebar."]])
 
 
 (defn athena
@@ -178,28 +246,27 @@
                         (swap! *cache assoc query result)
                         (reset! *match [query result])))))]
     (when @athena?
-      [:div +container
-       [:div {:style {:box-shadow "inset 0px -1px 0px rgba(0, 0, 0, 0.1)"}}
-        [:input (with-attributes +athena-input
-                  {:type        "search"
-                   :placeholder "Find or Create Page",
-                   :on-change   handler})]]
+      [:div (use-style container-style)
+       [:input (use-style athena-input-style
+                          {:type        "search"
+                           :auto-focus  true
+                           :placeholder "Find or Create Page"
+                           :on-change   handler})]
        [recent]
        [(fn []
           (let [[query {:keys [pages blocks] :as result}] @*match]
             (when result
-              [:div (with-styles +query)
+              [:div (use-style results-list-style)
                (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
                  (let [parent (:block/parent x)
                        page-title (or (:node/title parent) (:node/title x))
                        block-uid (or (:block/uid parent) (:block/uid x))
                        block-string (:block/string x)]
-                   [:div (with-attributes {:class "athena-result" :key i :on-click #(navigate-page block-uid)})
-                    [:div
-                     [:h4 (highlight-match query page-title)]
-                     (when block-string
-                       [:span (highlight-match query block-string)])]
-                    [:h4 (with-styles {:margin-left "auto"}) [:> mui-icons/ChevronRight]]]))])))]])))
+                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                    [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
+                    (when block-string
+                      [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
+                    [:span.link-leader (use-sub-style result-style :link-leader) "->"]]))])))]])))
 
 
 (defcard-rg Athena-Prompt

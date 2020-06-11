@@ -1,6 +1,7 @@
 (ns athens.devcards.db
   (:require
     [athens.db :as db]
+    [athens.devcards.buttons :refer [button-primary]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljsjs.react]
@@ -28,7 +29,9 @@
                   (swap! pressed? not)
                   (load-real-db! conn))]
     (fn []
-      [:button {:disabled @pressed? :on-click handler} "Load Real Data"])))
+      [button-primary {:disabled @pressed?
+                       :on-click-fn handler
+                       :label "Load Real Data"}])))
 
 
 (defcard-rg Load-Real-DB

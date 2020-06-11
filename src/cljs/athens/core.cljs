@@ -9,7 +9,8 @@
     [athens.views :as views]
     [re-frame.core :as rf]
     #_[re-posh.core :as rp]
-    [reagent.core :as reagent]))
+    [reagent.core :as reagent]
+    [stylefy.core :as stylefy]))
 
 
 (defn dev-setup
@@ -28,6 +29,7 @@
 
 (defn init
   []
+  (stylefy/init)
   (rf/dispatch-sync [:init-rfdb])
   ;; when dev, download datoms directly
   ;; FIXME without this dispatch nothing works, so enabling it for now

@@ -11,9 +11,11 @@
     [athens.devcards.style-guide]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core]))
+    [devcards.core]
+    [stylefy.core :as stylefy]))
 
 
 (defn ^:export main
   []
+  (stylefy/init)
   (devcards.core/start-devcard-ui!))

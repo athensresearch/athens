@@ -2,8 +2,7 @@
   (:require
     [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
-    [garden.core :refer [css]]
-    [garden.selectors :as s]))
+    [garden.core :refer [css]]))
 
 
 (def COLORS
@@ -15,6 +14,13 @@
    :body-text-color    "#433F38"
    :panel-color        "#EFEDEB"
    :app-bg-color       "#FFFFFF"})
+
+
+(def DEPTH-SHADOWS
+  {:4                  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
+   :8                  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
+   :16                 "0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.1)"
+   :64                 "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"})
 
 
 (def HSL-COLORS
@@ -46,10 +52,6 @@
   (with-styles {:box-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
 
 
-(def +depth-64
-  (with-styles {:box-shadow "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"}))
-
-
 ;; Flex Functions
 
 
@@ -73,16 +75,6 @@
   (with-styles {:display "flex" :flex-direction "column"}))
 
 
-;; Text Align
-
-(def +text-align-left
-  (with-styles {:text-align "left"}))
-
-
-(def +text-align-right
-  (with-styles {:text-align "right"}))
-
-
 ;; Width and Height
 
 
@@ -94,71 +86,41 @@
 
 ;; Style Guide
 
-
-(defn style-guide-css
+(defn base-styles
   []
   [:style (css
             [:body {:margin 0
-                    :font-size "16px"
-                    :line-height "32px"}]
-            [:* {:font-family "IBM Plex Sans, Sans-Serif"
-                 :box-sizing "border-box"}]
-            [:p :span {:color (:body-text-color COLORS)}]
+                    :font-family "IBM Plex Sans, Sans-Serif"
+                    :color (:body-text-color COLORS)
+                    :font-size "16px"}]
+            [:* {:box-sizing "border-box"}]
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                       :color (:header-text-color COLORS)}]
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"
-                  :line-spacing "-0.03em"}]
+                  :letter-spacing "-0.03em"}]
             [:h2 {:font-size "38px"
                   :font-weight 500
                   :line-height "49px"
-                  :line-spacing "-0.03em"}]
+                  :letter-spacing "-0.03em"}]
             [:h3 {:font-size "28px"
                   :font-weight 500
                   :line-height "36px"
-                  :line-spacing "-0.02em"}]
+                  :letter-spacing "-0.02em"}]
             [:h4 {:font-size "21px"
                   :line-height "27px"}]
             [:h5 {:font-size "12px"
                   :font-weight 500
                   :line-height "16px"
-                  :line-spacing "0.08em"
+                  :letter-spacing "0.08em"
                   :text-transform "uppercase"}]
+            [:.MuiSvgIcon-root {:font-size "24px"}]
+            [:input {:font-family "inherit"}]
             [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
                          :cursor           "alias"}]]]
-            [:tbody
-             [:tr
-              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
-            [:button :.input-file {:cursor           "pointer"
-                                   :padding          "6px 10px"
-                                   :border-radius    "4px"
-                                   :font-weight      "500"
-                                   :border           "none"
-                                   :display          "inline-flex"
-                                   :align-items      "center"
-                                   :color            "rgba(50, 47, 56, 1)"
-                                   :background-color "transparent"}
-             [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
-                           :background-color "#EFEDEB"
-                           :cursor "default"}]
-             [:&:hover {:background-color "#EFEDEB"}]
-             [:&:active {:color            "rgba(0, 117, 225)"
-                         :background-color "rgba(0, 117, 225, 0.1)"}]
-             [:&.primary {:color            "rgba(0, 117, 225)"
-                          :background-color "rgba(0, 117, 225, 0.1)"}
-              [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
-              [:&:active {:color "white"
-                          :background-color "rgba(0, 117, 225, 1)"}]]
-             [:svg {:font-size "145%"
-                    :vertical-align "-0.05em"}
-              [(s/& (s/not (s/last-child))) {:margin-inline-end "0.251em"}]
-              [(s/& (s/not (s/first-child))) {:margin-inline-start "0.251em"}]]]
-            [:.MuiSvgIcon-root {:font-size "145%"
-                                :vertical-align "-0.05em"
-                                :line-height "inherit"}]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
