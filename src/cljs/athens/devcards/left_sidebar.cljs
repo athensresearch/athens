@@ -52,6 +52,7 @@
     {:flex "0 0 40px"
      :align-items "flex-start"
      :justify-content "flex-start"
+     :grid-template-rows "min-content"
      :padding "32px 4px"
      :display "grid"
      :grid-gap "4px"
