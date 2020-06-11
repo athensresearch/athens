@@ -75,16 +75,6 @@
   (with-styles {:display "flex" :flex-direction "column"}))
 
 
-;; Text Align
-
-(def +text-align-left
-  (with-styles {:text-align "left"}))
-
-
-(def +text-align-right
-  (with-styles {:text-align "right"}))
-
-
 ;; Width and Height
 
 
