@@ -44,7 +44,7 @@
   (with-styles +flex-column-align-start
     {:flex               "0 0 288px"
      :padding            "32px 32px 16px 32px"
-      :box-shadow         (str "1px 0 " (:panel-color COLORS))}))
+     :box-shadow         (str "1px 0 " (:panel-color COLORS))}))
 
 
 (def +left-sidebar-collapsed

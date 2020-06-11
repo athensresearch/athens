@@ -1,23 +1,23 @@
 (ns athens.devcards.athena
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.devcards.buttons :refer [button-primary]]
-   [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
-   [athens.events]
-   [athens.lib.dom.attributes :refer [with-attributes]]
-   [athens.router :refer [navigate-page]]
-   [athens.style :refer [base-styles DEPTH-SHADOWS COLORS HSL-COLORS OPACITIES]]
-   [athens.subs]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [clojure.string :as str]
-   [datascript.core :as d]
-   [devcards.core :refer-macros [defcard-rg]]
-   [garden.color :refer [opacify]]
-   [garden.selectors :as selectors]
-   [re-frame.core :refer [subscribe dispatch]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.devcards.buttons :refer [button-primary]]
+    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
+    [athens.events]
+    [athens.lib.dom.attributes :refer [with-attributes]]
+    [athens.router :refer [navigate-page]]
+    [athens.style :refer [base-styles DEPTH-SHADOWS COLORS HSL-COLORS OPACITIES]]
+    [athens.subs]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [clojure.string :as str]
+    [datascript.core :as d]
+    [devcards.core :refer-macros [defcard-rg]]
+    [garden.color :refer [opacify]]
+    [garden.selectors :as selectors]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
 (defcard-rg Import-Styles
@@ -64,81 +64,92 @@
 
 
 
-(def container-style {:width         "784px"
-                      :border-radius "4px"
-                      :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (opacify (:body-text-color HSL-COLORS) (first OPACITIES))]]
-                      :display       "flex"
-                      :flex-direction "column"
-                      :background    (:app-bg-color HSL-COLORS)
-                      :position      "fixed"
-                      :overflow      "hidden"
-                      :max-height    "60vh"
-                      :top           "50%"
-                      :left          "50%"
-                      :transform     "translate(-50%, -50%)"
-                      :z-index       2})
+(def container-style
+  {:width         "784px"
+   :border-radius "4px"
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (opacify (:body-text-color HSL-COLORS) (first OPACITIES))]]
+   :display       "flex"
+   :flex-direction "column"
+   :background    (:app-bg-color HSL-COLORS)
+   :position      "fixed"
+   :overflow      "hidden"
+   :max-height    "60vh"
+   :top           "50%"
+   :left          "50%"
+   :transform     "translate(-50%, -50%)"
+   :z-index       2})
 
 
-(def athena-input-style {:width "100%"
-                         :border 0
-                         :font-size      "38px"
-                         :font-weight    "300"
-                         :line-height    "49px"
-                         :letter-spacing "-0.03em"
-                         :border-radius "4px 4px 0 0"
-                         :color          "#433F38"
-                         :caret-color    (:link-color COLORS)
-                         :padding "24px 42px 24px"
-                         :cursor "text"})
-
-(def results-list-style {:background    (:app-bg-color HSL-COLORS)
-                         :overflow-y "auto"
-                         :max-height "100%"})
-
-
-(def results-heading-style {:padding "4px 18px"
-                            :background (:app-bg-color HSL-COLORS)
-                            :display "flex"
-                            :position "sticky"
-                            :top "0"
-                            :justify-content "space-between"
-                            :box-shadow [["0 1px 0 0 " (opacify (:body-text-color HSL-COLORS) 0.12)]]
-                            :border-top [["1px solid" (opacify (:body-text-color HSL-COLORS) 0.12)]]})
+(def athena-input-style
+  {:width "100%"
+   :border 0
+   :font-size      "38px"
+   :font-weight    "300"
+   :line-height    "49px"
+   :letter-spacing "-0.03em"
+   :border-radius "4px 4px 0 0"
+   :color          "#433F38"
+   :caret-color    (:link-color COLORS)
+   :padding "24px"
+   :cursor "text"
+   ::stylefy/mode {:focus {:outline "none"}
+                   "::placeholder" {:opacity (nth OPACITIES 2)}}})
 
 
-(def result-style {:display "grid"
-                   :grid-template "\"title icon\" \"preview icon\""
-                   :padding "8px 32px"
-                   :background (opacify (:body-text-color HSL-COLORS) 0.02)
-                   :border-top [["1px solid " (opacify (:body-text-color HSL-COLORS) 0.12)]]
-                   ::stylefy/sub-styles {:title {:grid-area "title"
-                                                 :font-size "16px"
-                                                 :margin "0"
-                                                 :font-weight "600"}
-                                         :preview {:grid-area "preview"
-                                                   :color (opacify (:body-text-color HSL-COLORS) (nth OPACITIES 2))}
-                                         :link-leader {:grid-area "icon"
-                                                       :margin "auto auto"}}
-                   ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
-                                           :color (:app-bg-color COLORS) }}})
+(def results-list-style
+  {:background    (:app-bg-color HSL-COLORS)
+   :overflow-y "auto"
+   :max-height "100%"})
 
 
-(def result-highlight-style {:color "#000"
-                             :font-weight "500"
-                             :border-radius "2px"})
+(def results-heading-style
+  {:padding "4px 18px"
+   :background (:app-bg-color HSL-COLORS)
+   :display "flex"
+   :position "sticky"
+   :top "0"
+   :justify-content "space-between"
+   :box-shadow [["0 1px 0 0 " (opacify (:body-text-color HSL-COLORS) 0.12)]]
+   :border-top [["1px solid" (opacify (:body-text-color HSL-COLORS) 0.12)]]})
 
 
-(def hint-style {:color "inherit"
-                 :opacity (nth OPACITIES 3)
-                 :font-size "14px"
-                 ::stylefy/manual [[:kbd {:text-transform "uppercase"
-                                          :font-family "inherit"
-                                          :font-size "12px"
-                                          :font-weight 600
-                                          :border "1px solid rgba(67, 63, 56, 0.25)"
-                                          :border-radius "4px"
-                                          :padding "0 4px"}]]})
+(def result-style
+  {:display "grid"
+   :grid-template "\"title icon\" \"preview icon\""
+   :padding "8px 32px"
+   :background (opacify (:body-text-color HSL-COLORS) 0.02)
+   :border-top [["1px solid " (opacify (:body-text-color HSL-COLORS) 0.12)]]
+   ::stylefy/sub-styles {:title {:grid-area "title"
+                                 :font-size "16px"
+                                 :margin "0"
+                                 :color "inherit"
+                                 :font-weight "500"}
+                         :preview {:grid-area "preview"
+                                                  ;;  :color (opacify (:body-text-color HSL-COLORS) (nth OPACITIES 2))
+                                   :color "inherit"}
+                         :link-leader {:grid-area "icon"
+                                       :margin "auto auto"}}
+   ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
+                           :color (:app-bg-color COLORS)}}})
 
+
+(def result-highlight-style
+  {:color "#000"
+   :font-weight "500"
+   :border-radius "2px"})
+
+
+(def hint-style
+  {:color "inherit"
+   :opacity (nth OPACITIES 3)
+   :font-size "14px"
+   ::stylefy/manual [[:kbd {:text-transform "uppercase"
+                            :font-family "inherit"
+                            :font-size "12px"
+                            :font-weight 600
+                            :border "1px solid rgba(67, 63, 56, 0.25)"
+                            :border-radius "4px"
+                            :padding "0 4px"}]]})
 
 
 ;; COMPONENTS
@@ -180,15 +191,15 @@
 (defn search-in-block-content
   [db query]
   (->>
-   (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-          :in $ ?query-pattern
-          :where
-          [?block :block/string ?txt]
-          [(re-find ?query-pattern ?txt)]]
-        db
-        (re-case-insensitive query))
-   (map get-parent-node)
-   (map #(dissoc % :block/_children))))
+    (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
+           :in $ ?query-pattern
+           :where
+           [?block :block/string ?txt]
+           [(re-find ?query-pattern ?txt)]]
+         db
+         (re-case-insensitive query))
+    (map get-parent-node)
+    (map #(dissoc % :block/_children))))
 
 
 (defn highlight-match
@@ -230,6 +241,7 @@
       [:div (use-style container-style)
        [:input (use-style athena-input-style
                           {:type        "search"
+                           :auto-focus  true
                            :placeholder "Find or Create Page"
                            :on-change   handler})]
        [recent]
@@ -242,11 +254,11 @@
                        page-title (or (:node/title parent) (:node/title x))
                        block-uid (or (:block/uid parent) (:block/uid x))
                        block-string (:block/string x)]
-                    [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
-                     [:h4 (use-sub-style result-style :title) (highlight-match query page-title)]
-                     (when block-string
-                       [:span (use-sub-style result-style :preview) (highlight-match query block-string)])
-                     [:span ">"]]))])))]])))
+                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                    [:h4 (use-sub-style result-style :title) (highlight-match query page-title)]
+                    (when block-string
+                      [:span (use-sub-style result-style :preview) (highlight-match query block-string)])
+                    [:span ">"]]))])))]])))
 
 
 (defcard-rg Athena-Prompt

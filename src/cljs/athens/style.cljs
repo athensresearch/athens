@@ -15,6 +15,7 @@
    :panel-color        "#EFEDEB"
    :app-bg-color       "#FFFFFF"})
 
+
 (def DEPTH-SHADOWS
   {:4                  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
    :8                  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
@@ -129,8 +130,7 @@
                   :letter-spacing "0.08em"
                   :text-transform "uppercase"}]
             [:.MuiSvgIcon-root {:font-size "24px"}]
-            [:input {
-                     :font-family "inherit"}]
+            [:input {:font-family "inherit"}]
             [:span
              [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
               [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
