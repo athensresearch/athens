@@ -2,13 +2,14 @@
 
 - [Overview](#overview)
 - [Roles and Responsibilities](#roles-and-responsibilities)
-  - [Benevolent Dictator](#benevolent-dictator)
-  - [Core Team](#core-team)
-  - [Moderators (Guardians)](#moderators-guardians)
-  - [Contributors (Athenians)](#contributors-athenians)
-  - [Other Roles](#other-roles)
+  * [Benevolent Dictator](#benevolent-dictator)
+  * [Core Team](#core-team)
+  * [Moderators (Guardians)](#moderators--guardians-)
+  * [Contributors (Athenians)](#contributors--athenians-)
+  * [Other Roles](#other-roles)
 - [Attribution](#attribution)
 
+---
 
 # Overview
 
