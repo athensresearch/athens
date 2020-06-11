@@ -10,8 +10,9 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard defcard-rg]]
     ["@material-ui/icons" :as mui-icons]
-    [posh.reagent :refer [transact! pull q]]
-    [reagent.core :as r]))
+    [posh.reagent :refer [transact! pull pull-many q]]
+    [reagent.core :as r]
+    [athens.patterns :as patterns]))
 
 
 (defcard-rg Import-Styles
@@ -24,9 +25,54 @@
 
 
 (defcard-rg Create-Datoms
-  (let [datoms [{:db/id          1
+  (let [datoms [{:db/id 4291,
+                 :block/uid "0MtCtwFh0",
+                 :create/email "tangj1122@gmail.com",
+                 :create/time 1587924500189,
+                 :edit/email "tangj1122@gmail.com",
+                 :edit/time 1587924500192,
+                 :node/title "Datomic"}
+                {:block/string "[[[[Datomic]]: [[Event Sourcing]] without the hassle]]",
+                 :create/email "tangj1122@gmail.com",
+                 :create/time 1587823705202,
+                 :block/refs 4292,
+                 :block/uid "WNkp8_jEO",
+                 :block/open true,
+                 :edit/time 1587999528005,
+                 :db/id 4138,
+                 :edit/email "tangj1122@gmail.com",
+                 :block/order 0}
+                {:block/string "[[[[Datomic]]: [[Event Sourcing]] without the hassle]]",
+                 :create/email "tangj1122@gmail.com",
+                 :create/time 1587924394698,
+                 :block/refs 4292,
+                 :block/uid "-ejAtqgis",
+                 :block/open true,
+                 :edit/time 1587924500188,
+                 :db/id 4286,
+                 :edit/email "tangj1122@gmail.com",
+                 :block/order 1}
+                {:block/string "there is no hard limit, but don't put 100 billion datoms in Datomic",
+                 :create/email "tangj1122@gmail.com",
+                 :create/time 1587680559303,
+                 :block/uid "6S4eVeXo8",
+                 :block/open true,
+                 :edit/time 1587680599692,
+                 :db/id 3673,
+                 :edit/email "tangj1122@gmail.com",
+                 :block/order 1}
+                {:block/string "**there are only 4 people doing all of the dev on Datomic, Clojure**, etc combined so we are a tiny team of very experienced people using high leverage tools. I'm not sure this is directly relevant to most software teams in general (but Clojure projects do probably tend to be more that, and less big teams)",
+                 :create/email "tangj1122@gmail.com",
+                 :create/time 1588171319980,
+                 :block/uid "zm_Ft2Iim",
+                 :block/open true,
+                 :edit/time 1588171339086,
+                 :db/id 5008,
+                 :edit/email "tangj1122@gmail.com",
+                 :block/order 3}
+                {:db/id          1
                  :block/uid      "uid1",
-                 :node/title     "I'm a page"
+                 :node/title     "top-level page"
                  :block/children [{:db/id          2
                                    :block/uid      "uid2",
                                    :block/open     true,
@@ -85,28 +131,32 @@
         :else [:span {:style {:width 10}}])
       [:span (with-styles +gray-circle {:background-color (if closed? "lightgray" nil)})
        [:span (with-attributes +black-circle {:on-click #(navigate-page uid)})]]
-      [:span (parse-and-render string)]]                                       ;; parse-and-render
+      [:span (parse-and-render string)]]                                       ;; parse-and-render will break because it uses rfee/href
      (when open?
        (for [ch (:block/children block)]
          (let [uid (:block/uid ch)]
            [:div {:style {:margin-left 28} :key uid}
-            [block-component uid]])))]))
+            [block-component [:block/uid uid]]])))]))
 
 
-(defn block-component [uid]
+(defn block-component [ident]
   "This query is long because I'm not sure how to recursively find all child blocks with all attributes
-  '[* {:block/children [*]}] doesn't work"
+  '[* {:block/children [*]}] doesn't work
+
+
+Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
+no results for q returns nil
+no results for pull eid returns nil
+  "
   (fn []
-    (let [block (pull conn
-                  '[:db/id :block/string :block/uid :block/children :block/open {:block/children ...}]
-                  [:block/uid uid])]
+    (let [block (pull conn '[:db/id :block/string :block/uid :block/children :block/open {:block/children ...}] ident)]
       (when (:db/id @block)
         [block-el @block]))))
 
 
 (defcard-rg Block
-  "[block-component \"uid2\"]"
-  [block-component "uid2"])
+  "[:block/uid \"uid1\"]"
+  [block-component [:block/uid "uid1"]])
 
 
 (def enter-keycode 13)
@@ -152,6 +202,111 @@
 ;;        :style {:margin-left "30px"}}
 ;;    "no"]])
 
+(defn node-page-el [node linked-refs unlinked-refs]
+  (let [{:block/keys [children] :node/keys [title]} node]
+    [:div
+     ;;(when (get @merge :active false)
+     ;;  [merge-prompt @merge])
+     [title-comp title]
+     [:div
+      (for [child children]
+        (let [{:keys [block/uid]} child]
+          ^{:key uid}
+          [block-component uid])
+        )]
+     ;; {:background-color "lightblue" :margin "15px 0px" :padding 5}
+     [:div
+      [:h4 "Linked References"]
+      (for [ref linked-refs]
+        ^{:key ref} [:p ref])]
+     [:div
+      [:h4 "Unlinked References"]
+      (for [ref unlinked-refs]
+        ^{:key ref} [:p ref])]]))
+
+
+(def q-refs
+  '[:find [?e ...]
+    :in $ ?regex
+    :where
+    [?e :block/string ?s]
+    [(re-find ?regex ?s)]])
+
+
+(defn node-page-component
+  "One diff between datascript and posh: we don't have pull in q for posh
+  https://github.com/mpdairy/posh/issues/21"
+  [ident]
+  (fn []
+    (let [node          (pull conn '["*" {:block/children [:block/uid]}] ident)
+          title         (:node/title @node)
+          linked-refs   (q q-refs conn (patterns/linked title))
+          unlinked-refs (q q-refs conn (patterns/unlinked title))
+          ;;merge         (subscribe [:merge-prompt]) ;; merge with alert?
+          ]
+      [node-page-el @node @linked-refs @unlinked-refs])))
+
+;; TODO we shouldn't query for (un)linked refs if the query fails
+;; but it should never fail?
+
+(defcard-rg Node-Page
+  "Datomic: pull [:block/uid \"0MtCtwFh0\"]"
+  [node-page-component [:block/uid "0MtCtwFh0"]])
+
+(defn shape-parent-query
+  "Find path from nested block to origin node.
+  Again, don't understand why query returns {:db/id nil} if no query. Why not just nil?"
+  [pull-results]
+  (if-not (:db/id pull-results)
+    (vector)
+    (->> (loop [b   pull-results
+                res []]
+           (if (:node/title b)
+             (conj res b)
+             (recur (first (:block/_children b))
+               (conj res (dissoc b :block/_children)))))
+      (rest)
+      (reverse))))
+
+
+(defn block-page-el
+  [block parents]
+  (let [{:block/keys [string children]} block]
+    [:div
+     [:span {:style {:color "gray"}}
+      (interpose                                            ;; create an interpose function that can take [:> non-string elem]
+        " > "
+        (for [p parents]
+          (let [{:keys [node/title block/uid block/string]} p]
+            [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-page uid)} (or string title)])))
+      ]
+     [:h2 (str "• " string)]
+     [:div
+      (for [child children]
+        (let [{:keys [db/id]} child]
+          ^{:key id} [block-component id])
+        )]
+     ]))
+
+(defn block-page-component
+  "two queries: block+children and parents"
+  [ident]
+  (let [block @(pull conn '[:db/id :block/uid :block/string {:block/children ...}] ident)
+        parents (->> @(pull conn '[:db/id :node/title :block/uid :block/string {:block/_children ...}] ident)
+                  (shape-parent-query))]
+    (block-page-el block parents)))
+
+
+(defcard-rg Block-Page-Top-Level
+  [block-page-component [:block/uid "uid5"]])
+
+
+
+(defn page-el
+  [])
+
+(defn page-component
+  [])
 
 ;;(defn main []
 ;;  (let [current-route (subscribe [:current-route])]
@@ -164,68 +319,5 @@
 ;;           [node-page @node]
 ;;           ;;[block-page (:block/uid @node)]
 ;;           )]))))
-
-(defn page-el
-  [])
-
-(defn page-component
-  [])
-
-(defn block-page-el
-  [])
-
-(defn block-page-component
-  [])
-
-(defn node-page-el [node]
-  (let [{:block/keys [children]
-         :node/keys  [title]} node]
-    [:div
-     ;;(when (get @merge :active false)
-     ;;  [merge-prompt @merge])
-     [title-comp title]
-     [:div
-      (for [child children]
-        (let [{:keys [block/uid]} child]
-          ^{:key uid}
-          [block-component uid])
-        )]
-     [:div
-      [:h3 "Linked References"]
-      ;;[:div
-      ;; (for [id (reduce into [] @linked-refs)]
-      ;;   ^{:key id}
-      ;;   [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
-      ;;    [block-page id]])]
-      ]
-     [:div
-      [:h3 "Unlinked References"]
-      ;;[:div
-      ;; (for [id (reduce into [] @unlinked-refs)]
-      ;;   ^{:key id}
-      ;;   [:div {:style {:background-color "lightblue" :margin "15px 0px" :padding 5}}
-      ;;    [block-page id]])]]
-      ]])
-  )
-
-(defn node-page-component
-  [uid]
-  (fn []
-    (let [
-          node (pull conn
-                 '[* {:block/children [:block/uid]}]
-                 [:block/uid uid])
-          ;;linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
-          ;;unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])
-          ;;merge         (subscribe [:merge-prompt])
-          ]
-      [node-page-el @node]
-      )))
-
-
-(defcard-rg Node-Page
-  "Pulling [:block/uid \"uid1\"] "
-  [node-page-component "uid1"])
-
 
 ;;  TODO: Will be broken as long as we are using `rfee/href` to link to pages."
