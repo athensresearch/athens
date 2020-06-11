@@ -35,7 +35,9 @@
    ::stylefy/manual [[:svg {:margin-block-start "-0.0835em"
                             :margin-block-end "-0.0835em"}
                       [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
-                      [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]]]})
+                      [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]
+                      [(selectors/& ((selectors/first-child (selectors/last-child)))) {:margin-inline-start "-4px"
+                                                                                       :margin-inline-end "-4px"}]]]})
 
 
 (def buttons-primary-style
