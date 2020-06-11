@@ -32,7 +32,6 @@
                    [:disabled {:color "rgba(0, 0, 0, 0.3)"
                                :background-color "#EFEDEB"
                                :cursor "default"}]]
-   ::stylefy/sub-styles [[:label {:color "inherit"}]]
    ::stylefy/manual [[:svg {:margin-block-start "-0.0835em"
                             :margin-block-end "-0.0835em"}
                       [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
@@ -56,14 +55,14 @@
   [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn})
-   [:<> (use-sub-style buttons-style :label) label]])
+   [:<> label]])
 
 
 (defn button-primary
   [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn})
-   [:<> (use-sub-style buttons-style :label) label]])
+   [:<> label]])
 
 
 ;; DEVCARDS
