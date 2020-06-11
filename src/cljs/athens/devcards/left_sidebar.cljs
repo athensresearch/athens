@@ -6,7 +6,7 @@
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [base-styles +link +flex-column +flex-space-between +width-100]]
+    [athens.style :refer [base-styles +link +flex-column +flex-space-between +width-100 COLORS]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -44,13 +44,17 @@
   (with-styles +flex-column-align-start
     {:flex               "0 0 288px"
      :padding            "32px 32px 16px 32px"
-     :box-shadow         "1px 0 #433f3880"}))
+      :box-shadow         (str "1px 0 " (:panel-color COLORS))}))
 
 
 (def +left-sidebar-collapsed
   (with-styles +left-sidebar
-    {:flex "0 0 32px"
-     :padding "32px 0px"
+    {:flex "0 0 40px"
+     :align-items "flex-start"
+     :justify-content "flex-start"
+     :padding "32px 4px"
+     :display "grid"
+     :grid-gap "4px"
      :overflow-x "hidden"}))
 
 
@@ -75,15 +79,15 @@
           ;; IF COLLAPSED
           [:div +left-sidebar-collapsed
            [button {:on-click-fn #(swap! open? not)
-                    :label [:> mui-icons/ChevronRight]}]
+                    :label [:> mui-icons/ChevronRight (with-styles {:font-size "18px"})]}]
            [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                            :label [:> mui-icons/Search]}]
+                            :label [:> mui-icons/Search (with-styles {:font-size "18px"})]}]
            [:div (with-styles {:margin-top "auto"} +flex-column)
             [button {:disabled true
-                     :label [:> mui-icons/TextFormat]
+                     :label [:> mui-icons/TextFormat (with-styles {:font-size "18px"})]
                      :style {:margin-bottom "8px"}}]
             [button {:disabled true
-                     :label [:> mui-icons/Settings]}]]]
+                     :label [:> mui-icons/Settings (with-styles {:font-size "18px"})]}]]]
 
           ;; IF EXPANDED
           [:div +left-sidebar
@@ -93,13 +97,13 @@
                      :label [:> mui-icons/ChevronLeft]}]]
            [:div (with-styles +flex-column-align-start {:margin-bottom "40px"})
             [button {:disabled true :label [:<>
-                                            [:> mui-icons/Today]
+                                            [:> mui-icons/Today (with-styles {:font-size "16px"})]
                                             [:span "Daily Notes"]]}]
             [button {:on-click-fn #(navigate :home) :label [:<>
-                                                            [:> mui-icons/FileCopy]
+                                                            [:> mui-icons/FileCopy (with-styles {:font-size "16px"})]
                                                             [:span "All Pages"]]}]
             [button {:disabled true :label [:<>
-                                            [:> mui-icons/BubbleChart]
+                                            [:> mui-icons/BubbleChart (with-styles {:font-size "16px"})]
                                             [:span "Graph Overview"]]}]]
 
            ;; SHORTCUTS
@@ -118,10 +122,10 @@
               [:h3 (with-styles {:font-family "'IBM Plex Serif', Sans-Serif"}) "Athens"]]]
             [:div (with-styles {:display "flex"})
              [button {:disabled true
-                      :label [:> mui-icons/TextFormat]
+                      :label [:> mui-icons/TextFormat (with-styles {:font-size "16px"})]
                       :style {:margin-right "8px"}}]
              [button {:disabled true
-                      :label [:> mui-icons/Settings]}]]]])))))
+                      :label [:> mui-icons/Settings (with-styles {:font-size "16px"})]}]]]])))))
 
 
 (defcard-rg Comments
