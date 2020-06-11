@@ -13,7 +13,6 @@
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.color :refer [opacify]]
-    [garden.selectors :as selectors]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))

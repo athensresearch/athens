@@ -7,7 +7,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; STYLES
