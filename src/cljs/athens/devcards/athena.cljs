@@ -4,7 +4,6 @@
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.events]
-    [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
     [athens.style :refer [base-styles DEPTH-SHADOWS COLORS HSL-COLORS OPACITIES]]
     [athens.subs]
@@ -116,27 +115,37 @@
 (def result-style
   {:display "grid"
    :grid-template "\"title icon\" \"preview icon\""
+   :grid-gap "0 12px"
+   :grid-template-columns "1fr auto"
    :padding "8px 32px"
    :background (opacify (:body-text-color HSL-COLORS) 0.02)
+   :transition "all .05s ease"
    :border-top [["1px solid " (opacify (:body-text-color HSL-COLORS) 0.12)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
                                  :font-size "16px"
                                  :margin "0"
-                                 :color "inherit"
+                                 :color (:header-text-color COLORS)
                                  :font-weight "500"}
                          :preview {:grid-area "preview"
-                                                  ;;  :color (opacify (:body-text-color HSL-COLORS) (nth OPACITIES 2))
-                                   :color "inherit"}
+                                   :white-space "wrap"
+                                   :word-break "break-word"
+                                   :overflow "hidden"
+                                   :text-overflow "ellipsis"
+                                   :display "-webkit-box"
+                                   :-webkit-line-clamp "1"
+                                   :-webkit-box-orient "vertical"
+                                   :color (opacify (:body-text-color COLORS) (nth OPACITIES 3))}
                          :link-leader {:grid-area "icon"
+                                       :color "transparent"
                                        :margin "auto auto"}}
    ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
-                           :color (:app-bg-color COLORS)}}})
+                           :color (:app-bg-color COLORS)}}
+   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader {:color "inherit !important"}]]]})
 
 
 (def result-highlight-style
-  {:color "#000"
-   :font-weight "500"
-   :border-radius "2px"})
+  {:color "inherit"
+   :font-weight "500"})
 
 
 (def hint-style
@@ -255,10 +264,10 @@
                        block-uid (or (:block/uid parent) (:block/uid x))
                        block-string (:block/string x)]
                    [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
-                    [:h4 (use-sub-style result-style :title) (highlight-match query page-title)]
+                    [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
                     (when block-string
-                      [:span (use-sub-style result-style :preview) (highlight-match query block-string)])
-                    [:span ">"]]))])))]])))
+                      [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
+                    [:span.link-leader (use-sub-style result-style :link-leader) "->"]]))])))]])))
 
 
 (defcard-rg Athena-Prompt
