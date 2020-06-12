@@ -1,12 +1,13 @@
 (ns athens.devcards.blocks
   (:require
+    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.db]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
-    [athens.style :refer [style-guide-css +flex-column +flex-center]]
+    [athens.style :refer [base-styles +flex-column +flex-center]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard defcard-rg]]
@@ -17,7 +18,7 @@
 
 
 (defcard-rg Import-Styles
-  [style-guide-css])
+  [base-styles])
 
 
 (defcard Instantiate-Dsdb)
@@ -361,11 +362,12 @@
                                   {:db/id 4136, :block/string "type:: notes", :block/uid "7ZHM9WBJ4", :block/open true}
                                   {:db/id 4137, :block/string "", :block/uid "YDTpf-rMy", :block/open true}],
                  :block/open true}]]
-    [:button.primary {:on-click #(transact! conn datoms)} "Create Datoms"]))
+    [button-primary {:on-click-fn #(transact! conn datoms)
+                     :label "Create Datoms"}]))
 
 
-(defcard-rg Load-Real-DB
-  [load-real-db-button conn])
+;;(defcard-rg Load-Real-DB
+;;  [load-real-db-button conn])
 
 
 (defn toggle
@@ -396,6 +398,26 @@
                  (sort-by :block/order (map sort-block children)))
     block))
 
+;; used for both linked and unlinked references, just different regex
+(def q-refs
+  '[:find [?e ...]
+    :in $ ?regex
+    :where
+    [?e :block/string ?s]
+    [(re-find ?regex ?s)]])
+
+
+;; all blocks (except for block refs) want to get all children
+(def block-pull-pattern
+  '[:db/id :block/uid :block/string :block/open {:block/children ...}])
+
+;; the main difference between a page and a block is that page has a title attribute
+(def node-pull-pattern
+  (conj block-pull-pattern :node/title))
+
+;; reverse lookup, all the way up to node/title, is needed to get parent context
+(def parents-pull-pattern
+  '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
 
 (declare block-component)
 
@@ -430,9 +452,8 @@ no results for q returns nil
 no results for pull eid returns nil
   "
   (fn []
-    (let [block (pull conn '[:db/id :block/string :block/uid :block/children :block/open {:block/children ...}] ident)]
-      (when (:db/id @block)
-        [block-el @block]))))
+    (let [block (pull conn block-pull-pattern ident)]
+      [block-el @block])))
 
 
 (def enter-keycode 13)
@@ -465,7 +486,6 @@ no results for pull eid returns nil
                                             (assoc :current-title title))))}
          title]))))
 
-
 (defn merge-prompt
   "probably want to allow global Alert to accept arbitrary hiccup
   (when (get @merge :active false)\n    [merge-prompt @merge])"
@@ -482,7 +502,10 @@ no results for pull eid returns nil
 (defn node-page-el [node linked-refs unlinked-refs]
   (let [{:keys [block/children node/title]} node]
     [:div
-     [title-comp title]
+     (if title
+       [:h1 title]
+       [:h1 {:style {:color "lightgray"}} "Untitled"])
+     ;;[title-comp title]
      [:div
       (for [child children]
         ^{:key (:db/id child)} [block-el child])]
@@ -496,34 +519,28 @@ no results for pull eid returns nil
         ^{:key ref} [:p ref])]]))
 
 
-(def q-refs
-  '[:find [?e ...]
-    :in $ ?regex
-    :where
-    [?e :block/string ?s]
-    [(re-find ?regex ?s)]])
+(defn get-refs [title]
+  (when-not (clojure.string/blank? title)
+    [@(q q-refs conn (patterns/linked title))
+     @(q q-refs conn (patterns/unlinked title))]))
 
-
+;; TODO: Will be broken as long as we are using `rfee/href` to link to pages."
+;; TODO we shouldn't query for (un)linked refs if the query fails
 (defn node-page-component
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
   [ident]
   (fn []
-    (let [node          (pull conn '[:db/id :node/title :block/string :block/uid :block/children :block/open {:block/children ...}] ident) ;; TODO: pull recursively
-          title         (:node/title @node)
-          linked-refs   (q q-refs conn (patterns/linked title))
-          unlinked-refs (q q-refs conn (patterns/unlinked title))]
-      (prn @node)
-      (when @node
-        [node-page-el @node @linked-refs @unlinked-refs]))))
+    (let [node  (pull conn node-pull-pattern ident) ;; TODO: pull recursively
+          title (:node/title @node)
+          [linked-refs unlinked-refs] (get-refs title)]
+      ;;(prn @node @linked-refs)
+      [node-page-el @node linked-refs unlinked-refs])))
 
-;;  TODO: Will be broken as long as we are using `rfee/href` to link to pages."
-;; TODO we shouldn't query for (un)linked refs if the query fails
-;; but it should never fail?
 
-(defcard-rg Node-Page
-  "pull entity 4093: \"Hyperlink\" page"
-  [node-page-component 4093])
+;;(defcard-rg Node-Page
+;;  "pull entity 4093: \"Hyperlink\" page"
+;;  [node-page-component 4093])
 
 (defn shape-parent-query
   "Find path from nested block to origin node.
@@ -555,25 +572,30 @@ no results for pull eid returns nil
           (let [{:keys [node/title block/uid block/string]} p]
             [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-page uid)} (or string title)])))
       ]
-     [:h2 (str "• " string)]
+     [:h1 (str "• " string)]
      [:div (for [child children]
         (let [{:keys [db/id]} child]
           ^{:key id} [block-el child])
         )]
      ]))
 
+
 (defn block-page-component
   "two queries: block+children and parents"
   [ident]
-  (let [block @(pull conn '[:db/id :block/uid :block/string :block/open {:block/children ...}] ident)
-        parents (->> @(pull conn '[:db/id :node/title :block/uid :block/string {:block/_children ...}] ident)
+  (let [block   (pull conn block-pull-pattern ident)
+        parents (->> (pull conn parents-pull-pattern ident)
+                  (deref)
                   (shape-parent-query))]
-    (block-page-el block parents)))
+    (prn block parents)
+    [block-page-el @block parents]))
 
 
 (defcard-rg Block-Page
   [block-page-component 2347])
 
+;;(defcard-rg Block-Component
+;;  [block-component 2347])
 
 ;;(defn page-component
 ;;  []
