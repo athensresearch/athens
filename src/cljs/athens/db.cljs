@@ -2,10 +2,11 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
+    [posh.reagent :refer [#_posh! #_transact! #_pull pull-many #_q]]
     #_[re-frame.core :as re-frame]
     [re-posh.core :as re-posh]))
 
-
+;; Data Parsing ;;
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
   {"children" :block/children
@@ -74,7 +75,7 @@
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
-
+;; datascript and posh ;;
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
    :node/title     {:db/unique :db.unique/identity}
@@ -83,6 +84,64 @@
                     :db/valueType :db.type/ref}})
 
 
+(defn sort-block
+  [block]
+  (if-let [children (seq (:block/children block))]
+    (assoc block :block/children
+           (sort-by :block/order (map sort-block children)))
+    block))
+
+
+(defn shape-parent-query
+  "Find path from nested block to origin node.
+  Don't totally understand why query returns {:db/id nil} if no results. Returns nil when making q queries"
+  [pull-results]
+  (when (:db/id pull-results)
+    (->> (loop [b   pull-results
+                res []]
+           (if (:node/title b)
+             (conj res b)
+             (recur (first (:block/_children b))
+                    (conj res (dissoc b :block/_children)))))
+         (rest)
+         (reverse)
+         (into []))))
+
+;; all blocks (except for block refs) want to get all children
+(def block-pull-pattern
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}])
+
+;; the main difference between a page and a block is that page has a title attribute
+(def node-pull-pattern
+  (conj block-pull-pattern :node/title))
+
+;; reverse lookup, all the way up to node/title, is needed to get parent context
+(def parents-pull-pattern
+  '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
+
+
+;; used for both linked and unlinked references, just different regex
+(def q-refs
+  '[:find [?e ...]
+    :in $ ?regex
+    :where
+    [?e :block/string ?s]
+    [(re-find ?regex ?s)]])
+
+
+(defn get-children
+  [conn entids]
+  @(pull-many conn block-pull-pattern entids))
+
+
+(defn get-parents
+  [conn entids]
+  (->> @(pull-many conn parents-pull-pattern entids)
+       (map shape-parent-query)
+       (into [])))
+
+
+;; re-frame ;;
 (defonce rfdb {:user "Jeff"
                :current-route nil
                :loading true
