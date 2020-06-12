@@ -1,6 +1,5 @@
 (ns athens.devcards.block-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
     [athens.router :refer [navigate-page]]

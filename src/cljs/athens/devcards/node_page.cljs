@@ -1,15 +1,14 @@
 (ns athens.devcards.node-page
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.db :as db]
-   [athens.devcards.blocks :as blocks]
-   [athens.patterns :as patterns]
-   [athens.style :refer [base-styles]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [datascript.core :as d]
-   [devcards.core :refer-macros [defcard defcard-rg]]
-   [posh.reagent :refer [transact! posh! pull q]]))
+    [athens.db :as db]
+    [athens.devcards.blocks :as blocks]
+    [athens.patterns :as patterns]
+    [athens.style :refer [base-styles]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [datascript.core :as d]
+    [devcards.core :refer-macros [defcard defcard-rg]]
+    [posh.reagent :refer [transact! posh! pull q]]))
 
 
 (defcard-rg Import-Styles
@@ -382,13 +381,6 @@
 (defonce conn (d/create-conn db/schema))
 (posh! conn)
 (transact! conn datoms)
-
-
-(comment
-  ;; TODO: do title later
-
-  (def enter-keycode 13)
-  (def esc-keycode 27))
 
 
 (defn node-page-el

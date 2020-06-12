@@ -8,5 +8,7 @@ athens.db/ego-url
 ;; str-kw-mappings will be used for JSON import (see https://github.com/athensresearch/athens/issues/31)
 user/str-kw-mappings
 athens.lib.dom.attributes/with-classes
+
+;; will be used for linked references
 athens.db/get-children
 athens.db/get-parents
