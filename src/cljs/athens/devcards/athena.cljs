@@ -128,22 +128,22 @@
                          :preview {:grid-area "preview"
                                    :white-space "wrap"
                                    :word-break "break-word"
-                                   :overflow "hidden"
-                                   :text-overflow "ellipsis"
-                                   :display "-webkit-box"
-                                   :-webkit-line-clamp "1"
-                                   :-webkit-box-orient "vertical"
+                                  ;;  :overflow "hidden"
+                                  ;;  :text-overflow "ellipsis"
+                                  ;;  :display "-webkit-box"
+                                  ;;  :-webkit-line-clamp "2"
+                                  ;;  :-webkit-box-orient "vertical"
                                    :color (opacify (:body-text-color COLORS) (nth OPACITIES 3))}
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
    ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
                            :color (:app-bg-color COLORS)}}
-   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader {:color "inherit !important"}]]]})
+   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-highlight-style
-  {:color "inherit"
+  {:color "#000"
    :font-weight "500"})
 
 
@@ -215,7 +215,7 @@
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
     (map-indexed (fn [i part]
                    (if (re-find query-pattern part)
-                     [:span (use-style result-highlight-style {:key i}) part]
+                     [:span.result-highlight (use-style result-highlight-style {:key i}) part]
                      part))
                  (clojure.string/split txt query-pattern))))
 
