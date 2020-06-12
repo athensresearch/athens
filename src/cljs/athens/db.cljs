@@ -2,9 +2,9 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
+    [posh.reagent :refer [#_posh! #_transact! #_pull pull-many #_q]]
     #_[re-frame.core :as re-frame]
-    [re-posh.core :as re-posh]
-    [posh.reagent :refer [posh! transact! pull pull-many q]]))
+    [re-posh.core :as re-posh]))
 
 ;; Data Parsing ;;
 (def str-kw-mappings
@@ -83,12 +83,14 @@
    :block/children {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}})
 
+
 (defn sort-block
   [block]
   (if-let [children (seq (:block/children block))]
     (assoc block :block/children
-                 (sort-by :block/order (map sort-block children)))
+           (sort-by :block/order (map sort-block children)))
     block))
+
 
 (defn shape-parent-query
   "Find path from nested block to origin node.
@@ -100,10 +102,10 @@
            (if (:node/title b)
              (conj res b)
              (recur (first (:block/_children b))
-               (conj res (dissoc b :block/_children)))))
-      (rest)
-      (reverse)
-      (into []))))
+                    (conj res (dissoc b :block/_children)))))
+         (rest)
+         (reverse)
+         (into []))))
 
 ;; all blocks (except for block refs) want to get all children
 (def block-pull-pattern
@@ -131,11 +133,12 @@
   [conn entids]
   @(pull-many conn block-pull-pattern entids))
 
+
 (defn get-parents
   [conn entids]
   (->> @(pull-many conn parents-pull-pattern entids)
-    (map shape-parent-query)
-    (into [])))
+       (map shape-parent-query)
+       (into [])))
 
 
 ;; re-frame ;;

@@ -2,9 +2,9 @@
   (:require
     [athens.devcards.all-pages]
     [athens.devcards.athena]
-    [athens.devcards.buttons]
-    [athens.devcards.blocks]
     [athens.devcards.block-page]
+    [athens.devcards.blocks]
+    [athens.devcards.buttons]
     [athens.devcards.db]
     [athens.devcards.db-boxes]
     [athens.devcards.icons]
