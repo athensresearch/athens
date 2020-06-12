@@ -257,16 +257,17 @@
           (let [[query {:keys [pages blocks] :as result}] @*match]
             (when result
               [:div (use-style results-list-style)
-               (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
-                 (let [parent (:block/parent x)
-                       page-title (or (:node/title parent) (:node/title x))
-                       block-uid (or (:block/uid parent) (:block/uid x))
-                       block-string (:block/string x)]
-                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
-                    [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
-                    (when block-string
-                      [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
-                    [:span.link-leader (use-sub-style result-style :link-leader) "->"]]))])))]])))
+               (doall
+                 (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
+                   (let [parent (:block/parent x)
+                         page-title (or (:node/title parent) (:node/title x))
+                         block-uid (or (:block/uid parent) (:block/uid x))
+                         block-string (:block/string x)]
+                     [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                      [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
+                      (when block-string
+                        [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
+                      [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowRight]]])))])))]])))
 
 
 (defcard-rg Athena-Prompt
