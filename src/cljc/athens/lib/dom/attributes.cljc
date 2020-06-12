@@ -22,11 +22,6 @@
      (merge-dom-classes attrs dom-classes))))
 
 
-(defn merge-styles
-  [attrs styles]
-  (update attrs :style merge styles))
-
-
 (defn with-attributes
   [& attributes]
   (reduce (fn [acc map-or-fn]
