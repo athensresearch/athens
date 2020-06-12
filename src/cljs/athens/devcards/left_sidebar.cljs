@@ -39,7 +39,7 @@
 
 (def left-sidebar-style {:flex "0 0 288px"
                          :width "288px"
-                         :min-height "60vh"
+                         :height "100%"
                          :display "flex"
                          :flex-direction "column"
                          :padding "32px 32px 16px 32px"
@@ -61,18 +61,17 @@
 
 
 (def left-sidebar-collapsed-style (merge left-sidebar-style {:flex "0 0 44px"
-                                                             :width "44px"
-                                                             :min-height "60vh"
-                                                             :align-items "flex-start"
-                                                             :justify-content "flex-start"
-                                                             :grid-template-rows "min-content"
-                                                             :padding "32px 4px 16px"
                                                              :display "grid"
-                                                             :grid-auto-flow "row"
+                                                             :padding "32px 4px 16px"
                                                              :grid-gap "4px"
+                                                             :width "44px"
+                                                             :box-shadow "1px 0 #EFEDEB"
                                                              :overflow-x "hidden"
-                                                             ::stylefy/sub-styles {:footer {:margin-top "40px"
+                                                             :grid-template-rows "auto auto 1fr"
+                                                             :align-self "stretch"
+                                                             ::stylefy/sub-styles {:footer {:padding-top "40px"
                                                                                             :align-self "flex-end"
+                                                                                            :margin-top "auto"
                                                                                             :display "grid"
                                                                                             :grid-gap "4px"
                                                                                             :grid-auto-flow "row"}}}))
@@ -188,7 +187,8 @@
 
 
 (defcard-rg Left-Sidebar
-   [left-sidebar conn]
+  [:div {:style {:display "flex" :height "60vh"}}
+   [left-sidebar conn]]
   {}
   {:padding false})
 
