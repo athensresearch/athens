@@ -1,8 +1,9 @@
-(ns athens.devcards.blocks
+(ns athens.devcards.block-page
   (:require
     [athens.devcards.buttons :refer [button-primary]]
+    [athens.devcards.blocks :refer [block-el]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
-    [athens.db :as db]
+    [athens.db]
     [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
@@ -15,9 +16,13 @@
     [posh.reagent :refer [transact! posh! pull pull-many q]]
     [reagent.core :as r]
     [re-frame.core :refer [dispatch]]
-    [datascript.core :as d]))
+    [datascript.core :as d]
+    [athens.db :as db]))
 
-;; DATA
+
+(defcard-rg Import-Styles
+  [base-styles])
+
 
 (defcard Instantiate-Dsdb)
 (def datoms [{:db/id          2381,
@@ -69,75 +74,41 @@
 (transact! conn datoms)
 
 
-;; CSS ;;
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
-(def +gray-circle
-  (with-styles +flex-center
-    {:height 12 :width 12 :margin-right 5 :margin-top 5 :border-radius "50%" :cursor "pointer"}))
 
 
-(def +black-circle
-  (with-styles {:height           5 :width 5 :border-radius "50%" :cursor "pointer" :display "inline-block"
-                :background-color "black" :vertical-align "middle"}))
+;; TODO: replace " > " with an icon. Get a TypeError when doing this, though. Maybe same problem as "->" issue in Athena results
+(defn block-page-el
+  [block parents]
+  (let [{:block/keys [string children]} block]
+    [:div
+     [:span {:style {:color "gray"}}
+      (interpose
+        " > "
+        (for [p parents]
+          (let [{:keys [node/title block/uid block/string]} p]
+            [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-page uid)} (or string title)])))]
+     [:h1 (str "• " string)]
+     [:div (for [child children]
+             (let [{:keys [db/id]} child]
+               ^{:key id} [block-el child]))]]))
 
 
-;; HELPERS ;;
-(defn toggle
-  [dbid open?]
-  (transact! conn [{:db/id dbid :block/open (not open?)}]))
+(defn block-page-component
+  ""
+  [conn ident]
+  (let [block   @(pull conn db/block-pull-pattern ident)
+        parents (->> @(pull conn db/parents-pull-pattern ident)
+                  (db/shape-parent-query))]
+    ;;(prn block parents)
+    [block-page-el block parents]))
 
-(declare block-component)
+(defcard-rg Block-Page
+  "pull entity 2347: a block within Athens FAQ
 
+  two queries:
 
-;; COMPONENTS ;;
-(defn block-el [block]
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
-  (let [{:block/keys [uid string open children] dbid :db/id} block
-        open?   (and (seq children) open)
-        closed? (and (seq children) (not open))]
-    [:div +flex-column
-     [:div {:style {:display "flex"}}
-      (cond
-        open? [:> mui-icons/KeyboardArrowRight {:style {:cursor "pointer"} :on-click #(toggle dbid open)}]
-        closed? [:> mui-icons/KeyboardArrowDown {:style {:cursor "pointer"} :on-click #(toggle dbid open)}]
-        :else [:span {:style {:width 10}}])
-      [:span (with-styles +gray-circle {:background-color (if closed? "lightgray" nil)})
-       [:span (with-attributes +black-circle {:on-click #(navigate-page uid)})]]
-      [:span string]
-      ;; TODO parse-and-render will break because it uses rfee/href
-      ;;[:span (parse-and-render string)]
-      ]
-     (when open?
-       (for [child (:block/children block)]
-         [:div {:style {:margin-left 28} :key (:db/id child)}
-          [block-el child]]))]))
-
-
-(defn block-component [conn ident]
-  "This query is long because I'm not sure how to recursively find all child blocks with all attributes
-  '[* {:block/children [*]}] doesn't work
-Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
-no results for q returns nil
-no results for pull eid returns nil
-  "
-  (let [block (->> @(pull conn db/block-pull-pattern ident)
-                (db/sort-block))]
-    [block-el block]))
-
-
-(defcard-rg Block
-  "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents, unlike `block-page`"
-  [block-component conn 2347])
-
-
-(defcard-rg Block-Embed
-  "TODO"
-  )
-
-(defcard-rg Transclusion
-  "TODO"
-  )
+  1. block+children
+  1. parents for context"
+  [block-page-component conn 2347])
