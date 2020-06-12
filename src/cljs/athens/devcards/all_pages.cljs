@@ -2,9 +2,9 @@
   (:require
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
-    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
+    [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles +link HSL-COLORS COLORS OPACITIES]]
+    [athens.style :as style :refer [base-styles HSL-COLORS COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
@@ -68,7 +68,8 @@
                          :th-title {}
                          :th-body {}
                          :th-date {:text-align "right"}
-                         :td-title {:width "15vw"
+                         :td-title {:color (:link-color COLORS)
+                                    :width "15vw"
                                     :min-width "10em"
                                     :word-break "break-word"
                                     :font-weight "500"
@@ -91,7 +92,6 @@
                        [:td {:border-top (str "1px solid " (:panel-color COLORS))}]
                        [:&:hover {:background-color table-cell-background-color-hover
                                   :border-radius "8px"}
-                        ;; [:td {:border-top-color "transparent"}]
                         [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                      :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]
                         [:td [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
