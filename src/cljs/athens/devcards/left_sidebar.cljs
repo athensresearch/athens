@@ -4,15 +4,15 @@
     [athens.devcards.athena :refer [athena-prompt]]
     [athens.devcards.buttons :refer [button button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn!]]
-    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [base-styles +link +flex-column +flex-space-between +width-100 COLORS]]
+    [athens.style :refer [base-styles COLORS]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
     [posh.reagent :refer [q transact!]]
     [re-frame.core :as re-frame :refer [dispatch]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
 (defcard-rg Import-Styles
@@ -36,27 +36,92 @@
   [button-primary {:on-click-fn handler :label "Create Shortcut"}])
 
 
-(def +flex-column-align-start
-  (with-styles +flex-column {:align-items "flex-start"}))
+
+(def left-sidebar-style {:flex "0 0 288px"
+                         :width "288px"
+                         :min-height "60vh"
+                         :display "flex"
+                         :flex-direction "column"
+                         :padding "32px 32px 16px 32px"
+                         :box-shadow (str "1px 0 " (:panel-color COLORS))
+                         ::stylefy/manual [[]]
+                         ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
+                                                          :display "flex"
+                                                          :flex "0 0 auto"
+                                                          :justify-content "space-between"}
+                                               :footer {:margin-top "auto"
+                                                        :flex "0 0 auto"
+                                                        :align-self "stretch"
+                                                        :display "grid"
+                                                        :grid-auto-flow "column"
+                                                        :grid-template-columns "1fr auto auto"
+                                                        :grid-gap "4px"}
+                                               :small-icon {:font-size "16px"}
+                                               :large-icon {:font-size "22px"}}})
 
 
-(def +left-sidebar
-  (with-styles +flex-column-align-start
-    {:flex               "0 0 288px"
-     :padding            "32px 32px 16px 32px"
-     :box-shadow         (str "1px 0 " (:panel-color COLORS))}))
+(def left-sidebar-collapsed-style (merge left-sidebar-style {:flex "0 0 44px"
+                                                             :width "44px"
+                                                             :min-height "60vh"
+                                                             :align-items "flex-start"
+                                                             :justify-content "flex-start"
+                                                             :grid-template-rows "min-content"
+                                                             :padding "32px 4px 16px"
+                                                             :display "grid"
+                                                             :grid-auto-flow "row"
+                                                             :grid-gap "4px"
+                                                             :overflow-x "hidden"
+                                                             ::stylefy/sub-styles {:footer {:margin-top "40px"
+                                                                                            :align-self "flex-end"
+                                                                                            :display "grid"
+                                                                                            :grid-gap "4px"
+                                                                                            :grid-auto-flow "row"}}}))
 
 
-(def +left-sidebar-collapsed
-  (with-styles +left-sidebar
-    {:flex "0 0 40px"
-     :align-items "flex-start"
-     :justify-content "flex-start"
-     :grid-template-rows "min-content"
-     :padding "32px 4px"
-     :display "grid"
-     :grid-gap "4px"
-     :overflow-x "hidden"}))
+(def main-navigation {:margin "0 0 32px"
+                      :display "grid"
+                      :grid-auto-flow "row"
+                      :grid-gap "4px"
+                      :justify-content "flex-start"
+                      ::stylefy/manual [[:svg {:font-size "16px"}]
+                                        [:button {:justify-self "flex-start"}]]})
+
+
+(def shortcuts-list-style {:flex "1 1 100%"
+                           :display "flex"
+                           :list-style "none"
+                           :flex-direction "column"
+                           :padding "0"
+                           :margin "0 0 32px"
+                           :overflow-y "auto"
+                           ::stylefy/sub-styles {:heading {:flex "0 0 auto"
+                                                           :opacity "0.5"
+                                                           :line-height "1"
+                                                           :margin "0 0 4px"
+                                                           :font-size "inherit"}}})
+
+
+(def shortcut-style {:color (:link-color COLORS)
+                     :cursor "pointer"
+                     :display "flex"
+                     :flex "0 0 auto"
+                     :padding "4px 0"
+                     :transition "all 0.05s ease"
+                     ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+
+
+(def notional-logotype {:font-family "IBM Plex Serif"
+                        :font-size "18px"
+                        :opacity "0.5"
+                        :letter-spacing "-0.05em"
+                        :font-weight "bold"
+                        :text-decoration "none"
+                        :justify-self "flex-start"
+                        :align-self "center"
+                        :color "#000"
+                        :transition "all 0.05s ease"
+                        ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+
 
 
 (def q-shortcuts
@@ -78,68 +143,52 @@
         (if (not @open?)
 
           ;; IF COLLAPSED
-          [:div +left-sidebar-collapsed
+          [:div (use-style left-sidebar-collapsed-style)
            [button {:on-click-fn #(swap! open? not)
-                    :label [:> mui-icons/ChevronRight (with-styles {:font-size "18px"})]}]
+                    :label [:> mui-icons/ChevronRight]}]
            [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                            :label [:> mui-icons/Search (with-styles {:font-size "18px"})]}]
-           [:div (with-styles {:margin-top "auto"} +flex-column)
+                            :label [:> mui-icons/Search ]}]
+           [:footer (use-sub-style left-sidebar-collapsed-style :footer)
             [button {:disabled true
-                     :label [:> mui-icons/TextFormat (with-styles {:font-size "18px"})]
-                     :style {:margin-bottom "8px"}}]
+                     :label [:> mui-icons/TextFormat]}]
             [button {:disabled true
-                     :label [:> mui-icons/Settings (with-styles {:font-size "18px"})]}]]]
+                     :label [:> mui-icons/Settings]}]]]
 
           ;; IF EXPANDED
-          [:div +left-sidebar
-           [:div (with-styles {:margin-bottom "40px" :width "100%"} +flex-space-between)
+          [:div (use-style left-sidebar-style)
+           [:div (use-sub-style left-sidebar-style :top-line)
             [athena-prompt]
             [button {:on-click-fn #(swap! open? not)
                      :label [:> mui-icons/ChevronLeft]}]]
-           [:div (with-styles +flex-column-align-start {:margin-bottom "40px"})
+           [:nav (use-style main-navigation)
             [button {:disabled true :label [:<>
-                                            [:> mui-icons/Today (with-styles {:font-size "16px"})]
+                                            [:> mui-icons/Today]
                                             [:span "Daily Notes"]]}]
             [button {:on-click-fn #(navigate :home) :label [:<>
-                                                            [:> mui-icons/FileCopy (with-styles {:font-size "16px"})]
+                                                            [:> mui-icons/FileCopy]
                                                             [:span "All Pages"]]}]
             [button {:disabled true :label [:<>
-                                            [:> mui-icons/BubbleChart (with-styles {:font-size "16px"})]
+                                            [:> mui-icons/BubbleChart]
                                             [:span "Graph Overview"]]}]]
 
            ;; SHORTCUTS
-           [:div (with-styles +flex-column-align-start +width-100 {:height "60vh"})
-            [:span.small (with-styles {:opacity 0.5}) "Shortcuts"]
-            [:div (with-styles +width-100 {:overflow-y "auto"})
+           [:ol (use-style shortcuts-list-style)
+            [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
              (for [[_order title uid] sorted-shortcuts]
                ^{:key uid}
-               [:div (with-styles {:margin "12px 0"})
-                [:span (with-attributes +link {:on-click #(navigate-page uid)}) title]])]]
+               [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title])]
 
            ;; LOGO + BOTTOM BUTTONS
-           [:div (with-styles +flex-space-between {:flex-direction "row" :margin-top "auto" :width "100%"})
-            [:div
-             [:a {:href "https://github.com/athensresearch/athens" :target "_blank"}
-              [:h3 (with-styles {:font-family "'IBM Plex Serif', Sans-Serif"}) "Athens"]]]
-            [:div (with-styles {:display "flex"})
+            [:footer (use-sub-style left-sidebar-style :footer)
+             [:a (use-style notional-logotype {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
              [button {:disabled true
-                      :label [:> mui-icons/TextFormat (with-styles {:font-size "16px"})]
-                      :style {:margin-right "8px"}}]
+                      :label [:> mui-icons/TextFormat]}]
              [button {:disabled true
-                      :label [:> mui-icons/Settings (with-styles {:font-size "16px"})]}]]]])))))
-
-
-(defcard-rg Comments
-  "`position: fixed` for left-sidebar doesn't work with DevCards.
-
-  But `position: sticky` doesn't work well when in app.
-
-  Has to do with absolute vs relative positioning I believe.")
+                      :label [:> mui-icons/Settings]}]]])))))
 
 
 (defcard-rg Left-Sidebar
-  [:div
-   [left-sidebar conn]]
+   [left-sidebar conn]
   {}
   {:padding false})
 
