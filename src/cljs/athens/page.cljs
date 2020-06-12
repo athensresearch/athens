@@ -1,56 +1,62 @@
 (ns athens.page
   (:require
-    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as reagent]
-    #_[reitit.frontend.easy :as rfee]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(defn render-blocks []
+;; STYLES
+
+(def page-style {:margin "0 40px"})
+
+
+(defn render-blocks
+  []
   (fn [block-uid]
     (let [block (subscribe [:block/children-sorted [:block/uid block-uid]])]
       [:div {:class "content-block"}
        (doall
-        (for [ch (:block/children @block)]
-          (let [{:block/keys [uid string open children] dbid :db/id} ch
-                children? (not-empty children)]
-            ^{:key uid}
-            [:div
-             [:div.block {:style {:display "flex"}}
-              [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
-               (cond
-                 (and children? open) [:span.arrow-down {:style {:width        0 :height 0
-                                                                 :border-left  "5px solid transparent"
-                                                                 :border-right "5px solid transparent"
-                                                                 :border-top   "5px solid black"
-                                                                 :cursor "pointer"
-                                                                 :margin-top 4}
-                                                         :on-click #(toggle-open dbid open)}]
-                 (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
-                                                                        :border-top  "5px solid transparent"
-                                                                        :border-bottom "5px solid transparent"
-                                                                        :border-left   "5px solid black"
-                                                                        :cursor "pointer"
-                                                                        :margin-right 4}
-                                                                :on-click #(toggle-open dbid open)}]
-                 :else [:span {:style {:width 10}}])
-               [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
-                               :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
-                               :vertical-align "middle" :align-items "center" :justify-content "center"}}
-                [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
-                                            :cursor         "pointer" :display "inline-block" :background-color "black"
-                                            :vertical-align "middle"}
-                                 :on-click #(navigate-page uid)}]]]
-              [:span (parse-and-render string)]]
-             (when open
-               [:div {:style {:margin-left 20}}
-                [render-blocks uid]])])))])))
+         (for [ch (:block/children @block)]
+           (let [{:block/keys [uid string open children] dbid :db/id} ch
+                 children? (not-empty children)]
+             ^{:key uid}
+             [:div
+              [:div.block {:style {:display "flex"}}
+               [:div.controls {:style {:display "flex" :align-items "flex-start" :padding-top 5}}
+                (cond
+                  (and children? open) [:span.arrow-down {:style {:width        0 :height 0
+                                                                  :border-left  "5px solid transparent"
+                                                                  :border-right "5px solid transparent"
+                                                                  :border-top   "5px solid black"
+                                                                  :cursor "pointer"
+                                                                  :margin-top 4}
+                                                          :on-click #(toggle-open dbid open)}]
+                  (and children? (not open)) [:span.arrow-right {:style {:width        0 :height 0
+                                                                         :border-top  "5px solid transparent"
+                                                                         :border-bottom "5px solid transparent"
+                                                                         :border-left   "5px solid black"
+                                                                         :cursor "pointer"
+                                                                         :margin-right 4}
+                                                                 :on-click #(toggle-open dbid open)}]
+                  :else [:span {:style {:width 10}}])
+                [:span {:style {:height         12 :width 12 :border-radius "50%" :margin-right 5
+                                :cursor         "pointer" :display "flex" :background-color (if (not open) "lightgray" nil)
+                                :vertical-align "middle" :align-items "center" :justify-content "center"}}
+                 [:span.controls {:style    {:height         5 :width 5 :border-radius "50%"
+                                             :cursor         "pointer" :display "inline-block" :background-color "black"
+                                             :vertical-align "middle"}
+                                  :on-click #(navigate-page uid)}]]]
+               [:span (parse-and-render string)]]
+              (when open
+                [:div {:style {:margin-left 20}}
+                 [render-blocks uid]])])))])))
 
 
-(defn block-page []
+(defn block-page
+  []
   (fn [id]
     (let [node (subscribe [:node [:block/uid id]])
           parents (subscribe [:block/_children2 [:block/uid id]])]
@@ -75,7 +81,8 @@
 (def esc-keycode 27)
 
 
-(defn title-comp [title]
+(defn title-comp
+  [title]
   (let [s (reagent/atom {:editing false
                          :current-title title})
         save! (fn [new-title]
@@ -95,9 +102,10 @@
                                  (cancel!)
 
                                  :else nil)}]
-        [:h2 {:on-click (fn [_] (swap! s #(-> %
-                                              (assoc :editing true)
-                                              (assoc :current-title title))))}
+        [:h2 {:on-click (fn [_]
+                          (swap! s #(-> %
+                                        (assoc :editing true)
+                                        (assoc :current-title title))))}
          title]))))
 
 
@@ -105,16 +113,17 @@
   [{:keys [old-title new-title]}]
   [:div {:style {:background "red"
                  :color "white"}}
-    (str "\"" new-title "\" already exists, merge pages?")
-    [:a {:on-click #(dispatch [:node/merged old-title new-title])
-         :style {:margin-left "30px"}}
-     "yes"]
-    [:a {:on-click #(dispatch [:node/merge-canceled])
-         :style {:margin-left "30px"}}
-     "no"]])
+   (str "\"" new-title "\" already exists, merge pages?")
+   [:a {:on-click #(dispatch [:node/merged old-title new-title])
+        :style {:margin-left "30px"}}
+    "yes"]
+   [:a {:on-click #(dispatch [:node/merge-canceled])
+        :style {:margin-left "30px"}}
+    "no"]])
 
 
-(defn node-page []
+(defn node-page
+  []
   (fn [node]
     (let [linked-refs   (subscribe [:node/refs (patterns/linked   (:node/title node))])
           unlinked-refs (subscribe [:node/refs (patterns/unlinked (:node/title node))])
@@ -140,13 +149,12 @@
             [block-page id]])]]])))
 
 
-(defn main []
+(defn main
+  []
   (let [current-route (subscribe [:current-route])]
     (fn []
       (let [node (subscribe [:node [:block/uid (-> @current-route :path-params :id)]])]
-        [:div
-          (with-styles {:margin-left "40px" :margin-right "40px"})
-          ;;[:h1 "Page Panel"]
+        [:div (use-style page-style)
          (if (:node/title @node)
            [node-page @node]
            [block-page (:block/uid @node)])]))))
