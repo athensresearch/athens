@@ -115,22 +115,22 @@
        [:th (use-sub-style tables :th-date) [:h5 "Modified"]]
        [:th (use-sub-style tables :th-date) [:h5 "Created"]]]]
      [:tbody
-      (for [{uid :block/uid
-             title :node/title
-             modified :edit/time
-             created :create/time
-             children :block/children} @pages]
-        ^{:key uid}
-        [:tr (use-sub-style tables :tr-item)
-         [:td (with-attributes
-                (use-sub-style tables :td-title)
-                (with-styles +link {})
-                {:on-click #(navigate-page uid)})
-          title]
-         [:td (use-sub-style tables :td-body)
-          [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
-         [:td (use-sub-style tables :td-date) (date-string modified)]
-         [:td (use-sub-style tables :td-date) (date-string created)]])]]))
+      (doall
+        (for [{uid :block/uid
+               title :node/title
+               modified :edit/time
+               created :create/time
+               children :block/children} @pages]
+          ^{:key uid}
+          [:tr (use-sub-style tables :tr-item)
+           [:td (with-attributes
+                  (use-sub-style tables :td-title)
+                  {:on-click #(navigate-page uid)})
+            title]
+           [:td (use-sub-style tables :td-body)
+            [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
+           [:td (use-sub-style tables :td-date) (date-string modified)]
+           [:td (use-sub-style tables :td-date) (date-string created)]]))]]))
 
 
 (defcard-rg Table
