@@ -36,91 +36,95 @@
   [button-primary {:on-click-fn handler :label "Create Shortcut"}])
 
 
-
-(def left-sidebar-style {:flex "0 0 288px"
-                         :width "288px"
-                         :height "100%"
-                         :display "flex"
-                         :flex-direction "column"
-                         :padding "32px 32px 16px 32px"
-                         :box-shadow (str "1px 0 " (:panel-color COLORS))
-                         ::stylefy/manual [[]]
-                         ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
-                                                          :display "flex"
-                                                          :flex "0 0 auto"
-                                                          :justify-content "space-between"}
-                                               :footer {:margin-top "auto"
-                                                        :flex "0 0 auto"
-                                                        :align-self "stretch"
-                                                        :display "grid"
-                                                        :grid-auto-flow "column"
-                                                        :grid-template-columns "1fr auto auto"
-                                                        :grid-gap "4px"}
-                                               :small-icon {:font-size "16px"}
-                                               :large-icon {:font-size "22px"}}})
-
-
-(def left-sidebar-collapsed-style (merge left-sidebar-style {:flex "0 0 44px"
-                                                             :display "grid"
-                                                             :padding "32px 4px 16px"
-                                                             :grid-gap "4px"
-                                                             :width "44px"
-                                                             :box-shadow "1px 0 #EFEDEB"
-                                                             :overflow-x "hidden"
-                                                             :grid-template-rows "auto auto 1fr"
-                                                             :align-self "stretch"
-                                                             ::stylefy/sub-styles {:footer {:padding-top "40px"
-                                                                                            :align-self "flex-end"
-                                                                                            :margin-top "auto"
-                                                                                            :display "grid"
-                                                                                            :grid-gap "4px"
-                                                                                            :grid-auto-flow "row"}}}))
+(def left-sidebar-style
+  {:flex "0 0 288px"
+   :width "288px"
+   :height "100%"
+   :display "flex"
+   :flex-direction "column"
+   :padding "32px 32px 16px 32px"
+   :box-shadow (str "1px 0 " (:panel-color COLORS))
+   ::stylefy/manual [[]]
+   ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
+                                    :display "flex"
+                                    :flex "0 0 auto"
+                                    :justify-content "space-between"}
+                         :footer {:margin-top "auto"
+                                  :flex "0 0 auto"
+                                  :align-self "stretch"
+                                  :display "grid"
+                                  :grid-auto-flow "column"
+                                  :grid-template-columns "1fr auto auto"
+                                  :grid-gap "4px"}
+                         :small-icon {:font-size "16px"}
+                         :large-icon {:font-size "22px"}}})
 
 
-(def main-navigation {:margin "0 0 32px"
-                      :display "grid"
-                      :grid-auto-flow "row"
-                      :grid-gap "4px"
-                      :justify-content "flex-start"
-                      ::stylefy/manual [[:svg {:font-size "16px"}]
-                                        [:button {:justify-self "flex-start"}]]})
+(def left-sidebar-collapsed-style
+  (merge left-sidebar-style {:flex "0 0 44px"
+                             :display "grid"
+                             :padding "32px 4px 16px"
+                             :grid-gap "4px"
+                             :width "44px"
+                             :box-shadow "1px 0 #EFEDEB"
+                             :overflow-x "hidden"
+                             :grid-template-rows "auto auto 1fr"
+                             :align-self "stretch"
+                             ::stylefy/sub-styles {:footer {:padding-top "40px"
+                                                            :align-self "flex-end"
+                                                            :margin-top "auto"
+                                                            :display "grid"
+                                                            :grid-gap "4px"
+                                                            :grid-auto-flow "row"}}}))
 
 
-(def shortcuts-list-style {:flex "1 1 100%"
-                           :display "flex"
-                           :list-style "none"
-                           :flex-direction "column"
-                           :padding "0"
-                           :margin "0 0 32px"
-                           :overflow-y "auto"
-                           ::stylefy/sub-styles {:heading {:flex "0 0 auto"
-                                                           :opacity "0.5"
-                                                           :line-height "1"
-                                                           :margin "0 0 4px"
-                                                           :font-size "inherit"}}})
+(def main-navigation
+  {:margin "0 0 32px"
+   :display "grid"
+   :grid-auto-flow "row"
+   :grid-gap "4px"
+   :justify-content "flex-start"
+   ::stylefy/manual [[:svg {:font-size "16px"}]
+                     [:button {:justify-self "flex-start"}]]})
 
 
-(def shortcut-style {:color (:link-color COLORS)
-                     :cursor "pointer"
-                     :display "flex"
-                     :flex "0 0 auto"
-                     :padding "4px 0"
-                     :transition "all 0.05s ease"
-                     ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+(def shortcuts-list-style
+  {:flex "1 1 100%"
+   :display "flex"
+   :list-style "none"
+   :flex-direction "column"
+   :padding "0"
+   :margin "0 0 32px"
+   :overflow-y "auto"
+   ::stylefy/sub-styles {:heading {:flex "0 0 auto"
+                                   :opacity "0.5"
+                                   :line-height "1"
+                                   :margin "0 0 4px"
+                                   :font-size "inherit"}}})
 
 
-(def notional-logotype {:font-family "IBM Plex Serif"
-                        :font-size "18px"
-                        :opacity "0.5"
-                        :letter-spacing "-0.05em"
-                        :font-weight "bold"
-                        :text-decoration "none"
-                        :justify-self "flex-start"
-                        :align-self "center"
-                        :color "#000"
-                        :transition "all 0.05s ease"
-                        ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+(def shortcut-style
+  {:color (:link-color COLORS)
+   :cursor "pointer"
+   :display "flex"
+   :flex "0 0 auto"
+   :padding "4px 0"
+   :transition "all 0.05s ease"
+   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
 
+
+(def notional-logotype
+  {:font-family "IBM Plex Serif"
+   :font-size "18px"
+   :opacity "0.5"
+   :letter-spacing "-0.05em"
+   :font-weight "bold"
+   :text-decoration "none"
+   :justify-self "flex-start"
+   :align-self "center"
+   :color "#000"
+   :transition "all 0.05s ease"
+   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
 
 
 (def q-shortcuts
@@ -146,7 +150,7 @@
            [button {:on-click-fn #(swap! open? not)
                     :label [:> mui-icons/ChevronRight]}]
            [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                            :label [:> mui-icons/Search ]}]
+                            :label [:> mui-icons/Search]}]
            [:footer (use-sub-style left-sidebar-collapsed-style :footer)
             [button {:disabled true
                      :label [:> mui-icons/TextFormat]}]
@@ -173,17 +177,17 @@
            ;; SHORTCUTS
            [:ol (use-style shortcuts-list-style)
             [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
-             (for [[_order title uid] sorted-shortcuts]
-               ^{:key uid}
-               [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title])]
+            (for [[_order title uid] sorted-shortcuts]
+              ^{:key uid}
+              [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title])]
 
            ;; LOGO + BOTTOM BUTTONS
-            [:footer (use-sub-style left-sidebar-style :footer)
-             [:a (use-style notional-logotype {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-             [button {:disabled true
-                      :label [:> mui-icons/TextFormat]}]
-             [button {:disabled true
-                      :label [:> mui-icons/Settings]}]]])))))
+           [:footer (use-sub-style left-sidebar-style :footer)
+            [:a (use-style notional-logotype {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
+            [button {:disabled true
+                     :label [:> mui-icons/TextFormat]}]
+            [button {:disabled true
+                     :label [:> mui-icons/Settings]}]]])))))
 
 
 (defcard-rg Left-Sidebar
