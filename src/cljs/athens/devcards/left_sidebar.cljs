@@ -177,9 +177,10 @@
            ;; SHORTCUTS
            [:ol (use-style shortcuts-list-style)
             [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
-            (for [[_order title uid] sorted-shortcuts]
-              ^{:key uid}
-              [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title])]
+            (doall
+              (for [[_order title uid] sorted-shortcuts]
+                ^{:key uid}
+                [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title]))]
 
            ;; LOGO + BOTTOM BUTTONS
            [:footer (use-sub-style left-sidebar-style :footer)
