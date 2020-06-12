@@ -267,7 +267,7 @@
                       [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
                       (when block-string
                         [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
-                      [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowRight]]])))])))]])))
+                      [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowForward]]])))])))]])))
 
 
 (defcard-rg Athena-Prompt
