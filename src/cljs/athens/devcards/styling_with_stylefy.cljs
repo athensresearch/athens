@@ -1,11 +1,10 @@
 (ns athens.devcards.styling-with-stylefy
   (:require
     [athens.db]
-    [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-doc mkdn-pprint-source]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [devcards.core :refer-macros [defcard-doc]]))
+
 
 (defcard-doc
   "# Styling in Athens
@@ -14,6 +13,7 @@
   
   Behind the scenes, Stylefy creates classes and links them to each rendered component. This avoids polluting browser markup with inline styles, provides clear abstractions for reasoning about components, and allows for style reuse.
 ")
+
 
 (defcard-doc "
   ## Creating Styles
@@ -29,6 +29,7 @@
   ```
 ")
 
+
 (defcard-doc "
   Style pseudo-elements and element modes with `::stylefy/mode` inside the style definition.
 
@@ -41,6 +42,7 @@
   ```
 ")
 
+
 (defcard-doc "
   Create styles for inner components with Stylefy's \"sub-styles\". Use these when creating sub-components that won't be used separately.
 
@@ -50,6 +52,7 @@
      ::stylefy/sub-styles {:footer {:margin-top \"auto\"}}})
   ```
 ")
+
 
 (defcard-doc "
   Create deeper selections with `::stylefy/manual`.
@@ -61,6 +64,7 @@
      ::stylefy/manual [[:&.open {:color \"blue\"}]})
   ```
 ")
+
 
 (defcard-doc "
   Create more complex selections where necessary by combining manual mode with [Garden](https://github.com/noprompt/garden)'s advanced selectors.
@@ -78,6 +82,7 @@
   Check out Stylefy's [documentation](https://github.com/Jarzka/stylefy) to learn about composing styles together, creating dynamic style functions, and more.
 ")
 
+
 (defcard-doc "
   ### Applying Styles
 
@@ -93,6 +98,7 @@
     [:div (use-style box-style)])
   ```")
 
+
 (defcard-doc "
   Provide attributes to the element by adding them to `(use-style)` after the style.
 
@@ -100,6 +106,7 @@
   [:a (use-style link-style {:href \"https://athensresearch.github.io/athens\"} \"Athens\")]
   ```
 ")
+
 
 (defcard-doc "
   Apply sub-styles with Stylefy's `(use-sub-style)` function.
@@ -115,6 +122,7 @@
       [:div (use-sub-style box-style :box-child)]])
   ```
   ")
+
 
 (defcard-doc "
   Avoid creating styles that will be frequently updated, because this forces Stylefy to create a new class for each update.
