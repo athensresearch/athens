@@ -1,7 +1,6 @@
 (ns athens.devcards.db-boxes
   (:require
     [athens.db :as db]
-    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.style :refer [base-styles]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
@@ -335,8 +334,8 @@
   [data mode limit]
   (let [hs (headings data mode)
         rows (get-rows data mode)]
-    [:div (with-styles {:font-size "12px"
-                        :overflow-x "auto"})
+    [:div {:styles {:font-size "12px"
+                    :overflow-x "auto"}}
      [:table
       [:thead
        [:tr (for [h hs]
@@ -349,7 +348,7 @@
          ^{:key (str "row-" (-> row first :idx))}
          [:tr (for [{:keys [idx heading] :as c} row]
                 ^{:key (str idx heading)}
-                [:td (with-styles {:background-color "none"})
+                [:td {:style {:background-color "none"}}
                  (cell c)])])]]]))
 
 

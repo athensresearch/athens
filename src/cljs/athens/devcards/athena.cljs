@@ -128,22 +128,22 @@
                          :preview {:grid-area "preview"
                                    :white-space "wrap"
                                    :word-break "break-word"
-                                   :overflow "hidden"
-                                   :text-overflow "ellipsis"
-                                   :display "-webkit-box"
-                                   :-webkit-line-clamp "1"
-                                   :-webkit-box-orient "vertical"
+                                  ;;  :overflow "hidden"
+                                  ;;  :text-overflow "ellipsis"
+                                  ;;  :display "-webkit-box"
+                                  ;;  :-webkit-line-clamp "2"
+                                  ;;  :-webkit-box-orient "vertical"
                                    :color (opacify (:body-text-color COLORS) (nth OPACITIES 3))}
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
    ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
                            :color (:app-bg-color COLORS)}}
-   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader {:color "inherit !important"}]]]})
+   ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-highlight-style
-  {:color "inherit"
+  {:color "#000"
    :font-weight "500"})
 
 
@@ -215,7 +215,7 @@
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
     (map-indexed (fn [i part]
                    (if (re-find query-pattern part)
-                     [:span (use-style result-highlight-style {:key i}) part]
+                     [:span.result-highlight (use-style result-highlight-style {:key i}) part]
                      part))
                  (clojure.string/split txt query-pattern))))
 
@@ -257,16 +257,17 @@
           (let [[query {:keys [pages blocks] :as result}] @*match]
             (when result
               [:div (use-style results-list-style)
-               (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
-                 (let [parent (:block/parent x)
-                       page-title (or (:node/title parent) (:node/title x))
-                       block-uid (or (:block/uid parent) (:block/uid x))
-                       block-string (:block/string x)]
-                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
-                    [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
-                    (when block-string
-                      [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
-                    [:span.link-leader (use-sub-style result-style :link-leader) "->"]]))])))]])))
+               (doall
+                 (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
+                   (let [parent (:block/parent x)
+                         page-title (or (:node/title parent) (:node/title x))
+                         block-uid (or (:block/uid parent) (:block/uid x))
+                         block-string (:block/string x)]
+                     [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                      [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
+                      (when block-string
+                        [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
+                      [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowForward]]])))])))]])))
 
 
 (defcard-rg Athena-Prompt

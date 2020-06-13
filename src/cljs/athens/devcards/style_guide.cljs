@@ -1,20 +1,11 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [+flex-center +flex-space-between +flex-space-around +flex-column +flex-wrap
-                          +text-shadow +box-shadow
-                          +link-bg
-                          base-styles COLORS OPACITIES]]
+    [athens.style :refer [base-styles COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]))
-
-
-(def +circle
-  (with-styles {:width 80
-                :height 80
-                :border-radius 40}))
+    [devcards.core :refer-macros [defcard-rg]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (defcard-rg Import-Styles
@@ -22,26 +13,48 @@
   [base-styles])
 
 
+(def color-group-style
+  {:display "grid"
+   :padding "1rem"
+   :grid-template-columns "repeat( auto-fit, minmax(9rem, 1fr))"
+   :grid-gap "3rem 1rem"
+   :text-align "center"
+   :align-items "center"})
+
+
+(def color-item-style
+  {:display "grid"
+   :grid-gap "0.25rem"
+   ::stylefy/manual [[:div {:border-radius "1000px"
+                            :background (:link-color COLORS)
+                            :height "4rem"
+                            :margin "auto"
+                            :width "4rem"}]]})
+
+
+(def text-item-style
+  {:display "flex"
+   :justify-content "space-between"})
+
+
 (defcard-rg Colors
-  "`+box-shadow` and `+text-shadow` used on the circles and text, respectively."
-  [:div (with-styles +flex-space-around +flex-wrap
-          {:background-color "#E5E5E5" :padding 20 :border-radius 5})
+  [:div (use-style (merge color-group-style {:background "#e5e5e5"}))
    (for [c (keys COLORS)]
      ^{:key c}
-     [:div (with-styles +flex-center +flex-column {:width 200 :padding "15px 0px"})
-      [:div (with-styles +box-shadow +circle {:background-color (c COLORS)})]
+     [:div (use-style color-item-style)
+      [:div {:style {:background (c COLORS) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
       [:span c]
-      [:span (with-styles +text-shadow {:color (c COLORS)}) (c COLORS)]])]
+      [:span {:style {:color (c COLORS)}} (c COLORS)]])]
   {}
-  {})
+  {:padding false})
 
 
 (defcard-rg Opacities
-  [:div +flex-space-around
+  [:div (use-style color-group-style)
    (for [o OPACITIES]
      ^{:key o}
-     [:div (with-styles +flex-center +flex-column)
-      [:div (with-styles +circle +link-bg {:opacity o})]
+     [:div (use-style color-item-style)
+      [:div {:style {:opacity o}}]
       [:span o]])])
 
 
@@ -58,32 +71,28 @@
   [:div
    (for [t types]
      ^{:key t}
-     [:div +flex-space-between
+     [:div (use-style text-item-style)
       [:span t]
-      [t (with-styles {:font-family (second fonts)}) "Welcome to Athens"]])])
+      [t {:style {:font-family (second fonts)}} "Welcome to Athens"]])])
 
 
 (defcard-rg Serif-Types
   [:div
    (for [t types]
      ^{:key t}
-     [:div +flex-space-between
+     [:div (use-style text-item-style)
       [:span t]
-      [t (with-styles {:font-family (first fonts)}) "Welcome to Athens"]])])
+      [t {:style {:font-family (first fonts)}} "Welcome to Athens"]])])
 
 
 (defcard-rg Monospace-Types
   [:div
    (for [t types]
      ^{:key t}
-     [:div +flex-space-between
+     [:div (use-style text-item-style)
       [:span t]
-      [t (with-styles {:font-family (last fonts)}) "Welcome to Athens"]])])
+      [t {:style {:font-family (last fonts)}} "Welcome to Athens"]])])
 
 
 (defcard-rg Material-UI-Icons
-  "Not sure how to import Material UI Icons
-  resources
-  - https://shadow-cljs.github.io/docs/UsersGuide.html#cljsjs
-  - https://github.com/cljsjs/packages/tree/master/material-ui-icons
-  ")
+  [:a {:href "/cards.html#!/athens.devcards.icons"} "Icons DevCard"])

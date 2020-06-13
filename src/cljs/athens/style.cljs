@@ -1,6 +1,5 @@
 (ns athens.style
   (:require
-    [athens.lib.dom.attributes :refer [with-styles]]
     [garden.color :refer [opacify hex->hsl]]
     [garden.core :refer [css]]))
 
@@ -30,61 +29,7 @@
 (def OPACITIES [0.1 0.25 0.5 0.75 1])
 
 
-;; Functions that add styles to an element. Prefer to directly add styles when possible, otherwise
-;; use classes, and style above.
-
-;; Color Functions
-
-(def +link-bg
-  (with-styles {:background-color (:link-color COLORS)}))
-
-
-(def +link
-  (with-styles {:color (:link-color COLORS) :cursor "pointer"}))
-
-;; Shadow Functions
-
-(def +text-shadow
-  (with-styles {:text-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
-
-
-(def +box-shadow
-  (with-styles {:box-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
-
-
-;; Flex Functions
-
-
-(def +flex-center
-  (with-styles {:display "flex" :justify-content "center" :align-items "center"}))
-
-
-(def +flex-space-between
-  (with-styles {:display "flex" :justify-content "space-between" :align-items "center"}))
-
-
-(def +flex-space-around
-  (with-styles {:display "flex" :justify-content "space-around" :align-items "center"}))
-
-
-(def +flex-wrap
-  (with-styles {:display "flex" :flex-wrap "wrap"}))
-
-
-(def +flex-column
-  (with-styles {:display "flex" :flex-direction "column"}))
-
-
-;; Width and Height
-
-
-(def +width-100
-  (with-styles {:width "100%"}))
-
-
-;; Class Functions
-
-;; Style Guide
+;; Base Styles
 
 (defn base-styles
   []
