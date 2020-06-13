@@ -4,11 +4,11 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]))
+    [devcards.core :refer-macros [defcard-doc]]))
 
 
-(defcard-rg Styling-with-Stylefy
- "# Styling in Athens
+(defcard-doc
+  "# Styling in Athens
 
   Components in Athens are styled using [Stylefy](https://github.com/Jarzka/stylefy).
   
@@ -107,5 +107,4 @@
   ```clojure
   [:div (use-style cursor-trail-style) {:style {:left x :top y}}]
   ```"
-  [base-styles]
-)
+  [base-styles])
