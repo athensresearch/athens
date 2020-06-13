@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.router :refer [navigate-page]]
     [athens.style :refer [base-styles COLORS]]
     [cljsjs.react]
@@ -136,11 +135,6 @@
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.selected {}]]})
-
-
-(def +black-circle
-  (with-styles {:height           5 :width 5 :border-radius "50%" :cursor "pointer" :display "inline-block"
-                :background-color "black" :vertical-align "middle"}))
 
 
 ;; HELPERS ;;
