@@ -1,25 +1,25 @@
 (ns athens.devcards.devtool
   (:require
     [athens.db :as db]
-    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.devcards.buttons :refer [button-primary button]]
-    [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [base-styles]]
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [<!]]
+    [athens.devcards.db :refer [load-real-db-button]]
+    [cljs.pprint :as pp]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as str]
+    [clojure.core.protocols :as core-p]
+    [clojure.datafy :refer [nav datafy]]
     [datascript.core :as d]
-    [devcards.core :as devcards :refer [defcard defcard-rg]]
-    [garden.core :refer [css]]
+    [datascript.db]
+    [devcards.core :as devcards :refer [defcard-rg]]
+    [me.tonsky.persistent-sorted-set]
     [reagent.core :as r]
-    [reagent.ratom :refer [reactive?]]
+    [reagent.ratom]
     [sci.core :as sci]
-    [posh.reagent :as posh]
-    [shadow.remote.runtime.cljs.browser])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+    [shadow.remote.runtime.cljs.browser]
+    [stylefy.core :as stylefy :refer [use-style]]))
+
+
+(defonce conn (d/create-conn db/schema))
 
 
 (def key-code->key
@@ -30,31 +30,239 @@
 
 (def initial-state
   {:eval-str
-   "(d/q '[:find [?e ...]
+   "(d/q '[:find [(pull ?e [*]) ...]
        :where [?e :node/title]]
-    athens/conn)"
-   :tx-reports []})
+    @athens/db)"
+   :tx-reports []
+   :active-panel :query})
 
 
 (defonce state* (r/atom initial-state))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
+(defn ds-nav-impl
+  [_ k v]
+  (condp = k
+    :db/id (d/pull @conn '[* :block/_children] v) ; TODO add inverse refs here
+    v)) ; TODO add unique idents here as well
 
 
-(defonce conn (new-conn))
+(defn restore-db!
+  [db]
+  (d/reset-conn! conn db {:time-travel true}))
 
 
-(posh-conn! conn)
+(extend-protocol core-p/Datafiable
+  cljs.core/PersistentHashMap
+  (datafy [this]
+    (with-meta this {`core-p/nav ds-nav-impl}))
+  cljs.core/PersistentArrayMap
+  (datafy [this]
+    (with-meta this {`core-p/nav ds-nav-impl}))
+  datascript.db/TxReport
+  (datafy [this]
+    (into {} this))
+  datascript.db/Datom
+  (datafy [this]
+    (vec this))
+  datascript.db/DB
+  (datafy [this]
+    (into {} this))
+  me.tonsky.persistent-sorted-set/BTSet
+  (datafy [this]
+    (vec this)))
 
 
-(defn listener
-  [tx-report]
-  (swap! state* update :tx-reports conj tx-report))
+(defn data-table
+  [_ _ _]
+  (let [limit (r/atom 20)]
+    (fn [headers rows add-nav!]
+      [:div
+       [:div (use-style {:font-size "12px"
+                         :font-family "IBM Plex Mono"
+                         :overflow-x "auto"})
+        [:table
+         [:thead
+          [:tr (for [h headers]
+                 ^{:key h} [:th h])]]
+         [:tbody
+          (doall
+            (for [row (take @limit rows)]
+
+              ^{:key row}
+              [:tr (use-style {:cursor "pointer"
+                               ::stylefy/mode {:hover {:background-color "#EFEDEB"}}}
+                              {:on-click #(add-nav! [(first row)
+                                                     (-> row meta :row-value)])})
+               (for [i (range (count row))]
+                 (let [cell (get row i)]
+                   ^{:key (str row i cell)}
+                   [:td (if (nil? cell)
+                          ""
+                          (pr-str cell))]))]))]]] ; use the edn-viewer here as well?
+       (when (< @limit (count rows))
+         [:a (use-style {:cursor "pointer"}
+                        {:on-click #(swap! limit + 10)})
+          "Load more"])])))
 
 
-(d/listen! conn :devtool listener)
+; TODO add truncation of long strings here
+(defn edn-viewer
+  [data _]
+  [:pre [:code (with-out-str (cljs.pprint/pprint data))]])
+
+
+(defn coll-viewer
+  [coll add-nav!]
+  [data-table ["idx" "value"]
+   (->> coll
+        (map-indexed (fn [idx item]
+                       (with-meta [idx item] {:row-value item})))
+        vec)
+   add-nav!])
+
+
+(defn map-viewer
+  [m add-nav!]
+  [data-table ["key" "value"]
+   (map (fn [[k v]] (with-meta [k v] {:row-value v})) m)
+   add-nav!])
+
+
+(defn maps-viewer
+  [ms add-nav!]
+  (let [headers (into ["idx"] (->> ms (mapcat keys) distinct))
+        rows (map-indexed (fn [idx m]
+                            (with-meta (into [idx]
+                                             (for [h (rest headers)] (get m h)))
+                              {:row-value m}))
+                          ms)]
+    [data-table headers rows add-nav!]))
+
+
+(defn tuples-viewer
+  [colls add-nav!]
+  (let [max-count (->> colls
+                       (map count)
+                       (apply max))
+        headers (into ["idx"] (range max-count))
+        rows (map-indexed (fn [idx coll]
+                            (with-meta (into [idx]
+                                             (for [i (range max-count)] (get coll i)))
+                              {:row-value coll})
+                            colls))]
+    [data-table headers rows add-nav!]))
+
+
+(defn associative-not-sequential?
+  [x]
+  (and (associative? x)
+       (not (sequential? x))))
+
+
+(defn sequence-of-maps?
+  [x]
+  (and (sequential? x)
+       (every? map? x)))
+
+
+(defn tuples?
+  [x]
+  (and (sequential? x)
+       (every? sequential? x)))
+
+
+(def viewers
+  [{:athens.viewer/id :athens.browser/edn
+    :athens.viewer/pred (constantly true)
+    :athens.viewer/fn edn-viewer}
+   {:athens.viewer/id :athens.browser/coll
+    :athens.viewer/pred coll?
+    :athens.viewer/fn coll-viewer}
+   {:athens.viewer/id :athens.browser/map
+    :athens.viewer/pred associative-not-sequential?
+    :athens.viewer/fn map-viewer}
+   {:athens.viewer/id :athens.browser/maps
+    :athens.viewer/pred sequence-of-maps?
+    :athens.viewer/fn maps-viewer}])
+   ;{:athens.viewer/id :athens.browser/tuples
+   ; :athens.viewer/pred tuples?
+   ; :athens.viewer/fn tuples-viewer}])
+
+(def viewer-preference
+  [:athens.browser/maps
+   :athens.browser/map
+   :athens.browser/tuples
+   :athens.browser/coll
+   :athens.browser/edn])
+
+
+(defn applicable-viewers
+  [data]
+  (->> viewers
+       (filter (fn [{:keys [athens.viewer/pred]}] (pred data)))
+       (map :athens.viewer/id)
+       (sort-by #(.indexOf viewer-preference %))))
+
+
+(def indexed-viewers
+  (->> viewers
+       (map (juxt :athens.viewer/id identity))
+       (into {})))
+
+
+(defn dropdown
+  [options selected on-change]
+  [:select {:on-change on-change
+            :value selected}
+   (for [opt options]
+     ^{:key opt}
+     [:option {:value opt}
+      opt])])
+
+
+(defn data-browser
+  [_]
+  (let [state (r/atom {:navs []})]
+    (fn [data]
+      (let [navs (:navs @state)
+            add-nav! #(swap! state update :navs conj %)
+            navved-data (reduce (fn [d [k v]] (nav (datafy d) k v))
+                                data
+                                navs)
+            datafied-data (datafy navved-data)
+            applicable-vs (applicable-viewers datafied-data)
+            viewer-name (or (:viewer @state) (first applicable-vs))
+            viewer (get-in indexed-viewers [viewer-name :athens.viewer/fn])]
+        [:div
+         [:div {:style {:display "flex"
+                        :flex-direction "row"
+                        :flex-wrap "no-wrap"
+                        :justify-content "space-between"}}
+          [:div {:style {:display "flex"
+                         :flex-direction "column"
+                         :flex-wrap "no-wrap"}}
+           (doall
+             (for [i (-> navs count range)]
+               (let [nav (get navs i)]
+                 ^{:key i}
+                 [:a (use-style {:cursor "pointer"
+                                 ::stylefy/mode {:hover {:background-color "#EFEDEB"}}}
+                                {:on-click #(swap! state (fn [s]
+                                                           (-> s
+                                                               (update :navs subvec 0 i)
+                                                               (dissoc :viewer))))})
+                  (str "<< " (first nav))])))]
+          [:div "View as: "
+           [dropdown applicable-vs viewer-name #(swap! state assoc :viewer (->> %
+                                                                                .-target
+                                                                                .-value
+                                                                                (keyword "athens.browser")))]]]
+         [:div (pr-str (type navved-data))]
+         (when (d/db? navved-data)
+           [button-primary {:on-click-fn #(restore-db! navved-data)
+                            :label "Restore this db"}])
+         [viewer datafied-data add-nav!]]))))
 
 
 (defcard-rg Load-Real-DB
@@ -78,9 +286,11 @@
 
 (defn eval-with-sci
   [{:keys [eval-str] :as state}]
-  (let [bindings {'athens/conn conn
-                  'd/pull posh/pull
-                  'd/q posh/q}
+  (let [bindings {'athens/db conn
+                  'd/pull d/pull
+                  'd/q d/q
+                  'd/pull-many d/pull-many
+                  'd/entity d/entity}
         [ok? result] (try
                        [true (sci/eval-string eval-str {:bindings bindings})]
                        (catch js/Error e [false e]))]
@@ -96,21 +306,22 @@
 
 (defn update-box!
   [s]
-  (tap> s)
   (swap! state* assoc :eval-str s))
-
-
-(defn update-and-eval-box!
-  [s]
-  (swap! state*
-         #(-> %
-              (assoc :eval-str s)
-              (eval-with-sci))))
 
 
 (defn handle-box-change!
   [e]
   (update-box! (-> e .-target .-value)))
+
+
+(defn listener
+  [tx-report]
+  (swap! state* update :tx-reports conj tx-report)
+  (when (not (:error @state*))
+    (eval-box!)))
+
+
+(d/listen! conn :devtool listener)
 
 
 (defn handle-shift-return!
@@ -146,48 +357,61 @@
       nil)))
 
 
-(defn browser-component
-  [data]
-  [:div {:style {:color "blue"}}
-   (if (instance? reagent.ratom/Reaction data)
-     (pr-str @data)
-     (pr-str data))])
-
-
 (defn error-component
   [error]
   [:div {:style {:color "red"}}
    (str error)])
 
+
+(defn query-component
+  [{:keys [eval-str result error]}]
+  [:div
+   [:textarea {:value eval-str
+               :on-change handle-box-change!
+               :on-key-down handle-box-key-down!
+               :style {:width "100%"
+                       :min-height "150px"
+                       :resize :none
+                       :font-size "12px"
+                       :font-family "IBM Plex Mono"}}]
+   (if-not error
+     [data-browser result]
+     [error-component result])])
+
+
+(defn txes-component
+  [{:keys [tx-reports]}]
+  [data-browser tx-reports])
+
+
 (defn box-component
   [state _]
-  (let [{:keys [eval-str result error]} @state]
+  (let [{:keys [active-panel]} @state
+        switch-panel (fn [panel] (swap! state* assoc :active-panel panel))]
     [:div
-     [:textarea {:value eval-str
-                 :on-change handle-box-change!
-                 :on-key-down handle-box-key-down!
-                 :style {:width "100%"
-                         :min-height "150px"
-                         :resize :none
-                         :font-size "12px"
-                         :font-family "IBM Plex Mono"}}]
-     (if-not error
-       (browser-component result)
-       (error-component result))]))
+     [:span [button {:on-click-fn #(switch-panel :query)
+                     :label "Query"}]
+      " "
+      [button {:on-click-fn #(switch-panel :txes)
+               :label "Transactions"}]]
+     (case active-panel
+       :query [query-component @state]
+       :txes [txes-component @state])]))
 
 
 (defcard-rg Reset-to-all-pages
   (fn []
-    [button {:on-click-fn #(do (reset! state* initial-state)
+    [button {:on-click-fn #(do (swap! state* assoc :eval-str (:eval-str initial-state))
                                (eval-box!))
              :label "Reset"}]))
 
 
-(defcard-rg Browse-db-box
+(defcard-rg Devtool-box
   box-component
-  state*
-  {:history true})
+  state*)
+
 
 (comment
-  (deref state*)
+  (tap> (deref state*))
+
   nil)
