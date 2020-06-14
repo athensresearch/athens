@@ -27,11 +27,11 @@
 
 
 (def OPACITIES
-  {:opacity-10 0.1
-   :opacity-25 0.25
-   :opacity-50 0.50
-   :opacity-75 0.75
-   :opacity-100 1})
+  {:opacity-lower  0.10
+   :opacity-low    0.25
+   :opacity-med    0.50
+   :opacity-high   0.75
+   :opacity-higher 0.85})
 
 
 ;; Color
@@ -90,7 +90,7 @@
             [:input {:font-family "inherit"}]
             [:span
              [:.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
-              [:&:hover {:background-color (color :highlight-color :opacity-10)
+              [:&:hover {:background-color (color :highlight-color :opacity-lower)
                          :cursor           "alias"}]]]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"

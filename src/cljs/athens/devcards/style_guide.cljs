@@ -38,7 +38,7 @@
 
 
 (defcard-rg Colors
-  [:div (use-style (merge color-group-style {:background (color :body-text-color 0.15)}))
+  [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
    (doall
      (for [c (keys COLORS)]
        ^{:key c}

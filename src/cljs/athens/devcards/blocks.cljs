@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles color]]
+    [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [datascript.core :as d]
@@ -131,7 +131,7 @@
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
                      [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
-                                                                  :opacity "0.5"}]]
+                                                                  :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.selected {}]]})

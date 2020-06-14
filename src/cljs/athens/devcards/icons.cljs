@@ -34,8 +34,8 @@
    [:span {:style {:color (color :warning-color)}} (r/create-element mui-icons/Face)]
    [:span {:style {:color (color :confirmation-color)}} (r/create-element mui-icons/Face)]
    [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-10 OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-25 OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-50 OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-75 OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-lower OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-low OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-med OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-high OPACITIES)}} (r/create-element mui-icons/Face)]
    [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]])

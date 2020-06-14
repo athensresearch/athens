@@ -97,7 +97,7 @@
    :margin "0 0 32px"
    :overflow-y "auto"
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
-                                   :opacity "0.5"
+                                   :opacity (:opacity-med OPACITIES)
                                    :line-height "1"
                                    :margin "0 0 4px"
                                    :font-size "inherit"}}})
@@ -110,21 +110,21 @@
    :flex "0 0 auto"
    :padding "4px 0"
    :transition "all 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
 (def notional-logotype
   {:font-family "IBM Plex Serif"
    :font-size "18px"
-   :opacity "0.5"
+   :opacity (:opacity-med OPACITIES)
    :letter-spacing "-0.05em"
    :font-weight "bold"
    :text-decoration "none"
    :justify-self "flex-start"
    :align-self "center"
-   :color (color :headings-text-color)
+   :color (color :header-text-color)
    :transition "all 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity (:opacity-75 OPACITIES)}]]})
+   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
 (def q-shortcuts

@@ -4,7 +4,7 @@
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles color]]
+    [athens.style :as style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
@@ -79,20 +79,20 @@
                                         :-webkit-line-clamp "3"
                                         :-webkit-box-orient "vertical"}
                          :td-date {:text-align "right"
-                                   :opacity "0.75"
+                                   :opacity (:opacity-high OPACITIES)
                                    :font-size "12px"
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr
                        [:td {:border-top (str "1px solid " (color :panel-color))}]
-                       [:&:hover {:background-color (color :panel-color :opacity-10)
+                       [:&:hover {:background-color (color :panel-color :opacity-lower)
                                   :border-radius "8px"}
                         [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                      :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]
                         [:td [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
                                                                     :box-shadow "16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]]]]
                      [:td :th {:padding "8px"}]
-                     [:th [:h5 {:opacity "0.5"}]]]})
+                     [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
 
 (defn table

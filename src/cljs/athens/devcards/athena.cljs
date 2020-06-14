@@ -64,7 +64,7 @@
 (def container-style
   {:width         "784px"
    :border-radius "4px"
-   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-10)]]
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
    :flex-direction "column"
    :background    (color :app-bg-color)
@@ -90,7 +90,7 @@
    :padding "24px"
    :cursor "text"
    ::stylefy/mode {:focus {:outline "none"}
-                   "::placeholder" {:opacity (:opacity-25 OPACITIES)}}})
+                   "::placeholder" {:color (color :body-text-color :opacity-low)}}})
 
 
 (def results-list-style
@@ -106,8 +106,8 @@
    :position "sticky"
    :top "0"
    :justify-content "space-between"
-   :box-shadow [["0 1px 0 0 " (color :body-text-color 0.12)]]
-   :border-top [["1px solid" (color :body-text-color 0.12)]]})
+   :box-shadow [["0 1px 0 0 " (color :body-text-color :opacity-lower)]]
+   :border-top [["1px solid" (color :body-text-color :opacity-lower)]]})
 
 
 (def result-style
@@ -118,7 +118,7 @@
    :padding "8px 32px"
    :background (color :body-text-color 0.02)
    :transition "all .05s ease"
-   :border-top [["1px solid " (color :body-text-color 0.12)]]
+   :border-top [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
                                  :font-size "16px"
                                  :margin "0"
@@ -132,7 +132,7 @@
                                   ;;  :display "-webkit-box"
                                   ;;  :-webkit-line-clamp "2"
                                   ;;  :-webkit-box-orient "vertical"
-                                   :color (color :body-text-color :opacity-50)}
+                                   :color (color :body-text-color :opacity-med)}
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
@@ -148,7 +148,7 @@
 
 (def hint-style
   {:color "inherit"
-   :opacity (:opacity-50 OPACITIES)
+   :opacity (:opacity-med OPACITIES)
    :font-size "14px"
    ::stylefy/manual [[:kbd {:text-transform "uppercase"
                             :font-family "inherit"
