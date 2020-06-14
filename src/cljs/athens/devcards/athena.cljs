@@ -148,7 +148,7 @@
 
 (def hint-style
   {:color "inherit"
-   :opacity (nth OPACITIES 3)
+   :opacity (:opacity-50 OPACITIES)
    :font-size "14px"
    ::stylefy/manual [[:kbd {:text-transform "uppercase"
                             :font-family "inherit"
