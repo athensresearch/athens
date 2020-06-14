@@ -12,6 +12,7 @@
     [athens.devcards.node-page]
     [athens.devcards.sci-boxes]
     [athens.devcards.style-guide]
+    [athens.devcards.styling-with-stylefy]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core]
