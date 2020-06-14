@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles COLORS]]
+    [athens.style :refer [base-styles color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [datascript.core :as d]
@@ -96,7 +96,7 @@
    :justify-content "center"
    :padding "0"
    :-webkit-appearance "none"
-   ::stylefy/mode [[:hover {:color (:link-color COLORS)}]
+   ::stylefy/mode [[:hover {:color (color :link-color)}]
                    [":is(button)" {:cursor "pointer"}]]
    ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]]})
 
@@ -108,7 +108,7 @@
    :margin-right "4px"
    :transition "all 0.05s ease"
    :height "32px"
-   :color (:panel-color COLORS)
+   :color (color :panel-color)
    ::stylefy/mode [[:after {:content "''"
                             :background "currentColor"
                             :transition "all 0.05s ease"
@@ -119,7 +119,7 @@
                             :transform "translate(-50%, -50%)"
                             :height "5px"
                             :width "5px"}]
-                   [:hover {:color (:link-color COLORS)}]
+                   [:hover {:color (color :link-color)}]
                    [:before {:content "''"
                              :position "absolute"
                              :top "24px"
@@ -127,10 +127,10 @@
                              :pointer-events "none"
                              :left "22px"
                              :width "1px"
-                             :background (:panel-color COLORS)}]]
+                             :background (color :panel-color)}]]
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
-                     [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (:body-text-color COLORS))
+                     [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
                                                                   :opacity "0.5"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]

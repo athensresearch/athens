@@ -15,6 +15,10 @@
    :app-bg-color       "#FFFFFF"})
 
 
+(def HSL-COLORS
+  (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
+
+
 (def DEPTH-SHADOWS
   {:4                  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
    :8                  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
@@ -22,11 +26,34 @@
    :64                 "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"})
 
 
-(def HSL-COLORS
-  (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
+(def OPACITIES
+  {:opacity-10 0.1
+   :opacity-25 0.25
+   :opacity-50 0.50
+   :opacity-75 0.75
+   :opacity-100 1})
 
 
-(def OPACITIES [0.1 0.25 0.5 0.75 1])
+
+;; (color :link-color)
+;; (color :link-color 0.5)
+;; (color :link-color :opacity-50)
+
+;; Import (color) from style
+;; Pass in color keyword
+;; Optionally pass in alpha value, which may be keyword or 0-1
+
+(defn- return-color [c]
+  (c COLORS))
+
+(defn- return-color-with-alpha [c a]
+  (if (keyword? a)
+    (opacify (c HSL-COLORS) (a OPACITIES))
+    (opacify (c HSL-COLORS) a)))
+
+(defn color
+  ([c] (return-color c))
+  ([c a] (return-color-with-alpha c a)))
 
 
 ;; Base Styles
@@ -36,11 +63,11 @@
   [:style (css
             [:body {:margin 0
                     :font-family "IBM Plex Sans, Sans-Serif"
-                    :color (:body-text-color COLORS)
+                    :color (color :body-text-color)
                     :font-size "16px"}]
             [:* {:box-sizing "border-box"}]
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
-                                      :color (:header-text-color COLORS)}]
+                                      :color (color :header-text-color)}]
             [:h1 {:font-size "50px"
                   :font-weight 600
                   :line-height "65px"
@@ -63,12 +90,12 @@
             [:.MuiSvgIcon-root {:font-size "24px"}]
             [:input {:font-family "inherit"}]
             [:span
-             [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
-              [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
+             [:.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
+              [:&:hover {:background-color (color :highlight-color :opacity-10)
                          :cursor           "alias"}]]]
             [:.athena-result {:display "flex"
                               :padding "12px 32px 12px 32px"
                               :border-top "1px solid rgba(67, 63, 56, 0.2)"}
-             [:&:hover {:background-color (:link-color COLORS) :cursor "pointer"}
+             [:&:hover {:background-color (color :link-color) :cursor "pointer"}
               [:h4 {:color "rgba(255, 255, 255, 1)"}]
               [:span {:color "rgba(255, 255, 255, .9)"}]]])])

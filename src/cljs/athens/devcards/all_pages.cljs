@@ -4,11 +4,10 @@
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles HSL-COLORS COLORS OPACITIES]]
+    [athens.style :as style :refer [base-styles color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
-    [garden.color :refer [opacify]]
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
     [posh.reagent :refer [transact! pull-many q]]
@@ -55,10 +54,6 @@
     (.toLocaleString  (js/Date. x))))
 
 
-(def table-cell-background-color-hover
-  (opacify (:panel-color HSL-COLORS) (first OPACITIES)))
-
-
 (def tables
   {:width "100%"
    :text-align "left"
@@ -68,7 +63,7 @@
                          :th-title {}
                          :th-body {}
                          :th-date {:text-align "right"}
-                         :td-title {:color (:link-color COLORS)
+                         :td-title {:color (color :link-color)
                                     :width "15vw"
                                     :min-width "10em"
                                     :word-break "break-word"
@@ -89,8 +84,8 @@
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr
-                       [:td {:border-top (str "1px solid " (:panel-color COLORS))}]
-                       [:&:hover {:background-color table-cell-background-color-hover
+                       [:td {:border-top (str "1px solid " (color :panel-color))}]
+                       [:&:hover {:background-color (color :panel-color :opacity-10)
                                   :border-radius "8px"}
                         [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                      :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]

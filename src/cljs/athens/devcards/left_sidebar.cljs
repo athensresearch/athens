@@ -5,7 +5,7 @@
     [athens.devcards.buttons :refer [button button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [base-styles COLORS]]
+    [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -43,7 +43,7 @@
    :display "flex"
    :flex-direction "column"
    :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (:panel-color COLORS))
+   :box-shadow (str "1px 0 " (color :panel-color))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
@@ -104,7 +104,7 @@
 
 
 (def shortcut-style
-  {:color (:link-color COLORS)
+  {:color (color :link-color)
    :cursor "pointer"
    :display "flex"
    :flex "0 0 auto"
@@ -122,9 +122,9 @@
    :text-decoration "none"
    :justify-self "flex-start"
    :align-self "center"
-   :color "#000"
+   :color (color :headings-text-color)
    :transition "all 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+   ::stylefy/mode [[:hover {:opacity (:opacity-75 OPACITIES)}]]})
 
 
 (def q-shortcuts

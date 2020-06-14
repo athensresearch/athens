@@ -1,7 +1,7 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [base-styles COLORS OPACITIES]]
+    [athens.style :refer [base-styles color COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -26,7 +26,7 @@
   {:display "grid"
    :grid-gap "0.25rem"
    ::stylefy/manual [[:div {:border-radius "1000px"
-                            :background (:link-color COLORS)
+                            :background (color :link-color)
                             :height "4rem"
                             :margin "auto"
                             :width "4rem"}]]})
@@ -38,13 +38,13 @@
 
 
 (defcard-rg Colors
-  [:div (use-style (merge color-group-style {:background "#e5e5e5"}))
+  [:div (use-style (merge color-group-style {:background (color :body-text-color 0.15)}))
    (for [c (keys COLORS)]
      ^{:key c}
      [:div (use-style color-item-style)
-      [:div {:style {:background (c COLORS) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+      [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
       [:span c]
-      [:span {:style {:color (c COLORS)}} (c COLORS)]])]
+      [:span {:style {:color (color c)}} (color c)]])]
   {}
   {:padding false})
 
@@ -55,7 +55,8 @@
      ^{:key o}
      [:div (use-style color-item-style)
       [:div {:style {:opacity o}}]
-      [:span o]])])
+      [:span o]])
+   ])
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
