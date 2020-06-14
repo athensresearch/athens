@@ -16,7 +16,7 @@
 (def loading-message-style
   {:margin-top "50vh"
    :text-align "center"
-   :opacity (:opacity-high OPACITIES))})
+   :opacity (:opacity-high OPACITIES)})
 
 
 (def app-wrapper-style
