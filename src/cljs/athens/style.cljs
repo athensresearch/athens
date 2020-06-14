@@ -34,13 +34,9 @@
    :opacity-100 1})
 
 
-;; (color :link-color)
-;; (color :link-color 0.5)
-;; (color :link-color :opacity-50)
-
-;; Import (color) from style
-;; Pass in color keyword
-;; Optionally pass in alpha value, which may be keyword or 0-1
+;; Color
+;; Provide color keyword
+;; (optional) Provide alpha value, either keyword or 0-1
 
 (defn- return-color
   [c]

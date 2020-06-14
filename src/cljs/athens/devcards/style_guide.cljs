@@ -39,23 +39,25 @@
 
 (defcard-rg Colors
   [:div (use-style (merge color-group-style {:background (color :body-text-color 0.15)}))
-   (for [c (keys COLORS)]
-     ^{:key c}
-     [:div (use-style color-item-style)
-      [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
-      [:span c]
-      [:span {:style {:color (color c)}} (color c)]])]
+   (doall
+     (for [c (keys COLORS)]
+       ^{:key c}
+       [:div (use-style color-item-style)
+        [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+        [:span c]
+        [:span {:style {:color (color c)}} (color c)]]))]
   {}
   {:padding false})
 
 
 (defcard-rg Opacities
   [:div (use-style color-group-style)
-   (for [o OPACITIES]
-     ^{:key o}
-     [:div (use-style color-item-style)
-      [:div {:style {:opacity o}}]
-      [:span o]])])
+   (doall
+     (for [o (keys OPACITIES)]
+       ^{:key o}
+       [:div (use-style color-item-style)
+        [:div {:style {:opacity (o OPACITIES)}}]
+        [:span o]]))])
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
@@ -69,29 +71,32 @@
 
 (defcard-rg Sans-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (second fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (second fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Serif-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (first fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (first fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Monospace-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (last fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (last fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Material-UI-Icons
