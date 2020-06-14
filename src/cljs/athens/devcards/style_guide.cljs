@@ -1,7 +1,7 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [base-styles COLORS OPACITIES]]
+    [athens.style :refer [base-styles color COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -26,7 +26,7 @@
   {:display "grid"
    :grid-gap "0.25rem"
    ::stylefy/manual [[:div {:border-radius "1000px"
-                            :background (:link-color COLORS)
+                            :background (color :link-color)
                             :height "4rem"
                             :margin "auto"
                             :width "4rem"}]]})
@@ -38,24 +38,26 @@
 
 
 (defcard-rg Colors
-  [:div (use-style (merge color-group-style {:background "#e5e5e5"}))
-   (for [c (keys COLORS)]
-     ^{:key c}
-     [:div (use-style color-item-style)
-      [:div {:style {:background (c COLORS) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
-      [:span c]
-      [:span {:style {:color (c COLORS)}} (c COLORS)]])]
+  [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
+   (doall
+     (for [c (keys COLORS)]
+       ^{:key c}
+       [:div (use-style color-item-style)
+        [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+        [:span c]
+        [:span {:style {:color (color c)}} (color c)]]))]
   {}
   {:padding false})
 
 
 (defcard-rg Opacities
   [:div (use-style color-group-style)
-   (for [o OPACITIES]
-     ^{:key o}
-     [:div (use-style color-item-style)
-      [:div {:style {:opacity o}}]
-      [:span o]])])
+   (doall
+     (for [o (keys OPACITIES)]
+       ^{:key o}
+       [:div (use-style color-item-style)
+        [:div {:style {:opacity (o OPACITIES)}}]
+        [:span o]]))])
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
@@ -69,29 +71,32 @@
 
 (defcard-rg Sans-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (second fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (second fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Serif-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (first fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (first fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Monospace-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div (use-style text-item-style)
-      [:span t]
-      [t {:style {:font-family (last fonts)}} "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (last fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Material-UI-Icons

@@ -5,7 +5,7 @@
     [athens.devcards.athena :refer [athena]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.page :as page]
-    [athens.style :as style]
+    [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
     [re-frame.core :as rf :refer [subscribe dispatch]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -16,7 +16,7 @@
 (def loading-message-style
   {:margin-top "50vh"
    :text-align "center"
-   :opacity "0.9"})
+   :opacity (:opacity-high OPACITIES)})
 
 
 (def app-wrapper-style

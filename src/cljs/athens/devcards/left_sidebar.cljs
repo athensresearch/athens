@@ -5,7 +5,7 @@
     [athens.devcards.buttons :refer [button button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [base-styles COLORS]]
+    [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -43,7 +43,7 @@
    :display "flex"
    :flex-direction "column"
    :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (:panel-color COLORS))
+   :box-shadow (str "1px 0 " (color :panel-color))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
@@ -97,34 +97,34 @@
    :margin "0 0 32px"
    :overflow-y "auto"
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
-                                   :opacity "0.5"
+                                   :opacity (:opacity-med OPACITIES)
                                    :line-height "1"
                                    :margin "0 0 4px"
                                    :font-size "inherit"}}})
 
 
 (def shortcut-style
-  {:color (:link-color COLORS)
+  {:color (color :link-color)
    :cursor "pointer"
    :display "flex"
    :flex "0 0 auto"
    :padding "4px 0"
    :transition "all 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
 (def notional-logotype
   {:font-family "IBM Plex Serif"
    :font-size "18px"
-   :opacity "0.5"
+   :opacity (:opacity-med OPACITIES)
    :letter-spacing "-0.05em"
    :font-weight "bold"
    :text-decoration "none"
    :justify-self "flex-start"
    :align-self "center"
-   :color "#000"
+   :color (color :header-text-color)
    :transition "all 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity "0.8"}]]})
+   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
 (def q-shortcuts

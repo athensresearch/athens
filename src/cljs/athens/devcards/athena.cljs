@@ -5,14 +5,13 @@
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
     [athens.events]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles DEPTH-SHADOWS COLORS HSL-COLORS OPACITIES]]
+    [athens.style :refer [base-styles color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
-    [garden.color :refer [opacify]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
@@ -65,10 +64,10 @@
 (def container-style
   {:width         "784px"
    :border-radius "4px"
-   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (opacify (:body-text-color HSL-COLORS) (first OPACITIES))]]
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
    :flex-direction "column"
-   :background    (:app-bg-color HSL-COLORS)
+   :background    (color :app-bg-color)
    :position      "fixed"
    :overflow      "hidden"
    :max-height    "60vh"
@@ -87,28 +86,28 @@
    :letter-spacing "-0.03em"
    :border-radius "4px 4px 0 0"
    :color          "#433F38"
-   :caret-color    (:link-color COLORS)
+   :caret-color    (color :link-color)
    :padding "24px"
    :cursor "text"
    ::stylefy/mode {:focus {:outline "none"}
-                   "::placeholder" {:opacity (nth OPACITIES 2)}}})
+                   "::placeholder" {:color (color :body-text-color :opacity-low)}}})
 
 
 (def results-list-style
-  {:background    (:app-bg-color HSL-COLORS)
+  {:background    (color :app-bg-color)
    :overflow-y "auto"
    :max-height "100%"})
 
 
 (def results-heading-style
   {:padding "4px 18px"
-   :background (:app-bg-color HSL-COLORS)
+   :background (color :app-bg-color)
    :display "flex"
    :position "sticky"
    :top "0"
    :justify-content "space-between"
-   :box-shadow [["0 1px 0 0 " (opacify (:body-text-color HSL-COLORS) 0.12)]]
-   :border-top [["1px solid" (opacify (:body-text-color HSL-COLORS) 0.12)]]})
+   :box-shadow [["0 1px 0 0 " (color :body-text-color :opacity-lower)]]
+   :border-top [["1px solid" (color :body-text-color :opacity-lower)]]})
 
 
 (def result-style
@@ -117,13 +116,13 @@
    :grid-gap "0 12px"
    :grid-template-columns "1fr auto"
    :padding "8px 32px"
-   :background (opacify (:body-text-color HSL-COLORS) 0.02)
+   :background (color :body-text-color 0.02)
    :transition "all .05s ease"
-   :border-top [["1px solid " (opacify (:body-text-color HSL-COLORS) 0.12)]]
+   :border-top [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
                                  :font-size "16px"
                                  :margin "0"
-                                 :color (:header-text-color COLORS)
+                                 :color (color :header-text-color)
                                  :font-weight "500"}
                          :preview {:grid-area "preview"
                                    :white-space "wrap"
@@ -133,12 +132,12 @@
                                   ;;  :display "-webkit-box"
                                   ;;  :-webkit-line-clamp "2"
                                   ;;  :-webkit-box-orient "vertical"
-                                   :color (opacify (:body-text-color COLORS) (nth OPACITIES 3))}
+                                   :color (color :body-text-color :opacity-med)}
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
-   ::stylefy/mode {:hover {:background (:link-color HSL-COLORS)
-                           :color (:app-bg-color COLORS)}}
+   ::stylefy/mode {:hover {:background (color :link-color)
+                           :color (color :app-bg-color)}}
    ::stylefy/manual [[:&:hover [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
@@ -149,7 +148,7 @@
 
 (def hint-style
   {:color "inherit"
-   :opacity (nth OPACITIES 3)
+   :opacity (:opacity-med OPACITIES)
    :font-size "14px"
    ::stylefy/manual [[:kbd {:text-transform "uppercase"
                             :font-family "inherit"
