@@ -1,8 +1,7 @@
 (ns athens.devcards.db-boxes
   (:require
     [athens.db :as db]
-    [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [base-styles]]
+    [athens.style :refer [base-styles COLORS HSL-COLORS]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
@@ -10,9 +9,11 @@
     [clojure.string :as str]
     [datascript.core :as d]
     [devcards.core :as devcards :refer [defcard defcard-rg]]
+    [garden.color :refer [opacify]]
     [garden.core :refer [css]]
     [reagent.core :as r]
-    [sci.core :as sci])
+    [sci.core :as sci]
+    [stylefy.core :as stylefy :refer [use-style]])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
@@ -331,13 +332,44 @@
     ""))
 
 
+(def table-style
+  {:border-collapse "collapse"
+   :font-size "12px"
+   :font-family "IBM Plex Sans Condensed"
+   :letter-spacing "-0.01em"
+   :margin "8px 0 0"
+   :min-width "100%"
+   ::stylefy/manual [[:td {:border-top (str "1px solid " (:panel-color COLORS))
+                           :padding "2px"}]
+                     [:tbody {:vertical-align "top"}]
+                     [:th {:text-align "left" :padding "2px 2px"}]
+                     [:tr {:transition "all 0.05s ease"}]
+                     [:td:first-child :th:first-child {:padding-left "8px"}]
+                     [:td:last-child :th-last-child {:padding-right "8px"}]
+                     [:tbody [:tr:hover {:background (opacify (:panel-color HSL-COLORS) 0.15)
+                                         :color (:header-text-color COLORS)}]]
+                     [:td>ul {:padding "0"
+                              :margin "0"
+                              :list-style "none"}]
+                     [:td [:li {:margin "0 0 4px"
+                                :padding-top "4px";
+                                :border-top (str "1px solid " (:panel-color COLORS))}]]
+                     [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
+                     [:a {:color (:link-color COLORS)}]
+                     [:a:hover {:text-decoration "underline"}]]})
+
+
+(def footer-style
+  {:margin "8px 0"
+   ::stylefy/manual [[:a {:color (:link-color COLORS)}]]})
+
+
 (defn table-view
   [data mode limit]
   (let [hs (headings data mode)
         rows (get-rows data mode)]
-    [:div (with-styles {:font-size "12px"
-                        :overflow-x "auto"})
-     [:table
+    [:div {:style {:overflow-x "auto"}}
+     [:table (use-style table-style)
       [:thead
        [:tr (for [h hs]
               ^{:key (str "heading-" h)}
@@ -349,7 +381,7 @@
          ^{:key (str "row-" (-> row first :idx))}
          [:tr (for [{:keys [idx heading] :as c} row]
                 ^{:key (str idx heading)}
-                [:td (with-styles {:background-color "none"})
+                [:td {:style {:background-color "none"}}
                  (cell c)])])]]]))
 
 
@@ -384,13 +416,13 @@
 
            :else
            (str result))]
-   [:div (when (and (coll? result)
-                    (not (map? result))
-                    (< limit (count result)))
-           [:span (str "Showing " limit " out of " (count result) " rows ")
-            [:a {:on-click increase-limit!
-                 :style {:cursor :pointer}}
-             "load more"]])]])
+   [:div (use-style footer-style) (when (and (coll? result)
+                                             (not (map? result))
+                                             (< limit (count result)))
+                                    [:span (str "Showing " limit " out of " (count result) " rows ")
+                                     [:a {:on-click increase-limit!
+                                          :style {:cursor :pointer}}
+                                      "load more"]])]])
 
 
 (defn error-component

@@ -22,25 +22,6 @@
      (merge-dom-classes attrs dom-classes))))
 
 
-(defn merge-styles
-  [attrs styles]
-  (update attrs :style merge styles))
-
-
-(defn with-styles
-  ([map-or-fn]
-   (if (fn? map-or-fn)
-     (with-styles (map-or-fn))
-     (if (:style map-or-fn)
-       map-or-fn
-       {:style map-or-fn})))
-  ([map-or-fn & more]
-   (reduce (fn [acc x]
-             (update acc :style merge (:style (with-styles x))))
-           (with-styles map-or-fn)
-           more)))
-
-
 (defn with-attributes
   [& attributes]
   (reduce (fn [acc map-or-fn]
@@ -51,7 +32,6 @@
               (map? map-or-fn)
               (reduce-kv (fn [acc0 attribute v]
                            (case attribute
-                             :style (merge-styles      acc0 v)
                              :class (merge-dom-classes acc0 v)
 
                              ;; Potentially override whatever is there

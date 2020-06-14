@@ -4,11 +4,35 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
-    [athens.lib.dom.attributes :refer [with-styles]]
     [athens.page :as page]
-    [athens.style :as style]
+    [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
-    [re-frame.core :as rf :refer [subscribe dispatch]]))
+    [re-frame.core :as rf :refer [subscribe dispatch]]
+    [stylefy.core :as stylefy :refer [use-style]]))
+
+
+;; Styles
+
+(def loading-message-style
+  {:margin-top "50vh"
+   :text-align "center"
+   :opacity (:opacity-high OPACITIES)})
+
+
+(def app-wrapper-style
+  {:display "flex"
+   :height "100vh"})
+
+
+(def match-panel-style
+  {:margin "5rem auto"
+   :min-width "500px"
+   :max-width "900px"})
+
+
+(def main-content-style
+  {:flex "1 1 100%"
+   :overflow-y "auto"})
 
 
 (defn about-panel
@@ -48,7 +72,7 @@
 
 (defn match-panel
   [name]
-  [:div (with-styles {:margin "5rem auto" :min-width "500px" :max-width "900px"})
+  [:div (use-style match-panel-style)
    [(case name
       :about about-panel
       :pages pages-panel
@@ -66,11 +90,9 @@
        [alert]
        [athena db/dsdb]
        (if @loading
-         [:h1 (with-styles {:margin-top "50vh" :text-align "center" :opacity "0.9"}) "Loading Athens 😈"]
-         [:div
-          (with-styles {:display "flex" :height "100vh"})
+         [:h1 (use-style loading-message-style) "Loading Athens 😈"]
+         [:div (use-style app-wrapper-style)
           [style/base-styles]
           [left-sidebar db/dsdb]
-          [:div
-           (with-styles {:flex "1 1 100%" :overflow-y "auto"})
+          [:div (use-style main-content-style)
            [match-panel (-> @current-route :data :name)]]])])))

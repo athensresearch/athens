@@ -2,13 +2,12 @@
   (:require
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
-    [athens.lib.dom.attributes :refer [with-styles with-attributes]]
+    [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles +link HSL-COLORS COLORS OPACITIES]]
+    [athens.style :as style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
-    [garden.color :refer [opacify]]
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
     [posh.reagent :refer [transact! pull-many q]]
@@ -55,10 +54,6 @@
     (.toLocaleString  (js/Date. x))))
 
 
-(def table-cell-background-color-hover
-  (opacify (:panel-color HSL-COLORS) (first OPACITIES)))
-
-
 (def tables
   {:width "100%"
    :text-align "left"
@@ -68,7 +63,8 @@
                          :th-title {}
                          :th-body {}
                          :th-date {:text-align "right"}
-                         :td-title {:width "15vw"
+                         :td-title {:color (color :link-color)
+                                    :width "15vw"
                                     :min-width "10em"
                                     :word-break "break-word"
                                     :font-weight "500"
@@ -83,21 +79,20 @@
                                         :-webkit-line-clamp "3"
                                         :-webkit-box-orient "vertical"}
                          :td-date {:text-align "right"
-                                   :opacity "0.75"
+                                   :opacity (:opacity-high OPACITIES)
                                    :font-size "12px"
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr
-                       [:td {:border-top (str "1px solid " (:panel-color COLORS))}]
-                       [:&:hover {:background-color table-cell-background-color-hover
+                       [:td {:border-top (str "1px solid " (color :panel-color))}]
+                       [:&:hover {:background-color (color :panel-color :opacity-lower)
                                   :border-radius "8px"}
-                        ;; [:td {:border-top-color "transparent"}]
                         [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                      :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]
                         [:td [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
                                                                     :box-shadow "16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]]]]
                      [:td :th {:padding "8px"}]
-                     [:th [:h5 {:opacity "0.5"}]]]})
+                     [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
 
 (defn table
@@ -115,22 +110,22 @@
        [:th (use-sub-style tables :th-date) [:h5 "Modified"]]
        [:th (use-sub-style tables :th-date) [:h5 "Created"]]]]
      [:tbody
-      (for [{uid :block/uid
-             title :node/title
-             modified :edit/time
-             created :create/time
-             children :block/children} @pages]
-        ^{:key uid}
-        [:tr (use-sub-style tables :tr-item)
-         [:td (with-attributes
-                (use-sub-style tables :td-title)
-                (with-styles +link {})
-                {:on-click #(navigate-page uid)})
-          title]
-         [:td (use-sub-style tables :td-body)
-          [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
-         [:td (use-sub-style tables :td-date) (date-string modified)]
-         [:td (use-sub-style tables :td-date) (date-string created)]])]]))
+      (doall
+        (for [{uid :block/uid
+               title :node/title
+               modified :edit/time
+               created :create/time
+               children :block/children} @pages]
+          ^{:key uid}
+          [:tr (use-sub-style tables :tr-item)
+           [:td (with-attributes
+                  (use-sub-style tables :td-title)
+                  {:on-click #(navigate-page uid)})
+            title]
+           [:td (use-sub-style tables :td-body)
+            [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
+           [:td (use-sub-style tables :td-date) (date-string modified)]
+           [:td (use-sub-style tables :td-date) (date-string created)]]))]]))
 
 
 (defcard-rg Table

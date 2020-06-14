@@ -2,8 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
-    [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [COLORS OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -30,13 +29,13 @@
 (defcard-rg Styling-icons
   "Color, opacity, and other properties can be applied to icons by placing them in an element with those styles applied."
   [:div
-   [:span (with-styles {:color (:link-color COLORS)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:color (:highlight-color COLORS)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:color (:warning-color COLORS)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:color (:confirmation-color COLORS)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:opacity (nth OPACITIES 0)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:opacity (nth OPACITIES 1)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:opacity (nth OPACITIES 2)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:opacity (nth OPACITIES 3)}) (r/create-element mui-icons/Face)]
-   [:span (with-styles {:color (:body-text-color COLORS)}) (r/create-element mui-icons/Face)]])
+   [:span {:style {:color (color :link-color)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:color (color :highlight-color)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:color (color :warning-color)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:color (color :confirmation-color)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-lower OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-low OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-med OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:opacity (:opacity-high OPACITIES)}} (r/create-element mui-icons/Face)]
+   [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]])
