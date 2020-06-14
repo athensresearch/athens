@@ -55,8 +55,7 @@
      ^{:key o}
      [:div (use-style color-item-style)
       [:div {:style {:opacity o}}]
-      [:span o]])
-   ])
+      [:span o]])])
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])

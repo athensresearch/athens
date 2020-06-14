@@ -34,7 +34,6 @@
    :opacity-100 1})
 
 
-
 ;; (color :link-color)
 ;; (color :link-color 0.5)
 ;; (color :link-color :opacity-50)
@@ -43,13 +42,17 @@
 ;; Pass in color keyword
 ;; Optionally pass in alpha value, which may be keyword or 0-1
 
-(defn- return-color [c]
+(defn- return-color
+  [c]
   (c COLORS))
 
-(defn- return-color-with-alpha [c a]
+
+(defn- return-color-with-alpha
+  [c a]
   (if (keyword? a)
     (opacify (c HSL-COLORS) (a OPACITIES))
     (opacify (c HSL-COLORS) a)))
+
 
 (defn color
   ([c] (return-color c))
