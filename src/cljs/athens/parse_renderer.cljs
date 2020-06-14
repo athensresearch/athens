@@ -35,6 +35,10 @@
                          :style {:color "gray" :text-decoration "none" :font-weight "bold"}
                          :href  (rfee/href :page {:id (:block/uid @id)})}
                      (str "#" tag-name)]))
+     :url-image  (fn [{url :url alt :alt}]
+                   [:img {:class "url-image"
+                          :alt alt
+                          :src url}])
      :url-link  (fn [{url :url} text]
                   [:a {:class "url-link"
                        :href url}

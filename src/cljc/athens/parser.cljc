@@ -14,7 +14,7 @@
    block = ( syntax-in-block / any-char )*
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
    
-   <syntax-in-block> = (page-link | block-ref | hashtag | url-link | bold)
+   <syntax-in-block> = (page-link | block-ref | hashtag | url-image | url-link | bold)
    
    page-link = <'[['> any-chars <']]'>
    
@@ -23,6 +23,8 @@
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[\\p{L}\\p{M}\\p{N}_]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
    <hashtag-delimited> = <'#'> <'[['> #'[^\\]]+' <']]'>
+
+   url-image = <'!'> url-link-text url-link-url
    
    url-link = url-link-text url-link-url
    <url-link-text> = <'['> url-link-text-contents <']'>
@@ -65,6 +67,8 @@
     {:block                  (fn [& raw-contents]
                                 ;; use combine-adjacent-strings to collapse individual characters from any-char into one string
                                (into [:block] (combine-adjacent-strings raw-contents)))
+     :url-image              (fn [[text-contents] url]
+                               (into [:url-image {:url url :alt text-contents}]))
      :url-link               (fn [text-contents url]
                                (into [:url-link {:url url}] text-contents))
      :url-link-text-contents (fn [& raw-contents]
