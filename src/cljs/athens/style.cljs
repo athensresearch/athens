@@ -89,7 +89,7 @@
             [:.MuiSvgIcon-root {:font-size "24px"}]
             [:input {:font-family "inherit"}]
             [:span
-             [:.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
+             [:&.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
               [:&:hover {:background-color (color :highlight-color :opacity-lower)
                          :cursor           "alias"}]]]
             [:.athena-result {:display "flex"
