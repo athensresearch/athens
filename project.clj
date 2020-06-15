@@ -21,6 +21,7 @@
                  [re-posh "0.3.1"]
                  [cljs-http "0.1.46"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
+                 [metosin/komponentit "0.3.10"]
                  [metosin/reitit "0.4.2"]
                  [instaparse "1.4.10"]
                  [devcards "0.2.6"]
