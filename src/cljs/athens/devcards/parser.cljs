@@ -25,7 +25,7 @@
    "This is a ((uid1))"                                     ;; TODO
    "This is a **very** important block"
    "This is an [external link](https://github.com/athensresearch/athens/)"
-   "This is an image: ![alt](https://github.com/athensresearch/athens/blob/master/doc/athens-puk-patrick-unsplash.jpg"])
+   "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])
 
 
 (defcard-rg Import-Styles
