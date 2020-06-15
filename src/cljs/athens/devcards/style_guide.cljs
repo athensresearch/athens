@@ -97,7 +97,3 @@
        [:div (use-style text-item-style)
         [:span t]
         [t {:style {:font-family (last fonts)}} "Welcome to Athens"]]))])
-
-
-(defcard-rg Material-UI-Icons
-  [:a {:href "/cards.html#!/athens.devcards.icons"} "Icons DevCard"])
