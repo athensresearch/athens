@@ -212,13 +212,14 @@
 (defn coll-of-maps?
   [x]
   (and (coll? x)
-       (every? map? x)))
+       (every? associative? x)
+       (not (every? sequential? x))))
 
 
 (defn tuples?
   [x]
   (and (coll? x)
-       (every? coll? x)))
+       (every? sequential? x)))
 
 
 (defn browser
@@ -232,7 +233,8 @@
                (coll-of-maps? result)
                (table-view result :maps @limit opts)
 
-               (map? result)
+               (and (associative? result)
+                    (not (sequential? result)))
                (table-view result :map @limit opts)
 
                (tuples? result)
