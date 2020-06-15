@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-page]]
     [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
@@ -160,10 +161,7 @@
          [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
         [:span (use-style block-disclosure-toggle-style)])
       [:a (use-style block-indicator-style {:class (if closed? "closed" "open") :on-click #(navigate-page uid)})]
-      [:span string]
-      ;; TODO parse-and-render will break because it uses rfee/href
-      ;;[:span (parse-and-render string)]
-      ]
+      [:span (parse-and-render string)]]
      (when open?
        (for [child (:block/children block)]
          [:div {:style {:margin-left "32px"} :key (:db/id child)}

@@ -10,6 +10,7 @@
     [athens.devcards.icons]
     [athens.devcards.left-sidebar]
     [athens.devcards.node-page]
+    [athens.devcards.parser]
     [athens.devcards.sci-boxes]
     [athens.devcards.style-guide]
     [athens.devcards.styling-with-stylefy]

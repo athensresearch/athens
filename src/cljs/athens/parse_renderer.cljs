@@ -1,9 +1,9 @@
 (ns athens.parse-renderer
   (:require
     [athens.parser :as parser]
+    [athens.router :refer [navigate-page]]
     [instaparse.core :as insta]
-    [re-frame.core :refer [subscribe]]
-    [reitit.frontend.easy :as rfee]))
+    [re-frame.core :refer [subscribe]]))
 
 
 (declare parse-and-render)
@@ -21,23 +21,23 @@
                   (let [id (subscribe [:block/uid [:node/title title]])]
                     [:span {:class "page-link"}
                      [:span {:style {:color "gray"}} "[["]
-                     [:a {:href  (rfee/href :page {:id (:block/uid @id)})
-                          :style {:text-decoration "none" :color "dodgerblue"}} title]
+                     [:span {:on-click #(navigate-page (:block/uid @id))
+                             :style {:text-decoration "none" :color "dodgerblue"}} title]
                      [:span {:style {:color "gray"}} "]]"]]))
-     :block-ref (fn [id]
-                  (let [string (subscribe [:block/string [:block/uid id]])]
+     :block-ref (fn [uid]
+                  (let [string (subscribe [:block/string [:block/uid uid]])]
                     [:span {:class "block-ref"
                             :style {:font-size "0.9em" :border-bottom "1px solid gray"}}
-                     [:a {:href (rfee/href :page {:id id})} (parse-and-render (:block/string @string))]]))
+                     [:span {:on-click #(navigate-page uid)} (parse-and-render (:block/string @string))]]))
      :hashtag   (fn [tag-name]
                   (let [id (subscribe [:block/uid [:node/title tag-name]])]
-                    [:a {:class "hashtag"
-                         :style {:color "gray" :text-decoration "none" :font-weight "bold"}
-                         :href  (rfee/href :page {:id (:block/uid @id)})}
+                    [:span {:class "hashtag"
+                            :style {:color "gray" :text-decoration "none" :font-weight "bold"}
+                            :on-click #(navigate-page (:block/uid @id))}
                      (str "#" tag-name)]))
      :url-link  (fn [{url :url} text]
                   [:a {:class "url-link"
-                       :href url}
+                       :href  url}
                    text])
      :bold      (fn [text]
                   [:strong {:class "bold"} text])}
