@@ -57,5 +57,4 @@
        {:title (pr-str (insta/get-failure result))
         :style {:color "red"}}
        string]
-      [:span
-       (vec (transform result))])))
+      [vec (transform result)])))

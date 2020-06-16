@@ -161,7 +161,7 @@
          [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
         [:span (use-style block-disclosure-toggle-style)])
       [:a (use-style block-indicator-style {:class (if closed? "closed" "open") :on-click #(navigate-page uid)})]
-      [:span (parse-and-render string)]]
+      [parse-and-render string]]
      (when open?
        (for [child (:block/children block)]
          [:div {:style {:margin-left "32px"} :key (:db/id child)}
