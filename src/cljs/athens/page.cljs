@@ -103,33 +103,6 @@
 (def esc-keycode 27)
 
 
-;; (defn title-comp
-;;   [title]
-;;   (let [s (reagent/atom {:editing false
-;;                          :current-title title})
-;;         save! (fn [new-title]
-;;                 (swap! s assoc :editing false)
-;;                 (dispatch [:node/renamed (:current-title @s) new-title]))
-;;         cancel! (fn [] (swap! s assoc :editing false))]
-;;     (fn [title]
-;;       (if (:editing @s)
-;;         [:input {:default-value title
-;;                  :auto-focus true
-;;                  :on-blur #(save! (-> % .-target .-value))
-;;                  :on-key-down #(cond
-;;                                  (= (.-keyCode %) enter-keycode)
-;;                                  (save! (-> % .-target .-value))
-
-;;                                  (= (.-keyCode %) esc-keycode)
-;;                                  (cancel!)
-
-;;                                  :else nil)}]
-;;         [:h2 {:on-click (fn [_]
-;;                           (swap! s #(-> %
-;;                                         (assoc :editing true)
-;;                                         (assoc :current-title title))))}
-;;          title]))))
-
 (defn title-comp
   [title]
   (let [s (reagent/atom {:editing false
