@@ -3,7 +3,7 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-page toggle-open]]
-    [athens.style :refer [color]]
+    [athens.style :refer [color OPACITIES]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as reagent]
@@ -14,21 +14,25 @@
 
 (def page-style {:margin "0 40px"})
 
-(def title-style {:font-size "38px"
-                  :font-weight "500"
-                  :line-height "49px"
-                  :background "transparent"
-                  :font-family "inherit"
-                  :letter-spacing "-0.03em"
-                  :-webkit-appearance "none"
-                  :resize "none"
-                  :display "block"
-                  :width "100%"
-                  :border "none"
-                  :padding "0"
-                  :margin "0.2em 0"
-                  ::stylefy/mode [[:focus {:outline "none"
-                                           :color (color :body-text-color)}]]})
+
+(def title-style
+  {:font-size "38px"
+   :font-weight "500"
+   :line-height "49px"
+   :background "transparent"
+   :font-family "inherit"
+   :letter-spacing "-0.03em"
+   :min-height "49px"
+   :-webkit-appearance "none"
+   :resize "none"
+   :display "block"
+   :width "100%"
+   :border "none"
+   :padding "0"
+   :margin "0.2em 0"
+   ::stylefy/mode [[:focus {:outline "none"
+                            :color (color :body-text-color)
+                            :opacity (:opacity-high OPACITIES)}]]})
 
 
 (defn render-blocks
@@ -109,21 +113,17 @@
 ;;         cancel! (fn [] (swap! s assoc :editing false))]
 ;;     (fn [title]
 ;;       (if (:editing @s)
-;;         [autosize/textarea (use-style title-style
-;;          {:default-value title
-;;           :value title
-;;           :auto-focus true
-;;           :on-blur #(save! (-> % .-target .-value))
-;;           :on-key-down #(cond
-;;                           (= (.-keyCode %) enter-keycode)
-;;                           (save! (-> % .-target .-value))
+;;         [:input {:default-value title
+;;                  :auto-focus true
+;;                  :on-blur #(save! (-> % .-target .-value))
+;;                  :on-key-down #(cond
+;;                                  (= (.-keyCode %) enter-keycode)
+;;                                  (save! (-> % .-target .-value))
 
-;;                           (= (.-keyCode %) esc-keycode)
-;;                           (cancel!)
+;;                                  (= (.-keyCode %) esc-keycode)
+;;                                  (cancel!)
 
-;;                           :else nil)
-;;           ;; :on-change #(reset! title (-> % .-target .-value))
-;;           })]
+;;                                  :else nil)}]
 ;;         [:h2 {:on-click (fn [_]
 ;;                           (swap! s #(-> %
 ;;                                         (assoc :editing true)
@@ -131,16 +131,37 @@
 ;;          title]))))
 
 (defn title-comp
-    [title]
-    (let [s (reagent/atom {:editing false
-                           :title title})]
-      (fn []
-        (if (:editing @s)
-          [:h2 [autosize/textarea (use-style title-style {:value     (:title @s)
-                                   :on-change (fn [e] (swap! s assoc :title (.. e -target -value)))
-                                   :on-blur   #(swap! s assoc :editing false)})]]
-          [:h1 (use-style title-style {:on-click #(swap! s assoc :editing true)})
-            (:title @s)]))))
+  [title]
+  (let [s (reagent/atom {:editing false
+                         :title title})
+        save! (fn [new-title]
+                (swap! s assoc :editing false)
+                (dispatch [:node/renamed (:current-title @s) new-title]))
+        cancel! (fn [] (swap! s assoc :editing false))]
+    (fn []
+      (if (:editing @s)
+        [autosize/textarea (use-style title-style {:value (:title @s)
+                                                   :auto-focus true
+                                                   :on-change (fn [e] (swap! s assoc :title (.. e -target -value)))
+                                                   :on-blur (fn [_]
+                                                              #(save! (-> % .-target .-value))
+                                                              (swap! s assoc :editing false))
+                                                   :on-key-down (fn [e]
+                                                                  (cond
+                                                                    (= (.-keyCode e) enter-keycode)
+                                                                    (doall
+                                                                      (.preventDefault e)
+                                                                      (save! (-> e .-target .-value)))
+
+                                                                    (= (.-keyCode e) esc-keycode)
+                                                                    (cancel!)
+
+                                                                    :else nil))})]
+        [:h1 (use-style title-style {:on-click (fn [_]
+                                                 (swap! s #(-> %
+                                                               (assoc :editing true)
+                                                               (assoc :current-title title))))})
+         (:title @s)]))))
 
 
 (defn merge-prompt
