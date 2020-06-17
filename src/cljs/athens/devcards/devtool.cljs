@@ -1,8 +1,8 @@
 (ns athens.devcards.devtool
   (:require
+    [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary button]]
-    [athens.devcards.db :refer [new-conn load-real-db-button]]
-    [athens.style :refer [base-styles]]
+    [athens.devcards.db :refer [load-real-db-button]]
     [cljs.pprint :as pp]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -19,7 +19,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(defonce conn (new-conn))
+(defonce conn (d/create-conn db/schema))
 
 
 (def key-code->key
@@ -263,10 +263,6 @@
            [button-primary {:on-click-fn #(restore-db! navved-data)
                             :label "Restore this db"}])
          [viewer datafied-data add-nav!]]))))
-
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
 (defcard-rg Load-Real-DB
