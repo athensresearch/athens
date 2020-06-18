@@ -10,7 +10,8 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; STYLES
+;;; Styles
+
 
 (def buttons-style
   {:cursor "pointer"
@@ -51,23 +52,25 @@
                                                     :cursor "default"}]]}))
 
 
-;; COMPONENTS
+;;; Components
+
 
 (defn button
   [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn})
-   [:<> label]])
+   label])
 
 
 (defn button-primary
   [{:keys [disabled label on-click-fn style]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn})
-   [:<> label]])
+   label])
 
 
-;; DEVCARDS
+;;; Devcards
+
 
 (defcard-rg Import-Styles
   [base-styles])
@@ -112,4 +115,3 @@
    [button-primary {:disabled true :label [:<>
                                            [:span "Button"]
                                            [:> mui-icons/ChevronRight]]}]])
-

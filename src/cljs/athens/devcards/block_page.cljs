@@ -11,11 +11,7 @@
     [posh.reagent :refer [transact! posh! pull]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
-
-
-(defcard Instantiate-Dsdb)
+;;; Globals
 
 
 (def datoms
@@ -63,11 +59,10 @@
                                                           :block/string "Ultimately, we don't know when/if Roam will be open-sourced, but it's possible that Athens could accelerate or catalyze this. Regardless, there will always be some who are open-source maximalists and some who want to self-host, because that's probably really the most secure thing you can do (if you know what you're doing).",
                                                           :block/open   true,
                                                           :block/order  3}]}]}]}])
+(transact! db/dsdb datoms)
 
 
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
-(transact! conn datoms)
+;;; Components
 
 
 ;; TODO: replace " > " with an icon. Get a TypeError when doing this, though. Maybe same problem as "->" issue in Athena results
@@ -89,19 +84,21 @@
 
 (defn block-page-component
   ""
-  [conn ident]
-  (let [block   @(pull conn db/block-pull-pattern ident)
-        parents (->> @(pull conn db/parents-pull-pattern ident)
+  [ident]
+  (let [block   @(pull db/dsdb db/block-pull-pattern ident)
+        parents (->> @(pull db/dsdb db/parents-pull-pattern ident)
                      (db/shape-parent-query))]
     ;;(prn block parents)
     [block-page-el block parents]))
 
 
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
 (defcard-rg Block-Page
-  "pull entity 2347: a block within Athens FAQ
-
-  two queries:
-
-  1. block+children
-  1. parents for context"
-  [block-page-component conn 2347])
+  "pull entity 2347: a block within Athens FAQ"
+  [block-page-component 2347])

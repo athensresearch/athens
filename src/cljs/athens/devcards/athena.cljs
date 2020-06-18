@@ -1,8 +1,9 @@
 (ns athens.devcards.athena
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary]]
-    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
+    [athens.devcards.db :refer [load-real-db-button]]
     [athens.events]
     [athens.router :refer [navigate-page]]
     [athens.style :refer [base-styles color DEPTH-SHADOWS OPACITIES]]
@@ -17,48 +18,10 @@
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
-
-
-(defcard-rg Instantiate-app-db
-  "Using re-frame, even though DevCards </3 re-frame. Not using re-frame elsewhere for subs, but will probably
-  need refactoring or real isolation later.
-
-  - https://github.com/athensresearch/athens/issues/126
-  - https://github.com/bhauman/devcards/issues/105
-  - https://github.com/bhauman/devcards/pull/131/
-  ")
-
-
 (dispatch [:init-rfdb])
 
-(defcard-rg Instantiate-Dsdb)
-(defonce conn (new-conn))
-(posh-conn! conn)
 
-
-(defn handler
-  []
-  (let [n (inc (:max-eid @conn))
-        n-child (inc n)]
-    (d/transact! conn [{:node/title     (str "Test Page " n)
-                        :block/uid      (str "uid-" n)
-                        :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
-
-
-(defcard-rg Create-Page
-  "Press button and then search \"test\" "
-  [button-primary {:on-click-fn handler
-                   :label "Create Test Pages and Blocks"}])
-
-
-(defcard-rg Load-Real-DB
-  [load-real-db-button conn])
-
-
-;; STYLES
-
+;;; Styles
 
 
 (def container-style
@@ -159,7 +122,8 @@
                             :padding "0 4px"}]]})
 
 
-;; COMPONENTS
+;;; Components
+
 
 (defn athena-prompt
   []
@@ -177,13 +141,13 @@
 
 
 (defn search-in-block-title
-  [db query]
+  [query]
   (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
          :in $ ?query-pattern
          :where
          [?node :node/title ?txt]
          [(re-find ?query-pattern ?txt)]]
-       db
+       @db/dsdb
        (re-case-insensitive query)))
 
 
@@ -196,14 +160,14 @@
 
 
 (defn search-in-block-content
-  [db query]
+  [query]
   (->>
     (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
            :in $ ?query-pattern
            :where
            [?block :block/string ?txt]
            [(re-find ?query-pattern ?txt)]]
-         db
+         @db/dsdb
          (re-case-insensitive query))
     (map get-parent-node)
     (map #(dissoc % :block/_children))))
@@ -230,18 +194,17 @@
 
 
 (defn athena
-  [conn]
+  []
   (let [*cache (r/atom {})
         *match (r/atom nil)
-        db (d/db conn)
         athena? (subscribe [:athena])
         handler (fn [e]
                   (let [query (.. e -target -value)]
                     (if (clojure.string/blank? query)
                       (reset! *match [query nil])
                       (let [result (or (get @*cache query)
-                                       (cond-> {:pages (search-in-block-title db query)}
-                                         (count query) (assoc :blocks (search-in-block-content db query))))]
+                                       (cond-> {:pages (search-in-block-title query)}
+                                         (count query) (assoc :blocks (search-in-block-content query))))]
                         (swap! *cache assoc query result)
                         (reset! *match [query result])))))]
     (when @athena?
@@ -269,8 +232,30 @@
                       [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowForward]]])))])))]])))
 
 
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
+(defcard-rg Create-Page
+  "Press button and then search \"test\" "
+  [button-primary {:on-click-fn (fn []
+                                  (let [n       (inc (:max-eid @db/dsdb))
+                                        n-child (inc n)]
+                                    (d/transact! db/dsdb [{:node/title     (str "Test Page " n)
+                                                           :block/uid      (str "uid-" n)
+                                                           :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
+                   :label       "Create Test Pages and Blocks"}])
+
+
+(defcard-rg Load-Real-DB
+  [load-real-db-button])
+
+
 (defcard-rg Athena-Prompt
   "Must press again to close. Doesn't go away if you click outside."
   [:<>
    [athena-prompt]
-   [athena conn]])
+   [athena]])

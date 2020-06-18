@@ -2,7 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [#_posh! #_transact! #_pull pull-many #_q]]
+    [posh.reagent :refer [posh! #_transact! #_pull pull-many #_q]]
     #_[re-frame.core :as re-frame]
     [re-posh.core :as re-posh]))
 
@@ -128,6 +128,13 @@
     [?e :block/string ?s]
     [(re-find ?regex ?s)]])
 
+(def q-shortcuts
+  '[:find ?order ?title ?uid
+    :where
+    [?e :page/sidebar ?order]
+    [?e :node/title ?title]
+    [?e :block/uid ?uid]])
+
 
 (defn get-children
   [conn entids]
@@ -151,3 +158,4 @@
 
 (defonce dsdb (d/create-conn schema))
 (re-posh/connect! dsdb)
+(posh! dsdb)

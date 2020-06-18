@@ -12,15 +12,8 @@
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
-    [posh.reagent :refer [transact! posh! pull-many q]]
+    [posh.reagent :refer [transact! pull-many q]]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
-
-
-;;; Globals
-
-
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
 
 
 ;;; Styles
@@ -78,12 +71,12 @@
 
 
 (defn table
-  [conn]
+  []
   (let [page-eids (q '[:find [?e ...]
                        :where
                        [?e :node/title ?t]]
-                     conn)
-        pages (pull-many conn '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
+                     db/dsdb)
+        pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
     [:table (use-style table-style)
      [:thead (use-sub-style table-style :thead)
       [:tr
@@ -126,8 +119,8 @@
   "Page title increments by more than one each time because we create multiple entities (the child blocks)."
   [button-primary {:label "Create Page"
                    :on-click-fn (fn []
-                                  (let [n (:max-eid @conn)]
-                                    (transact! conn [{:node/title     (str "Test Title " n)
+                                  (let [n (:max-eid @db/dsdb)]
+                                    (transact! db/dsdb [{:node/title     (str "Test Title " n)
                                                       :block/uid      (str "uid" n)
                                                       :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
                                                       :create/time    (.getTime (js/Date.))
@@ -135,8 +128,8 @@
 
 
 (defcard-rg Load-Real-DB
-  [load-real-db-button conn])
+  [load-real-db-button])
 
 
 (defcard-rg Table
-  [table conn])
+  [table])
