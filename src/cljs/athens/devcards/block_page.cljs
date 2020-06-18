@@ -6,16 +6,11 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
-    [posh.reagent :refer [transact! posh! pull]]))
+    [devcards.core :refer-macros [defcard-rg]]
+    [posh.reagent :refer [transact! pull]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
-
-
-(defcard Instantiate-Dsdb)
+;;; Globals
 
 
 (def datoms
@@ -65,9 +60,10 @@
                                                           :block/order  3}]}]}]}])
 
 
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
-(transact! conn datoms)
+(transact! db/dsdb datoms)
+
+
+;;; Components
 
 
 ;; TODO: replace " > " with an icon. Get a TypeError when doing this, though. Maybe same problem as "->" issue in Athena results
@@ -89,19 +85,21 @@
 
 (defn block-page-component
   ""
-  [conn ident]
-  (let [block   @(pull conn db/block-pull-pattern ident)
-        parents (->> @(pull conn db/parents-pull-pattern ident)
+  [ident]
+  (let [block   @(pull db/dsdb db/block-pull-pattern ident)
+        parents (->> @(pull db/dsdb db/parents-pull-pattern ident)
                      (db/shape-parent-query))]
     ;;(prn block parents)
     [block-page-el block parents]))
 
 
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
 (defcard-rg Block-Page
-  "pull entity 2347: a block within Athens FAQ
-
-  two queries:
-
-  1. block+children
-  1. parents for context"
-  [block-page-component conn 2347])
+  "pull entity 2347: a block within Athens FAQ"
+  [block-page-component 2347])

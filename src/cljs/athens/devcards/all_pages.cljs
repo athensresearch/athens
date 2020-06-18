@@ -1,7 +1,8 @@
 (ns athens.devcards.all-pages
   (:require
+    [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary]]
-    [athens.devcards.db :refer [new-conn posh-conn! load-real-db-button]]
+    [athens.devcards.db :refer [load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
     [athens.style :as style :refer [base-styles color OPACITIES]]
@@ -14,47 +15,10 @@
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
+;;; Styles
 
 
-(defcard-rg Modify-Devcards
-  "Increase width to 90% for table"
-  [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])])
-
-
-(defcard Instantiate-Dsdb)
-(defonce conn (new-conn))
-(posh-conn! conn)
-
-
-(defn handler
-  []
-  (let [n (:max-eid @conn)]
-    (transact! conn [{:node/title     (str "Test Title " n)
-                      :block/uid      (str "uid" n)
-                      :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
-                      :create/time    (.getTime (js/Date.))
-                      :edit/time      (.getTime (js/Date.))}])))
-
-
-(defcard-rg Create-Page
-  "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [button-primary {:on-click-fn handler :label "Create Page"}])
-
-
-(defcard-rg Load-Real-DB
-  [load-real-db-button conn])
-
-
-(defn- date-string
-  [x]
-  (if (< x 1)
-    [:span "(unknown date)"]
-    (.toLocaleString  (js/Date. x))))
-
-
-(def tables
+(def table-style
   {:width "100%"
    :text-align "left"
    :border-collapse "collapse"
@@ -95,20 +59,30 @@
                      [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
 
+;;; Components
+
+
+(defn- date-string
+  [x]
+  (if (< x 1)
+    [:span "(unknown date)"]
+    (.toLocaleString  (js/Date. x))))
+
+
 (defn table
-  [conn]
+  []
   (let [page-eids (q '[:find [?e ...]
                        :where
                        [?e :node/title ?t]]
-                     conn)
-        pages (pull-many conn '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
-    [:table (use-style tables)
-     [:thead (use-sub-style tables :thead)
+                     db/dsdb)
+        pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
+    [:table (use-style table-style)
+     [:thead (use-sub-style table-style :thead)
       [:tr
-       [:th (use-sub-style tables :th-title) [:h5 "Title"]]
-       [:th (use-sub-style tables :th-body) [:h5 "Body"]]
-       [:th (use-sub-style tables :th-date) [:h5 "Modified"]]
-       [:th (use-sub-style tables :th-date) [:h5 "Created"]]]]
+       [:th (use-sub-style table-style :th-title) [:h5 "Title"]]
+       [:th (use-sub-style table-style :th-body) [:h5 "Body"]]
+       [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
+       [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
      [:tbody
       (doall
         (for [{uid :block/uid
@@ -117,17 +91,44 @@
                created :create/time
                children :block/children} @pages]
           ^{:key uid}
-          [:tr (use-sub-style tables :tr-item)
+          [:tr (use-sub-style table-style :tr-item)
            [:td (with-attributes
-                  (use-sub-style tables :td-title)
+                  (use-sub-style table-style :td-title)
                   {:on-click #(navigate-page uid)})
             title]
-           [:td (use-sub-style tables :td-body)
-            [:div (use-sub-style tables :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
-           [:td (use-sub-style tables :td-date) (date-string modified)]
-           [:td (use-sub-style tables :td-date) (date-string created)]]))]]))
+           [:td (use-sub-style table-style :td-body)
+            [:div (use-sub-style table-style :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
+           [:td (use-sub-style table-style :td-date) (date-string modified)]
+           [:td (use-sub-style table-style :td-date) (date-string created)]]))]]))
+
+
+;;; Devcards
+
+
+(defcard "# All Pages — [#100](https://github.com/athensresearch/athens/issues/100)")
+
+
+(defcard-rg Import-Styles
+  [:<>
+   [base-styles]
+   [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])]])
+
+
+(defcard-rg Create-Page
+  "Page title increments by more than one each time because we create multiple entities (the child blocks)."
+  [button-primary {:label "Create Page"
+                   :on-click-fn (fn []
+                                  (let [n (:max-eid @db/dsdb)]
+                                    (transact! db/dsdb [{:node/title     (str "Test Title " n)
+                                                         :block/uid      (str "uid" n)
+                                                         :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
+                                                         :create/time    (.getTime (js/Date.))
+                                                         :edit/time      (.getTime (js/Date.))}])))}])
+
+
+(defcard-rg Load-Real-DB
+  [load-real-db-button])
 
 
 (defcard-rg Table
-  [table conn])
-
+  [table])

@@ -6,16 +6,11 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
-    [posh.reagent :refer [transact! posh! pull q]]))
+    [devcards.core :refer-macros [defcard-rg]]
+    [posh.reagent :refer [transact! pull q]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
-
-
-(defcard Instantiate-Dsdb)
+;;; Globals
 
 
 (def datoms
@@ -378,9 +373,10 @@
                      {:db/id 4137, :block/uid "YDTpf-rMy", :block/string "", :block/open true, :block/order 1}]}])
 
 
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
-(transact! conn datoms)
+(transact! db/dsdb datoms)
+
+
+;;; Components
 
 
 (defn node-page-el
@@ -409,22 +405,23 @@
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
   [ident]
-  (let [node (->> @(pull conn db/node-pull-pattern ident) (db/sort-block))
+  (let [node (->> @(pull db/dsdb db/node-pull-pattern ident) (db/sort-block))
         title (:node/title node)]
     (when-not (clojure.string/blank? title)
-      (let [linked-ref-entids     @(q db/q-refs conn (patterns/linked title))
-            unlinked-ref-entids   @(q db/q-refs conn (patterns/unlinked title))]
+      (let [linked-ref-entids     @(q db/q-refs db/dsdb (patterns/linked title))
+            unlinked-ref-entids   @(q db/q-refs db/dsdb (patterns/unlinked title))]
         [node-page-el node linked-ref-entids unlinked-ref-entids]))))
 
 
-(defcard-rg Node-Page
-  "pull entity 4093: \"Hyperlink\" page
+;;; Devcards
 
-  TODO Could all be separate issues/PRs:
-  - [ ] pulls aren't reactive
-  - [ ] title
-  - [ ] linked refs
-  "
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
+(defcard-rg Node-Page
+  "pull entity 4093: \"Hyperlink\" page"
   [node-page-component 4093])
 
 

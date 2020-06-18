@@ -7,15 +7,13 @@
     [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
+    [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [posh.reagent :refer [transact! posh! pull]]
+    [posh.reagent :refer [transact! pull]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
-;; DATA
 
-(defcard Instantiate-Dsdb)
+;;; Globals
 
 
 (def datoms
@@ -65,15 +63,9 @@
                                                           :block/order  3}]}]}]}])
 
 
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
-(transact! conn datoms)
+(transact! db/dsdb datoms)
 
-
-;; CSS ;;
-
-(defcard-rg Import-Styles
-  [base-styles])
+;;; Styles
 
 
 (def block-style
@@ -138,16 +130,17 @@
                      [:&.selected {}]]})
 
 
-;; HELPERS ;;
+;;; Components
+
+
 (defn toggle
   [dbid open?]
-  (transact! conn [{:db/id dbid :block/open (not open?)}]))
+  (transact! db/dsdb [{:db/id dbid :block/open (not open?)}]))
 
 
 (declare block-component)
 
 
-;; COMPONENTS ;;
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
@@ -175,20 +168,25 @@ Also, why does datascript return a reaction of {:db/id nil} when pulling for [:b
 no results for q returns nil
 no results for pull eid returns nil
   "
-  [conn ident]
-  (let [block (->> @(pull conn db/block-pull-pattern ident)
+  [ident]
+  (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
                    (db/sort-block))]
     [block-el block]))
 
 
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
 (defcard-rg Block
-  "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents, unlike `block-page`"
-  [block-component conn 2347])
+  "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents for context, unlike `block-page`."
+  [block-component 2347])
 
 
-(defcard-rg Block-Embed
-  "TODO")
+(defcard-rg Block-Embed "TODO")
 
 
-(defcard-rg Transclusion
-  "TODO")
+(defcard-rg Transclusion "TODO")

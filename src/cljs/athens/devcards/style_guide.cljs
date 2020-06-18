@@ -8,9 +8,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(defcard-rg Import-Styles
-  "CSS is imported here"
-  [base-styles])
+;;; Styles
 
 
 (def color-group-style
@@ -37,6 +35,25 @@
    :justify-content "space-between"})
 
 
+;;; Components
+
+
+(def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
+
+
+(def fonts
+  [["IBM Plex Serif" "serif"]
+   ["IBM Plex Sans" "sans-serif"]
+   ["IBM Plex Mono" "monospace"]])
+
+
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
 (defcard-rg Colors
   [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
    (doall
@@ -58,15 +75,6 @@
        [:div (use-style color-item-style)
         [:div {:style {:opacity (o OPACITIES)}}]
         [:span o]]))])
-
-
-(def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
-
-
-(def fonts
-  [["IBM Plex Serif" "serif"]
-   ["IBM Plex Sans" "sans-serif"]
-   ["IBM Plex Mono" "monospace"]])
 
 
 (defcard-rg Sans-Types

@@ -1,9 +1,9 @@
 (ns athens.devcards.left-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db]
     [athens.devcards.athena :refer [athena-prompt]]
     [athens.devcards.buttons :refer [button button-primary]]
-    [athens.devcards.db :refer [new-conn posh-conn!]]
     [athens.router :refer [navigate navigate-page]]
     [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
@@ -15,25 +15,7 @@
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
-(defcard-rg Import-Styles
-  [base-styles])
-
-
-(defcard-rg Instantiate-Dsdb)
-(defonce conn (new-conn))
-(posh-conn! conn)
-
-
-(defn handler
-  []
-  (let [n (:max-eid @conn)]
-    (transact! conn [{:page/sidebar n
-                      :node/title   (str "Page " n)
-                      :block/uid    (str "uid" n)}])))
-
-
-(defcard-rg Create-Shortcut
-  [button-primary {:on-click-fn handler :label "Create Shortcut"}])
+;;; Styles
 
 
 (def left-sidebar-style
@@ -78,7 +60,7 @@
                                                             :grid-auto-flow "row"}}}))
 
 
-(def main-navigation
+(def main-navigation-style
   {:margin "0 0 32px"
    :display "grid"
    :grid-auto-flow "row"
@@ -113,7 +95,7 @@
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
-(def notional-logotype
+(def notional-logotype-style
   {:font-family "IBM Plex Serif"
    :font-size "18px"
    :opacity (:opacity-med OPACITIES)
@@ -127,18 +109,13 @@
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
-(def q-shortcuts
-  '[:find ?order ?title ?uid
-    :where
-    [?e :page/sidebar ?order]
-    [?e :node/title ?title]
-    [?e :block/uid ?uid]])
+;;; Components
 
 
 (defn left-sidebar
-  [conn]
+  []
   (let [open? (r/atom true)
-        shortcuts (q q-shortcuts conn)]
+        shortcuts (q db/q-shortcuts db/dsdb)]
     (fn []
       (let [sorted-shortcuts (->> @shortcuts
                                   (into [])
@@ -163,7 +140,7 @@
             [athena-prompt]
             [button {:on-click-fn #(swap! open? not)
                      :label [:> mui-icons/ChevronLeft]}]]
-           [:nav (use-style main-navigation)
+           [:nav (use-style main-navigation-style)
             [button {:disabled true :label [:<>
                                             [:> mui-icons/Today]
                                             [:span "Daily Notes"]]}]
@@ -184,17 +161,29 @@
 
            ;; LOGO + BOTTOM BUTTONS
            [:footer (use-sub-style left-sidebar-style :footer)
-            [:a (use-style notional-logotype {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
+            [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
             [button {:disabled true
                      :label [:> mui-icons/TextFormat]}]
             [button {:disabled true
                      :label [:> mui-icons/Settings]}]]])))))
 
 
+;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
+
+
+(defcard-rg Create-Shortcut
+  [button-primary {:on-click-fn (fn []
+                                  (let [n (:max-eid @db/dsdb)]
+                                    (transact! db/dsdb [{:page/sidebar n
+                                                         :node/title   (str "Page " n)
+                                                         :block/uid    (str "uid" n)}]))) :label "Create Shortcut"}])
+
+
 (defcard-rg Left-Sidebar
   [:div {:style {:display "flex" :height "60vh"}}
-   [left-sidebar conn]]
-  {}
+   [left-sidebar]]
   {:padding false})
-
-
