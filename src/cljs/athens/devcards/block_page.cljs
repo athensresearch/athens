@@ -6,9 +6,8 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
-    [posh.reagent :refer [transact! posh! pull]]))
+    [devcards.core :refer-macros [defcard-rg]]
+    [posh.reagent :refer [transact! pull]]))
 
 
 ;;; Globals
@@ -59,6 +58,8 @@
                                                           :block/string "Ultimately, we don't know when/if Roam will be open-sourced, but it's possible that Athens could accelerate or catalyze this. Regardless, there will always be some who are open-source maximalists and some who want to self-host, because that's probably really the most secure thing you can do (if you know what you're doing).",
                                                           :block/open   true,
                                                           :block/order  3}]}]}]}])
+
+
 (transact! db/dsdb datoms)
 
 

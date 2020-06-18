@@ -8,7 +8,6 @@
     [athens.style :as style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
@@ -121,10 +120,10 @@
                    :on-click-fn (fn []
                                   (let [n (:max-eid @db/dsdb)]
                                     (transact! db/dsdb [{:node/title     (str "Test Title " n)
-                                                      :block/uid      (str "uid" n)
-                                                      :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
-                                                      :create/time    (.getTime (js/Date.))
-                                                      :edit/time      (.getTime (js/Date.))}])))}])
+                                                         :block/uid      (str "uid" n)
+                                                         :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
+                                                         :create/time    (.getTime (js/Date.))
+                                                         :edit/time      (.getTime (js/Date.))}])))}])
 
 
 (defcard-rg Load-Real-DB

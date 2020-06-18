@@ -8,7 +8,7 @@
     [cljsjs.react.dom]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
-    [posh.reagent :refer [posh! transact!]]
+    [posh.reagent :refer [transact!]]
     [reagent.core :as r]))
 
 
@@ -59,14 +59,3 @@
 (defcard athens-dsdb
   "The main Athens dsdb:"
   db/dsdb)
-
-
-(defn new-conn
-  []
-  (d/create-conn db/schema))
-
-
-(defn posh-conn!
-  [conn]
-  (posh! conn))
-

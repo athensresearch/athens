@@ -6,10 +6,8 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
-    [posh.reagent :refer [transact! posh! pull q]]))
-
+    [devcards.core :refer-macros [defcard-rg]]
+    [posh.reagent :refer [transact! pull q]]))
 
 
 ;;; Globals
@@ -373,6 +371,8 @@
                                         :block/order  1}]}
                      {:db/id 4136, :block/uid "7ZHM9WBJ4", :block/string "type:: notes", :block/open true, :block/order 0}
                      {:db/id 4137, :block/uid "YDTpf-rMy", :block/string "", :block/open true, :block/order 1}]}])
+
+
 (transact! db/dsdb datoms)
 
 

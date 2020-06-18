@@ -7,10 +7,9 @@
     [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
+    [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [posh.reagent :refer [transact! posh! pull]]
+    [posh.reagent :refer [transact! pull]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -63,6 +62,8 @@
                                                           :block/open   true
                                                           :block/order  3}]}]}]}])
 
+
+(transact! db/dsdb datoms)
 
 ;;; Styles
 

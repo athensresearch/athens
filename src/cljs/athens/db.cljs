@@ -128,6 +128,7 @@
     [?e :block/string ?s]
     [(re-find ?regex ?s)]])
 
+
 (def q-shortcuts
   '[:find ?order ?title ?uid
     :where
