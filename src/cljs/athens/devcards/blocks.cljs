@@ -1,20 +1,20 @@
 (ns athens.devcards.blocks
   (:require
-    ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles color OPACITIES DEPTH-SHADOWS]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]
-    [garden.selectors :as selectors]
-    [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! pull]]
-    [re-frame.core :as rf]
-    [stylefy.core :as stylefy :refer [use-style]])
+   ["@material-ui/icons" :as mui-icons]
+   [athens.db :as db]
+   [athens.parse-renderer :refer [parse-and-render]]
+   [athens.router :refer [navigate-page]]
+   [athens.style :refer [base-styles color OPACITIES DEPTH-SHADOWS]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [devcards.core :refer-macros [defcard-rg]]
+   [garden.selectors :as selectors]
+   [komponentit.autosize :as autosize]
+   [posh.reagent :refer [transact! pull]]
+   [re-frame.core :as rf]
+   [stylefy.core :as stylefy :refer [use-style]])
   (:import
-    (goog.events KeyCodes)))
+   (goog.events KeyCodes)))
 
 
 (rf/dispatch [:init-rfdb])
@@ -134,6 +134,40 @@
                      [:&.selected {}]]})
 
 
+(stylefy/keyframes "drop-area-appear"
+                   [:from
+                    {:opacity "0"}]
+                   [:to
+                    {:opacity "1"}])
+
+
+(stylefy/keyframes "drop-area-color-pulse"
+                   [:from
+                    {:opacity (:opacity-lower OPACITIES)}]
+                   [:to
+                    {:opacity (:opacity-med OPACITIES)}])
+
+
+(def drop-area-indicator {:display "block"
+                          :height "1px"
+                          :margin-bottom "-1px"
+                          :color (color :body-text-color)
+                          :position "relative"
+                          :transform-origin "left"
+                          :z-index "1000"
+                          :width "100%"
+                          :animation "drop-area-appear .5s ease"
+                          ::stylefy/manual [[:&:after {:position "absolute"
+                                                       :content "''"
+                                                       :top "-0.5px"
+                                                       :right "0"
+                                                       :bottom "-0.5px"
+                                                       :left "0"
+                                                       :border-radius "100px"
+                                                       :animation "drop-area-color-pulse 1s ease infinite alternate"
+                                                       :background "currentColor"}]]})
+
+
 (def tooltip-style
   {:z-index    1 :position "absolute" :left "-200px"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
@@ -179,9 +213,7 @@ no results for pull eid returns nil
 
       [:div (merge (use-style block-style
                               {:class "block-container"
-                               :data-uid uid})
-                   {:style {:border-bottom (when (and (= closest-uid uid)
-                                                      (= closest-kind :sibling)) "5px solid black")}})
+                               :data-uid uid}))
        [:div {:style {:display "flex"}}
 
         ;; Toggle
@@ -221,9 +253,7 @@ no results for pull eid returns nil
         [:div {:class    "block-contents"
                :data-uid uid
                :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")
-                          :border-bottom (when (and (= closest-uid uid)
-                                                    (= closest-kind :child)) "5px solid black")}}
+                          :user-select   (when dragging-uid "none")}}
          (if (= editing-uid uid)
            [autosize/textarea {:value       string
                                :style       {:width "100%"}
@@ -232,14 +262,20 @@ no results for pull eid returns nil
                                               ;;(prn (.. e -target -value))
                                               (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
                                :on-key-down (fn [e] (on-key-down e dbid order))}]
-           [parse-and-render string])]]
+           [parse-and-render string])
+        
+         (when (and (= closest-uid uid)
+                    (= closest-kind :child))
+                      [:span (use-style drop-area-indicator)])]]
 
        ;; Children
        (when open?
          (for [child (:block/children block)]
            [:div {:style {:margin-left "32px"} :key (:db/id child)}
-            [block-el child]]))])))
+            [block-el child]]))
 
+       (when (and (= closest-uid uid) (= closest-kind :sibling))
+         [:span (use-style drop-area-indicator)])])))
 
 ;; Helpers
 
