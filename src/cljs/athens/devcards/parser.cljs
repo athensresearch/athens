@@ -13,16 +13,17 @@
     [posh.reagent :refer [posh! transact!]]))
 
 
-(defonce conn (d/create-conn db/schema))
-(posh! conn)
-;; TODO: parser transformation requires database to transclude block refs. Currently uses re-frame, not sure how we want to do it with posh.
-(transact! conn [[:db/add 1 :block/uid "uid1" :block/string "block ref"]])
+;; not transacting for some reason
+;;(transact! db/dsdb [[:db/add 5001 :block/uid "asd123" :block/string "block ref"]])
 
 
 (def strings
   ["This is a plain block"
    "This is a [[page link]]"
-   "This is a ((uid1))"                                     ;; TODO
+   "This is a [[nested [[page link]]]]"
+   "This is a #hashtag"
+   "This is a #[[long hashtag]]"
+   "This is a block ref: ((lxMRAb5Y5))"                                     ;; TODO
    "This is a **very** important block"
    "This is an [external link](https://github.com/athensresearch/athens/)"
    "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])

@@ -1,17 +1,20 @@
 (ns athens.views
   (:require
     [athens.db :as db]
+    [athens.devcards.node-page :refer [node-page-component]]
+    [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
-    [athens.page :as page]
     [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
-    [re-frame.core :as rf :refer [subscribe dispatch]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [posh.reagent :refer [pull]]
+    [re-frame.core :refer [subscribe dispatch]]
+    [stylefy.core :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
+
 
 (def loading-message-style
   {:margin-top "50vh"
@@ -35,10 +38,16 @@
    :overflow-y "auto"})
 
 
-(defn about-panel
+;;; Components
+
+
+(defn alert
+  "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
-  [:div
-   [:h1 "About Panel"]])
+  (let [errors (subscribe [:errors])]
+    (when (seq @errors)
+      (js/alert (str @errors))
+      (dispatch [:clear-errors]))))
 
 
 (defn file-cb
@@ -47,6 +56,15 @@
         file (.. e -target -files (item 0))]
     (set! (.-onload fr) #(dispatch [:parse-datoms (.. % -target -result)]))
     (.readAsText fr file)))
+
+
+;; Panels
+
+
+(defn about-panel
+  []
+  [:div
+   [:h1 "About Panel"]])
 
 
 (defn pages-panel
@@ -61,13 +79,15 @@
      [table db/dsdb]]))
 
 
-(defn alert
-  "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
+(defn page-panel
   []
-  (let [errors (subscribe [:errors])]
-    (when (seq @errors)
-      (js/alert (str @errors))
-      (dispatch [:clear-errors]))))
+  (let [current-route (subscribe [:current-route])
+        uid           (-> @current-route :path-params :id)
+        node-or-block @(pull db/dsdb '[*] [:block/uid uid])]
+    [:div {:style {:margin-left "40px" :margin-right "40px"}}
+     (if (:node/title node-or-block)
+       [node-page-component (:db/id node-or-block)]
+       [block-page-component (:db/id node-or-block)])]))
 
 
 (defn match-panel
@@ -76,7 +96,7 @@
    [(case name
       :about about-panel
       :pages pages-panel
-      :page page/main
+      :page page-panel
       pages-panel)]])
 
 
