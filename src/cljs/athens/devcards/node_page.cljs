@@ -423,16 +423,3 @@
 (defcard-rg Node-Page
   "pull entity 4093: \"Hyperlink\" page"
   [node-page-component 4093])
-
-
-;; TODO: don't want to create a page wrapper here as it relies on re-frame subscription, but can copy this to app when ready
-;;(defn page-component
-;;  []
-;;  (let [current-route (subscribe [:current-route])
-;;        uid           (-> @current-route :path-params :id)
-;;        node-or-block @(pull conn '[*] [:block/uid uid])]
-;;    [:div {:style {:margin-left "40px" :margin-right "40px"}}
-;;     (if (:node/title node-or-block)
-;;       [node-page-component (:db/id node-or-block)]
-;;       [block-page-component (:db/id node-or-block)]
-;;       )]))

@@ -2,11 +2,11 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! #_transact! #_pull pull-many #_q]]
-    #_[re-frame.core :as re-frame]
-    [re-posh.core :as re-posh]))
+    [posh.reagent :refer [posh! #_transact! #_pull pull-many #_q]]))
 
-;; Data Parsing ;;
+;;; JSON Parsing
+
+
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
   {"children" :block/children
@@ -71,11 +71,17 @@
       (parse-tuples edn-data))))
 
 
+;;; Example Roam DBs
+
+
 (def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
-;; datascript and posh ;;
+
+;;; Datascript and Posh
+
+
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
    :node/title     {:db/unique :db.unique/identity}
@@ -149,14 +155,18 @@
        (into [])))
 
 
-;; re-frame ;;
+(defonce dsdb (d/create-conn schema))
+
+
+(posh! dsdb)
+
+
+;;; re-frame
+
+
 (defonce rfdb {:user "Jeff"
                :current-route nil
                :loading true
                :errors {}
                :athena false})
 
-
-(defonce dsdb (d/create-conn schema))
-(re-posh/connect! dsdb)
-(posh! dsdb)
