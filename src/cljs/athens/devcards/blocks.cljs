@@ -14,7 +14,8 @@
     [re-frame.core :as rf]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
-    (goog.events KeyCodes)))
+    (goog.events
+      KeyCodes)))
 
 
 (rf/dispatch [:init-rfdb])
@@ -75,7 +76,7 @@
 (def block-style
   {:display "flex"
    :line-height "32px"
-   :position "relative"
+  ;;  :position "relative"
    :justify-content "flex-start"
    :flex-direction "column"})
 
@@ -117,21 +118,76 @@
                             :height "5px"
                             :width "5px"}]
                    [:hover {:color (color :link-color)}]
-                   [:before {:content "''"
-                             :position "absolute"
-                             :top "24px"
-                             :bottom "0"
-                             :pointer-events "none"
-                             :left "22px"
-                             :width "1px"
-                             :background (color :panel-color)}]]
+                  ;;  [:before {:content "''"
+                  ;;            :position "absolute"
+                  ;;            :top "24px"
+                  ;;            :bottom "0"
+                  ;;            :pointer-events "none"
+                  ;;            :left "22px"
+                  ;;            :width "1px"
+                  ;;            :background (color :panel-color)}]
+                   ]
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
                      [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
                                                                   :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
+                     [:&.dragging {:z-index "1000"
+                                   :cursor "grabbing"
+                                   :color (color :body-text-color)}]
+                     [:&.dragging [(selectors/& (selectors/after)) {:box-shadow "0 4px 16px 1px"}]]
                      [:&.selected {}]]})
+
+
+(stylefy/keyframes "drop-area-appear"
+                   [:from
+                    {:opacity "0"}]
+                   [:to
+                    {:opacity "1"}])
+
+
+(stylefy/keyframes "drop-area-color-pulse"
+                   [:from
+                    {:opacity (:opacity-lower OPACITIES)}]
+                   [:to
+                    {:opacity (:opacity-med OPACITIES)}])
+
+
+(def drop-area-indicator
+  {:display "block"
+   :height "1px"
+   :margin-bottom "-1px"
+   :color (color :body-text-color)
+   :position "relative"
+   :transform-origin "left"
+   :z-index "1000"
+   :width "100%"
+   :animation "drop-area-appear .5s ease"
+   ::stylefy/manual [[:&:after {:position "absolute"
+                                :content "''"
+                                :top "-0.5px"
+                                :right "0"
+                                :bottom "-0.5px"
+                                :left "0"
+                                :border-radius "100px"
+                                :animation "drop-area-color-pulse 1s ease infinite alternate"
+                                :background "currentColor"}]]})
+
+
+(def block-content-style
+  {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+                                 :resize "none"
+                                 :color "inherit"
+                                 :padding "0"
+                                 :margin "0"
+                                 :font-size "inherit"
+                                 :line-height "inherit"
+                                 :border "0"
+                                 :font-family "inherit"}]
+                     [:textarea:focus {:outline "none"
+                                       :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                       :opacity (:opacity-high OPACITIES)}]]})
 
 
 (def tooltip-style
@@ -179,9 +235,7 @@ no results for pull eid returns nil
 
       [:div (merge (use-style block-style
                               {:class "block-container"
-                               :data-uid uid})
-                   {:style {:border-bottom (when (and (= closest-uid uid)
-                                                      (= closest-kind :sibling)) "5px solid black")}})
+                               :data-uid uid}))
        [:div {:style {:display "flex"}}
 
         ;; Toggle
@@ -193,9 +247,9 @@ no results for pull eid returns nil
         ;; Bullet
         (if (= dragging-uid uid)
           [:span (merge (use-style block-indicator-style
-                                   {:class    (str "bullet " (if closed? "closed" "open"))
+                                   {:class    (str "bullet" (if closed? " closed" " open") " dragging")
                                     :data-uid uid})
-                        {:style {:left x :top y}})]
+                        {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
           [:span (use-style block-indicator-style
                             {:class    (str "bullet " (if closed? "closed" "open"))
@@ -212,18 +266,16 @@ no results for pull eid returns nil
               [:span [:b "children: "]]
               (for [ch children]
                 (let [{:block/keys [uid order]} ch]
-                  [:span {:style {:margin-left "20px"} :key uid}
+                  [:span {:style {:margin-left "-20px"} :key uid}
                    [:b "order: "] [:span order]
                    [:span " | "]
                    [:b "uid: "] [:span uid]]))])])
 
         ;; Actual Contents
-        [:div {:class    "block-contents"
-               :data-uid uid
-               :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")
-                          :border-bottom (when (and (= closest-uid uid)
-                                                    (= closest-kind :child)) "5px solid black")}}
+        [:div (use-style (merge block-content-style {:width "100%"
+                                                     :user-select (when dragging-uid "none")})
+                         {:class "block-contents"
+                          :data-uid uid})
          (if (= editing-uid uid)
            [autosize/textarea {:value       string
                                :style       {:width "100%"}
@@ -232,14 +284,20 @@ no results for pull eid returns nil
                                               ;;(prn (.. e -target -value))
                                               (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
                                :on-key-down (fn [e] (on-key-down e dbid order))}]
-           [parse-and-render string])]]
+           [parse-and-render string])
+
+         (when (and (= closest-uid uid)
+                    (= closest-kind :child))
+           [:span (use-style drop-area-indicator)])]]
 
        ;; Children
        (when open?
          (for [child (:block/children block)]
            [:div {:style {:margin-left "32px"} :key (:db/id child)}
-            [block-el child]]))])))
+            [block-el child]]))
 
+       (when (and (= closest-uid uid) (= closest-kind :sibling))
+         [:span (use-style drop-area-indicator)])])))
 
 ;; Helpers
 
