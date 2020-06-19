@@ -75,7 +75,7 @@
 (def block-style
   {:display "flex"
    :line-height "32px"
-   :position "relative"
+  ;;  :position "relative"
    :justify-content "flex-start"
    :flex-direction "column"})
 
@@ -117,20 +117,25 @@
                             :height "5px"
                             :width "5px"}]
                    [:hover {:color (color :link-color)}]
-                   [:before {:content "''"
-                             :position "absolute"
-                             :top "24px"
-                             :bottom "0"
-                             :pointer-events "none"
-                             :left "22px"
-                             :width "1px"
-                             :background (color :panel-color)}]]
+                  ;;  [:before {:content "''"
+                  ;;            :position "absolute"
+                  ;;            :top "24px"
+                  ;;            :bottom "0"
+                  ;;            :pointer-events "none"
+                  ;;            :left "22px"
+                  ;;            :width "1px"
+                  ;;            :background (color :panel-color)}]
+                   ]
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
                      [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
                                                                   :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
+                     [:&.dragging {:z-index "1000"
+                                   :cursor "grabbing"
+                                   :color (color :body-text-color)}]
+                     [:&.dragging [(selectors/& (selectors/after)) {:box-shadow "0 4px 16px 1px"}]]
                      [:&.selected {}]]})
 
 
@@ -193,9 +198,9 @@ no results for pull eid returns nil
         ;; Bullet
         (if (= dragging-uid uid)
           [:span (merge (use-style block-indicator-style
-                                   {:class    (str "bullet " (if closed? "closed" "open"))
+                                   {:class    (str "bullet" (if closed? " closed" " open") " dragging")
                                     :data-uid uid})
-                        {:style {:left x :top y}})]
+                        {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
           [:span (use-style block-indicator-style
                             {:class    (str "bullet " (if closed? "closed" "open"))
@@ -212,7 +217,7 @@ no results for pull eid returns nil
               [:span [:b "children: "]]
               (for [ch children]
                 (let [{:block/keys [uid order]} ch]
-                  [:span {:style {:margin-left "20px"} :key uid}
+                  [:span {:style {:margin-left "-20px"} :key uid}
                    [:b "order: "] [:span order]
                    [:span " | "]
                    [:b "uid: "] [:span uid]]))])])
@@ -221,9 +226,7 @@ no results for pull eid returns nil
         [:div {:class    "block-contents"
                :data-uid uid
                :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")
-                          :border-bottom (when (and (= closest-uid uid)
-                                                    (= closest-kind :child)) "5px solid black")}}
+                          :user-select   (when dragging-uid "none")}}
          (if (= editing-uid uid)
            [autosize/textarea {:value       string
                                :style       {:width "100%"}

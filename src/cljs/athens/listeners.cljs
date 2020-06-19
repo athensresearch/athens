@@ -23,20 +23,19 @@
   [e]
   (let [class-list (-> (.. e -target -classList) array-seq)]
     (when (some #(= "bullet" %) class-list)
-      (let [{:keys [left top]} (get-client-rect e)
-            offset {:x (- (.-clientX e) left)
-                    :y (- (.-clientY e) top)}
+      (let [start-pos {:x (.-clientX e)
+                       :y (.-clientY e)}
             uid (.. e -target -dataset -uid)
-            on-move (mouse-move-bullet offset uid)]
+            on-move (mouse-move-bullet start-pos uid)]
         (events/listen js/window EventType.MOUSEMOVE on-move)
         (events/listen js/window EventType.MOUSEUP (mouse-up-bullet on-move))))))
 
 
 (defn mouse-move-bullet
-  [offset uid]
+  [start-pos uid]
   (fn [evt]
-    (let [x (- (.-clientX evt) (:x offset))
-          y (- (.-clientY evt) (:y offset))
+    (let [x (- (.-clientX evt) (:x start-pos))
+          y (- (.-clientY evt) (:y start-pos))
           closest-sibling (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-container"))
           closest-child (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-contents"))
           closest (or closest-child closest-sibling)
