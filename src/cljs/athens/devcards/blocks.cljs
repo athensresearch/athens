@@ -134,6 +134,20 @@
                      [:&.selected {}]]})
 
 
+(def block-content-style {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+                                                        :resize "none"
+                                                        :color "inherit"
+                                                        :padding "0"
+                                                        :margin "0"
+                                                        :font-size "inherit"
+                                                        :line-height "inherit"
+                                                        :border "0"
+                                                        :font-family "inherit"}]
+                                            [:textarea:focus {:outline "none"
+                                                              :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                                              :opacity (:opacity-high OPACITIES)}]]})
+
+
 (def tooltip-style
   {:z-index    1 :position "absolute" :left "-200px"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
@@ -218,12 +232,12 @@ no results for pull eid returns nil
                    [:b "uid: "] [:span uid]]))])])
 
         ;; Actual Contents
-        [:div {:class    "block-contents"
-               :data-uid uid
-               :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")
-                          :border-bottom (when (and (= closest-uid uid)
-                                                    (= closest-kind :child)) "5px solid black")}}
+        [:div (use-style (merge block-content-style {:width "100%"
+                                                     :user-select   (when dragging-uid "none")
+                                                     :border-bottom (when (and (= closest-uid uid)
+                                                                               (= closest-kind :child)) "5px solid black")})
+                         {:class "block-contents"
+                          :data-uid uid})
          (if (= editing-uid uid)
            [autosize/textarea {:value       string
                                :style       {:width "100%"}
