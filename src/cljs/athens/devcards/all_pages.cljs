@@ -22,11 +22,7 @@
   {:width "100%"
    :text-align "left"
    :border-collapse "collapse"
-   ::stylefy/sub-styles {:thead {}
-                         :tr-item {}
-                         :th-title {}
-                         :th-body {}
-                         :th-date {:text-align "right"}
+   ::stylefy/sub-styles {:th-date {:text-align "right"}
                          :td-title {:color (color :link-color)
                                     :width "15vw"
                                     :min-width "10em"
@@ -34,7 +30,6 @@
                                     :font-weight "500"
                                     :font-size "21px"
                                     :line-height "27px"}
-                         :td-body {}
                          :body-preview {:white-space "wrap"
                                         :word-break "break-word"
                                         :overflow "hidden"
@@ -77,10 +72,10 @@
                      db/dsdb)
         pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
     [:table (use-style table-style)
-     [:thead (use-sub-style table-style :thead)
+     [:thead
       [:tr
-       [:th (use-sub-style table-style :th-title) [:h5 "Title"]]
-       [:th (use-sub-style table-style :th-body) [:h5 "Body"]]
+       [:th [:h5 "Title"]]
+       [:th [:h5 "Body"]]
        [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
        [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
      [:tbody
@@ -91,12 +86,12 @@
                created :create/time
                children :block/children} @pages]
           ^{:key uid}
-          [:tr (use-sub-style table-style :tr-item)
+          [:tr
            [:td (with-attributes
                   (use-sub-style table-style :td-title)
                   {:on-click #(navigate-page uid)})
             title]
-           [:td (use-sub-style table-style :td-body)
+           [:td
             [:div (use-sub-style table-style :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
            [:td (use-sub-style table-style :td-date) (date-string modified)]
            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]))
