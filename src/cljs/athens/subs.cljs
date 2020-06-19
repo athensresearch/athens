@@ -43,16 +43,16 @@
 (re-frame/reg-sub
   :editing-uid
   (fn-traced [db _]
-    (:editing-uid db)))
+             (:editing-uid db)))
 
 
 (re-frame/reg-sub
   :tooltip-uid
   (fn-traced [db _]
-    (:tooltip-uid db)))
+             (:tooltip-uid db)))
 
 
 (re-frame/reg-sub
-  :dragging
+  :drag-bullet
   (fn-traced [db _]
-    (:dragging db)))
+             (:drag-bullet db)))

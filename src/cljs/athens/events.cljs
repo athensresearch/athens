@@ -52,6 +52,24 @@
              (assoc-in db [:loading] false)))
 
 
+(reg-event-db
+  :editing-uid
+  (fn-traced [db [_ uid]]
+             (assoc db :editing-uid uid)))
+
+
+(reg-event-db
+  :drag-bullet
+  (fn [db [_ map]]
+    (assoc db :drag-bullet map)))
+
+
+(reg-event-db
+  :tooltip-uid
+  (fn-traced [db [_ uid]]
+             (assoc db :tooltip-uid uid)))
+
+
 ;;; effects
 
 
@@ -79,24 +97,30 @@
                    (swap! timers dissoc id))))))
 
 
-;;; event effects and boot
+;;;; TODO WIP
+;;(reg-fx
+;;  :transact
+;;  (fn [datoms]
+;;    (transact! ds/dsdb datoms)))
+;;
+;;
+;;;;; coeffects
 
 
-(reg-event-db
-  :editing-uid
-  (fn-traced [db [_ uid]]
-    (assoc db :editing-uid uid)))
+;;(r/reg-cofx
+;;  :ds
+;;  (fn [coeffects _]
+;;    (assoc coeffects :ds @@store)))
+;;
+;;
+;;;;; event effects and boot
 
 
-(reg-event-db
-  :dragging
-  (fn-traced [db [_ map]]
-    (assoc db :dragging map)))
-
-(reg-event-db
-  :tooltip-uid
-  (fn-traced [db [_ uid]]
-    (assoc db :tooltip-uid uid)))
+(reg-event-fx
+ :drop-bullet
+ (fn-traced [_ [_ {:keys [source target kind]}]]
+   (prn source target kind)
+   ))
 
 
 (defn boot-flow

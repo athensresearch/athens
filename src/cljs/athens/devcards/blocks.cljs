@@ -9,14 +9,12 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [goog.events :as events]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! posh! pull]]
-    [reagent.core :as r]
+    [posh.reagent :refer [transact! pull]]
     [re-frame.core :as rf]
     [stylefy.core :as stylefy :refer [use-style]])
-  (:import [goog.events EventType KeyCodes]))
-
+  (:import
+    (goog.events KeyCodes)))
 
 
 (rf/dispatch [:init-rfdb])
@@ -144,121 +142,11 @@
    :padding "5px 10px"
    :border-radius "4px"})
 
+
 ;;; Components
 
-(defn toggle
-  [dbid open]
-  (transact! db/dsdb [{:db/id dbid :block/open (not open)}]))
 
-
-(declare block-component)
-
-(defn on-key-down [e dbid order]
-  (let [key             (.. e -keyCode)
-        val             (.. e -target -value)
-        selection-start (.. e -target -selectionStart)]
-    ;;(prn "KEYDOWN" selection-start (subs val selection-start))
-    (cond
-      (= key KeyCodes.ENTER)
-      (transact! db/dsdb
-        ;; FIXME original block doesn't update. textarea and `on-change` prevents update
-        [
-         ;;{:db/id dbid
-         ;; :block/string (subs val 0 selection-start)}
-         {;; random-uuid generates length 36 id. Roam uids are 9
-          :block/uid       (subs (str (random-uuid)) 27)
-          :block/string    (subs val selection-start)
-          ;; FIXME makes current block the parent
-          :block/_children dbid
-          ;; FIXME. order is dependent on parent
-          :block/order     (inc order)
-          :block/open      true}])
-
-      :else nil)))
-
-;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
-(defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [block]
-  (fn [block]
-    (let [{:block/keys [uid string open order children] dbid :db/id} block
-          open?       (and (seq children) open)
-          closed?     (and (seq children) (not open))
-          editing-uid @(rf/subscribe [:editing-uid])
-          tooltip-uid @(rf/subscribe [:tooltip-uid])
-          {:keys [x y]
-           dragging-uid :uid
-           closest-uid :closest/uid
-           closest-class :closest/class} @(rf/subscribe [:dragging])]
-
-      [:div (merge (use-style block-style
-                     {:class "block-container"
-                      :data-uid uid})
-              {:style {:border-bottom (when (and (= closest-uid uid)
-                                              (= closest-class "block-container")) "5px solid black")}})
-       [:div {:style {:display "flex"}}
-
-        ;; toggle
-        (if (seq children)
-          [:button (use-style block-disclosure-toggle-style {:class (cond open? "open" closed? "closed") :on-click #(toggle dbid open)})
-           [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
-          [:span (use-style block-disclosure-toggle-style)])
-
-        ;; bullet
-        (if (= dragging-uid uid)
-          [:span (merge (use-style block-indicator-style
-                          {:class    (str "bullet " (if closed? "closed" "open"))
-                           :data-uid uid})
-                   {:style {:left x :top y}})]
-
-          [:span (use-style block-indicator-style
-                   {:class    (str "bullet " (if closed? "closed" "open"))
-                    :data-uid uid
-                    :on-click #(navigate-page uid)})
-           ])
-
-        (if (= tooltip-uid uid)
-          [:div (use-style tooltip-style {:class "tooltip"})
-           [:span [:b "uid: "] uid]
-           [:span [:b "order: "] order]
-           (when children
-             [:<>
-              [:span [:b "children: "]]
-              (for [ch children]
-                (let [{:block/keys [uid order]} ch]
-                  [:span {:style {:margin-left "20px"} :key uid}
-                   [:b "order: "] [:span order]
-                   [:span " | "]
-                   [:b "uid: "] [:span uid]
-                   ]))])
-           ])
-
-        ;;(prn (= tooltip-uid uid) tooltip-uid uid)
-
-        ;; contents — actual text
-        [:div {:class    "block-contents"
-               :data-uid uid
-               :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")
-                          :border-bottom (when (and (= closest-uid uid)
-                                                 (= closest-class "block-contents")) "5px solid black")}}
-         (if (= editing-uid uid)
-           [autosize/textarea {:value       string
-                               :style       {:width "100%"}
-                               :auto-focus  true
-                               :on-change   (fn [e]
-                                              ;;(prn (.. e -target -value))
-                                              (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
-                               :on-key-down (fn [e] (on-key-down e dbid order))
-
-                               }]
-           [parse-and-render string])]]
-
-       ;; children
-       (when open?
-         (for [child (:block/children block)]
-           [:div {:style {:margin-left "32px"} :key (:db/id child)}
-            [block-el child]]))])))
+(declare block-component block-el toggle on-key-down)
 
 
 (defn block-component
@@ -274,70 +162,118 @@ no results for pull eid returns nil
     [block-el block]))
 
 
-(defn get-client-rect [evt]
-  (let [r (.getBoundingClientRect (.-target evt))]
-    {:left (.-left r), :top (.-top r)}))
+;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
+(defn block-el
+  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  [block]
+  (fn [block]
+    (let [{:block/keys [uid string open order children] dbid :db/id} block
+          open?       (and (seq children) open)
+          closed?     (and (seq children) (not open))
+          editing-uid @(rf/subscribe [:editing-uid])
+          tooltip-uid @(rf/subscribe [:tooltip-uid])
+          {:keys        [x y]
+           dragging-uid :uid
+           closest-uid  :closest/uid
+           closest-kind :closest/kind} @(rf/subscribe [:drag-bullet])]
 
-(defn mouse-move-handler [offset uid]
-  (fn [evt]
-    (let [x (- (.-clientX evt) (:x offset))
-          y (- (.-clientY evt) (:y offset))
-          closest-sibling (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-container"))
-          closest-child (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-contents"))
-          closest (or closest-child closest-sibling)
-          closest-uid (when closest (.. closest -dataset -uid))
-          closest-class (when closest
-                          (if (some #(= "block-container" %) (array-seq (.. closest -classList)))
-                            "block-container"
-                            "block-contents"))]
-      ;;(prn closest-uid closest-class)
-      (rf/dispatch [:dragging {:x x :y y
-                               :uid uid
-                               :closest/uid closest-uid
-                               :closest/class closest-class}]))))
+      [:div (merge (use-style block-style
+                              {:class "block-container"
+                               :data-uid uid})
+                   {:style {:border-bottom (when (and (= closest-uid uid)
+                                                      (= closest-kind :sibling)) "5px solid black")}})
+       [:div {:style {:display "flex"}}
 
-(defn mouse-up-handler [on-move]
-  (fn me [_evt]
-    (let [dragging @(rf/subscribe [:dragging])]
-      (prn "mouse up: " dragging)                           ; uncomment to see state of last drag
-      (rf/dispatch [:dragging {}])
-      (.. (js/document.getSelection) empty)
-      (events/unlisten js/window EventType.MOUSEMOVE on-move))))
+        ;; Toggle
+        (if (seq children)
+          [:button (use-style block-disclosure-toggle-style {:class (cond open? "open" closed? "closed") :on-click #(toggle dbid open)})
+           [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+          [:span (use-style block-disclosure-toggle-style)])
 
-(defn container []
-  ;; when user clicks within a block-contents, pass the uid of the closest ancestor
-  (events/listen js/window EventType.MOUSEDOWN
-    (fn [e]
-      (let [closest (.. e -target (closest ".block-contents"))]
-        (when closest
-          (rf/dispatch [:editing-uid (.. closest -dataset -uid)])))))
+        ;; Bullet
+        (if (= dragging-uid uid)
+          [:span (merge (use-style block-indicator-style
+                                   {:class    (str "bullet " (if closed? "closed" "open"))
+                                    :data-uid uid})
+                        {:style {:left x :top y}})]
 
-  ;; when a user clicks on a bullet, begin listening to mousemove
-  (events/listen js/window EventType.MOUSEDOWN
-    (fn [e]
-      (let [class-list (-> (.. e -target -classList) array-seq)]
-        (when (some #(= "bullet" %) class-list)
-          (let [{:keys [left top]} (get-client-rect e)
-                offset             {:x (- (.-clientX e) left)
-                                    :y (- (.-clientY e) top)}
-                uid                (.. e -target -dataset -uid)
-                on-move            (mouse-move-handler offset uid)]
-            (events/listen js/window EventType.MOUSEMOVE on-move)
-            (events/listen js/window EventType.MOUSEUP (mouse-up-handler on-move)))))))
+          [:span (use-style block-indicator-style
+                            {:class    (str "bullet " (if closed? "closed" "open"))
+                             :data-uid uid
+                             :on-click #(navigate-page uid)})])
 
-  (events/listen js/window EventType.MOUSEOVER
-    (fn [e]
-      (let [class-list (array-seq (.. e -target -classList))
-            closest (.. e -target (closest ".tooltip"))
-            uid (.. e -target -dataset -uid)]
-        (cond
-          (some #(= "bullet" %) class-list) (rf/dispatch [:tooltip-uid uid])
-          closest nil
-          :else (rf/dispatch [:tooltip-uid nil])))))
+        ;; Tooltip
+        (when (= tooltip-uid uid)
+          [:div (use-style tooltip-style {:class "tooltip"})
+           [:span [:b "uid: "] uid]
+           [:span [:b "order: "] order]
+           (when children
+             [:<>
+              [:span [:b "children: "]]
+              (for [ch children]
+                (let [{:block/keys [uid order]} ch]
+                  [:span {:style {:margin-left "20px"} :key uid}
+                   [:b "order: "] [:span order]
+                   [:span " | "]
+                   [:b "uid: "] [:span uid]]))])])
 
-  [block-component 2347])
+        ;; Actual Contents
+        [:div {:class    "block-contents"
+               :data-uid uid
+               :style    {:width         "100%"
+                          :user-select   (when dragging-uid "none")
+                          :border-bottom (when (and (= closest-uid uid)
+                                                    (= closest-kind :child)) "5px solid black")}}
+         (if (= editing-uid uid)
+           [autosize/textarea {:value       string
+                               :style       {:width "100%"}
+                               :auto-focus  true
+                               :on-change   (fn [e]
+                                              ;;(prn (.. e -target -value))
+                                              (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
+                               :on-key-down (fn [e] (on-key-down e dbid order))}]
+           [parse-and-render string])]]
+
+       ;; Children
+       (when open?
+         (for [child (:block/children block)]
+           [:div {:style {:margin-left "32px"} :key (:db/id child)}
+            [block-el child]]))])))
 
 
+;; Helpers
+
+(defn toggle
+  [dbid open]
+  (transact! db/dsdb [{:db/id dbid :block/open (not open)}]))
+
+
+(defn reindex
+  [ident])
+
+
+(defn on-key-down
+  [e dbid order]
+  (let [key             (.. e -keyCode)
+        val             (.. e -target -value)
+        selection-start (.. e -target -selectionStart)]
+    ;;(prn "KEYDOWN" selection-start (subs val selection-start))
+    (cond
+      (= key KeyCodes.ENTER)
+      (transact! db/dsdb
+        ;; FIXME original block doesn't update. textarea and `on-change` prevents update
+                 [;;{:db/id dbid
+         ;; :block/string (subs val 0 selection-start)}
+                  {;; random-uuid generates length 36 id. Roam uids are 9
+                   :block/uid       (subs (str (random-uuid)) 27)
+                   :block/string    (subs val selection-start)
+          ;; FIXME makes current block the parent
+                   :block/_children dbid
+          ;; FIXME. order is dependent on parent
+                   :block/order     (inc order)
+                   :block/open      true}])
+
+      :else nil)))
 
 ;;; Devcards
 
@@ -348,10 +284,4 @@ no results for pull eid returns nil
 
 (defcard-rg Block
   "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents, unlike `block-page`"
-  [container])
-
-
-(defcard-rg Block-Embed "TODO")
-
-
-(defcard-rg Transclusion "TODO")
+  [block-component 2347])

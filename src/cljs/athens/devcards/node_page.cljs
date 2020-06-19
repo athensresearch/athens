@@ -6,10 +6,9 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer-macros [defcard defcard-rg]]
+    [devcards.core :refer-macros [defcard-rg]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! posh! pull q]]
+    [posh.reagent :refer [transact! pull q]]
     [reagent.core :as r]))
 
 

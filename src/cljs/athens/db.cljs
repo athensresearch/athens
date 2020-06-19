@@ -165,15 +165,15 @@
 ;;; re-frame
 
 
-(defonce rfdb {:user "Jeff"
+(defonce rfdb {:user          "Jeff"
                :current-route nil
-               :loading true
-               :errors {}
-               :athena false
-               :editing-uid nil
-               :dragging {:uid nil
-                          :x nil
-                          :y nil
-                          :closest/uid nil
-                          :closest/class nil}
-               :tooltip-uid nil})
+               :loading       true
+               :errors        {}
+               :athena        false
+               :editing-uid   nil
+               :drag-bullet   {:uid          nil
+                               :x            nil
+                               :y            nil
+                               :closest/uid  nil
+                               :closest/kind nil}
+               :tooltip-uid   nil})
