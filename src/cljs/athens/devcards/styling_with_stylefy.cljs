@@ -132,22 +132,5 @@
   In these cases, pass the style directly to the element to update it inline.
   
   ```clojure
-  [:div (use-style cursor-trail-style) {:style {:left x :top y}}]
-  ```")
-
-
-(defcard-doc "
-  Avoid creating styles that will be frequently updated, because this forces Stylefy to create a new class for each update.
-  
-  In these cases, pass the style directly to the element to update it inline.
-  
-  ```clojure
-  [:div (use-style cursor-trail-style) {:style {:left x :top y}}]
-  ```")
-
-
-(defcard-doc "
-  
-  ```clojure
-  [:div (use-style cursor-trail-style) {:style {:left x :top y}}]
+  [:div (use-style (merge cursor-trail-style {:left x :top y})}]
   ```")

@@ -30,7 +30,6 @@
                                     :font-weight "500"
                                     :font-size "21px"
                                     :line-height "27px"}
-
                          :body-preview {:white-space "wrap"
                                         :word-break "break-word"
                                         :overflow "hidden"
@@ -75,8 +74,8 @@
     [:table (use-style table-style)
      [:thead
       [:tr
-       [:th  [:h5 "Title"]]
-       [:th  [:h5 "Body"]]
+       [:th [:h5 "Title"]]
+       [:th [:h5 "Body"]]
        [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
        [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
      [:tbody
