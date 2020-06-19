@@ -1,8 +1,10 @@
 (ns athens.router
   (:require
+    [athens.db :as db]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
+    [posh.reagent :refer [pull]]
+    [re-frame.core :refer [#_subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
     [reitit.frontend.controllers :as rfc]
@@ -26,7 +28,7 @@
   (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (subscribe [:node [:block/uid (-> new-match :path-params :id)]]) ;; TODO make the page title query work when zoomed in on a block
+          node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
           node-title (:node/title @node)
           page-title (str (or node-title "untitled") " – Athens")]
       (set! (.-title js/document) page-title) ;; TODO make this side effect explicit
@@ -74,11 +76,6 @@
 (defn navigate-page
   [uid]
   (dispatch [:navigate :page {:id uid}]))
-
-
-(defn toggle-open
-  [dbid open]
-  (dispatch [:block/toggle-open dbid open]))
 
 
 (defn init-routes!
