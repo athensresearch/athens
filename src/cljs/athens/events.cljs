@@ -6,11 +6,14 @@
     [datascript.core :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [posh.reagent :refer [transact!]]
+    [posh.reagent :refer [transact! pull #_q #_pull-many]]
     [re-frame.core :refer [dispatch reg-fx reg-event-db reg-event-fx]]))
 
 
 ;;; Events
+
+
+;; app-db events
 
 
 (reg-event-db
@@ -70,7 +73,68 @@
              (assoc db :tooltip-uid uid)))
 
 
+;; dsdb events (transactions)
+
+(defn reindex
+  [blocks]
+  (->> blocks
+    (sort-by :block/order)
+    (map-indexed (fn [i x] (assoc x :block/order i)))
+    vec))
+
+
+(defn reindex-parent
+  [source parent]
+  (->> parent
+    :block/children
+    (remove #(= (:block/uid %) source))
+    reindex))
+
+
+(defn reindex-target
+  [source target]
+  (let [target-entity @(pull db/dsdb '[* {:block/children [:db/id :block/order]}] [:block/uid target])]
+    (->> target-entity
+      :block/children
+      ;;(cons {:block/uid source :block/order -1})
+      (cons {:db/id 2349 :block/order -1})
+      reindex)))
+
+
+(defn get-parent
+  "takes in a block string and returns a parent with its children"
+  [uid]
+  (let [parent-eid (-> @(pull db/dsdb '[:block/_children] [:block/uid uid])
+                     :block/_children
+                     first
+                     :db/id)]
+    @(pull db/dsdb '[:db/id {:block/children [:db/id :block/uid :block/order]}] parent-eid)))
+
+;; FIXME I don't like nested datoms as much as flat datoms
+
+;; TODO: diff logic if adding as as sibling
+(reg-event-fx
+  :drop-bullet
+  (fn-traced [_ [_ {:keys [source target kind]}]]
+             (let [parent (get-parent source)
+                   parent-children (reindex-parent source parent)
+                   target-children (reindex-target source target)]
+               {:transact [{:db/add [:block/uid source] :block/children parent-children}
+                           [:db/retract (:db/id parent) :block/children [:block/uid source]]
+
+                           ;; FIXME: for some reason unable to transact multiple children
+                           ;; Get error: Error: Lookup ref should contain 2 elements: [1 2 3 4]
+                           ;;{:db/add [:block/uid target] :block/children target-children}
+                           ]})))
+
+
 ;;; Effects
+
+
+(reg-fx
+  :transact
+  (fn [datoms]
+    (transact! db/dsdb datoms)))
 
 
 (reg-fx
@@ -107,12 +171,6 @@
 
 
 ;;; event effects and boot
-
-
-(reg-event-fx
-  :drop-bullet
-  (fn-traced [_ [_ {:keys [source target kind]}]]
-             (prn source target kind)))
 
 
 (reg-event-fx

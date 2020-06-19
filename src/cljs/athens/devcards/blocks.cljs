@@ -76,9 +76,9 @@
 (def block-style
   {:display "flex"
    :line-height "32px"
-  ;;  :position "relative"
    :justify-content "flex-start"
-   :flex-direction "column"})
+   :flex-direction "column"
+   })
 
 
 (def block-disclosure-toggle-style
@@ -133,10 +133,10 @@
                                                                   :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
+                     [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
                      [:&.dragging {:z-index "1000"
                                    :cursor "grabbing"
                                    :color (color :body-text-color)}]
-                     [:&.dragging [(selectors/& (selectors/after)) {:box-shadow "0 4px 16px 1px"}]]
                      [:&.selected {}]]})
 
 
@@ -180,13 +180,15 @@
                                  :resize "none"
                                  :color "inherit"
                                  :padding "0"
+                                 :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
+                                 :overflow "hidden"
+                                 :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
                                  :border "0"
                                  :font-family "inherit"}]
                      [:textarea:focus {:outline "none"
-                                       :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
                                        :opacity (:opacity-high OPACITIES)}]]})
 
 
@@ -247,8 +249,8 @@ no results for pull eid returns nil
         ;; Bullet
         (if (= dragging-uid uid)
           [:span (merge (use-style block-indicator-style
-                                   {:class    (str "bullet" (if closed? " closed" " open") " dragging")
-                                    :data-uid uid})
+                          {:class    (clojure.string/join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                           :data-uid uid})
                         {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
           [:span (use-style block-indicator-style
@@ -257,8 +259,10 @@ no results for pull eid returns nil
                              :on-click #(navigate-page uid)})])
 
         ;; Tooltip
-        (when (= tooltip-uid uid)
+        (when (and (= tooltip-uid uid)
+                (not dragging-uid))
           [:div (use-style tooltip-style {:class "tooltip"})
+           [:span [:b "dbid: "] dbid]
            [:span [:b "uid: "] uid]
            [:span [:b "order: "] order]
            (when children
@@ -266,7 +270,7 @@ no results for pull eid returns nil
               [:span [:b "children: "]]
               (for [ch children]
                 (let [{:block/keys [uid order]} ch]
-                  [:span {:style {:margin-left "-20px"} :key uid}
+                  [:span {:style {:margin-left "20px"} :key uid}
                    [:b "order: "] [:span order]
                    [:span " | "]
                    [:b "uid: "] [:span uid]]))])])
@@ -281,11 +285,13 @@ no results for pull eid returns nil
                                :style       {:width "100%"}
                                :auto-focus  true
                                :on-change   (fn [e]
-                                              ;;(prn (.. e -target -value))
-                                              (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
+                                              (prn (.. e -target -value))
+                                              ;;(transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]])
+                                              )
                                :on-key-down (fn [e] (on-key-down e dbid order))}]
            [parse-and-render string])
 
+         ;; Drop Indicator
          (when (and (= closest-uid uid)
                     (= closest-kind :child))
            [:span (use-style drop-area-indicator)])]]
@@ -317,19 +323,19 @@ no results for pull eid returns nil
         selection-start (.. e -target -selectionStart)]
     ;;(prn "KEYDOWN" selection-start (subs val selection-start))
     (cond
-      (= key KeyCodes.ENTER)
-      (transact! db/dsdb
-        ;; FIXME original block doesn't update. textarea and `on-change` prevents update
-                 [;;{:db/id dbid
-         ;; :block/string (subs val 0 selection-start)}
-                  {;; random-uuid generates length 36 id. Roam uids are 9
-                   :block/uid       (subs (str (random-uuid)) 27)
-                   :block/string    (subs val selection-start)
-          ;; FIXME makes current block the parent
-                   :block/_children dbid
-          ;; FIXME. order is dependent on parent
-                   :block/order     (inc order)
-                   :block/open      true}])
+      ;;(= key KeyCodes.ENTER)
+      ;;(transact! db/dsdb
+      ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
+      ;;           [;;{:db/id dbid
+      ;;   ;; :block/string (subs val 0 selection-start)}
+      ;;            {;; random-uuid generates length 36 id. Roam uids are 9
+      ;;             :block/uid       (subs (str (random-uuid)) 27)
+      ;;             :block/string    (subs val selection-start)
+      ;;    ;; FIXME makes current block the parent
+      ;;             :block/_children dbid
+      ;;    ;; FIXME. order is dependent on parent
+      ;;             :block/order     (inc order)
+      ;;             :block/open      true}])
 
       :else nil)))
 

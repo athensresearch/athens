@@ -36,10 +36,12 @@
 (defn mouse-move-bullet
   [start-pos uid]
   (fn [evt]
-    (let [x (- (.-clientX evt) (:x start-pos))
-          y (- (.-clientY evt) (:y start-pos))
-          closest-sibling (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-container"))
-          closest-child (.. (js/document.elementFromPoint (.-clientX evt) (.-clientY evt)) (closest ".block-contents"))
+    (let [cX (.-clientX evt)
+          cY (.-clientY evt)
+          x (- cX (:x start-pos))
+          y (- cY (:y start-pos))
+          closest-sibling (.. (js/document.elementFromPoint cX cY) (closest ".block-container"))
+          closest-child (.. (js/document.elementFromPoint cX cY) (closest ".block-contents"))
           closest (or closest-child closest-sibling)
           closest-uid (when closest (.. closest -dataset -uid))
           closest-kind (when closest (if (some #(= "block-container" %) (array-seq (.. closest -classList)))
