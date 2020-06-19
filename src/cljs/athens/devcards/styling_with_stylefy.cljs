@@ -129,8 +129,8 @@
 (defcard-doc "
   Avoid creating styles that will be frequently updated, because this forces Stylefy to create a new class for each update.
   
-  In these cases, pass the style directly to the element to update it inline.
+  In these cases, merge `use-style` with a style attribute to perform the updates inline, bypassing `use-style`.
   
   ```clojure
-  [:div (use-style (merge cursor-trail-style {:left x :top y})}]
+  [:div (merge (use-style cursor-trail-style) {:style {:left x :top y}})]
   ```")
