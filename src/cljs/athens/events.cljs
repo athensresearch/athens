@@ -10,7 +10,7 @@
     [re-frame.core :refer [dispatch reg-fx reg-event-db reg-event-fx]]))
 
 
-;;; events
+;;; Events
 
 
 (reg-event-db
@@ -70,7 +70,7 @@
              (assoc db :tooltip-uid uid)))
 
 
-;;; effects
+;;; Effects
 
 
 (reg-fx
@@ -97,23 +97,16 @@
                    (swap! timers dissoc id))))))
 
 
-;;;; TODO WIP
-;;(reg-fx
-;;  :transact
-;;  (fn [datoms]
-;;    (transact! ds/dsdb datoms)))
-;;
-;;
-;;;;; coeffects
+;;; Coeffects
 
-
+;;
 ;;(r/reg-cofx
 ;;  :ds
 ;;  (fn [coeffects _]
 ;;    (assoc coeffects :ds @@store)))
-;;
-;;
-;;;;; event effects and boot
+
+
+;;; event effects and boot
 
 
 (reg-event-fx
@@ -121,14 +114,6 @@
  (fn-traced [_ [_ {:keys [source target kind]}]]
    (prn source target kind)
    ))
-
-
-(defn boot-flow
-  []
-  {:first-dispatch
-   [:get-datoms]
-   :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
-           {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
 
 
 (reg-event-fx
@@ -144,7 +129,16 @@
 (reg-event-fx
   :boot
   (fn-traced [_ _]
-             {:async-flow (boot-flow)}))
+             {:async-flow {:first-dispatch
+                                  [:get-datoms]
+                           :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
+                                   {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]}}))
+
+
+
+
+
+
 
 
 ;;;; TODO: delete the following logic when re-implementing title merge
