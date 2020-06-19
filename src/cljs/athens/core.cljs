@@ -21,7 +21,7 @@
   (rf/clear-subscription-cache!)
   (router/init-routes!)
   (reagent/render [views/main-panel]
-    (.getElementById js/document "app")))
+                  (.getElementById js/document "app")))
 
 
 (defn init
@@ -31,6 +31,6 @@
   ;; when dev, download datoms directly
   ;; FIXME without this dispatch nothing works, so enabling it for now
   (when true #_config/debug?
-    (rf/dispatch [:boot]))
+        (rf/dispatch [:boot]))
   (dev-setup)
   (mount-root))

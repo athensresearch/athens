@@ -1,10 +1,10 @@
 (ns athens.router
   (:require
-    #_[athens.views :as views]
     [athens.db :as db]
+    #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
+    [re-frame.core :refer [#_subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
     [reitit.frontend.controllers :as rfc]
@@ -76,11 +76,6 @@
 (defn navigate-page
   [uid]
   (dispatch [:navigate :page {:id uid}]))
-
-
-(defn toggle-open
-  [dbid open]
-  (dispatch [:block/toggle-open dbid open]))
 
 
 (defn init-routes!

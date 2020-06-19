@@ -4,7 +4,7 @@
     [athens.parser :as parser]
     [athens.router :refer [navigate-page]]
     [instaparse.core :as insta]
-    [posh.reagent :refer [pull q]]))
+    [posh.reagent :refer [pull #_q]]))
 
 
 (declare parse-and-render)

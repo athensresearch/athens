@@ -1,6 +1,5 @@
 (ns athens.devcards.parser
   (:require
-    [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
     #_[athens.parse-renderer :refer [parse-and-render]]
     #_[athens.parser :refer [parse-to-ast combine-adjacent-strings]]
@@ -8,9 +7,7 @@
     #_[cljs.test :refer [is testing are async]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
-    [devcards.core :refer [#_defcard defcard-rg #_deftest]]
-    [posh.reagent :refer [posh! transact!]]))
+    [devcards.core :refer [#_defcard defcard-rg #_deftest]]))
 
 
 ;; not transacting for some reason

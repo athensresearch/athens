@@ -1,10 +1,8 @@
 (ns athens.events
   (:require
     [athens.db :as db]
-    [athens.patterns :as patterns]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
-    [clojure.string :as str]
     [datascript.core :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
@@ -30,29 +28,28 @@
 (reg-event-db
   :alert-failure
   (fn-traced [db error]
-    (assoc-in db [:errors] error)))
+             (assoc-in db [:errors] error)))
 
 
 (reg-event-db
   :parse-datoms
   (fn-traced [db [_ json-str]]
     ;; TODO: refactor to an effect
-    (d/reset-conn! db/dsdb (d/empty-db db/schema))
-    (transact! db/dsdb (db/str-to-db-tx json-str))
-    (assoc db :loading false)
-    ))
+             (d/reset-conn! db/dsdb (d/empty-db db/schema))
+             (transact! db/dsdb (db/str-to-db-tx json-str))
+             (assoc db :loading false)))
 
 
 (reg-event-db
   :clear-errors
   (fn-traced [db]
-    (assoc-in db [:errors] {})))
+             (assoc-in db [:errors] {})))
 
 
 (reg-event-db
   :clear-loading
   (fn-traced [db]
-    (assoc-in db [:loading] false)))
+             (assoc-in db [:loading] false)))
 
 
 ;;; effects
@@ -88,9 +85,10 @@
 (defn boot-flow
   []
   {:first-dispatch
-          [:get-datoms]
+   [:get-datoms]
    :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]})
+
 
 (reg-event-fx
   :get-datoms
@@ -105,8 +103,7 @@
 (reg-event-fx
   :boot
   (fn-traced [_ _]
-    {:async-flow (boot-flow)}))
-
+             {:async-flow (boot-flow)}))
 
 
 ;;;; TODO: delete the following logic when re-implementing title merge

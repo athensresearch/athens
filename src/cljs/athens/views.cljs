@@ -1,11 +1,11 @@
 (ns athens.views
   (:require
     [athens.db :as db]
-    [athens.devcards.node-page :refer [node-page-component]]
-    [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena]]
+    [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
+    [athens.devcards.node-page :refer [node-page-component]]
     [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
     [posh.reagent :refer [pull]]

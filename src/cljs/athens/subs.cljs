@@ -30,8 +30,8 @@
 
 (re-frame/reg-sub
   :athena
-  (fn [db _]
-    (:athena db)))
+  (fn-traced [db _]
+             (:athena db)))
 
 
 (re-frame/reg-sub
