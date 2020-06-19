@@ -171,6 +171,18 @@
                                                        :border-radius "100px"
                                                        :animation "drop-area-color-pulse 1s ease infinite alternate"
                                                        :background "currentColor"}]]})
+(def block-content-style {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+                                                        :resize "none"
+                                                        :color "inherit"
+                                                        :padding "0"
+                                                        :margin "0"
+                                                        :font-size "inherit"
+                                                        :line-height "inherit"
+                                                        :border "0"
+                                                        :font-family "inherit"}]
+                                            [:textarea:focus {:outline "none"
+                                                              :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                                              :opacity (:opacity-high OPACITIES)}]]})
 
 
 (def tooltip-style
@@ -255,10 +267,10 @@ no results for pull eid returns nil
                    [:b "uid: "] [:span uid]]))])])
 
         ;; Actual Contents
-        [:div {:class    "block-contents"
-               :data-uid uid
-               :style    {:width         "100%"
-                          :user-select   (when dragging-uid "none")}}
+        [:div (use-style (merge block-content-style {:width "100%"
+                                                     :user-select (when dragging-uid "none")})
+                         {:class "block-contents"
+                          :data-uid uid})
          (if (= editing-uid uid)
            [autosize/textarea {:value       string
                                :style       {:width "100%"}
