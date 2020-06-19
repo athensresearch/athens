@@ -1,7 +1,9 @@
 (ns athens.style
   (:require
     [garden.color :refer [opacify hex->hsl]]
-    [garden.core :refer [css]]))
+    [garden.core :refer [css]]
+    [stylefy.core :as stylefy]
+   ))
 
 
 (def COLORS
@@ -57,14 +59,17 @@
 
 ;; Base Styles
 
+(stylefy/tag "body" {:background-color (color :app-bg-color)
+                    :font-family "IBM Plex Sans, Sans-Serif"
+                    :color (color :body-text-color)
+                    :font-size "16px"})
+(stylefy/tag "*" {:box-sizing "border-box"})
+
+
 (defn base-styles
   []
   [:style (css
-            [:body {:margin 0
-                    :font-family "IBM Plex Sans, Sans-Serif"
-                    :color (color :body-text-color)
-                    :font-size "16px"}]
-            [:* {:box-sizing "border-box"}]
+
             [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                       :color (color :header-text-color)}]
             [:h1 {:font-size "50px"
