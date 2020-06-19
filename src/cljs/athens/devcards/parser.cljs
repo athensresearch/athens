@@ -31,7 +31,7 @@
 
 
 (defcard-rg Parse
-  [:div
+  [:<>
    (for [s strings]
      ^{:key s} [block-el {:block/string s}])])
 

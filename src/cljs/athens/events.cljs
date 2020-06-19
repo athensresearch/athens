@@ -82,6 +82,23 @@
 ;;; event effects and boot
 
 
+(reg-event-db
+  :editing-uid
+  (fn-traced [db [_ uid]]
+    (assoc db :editing-uid uid)))
+
+
+(reg-event-db
+  :dragging
+  (fn-traced [db [_ map]]
+    (assoc db :dragging map)))
+
+(reg-event-db
+  :tooltip-uid
+  (fn-traced [db [_ uid]]
+    (assoc db :tooltip-uid uid)))
+
+
 (defn boot-flow
   []
   {:first-dispatch

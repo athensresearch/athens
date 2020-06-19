@@ -38,3 +38,21 @@
   :merge-prompt
   (fn [db _]
     (:merge-prompt db)))
+
+
+(re-frame/reg-sub
+  :editing-uid
+  (fn-traced [db _]
+    (:editing-uid db)))
+
+
+(re-frame/reg-sub
+  :tooltip-uid
+  (fn-traced [db _]
+    (:tooltip-uid db)))
+
+
+(re-frame/reg-sub
+  :dragging
+  (fn-traced [db _]
+    (:dragging db)))

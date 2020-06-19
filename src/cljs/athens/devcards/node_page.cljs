@@ -6,8 +6,11 @@
     [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]
-    [posh.reagent :refer [transact! pull q]]))
+    [datascript.core :as d]
+    [devcards.core :refer-macros [defcard defcard-rg]]
+    [komponentit.autosize :as autosize]
+    [posh.reagent :refer [transact! posh! pull q]]
+    [reagent.core :as r]))
 
 
 ;;; Globals
@@ -379,14 +382,26 @@
 ;;; Components
 
 
+(defn title-component
+  [title]
+  (let [s (r/atom {:editing false
+                   :title title})]
+    (fn []
+      (if (:editing @s)
+        [:h2 [autosize/textarea {:value     (:title @s)
+                                 :style     {:height "inherit" :font-size "inherit"}
+                                 :on-change (fn [e] (swap! s assoc :title (.. e -target -value)))
+                                 :on-blur   #(swap! s assoc :editing false)}]]
+        [:h1 {:on-click #(swap! s assoc :editing true)}
+         (:title @s)]))))
+
+
 (defn node-page-el
   [node linked-refs unlinked-refs]
   (let [{:keys [block/children node/title]} node]
     [:div
-     ;;[title-comp title] ;; TODO
-     (if title
-       [:h1 title]
-       [:h1 {:style {:color "lightgray"}} "Untitled"])
+     ;;[title-comp title]
+     [title-component title]
      [:div
       (for [child children]
         ^{:key (:db/id child)} [blocks/block-el child])]

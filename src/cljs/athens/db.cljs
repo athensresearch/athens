@@ -155,9 +155,10 @@
        (into [])))
 
 
+;;; posh
+
+
 (defonce dsdb (d/create-conn schema))
-
-
 (posh! dsdb)
 
 
@@ -168,5 +169,11 @@
                :current-route nil
                :loading true
                :errors {}
-               :athena false})
-
+               :athena false
+               :editing-uid nil
+               :dragging {:uid nil
+                          :x nil
+                          :y nil
+                          :closest/uid nil
+                          :closest/class nil}
+               :tooltip-uid nil})
