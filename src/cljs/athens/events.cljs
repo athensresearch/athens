@@ -117,10 +117,9 @@
 
 
 (reg-event-fx
- :drop-bullet
- (fn-traced [_ [_ {:keys [source target kind]}]]
-   (prn source target kind)
-   ))
+  :drop-bullet
+  (fn-traced [_ [_ {:keys [source target kind]}]]
+             (prn source target kind)))
 
 
 (defn boot-flow

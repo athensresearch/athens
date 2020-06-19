@@ -1,20 +1,21 @@
 (ns athens.devcards.blocks
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.db :as db]
-   [athens.parse-renderer :refer [parse-and-render]]
-   [athens.router :refer [navigate-page]]
-   [athens.style :refer [base-styles color OPACITIES DEPTH-SHADOWS]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :refer-macros [defcard-rg]]
-   [garden.selectors :as selectors]
-   [komponentit.autosize :as autosize]
-   [posh.reagent :refer [transact! pull]]
-   [re-frame.core :as rf]
-   [stylefy.core :as stylefy :refer [use-style]])
+    ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.router :refer [navigate-page]]
+    [athens.style :refer [base-styles color OPACITIES DEPTH-SHADOWS]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :refer-macros [defcard-rg]]
+    [garden.selectors :as selectors]
+    [komponentit.autosize :as autosize]
+    [posh.reagent :refer [transact! pull]]
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
-   (goog.events KeyCodes)))
+    (goog.events
+      KeyCodes)))
 
 
 (rf/dispatch [:init-rfdb])
@@ -153,36 +154,40 @@
                     {:opacity (:opacity-med OPACITIES)}])
 
 
-(def drop-area-indicator {:display "block"
-                          :height "1px"
-                          :margin-bottom "-1px"
-                          :color (color :body-text-color)
-                          :position "relative"
-                          :transform-origin "left"
-                          :z-index "1000"
-                          :width "100%"
-                          :animation "drop-area-appear .5s ease"
-                          ::stylefy/manual [[:&:after {:position "absolute"
-                                                       :content "''"
-                                                       :top "-0.5px"
-                                                       :right "0"
-                                                       :bottom "-0.5px"
-                                                       :left "0"
-                                                       :border-radius "100px"
-                                                       :animation "drop-area-color-pulse 1s ease infinite alternate"
-                                                       :background "currentColor"}]]})
-(def block-content-style {::stylefy/manual [[:textarea {:-webkit-appearance "none"
-                                                        :resize "none"
-                                                        :color "inherit"
-                                                        :padding "0"
-                                                        :margin "0"
-                                                        :font-size "inherit"
-                                                        :line-height "inherit"
-                                                        :border "0"
-                                                        :font-family "inherit"}]
-                                            [:textarea:focus {:outline "none"
-                                                              :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
-                                                              :opacity (:opacity-high OPACITIES)}]]})
+(def drop-area-indicator
+  {:display "block"
+   :height "1px"
+   :margin-bottom "-1px"
+   :color (color :body-text-color)
+   :position "relative"
+   :transform-origin "left"
+   :z-index "1000"
+   :width "100%"
+   :animation "drop-area-appear .5s ease"
+   ::stylefy/manual [[:&:after {:position "absolute"
+                                :content "''"
+                                :top "-0.5px"
+                                :right "0"
+                                :bottom "-0.5px"
+                                :left "0"
+                                :border-radius "100px"
+                                :animation "drop-area-color-pulse 1s ease infinite alternate"
+                                :background "currentColor"}]]})
+
+
+(def block-content-style
+  {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+                                 :resize "none"
+                                 :color "inherit"
+                                 :padding "0"
+                                 :margin "0"
+                                 :font-size "inherit"
+                                 :line-height "inherit"
+                                 :border "0"
+                                 :font-family "inherit"}]
+                     [:textarea:focus {:outline "none"
+                                       :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                       :opacity (:opacity-high OPACITIES)}]]})
 
 
 (def tooltip-style
@@ -280,10 +285,10 @@ no results for pull eid returns nil
                                               (transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]]))
                                :on-key-down (fn [e] (on-key-down e dbid order))}]
            [parse-and-render string])
-        
+
          (when (and (= closest-uid uid)
                     (= closest-kind :child))
-                      [:span (use-style drop-area-indicator)])]]
+           [:span (use-style drop-area-indicator)])]]
 
        ;; Children
        (when open?

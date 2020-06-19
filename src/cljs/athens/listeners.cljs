@@ -4,7 +4,9 @@
     [cljsjs.react.dom]
     [goog.events :as events]
     [re-frame.core :as rf])
-  (:import (goog.events EventType)))
+  (:import
+    (goog.events
+      EventType)))
 
 
 ;;; Drag Bullet to Re-order Block
