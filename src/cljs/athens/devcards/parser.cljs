@@ -3,7 +3,6 @@
     [athens.devcards.blocks :refer [block-el]]
     #_[athens.parse-renderer :refer [parse-and-render]]
     #_[athens.parser :refer [parse-to-ast combine-adjacent-strings]]
-    [athens.style :refer [base-styles]]
     #_[cljs.test :refer [is testing are async]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -24,10 +23,6 @@
    "This is a **very** important block"
    "This is an [external link](https://github.com/athensresearch/athens/)"
    "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])
-
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
 (defcard-rg Parse

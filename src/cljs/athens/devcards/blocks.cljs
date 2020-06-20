@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles color OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -175,10 +175,6 @@ no results for pull eid returns nil
 
 
 ;;; Devcards
-
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
 (defcard-rg Block

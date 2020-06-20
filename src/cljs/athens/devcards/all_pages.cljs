@@ -5,7 +5,7 @@
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-page]]
-    [athens.style :as style :refer [base-styles color OPACITIES]]
+    [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard defcard-rg]]
@@ -104,9 +104,7 @@
 
 
 (defcard-rg Import-Styles
-  [:<>
-   [base-styles]
-   [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])]])
+  [:style (css [:.com-rigsomelight-devcards-container {:width "90%"}])])
 
 
 (defcard-rg Create-Page

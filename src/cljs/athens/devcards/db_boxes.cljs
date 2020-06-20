@@ -1,7 +1,7 @@
 (ns athens.devcards.db-boxes
   (:require
     [athens.db :as db]
-    [athens.style :refer [base-styles COLORS HSL-COLORS]]
+    [athens.style :refer [COLORS HSL-COLORS]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [cljsjs.react]
@@ -22,10 +22,6 @@
   {8   :backspace
    9   :tab
    13  :return})
-
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
 (defcard "
