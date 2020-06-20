@@ -92,7 +92,7 @@
 
 
 (defn reindex-target
-  [source target]
+  [_source target]
   (let [target-entity @(pull db/dsdb '[* {:block/children [:db/id :block/order]}] [:block/uid target])]
     (->> target-entity
       :block/children
@@ -115,10 +115,10 @@
 ;; TODO: diff logic if adding as as sibling
 (reg-event-fx
   :drop-bullet
-  (fn-traced [_ [_ {:keys [source target kind]}]]
+  (fn-traced [_ [_ {:keys [source target _kind]}]]
              (let [parent (get-parent source)
                    parent-children (reindex-parent source parent)
-                   target-children (reindex-target source target)]
+                   _target-children (reindex-target source target)]
                {:transact [{:db/add [:block/uid source] :block/children parent-children}
                            [:db/retract (:db/id parent) :block/children [:block/uid source]]
 

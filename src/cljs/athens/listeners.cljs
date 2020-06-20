@@ -15,12 +15,6 @@
 (declare mouse-move-bullet mouse-up-bullet)
 
 
-(defn get-client-rect
-  [evt]
-  (let [r (.getBoundingClientRect (.-target evt))]
-    {:left (.-left r), :top (.-top r)}))
-
-
 (defn mouse-down-bullet
   [e]
   (let [class-list (-> (.. e -target -classList) array-seq)]
