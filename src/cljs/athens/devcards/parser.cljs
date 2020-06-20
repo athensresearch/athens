@@ -25,7 +25,6 @@
    "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])
 
 
-
 (defcard-rg Parse
   [:div
    (for [s strings]

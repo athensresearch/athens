@@ -1,9 +1,7 @@
 (ns athens.style
   (:require
     [garden.color :refer [opacify hex->hsl]]
-    [garden.core :refer [css]]
-    [stylefy.core :as stylefy]
-   ))
+    [stylefy.core :as stylefy]))
 
 
 (def COLORS
@@ -94,4 +92,6 @@
                                                     :cursor "alias"}]]]
                                        [:img {:max-width "100%"
                                               :height "auto"}]]})
+
+
 (stylefy/tag "*" {:box-sizing "border-box"})

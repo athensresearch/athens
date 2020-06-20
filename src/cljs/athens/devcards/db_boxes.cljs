@@ -24,7 +24,6 @@
    13  :return})
 
 
-
 (defcard "
   # An experiment in browsing the datascript database
 
