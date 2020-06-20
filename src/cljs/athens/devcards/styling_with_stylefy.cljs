@@ -110,6 +110,8 @@
 
 (defcard-doc "
   Apply sub-styles with Stylefy's `(use-sub-style)` function.
+              
+  Don't create empty sub-styles, as this may silently break Stylefy processing.
 
   ```clojure
   (:require [stylefy.core :as stylefy :refer [use-style]])
@@ -127,8 +129,8 @@
 (defcard-doc "
   Avoid creating styles that will be frequently updated, because this forces Stylefy to create a new class for each update.
   
-  In these cases, pass the style directly to the element to update it inline.
+  In these cases, merge `use-style` with a style attribute to perform the updates inline, bypassing `use-style`.
   
   ```clojure
-  [:div (use-style cursor-trail-style) {:style {:left x :top y}}]
+  [:div (merge (use-style cursor-trail-style) {:style {:left x :top y}})]
   ```")
