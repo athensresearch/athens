@@ -6,7 +6,7 @@
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.events]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [base-styles color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -233,6 +233,10 @@
 
 
 ;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
 
 
 (defcard-rg Create-Page

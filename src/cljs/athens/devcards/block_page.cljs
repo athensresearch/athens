@@ -3,6 +3,7 @@
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
     [athens.router :refer [navigate-page]]
+    [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -93,6 +94,10 @@
 
 
 ;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
 
 
 (defcard-rg Block-Page

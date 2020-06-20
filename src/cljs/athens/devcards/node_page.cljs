@@ -3,6 +3,7 @@
     [athens.db :as db]
     [athens.devcards.blocks :as blocks]
     [athens.patterns :as patterns]
+    [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -413,6 +414,10 @@
 
 
 ;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
 
 
 (defcard-rg Node-Page

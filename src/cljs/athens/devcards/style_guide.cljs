@@ -1,7 +1,7 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [color COLORS OPACITIES]]
+    [athens.style :refer [base-styles color COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -48,6 +48,10 @@
 
 
 ;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
 
 
 (defcard-rg Colors
