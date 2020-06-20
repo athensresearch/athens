@@ -22,6 +22,7 @@
                  [cljs-http "0.1.46"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [metosin/reitit "0.4.2"]
+                 [metosin/komponentit "0.3.10"]
                  [instaparse "1.4.10"]
                  [devcards "0.2.6"]
                  [borkdude/sci "0.0.13-alpha.22"]

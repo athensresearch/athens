@@ -2,6 +2,7 @@
   (:require
     [athens.config :as config]
     [athens.events]
+    [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.subs]
     [athens.views :as views]
@@ -27,6 +28,7 @@
 (defn init
   []
   (stylefy/init)
+  (listeners/init)
   (rf/dispatch-sync [:init-rfdb])
   ;; when dev, download datoms directly
   ;; FIXME without this dispatch nothing works, so enabling it for now

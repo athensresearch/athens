@@ -14,6 +14,7 @@
     [athens.devcards.sci-boxes]
     [athens.devcards.style-guide]
     [athens.devcards.styling-with-stylefy]
+    [athens.listeners :as listeners]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core]
@@ -23,4 +24,5 @@
 (defn ^:export main
   []
   (stylefy/init)
+  (listeners/init)
   (devcards.core/start-devcard-ui!))

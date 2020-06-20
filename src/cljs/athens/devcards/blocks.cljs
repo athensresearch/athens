@@ -4,16 +4,21 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-page]]
-    [athens.style :refer [base-styles color OPACITIES]]
+    [athens.style :refer [base-styles color OPACITIES DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
+    [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy :refer [use-style]])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 
-;;; Globals
+(rf/dispatch [:init-rfdb])
 
 
 (def datoms
@@ -48,7 +53,7 @@
                                                           :block/order    0
                                                           :block/children [{:db/id        2174
                                                                             :block/uid    "WKWPPSYQa"
-                                                                            :block/string "((iWmBJaChO))"
+                                                                            :block/string "((ZOxwo0K_7))"
                                                                             :block/open   true
                                                                             :block/order  0}]}
                                                          {:db/id        2349
@@ -71,7 +76,6 @@
 (def block-style
   {:display "flex"
    :line-height "32px"
-   :position "relative"
    :justify-content "flex-start"
    :flex-direction "column"})
 
@@ -113,52 +117,93 @@
                             :height "5px"
                             :width "5px"}]
                    [:hover {:color (color :link-color)}]
-                   [:before {:content "''"
-                             :position "absolute"
-                             :top "24px"
-                             :bottom "0"
-                             :pointer-events "none"
-                             :left "22px"
-                             :width "1px"
-                             :background (color :panel-color)}]]
+                  ;;  [:before {:content "''"
+                  ;;            :position "absolute"
+                  ;;            :top "24px"
+                  ;;            :bottom "0"
+                  ;;            :pointer-events "none"
+                  ;;            :left "22px"
+                  ;;            :width "1px"
+                  ;;            :background (color :panel-color)}]
+                   ]
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
                      [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
                                                                   :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
+                     [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
+                     [:&.dragging {:z-index "1000"
+                                   :cursor "grabbing"
+                                   :color (color :body-text-color)}]
                      [:&.selected {}]]})
+
+
+(stylefy/keyframes "drop-area-appear"
+                   [:from
+                    {:opacity "0"}]
+                   [:to
+                    {:opacity "1"}])
+
+
+(stylefy/keyframes "drop-area-color-pulse"
+                   [:from
+                    {:opacity (:opacity-lower OPACITIES)}]
+                   [:to
+                    {:opacity (:opacity-med OPACITIES)}])
+
+
+(def drop-area-indicator
+  {:display "block"
+   :height "1px"
+   :margin-bottom "-1px"
+   :color (color :body-text-color)
+   :position "relative"
+   :transform-origin "left"
+   :z-index "1000"
+   :width "100%"
+   :animation "drop-area-appear .5s ease"
+   ::stylefy/manual [[:&:after {:position "absolute"
+                                :content "''"
+                                :top "-0.5px"
+                                :right "0"
+                                :bottom "-0.5px"
+                                :left "0"
+                                :border-radius "100px"
+                                :animation "drop-area-color-pulse 1s ease infinite alternate"
+                                :background "currentColor"}]]})
+
+
+(def block-content-style
+  {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+                                 :resize "none"
+                                 :color "inherit"
+                                 :padding "0"
+                                 :caret-color (color :link-color)
+                                 :margin "0"
+                                 :font-size "inherit"
+                                 :line-height "inherit"
+                                 :overflow "hidden"
+                                 :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                 :border "0"
+                                 :font-family "inherit"}]
+                     [:textarea:focus {:outline "none"
+                                       :opacity (:opacity-high OPACITIES)}]]})
+
+
+(def tooltip-style
+  {:z-index    1 :position "absolute" :left "-200px"
+   :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+   :display    "flex" :flex-direction "column"
+   :background-color "white"
+   :padding "5px 10px"
+   :border-radius "4px"})
 
 
 ;;; Components
 
 
-(defn toggle
-  [dbid open?]
-  (transact! db/dsdb [{:db/id dbid :block/open (not open?)}]))
-
-
-(declare block-component)
-
-
-(defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [block]
-  (let [{:block/keys [uid string open children] dbid :db/id} block
-        open?   (and (seq children) open)
-        closed? (and (seq children) (not open))]
-    [:div (use-style block-style)
-     [:div {:style {:display "flex"}}
-      (if (seq children)
-        [:button (use-style block-disclosure-toggle-style {:class (cond open? "open" closed? "closed") :on-click #(toggle dbid open)})
-         [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
-        [:span (use-style block-disclosure-toggle-style)])
-      [:a (use-style block-indicator-style {:class (if closed? "closed" "open") :on-click #(navigate-page uid)})]
-      [parse-and-render string]]
-     (when open?
-       (for [child (:block/children block)]
-         [:div {:style {:margin-left "32px"} :key (:db/id child)}
-          [block-el child]]))]))
+(declare block-component block-el toggle on-key-down)
 
 
 (defn block-component
@@ -174,6 +219,120 @@ no results for pull eid returns nil
     [block-el block]))
 
 
+;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
+(defn block-el
+  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  [block]
+  (let [{:block/keys [uid string open order children] dbid :db/id} block
+        open?       (and (seq children) open)
+        closed?     (and (seq children) (not open))
+        editing-uid @(rf/subscribe [:editing-uid])
+        tooltip-uid @(rf/subscribe [:tooltip-uid])
+        {:keys        [x y]
+         dragging-uid :uid
+         closest-uid  :closest/uid
+         closest-kind :closest/kind} @(rf/subscribe [:drag-bullet])]
+
+    [:div (merge (use-style block-style
+                            {:class    "block-container"
+                             :data-uid uid}))
+     [:div {:style {:display "flex"}}
+
+      ;; Toggle
+      (if (seq children)
+        [:button (use-style block-disclosure-toggle-style {:class (cond open? "open" closed? "closed") :on-click #(toggle dbid open)})
+         [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+        [:span (use-style block-disclosure-toggle-style)])
+
+      ;; Bullet
+      (if (= dragging-uid uid)
+        [:span (merge (use-style block-indicator-style
+                                 {:class    (clojure.string/join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                                  :data-uid uid})
+                      {:style {:transform (str "translate(" x "px, " y "px)")}})]
+
+        [:span (use-style block-indicator-style
+                          {:class    (str "bullet " (if closed? "closed" "open"))
+                           :data-uid uid
+                           :on-click #(navigate-page uid)})])
+
+      ;; Tooltip
+      (when (and (= tooltip-uid uid)
+                 (not dragging-uid))
+        [:div (use-style tooltip-style {:class "tooltip"})
+         [:span [:b "dbid: "] dbid]
+         [:span [:b "uid: "] uid]
+         [:span [:b "order: "] order]
+         (when children
+           [:<>
+            [:span [:b "children: "]]
+            (for [ch children]
+              (let [{:block/keys [uid order]} ch]
+                [:span {:style {:margin-left "20px"} :key uid}
+                 [:b "order: "] [:span order]
+                 [:span " | "]
+                 [:b "uid: "] [:span uid]]))])])
+
+      ;; Actual Contents
+      [:div (use-style (merge block-content-style {:width       "100%"
+                                                   :user-select (when dragging-uid "none")})
+                       {:class    "block-contents"
+                        :data-uid uid})
+       (if (= editing-uid uid)
+         [autosize/textarea {:value       string
+                             :style       {:width "100%"}
+                             :auto-focus  true
+                             :on-change   (fn [e]
+                                            (prn (.. e -target -value))
+                                            ;;(transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]])
+                                            )
+                             :on-key-down (fn [e] (on-key-down e dbid order))}]
+         [parse-and-render string])
+
+       ;; Drop Indicator
+       (when (and (= closest-uid uid)
+                  (= closest-kind :child))
+         [:span (use-style drop-area-indicator)])]]
+
+     ;; Children
+     (when open?
+       (for [child (:block/children block)]
+         [:div {:style {:margin-left "32px"} :key (:db/id child)}
+          [block-el child]]))
+
+     (when (and (= closest-uid uid) (= closest-kind :sibling))
+       [:span (use-style drop-area-indicator)])]))
+
+;; Helpers
+
+(defn toggle
+  [dbid open]
+  (transact! db/dsdb [{:db/id dbid :block/open (not open)}]))
+
+
+(defn on-key-down
+  [e dbid order]
+  (let [key             (.. e -keyCode)
+        val             (.. e -target -value)
+        selection-start (.. e -target -selectionStart)]
+    (prn "KEYDOWN" selection-start (subs val selection-start) key dbid order KeyCodes.ENTER)
+    (cond
+      ;;(= key KeyCodes.ENTER)
+      ;;(transact! db/dsdb
+      ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
+      ;;           [;;{:db/id dbid
+      ;;   ;; :block/string (subs val 0 selection-start)}
+      ;;            {;; random-uuid generates length 36 id. Roam uids are 9
+      ;;             :block/uid       (subs (str (random-uuid)) 27)
+      ;;             :block/string    (subs val selection-start)
+      ;;    ;; FIXME makes current block the parent
+      ;;             :block/_children dbid
+      ;;    ;; FIXME. order is dependent on parent
+      ;;             :block/order     (inc order)
+      ;;             :block/open      true}])
+
+      :else nil)))
+
 ;;; Devcards
 
 
@@ -182,11 +341,5 @@ no results for pull eid returns nil
 
 
 (defcard-rg Block
-  "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents for context, unlike `block-page`."
+  "Pull entity 2347, a block within Athens FAQ, and its children. Doesn't pull parents, unlike `block-page`"
   [block-component 2347])
-
-
-(defcard-rg Block-Embed "TODO")
-
-
-(defcard-rg Transclusion "TODO")

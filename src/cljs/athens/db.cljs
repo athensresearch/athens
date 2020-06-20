@@ -155,18 +155,25 @@
        (into [])))
 
 
+;;; posh
+
+
 (defonce dsdb (d/create-conn schema))
-
-
 (posh! dsdb)
 
 
 ;;; re-frame
 
 
-(defonce rfdb {:user "Jeff"
+(defonce rfdb {:user          "Jeff"
                :current-route nil
-               :loading true
-               :errors {}
-               :athena false})
-
+               :loading       true
+               :errors        {}
+               :athena        false
+               :editing-uid   nil
+               :drag-bullet   {:uid          nil
+                               :x            nil
+                               :y            nil
+                               :closest/uid  nil
+                               :closest/kind nil}
+               :tooltip-uid   nil})
