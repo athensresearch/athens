@@ -106,11 +106,13 @@
         loading (subscribe [:loading])]
     (fn []
       [:<>
+       [style/base-styles]
        [alert]
        [athena db/dsdb]
        (if @loading
          [:h1 (use-style loading-message-style) "Loading Athens 😈"]
          [:div (use-style app-wrapper-style)
+          [style/base-styles]
           [left-sidebar db/dsdb]
           [:div (use-style main-content-style)
            [match-panel (-> @current-route :data :name)]]])])))

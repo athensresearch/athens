@@ -5,7 +5,7 @@
     [athens.devcards.athena :refer [athena-prompt]]
     [athens.devcards.buttons :refer [button button-primary]]
     [athens.router :refer [navigate navigate-page]]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [base-styles color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -169,6 +169,10 @@
 
 
 ;;; Devcards
+
+
+(defcard-rg Import-Styles
+  [base-styles])
 
 
 (defcard-rg Create-Shortcut
