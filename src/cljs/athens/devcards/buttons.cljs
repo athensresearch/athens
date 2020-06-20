@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
-    [athens.style :refer [base-styles]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -70,10 +69,6 @@
 
 
 ;;; Devcards
-
-
-(defcard-rg Import-Styles
-  [base-styles])
 
 
 (defcard-rg Default-Button
