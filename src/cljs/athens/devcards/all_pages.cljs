@@ -12,7 +12,9 @@
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
     [posh.reagent :refer [transact! pull-many q]]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]
+    [tick.alpha.api :as t]
+    [tick.locale-en-us]))
 
 
 ;;; Styles
@@ -61,7 +63,7 @@
   [x]
   (if (< x 1)
     [:span "(unknown date)"]
-    (.toLocaleString  (js/Date. x))))
+    (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x))))))
 
 
 (defn table
