@@ -6,6 +6,7 @@
     [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
+    [athens.devcards.spinner :refer [spinner]]
     [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
     [posh.reagent :refer [pull]]
@@ -16,10 +17,9 @@
 ;;; Styles
 
 
-(def loading-message-style
+(def spinner-container
   {:margin-top "50vh"
-   :text-align "center"
-   :opacity (:opacity-high OPACITIES)})
+   :transform "translateY(-50%)"})
 
 
 (def app-wrapper-style
@@ -109,7 +109,8 @@
        [alert]
        [athena-component]
        (if @loading
-         [:h1 (use-style loading-message-style) "Loading Athens 😈"]
+         [:div (use-style spinner-container)
+          [spinner]]
          [:div (use-style app-wrapper-style)
           [left-sidebar db/dsdb]
           [:div (use-style main-content-style)
