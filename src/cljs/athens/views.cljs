@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.devcards.all-pages :refer [table]]
-    [athens.devcards.athena :refer [athena]]
+    [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
@@ -107,7 +107,7 @@
     (fn []
       [:<>
        [alert]
-       [athena db/dsdb]
+       [athena-component]
        (if @loading
          [:h1 (use-style loading-message-style) "Loading Athens 😈"]
          [:div (use-style app-wrapper-style)
