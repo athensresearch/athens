@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
-    [athens.router :refer [navigate-page]]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -251,7 +251,7 @@ no results for pull eid returns nil
         [:span (use-style block-indicator-style
                           {:class    (str "bullet " (if closed? "closed" "open"))
                            :data-uid uid
-                           :on-click #(navigate-page uid)})])
+                           :on-click #(navigate-uid uid)})])
 
       ;; Tooltip
       (when (and (= tooltip-uid uid)
