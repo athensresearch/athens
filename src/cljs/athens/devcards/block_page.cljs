@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
-    [athens.router :refer [navigate-page]]
+    [athens.router :refer [navigate-uid]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -75,7 +75,7 @@
         " > "
         (for [p parents]
           (let [{:keys [node/title block/uid block/string]} p]
-            [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-page uid)} (or string title)])))]
+            [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])))]
      [:h1 (str "• " string)]
      [:div (for [child children]
              (let [{:keys [db/id]} child]

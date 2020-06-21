@@ -4,7 +4,7 @@
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.lib.dom.attributes :refer [with-attributes]]
-    [athens.router :refer [navigate-page]]
+    [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -89,7 +89,7 @@
           [:tr
            [:td (with-attributes
                   (use-sub-style table-style :td-title)
-                  {:on-click #(navigate-page uid)})
+                  {:on-click #(navigate-uid uid)})
             title]
            [:td
             [:div (use-sub-style table-style :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]

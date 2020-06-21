@@ -73,7 +73,7 @@
   (dispatch [:navigate page]))
 
 
-(defn navigate-page
+(defn navigate-uid
   [uid]
   (dispatch [:navigate :page {:id uid}]))
 
