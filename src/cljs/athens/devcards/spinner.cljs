@@ -63,8 +63,7 @@
    :animation-fill-mode "both"})
 
 
-;; For initial loading screen
-(def spinner-container
+(def initial-spinner-container
   {:margin-top "50vh"
    :transform "translateY(-50%)"})
 
@@ -81,7 +80,7 @@
 
 (defn ^:export initial-spinner-component
   []
-  [:div (use-style spinner-container)
+  [:div (use-style intitial-spinner-container)
    [spinner-component]])
 
 
@@ -94,3 +93,4 @@
 
 (defcard-rg Spinner-with-custom-message
   [spinner-component (use-style spinner-style {:message "Custom Loading Message"})])
+
