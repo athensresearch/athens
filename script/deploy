@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Compile App and Devcard bundles
+# Using shadow-cljs directly is faster than lein
+./node_modules/shadow-cljs/cli/runner.js compile app --config-merge "{:closure-defines {athens.devcards/spinner/COMMIT_URL \"${COMMIT_URL}\"}}"
+./node_modules/shadow-cljs/cli/runner.js compile devcards --config-merge "{:closure-defines {athens.devcards/spinner/COMMIT_URL \"${COMMIT_URL}\"}}"
