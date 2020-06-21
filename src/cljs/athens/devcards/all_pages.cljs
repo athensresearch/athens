@@ -63,7 +63,7 @@
   [x]
   (if (< x 1)
     [:span "(unknown date)"]
-    (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x))))))
+    (clojure.string/replace (clojure.string/replace (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x)))) #"AM" "am") #"PM" "pm")))
 
 
 (defn table
