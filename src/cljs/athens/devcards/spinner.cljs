@@ -80,7 +80,7 @@
 
 (defn ^:export initial-spinner-component
   []
-  [:div (use-style intitial-spinner-container)
+  [:div (use-style initial-spinner-container)
    [spinner-component]])
 
 
