@@ -18,9 +18,6 @@
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
-(dispatch [:init-rfdb])
-
-
 ;;; Styles
 
 

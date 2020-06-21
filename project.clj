@@ -18,6 +18,7 @@
                  [reagent "0.9.1"]
                  [re-frame "0.11.0"]
                  [datascript "0.18.10"]
+                 [datascript-transit "0.3.0"]
                  [denistakeda/posh "0.5.8"]
                  [cljs-http "0.1.46"]
                  [day8.re-frame/async-flow-fx "0.1.0"]

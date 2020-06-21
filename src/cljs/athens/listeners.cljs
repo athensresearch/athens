@@ -52,7 +52,8 @@
   [on-move]
   (fn [_evt]
     (let [{:keys [uid closest/kind] target-uid :closest/uid} @(rf/subscribe [:drag-bullet])]
-      (rf/dispatch [:drop-bullet {:source uid :target target-uid :kind kind}])
+      (when target-uid
+        (rf/dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
       (rf/dispatch [:drag-bullet {}])
       (.. (js/document.getSelection) empty)
       (events/unlisten js/window EventType.MOUSEMOVE on-move))))
@@ -75,10 +76,16 @@
   [e]
   (let [class-list (array-seq (.. e -target -classList))
         closest (.. e -target (closest ".tooltip"))
-        uid (.. e -target -dataset -uid)]
+        uid (.. e -target -dataset -uid)
+        tooltip-uid @(rf/subscribe [:tooltip-uid])]
     (cond
+      ;; if mouse over bullet, show tooltip
       (some #(= "bullet" %) class-list) (rf/dispatch [:tooltip-uid uid])
+      ;; if mouse over a child of bullet, keep tooltip-uid
       closest nil
+      ;; if tooltip is already nil, don't overwrite tooltip-uid
+      (nil? tooltip-uid) nil
+      ;; otherwise mouse is no longer over a bullet or tooltip. clear the tooltip-uid
       :else (rf/dispatch [:tooltip-uid nil]))))
 
 

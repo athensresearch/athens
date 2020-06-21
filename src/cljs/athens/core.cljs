@@ -1,6 +1,8 @@
 (ns athens.core
   (:require
+    [athens.coeffects]
     [athens.config :as config]
+    [athens.effects]
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
@@ -29,10 +31,6 @@
   []
   (stylefy/init)
   (listeners/init)
-  (rf/dispatch-sync [:init-rfdb])
-  ;; when dev, download datoms directly
-  ;; FIXME without this dispatch nothing works, so enabling it for now
-  (when true #_config/debug?
-        (rf/dispatch [:boot]))
+  (rf/dispatch-sync [:boot])
   (dev-setup)
   (mount-root))
