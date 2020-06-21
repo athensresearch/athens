@@ -5,7 +5,7 @@
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.events]
-    [athens.router :refer [navigate-page]]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]
     [cljsjs.react]
@@ -248,7 +248,7 @@
                        page-title   (or (:node/title parent) (:node/title x))
                        block-uid    (or (:block/uid parent) (:block/uid x))
                        block-string (:block/string x)]
-                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                   [:div (use-style result-style {:key i :on-click #(navigate-uid block-uid)})
                     [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
                     (when block-string
                       [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])

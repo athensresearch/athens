@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.parser :as parser]
-    [athens.router :refer [navigate-page]]
+    [athens.router :refer [navigate-uid]]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]))
 
@@ -21,19 +21,19 @@
                   (let [node (pull db/dsdb '[*] [:node/title title])]
                     [:span {:class "page-link"}
                      [:span {:style {:color "gray"}} "[["]
-                     [:span {:on-click #(navigate-page (:block/uid @node))
+                     [:span {:on-click #(navigate-uid (:block/uid @node))
                              :style    {:text-decoration "none" :color "dodgerblue"}} title]
                      [:span {:style {:color "gray"}} "]]"]]))
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]
                     [:span {:class "block-ref"
                             :style {:font-size "0.9em" :border-bottom "1px solid gray"}}
-                     [:span {:on-click #(navigate-page uid)} (parse-and-render (:block/string @block))]]))
+                     [:span {:on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
      :hashtag   (fn [tag-name]
                   (let [node (pull db/dsdb '[*] [:node/title tag-name])]
                     [:span {:class    "hashtag"
                             :style    {:color "gray" :text-decoration "none" :font-weight "bold"}
-                            :on-click #(navigate-page (:block/uid @node))}
+                            :on-click #(navigate-uid (:block/uid @node))}
                      (str "#" tag-name)]))
      :url-image (fn [{url :url alt :alt}]
                   [:img {:class "url-image"

@@ -63,24 +63,34 @@
    :animation-fill-mode "both"})
 
 
+(def initial-spinner-container
+  {:margin-top "50vh"
+   :transform "translateY(-50%)"})
+
+
 ;;; Components
 
 
-(defn spinner
+(defn spinner-component
   [{:keys [message style]}]
   [:div (use-style (merge spinner-style style))
    [:div (use-style spinner-progress-style)]
-   [:span (use-style spinner-message-style) (or
-                                              message
-                                              "Loading...")]])
+   [:span (use-style spinner-message-style) (or message "Loading...")]])
+
+
+(defn ^:export initial-spinner-component
+  []
+  [:div (use-style initial-spinner-container)
+   [spinner-component]])
 
 
 ;;; Devcards
 
 
 (defcard-rg Default-Spinner
-  [spinner (use-style spinner-style)])
+  [spinner-component (use-style spinner-style)])
 
 
 (defcard-rg Spinner-with-custom-message
-  [spinner (use-style spinner-style {:message "Custom Loading Message"})])
+  [spinner-component (use-style spinner-style {:message "Custom Loading Message"})])
+

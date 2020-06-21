@@ -6,7 +6,7 @@
     [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
-    [athens.devcards.spinner :refer [spinner]]
+    [athens.devcards.spinner :refer [initial-spinner-component]]
     [athens.subs]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
@@ -14,11 +14,6 @@
 
 
 ;;; Styles
-
-
-(def spinner-container
-  {:margin-top "50vh"
-   :transform "translateY(-50%)"})
 
 
 (def app-wrapper-style
@@ -108,8 +103,7 @@
        [alert]
        [athena-component]
        (if @loading
-         [:div (use-style spinner-container)
-          [spinner]]
+         [initial-spinner-component]
          [:div (use-style app-wrapper-style)
           [left-sidebar db/dsdb]
           [:div (use-style main-content-style)

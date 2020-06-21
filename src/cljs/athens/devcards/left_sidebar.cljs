@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.devcards.athena :refer [athena-prompt-el]]
     [athens.devcards.buttons :refer [button button-primary]]
-    [athens.router :refer [navigate navigate-page]]
+    [athens.router :refer [navigate navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -157,7 +157,7 @@
             (doall
               (for [[_order title uid] sorted-shortcuts]
                 ^{:key uid}
-                [:li>a (use-style shortcut-style {:on-click #(navigate-page uid)}) title]))]
+                [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
 
            ;; LOGO + BOTTOM BUTTONS
            [:footer (use-sub-style left-sidebar-style :footer)
