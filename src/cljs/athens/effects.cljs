@@ -19,7 +19,8 @@
     (transact! db/dsdb datoms)))
 
 
-(reg-fx :reset-conn
+(reg-fx
+  :reset-conn
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)))
 
