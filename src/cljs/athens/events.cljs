@@ -1,13 +1,12 @@
 (ns athens.events
   (:require
     [athens.db :as db]
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [go <!]]
     [datascript.core :as d]
+    [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [posh.reagent :refer [transact! pull #_q #_pull-many]]
-    [re-frame.core :refer [dispatch reg-fx reg-event-db reg-event-fx]]))
+    [posh.reagent :refer [pull #_q #_pull-many]]
+    [re-frame.core :refer [reg-event-db reg-event-fx]]))
 
 
 ;;; Events
@@ -32,15 +31,6 @@
   :alert-failure
   (fn-traced [db error]
              (assoc-in db [:errors] error)))
-
-
-(reg-event-db
-  :parse-datoms
-  (fn-traced [db [_ json-str]]
-    ;; TODO: refactor to an effect
-             (d/reset-conn! db/dsdb (d/empty-db db/schema))
-             (transact! db/dsdb (db/str-to-db-tx json-str))
-             (assoc db :loading false)))
 
 
 (reg-event-db
@@ -69,11 +59,55 @@
 
 (reg-event-db
   :tooltip-uid
-  (fn-traced [db [_ uid]]
-             (assoc db :tooltip-uid uid)))
+  (fn [db [_ uid]]
+    (assoc db :tooltip-uid uid)))
 
 
-;; dsdb events (transactions)
+
+;;; event effects
+
+
+(reg-event-fx
+  :boot
+  (fn-traced [_ _]
+             {:db         db/rfdb
+              :async-flow {:first-dispatch [:get-local-storage-db]
+                           :rules          [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
+                                            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}
+                                            ]}}))
+
+
+(reg-event-fx
+  :get-datoms
+  (fn [_ _]
+    {:http {:method :get
+            :url db/athens-url
+            :opts {:with-credentials? false}
+            :on-success [:parse-datoms]
+            :on-failure [:alert-failure]}}))
+
+;; FIXME? I reset db/dsdb and store its value in localStorage in the same step. How do we ensure the order of operations is correct?
+(reg-event-fx
+  :parse-datoms
+  (fn [_ [_ json-str]]
+    (let [datoms (db/str-to-db-tx json-str)
+          new-db (d/db-with (d/empty-db db/schema) datoms)]
+      {:reset-conn new-db
+       :set-local-storage-db nil})))
+
+
+(reg-event-fx
+  :get-local-storage-db
+  (fn [{:keys [db]}]
+    (if-let [stored (js/localStorage.getItem "datascript/DB")]
+      {:reset-conn (dt/read-transit-str stored)
+       :db         (assoc db :loading false)}
+      {:dispatch [:get-datoms]})
+    ))
+
+
+
+;; WIP: dsdb events (transactions)
 
 (defn reindex
   [blocks]
@@ -110,9 +144,7 @@
                      :db/id)]
     @(pull db/dsdb '[:db/id {:block/children [:db/id :block/uid :block/order]}] parent-eid)))
 
-;; FIXME I don't like nested datoms as much as flat datoms
 
-;; TODO: diff logic if adding as as sibling
 (reg-event-fx
   :drop-bullet
   (fn-traced [_ [_ {:keys [source target _kind]}]]
@@ -126,75 +158,6 @@
                            ;; Get error: Error: Lookup ref should contain 2 elements: [1 2 3 4]
                            ;;{:db/add [:block/uid target] :block/children target-children}
                            ]})))
-
-
-;;; Effects
-
-
-(reg-fx
-  :transact
-  (fn [datoms]
-    (transact! db/dsdb datoms)))
-
-
-(reg-fx
-  :http
-  (fn [{:keys [url method opts on-success on-failure]}]
-    (go
-      (let [http-fn (case method
-                      :post http/post :get http/get
-                      :put http/put :delete http/delete)
-            res     (<! (http-fn url opts))
-            {:keys [success body] :as all} res]
-        (if success
-          (dispatch (conj on-success body))
-          (dispatch (conj on-failure all)))))))
-
-
-(reg-fx
-  :timeout
-  (let [timers (atom {})]
-    (fn [{:keys [action id event wait]}]
-      (case action
-        :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
-        :clear (do (js/clearTimeout (get @timers id))
-                   (swap! timers dissoc id))))))
-
-
-;;; Coeffects
-
-;;
-;;(r/reg-cofx
-;;  :ds
-;;  (fn [coeffects _]
-;;    (assoc coeffects :ds @@store)))
-
-
-;;; event effects and boot
-
-
-(reg-event-fx
-  :get-datoms
-  (fn [_ _]
-    {:http {:method :get
-            :url db/athens-url
-            :opts {:with-credentials? false}
-            :on-success [:parse-datoms]
-            :on-failure [:alert-failure]}}))
-
-
-(reg-event-fx
-  :boot
-  (fn-traced [_ _]
-             {:async-flow {:first-dispatch
-                                  [:get-datoms]
-                           :rules [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
-                                   {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]}}))
-
-
-
-
-
 
 
 

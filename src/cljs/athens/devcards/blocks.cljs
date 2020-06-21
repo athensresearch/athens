@@ -18,9 +18,6 @@
       KeyCodes)))
 
 
-(rf/dispatch [:init-rfdb])
-
-
 (def datoms
   [{:db/id          2381
     :block/uid      "OaSVyM_nr"
