@@ -28,7 +28,8 @@
                  [devcards "0.2.6"]
                  [borkdude/sci "0.0.13-alpha.22"]
                  [garden "1.3.10"]
-                 [stylefy "2.2.0"]]
+                 [stylefy "2.2.0"]
+                 [tick "0.4.26-alpha"]]
 
   :plugins [[lein-shell "0.5.0"]]
 

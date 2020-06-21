@@ -8,11 +8,14 @@
     [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as str]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
     [garden.selectors :as selectors]
     [posh.reagent :refer [transact! pull-many q]]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]
+    [tick.alpha.api :as t]
+    [tick.locale-en-us]))
 
 
 ;;; Styles
@@ -61,7 +64,7 @@
   [x]
   (if (< x 1)
     [:span "(unknown date)"]
-    (.toLocaleString  (js/Date. x))))
+    (str/replace (str/replace (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x)))) #"AM" "am") #"PM" "pm")))
 
 
 (defn table
@@ -92,7 +95,7 @@
                   {:on-click #(navigate-uid uid)})
             title]
            [:td
-            [:div (use-sub-style table-style :body-preview) (clojure.string/join " " (map #(str "• " (:block/string %)) children))]]
+            [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
            [:td (use-sub-style table-style :td-date) (date-string modified)]
            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]))
 
