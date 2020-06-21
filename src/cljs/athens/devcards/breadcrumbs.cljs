@@ -13,7 +13,6 @@
 
 (def breadcrumbs-list-style
   {:list-style "none"
-  ;;  :font-size "12px"
    :display "flex"
    :flex "1 1 auto"
    :margin "0"
