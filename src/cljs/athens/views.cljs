@@ -7,7 +7,6 @@
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
     [athens.devcards.spinner :refer [spinner]]
-    [athens.style :as style :refer [OPACITIES]]
     [athens.subs]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]

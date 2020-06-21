@@ -18,11 +18,13 @@
                     {:transform "translateY(0)"
                      :opacity "var(--anim-opacity-end, 1)"}])
 
+
 (stylefy/keyframes "appear"
                    [:from
                     {:opacity "0"}]
                    [:to
                     {:opacity "var(--anim-opacity-end, 1)"}])
+
 
 (stylefy/keyframes "spinning"
                    [:from
@@ -68,10 +70,9 @@
   [{:keys [message style]}]
   [:div (use-style (merge spinner-style style))
    [:div (use-style spinner-progress-style)]
-    [:span (use-style spinner-message-style) (if message
-              message
-              "Loading...")]])
-
+   [:span (use-style spinner-message-style) (if message
+                                              message
+                                              "Loading...")]])
 
 
 ;;; Devcards
@@ -79,6 +80,7 @@
 
 (defcard-rg Default-Spinner
   [spinner (use-style spinner-style)])
+
 
 (defcard-rg Spinner-with-custom-message
   [spinner (use-style spinner-style {:message "Custom Loading Message"})])
