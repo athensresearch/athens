@@ -70,7 +70,7 @@
   [{:keys [message style]}]
   [:div (use-style (merge spinner-style style))
    [:div (use-style spinner-progress-style)]
-   [:span (use-style spinner-message-style) (if message
+   [:span (use-style spinner-message-style) (or
                                               message
                                               "Loading...")]])
 
