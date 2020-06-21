@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.athena :refer [athena-prompt]]
+    [athens.devcards.athena :refer [athena-prompt-el]]
     [athens.devcards.buttons :refer [button button-primary]]
     [athens.router :refer [navigate navigate-page]]
     [athens.style :refer [color OPACITIES]]
@@ -137,7 +137,7 @@
           ;; IF EXPANDED
           [:div (use-style left-sidebar-style)
            [:div (use-sub-style left-sidebar-style :top-line)
-            [athena-prompt]
+            [athena-prompt-el]
             [button {:on-click-fn #(swap! open? not)
                      :label [:> mui-icons/ChevronLeft]}]]
            [:nav (use-style main-navigation-style)

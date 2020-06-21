@@ -15,7 +15,10 @@
     [devcards.core :refer-macros [defcard-rg]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 
 ;;; Styles
@@ -119,16 +122,7 @@
                             :padding "0 4px"}]]})
 
 
-;;; Components
-
-
-(defn athena-prompt
-  []
-  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                   :label [:<>
-                           [:> mui-icons/Search]
-                           [:span "Find or Create a Page"]]
-                   :style {:font-size "11px"}}])
+;;; Utilities
 
 
 (defn re-case-insensitive
@@ -173,14 +167,57 @@
 (defn highlight-match
   [query txt]
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
-    (map-indexed (fn [i part]
-                   (if (re-find query-pattern part)
-                     [:span.result-highlight (use-style result-highlight-style {:key i}) part]
-                     part))
-                 (clojure.string/split txt query-pattern))))
+    (doall
+      (map-indexed (fn [i part]
+                     (if (re-find query-pattern part)
+                       [:span.result-highlight (use-style result-highlight-style {:key i}) part]
+                       part))
+                   (clojure.string/split txt query-pattern)))))
 
 
-(defn recent
+(defn search-handler
+  [*cache *match]
+  (fn [e]
+    (let [query (.. e -target -value)]
+      (if (clojure.string/blank? query)
+        (reset! *match [query nil])
+        (let [result (or (get @*cache query)
+                         (cond-> {:pages (search-in-block-title query)}
+                           (count query) (assoc :blocks (search-in-block-content query))))]
+          (swap! *cache assoc query result)
+          (reset! *match [query result]))))))
+
+
+(defn key-down-handler
+  [e]
+  (let [key (.. e -keyCode)]
+    (cond
+      ;; exit athena
+      (= key KeyCodes.ESC) (dispatch [:toggle-athena])
+
+      ;; TODO: navigate to page
+      (= key KeyCodes.ENTER) nil
+
+      ;; TODO: move selection up or down
+      (= key KeyCodes.UP) nil
+      (= key KeyCodes.DOWN) nil
+
+      :else nil)))
+
+
+;;; Components
+
+
+(defn athena-prompt-el
+  []
+  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+                   :label [:<>
+                           [:> mui-icons/Search]
+                           [:span "Find or Create a Page"]]
+                   :style {:font-size "11px"}}])
+
+
+(defn recent-el
   []
   [:div (use-style results-heading-style)
    [:h5 "Recent"]
@@ -190,43 +227,41 @@
     " to open in right sidebar."]])
 
 
-(defn athena
+(defn athena-el
+  [athena? *match change-handler]
+  (when athena?
+    [:div.athena (use-style container-style)
+     [:input (use-style athena-input-style
+                        {:type        "search"
+                         :auto-focus  true
+                         :placeholder "Find or Create Page"
+                         :on-change   change-handler
+                         :on-key-down key-down-handler})]
+     [recent-el]
+     [(fn []
+        (let [[query {:keys [pages blocks] :as result}] @*match]
+          (when result
+            [:div (use-style results-list-style)
+             (doall
+               (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
+                 (let [parent       (:block/parent x)
+                       page-title   (or (:node/title parent) (:node/title x))
+                       block-uid    (or (:block/uid parent) (:block/uid x))
+                       block-string (:block/string x)]
+                   [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
+                    [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
+                    (when block-string
+                      [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
+                    [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowForward]]])))])))]]))
+
+
+(defn athena-component
   []
-  (let [*cache (r/atom {})
-        *match (r/atom nil)
-        athena? (subscribe [:athena])
-        handler (fn [e]
-                  (let [query (.. e -target -value)]
-                    (if (clojure.string/blank? query)
-                      (reset! *match [query nil])
-                      (let [result (or (get @*cache query)
-                                       (cond-> {:pages (search-in-block-title query)}
-                                         (count query) (assoc :blocks (search-in-block-content query))))]
-                        (swap! *cache assoc query result)
-                        (reset! *match [query result])))))]
-    (when @athena?
-      [:div (use-style container-style)
-       [:input (use-style athena-input-style
-                          {:type        "search"
-                           :auto-focus  true
-                           :placeholder "Find or Create Page"
-                           :on-change   handler})]
-       [recent]
-       [(fn []
-          (let [[query {:keys [pages blocks] :as result}] @*match]
-            (when result
-              [:div (use-style results-list-style)
-               (doall
-                 (for [[i x] (map-indexed list (take 40 (concat (take 20 pages) blocks)))]
-                   (let [parent (:block/parent x)
-                         page-title (or (:node/title parent) (:node/title x))
-                         block-uid (or (:block/uid parent) (:block/uid x))
-                         block-string (:block/string x)]
-                     [:div (use-style result-style {:key i :on-click #(navigate-page block-uid)})
-                      [:h4.title (use-sub-style result-style :title) (highlight-match query page-title)]
-                      (when block-string
-                        [:span.preview (use-sub-style result-style :preview) (highlight-match query block-string)])
-                      [:span.link-leader (use-sub-style result-style :link-leader) [:> mui-icons/ArrowForward]]])))])))]])))
+  (let [athena? @(subscribe [:athena])
+        *cache  (r/atom {})
+        *match  (r/atom nil)
+        handler (search-handler *cache *match)]
+    [athena-el athena? *match handler]))
 
 
 ;;; Devcards
@@ -248,7 +283,6 @@
 
 
 (defcard-rg Athena-Prompt
-  "Must press again to close. Doesn't go away if you click outside."
   [:<>
-   [athena-prompt]
-   [athena]])
+   [athena-prompt-el]
+   [athena-component]])

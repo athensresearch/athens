@@ -3,7 +3,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
-    [re-frame.core :as rf])
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       EventType)))
@@ -42,19 +42,19 @@
                                        :sibling
                                        :child))]
       (prn x y uid closest-uid closest-kind)
-      (rf/dispatch [:drag-bullet {:x         x :y y
-                                  :uid          uid
-                                  :closest/uid  closest-uid
-                                  :closest/kind closest-kind}]))))
+      (dispatch [:drag-bullet {:x         x :y y
+                               :uid          uid
+                               :closest/uid  closest-uid
+                               :closest/kind closest-kind}]))))
 
 
 (defn mouse-up-bullet
   [on-move]
   (fn [_evt]
-    (let [{:keys [uid closest/kind] target-uid :closest/uid} @(rf/subscribe [:drag-bullet])]
+    (let [{:keys [uid closest/kind] target-uid :closest/uid} @(subscribe [:drag-bullet])]
       (when target-uid
-        (rf/dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
-      (rf/dispatch [:drag-bullet {}])
+        (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
+      (dispatch [:drag-bullet {}])
       (.. (js/document.getSelection) empty)
       (events/unlisten js/window EventType.MOUSEMOVE on-move))))
 
@@ -66,7 +66,7 @@
   [e]
   (let [closest (.. e -target (closest ".block-contents"))]
     (when closest
-      (rf/dispatch [:editing-uid (.. closest -dataset -uid)]))))
+      (dispatch [:editing-uid (.. closest -dataset -uid)]))))
 
 
 ;;; Show tooltip
@@ -77,23 +77,32 @@
   (let [class-list (array-seq (.. e -target -classList))
         closest (.. e -target (closest ".tooltip"))
         uid (.. e -target -dataset -uid)
-        tooltip-uid @(rf/subscribe [:tooltip-uid])]
+        tooltip-uid @(subscribe [:tooltip-uid])]
     (cond
       ;; if mouse over bullet, show tooltip
-      (some #(= "bullet" %) class-list) (rf/dispatch [:tooltip-uid uid])
+      (some #(= "bullet" %) class-list) (dispatch [:tooltip-uid uid])
       ;; if mouse over a child of bullet, keep tooltip-uid
       closest nil
       ;; if tooltip is already nil, don't overwrite tooltip-uid
       (nil? tooltip-uid) nil
       ;; otherwise mouse is no longer over a bullet or tooltip. clear the tooltip-uid
-      :else (rf/dispatch [:tooltip-uid nil]))))
+      :else (dispatch [:tooltip-uid nil]))))
+
+
+;;; Close Athena
+
+
+(defn mouse-down-outside-athena
+  [e]
+  (let [athena? @(subscribe [:athena])
+        closest (.. e -target (closest ".athena"))]
+    (when (and athena? (nil? closest))
+      (dispatch [:toggle-athena]))))
 
 
 (defn init
   []
-
   (events/listen js/window EventType.MOUSEDOWN mouse-down-block)
-
   (events/listen js/window EventType.MOUSEDOWN mouse-down-bullet)
-
-  (events/listen js/window EventType.MOUSEOVER mouse-over-bullet))
+  (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
+  (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena))
