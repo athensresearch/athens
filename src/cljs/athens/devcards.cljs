@@ -13,6 +13,7 @@
     [athens.devcards.node-page]
     [athens.devcards.parser]
     [athens.devcards.sci-boxes]
+    [athens.devcards.spinner]
     [athens.devcards.style-guide]
     [athens.devcards.styling-with-stylefy]
     [athens.listeners :as listeners]
