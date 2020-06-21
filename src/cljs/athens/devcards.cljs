@@ -4,6 +4,7 @@
     [athens.devcards.athena]
     [athens.devcards.block-page]
     [athens.devcards.blocks]
+    [athens.devcards.breadcrumbs]
     [athens.devcards.buttons]
     [athens.devcards.db]
     [athens.devcards.db-boxes]
