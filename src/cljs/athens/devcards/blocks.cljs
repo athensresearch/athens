@@ -9,6 +9,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
+    [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
     [re-frame.core :as rf]
     [stylefy.core :as stylefy :refer [use-style]])
@@ -187,16 +188,14 @@
                                  :top "0"
                                  :left "0"
                                  :right "0"
-                                 :bottom "0"
-                                 :height "100%"
                                  :width "100%"
+                                 :min-height "100%"
                                  :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
-                                 :overflow "visible"
                                  :border-radius "4px"
-                                 :transition "all 0.15s ease"
+                                 :transition "opacity 0.15s ease"
                                  :box-shadow (str "-4px 0 0 0" (color :panel-color))
                                  :border "0"
                                  :opacity "0"
@@ -298,7 +297,7 @@ no results for pull eid returns nil
                                                    :user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-       [:textarea {:value       string
+       [autosize/textarea {:value       string
                    :class (when (= editing-uid uid) "isEditing")
                    :auto-focus  true
                    :on-change   (fn [e]
