@@ -19,7 +19,7 @@
                   (concat [:span {:class "block"}] contents))
      :page-link (fn [title]
                   (let [node (pull db/dsdb '[*] [:node/title title])]
-                    [:span {:class "page-link"}
+                    [:span {:class "page-link" :style {:cursor "pointer"}}
                      [:span {:style {:color "gray"}} "[["]
                      [:span {:on-click #(navigate-uid (:block/uid @node))
                              :style    {:text-decoration "none" :color "dodgerblue"}} title]
