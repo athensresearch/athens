@@ -9,7 +9,6 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
     [re-frame.core :as rf]
     [stylefy.core :as stylefy :refer [use-style]])
@@ -190,23 +189,26 @@
                                  :right "0"
                                  :bottom "0"
                                  :height "100%"
+                                 :width "100%"
                                  :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
                                  :overflow "visible"
-                                 :border-radius "2px"
+                                 :border-radius "4px"
                                  :transition "all 0.15s ease"
-                                 :box-shadow (str "-2px 0 0 2px " (color :panel-color))
+                                 :box-shadow (str "-4px 0 0 0" (color :panel-color))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
-                     [:textarea:focus {:outline "none"
-                                       :z-index "10"
-                                       :display "block"
-                                       :opacity "1"}]
-                     [:span [:span :a {:position "relative"
-                                       :z-index "2"}]]]})
+                     [:textarea:focus
+                      :.isEditing {:outline "none"
+                                   :z-index "10"
+                                   :display "block"
+                                   :opacity "1"}]
+                     [:span [:span
+                             :a {:position "relative"
+                                 :z-index "2"}]]]})
 
 
 (def tooltip-style
@@ -297,7 +299,7 @@ no results for pull eid returns nil
                        {:class    "block-contents"
                         :data-uid uid})
        [:textarea {:value       string
-                   :style       {:width "100%"}
+                   :class (when (= editing-uid uid) "isEditing")
                    :auto-focus  true
                    :on-change   (fn [e]
                                   (prn (.. e -target -value))
