@@ -296,15 +296,15 @@ no results for pull eid returns nil
                                                    :user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-         [:textarea {:value       string
-                             :style       {:width "100%"}
-                             :auto-focus  true
-                             :on-change   (fn [e]
-                                            (prn (.. e -target -value))
+       [:textarea {:value       string
+                   :style       {:width "100%"}
+                   :auto-focus  true
+                   :on-change   (fn [e]
+                                  (prn (.. e -target -value))
                                             ;;(transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]])
-                                            )
-                             :on-key-down (fn [e] (on-key-down e dbid order))}]
-         [parse-and-render string]
+                                  )
+                   :on-key-down (fn [e] (on-key-down e dbid order))}]
+       [parse-and-render string]
 
        ;; Drop Indicator
        (when (and (= closest-uid uid)
