@@ -1,4 +1,4 @@
-name: test, style, and lint
+name: Test, Lint, Style. Deploy on push
 
 on: [push, pull_request]
 
@@ -125,8 +125,10 @@ jobs:
   #         path: ${{ steps.athens-version.outputs.release-name }}.tar.gz
 
 
+   # Only deploy if a commit is pushed. This lets the previous jobs run on PRs. This also runs when a PR is merged, because a merge is a push.
    deploy:
      needs: [test]
+     if: github.event_name == 'push'
      runs-on: ubuntu-18.04
      steps:
        - name: Git checkout
@@ -165,11 +167,9 @@ jobs:
          run: yarn install --frozen-lockfile
 
        - name: Compile app and devcards
-         if: github.event_name == 'push'
          run: COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}" script/deploy
 
        - name: Deploy
-         if: github.event_name == 'push'
          uses: peaceiris/actions-gh-pages@v3
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
