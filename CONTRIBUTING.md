@@ -1,7 +1,10 @@
-**Table of Contents**
+# Table of Contents
+
 - [Contributing to Athens](#contributing-to-athens)
 - [Running Athens Locally](#running-athens-locally)
 - [Deploying Athens and Devcards](#deploying-athens-and-devcards)
+  * [Automated Deploys](#automated-deploys)
+  * [Manual Deploys](#manual-deploys)
 - [Connecting your REPL](#connecting-your-repl)
 - [Using re-frame-10x](#using-re-frame-10x)
 - [Running CI Scripts Locally](#running-ci-scripts-locally)
@@ -13,6 +16,8 @@
   * [Commits](#commits)
   * [Issues](#issues)
   * [Pull Requests](#pull-requests)
+  
+---
 
 # Contributing to Athens
 
@@ -52,23 +57,32 @@ When these scripts are done, your terminal will read `build complete`. Athens ca
 
 # Deploying Athens and Devcards
 
-You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
+You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making UI-releated pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
 
-The official Athens Devcards can be found at https://athensresearch.github.io/athens/cards.html.
+Athens Devcards can be found at https://athensresearch.github.io/athens/cards.html.
 
-To build and deploy Athens and Devcards:
+## Automated Deploys
 
-1. Run `lein dev` as above. Your app is running at http://localhost:3000, and your shadow-cljs server is running at http://localhost:9630.
-1. Run `lein devcards` in a separate terminal. It's okay if you see warning logs. Because `lein dev` is already running, the Devcards build finds the next available ports — http://localhost:3001 and http://localhost:9631 for the app and shadow-cljs, respectively.
-1. Open http://localhost:3000/ and http://localhost:3001/cards.html. You should see Athens and Devcards, respectively.
-1. Run `lein gh-pages` in a third terminal.
-1. Open http://<YOUR_GITHUB>/github.io/athens/ and http://<YOUR_GITHUB>/github.io/athens/cards.html. Sometimes this takes a minute to be updated. If both work, then you have successfuly deployed your Athens and Devcards for the world to see! 
+We've setup GitHub Actions so that each time you commit to your fork on GitHub, GitHub Actions automatically lints, tests, and styles your code.
+
+If these scripts pass, GitHub builds your code and then deploys it to https://YOUR_GITHUB.github.io/athens/ and https://YOUR_GITHUB.github.io/athens/cards.html.
+
+To begin doing automated deploys, just make sure your Actions are enabled at https://github.com/YOUR_GITHUB/athens/actions. Then start pushing code!
+
+## Manual Deploys
+
+To build and deploy Athens and Devcards from your local development environment:
+
+1. Build your JavaScript bundle(s) with either `lein dev`, `lein devcards`, or `lein compile`.
+1. Run `lein gh-pages`.
+1. Open http://<YOUR_GITHUB>/github.io/athens/ and http://<YOUR_GITHUB>/github.io/athens/cards.html. Sometimes this takes a minute to be updated.
 
 Notes:
 
-- If you are only developing on Athens and not Devcards, you only need to run `lein dev`.
-- If you are only developing on DevCards and not Athens, you only need to run `lein devcards`.
-- However, if you want to build both because you are testing a component on DevCards and Athens at the same time, you should run both.
+- If you want to compile Athens and Devcards one time without hot-reloading, run `lein compile`.
+- If you are actively developing Athens and not Devcards, run `lein dev` to hot-reload the Athens application.
+- If you are actively developing DevCards and not Athens, run `lein devcards` to hot-reload Devcards.
+- If you want to build Athens and Devcards, because you are testing a component on DevCards and Athens at the same time, you should run `lein dev` and `lein devcards` in two terminals.
 - If both builds are running, it doesn't matter which port you go to (i.e. `3000` or `3001`), because both HTTP servers can serve assets.
 - More docs should be written in the future on how to connect a REPL to either build, depending on your text editor.
 

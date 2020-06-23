@@ -36,6 +36,8 @@ We chat about other Tools for Thought, [graph visualizations](https://github.com
 
 We also love [Future of Coding topics](https://futureofcoding.org/episodes/046#question-thirteen-what-foc-topics-interest-you-most) such as visual programming, live programming, end-user programming, programming language theory, HCI, AR / VR / spatial software, AI / ML, and so on and so forth.
 
+Ultimately, however, we recognize technology does not exist in a vaccum. Technology shapes society as much as vice versa. There are never no externalities. If you are interested in "sensemaking" towards a better world, please join us! 
+
 [![Discord](https://i.imgur.com/lTIZXqW.png)](https://discord.gg/GCJaV3V)
 [![Twitter](https://i.imgur.com/S41NYml.png)](https://twitter.com/AthensResearch)
 
