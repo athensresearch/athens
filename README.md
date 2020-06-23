@@ -42,6 +42,7 @@ Ultimately, however, we recognize technology does not exist in a vaccum. Technol
 [![Twitter](https://i.imgur.com/S41NYml.png)](https://twitter.com/AthensResearch)
 
 
+
 ---
 
 ![Athens](doc/athens-puk-patrick-unsplash.jpg)
