@@ -64,8 +64,12 @@
 
 
 (def initial-spinner-container
-  {:margin-top "50vh"
-   :transform "translateY(-50%)"})
+  {:margin-top      "50vh"
+   :transform       "translateY(-50%)"
+   :display         "flex"
+   :flex-direction  "column"
+   :justify-content "center"
+   :align-items     "center"})
 
 
 ;;; Components
@@ -78,9 +82,14 @@
    [:span (use-style spinner-message-style) (or message "Loading...")]])
 
 
+(goog-define COMMIT_URL false)
+
+
 (defn ^:export initial-spinner-component
   []
   [:div (use-style initial-spinner-container)
+   (when COMMIT_URL
+     [:a {:href COMMIT_URL} COMMIT_URL])
    [spinner-component]])
 
 
