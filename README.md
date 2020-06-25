@@ -12,6 +12,21 @@ To learn more about this project, please see:
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
 
+<p align="center">
+  <a href="https://twitter.com/athensresearch">
+      <img src="https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social" alt="Twitter">
+  </a>
+ <!--- should we have issues in here? --->
+  <a href="https://github.com/athensresearch/athens/issues">
+      <img src="https://img.shields.io/github/issues/athensresearch/athens" alt="GitHub issues">
+  </a>
+  <img src="https://img.shields.io/github/commit-activity/w/athensresearch/athens" alt="Commit activity"> 
+  <img src="https://img.shields.io/github/languages/top/athensresearch/athens" alt="Programming Language">
+  <img src="https://img.shields.io/github/contributors/athensresearch/athens" alt="Contributors">
+  <img src="https://img.shields.io/github/stars/athensresearch/athens?style=social" alt="Github stars">
+</p>
+
+
 # Run or Contribute
 
 Athens is currently **read-only** and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](CONTRIBUTING.md).
