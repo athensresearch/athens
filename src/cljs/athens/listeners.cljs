@@ -59,12 +59,16 @@
       (events/unlisten js/window EventType.MOUSEMOVE on-move))))
 
 
-;;; Turn read block into write block
+;;; Turn read block or header into editable on mouse down
 
 
 (defn mouse-down-block
   [e]
-  (let [closest (.. e -target (closest ".block-contents"))]
+  ;; Consider refactor if we add more editable targets
+  (let [closest-block (.. e -target (closest ".block-contents"))
+        closest-block-header (.. e -target (closest ".block-header"))
+        closest-page-header (.. e -target (closest ".page-header"))
+        closest (or closest-block closest-block-header closest-page-header)]
     (when closest
       (dispatch [:editing-uid (.. closest -dataset -uid)]))))
 
