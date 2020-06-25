@@ -172,20 +172,43 @@
 
 
 (def block-content-style
-  {::stylefy/manual [[:textarea {:-webkit-appearance "none"
+  {:position "relative"
+   :overflow "visible"
+   :word-break "break-word"
+   ::stylefy/manual [[:textarea {:display "none"}]
+                     [:&:hover [:textarea {:display "block"
+                                           :z-index 1}]]
+                     [:textarea {:-webkit-appearance "none"
+                                 :cursor "text"
                                  :resize "none"
+                                 :transform "translate3d(0,0,0)"
                                  :color "inherit"
                                  :padding "0"
+                                 :background (color :panel-color)
+                                 :position "absolute"
+                                 :top "0"
+                                 :left "0"
+                                 :right "0"
+                                 :width "100%"
+                                 :min-height "100%"
                                  :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
-                                 :overflow "hidden"
-                                 :margin-bottom "-10px" ;; FIXME: hack to correct for improper textarea autosizing. 
+                                 :border-radius "4px"
+                                 :transition "opacity 0.15s ease"
+                                 :box-shadow (str "-4px 0 0 0" (color :panel-color))
                                  :border "0"
+                                 :opacity "0"
                                  :font-family "inherit"}]
-                     [:textarea:focus {:outline "none"
-                                       :opacity (:opacity-high OPACITIES)}]]})
+                     [:textarea:focus
+                      :.isEditing {:outline "none"
+                                   :z-index "10"
+                                   :display "block"
+                                   :opacity "1"}]
+                     [:span [:span
+                             :a {:position "relative"
+                                 :z-index "2"}]]]})
 
 
 (def tooltip-style
@@ -275,16 +298,14 @@ no results for pull eid returns nil
                                                    :user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-       (if (= editing-uid uid)
-         [autosize/textarea {:value       string
-                             :style       {:width "100%"}
-                             :auto-focus  true
-                             :on-change   (fn [e]
+       [autosize/textarea {:value       string
+                           :class       (when (= editing-uid uid) "isEditing")
+                           :auto-focus  true
+                           :on-change   (fn [e]
                                             ;;(prn (.. e -target -value)))
-                                            (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
-
-                             :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
-         [parse-and-render string])
+                                          (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
+                           :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
+       [parse-and-render string]
 
        ;; Drop Indicator
        (when (and (= closest-uid uid)
