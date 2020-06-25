@@ -51,6 +51,13 @@
                ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
 
 
+(def block-ref {:font-size "0.9em"
+                :transition "background 0.05s ease"
+                :border-bottom [["1px" "solid" (color :highlight-color)]]
+                ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
+                                         :cursor "alias"}]]})
+
+
 ;;; Components
 
 
@@ -69,8 +76,7 @@
                      [:span {:class "formatting"} "]]"]]))
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]
-                    [:span {:class "block-ref"
-                            :style {:font-size "0.9em" :border-bottom "1px solid gray"}}
+                    [:span (use-style block-ref {:class "block-ref"})
                      [:span {:on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
      :hashtag   (fn [tag-name]
                   (let [node (pull db/dsdb '[*] [:node/title tag-name])]

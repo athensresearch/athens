@@ -86,10 +86,6 @@
                                              :text-transform "uppercase"}]
                                        [:.MuiSvgIcon-root {:font-size "24px"}]
                                        [:input {:font-family "inherit"}]
-                                       [:span
-                                        [:&.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
-                                         [:&:hover {:background-color (color :highlight-color :opacity-lower)
-                                                    :cursor "alias"}]]]
                                        [:img {:max-width "100%"
                                               :height "auto"}]]})
 
