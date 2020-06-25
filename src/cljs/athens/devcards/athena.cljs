@@ -4,7 +4,6 @@
     [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.events]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]

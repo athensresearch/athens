@@ -16,6 +16,8 @@
     [athens.devcards.spinner]
     [athens.devcards.style-guide]
     [athens.devcards.styling-with-stylefy]
+    [athens.effects]
+    [athens.events]
     [athens.listeners :as listeners]
     [cljsjs.react]
     [cljsjs.react.dom]

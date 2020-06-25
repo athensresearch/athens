@@ -242,7 +242,7 @@ no results for pull eid returns nil
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children]}]
+  [{:block/keys [uid string open order children] dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
         editing-uid @(rf/subscribe [:editing-uid])
@@ -281,6 +281,7 @@ no results for pull eid returns nil
       (when (and (= tooltip-uid uid)
                  (not dragging-uid))
         [:div (use-style tooltip-style {:class "tooltip"})
+         [:span [:b "db/id: "] dbid]
          [:span [:b "uid: "] uid]
          [:span [:b "order: "] order]
          (when children
