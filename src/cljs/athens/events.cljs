@@ -73,8 +73,7 @@
              {:db         db/rfdb
               :async-flow {:first-dispatch [:get-local-storage-db]
                            :rules          [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
-                                            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}
-                                            ]}}))
+                                            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]}}))
 
 
 (reg-event-fx
@@ -102,8 +101,22 @@
     (if-let [stored (js/localStorage.getItem "datascript/DB")]
       {:reset-conn (dt/read-transit-str stored)
        :db         (assoc db :loading false)}
-      {:dispatch [:get-datoms]})
-    ))
+      {:dispatch [:get-datoms]})))
+
+
+(reg-event-fx
+  :undo
+  (fn [_ _]
+    (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
+      {:reset-conn prev})))
+
+
+(reg-event-fx
+  :redo
+  (fn [_ _]
+    (when-let [next (db/find-next @db/history #(identical? @db/dsdb %))]
+      {:reset-conn next})))
+
 
 
 
@@ -152,12 +165,12 @@
                    parent-children (reindex-parent source parent)
                    _target-children (reindex-target source target)]
                {:transact [{:db/add [:block/uid source] :block/children parent-children}
-                           [:db/retract (:db/id parent) :block/children [:block/uid source]]
+                           [:db/retract (:db/id parent) :block/children [:block/uid source]]]})))
 
                            ;; FIXME: for some reason unable to transact multiple children
                            ;; Get error: Error: Lookup ref should contain 2 elements: [1 2 3 4]
                            ;;{:db/add [:block/uid target] :block/children target-children}
-                           ]})))
+
 
 
 

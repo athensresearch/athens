@@ -6,7 +6,8 @@
     [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
-      EventType)))
+      EventType
+      KeyCodes)))
 
 
 ;;; Drag Bullet to Re-order Block
@@ -55,7 +56,8 @@
       (when target-uid
         (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
       (dispatch [:drag-bullet {}])
-      (.. (js/document.getSelection) empty)
+      ;; FIXME: after the first time `empty` is called, selection stays empty
+      ;;(.. (js/document.getSelection) empty)
       (events/unlisten js/window EventType.MOUSEMOVE on-move))))
 
 
@@ -104,9 +106,30 @@
       (dispatch [:toggle-athena]))))
 
 
+;;; Hotkeys
+
+(defn key-down
+  [e]
+  (let [key (.. e -keyCode)
+        _ctrl (.. e -ctrlKey)
+        meta (.. e -metaKey)
+        shift (.. e -shiftKey)]
+
+    (cond
+      (and (= key KeyCodes.Z) meta shift)
+      (dispatch [:redo])
+
+      (and (= key KeyCodes.Z) meta)
+      (dispatch [:undo])
+
+      (and (= key KeyCodes.K) meta)
+      (dispatch [:toggle-athena]))))
+
+
 (defn init
   []
   (events/listen js/window EventType.MOUSEDOWN mouse-down-block)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-bullet)
   (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
-  (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena))
+  (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
+  (events/listen js/window EventType.KEYDOWN key-down))
