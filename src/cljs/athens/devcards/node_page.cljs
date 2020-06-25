@@ -8,7 +8,7 @@
     [devcards.core :refer-macros [defcard-rg]]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull q]]
-    [reagent.core :as r]))
+    [re-frame.core :refer [subscribe]]))
 
 
 ;;; Globals
@@ -380,38 +380,35 @@
 ;;; Components
 
 
-(defn title-component
-  [title]
-  (let [s (r/atom {:editing false
-                   :title title})]
-    (fn []
-      (if (:editing @s)
-        [:h2 [autosize/textarea {:value     (:title @s)
-                                 :style     {:height "inherit" :font-size "inherit"}
-                                 :on-change (fn [e] (swap! s assoc :title (.. e -target -value)))
-                                 :on-blur   #(swap! s assoc :editing false)}]]
-        [:h1 {:on-click #(swap! s assoc :editing true)}
-         (:title @s)]))))
-
-
 (defn node-page-el
-  [node linked-refs unlinked-refs]
-  (let [{:keys [block/children node/title]} node]
-    [:div
-     ;;[title-comp title]
-     [title-component title]
-     [:div
-      (for [child children]
-        ^{:key (:db/id child)} [blocks/block-el child])]
-     ;; TODO references
-     [:div
-      [:h4 "Linked References"]
-      (for [ref linked-refs]
-        ^{:key ref} [:p ref])]
-     [:div
-      [:h4 "Unlinked References"]
-      (for [ref unlinked-refs]
-        ^{:key ref} [:p ref])]]))
+  [{:block/keys [children uid] title :node/title} editing-uid linked-refs unlinked-refs]
+  [:div
+
+   ;; Header
+   [:div {:data-uid uid :class "page-header"}
+    (if (= uid editing-uid)
+      [:h1
+       [autosize/textarea
+        {:value      title
+         :style      {:width "100%"}
+         :auto-focus true
+         :on-change  (fn [e]
+                       ;;(prn (.. e -target -value))
+                       (transact! db/dsdb [[:db/add [:block/uid uid] :node/title (.. e -target -value)]]))}]]
+      [:h1 title])]
+
+   [:div
+    (for [child children]
+      ^{:key (:db/id child)} [blocks/block-el child])]
+   ;; TODO references
+   [:div
+    [:h4 "Linked References"]
+    (for [ref linked-refs]
+      ^{:key ref} [:p ref])]
+   [:div
+    [:h4 "Unlinked References"]
+    (for [ref unlinked-refs]
+      ^{:key ref} [:p ref])]])
 
 
 (defn node-page-component
@@ -419,11 +416,12 @@
   https://github.com/mpdairy/posh/issues/21"
   [ident]
   (let [node (->> @(pull db/dsdb db/node-pull-pattern ident) (db/sort-block))
-        title (:node/title node)]
+        title (:node/title node)
+        editing-uid @(subscribe [:editing-uid])]
     (when-not (clojure.string/blank? title)
       (let [linked-ref-entids     @(q db/q-refs db/dsdb (patterns/linked title))
             unlinked-ref-entids   @(q db/q-refs db/dsdb (patterns/unlinked title))]
-        [node-page-el node linked-ref-entids unlinked-ref-entids]))))
+        [node-page-el node editing-uid linked-ref-entids unlinked-ref-entids]))))
 
 
 ;;; Devcards

@@ -113,7 +113,7 @@
                             :transform "translate(-50%, -50%)"
                             :height "5px"
                             :width "5px"}]
-                   [:hover {:color (color :link-color)}]
+                   [:hover {:color (color :link-color)}]]
                   ;;  [:before {:content "''"
                   ;;            :position "absolute"
                   ;;            :top "24px"
@@ -122,7 +122,7 @@
                   ;;            :left "22px"
                   ;;            :width "1px"
                   ;;            :background (color :panel-color)}]
-                   ]
+
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
                      [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
@@ -241,9 +241,8 @@ no results for pull eid returns nil
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [block]
-  (let [{:block/keys [uid string open order children] dbid :db/id} block
-        open?       (and (seq children) open)
+  [{:block/keys [uid string open order children]}]
+  (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
         editing-uid @(rf/subscribe [:editing-uid])
         tooltip-uid @(rf/subscribe [:tooltip-uid])
@@ -259,7 +258,9 @@ no results for pull eid returns nil
 
       ;; Toggle
       (if (seq children)
-        [:button (use-style block-disclosure-toggle-style {:class (cond open? "open" closed? "closed") :on-click #(toggle dbid open)})
+        [:button (use-style block-disclosure-toggle-style
+                            {:class (cond open? "open" closed? "closed")
+                             :on-click #(toggle [:block/uid uid] open)})
          [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
         [:span (use-style block-disclosure-toggle-style)])
 
@@ -279,7 +280,6 @@ no results for pull eid returns nil
       (when (and (= tooltip-uid uid)
                  (not dragging-uid))
         [:div (use-style tooltip-style {:class "tooltip"})
-         [:span [:b "dbid: "] dbid]
          [:span [:b "uid: "] uid]
          [:span [:b "order: "] order]
          (when children
@@ -297,15 +297,16 @@ no results for pull eid returns nil
                                                    :user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-       [autosize/textarea {:value       string
-                           :class (when (= editing-uid uid) "isEditing")
-                           :auto-focus  true
-                           :on-change   (fn [e]
-                                          (prn (.. e -target -value))
-                                            ;;(transact! db/dsdb [[:db/add dbid :block/string (.. e -target -value)]])
-                                          )
-                           :on-key-down (fn [e] (on-key-down e dbid order))}]
-       [parse-and-render string]
+       (if (= editing-uid uid)
+         [autosize/textarea {:value       string
+                             :class (when (= editing-uid uid) "isEditing")
+                             :auto-focus  true
+                             :on-change   (fn [e]
+                                            ;;(prn (.. e -target -value)))
+                                            (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
+
+                             :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
+         [parse-and-render string])
 
        ;; Drop Indicator
        (when (and (= closest-uid uid)
@@ -314,7 +315,7 @@ no results for pull eid returns nil
 
      ;; Children
      (when open?
-       (for [child (:block/children block)]
+       (for [child children]
          [:div {:style {:margin-left "32px"} :key (:db/id child)}
           [block-el child]]))
 
@@ -324,27 +325,27 @@ no results for pull eid returns nil
 ;; Helpers
 
 (defn toggle
-  [dbid open]
-  (transact! db/dsdb [{:db/id dbid :block/open (not open)}]))
+  [ident open]
+  (transact! db/dsdb [{:db/id ident :block/open (not open)}]))
 
 
 (defn on-key-down
-  [e dbid order]
+  [e ident order]
   (let [key             (.. e -keyCode)
         val             (.. e -target -value)
         selection-start (.. e -target -selectionStart)]
-    (prn "KEYDOWN" selection-start (subs val selection-start) key dbid order KeyCodes.ENTER)
+    (prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
     (cond
       ;;(= key KeyCodes.ENTER)
       ;;(transact! db/dsdb
       ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
-      ;;           [;;{:db/id dbid
+      ;;           [;;{:db/id ident
       ;;   ;; :block/string (subs val 0 selection-start)}
       ;;            {;; random-uuid generates length 36 id. Roam uids are 9
       ;;             :block/uid       (subs (str (random-uuid)) 27)
       ;;             :block/string    (subs val selection-start)
       ;;    ;; FIXME makes current block the parent
-      ;;             :block/_children dbid
+      ;;             :block/_children ident
       ;;    ;; FIXME. order is dependent on parent
       ;;             :block/order     (inc order)
       ;;             :block/open      true}])
