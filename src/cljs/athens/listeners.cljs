@@ -1,9 +1,7 @@
 (ns athens.listeners
   (:require
-    [athens.db :as db]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
     [goog.events :as events]
     [re-frame.core :refer [dispatch subscribe]])
   (:import
@@ -110,8 +108,6 @@
 
 ;;; Hotkeys
 
-;; Undo
-
 (defn key-down
   [e]
   (let [key (.. e -keyCode)
@@ -120,16 +116,14 @@
         shift (.. e -shiftKey)]
 
     (cond
-      ;; redo
       (and (= key KeyCodes.Z) meta shift)
-      (do (prn "redo")
-          (if-let [next (db/find-next @db/history #(identical? @db/dsdb %))]
-            (d/reset-conn! db/dsdb next)))
-      ;; undo
+      (dispatch [:redo])
+
       (and (= key KeyCodes.Z) meta)
-      (do (prn "undo")
-          (if-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
-            (d/reset-conn! db/dsdb prev))))))
+      (dispatch [:undo])
+
+      (and (= key KeyCodes.K) meta)
+      (dispatch [:toggle-athena]))))
 
 
 (defn init

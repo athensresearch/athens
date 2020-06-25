@@ -104,6 +104,20 @@
       {:dispatch [:get-datoms]})))
 
 
+(reg-event-fx
+  :undo
+  (fn [_ _]
+    (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
+      {:reset-conn prev})))
+
+
+(reg-event-fx
+  :redo
+  (fn [_ _]
+    (when-let [next (db/find-next @db/history #(identical? @db/dsdb %))]
+      {:reset-conn next})))
+
+
 
 
 ;; WIP: dsdb events (transactions)
