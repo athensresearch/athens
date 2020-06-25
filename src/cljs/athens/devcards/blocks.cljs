@@ -298,14 +298,14 @@ no results for pull eid returns nil
                                                    :user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-         [autosize/textarea {:value       string
-                             :class       (when (= editing-uid uid) "isEditing")
-                             :auto-focus  true
-                             :on-change   (fn [e]
+       [autosize/textarea {:value       string
+                           :class       (when (= editing-uid uid) "isEditing")
+                           :auto-focus  true
+                           :on-change   (fn [e]
                                             ;;(prn (.. e -target -value)))
-                                            (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
-                             :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
-         [parse-and-render string]
+                                          (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
+                           :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
+       [parse-and-render string]
 
        ;; Drop Indicator
        (when (and (= closest-uid uid)
