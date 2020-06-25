@@ -1,9 +1,9 @@
 (ns athens.parse-renderer
   (:require
     [athens.db :as db]
-    [athens.style :refer [color OPACITIES]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color OPACITIES]]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -17,13 +17,38 @@
 
 (def block {})
 
+
 (def page-link {:cursor "pointer"
                 :text-decoration "none"
                 :color (color :link-color)
-                ::stylefy/manual [[:.formatting {:display "none"}
-                                   :&:hover {:background-color (color :panel-background)} ]]})
+                :position "relative"
+                ::stylefy/manual [[:.formatting {:display "none"}]
+                                  [:&:after {:content "''"
+                                             :display "inline-block"
+                                             :position "absolute"
+                                             :top "-1px"
+                                             :right "-0.2em"
+                                             :left "-0.2em"
+                                             :bottom "-1px"
+                                             :z-index "-1"
+                                             :opacity "0"
+                                             :border-radius "4px"
+                                             :transition "all 0.05s ease"
+                                             :background (color :link-color 0.1)}]
+                                  [:&:hover:after {:opacity "1"}]]})
 
-(def hashtag {::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
+
+(def hashtag {::stylefy/mode [[:hover {:text-decoration "underline"}]]
+              ::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
+
+
+(def image {:border-radius "2px"})
+
+
+(def url-link {:cursor "pointer"
+               :text-decoration "none"
+               :color (color :link-color)
+               ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
 
 
 ;;; Components
@@ -54,12 +79,12 @@
                      [:span {:class "formatting"} "#"]
                      tag-name]))
      :url-image (fn [{url :url alt :alt}]
-                  [:img {:class "url-image"
-                         :alt   alt
-                         :src   url}])
+                  [:img (use-style image {:class "url-image"
+                                          :alt   alt
+                                          :src   url})])
      :url-link  (fn [{url :url} text]
-                  [:a {:class "url-link"
-                       :href  url}
+                  [:a (use-style url-link {:class "url-link"
+                                           :href  url})
                    text])
      :bold      (fn [text]
                   [:strong {:class "bold"} text])}
