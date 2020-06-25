@@ -7,6 +7,7 @@
     [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :refer [join]]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
@@ -175,6 +176,7 @@
   {:position "relative"
    :overflow "visible"
    :word-break "break-word"
+   ;;:min-height "100px" helpful for development
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -211,13 +213,22 @@
                                  :z-index "2"}]]]})
 
 
-(def tooltip-style
-  {:z-index    1 :position "absolute" :left "-200px"
-   :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
-   :display    "flex" :flex-direction "column"
-   :background-color "white"
-   :padding "5px 10px"
-   :border-radius "4px"})
+#_(def tooltip-style
+    {:z-index    1
+     :position "relative"
+     :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+     :display    "flex"
+     :flex-direction "column"
+     :background-color "white"
+     :padding "5px 10px"
+     :border-radius "4px"
+     :left "-200px"
+     :min-width "150px"})
+
+
+(def dragging-style)
+  ;;{:background-color "lightblue"})
+
 
 
 ;;; Components
@@ -242,19 +253,20 @@ no results for pull eid returns nil
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children] dbid :db/id}]
+  [{:block/keys [uid string open order children] _dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
         editing-uid @(rf/subscribe [:editing-uid])
-        tooltip-uid @(rf/subscribe [:tooltip-uid])
+        _tooltip-uid @(rf/subscribe [:tooltip-uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid
          closest-kind :closest/kind} @(rf/subscribe [:drag-bullet])]
 
-    [:div (merge (use-style block-style
-                            {:class    "block-container"
-                             :data-uid uid}))
+    [:div (use-style (merge block-style
+                            (when (= dragging-uid uid) dragging-style))
+                     {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
+                      :data-uid uid})
      [:div {:style {:display "flex"}}
 
       ;; Toggle
@@ -268,7 +280,7 @@ no results for pull eid returns nil
       ;; Bullet
       (if (= dragging-uid uid)
         [:span (merge (use-style block-indicator-style
-                                 {:class    (clojure.string/join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                                 {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
                                   :data-uid uid})
                       {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
@@ -278,21 +290,22 @@ no results for pull eid returns nil
                            :on-click #(navigate-uid uid)})])
 
       ;; Tooltip
-      (when (and (= tooltip-uid uid)
-                 (not dragging-uid))
-        [:div (use-style tooltip-style {:class "tooltip"})
-         [:span [:b "db/id: "] dbid]
-         [:span [:b "uid: "] uid]
-         [:span [:b "order: "] order]
-         (when children
-           [:<>
-            [:span [:b "children: "]]
-            (for [ch children]
-              (let [{:block/keys [uid order]} ch]
-                [:span {:style {:margin-left "20px"} :key uid}
-                 [:b "order: "] [:span order]
-                 [:span " | "]
-                 [:b "uid: "] [:span uid]]))])])
+      ;;(when (and (= tooltip-uid uid)
+      ;;           (not dragging-uid)))
+      ;;[:div (use-style tooltip-style {:class "tooltip"})
+      ;; [:span [:b "db/id: "] dbid]
+      ;; [:span [:b "uid: "] uid]
+      ;; [:span [:b "order: "] order]]
+       ;;(when children
+       ;;  [:<>
+       ;;   [:span [:b "children: "]]
+       ;;   (for [ch children]
+       ;;     (let [{:block/keys [uid order]} ch]
+       ;;       [:span {:style {:margin-left "20px"} :key uid}
+       ;;        [:b "order: "] [:span order]
+       ;;        [:span " | "]
+       ;;        [:b "uid: "] [:span uid]]))])]
+
 
       ;; Actual Contents
       [:div (use-style (merge block-content-style {:width       "100%"
@@ -319,6 +332,7 @@ no results for pull eid returns nil
          [:div {:style {:margin-left "32px"} :key (:db/id child)}
           [block-el child]]))
 
+     ;; Drop Indicator
      (when (and (= closest-uid uid) (= closest-kind :sibling))
        [:span (use-style drop-area-indicator)])]))
 
@@ -330,13 +344,13 @@ no results for pull eid returns nil
 
 
 (defn on-key-down
-  [e ident order]
-  (let [key             (.. e -keyCode)
-        val             (.. e -target -value)
-        selection-start (.. e -target -selectionStart)]
-    (prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
+  [e _ident _order]
+  (let [_key             (.. e -keyCode)
+        _val             (.. e -target -value)
+        _selection-start (.. e -target -selectionStart)]
+    ;;(prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
     (cond
-      ;;(= key KeyCodes.ENTER)
+      (= key KeyCodes.ENTER) nil
       ;;(transact! db/dsdb
       ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
       ;;           [;;{:db/id ident
