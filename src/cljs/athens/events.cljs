@@ -138,38 +138,51 @@
     reindex))
 
 
-(defn reindex-target
-  [_source target]
-  (let [target-entity @(pull db/dsdb '[* {:block/children [:db/id :block/order]}] [:block/uid target])]
-    (->> target-entity
-      :block/children
-      ;;(cons {:block/uid source :block/order -1})
-      (cons {:db/id 2349 :block/order -1})
-      reindex)))
+(defn get-block
+  [id]
+  @(pull db/dsdb '[:db/id {:block/children [:block/uid :block/order]}] id))
 
 
 (defn get-parent
-  "takes in a block string and returns a parent with its children"
-  [uid]
-  (let [parent-eid (-> @(pull db/dsdb '[:block/_children] [:block/uid uid])
-                     :block/_children
-                     first
-                     :db/id)]
-    @(pull db/dsdb '[:db/id {:block/children [:db/id :block/uid :block/order]}] parent-eid)))
+  [id]
+  (let [eid (-> (d/entity @db/dsdb id)
+              :block/_children
+              first
+              :db/id)]
+    (get-block eid)))
+
+
+(defn reindex-target
+  "If kind is :sibling, target's parent is new target
+  If kind is :child, target is target"
+  [source target kind]
+  (when (= kind :child)
+    (let [target (get-block [:block/uid target])
+          children (get target :block/children [])
+          conj-child (conj children {:block/uid source :block/order -1})
+          indexed-children (reindex conj-child)]
+      indexed-children)))
+
+;; TODO: wrangling nested data is a pain. probably looking into Specter
+;; (when (= kind :sibling))
+;;(get-parent [:block/uid target])
+;;(->> (reindex-target s t :sibling)
+;;  :block/children
+;;  (sort-by :block/order)
+;;  (take-while #(not= (:block/uid %) t)))
 
 
 (reg-event-fx
   :drop-bullet
-  (fn-traced [_ [_ {:keys [source target _kind]}]]
-             (let [parent (get-parent source)
+  (fn-traced [_ [_ {:keys [source target kind]}]]
+             (let [parent (get-parent [:block/uid source])
                    parent-children (reindex-parent source parent)
-                   _target-children (reindex-target source target)]
-               {:transact [{:db/add [:block/uid source] :block/children parent-children}
-                           [:db/retract (:db/id parent) :block/children [:block/uid source]]]})))
+                   target-children (reindex-target source target kind)]
+               {:transact [
+                           {:db/add [:block/uid source] :block/children parent-children} ;; re-index source parent's children
+                           [:db/retract (:db/id parent) :block/children [:block/uid source]] ;; retract source from parent
+                           {:db/id [:block/uid target]  :block/children target-children}]}))) ;; reindex target location
 
-                           ;; FIXME: for some reason unable to transact multiple children
-                           ;; Get error: Error: Lookup ref should contain 2 elements: [1 2 3 4]
-                           ;;{:db/add [:block/uid target] :block/children target-children}
 
 
 
