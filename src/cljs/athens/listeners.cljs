@@ -25,7 +25,19 @@
             uid (.. e -target -dataset -uid)
             on-move (mouse-move-bullet start-pos uid)]
         (events/listen js/window EventType.MOUSEMOVE on-move)
-        (events/listen js/window EventType.MOUSEUP (mouse-up-bullet on-move))))))
+        (set! (.. e -target -onmouseup) (mouse-up-bullet on-move))))))
+
+
+(defn mouse-up-bullet
+  [on-move]
+  (fn [_]
+    (let [{:keys [uid closest/kind] target-uid :closest/uid} @(subscribe [:drag-bullet])]
+      (when target-uid
+        (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
+      (dispatch [:drag-bullet nil])
+      ;; FIXME: after the first time `empty` is called, selection stays empty
+      ;;(.. (js/document.getSelection) empty)
+      (events/unlisten js/window EventType.MOUSEMOVE on-move))))
 
 
 (defn mouse-move-bullet
@@ -53,18 +65,6 @@
                     :uid          uid
                     :closest/uid  closest-uid
                     :closest/kind closest-kind}])))))
-
-
-(defn mouse-up-bullet
-  [on-move]
-  (fn [_evt]
-    (let [{:keys [uid closest/kind] target-uid :closest/uid} @(subscribe [:drag-bullet])]
-      (when target-uid
-        (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
-      (dispatch [:drag-bullet {}])
-      ;; FIXME: after the first time `empty` is called, selection stays empty
-      ;;(.. (js/document.getSelection) empty)
-      (events/unlisten js/window EventType.MOUSEMOVE on-move))))
 
 
 ;;; Turn read block or header into editable on mouse down
