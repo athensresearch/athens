@@ -174,6 +174,7 @@
 (def block-content-style
   {:position "relative"
    :overflow "visible"
+   :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
