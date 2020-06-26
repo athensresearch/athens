@@ -14,10 +14,6 @@
 
 ;;; Styles
 
-
-(def block {})
-
-
 (def page-link {:cursor "pointer"
                 :text-decoration "none"
                 :color (color :link-color)
@@ -68,7 +64,7 @@
   [tree]
   (insta/transform
     {:block     (fn [& contents]
-                  (concat [:span (use-style block {:class "block"})] contents))
+                  (concat [:span {:class "block"}] contents))
      :page-link (fn [title]
                   (let [node (pull db/dsdb '[*] [:node/title title])]
                     [:span (use-style page-link {:class "page-link"})
