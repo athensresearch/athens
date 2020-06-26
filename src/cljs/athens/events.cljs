@@ -120,7 +120,77 @@
 
 
 
-;; WIP: dsdb events (transactions)
+;;; dsdb events (transactions)
+
+(reg-event-fx
+  :transact-event
+  (fn [_ [_ datoms]]
+    {:transact datoms}))
+
+
+;; Block Editing
+
+(defn get-block
+  [id]
+  @(pull db/dsdb '[:db/id {:block/children [:block/uid :block/order]}] id))
+
+
+(defn get-parent
+  [id]
+  (let [eid (-> (d/entity @db/dsdb id)
+              :block/_children
+              first
+              :db/id)]
+    (get-block eid)))
+
+
+;; find sibling block with order - 1
+;; TODO: reindex order
+(reg-event-fx
+  :indent
+  (fn [_ [_ uid]]
+    (let [old-parent-eid (:db/id (get-parent [:block/uid uid]))
+          new-parent-uid
+          (->> (d/q '[:find ?order ?uid
+                      :in $ ?parent
+                      :where
+                      [?parent :block/children ?children]
+                      [?children :block/order ?order]
+                      [?children :block/uid ?uid]]
+                 @db/dsdb old-parent-eid)
+            vec
+            (sort-by first)
+            (take-while #(not= uid (second %)))
+            last
+            second)]
+      {:transact [[:db/add [:block/uid new-parent-uid] :block/children [:block/uid uid]]
+                  [:db/retract old-parent-eid :block/children [:block/uid uid]]]})))
+
+
+(reg-event-fx
+  :unindent
+  (fn [_ [_ uid]]
+    (let [parent (get-parent [:block/uid uid])
+          grandpa (get-parent (:db/id parent))
+          reindex-blocks (->> (d/q '[:find ?new-order ?children
+                                     :in $ ?grandpa ?parent-order
+                                     :where
+                                     [?grandpa :block/children ?children]
+                                     [?children :block/order ?order]
+                                     [(> ?order ?parent-order)]
+                                     [(inc ?order) ?new-order]]
+                                @db/dsdb (:db/id grandpa) (:order parent))
+                           (map (fn [x] {:db/id (second x) :block/order (first x)})))]
+      {:transact [[:db/add [:block/uid uid] :block/order (inc (:block/order parent))]
+                  [:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                  [:db/add (:db/id grandpa) :block/children [:block/uid uid]]
+                  {:db/add (:db/id grandpa) :block/children reindex-blocks}]})))
+
+
+
+
+
+;; Drag and Drop
 
 (defn reindex
   [blocks]
@@ -136,20 +206,6 @@
     :block/children
     (remove #(= (:block/uid %) source))
     reindex))
-
-
-(defn get-block
-  [id]
-  @(pull db/dsdb '[:db/id {:block/children [:block/uid :block/order]}] id))
-
-
-(defn get-parent
-  [id]
-  (let [eid (-> (d/entity @db/dsdb id)
-              :block/_children
-              first
-              :db/id)]
-    (get-block eid)))
 
 
 (defn reindex-target
