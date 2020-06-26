@@ -12,7 +12,7 @@
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
-    [re-frame.core :as rf]
+    [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
@@ -213,17 +213,17 @@
                                  :z-index "2"}]]]})
 
 
-#_(def tooltip-style
-    {:z-index    1
-     :position "relative"
-     :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
-     :display    "flex"
-     :flex-direction "column"
-     :background-color "white"
-     :padding "5px 10px"
-     :border-radius "4px"
-     :left "-200px"
-     :min-width "150px"})
+(def tooltip-style
+  {:z-index    1
+   :position "relative"
+   :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+   :display    "flex"
+   :flex-direction "column"
+   :background-color "white"
+   :padding "5px 10px"
+   :border-radius "4px"
+   :left "-200px"
+   :min-width "150px"})
 
 
 (def dragging-style)
@@ -234,7 +234,7 @@
 ;;; Components
 
 
-(declare block-component block-el toggle on-key-down)
+(declare block-component block-el toggle on-key-down debounce)
 
 
 (defn block-component
@@ -256,12 +256,12 @@ no results for pull eid returns nil
   [{:block/keys [uid string open order children] _dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
-        editing-uid @(rf/subscribe [:editing-uid])
-        _tooltip-uid @(rf/subscribe [:tooltip-uid])
+        editing-uid @(subscribe [:editing-uid])
+        _tooltip-uid @(subscribe [:tooltip-uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid
-         closest-kind :closest/kind} @(rf/subscribe [:drag-bullet])]
+         closest-kind :closest/kind} @(subscribe [:drag-bullet])]
 
     [:div (use-style (merge block-style
                             (when (= dragging-uid uid) dragging-style))
@@ -316,9 +316,9 @@ no results for pull eid returns nil
                            :class       (when (= editing-uid uid) "isEditing")
                            :auto-focus  true
                            :on-change   (fn [e]
-                                            ;;(prn (.. e -target -value)))
-                                          (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
-                           :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
+                                          (prn "CHANGE" (.. e -target-value)))
+                           ;;(debounce (.. e -target-value)))
+                           :on-key-down (fn [e] (on-key-down e uid))}]
        [parse-and-render string]
 
        ;; Drop Indicator
@@ -338,19 +338,33 @@ no results for pull eid returns nil
 
 ;; Helpers
 
+(defn on-change
+  [v]
+  (dispatch [:transact-event [[:db/add [:block/uid "VQ-ybRmNh"] :block/string v]]]))
+
+
+(def debounce
+  (goog.functions.debounce on-change))
+
+
 (defn toggle
   [ident open]
   (transact! db/dsdb [{:db/id ident :block/open (not open)}]))
 
 
 (defn on-key-down
-  [e _ident _order]
-  (let [_key             (.. e -keyCode)
+  [e uid]
+  (let [key             (.. e -keyCode)
         _val             (.. e -target -value)
-        _selection-start (.. e -target -selectionStart)]
+        _selection-start (.. e -target -selectionStart)
+        shift (.. e -shiftKey)]
     ;;(prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
     (cond
-      (= key KeyCodes.ENTER) nil
+
+      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
+      (= key KeyCodes.TAB) (dispatch [:indent uid])
+
+      (= key KeyCodes.ENTER) (dispatch [:enter])
       ;;(transact! db/dsdb
       ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
       ;;           [;;{:db/id ident
