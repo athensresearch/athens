@@ -178,8 +178,6 @@
    :word-break "break-word"
    ;;:min-height "100px" helpful for development
    ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
                      [:textarea {:-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
@@ -203,11 +201,14 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
+                     [:&:hover [:textarea {:display "block"
+                                           :z-index 1}]]
                      [:textarea:focus
                       :.isEditing {:outline "none"
                                    :z-index "10"
                                    :display "block"
-                                   :opacity "1"}]
+                                   :opacity "1"}
+                      [:span [:span :a {:z-index "1"}]]]
                      [:span [:span
                              :a {:position "relative"
                                  :z-index "2"}]]]})
