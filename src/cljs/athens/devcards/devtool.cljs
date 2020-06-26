@@ -73,9 +73,7 @@
   (let [limit (r/atom 20)]
     (fn [headers rows add-nav!]
       [:div
-       [:div (use-style {:font-size "12px"
-                         :font-family "IBM Plex Mono"
-                         :overflow-x "auto"})
+       [:div (use-style {:overflow-x "auto"})
         [:table
          [:thead
           [:tr (for [h headers]
