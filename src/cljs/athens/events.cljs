@@ -145,26 +145,31 @@
 
 
 ;; find sibling block with order - 1
-;; TODO: reindex order
+;; add to end of sib children. no need to reindex?
 (reg-event-fx
   :indent
   (fn [_ [_ uid]]
-    (let [old-parent-eid (:db/id (get-parent [:block/uid uid]))
-          new-parent-uid
-          (->> (d/q '[:find ?order ?uid
-                      :in $ ?parent
-                      :where
-                      [?parent :block/children ?children]
-                      [?children :block/order ?order]
-                      [?children :block/uid ?uid]]
-                 @db/dsdb old-parent-eid)
-            vec
-            (sort-by first)
-            (take-while #(not= uid (second %)))
-            last
-            second)]
-      {:transact [[:db/add [:block/uid new-parent-uid] :block/children [:block/uid uid]]
-                  [:db/retract old-parent-eid :block/children [:block/uid uid]]]})))
+    (let [block (get-block [:block/uid uid])
+          parent (get-parent [:block/uid uid])
+          older-sib (->> parent
+                      :block/children
+                      (filter #(= (dec (:block/order block)) (:block/order %)))
+                      first
+                      :db/id
+                      get-block)
+          new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
+          reindex-blocks (->> (d/q '[:find ?ch ?new-order
+                                     :in $ ?parent ?source-order
+                                     :where
+                                     [?parent :block/children ?ch]
+                                     [?ch :block/order ?order]
+                                     [(> ?order ?source-order)]
+                                     [(dec ?order) ?new-order]]
+                                @db/dsdb (:db/id parent) (:block/order block))
+                           (map (fn [[id order]] {:db/id id :block/order order})))]
+      {:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                  {:db/id (:db/id older-sib) :block/children [new-block]}
+                  {:db/id (:db/id parent) :block/children reindex-blocks}]})))
 
 
 (reg-event-fx
@@ -270,12 +275,6 @@
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
      {:db/id (:db/id source-parent) :block/children source-parent-children}
      {:db/id (:db/id target-parent) :block/children target-parent-children}]))
-
-;;(target-sibling-diff-parent
-;;  {:db/id 2174, :block/uid "WKWPPSYQa", :block/order 0}
-;;  {:db/id 2349, :block/uid "VQ-ybRmNh", :block/order 2}
-;;  {:db/id 2346, :block/uid "ZOxwo0K_7", :block/order 0, :block/children [{:db/id 2174, :block/uid "WKWPPSYQa", :block/order 0} {:db/id 2351, :block/uid "PGGS8MFH_", :block/order 1}]}
-;;  {:db/id 2347, :block/uid "jbiKpcmIX", :block/order 0, :block/children [{:db/id 2176, :block/uid "gVINXaN8Y", :block/order 3} {:db/id 2346, :block/uid "ZOxwo0K_7", :block/order 0} {:db/id 2349, :block/uid "VQ-ybRmNh", :block/order 2}]})
 
 
 (reg-event-fx
