@@ -32,8 +32,8 @@
   [on-move]
   (fn [_]
     (let [{:keys [uid closest/kind] target-uid :closest/uid} @(subscribe [:drag-bullet])]
-      (when target-uid
-        (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
+      (when (and uid kind target-uid)
+        (dispatch [:drop-bullet uid target-uid kind]))
       (dispatch [:drag-bullet nil])
       ;; FIXME: after the first time `empty` is called, selection stays empty
       ;;(.. (js/document.getSelection) empty)
@@ -55,7 +55,9 @@
             closest-sibling (.. (js/document.elementFromPoint cX cY) (closest ".block-container"))
             closest-child-uid (when closest-child (.. closest-child -dataset -uid))
             closest-sibling-uid (when closest-sibling (.. closest-sibling -dataset -uid))
+            ;; nilable
             closest-uid (or closest-child-uid closest-sibling-uid)
+            ;; nilable
             closest-kind (cond closest-child-uid   :child
                                closest-sibling-uid :sibling)]
         (set! (.. e -target -hidden) false)
