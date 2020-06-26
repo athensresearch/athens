@@ -246,10 +246,10 @@
                :else
                (str result))]
        [:div (use-style footer-style)
-             (when (and (coll? result)
-                        (not (map? result))
-                        (< @limit (count result)))
-               [:span (str "Showing " @limit " out of " (count result) " rows ")
-                [:a {:on-click increase-limit
-                     :style {:cursor :pointer}}
-                 "load more"]])]])))
+        (when (and (coll? result)
+                   (not (map? result))
+                   (< @limit (count result)))
+          [:span (str "Showing " @limit " out of " (count result) " rows ")
+           [:a {:on-click increase-limit
+                :style {:cursor :pointer}}
+            "load more"]])]])))
