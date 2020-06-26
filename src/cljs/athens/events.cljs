@@ -85,6 +85,7 @@
             :on-success [:parse-datoms]
             :on-failure [:alert-failure]}}))
 
+
 ;; FIXME? I reset db/dsdb and store its value in localStorage in the same step. How do we ensure the order of operations is correct?
 (reg-event-fx
   :parse-datoms
@@ -105,6 +106,12 @@
 
 
 (reg-event-fx
+  :transact-event
+  (fn [_ [_ datoms]]
+    {:transact datoms}))
+
+
+(reg-event-fx
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
@@ -118,17 +125,8 @@
       {:reset-conn next})))
 
 
-
-
 ;;; dsdb events (transactions)
 
-(reg-event-fx
-  :transact-event
-  (fn [_ [_ datoms]]
-    {:transact datoms}))
-
-
-;; Block Editing
 
 (defn get-block
   [id]
@@ -144,8 +142,19 @@
     (get-block eid)))
 
 
-;; find sibling block with order - 1
-;; add to end of sib children. no need to reindex?
+(def rules
+  '[[(after ?p ?at ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?at)]]
+    [(inc-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(inc ?o) ?new-o]]
+    [(dec-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(dec ?o) ?new-o]]])
+
+
 (reg-event-fx
   :indent
   (fn [_ [_ uid]]
@@ -158,74 +167,60 @@
                       :db/id
                       get-block)
           new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
-          reindex-blocks (->> (d/q '[:find ?ch ?new-order
-                                     :in $ ?parent ?source-order
-                                     :where
-                                     [?parent :block/children ?ch]
-                                     [?ch :block/order ?order]
-                                     [(> ?order ?source-order)]
-                                     [(dec ?order) ?new-order]]
-                                @db/dsdb (:db/id parent) (:block/order block))
+          reindex-blocks (->> (d/q '[:find ?ch ?new-o
+                                     :in $ % ?p ?at
+                                     :where (dec-after ?p ?at ?ch ?new-o)]
+                                @db/dsdb rules (:db/id parent) (:block/order block))
                            (map (fn [[id order]] {:db/id id :block/order order})))]
       {:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                  {:db/id (:db/id older-sib) :block/children [new-block]}
-                  {:db/id (:db/id parent) :block/children reindex-blocks}]})))
+                  {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
+                  {:db/id (:db/id parent) :block/children reindex-blocks}]}))) ;; reindex parent
 
+
+;; if a block leaves, decrement after order
+;; if a block enters, increment after order
+
+;; reindex after order
 
 (reg-event-fx
   :unindent
   (fn [_ [_ uid]]
     (let [parent (get-parent [:block/uid uid])
           grandpa (get-parent (:db/id parent))
-          reindex-blocks (->> (d/q '[:find ?new-order ?children
-                                     :in $ ?grandpa ?parent-order
-                                     :where
-                                     [?grandpa :block/children ?children]
-                                     [?children :block/order ?order]
-                                     [(> ?order ?parent-order)]
-                                     [(inc ?order) ?new-order]]
-                                @db/dsdb (:db/id grandpa) (:order parent))
-                           (map (fn [[order id]] {:db/id id :block/order order})))]
-      {:transact [[:db/add [:block/uid uid] :block/order (inc (:block/order parent))]
-                  [:db/retract (:db/id parent) :block/children [:block/uid uid]]
-                  [:db/add (:db/id grandpa) :block/children [:block/uid uid]]
-                  {:db/add (:db/id grandpa) :block/children reindex-blocks}]})))
-
-
-
-
-
-;; Drag and Drop
+          new-block {:block/uid uid :block/order (inc (:block/order parent))}
+          reindex-grandpa (->> (d/q '[:find ?ch ?new-order
+                                      :in $ % ?grandpa ?parent-order
+                                      :where (inc-after ?grandpa ?parent-order ?ch ?new-order)]
+                                 @db/dsdb rules (:db/id grandpa) (:block/order parent))
+                            (map (fn [[id order]] {:db/id id :block/order order}))
+                            (concat [new-block]))]
+      (when grandpa ;; TODO: no-op when user tries to unindent to a child out of current context
+        {:transact [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                    {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
 
 
 (defn target-child
-  [{:block/keys [uid order]} {parent-eid :db/id} {target-eid :db/id}]
-  (let [new-parent-children (->> (d/q '[:find ?ch ?new-order
-                                         :in $ ?parent ?source-order
-                                         :where
-                                         [?parent :block/children ?ch]
-                                         [?ch :block/order ?order]
-                                         [(> ?order ?source-order)]
-                                         [(dec ?order) ?new-order]]
-                                    @db/dsdb parent-eid order)
+  [source source-parent target]
+  (let [new-block {:block/uid (:block/uid source) :block/order 0}
+        new-parent-children (->> (d/q '[:find ?ch ?new-order
+                                         :in $ % ?parent ?source-order
+                                         :where (dec-after ?parent ?source-order ?ch ?new-order)]
+                                    @db/dsdb rules (:db/id source-parent) (:block/order source))
                               (map (fn [[id order]] {:db/id id :block/order order})))
         new-target-children (->> (d/q '[:find ?ch ?new-order
-                                        :in $ ?parent
-                                        :where
-                                        [?parent :block/children ?ch]
-                                        [?ch :block/order ?order]
-                                        [(inc ?order) ?new-order]]
-                                   @db/dsdb target-eid)
+                                        :in $ % ?parent ?at
+                                        :where (inc-after ?parent ?at ?ch ?new-order)]
+                                   @db/dsdb rules (:dbid target) 0)
                               (map (fn [[id order]] {:db/id id :block/order order}))
-                              (concat [{:block/uid uid :block/order 0}]))]
-    [[:db/retract parent-eid :block/children [:block/uid uid]] ;; retract source from parent
-     {:db/add parent-eid :block/children new-parent-children} ;; reindex parent without source
-     ;; TODO: not sure why I need to use :db/id here and not :db/add
-     {:db/id target-eid :block/children new-target-children}])) ;; reindex target. include source
+                              (concat [new-block]))]
+    [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
+     {:db/add (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
+     {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
 
 
-(defn between [s t x]
+(defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
+  [s t x]
   (if (< s t)
     (and (< s x) (< x t))
     (and (< t x) (< x s))))
@@ -235,6 +230,7 @@
   [source target parent]
   (let [t-order (:block/order target)
         s-order (:block/order source)
+        new-block {:db/id (:db/id source) :block/order (inc t-order)}
         inc-or-dec (if (> s-order t-order) inc dec)
         reindex (->> (d/q '[:find ?ch ?new-order
                             :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
@@ -244,37 +240,28 @@
                             [(?between ?s-order ?t-order ?order)]
                             [(?inc-or-dec ?order) ?new-order]]
                        @db/dsdb (:db/id parent) s-order t-order between inc-or-dec)
-                  (map (fn [[eid order _uid]] {:db/id eid :block/order order}))
-                  (concat [{:db/id (:db/id source) :block/order (inc t-order)}]))]
+                  (map (fn [[id order]] {:db/id id :block/order order}))
+                  (concat [new-block]))]
     [{:db/add (:db/id parent) :block/children reindex}]))
 
 
 (defn target-sibling-diff-parent
-  "source: reindex everything after source-order
- target: reindex everything after target-order"
   [source target source-parent target-parent]
-  (let [source-parent-children (->> (d/q '[:find ?ch ?new-order
-                                           :in $ ?parent ?source-order
-                                           :where
-                                           [?parent :block/children ?ch]
-                                           [?ch :block/order ?order]
-                                           [(> ?order ?source-order)]
-                                           [(dec ?order) ?new-order]]
-                                      @db/dsdb (:db/id source-parent) (:block/order source))
+  (let [new-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
+        source-parent-children (->> (d/q '[:find ?ch ?new-order
+                                           :in $ % ?parent ?source-order
+                                           :where (dec-after ?parent ?source-order ?ch ?new-order)]
+                                      @db/dsdb rules (:db/id source-parent) (:block/order source))
                                  (map (fn [[id order]] {:db/id id :block/order order})))
         target-parent-children (->> (d/q '[:find ?ch ?new-order
-                                           :in $ ?parent ?target-order
-                                           :where
-                                           [?parent :block/children ?ch]
-                                           [?ch :block/order ?order]
-                                           [(> ?order ?target-order)]
-                                           [(inc ?order) ?new-order]]
-                                      @db/dsdb (:db/id target-parent) (:block/order target))
+                                           :in $ % ?parent ?target-order
+                                           :where (inc-after ?parent ?target-order ?ch ?new-order)]
+                                      @db/dsdb rules (:db/id target-parent) (:block/order target))
                                  (map (fn [[id order]] {:db/id id :block/order order}))
-                                 (concat [{:db/id (:db/id source) :block/order (inc (:block/order target))}]))]
+                                 (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children source-parent-children}
-     {:db/id (:db/id target-parent) :block/children target-parent-children}]))
+     {:db/id (:db/id source-parent) :block/children source-parent-children} ;; reindex source
+     {:db/id (:db/id target-parent) :block/children target-parent-children}])) ;; reindex target
 
 
 (reg-event-fx
@@ -284,27 +271,17 @@
                    target        (get-block [:block/uid target-uid])
                    source-parent (get-parent [:block/uid source-uid])
                    target-parent (get-parent [:block/uid target-uid])]
-               (prn target)
                {:transact
                 (cond
                   ;; child always has same behavior: move to first child of target
                   (= kind :child) (target-child source source-parent target)
-
                   ;; do nothing if target is directly above source
-                  (and
-                    (= source-parent target-parent)
-                    (= 1 (- (:block/order source) (:block/order target))))
-                  nil
-
+                  (and (= source-parent target-parent)
+                    (= 1 (- (:block/order source) (:block/order target)))) nil
                   ;; re-order blocks between source and target
-                  (= source-parent target-parent)
-                  (target-sibling-same-parent source target source-parent)
-
+                  (= source-parent target-parent) (target-sibling-same-parent source target source-parent)
                   ;;; when parent is different, re-index both source-parent and target-parent
-                  (not= source-parent target-parent)
-                  (target-sibling-diff-parent source target source-parent target-parent)
-
-                  :else nil)})))
+                  (not= source-parent target-parent) (target-sibling-diff-parent source target source-parent target-parent))})))
 
 ;;;; TODO: delete the following logic when re-implementing title merge
 
