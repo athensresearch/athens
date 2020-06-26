@@ -17,7 +17,9 @@
     [sci.core :as sci]
     [shadow.remote.runtime.cljs.browser]
     [stylefy.core :as stylefy :refer [use-style]])
-  (:import (goog.events KeyCodes)))
+  (:import
+    (goog.events
+      KeyCodes)))
 
 
 (defonce conn (d/create-conn db/schema))
@@ -182,6 +184,7 @@
     :athens.viewer/pred tuples?
     :athens.viewer/fn tuples-viewer}])
 
+
 (def viewer-preference
   [:athens.browser/maps
    :athens.browser/map
@@ -238,16 +241,16 @@
                   (str "<< " (first nav))])))]
           [:div (use-style {:display "flex"
                             :flex-direction "row"})
-                "View as: "
-                (for [v applicable-vs]
-                  (let [click-fn #(swap! state assoc :viewer v)]
-                    (if (= v viewer-name)
-                      ^{:key v}
-                      [button-primary {:on-click-fn click-fn
-                                       :label (name v)}]
-                      ^{:key v}
-                      [button {:on-click-fn click-fn
-                               :label (name v)}])))]]
+           "View as: "
+           (for [v applicable-vs]
+             (let [click-fn #(swap! state assoc :viewer v)]
+               (if (= v viewer-name)
+                 ^{:key v}
+                 [button-primary {:on-click-fn click-fn
+                                  :label (name v)}]
+                 ^{:key v}
+                 [button {:on-click-fn click-fn
+                          :label (name v)}])))]]
          [:div (pr-str (type navved-data))]
          (when (d/db? navved-data)
            [button-primary {:on-click-fn #(restore-db! navved-data)

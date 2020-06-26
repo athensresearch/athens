@@ -13,8 +13,9 @@
     [sci.core :as sci])
   (:require-macros
     [cljs.core.async.macros :refer [go]])
-  (:import (goog.events KeyCodes)))
-
+  (:import
+    (goog.events
+      KeyCodes)))
 
 
 (defcard "
