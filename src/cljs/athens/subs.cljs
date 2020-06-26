@@ -35,6 +35,12 @@
 
 
 (re-frame/reg-sub
+  :devtool
+  (fn-traced [db _]
+             (:devtool db)))
+
+
+(re-frame/reg-sub
   :merge-prompt
   (fn [db _]
     (:merge-prompt db)))

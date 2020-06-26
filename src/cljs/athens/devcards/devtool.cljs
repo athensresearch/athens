@@ -1,8 +1,10 @@
 (ns athens.devcards.devtool
   (:require
-    [athens.db :as db]
+    ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db :refer [dsdb]]
     [athens.devcards.buttons :refer [button-primary button]]
     [athens.devcards.db :refer [load-real-db-button]]
+    [athens.style :refer [color DEPTH-SHADOWS]]
     [cljs.pprint :as pp]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -12,6 +14,7 @@
     [datascript.db]
     [devcards.core :as devcards :refer [defcard-rg]]
     [me.tonsky.persistent-sorted-set]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [reagent.ratom]
     [sci.core :as sci]
@@ -20,9 +23,6 @@
   (:import
     (goog.events
       KeyCodes)))
-
-
-(defonce conn (d/create-conn db/schema))
 
 
 (def initial-state
@@ -40,13 +40,13 @@
 (defn ds-nav-impl
   [_ k v]
   (condp = k
-    :db/id (d/pull @conn '[* :block/_children] v) ; TODO add inverse refs here
+    :db/id (d/pull @dsdb '[* :block/_children] v) ; TODO add inverse refs here
     v)) ; TODO add unique idents here as well
 
 
 (defn restore-db!
   [db]
-  (d/reset-conn! conn db {:time-travel true}))
+  (d/reset-conn! dsdb db {:time-travel true}))
 
 
 (extend-protocol core-p/Datafiable
@@ -75,7 +75,8 @@
   (let [limit (r/atom 20)]
     (fn [headers rows add-nav!]
       [:div
-       [:div (use-style {:overflow-x "auto"})
+       [:div (use-style {:overflow-x "auto"
+                         :height "100%"})
         [:table
          [:thead
           [:tr (for [h headers]
@@ -258,28 +259,18 @@
          [viewer datafied-data add-nav!]]))))
 
 
-(defcard-rg Load-Real-DB
-  [load-real-db-button conn])
-
-
 (defn handler
   []
-  (let [n (inc (:max-eid @conn))
+  (let [n (inc (:max-eid @dsdb))
         n-child (inc n)]
-    (d/transact! conn [{:node/title     (str "Test Page " n)
+    (d/transact! dsdb [{:node/title     (str "Test Page " n)
                         :block/uid      (str "uid-" n)
                         :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
 
 
-(defcard-rg Create-Page
-  "Press button and then search \"test\" "
-  [button-primary {:on-click-fn handler
-                   :label "Create Test Pages and Blocks"}])
-
-
 (defn eval-with-sci
   [{:keys [eval-str] :as state}]
-  (let [bindings {'athens/db conn
+  (let [bindings {'athens/db dsdb
                   'd/pull d/pull
                   'd/q d/q
                   'd/pull-many d/pull-many
@@ -302,11 +293,6 @@
   (swap! state* assoc :eval-str s))
 
 
-(defn handle-box-change!
-  [e]
-  (update-box! (-> e .-target .-value)))
-
-
 (defn listener
   [tx-report]
   (swap! state* update :tx-reports conj tx-report)
@@ -314,7 +300,12 @@
     (eval-box!)))
 
 
-(d/listen! conn :devtool listener)
+(d/listen! dsdb :devtool listener)
+
+
+(defn handle-box-change!
+  [e]
+  (update-box! (-> e .-target .-value)))
 
 
 (defn handle-shift-return!
@@ -356,7 +347,7 @@
 
 (defn query-component
   [{:keys [eval-str result error]}]
-  [:div
+  [:div (use-style {:height "100%"})
    [:textarea {:value eval-str
                :on-change handle-box-change!
                :on-key-down handle-box-key-down!
@@ -375,19 +366,63 @@
   [data-browser tx-reports])
 
 
-(defn box-component
-  [state _]
-  (let [{:keys [active-panel]} @state
-        switch-panel (fn [panel] (swap! state* assoc :active-panel panel))]
-    [:div
-     [:span [button {:on-click-fn #(switch-panel :query)
-                     :label "Query"}]
-      " "
-      [button {:on-click-fn #(switch-panel :txes)
-               :label "Transactions"}]]
-     (case active-panel
-       :query [query-component @state]
-       :txes [txes-component @state])]))
+(defn devtool-prompt-el
+  []
+  [button-primary {:on-click-fn #(dispatch [:toggle-devtool])
+                   :label [:<>
+                           [:> mui-icons/Build]
+                           [:span "Toggle devtool"]]
+                   :style {:font-size "11px"}}])
+
+
+(def container-style
+  {:width         "600px"
+   :border-radius "4px"
+   :padding       "4px"
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+   :display       "flex"
+   :flex-direction "column"
+   :background    (color :panel-color)
+   :position      "fixed"
+   ;:overflow      "hidden"
+   :min-height    "96vh"
+   :max-height    "96vh"
+   :top           "2vh"
+   :right         0
+   :z-index       2})
+
+
+(defn devtool-el
+  [devtool? state]
+  (when devtool?
+    (let [{:keys [active-panel]} @state
+          switch-panel (fn [panel] (swap! state assoc :active-panel panel))]
+      [:div (use-style container-style)
+       [:span
+        [button {:on-click-fn #(switch-panel :query)
+                 :label "Query"}]
+        " "
+        [button {:on-click-fn #(switch-panel :txes)
+                 :label "Transactions"}]]
+       (case active-panel
+         :query [query-component @state]
+         :txes [txes-component @state])])))
+
+
+(defn devtool-component
+  []
+  (let [devtool? @(subscribe [:devtool])]
+    [devtool-el devtool? state*]))
+
+
+(defcard-rg Load-Real-DB
+  [load-real-db-button dsdb])
+
+
+(defcard-rg Create-Page
+  "Press button and then search \"test\" "
+  [button-primary {:on-click-fn handler
+                   :label "Create Test Pages and Blocks"}])
 
 
 (defcard-rg Reset-to-all-pages
@@ -398,8 +433,9 @@
 
 
 (defcard-rg Devtool-box
-  box-component
-  state*)
+  [:<>
+   [devtool-prompt-el]
+   [devtool-component]])
 
 
 (comment

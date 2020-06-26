@@ -211,6 +211,7 @@
                :loading       true
                :errors        {}
                :athena        false
+               :devtool       false
                :editing-uid   nil
                :drag-bullet   {:uid          nil
                                :x            nil

@@ -119,7 +119,7 @@
 (defn key-down
   [e]
   (let [key (.. e -keyCode)
-        _ctrl (.. e -ctrlKey)
+        ctrl (.. e -ctrlKey)
         meta (.. e -metaKey)
         shift (.. e -shiftKey)]
 
@@ -131,7 +131,10 @@
       (dispatch [:undo])
 
       (and (= key KeyCodes.K) meta)
-      (dispatch [:toggle-athena]))))
+      (dispatch [:toggle-athena])
+
+      (and (= key KeyCodes.G) ctrl)
+      (dispatch [:toggle-devtool]))))
 
 
 (defn init

@@ -28,6 +28,12 @@
 
 
 (reg-event-db
+  :toggle-devtool
+  (fn [db _]
+    (update db :devtool not)))
+
+
+(reg-event-db
   :alert-failure
   (fn-traced [db error]
              (assoc-in db [:errors] error)))
