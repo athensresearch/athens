@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
