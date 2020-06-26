@@ -22,7 +22,8 @@
                 :text-decoration "none"
                 :color (color :link-color)
                 :position "relative"
-                ::stylefy/manual [[:.formatting {:display "none"}]
+                ::stylefy/manual [[:.formatting {:color (color :body-text-color)
+                                                 :opacity (:opacity-low OPACITIES)}]
                                   [:&:after {:content "''"
                                              :display "inline-block"
                                              :position "absolute"
@@ -77,13 +78,13 @@
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]
                     [:span (use-style block-ref {:class "block-ref"})
-                     [:span {:on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
+                     [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
      :hashtag   (fn [tag-name]
                   (let [node (pull db/dsdb '[*] [:node/title tag-name])]
                     [:span (use-style hashtag) {:class    "hashtag"
                                                 :on-click #(navigate-uid (:block/uid @node))}
                      [:span {:class "formatting"} "#"]
-                     tag-name]))
+                     [:span {:class "contents"} tag-name]]))
      :url-image (fn [{url :url alt :alt}]
                   [:img (use-style image {:class "url-image"
                                           :alt   alt
@@ -93,7 +94,7 @@
                                            :href  url})
                    text])
      :bold      (fn [text]
-                  [:strong {:class "bold"} text])}
+                  [:strong {:class "contents bold"} text])}
     tree))
 
 
