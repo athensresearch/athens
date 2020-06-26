@@ -3,6 +3,7 @@
     [athens.db :as db]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
+    [cljs.pprint :refer [pprint]]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
@@ -16,7 +17,11 @@
 (reg-fx
   :transact
   (fn [datoms]
-    (transact! db/dsdb datoms)))
+    (prn "INPUTS")
+    (pprint datoms)
+    (prn "OUTPUTS")
+    (pprint (:tx-data (transact! db/dsdb datoms)))
+    (println)))
 
 
 (reg-fx
