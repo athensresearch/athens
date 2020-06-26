@@ -67,45 +67,6 @@
                     :closest/kind closest-kind}])))))
 
 
-(defn mouse-up-bullet
-  [on-move]
-  (fn [_]
-    (let [{:keys [uid closest/kind] target-uid :closest/uid} @(subscribe [:drag-bullet])]
-      (when target-uid
-        (dispatch [:drop-bullet {:source uid :target target-uid :kind kind}]))
-      (dispatch [:drag-bullet nil])
-      ;; FIXME: after the first time `empty` is called, selection stays empty
-      ;;(.. (js/document.getSelection) empty)
-      (events/unlisten js/window EventType.MOUSEMOVE on-move))))
-
-
-(defn mouse-move-bullet
-  "Must set hidden to true for bullet, otherwise bullet is captured when calling `elementFromPoint`.
-  Closest child always takes precedent over closest sibling, because .block-contents is nested within .block-container.
-  `cljs-oops` provides macros that let you bypass null `when` checks"
-  [start-pos uid]
-  (fn [e]
-    (let [cX (.-clientX e)
-          cY (.-clientY e)
-          x (- cX (:x start-pos))
-          y (- cY (:y start-pos))]
-      (set! (.. e -target -hidden) true)
-      (let [closest-child   (.. (js/document.elementFromPoint cX cY) (closest ".block-contents"))
-            closest-sibling (.. (js/document.elementFromPoint cX cY) (closest ".block-container"))
-            closest-child-uid (when closest-child (.. closest-child -dataset -uid))
-            closest-sibling-uid (when closest-sibling (.. closest-sibling -dataset -uid))
-            closest-uid (or closest-child-uid closest-sibling-uid)
-            closest-kind (cond closest-child-uid   :child
-                               closest-sibling-uid :sibling)]
-        (set! (.. e -target -hidden) false)
-        (dispatch [:drag-bullet
-                   {:x            x
-                    :y            y
-                    :uid          uid
-                    :closest/uid  closest-uid
-                    :closest/kind closest-kind}])))))
-
-
 ;;; Turn read block or header into editable on mouse down
 
 
