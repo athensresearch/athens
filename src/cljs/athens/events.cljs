@@ -219,9 +219,6 @@
      {:db/id target-eid :block/children new-target-children}])) ;; reindex target. include source
 
 
-(defn target-sibling-diff-parent
-  [source target parent])
-
 (defn between [s t x]
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
   (if (< s t)
@@ -247,6 +244,40 @@
     [{:db/add (:db/id parent) :block/children reindex}]))
 
 
+(defn target-sibling-diff-parent
+  "source: reindex everything after source-order
+ target: reindex everything after target-order"
+  [source target source-parent target-parent]
+  (let [source-parent-children (->> (d/q '[:find ?ch ?new-order
+                                           :in $ ?parent ?source-order
+                                           :where
+                                           [?parent :block/children ?ch]
+                                           [?ch :block/order ?order]
+                                           [(> ?order ?source-order)]
+                                           [(dec ?order) ?new-order]]
+                                      @db/dsdb (:db/id source-parent) (:block/order source))
+                                 (map (fn [[id order]] {:db/id id :block/order order})))
+        target-parent-children (->> (d/q '[:find ?ch ?new-order
+                                           :in $ ?parent ?target-order
+                                           :where
+                                           [?parent :block/children ?ch]
+                                           [?ch :block/order ?order]
+                                           [(> ?order ?target-order)]
+                                           [(inc ?order) ?new-order]]
+                                      @db/dsdb (:db/id target-parent) (:block/order target))
+                                 (map (fn [[id order]] {:db/id id :block/order order}))
+                                 (concat [{:db/id (:db/id source) :block/order (inc (:block/order target))}]))]
+    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
+     {:db/id (:db/id source-parent) :block/children source-parent-children}
+     {:db/id (:db/id target-parent) :block/children target-parent-children}]))
+
+;;(target-sibling-diff-parent
+;;  {:db/id 2174, :block/uid "WKWPPSYQa", :block/order 0}
+;;  {:db/id 2349, :block/uid "VQ-ybRmNh", :block/order 2}
+;;  {:db/id 2346, :block/uid "ZOxwo0K_7", :block/order 0, :block/children [{:db/id 2174, :block/uid "WKWPPSYQa", :block/order 0} {:db/id 2351, :block/uid "PGGS8MFH_", :block/order 1}]}
+;;  {:db/id 2347, :block/uid "jbiKpcmIX", :block/order 0, :block/children [{:db/id 2176, :block/uid "gVINXaN8Y", :block/order 3} {:db/id 2346, :block/uid "ZOxwo0K_7", :block/order 0} {:db/id 2349, :block/uid "VQ-ybRmNh", :block/order 2}]})
+
+
 (reg-event-fx
   :drop-bullet
   (fn-traced [_ [_ source-uid target-uid kind]]
@@ -254,10 +285,9 @@
                    target        (get-block [:block/uid target-uid])
                    source-parent (get-parent [:block/uid source-uid])
                    target-parent (get-parent [:block/uid target-uid])]
-               ;;(prn (:db/id source) (:db/id target))
+               (prn target)
                {:transact
                 (cond
-
                   ;; child always has same behavior: move to first child of target
                   (= kind :child) (target-child source source-parent target)
 
@@ -268,23 +298,14 @@
                   nil
 
                   ;; re-order blocks between source and target
-                  (and (= source-parent target-parent))
+                  (= source-parent target-parent)
                   (target-sibling-same-parent source target source-parent)
 
-                  ;;; when parent is different, re-index everything after target, and everything after source
+                  ;;; when parent is different, re-index both source-parent and target-parent
+                  (not= source-parent target-parent)
+                  (target-sibling-diff-parent source target source-parent target-parent)
 
                   :else nil)})))
-
-
-
-
-
-
-
-                  ;;(= kind :sibling)
-                  ;;(target-sibling-diff-parent source source-parent target-parent))})))
-
-
 
 ;;;; TODO: delete the following logic when re-implementing title merge
 
