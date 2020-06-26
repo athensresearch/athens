@@ -12,13 +12,9 @@
     [reagent.core :as r]
     [sci.core :as sci])
   (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+    [cljs.core.async.macros :refer [go]])
+  (:import (goog.events KeyCodes)))
 
-
-(def key-code->key
-  {8   :backspace
-   9   :tab
-   13  :return})
 
 
 (defcard "
@@ -210,14 +206,12 @@
 
 (defn handle-box-key-down!
   [e]
-  (let [key-code (.-keyCode e)
-        shift? (.-shiftKey e)
-        k (key-code->key key-code)]
-    (case k
-      :return (when shift?
-                (handle-return-key! e))
-      :tab (handle-tab-key! e)
-      nil)))
+  (let [key (.. e -keyCode)
+        shift? (.. e -shiftKey)]
+    (cond
+      (= key KeyCodes.ENTER) (when shift? (handle-return-key! e))
+      (= key KeyCodes.TAB) (handle-tab-key! e)
+      :else nil)))
 
 
 (defn box-component

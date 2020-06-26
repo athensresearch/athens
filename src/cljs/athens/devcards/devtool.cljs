@@ -16,16 +16,11 @@
     [reagent.ratom]
     [sci.core :as sci]
     [shadow.remote.runtime.cljs.browser]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy :refer [use-style]])
+  (:import (goog.events KeyCodes)))
 
 
 (defonce conn (d/create-conn db/schema))
-
-
-(def key-code->key
-  {8   :backspace
-   9   :tab
-   13  :return})
 
 
 (def initial-state
@@ -347,14 +342,12 @@
 
 (defn handle-box-key-down!
   [e]
-  (let [key-code (.-keyCode e)
-        shift? (.-shiftKey e)
-        k (key-code->key key-code)]
-    (case k
-      :return (when shift?
-                (handle-shift-return! e))
-      :tab (handle-tab-key! e)
-      nil)))
+  (let [key (.. e -keyCode)
+        shift? (.. e -shiftKey)]
+    (cond
+      (= key KeyCodes.ENTER) (when shift? (handle-shift-return! e))
+      (= key KeyCodes.TAB) (handle-tab-key! e)
+      :else nil)))
 
 
 (defn error-component
