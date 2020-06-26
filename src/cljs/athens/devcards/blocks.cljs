@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [join]]
@@ -234,7 +234,7 @@
 ;;; Components
 
 
-(declare block-component block-el toggle on-key-down debounce)
+(declare block-component block-el toggle on-key-down)
 
 
 (defn block-component
@@ -253,11 +253,11 @@ no results for pull eid returns nil
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children] _dbid :db/id}]
+  [{:block/keys [uid string open order children] dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
         editing-uid @(subscribe [:editing-uid])
-        _tooltip-uid @(subscribe [:tooltip-uid])
+        tooltip-uid @(subscribe [:tooltip-uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid
@@ -290,22 +290,12 @@ no results for pull eid returns nil
                            :on-click #(navigate-uid uid)})])
 
       ;; Tooltip
-      ;;(when (and (= tooltip-uid uid)
-      ;;           (not dragging-uid)))
-      ;;[:div (use-style tooltip-style {:class "tooltip"})
-      ;; [:span [:b "db/id: "] dbid]
-      ;; [:span [:b "uid: "] uid]
-      ;; [:span [:b "order: "] order]]
-       ;;(when children
-       ;;  [:<>
-       ;;   [:span [:b "children: "]]
-       ;;   (for [ch children]
-       ;;     (let [{:block/keys [uid order]} ch]
-       ;;       [:span {:style {:margin-left "20px"} :key uid}
-       ;;        [:b "order: "] [:span order]
-       ;;        [:span " | "]
-       ;;        [:b "uid: "] [:span uid]]))])]
-
+      (when (and (= tooltip-uid uid)
+                 (not dragging-uid))
+        [:div (use-style tooltip-style {:class "tooltip"})
+         [:span [:b "db/id: "] dbid]
+         [:span [:b "uid: "] uid]
+         [:span [:b "order: "] order]])
 
       ;; Actual Contents
       [:div (use-style (merge block-content-style {:width       "100%"
@@ -338,13 +328,9 @@ no results for pull eid returns nil
 
 ;; Helpers
 
-(defn on-change
-  [v]
-  (dispatch [:transact-event [[:db/add [:block/uid "VQ-ybRmNh"] :block/string v]]]))
-
-
-(def debounce
-  (goog.functions.debounce on-change))
+;;(defn on-change
+;;  [v]
+;;  (dispatch [:transact-event [[:db/add [:block/uid "VQ-ybRmNh"] :block/string v]]]))
 
 
 (defn toggle
