@@ -184,10 +184,10 @@
     :athens.viewer/fn map-viewer}
    {:athens.viewer/id :athens.browser/maps
     :athens.viewer/pred sequence-of-maps?
-    :athens.viewer/fn maps-viewer}])
-   ;{:athens.viewer/id :athens.browser/tuples
-   ; :athens.viewer/pred tuples?
-   ; :athens.viewer/fn tuples-viewer}])
+    :athens.viewer/fn maps-viewer}
+   {:athens.viewer/id :athens.browser/tuples
+    :athens.viewer/pred tuples?
+    :athens.viewer/fn tuples-viewer}])
 
 (def viewer-preference
   [:athens.browser/maps
