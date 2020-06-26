@@ -25,7 +25,35 @@
             uid (.. e -target -dataset -uid)
             on-move (mouse-move-bullet start-pos uid)]
         (events/listen js/window EventType.MOUSEMOVE on-move)
-        (set! (.. e -target -onmouseup) (mouse-up-bullet on-move))))))
+        (events/listen js/window EventType.MOUSEUP (mouse-up-bullet on-move))))))
+
+
+(defn mouse-move-bullet
+  "Must set hidden to true for bullet, otherwise bullet is captured when calling `elementFromPoint`.
+  Closest child always takes precedent over closest sibling, because .block-contents is nested within .block-container.
+  There's probably a better way to do this."
+  [start-pos uid]
+  (fn [e]
+    (let [cX (.-clientX e)
+          cY (.-clientY e)
+          x (- cX (:x start-pos))
+          y (- cY (:y start-pos))]
+         (set! (.. e -target -hidden) true)
+         (let [closest-child   (.. (js/document.elementFromPoint cX cY) (closest ".block-contents"))
+               closest-sibling (.. (js/document.elementFromPoint cX cY) (closest ".block-container"))
+               ;; cljs-oops provides macros that let you bypass null checks
+               closest-child-uid (when closest-child (.. closest-child -dataset -uid))
+               closest-sibling-uid (when closest-sibling (.. closest-sibling -dataset -uid))
+               closest-uid (or closest-child-uid closest-sibling-uid)
+               closest-kind (cond closest-child-uid   :child
+                                  closest-sibling-uid :sibling)]
+           (set! (.. e -target -hidden) false)
+           (dispatch [:drag-bullet
+                      {:x            x
+                       :y            y
+                       :uid          uid
+                       :closest/uid  closest-uid
+                       :closest/kind closest-kind}])))))
 
 
 (defn mouse-up-bullet
