@@ -176,12 +176,10 @@
   {:position "relative"
    :overflow "visible"
    :word-break "break-word"
-   ;;:min-height "100px" helpful for development
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:textarea {:-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
-                                 :transform "translate3d(0,0,0)"
                                  :color "inherit"
                                  :padding "0"
                                  :background (color :panel-color)
@@ -200,18 +198,22 @@
                                  :box-shadow (str "-4px 0 0 0" (color :panel-color))
                                  :border "0"
                                  :opacity "0"
+                                 :z-index "-1"
                                  :font-family "inherit"}]
+                     [:span [:span :a {:position "relative"
+                                       :z-index "1"}]]
                      [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
-                     [:textarea:focus
-                      :.isEditing {:outline "none"
-                                   :z-index "10"
-                                   :display "block"
-                                   :opacity "1"}
-                      [:span [:span :a {:z-index "1"}]]]
-                     [:span [:span
-                             :a {:position "relative"
-                                 :z-index "2"}]]]})
+                                           :z-index "1"}]
+                      [:span [:span :a {:z-index "2"}]]]
+                     [:isEditing [:span [:span :a {:z-index "-1"}]]
+                      [:textarea {:z-index "2"
+                                  :outline "none"
+                                  :display "block"
+                                  :opacity "1}]]
+                     ]
+                    ]
+  }
+)
 
 
 #_(def tooltip-style
@@ -311,10 +313,9 @@ no results for pull eid returns nil
       ;; Actual Contents
       [:div (use-style (merge block-content-style {:width       "100%"
                                                    :user-select (when dragging-uid "none")})
-                       {:class    "block-contents"
+                       {:class    (str "block-contents" (when (= editing-uid uid) " isEditing"))
                         :data-uid uid})
        [autosize/textarea {:value       string
-                           :class       (when (= editing-uid uid) "isEditing")
                            :auto-focus  true
                            :on-change   (fn [e]
                                             ;;(prn (.. e -target -value)))
