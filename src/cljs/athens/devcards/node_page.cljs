@@ -7,7 +7,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! pull q]]
+    [posh.reagent :refer [pull q]]
     [re-frame.core :refer [subscribe]]))
 
 

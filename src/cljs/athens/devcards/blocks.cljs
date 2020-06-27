@@ -11,7 +11,7 @@
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! pull]]
+    [posh.reagent :refer [pull]]
     [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import

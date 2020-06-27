@@ -10,8 +10,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
     [posh.reagent :refer [q transact!]]
-    [re-frame.core :as re-frame :refer [dispatch]]
-    [reagent.core :as r]
+    [re-frame.core :as re-frame :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
@@ -114,7 +113,7 @@
 
 (defn left-sidebar
   []
-  (let [open? (r/atom true)
+  (let [open? (subscribe [:left-sidebar])
         shortcuts (q db/q-shortcuts db/dsdb)]
     (fn []
       (let [sorted-shortcuts (->> @shortcuts
@@ -124,7 +123,7 @@
 
           ;; IF COLLAPSED
           [:div (use-style left-sidebar-collapsed-style)
-           [button {:on-click-fn #(swap! open? not)
+           [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
                     :label [:> mui-icons/ChevronRight]}]
            [button-primary {:on-click-fn #(dispatch [:toggle-athena])
                             :label [:> mui-icons/Search]}]
@@ -138,7 +137,7 @@
           [:div (use-style left-sidebar-style)
            [:div (use-sub-style left-sidebar-style :top-line)
             [athena-prompt-el]
-            [button {:on-click-fn #(swap! open? not)
+            [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
                      :label [:> mui-icons/ChevronLeft]}]]
            [:nav (use-style main-navigation-style)
             [button {:disabled true :label [:<>

@@ -134,7 +134,13 @@
       (dispatch [:toggle-athena])
 
       (and (= key KeyCodes.G) ctrl)
-      (dispatch [:toggle-devtool]))))
+      (dispatch [:toggle-devtool])
+
+      (and (= key KeyCodes.R) ctrl)
+      (dispatch [:toggle-right-sidebar])
+
+      (and (= key KeyCodes.L) ctrl)
+      (dispatch [:toggle-left-sidebar]))))
 
 
 (defn init
