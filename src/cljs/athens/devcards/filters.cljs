@@ -5,7 +5,6 @@
     #_[athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [join]]
     [devcards.core :refer [defcard-rg]]
     #_[re-frame.core :as re-frame :refer [dispatch]]
     [reagent.core :as r]
