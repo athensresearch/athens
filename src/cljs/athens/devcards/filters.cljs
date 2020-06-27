@@ -1,7 +1,7 @@
 (ns athens.devcards.filters
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.devcards.buttons :refer [button button-primary]]
+    [athens.devcards.buttons :refer [button]]
     [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -49,7 +49,6 @@
 
 (def sort-control-style {:padding "4px 6px"
                          ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
-
 
 
 (def reset-control-style {:margin-left "0.5em"})
