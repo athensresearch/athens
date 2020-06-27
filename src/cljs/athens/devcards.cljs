@@ -18,6 +18,7 @@
     [athens.devcards.spinner]
     [athens.devcards.style-guide]
     [athens.devcards.styling-with-stylefy]
+    [athens.devcards.textinput]
     [athens.effects]
     [athens.events]
     [athens.listeners :as listeners]
