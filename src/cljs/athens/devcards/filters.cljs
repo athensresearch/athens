@@ -128,6 +128,7 @@
                             :margin-right "0.2em"
                             :font-size "18px"}]]})
 
+
 (def no-items-message-style
   {:text-align "center"
    :opacity (:opacity-med OPACITIES)
