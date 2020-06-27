@@ -8,6 +8,7 @@
     [athens.devcards.buttons]
     [athens.devcards.db]
     [athens.devcards.db-boxes]
+    [athens.devcards.devtool]
     [athens.devcards.filters]
     [athens.devcards.icons]
     [athens.devcards.left-sidebar]

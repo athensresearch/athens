@@ -4,6 +4,7 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
+    [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
     [athens.devcards.spinner :refer [initial-spinner-component]]
@@ -102,6 +103,7 @@
       [:<>
        [alert]
        [athena-component]
+       [devtool-component]
        (if @loading
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
