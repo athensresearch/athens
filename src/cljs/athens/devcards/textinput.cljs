@@ -20,7 +20,7 @@
    :background (color :panel-color)
    :padding "2px 8px"
    :flex-basis "100%"
-   :border "1px solid #C9C7C7" ;; TODO: this should be defined by a system color
+   :border [["1px solid " (color :body-text-color :opacity-low)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"
    :transition-timing-property "ease"
