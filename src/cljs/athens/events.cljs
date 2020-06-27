@@ -24,13 +24,25 @@
 (reg-event-db
   :toggle-athena
   (fn [db _]
-    (assoc db :athena (not (:athena db)))))
+    (update db :athena not)))
 
 
 (reg-event-db
   :toggle-devtool
   (fn [db _]
     (update db :devtool not)))
+
+
+(reg-event-db
+  :toggle-left-sidebar
+  (fn [db _]
+    (update db :left-sidebar not)))
+
+
+(reg-event-db
+  :toggle-right-sidebar
+  (fn [db _]
+    (update-in db [:right-sidebar :open] not)))
 
 
 (reg-event-db

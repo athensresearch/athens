@@ -212,6 +212,12 @@
                :errors        {}
                :athena        false
                :devtool       false
+               :left-sidebar  true
+               :right-sidebar {:open false
+                               :uids ["OaSVyM_nr"
+                                      "p1Xv2crs3"]}
+                               ;;:uids {"OaSVyM_nr" {:open false :index 0}
+                               ;;       "p1Xv2crs3" {:open true :index 1}}}
                :editing-uid   nil
                :drag-bullet   {:uid          nil
                                :x            nil
