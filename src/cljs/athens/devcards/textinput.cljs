@@ -20,7 +20,7 @@
    :background (color :panel-color)
    :padding "2px 8px"
    :flex-basis "100%"
-   :border "1px solid #C9C7C7" ;; TODO: this should be defined by a system color
+   :border [["1px solid " (color :body-text-color :opacity-low)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"
    :transition-timing-property "ease"
@@ -33,6 +33,9 @@
 
 (def input-wrap
   {:position "relative"
+   :display "inline-flex"
+   :align-items "stretch"
+   :justify-content "stretch"
    ::stylefy/manual [[:input {:padding-left "28px"}]]})
 
 
@@ -51,12 +54,29 @@
 ;;; Components
 
 (defn textinput
-  [{:keys [type defaultValue placeholder style icon]}]
+  [{:keys [type
+           autoFocus
+           defaultValue
+           placeholder
+           on-change
+           value
+           style
+           icon]}]
   (if icon
     [:div (use-style input-wrap)
-     [:input (use-style (merge textinput-style style) {:type type :defaultValue defaultValue :placeholder placeholder})]
+     [:input (use-style (merge textinput-style style) {:type type
+                                                       :autoFocus autoFocus
+                                                       :defaultValue defaultValue
+                                                       :value value
+                                                       :on-change on-change
+                                                       :placeholder placeholder})]
      [:span (use-style input-icon) icon]]
-    [:input (use-style (merge textinput-style style) {:type type :defaultValue defaultValue :placeholder placeholder})]))
+    [:input (use-style (merge textinput-style style) {:type type
+                                                      :autoFocus autoFocus
+                                                      :defaultValue defaultValue
+                                                      :value value
+                                                      :on-change on-change
+                                                      :placeholder placeholder})]))
 
 
 ;;; Devcards

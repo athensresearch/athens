@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.devcards.buttons :refer [button]]
+    [athens.devcards.textinput :refer [textinput]]
     [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -27,7 +28,7 @@
 
 ;; TODO: Replace with styled Input component
 (def search-style
-  {:width "100%"
+  {:align-self "stretch"
    :display "flex"})
 
 
@@ -128,6 +129,12 @@
                             :font-size "18px"}]]})
 
 
+(def no-items-message-style
+  {:text-align "center"
+   :opacity (:opacity-med OPACITIES)
+   :margin "0"})
+
+
 ;;; Utilities
 
 
@@ -183,13 +190,14 @@
          [:h5 (use-style title-style) "Filter"]
 
          ;; Search
-         [:input (use-style search-style
-                            {:type        "search"
-                             :auto-focus  true
-                             :placeholder "Add or remove filters"
-                             :value (:search @s)
-                             :on-change   (fn [e]
-                                            (swap! s assoc-in [:search] (.. e -target -value)))})]
+         [textinput (use-style search-style
+                               {:type        "search"
+                                :autoFocus  true
+                                :placeholder "Type to find filters"
+                                :icon [:> mui-icons/FilterList]
+                                :value (:search @s)
+                                :on-change   (fn [e]
+                                               (swap! s assoc-in [:search] (.. e -target -value)))})]
 
          ;; Controls
          [:div (use-style controls-style)
@@ -199,47 +207,49 @@
                                   (swap! s assoc :sort (if (= sort_ :lex)
                                                          :count
                                                          :lex)))}]
-           [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
-           [:span (str num-filters " Filters")]
-           [button {:label "Reset"
-                    :style reset-control-style
-                    :on-click-fn (fn [_]
-                                   (swap! s assoc :items
-                                          (reduce-kv
-                                           (fn [m k v]
-                                             (assoc m k (dissoc v :state)))
-                                           {}
-                                           (:items @s))))}]]
+          [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
+          [:span (str num-filters " Active")]
+          [button {:label "Reset"
+                   :style reset-control-style
+                   :on-click-fn (fn [_]
+                                  (swap! s assoc :items
+                                         (reduce-kv
+                                          (fn [m k v]
+                                            (assoc m k (dissoc v :state)))
+                                          {}
+                                          (:items @s))))}]]
 
 
          ;; List
          [:div (use-style filter-list-style)
-          (doall
-            (for [[k {:keys [count state]}] items
-                  :let [added?    (= state :added)
-                        excluded? (= state :excluded)]]
-              ^{:key k}
-              [:div (use-style (merge filter-style
-                                      (cond
-                                        added? added-style
-                                        excluded? excluded-style))
-                               {:on-click (fn [_]
-                                            (swap! s assoc-in [:items k :state]
-                                                   (case state
-                                                     nil :added
-                                                     :added :excluded
-                                                     :excluded nil)))})
+          (if (> (count items) 0)
+            (doall
+             (for [[k {:keys [count state]}] items
+                   :let [added?    (= state :added)
+                         excluded? (= state :excluded)]]
+               ^{:key k}
+               [:div (use-style (merge filter-style
+                                       (cond
+                                         added? added-style
+                                         excluded? excluded-style))
+                                {:on-click (fn [_]
+                                             (swap! s assoc-in [:items k :state]
+                                                    (case state
+                                                      nil :added
+                                                      :added :excluded
+                                                      :excluded nil)))})
 
                ;; Left
-              [:span (use-style count-style) count]
-              [:span (use-style filter-name-style) k]
+                [:span (use-style count-style) count]
+                [:span (use-style filter-name-style) k]
 
                ;; Right
-               (when (or added? excluded?)
-                 [:span (use-style state-style) state
-                  (if added?
-                    [:> mui-icons/Check]
-                    [:> mui-icons/Block])])]))]]))))
+                (when (or added? excluded?)
+                  [:span (use-style state-style) state
+                   (if added?
+                     [:> mui-icons/Check]
+                     [:> mui-icons/Block])])]))
+            [:p (use-style no-items-message-style) "No filters found"])]]))))
 
 
 ;;; Devcards
