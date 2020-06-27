@@ -25,15 +25,16 @@
    :transition-duration "0.1s"
    :transition-timing-property "ease"
    ::stylefy/manual [[:placeholder {:opacity (:opacity-med OPACITIES)}]
-                     [:&:hover {
-                                :box-shadow (:4 DEPTH-SHADOWS)}]
+                     [:&:hover {:box-shadow (:4 DEPTH-SHADOWS)}]
                      [:&:focus :&:focus:hover {:outline "none"
-                                :border "1px solid"
-                                :box-shadow (:8 DEPTH-SHADOWS)}]]})
+                                               :border "1px solid"
+                                               :box-shadow (:8 DEPTH-SHADOWS)}]]})
+
 
 (def input-wrap
   {:position "relative"
    ::stylefy/manual [[:input {:padding-left "28px"}]]})
+
 
 (def input-icon
   {:position "absolute"
@@ -58,12 +59,12 @@
     [:input (use-style (merge textinput-style style) {:type type :defaultValue defaultValue :placeholder placeholder})]))
 
 
-
 ;;; Devcards
 
 
 (defcard-rg Input
   [textinput {:placeholder "pink"}])
+
 
 (defcard-rg Input-with-icon
   [textinput {:placeholder "pink" :icon [:> mui-icons/Face]}])
