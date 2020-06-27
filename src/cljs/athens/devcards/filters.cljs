@@ -1,8 +1,8 @@
 (ns athens.devcards.filters
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.devcards.buttons :refer [button-primary]]
-    #_[athens.style :refer [color OPACITIES]]
+    [athens.devcards.buttons :refer [button]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
@@ -15,11 +15,17 @@
 
 
 (def container-style
-  {:width "400px"
+  {:flex-basis "30em"
    :display "flex"
    :flex-direction "column"})
 
+;; TODO: move to new Popover component as Title prop
+(def title-style
+  {:text-align "center"
+   :opacity (:opacity-high OPACITIES)})
 
+
+;; TODO: Replace with styled Input component
 (def search-style
   {:width "100%"
    :display "flex"})
@@ -28,12 +34,40 @@
 (def controls-style
   {:width "100%"
    :display "flex"
-   :justify-content "space-between"})
+   :flex "0 0 auto"
+   :font-size "12px"
+   :align-items "center"
+   :text-align "right"
+   :border-bottom (str "1px solid " (color :panel-color))
+   :margin "4px 0"
+   :padding-bottom "4px"
+   :justify-content "space-between"
+   :font-weight "500"
+   :color (color :body-text-color :opacity-high)
+   ::stylefy/manual [[:svg {:font-size "20px"}]]})
+
+
+(def sort-control-style {:padding "4px 6px"
+                         ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
+
+
+(def reset-control-style {:margin-left "0.5em"})
+
+
+(def sort-indicator-style {:margin-right "auto"
+                           :transition "all 0.2s ease"
+                           :opacity 0
+                           :display "flex"
+                           :flex-direction "row"
+                           :align-items "center"
+                           :margin-left "0.5em"})
 
 
 (def filter-list-style
-  {:width "100%"
+  {:align-self "stretch"
    :display "flex"
+   :flex "1 1 100%"
+   :overflow-y "auto"
    :flex-direction "column"})
 
 
@@ -41,24 +75,57 @@
   {:width           "100%"
    :display         "flex"
    :justify-content "space-between"
-   :height "30px"})
+   :padding         "2px 8px"
+   :align-items     "center"
+   :border-radius   "4px"
+   :margin-block-end "1px"
+   :user-select     "none"
+   :transition      "all 0.1s ease"
+   ::stylefy/manual [[:&:hover {:background (color :panel-color :opacity-med)}]
+                     [:&:active {:transform "scale(0.99)"}]]})
 
 
 (def added-style
-  {:background-color "lightblue"})
+  {:background-color (color :link-color :opacity-low)
+   :color (color :link-color)
+   ::stylefy/manual [[:&:hover {:background (color :link-color 0.3)}]
+                     [:&:active {:transform "scale(0.99)"}]]})
 
 
 (def excluded-style
-  {:background-color "salmon"})
+  {:background-color (color :warning-color :opacity-low)
+   :color (color :warning-color)
+   ::stylefy/manual [[:&:hover {:background (color :warning-color 0.3)}]
+                     [:&:active {:transform "scale(0.99)"}]]})
 
 
 (def count-style
-  {:padding "5px"
-   :width "30px"})
+  {:padding "0 1em 0 0"
+   :color (color :body-text-color)
+   :font-weight "bold"
+   :font-size "11px"
+   :text-align "right"
+   :flex "0 0 3em"})
 
 
 (def filter-name-style
-  {:padding-left "10px"})
+  {:flex "1 1 100%"
+   :color (color :body-text-color)
+   :text-align "left"})
+
+
+(def state-style
+  {:font-weight "bold"
+   :flex "0 0 auto"
+   :font-size "12px"
+   :display "flex"
+   :align-items "center"
+   :letter-spacing "0.1em"
+   :text-transform "uppercase"
+   :margin-right "0.2em"
+   ::stylefy/manual [[:svg {:margin-left "0.2em"
+                            :margin-right "0.2em"
+                            :font-size "18px"}]]})
 
 
 ;;; Utilities
@@ -66,11 +133,11 @@
 
 (def items
   {"Amet"   {:count 6 :state :added}
-   "At"     {:count 30 :state :excluded}
+   "At"     {:count 130 :state :excluded}
    "Diam"   {:count 6}
    "Donec"  {:count 6}
    "Elit"   {:count 30}
-   "Elitu"  {:count 1}
+   "Elitudomin mesucen defibocutruon"  {:count 1}
    "Erat"   {:count 11}
    "Est"    {:count 2}
    "Eu"     {:count 2}
@@ -106,14 +173,14 @@
                     (into (sorted-map) filtered-items)
                     (into (sorted-map-by (fn [k1 k2]
                                            (compare
-                                             [(get-in items [k2 :count]) k1]
-                                             [(get-in items [k1 :count]) k2]))) filtered-items))
+                                            [(get-in items [k2 :count]) k1]
+                                            [(get-in items [k1 :count]) k2]))) filtered-items))
             num-filters (count (filter
-                                 (fn [[_k v]] (:state v))
-                                 items))]
+                                (fn [[_k v]] (:state v))
+                                items))]
 
         [:div (use-style container-style)
-         [:h5 "Filter"]
+         [:h5 (use-style title-style) "Filter"]
 
          ;; Search
          [:input (use-style search-style
@@ -126,21 +193,23 @@
 
          ;; Controls
          [:div (use-style controls-style)
-          [button-primary {:label       [:> mui-icons/Sort]
-                           :on-click-fn (fn [_]
-                                          (swap! s assoc :sort (if (= sort_ :lex)
-                                                                 :count
-                                                                 :lex)))}]
-          [:div
-           [:span (str num-filters " Filters Active")]
-           [button-primary {:label       "Reset"
-                            :on-click-fn (fn [_]
-                                           (swap! s assoc :items
-                                                  (reduce-kv
-                                                    (fn [m k v]
-                                                      (assoc m k (dissoc v :state)))
-                                                    {}
-                                                    (:items @s))))}]]]
+          [button {:label       [:> mui-icons/Sort]
+                   :style sort-control-style
+                   :on-click-fn (fn [_]
+                                  (swap! s assoc :sort (if (= sort_ :lex)
+                                                         :count
+                                                         :lex)))}]
+           [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
+           [:span (str num-filters " Filters")]
+           [button {:label "Reset"
+                    :style reset-control-style
+                    :on-click-fn (fn [_]
+                                   (swap! s assoc :items
+                                          (reduce-kv
+                                           (fn [m k v]
+                                             (assoc m k (dissoc v :state)))
+                                           {}
+                                           (:items @s))))}]]
 
 
          ;; List
@@ -162,13 +231,12 @@
                                                      :excluded nil)))})
 
                ;; Left
-               [:div
-                [:span (use-style count-style) count]
-                [:span (use-style filter-name-style) k]]
+              [:span (use-style count-style) count]
+              [:span (use-style filter-name-style) k]
 
                ;; Right
                (when (or added? excluded?)
-                 [:span {:style {:display "flex"}} state
+                 [:span (use-style state-style) state
                   (if added?
                     [:> mui-icons/Check]
                     [:> mui-icons/Block])])]))]]))))
@@ -177,5 +245,9 @@
 ;;; Devcards
 
 
+(def devcard-wrapper {:width "300px"})
+
+
 (defcard-rg Filters
-  [filters-el "((some-uid))" items])
+  [:div (use-style devcard-wrapper)
+  [filters-el "((some-uid))" items]])
