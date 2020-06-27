@@ -155,6 +155,74 @@
      [(dec ?o) ?new-o]]])
 
 
+(defn gen-block-uid
+  []
+  (subs (str (random-uuid)) 27))
+
+
+(reg-event-fx
+  :backspace
+  (fn [_ [_ _uid]]))
+
+
+;; TODO but how to set focus... especially async
+(defn split-block
+  [uid val sel-start]
+  (let [parent (get-parent [:block/uid uid])
+        block (get-block [:block/uid uid])
+        head (subs val 0 sel-start)
+        tail (subs val sel-start)
+        new-uid (gen-block-uid)
+        new-block {:db/id        -1
+                   :block/order  (inc (:block/order block))
+                   :block/uid    new-uid
+                   :block/open   true
+                   :block/string tail}
+        reindex (->> (d/q '[:find ?ch ?new-o
+                            :in $ % ?p ?at
+                            :where (inc-after ?p ?at ?ch ?new-o)]
+                       @db/dsdb rules (:db/id parent) (:block/order block))
+                  (map (fn [[id order]] {:db/id id :block/order order}))
+                  (concat [new-block]))]
+    {:transact [[:db/add (:db/id block) :block/string head]
+                {:db/id (:db/id parent)
+                 :block/children reindex}]
+     :dispatch [:editing-uid new-uid]}))
+
+
+(defn bump-up
+  [uid val sel-start]
+  (let [parent (get-parent [:block/uid uid])
+        block (get-block [:block/uid uid])
+        tail (subs val sel-start)
+        new-uid (gen-block-uid)
+        new-block {:db/id        -1
+                   :block/order  (:block/order block)
+                   :block/uid    new-uid
+                   :block/open   true
+                   :block/string tail}
+        reindex (->> (d/q '[:find ?ch ?new-o
+                            :in $ % ?p ?at
+                            :where (inc-after ?p ?at ?ch ?new-o)]
+                       @db/dsdb rules (:db/id parent) (inc (:block/order block)))
+                  (map (fn [[id order]] {:db/id id :block/order order}))
+                  (concat [new-block]))]
+    {:transact [[:db/add (:db/id block) :block/string ""]
+                {:db/id (:db/id parent) :block/children reindex}]
+     :dispatch [:editing-uid new-uid]}))
+
+
+;; TODO: if enter at end of block, if block open, insert new 0th child. otherwise, add sibling (default behavior right now)
+(reg-event-fx
+  :enter
+  (fn [_ [_ uid val sel-start]]
+    (cond
+      (not (zero? sel-start)) (split-block uid val sel-start)
+      (empty? val) {:dispatch [:unindent uid]}
+      (and (zero? sel-start) val) (bump-up uid val sel-start))))
+
+
+;; TODO: no-op when indenting as the right-most child
 (reg-event-fx
   :indent
   (fn [_ [_ uid]]
@@ -177,11 +245,7 @@
                   {:db/id (:db/id parent) :block/children reindex-blocks}]}))) ;; reindex parent
 
 
-;; if a block leaves, decrement after order
-;; if a block enters, increment after order
-
-;; reindex after order
-
+;; TODO: no-op when user tries to unindent to a child out of current context
 (reg-event-fx
   :unindent
   (fn [_ [_ uid]]
@@ -194,7 +258,7 @@
                                  @db/dsdb rules (:db/id grandpa) (:block/order parent))
                             (map (fn [[id order]] {:db/id id :block/order order}))
                             (concat [new-block]))]
-      (when grandpa ;; TODO: no-op when user tries to unindent to a child out of current context
+      (when (and parent grandpa)
         {:transact [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
                     {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
 

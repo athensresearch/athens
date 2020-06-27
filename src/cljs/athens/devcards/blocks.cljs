@@ -334,37 +334,22 @@ no results for pull eid returns nil
 
 
 (defn toggle
-  [ident open]
-  (transact! db/dsdb [{:db/id ident :block/open (not open)}]))
+  [id open]
+  (dispatch [:transact-event [[:db/add id :block/open (not open)]]]))
 
 
 (defn on-key-down
   [e uid]
-  (let [key             (.. e -keyCode)
-        _val             (.. e -target -value)
-        _selection-start (.. e -target -selectionStart)
-        shift (.. e -shiftKey)]
-    ;;(prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
+  (let [key       (.. e -keyCode)
+        shift     (.. e -shiftKey)
+        val       (.. e -target -value)
+        sel-start (.. e -target -selectionStart)]
     (cond
-
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
+      (= key KeyCodes.ENTER) (dispatch [:enter uid val sel-start])
+      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
 
-      (= key KeyCodes.ENTER) (dispatch [:enter])
-      ;;(transact! db/dsdb
-      ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
-      ;;           [;;{:db/id ident
-      ;;   ;; :block/string (subs val 0 selection-start)}
-      ;;            {;; random-uuid generates length 36 id. Roam uids are 9
-      ;;             :block/uid       (subs (str (random-uuid)) 27)
-      ;;             :block/string    (subs val selection-start)
-      ;;    ;; FIXME makes current block the parent
-      ;;             :block/_children ident
-      ;;    ;; FIXME. order is dependent on parent
-      ;;             :block/order     (inc order)
-      ;;             :block/open      true}])
-
-      :else nil)))
 
 ;;; Devcards
 
