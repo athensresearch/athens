@@ -348,8 +348,7 @@ no results for pull eid returns nil
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (dispatch [:enter uid val sel-start])
-      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (do (dispatch [:backspace uid]))
-      :else nil)))
+      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
 
 
 ;;; Devcards

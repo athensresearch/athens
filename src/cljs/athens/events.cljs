@@ -162,7 +162,7 @@
 
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid]]))
+  (fn [_ [_ _uid]]))
 
 
 ;; TODO but how to set focus... especially async
@@ -219,8 +219,7 @@
     (cond
       (not (zero? sel-start)) (split-block uid val sel-start)
       (empty? val) {:dispatch [:unindent uid]}
-      (and (zero? sel-start) val) (bump-up uid val sel-start)
-      :else null)))
+      (and (zero? sel-start) val) (bump-up uid val sel-start))))
 
 
 ;; TODO: no-op when indenting as the right-most child
