@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [join]]
@@ -12,7 +12,7 @@
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
-    [re-frame.core :as rf]
+    [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
@@ -216,17 +216,17 @@
 )
 
 
-#_(def tooltip-style
-    {:z-index    1
-     :position "relative"
-     :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
-     :display    "flex"
-     :flex-direction "column"
-     :background-color "white"
-     :padding "5px 10px"
-     :border-radius "4px"
-     :left "-200px"
-     :min-width "150px"})
+(def tooltip-style
+  {:z-index    1
+   :position "relative"
+   :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+   :display    "flex"
+   :flex-direction "column"
+   :background-color "white"
+   :padding "5px 10px"
+   :border-radius "4px"
+   :left "-200px"
+   :min-width "150px"})
 
 
 (def dragging-style)
@@ -256,15 +256,15 @@ no results for pull eid returns nil
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children] _dbid :db/id}]
+  [{:block/keys [uid string open order children] dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
-        editing-uid @(rf/subscribe [:editing-uid])
-        _tooltip-uid @(rf/subscribe [:tooltip-uid])
+        editing-uid @(subscribe [:editing-uid])
+        tooltip-uid @(subscribe [:tooltip-uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid
-         closest-kind :closest/kind} @(rf/subscribe [:drag-bullet])]
+         closest-kind :closest/kind} @(subscribe [:drag-bullet])]
 
     [:div (use-style (merge block-style
                             (when (= dragging-uid uid) dragging-style))
@@ -293,22 +293,12 @@ no results for pull eid returns nil
                            :on-click #(navigate-uid uid)})])
 
       ;; Tooltip
-      ;;(when (and (= tooltip-uid uid)
-      ;;           (not dragging-uid)))
-      ;;[:div (use-style tooltip-style {:class "tooltip"})
-      ;; [:span [:b "db/id: "] dbid]
-      ;; [:span [:b "uid: "] uid]
-      ;; [:span [:b "order: "] order]]
-       ;;(when children
-       ;;  [:<>
-       ;;   [:span [:b "children: "]]
-       ;;   (for [ch children]
-       ;;     (let [{:block/keys [uid order]} ch]
-       ;;       [:span {:style {:margin-left "20px"} :key uid}
-       ;;        [:b "order: "] [:span order]
-       ;;        [:span " | "]
-       ;;        [:b "uid: "] [:span uid]]))])]
-
+      (when (and (= tooltip-uid uid)
+                 (not dragging-uid))
+        [:div (use-style tooltip-style {:class "tooltip"})
+         [:span [:b "db/id: "] dbid]
+         [:span [:b "uid: "] uid]
+         [:span [:b "order: "] order]])
 
       ;; Actual Contents
       [:div (use-style (merge block-content-style {:width       "100%"
@@ -318,9 +308,9 @@ no results for pull eid returns nil
        [autosize/textarea {:value       string
                            :auto-focus  true
                            :on-change   (fn [e]
-                                            ;;(prn (.. e -target -value)))
-                                          (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))
-                           :on-key-down (fn [e] (on-key-down e [:block/uid uid] order))}]
+                                          (prn "CHANGE" (.. e -target-value)))
+                           ;;(debounce (.. e -target-value)))
+                           :on-key-down (fn [e] (on-key-down e uid))}]
        [parse-and-render string]
 
        ;; Drop Indicator
@@ -340,19 +330,29 @@ no results for pull eid returns nil
 
 ;; Helpers
 
+;;(defn on-change
+;;  [v]
+;;  (dispatch [:transact-event [[:db/add [:block/uid "VQ-ybRmNh"] :block/string v]]]))
+
+
 (defn toggle
   [ident open]
   (transact! db/dsdb [{:db/id ident :block/open (not open)}]))
 
 
 (defn on-key-down
-  [e _ident _order]
-  (let [_key             (.. e -keyCode)
+  [e uid]
+  (let [key             (.. e -keyCode)
         _val             (.. e -target -value)
-        _selection-start (.. e -target -selectionStart)]
+        _selection-start (.. e -target -selectionStart)
+        shift (.. e -shiftKey)]
     ;;(prn "KEYDOWN" selection-start (subs val selection-start) key ident order KeyCodes.ENTER)
     (cond
-      (= key KeyCodes.ENTER) nil
+
+      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
+      (= key KeyCodes.TAB) (dispatch [:indent uid])
+
+      (= key KeyCodes.ENTER) (dispatch [:enter])
       ;;(transact! db/dsdb
       ;;  ;; FIXME original block doesn't update. textarea and `on-change` prevents update
       ;;           [;;{:db/id ident
