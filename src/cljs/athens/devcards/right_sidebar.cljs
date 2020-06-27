@@ -60,23 +60,22 @@
                                     :title title}))
                     {}))
         s (r/atom {:uids uids})]
-    (fn [state]
-      (when (:open state)
-        [:div (use-style right-sidebar-style)
-         [:div (use-style content-style)
-          (doall
-            (for [[uid {:keys [open title]}] (:uids @s)]
-              ^{:key uid}
-              [:div {:style {:display "flex"}}
-               [:span (use-style toggle-page-style
-                                 {:on-click (fn [_]
-                                              (swap! s update-in [:uids uid :open] not))})
-                [:> mui-icons/KeyboardArrowDown]]
-               (if open
-                 [node-page-component [:block/uid uid]]
-                 [:div [:h1 title]])]))]
-         [:div {:on-click (fn [_] (dispatch [:toggle-right-sidebar]))}
-          [:> mui-icons/Close]]]))))
+    (when (:open state)
+      [:div (use-style right-sidebar-style)
+       [:div (use-style content-style)
+        (doall
+          (for [[uid {:keys [open title]}] (:uids @s)]
+            ^{:key uid}
+            [:div {:style {:display "flex"}}
+             [:span (use-style toggle-page-style
+                      {:on-click (fn [_]
+                                   (swap! s update-in [:uids uid :open] not))})
+              [:> mui-icons/KeyboardArrowDown]]
+             (if open
+               [node-page-component [:block/uid uid]]
+               [:div [:h1 title]])]))]
+       [:div {:on-click (fn [_] (dispatch [:toggle-right-sidebar]))}
+        [:> mui-icons/Close]]])))
 
 
 (defn right-sidebar-component
