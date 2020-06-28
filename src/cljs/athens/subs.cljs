@@ -47,9 +47,15 @@
 
 
 (re-frame/reg-sub
-  :right-sidebar
+  :right-sidebar/open
   (fn-traced [db _]
-             (:right-sidebar db)))
+             (:right-sidebar/open db)))
+
+
+(re-frame/reg-sub
+  :right-sidebar/items
+  (fn-traced [db _]
+             (:right-sidebar/items db)))
 
 
 (re-frame/reg-sub

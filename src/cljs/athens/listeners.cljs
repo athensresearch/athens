@@ -137,7 +137,7 @@
       (dispatch [:toggle-devtool])
 
       (and (= key KeyCodes.R) ctrl)
-      (dispatch [:toggle-right-sidebar])
+      (dispatch [:right-sidebar/toggle])
 
       (and (= key KeyCodes.L) ctrl)
       (dispatch [:toggle-left-sidebar]))))
