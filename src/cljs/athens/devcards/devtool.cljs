@@ -376,18 +376,15 @@
 
 
 (def container-style
-  {:width         "600px"
-   :border-radius "4px"
-   :padding       "4px"
-   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+  {:padding       "4px"
+   :grid-area "devtool"
    :display       "flex"
    :flex-direction "column"
    :background    (color :panel-color)
-   :position      "fixed"
-   ;:overflow      "hidden"
-   :min-height    "96vh"
-   :max-height    "96vh"
-   :top           "2vh"
+   :width         "100vw"
+   :max-height    "30vh"
+   :overflow-y    "auto"
+   :bottom        "0"
    :right         0
    :z-index       2})
 

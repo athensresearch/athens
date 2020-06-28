@@ -18,7 +18,8 @@
 
 
 (def right-sidebar-style
-  {:width "600px"
+  {:grid-area "secondary-content"
+   :width "600px"
    :height "100%"
    :border "1px solid lightgray"
    :background-color (color :panel-color :opacity-low)
