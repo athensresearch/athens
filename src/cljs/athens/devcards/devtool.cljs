@@ -13,6 +13,7 @@
     [datascript.core :as d]
     [datascript.db]
     [devcards.core :as devcards :refer [defcard-rg]]
+    [komponentit.autosize :as autosize]
     [me.tonsky.persistent-sorted-set]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -23,6 +24,32 @@
   (:import
     (goog.events
       KeyCodes)))
+
+
+;;; Styles
+
+(def devtool-table-style {:height "100%"
+                          :font-size "14px"})
+
+(def tabs-style {:border-bottom [["1px solid" (color :body-text-color :opacity-lower)]]
+                 :margin-bottom "8px"})
+
+(def container-style
+  {:padding       "4px"
+   :grid-area     "devtool"
+   :border-top    [["2px solid" (color :body-text-color :opacity-lower)]]
+   :display       "flex"
+   :flex-direction "column"
+   :background    (color :panel-color)
+   :width         "100vw"
+   :max-height    "30vh"
+   :overflow-y    "auto"
+   :bottom        "0"
+   :right         0
+   :z-index       2})
+
+
+;;; Components
 
 
 (def initial-state
@@ -74,9 +101,7 @@
   [_ _ _]
   (let [limit (r/atom 20)]
     (fn [headers rows add-nav!]
-      [:div
-       [:div (use-style {:overflow-x "auto"
-                         :height "100%"})
+      [:div (use-style devtool-table-style)
         [:table
          [:thead
           [:tr (for [h headers]
@@ -95,7 +120,7 @@
                    ^{:key (str row i cell)}
                    [:td (if (nil? cell)
                           ""
-                          (pr-str cell))]))]))]]] ; use the edn-viewer here as well?
+                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
          [:a (use-style {:cursor "pointer"}
                         {:on-click #(swap! limit + 10)})
@@ -348,14 +373,14 @@
 (defn query-component
   [{:keys [eval-str result error]}]
   [:div (use-style {:height "100%"})
-   [:textarea {:value eval-str
-               :on-change handle-box-change!
-               :on-key-down handle-box-key-down!
-               :style {:width "100%"
-                       :min-height "150px"
-                       :resize :none
-                       :font-size "12px"
-                       :font-family "IBM Plex Mono"}}]
+   [autosize/textarea {:value eval-str
+                       :on-change handle-box-change!
+                       :on-key-down handle-box-key-down!
+                       :style {:width "100%"
+                               :min-height "150px"
+                               :resize :none
+                               :font-size "12px"
+                               :font-family "IBM Plex Mono"}}]
    (if-not error
      [data-browser result]
      [error-component result])])
@@ -375,27 +400,13 @@
                    :style {:font-size "11px"}}])
 
 
-(def container-style
-  {:padding       "4px"
-   :grid-area "devtool"
-   :display       "flex"
-   :flex-direction "column"
-   :background    (color :panel-color)
-   :width         "100vw"
-   :max-height    "30vh"
-   :overflow-y    "auto"
-   :bottom        "0"
-   :right         0
-   :z-index       2})
-
-
 (defn devtool-el
   [devtool? state]
   (when devtool?
     (let [{:keys [active-panel]} @state
           switch-panel (fn [panel] (swap! state assoc :active-panel panel))]
       [:div (use-style container-style)
-       [:span
+       [:nav (use-style tabs-style)
         [button {:on-click-fn #(switch-panel :query)
                  :label "Query"}]
         " "
