@@ -128,6 +128,7 @@
   {:position "relative"
    :overflow "visible"
    :z-index "1"
+   :flex-grow "1"
    :word-break "break-word"
    ;;:min-height "100px" helpful for development
    ::stylefy/manual [[:textarea {:display "none"}]
@@ -287,8 +288,7 @@ no results for pull eid returns nil
          [:div [:b "order"] [:span order]]])
 
       ;; Actual Contents
-      [:div (use-style (merge block-content-style {:width       "100%"
-                                                   :user-select (when dragging-uid "none")})
+      [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
        [autosize/textarea {:value       string
