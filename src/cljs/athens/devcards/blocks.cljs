@@ -25,6 +25,7 @@
 (def block-style
   {:display "flex"
    :line-height "32px"
+   :position "relative"
    :justify-content "flex-start"
    :flex-direction "column"})
 
@@ -126,6 +127,7 @@
 (def block-content-style
   {:position "relative"
    :overflow "visible"
+   :z-index "1"
    :flex-grow "1"
    :word-break "break-word"
    ;;:min-height "100px" helpful for development
@@ -165,17 +167,53 @@
                                  :z-index "2"}]]]})
 
 
+(stylefy/keyframes "tooltip-appear"
+                   [:from
+                    {:opacity "0"
+                     :transform "scale(0)"}]
+                   [:to
+                    {:opacity "1"
+                     :transform "scale(1)"}])
+
+
 (def tooltip-style
-  {:z-index    1
-   :position "relative"
+  {:z-index    2
+   :position "absolute"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
-   :display    "flex"
    :flex-direction "column"
    :background-color "white"
-   :padding "5px 10px"
+   :padding "8px 12px"
    :border-radius "4px"
-   :left "-200px"
-   :min-width "150px"})
+   :line-height "24px"
+   :left "8px"
+   :top "32px"
+   :transform-origin "8px 24px"
+   :min-width "150px"
+   :animation "tooltip-appear .2s ease"
+   :transition "background .1s ease"
+   :display "table"
+   :color (color :body-text-color :opacity-high)
+   :border-spacing "4px"
+   ::stylefy/manual [[:div {:display "table-row"}]
+                     [:b {:display "table-cell"
+                          :user-select "none"
+                          :text-align "right"
+                          :text-transform "uppercase"
+                          :font-size "12px"
+                          :letter-spacing "0.1em"
+                          :opacity (:opacity-med OPACITIES)}]
+                     [:span {:display "table-cell"
+                             :user-select "all"}
+                      [:&:hover {:color (color :header-text-color)}]]
+                     [:&:after {:content "''"
+                                :position "absolute"
+                                :top "-12px"
+                                :bottom "-16px"
+                                :border-radius "inherit"
+                                :left "-16px"
+                                :right "-16px"
+                                :z-index -1
+                                :display "block"}]]})
 
 
 (def dragging-style)
@@ -245,9 +283,9 @@ no results for pull eid returns nil
       (when (and (= tooltip-uid uid)
                  (not dragging-uid))
         [:div (use-style tooltip-style {:class "tooltip"})
-         [:span [:b "db/id: "] dbid]
-         [:span [:b "uid: "] uid]
-         [:span [:b "order: "] order]])
+         [:div [:b "db/id"] [:span dbid]]
+         [:div [:b "uid"] [:span uid]]
+         [:div [:b "order"] [:span order]]])
 
       ;; Actual Contents
       [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
