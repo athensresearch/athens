@@ -19,7 +19,12 @@
 
 
 (def app-wrapper-style
-  {:display "flex"
+  {:display "grid"
+   :grid-template-areas
+   "'left-sidebar main-content secondary-content'
+   'devtool devtool devtool'"
+   :grid-template-columns "auto 1fr auto"
+   :grid-template-rows "1fr auto"
    :height "100vh"})
 
 
@@ -104,11 +109,11 @@
       [:<>
        [alert]
        [athena-component]
-       [devtool-component]
        (if @loading
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
           [left-sidebar]
           [:div (use-style main-content-style)
            [match-panel (-> @current-route :data :name)]]
-          [right-sidebar-component]])])))
+          [right-sidebar-component]
+          [devtool-component]])])))

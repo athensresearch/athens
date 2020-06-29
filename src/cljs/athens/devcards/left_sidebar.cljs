@@ -19,6 +19,7 @@
 
 (def left-sidebar-style
   {:flex "0 0 288px"
+   :grid-area "left-sidebar"
    :width "288px"
    :height "100%"
    :display "flex"
