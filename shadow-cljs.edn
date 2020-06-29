@@ -6,8 +6,7 @@
                 :modules         {:shared {:entries [athens.style
                                                      athens.devcards.spinner]
                                            :preloads [devtools.preload
-                                                      day8.re-frame-10x.preload]
-                                           }
+                                                      day8.re-frame-10x.preload]}
                                   :app {:init-fn athens.core/init
                                         :depends-on #{:shared}}}
 
@@ -18,8 +17,7 @@
 
                 :dev             {:compiler-options
                                   {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                     day8.re-frame.tracing.trace-enabled? true
-                                                     }
+                                                     day8.re-frame.tracing.trace-enabled? true}
                                    }}
                 :devtools        {:http-root    "resources/public"
                                   :http-port    3000
