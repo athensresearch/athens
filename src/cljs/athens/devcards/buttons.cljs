@@ -2,9 +2,11 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
+    [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
+    [garden.color :refer [darken]]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -37,7 +39,8 @@
                       [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
                       [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]
                       [(selectors/& ((selectors/first-child (selectors/last-child)))) {:margin-inline-start "-4px"
-                                                                                       :margin-inline-end "-4px"}]]]})
+                                                                                       :margin-inline-end "-4px"}]]
+                     [:&.active {:background-color (darken (color :panel-color) 10)}]]})
 
 
 (def buttons-primary-style
@@ -55,16 +58,18 @@
 
 
 (defn button
-  [{:keys [disabled label on-click-fn style]}]
+  [{:keys [disabled label on-click-fn style active]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
-                                                   :on-click on-click-fn})
+                                                   :on-click on-click-fn
+                                                   :class (when active "active")})
    label])
 
 
 (defn button-primary
-  [{:keys [disabled label on-click-fn style]}]
+  [{:keys [disabled label on-click-fn style active]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
-                                                           :on-click on-click-fn})
+                                                           :on-click on-click-fn
+                                                           :class (when active "active")})
    label])
 
 

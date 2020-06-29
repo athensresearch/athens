@@ -58,6 +58,9 @@
 ;; Base Styles
 
 (stylefy/tag "body" {:background-color (color :app-bg-color)
+                     :overflow "hidden"
+                     :height "100vh"
+                     :width "100vw"
                      :font-family "IBM Plex Sans, Sans-Serif"
                      :color (color :body-text-color)
                      :font-size "16px"

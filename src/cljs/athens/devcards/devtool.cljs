@@ -4,7 +4,8 @@
     [athens.db :as db :refer [dsdb]]
     [athens.devcards.buttons :refer [button-primary button]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.style :refer [color DEPTH-SHADOWS]]
+    [athens.devcards.textinput :refer [textinput-style]]
+    [athens.style :refer [color]]
     [cljs.pprint :as pp]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -13,6 +14,7 @@
     [datascript.core :as d]
     [datascript.db]
     [devcards.core :as devcards :refer [defcard-rg]]
+    [garden.color :refer [darken]]
     [komponentit.autosize :as autosize]
     [me.tonsky.persistent-sorted-set]
     [re-frame.core :refer [subscribe dispatch]]
@@ -28,21 +30,57 @@
 
 ;;; Styles
 
-(def tabs-style {:border-bottom [["1px solid" (color :body-text-color :opacity-lower)]]
-                 :margin-bottom "8px"})
 
 (def container-style
-  {:padding       "4px"
-   :grid-area     "devtool"
-   :border-top    [["2px solid" (color :body-text-color :opacity-lower)]]
+  {:grid-area     "devtool"
    :flex-direction "column"
    :background    (color :panel-color)
+   :position      "relative"
    :width         "100vw"
-   :max-height    "30vh"
+   :height        "33vh"
+   :display "flex"
    :overflow-y    "auto"
-   :bottom        "0"
    :right         0
    :z-index       2})
+
+
+(def tabs-style
+  {:padding "0 8px"
+   :flex "0 0 auto"
+   :background (darken (color :panel-color) 5)
+   :display "flex"
+   :align-items "stretch"
+   :justify-content "space-between"
+   ::stylefy/manual [[:button {:border-radius "0"}]]})
+
+
+(def tabs-section-style
+  {:display "flex"
+   :align-items "stretch"})
+
+
+(def panels-style
+  {:overflow-y "auto"
+   :padding "8px"})
+
+
+(def current-location-style
+  {:display "flex"
+   :align-items "center"
+   :flex "1 1 100%"
+   :font-size "14px"
+   :border-bottom [["1px solid" (darken (color :panel-color) 10)]]})
+
+
+(def current-location-name-style
+  {:font-weight "bold"
+   :font-size "inherit"
+   :margin-block "0"
+   :margin-inline-start "1em"
+   :margin-inline-end "1em"})
+
+
+(def current-location-controls-style {:margin-inline-start "1em"})
 
 
 (def devtool-table-style
@@ -51,15 +89,17 @@
    :font-family "IBM Plex Sans Condensed"
    :letter-spacing "-0.01em"
    :margin "8px 0 0"
+   :border-spacing "0"
    :min-width "100%"
-   ::stylefy/manual [[:td {:border-top (str "1px solid " (color :panel-color))
+   ::stylefy/manual [[:td {:border-top [["1px solid " (darken (color :panel-color) 5)]]
                            :padding "2px"}]
                      [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "2px 2px"}]
+                     [:th {:text-align "left" :padding "2px 2px" :white-space "nowrap"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "8px"}]
                      [:td:last-child :th-last-child {:padding-right "8px"}]
-                     [:tbody [:tr:hover {:background (color :panel-color 0.15)
+                     [:tbody [:tr:hover {:cursor "pointer"
+                                         :background (darken (color :panel-color) 2.5)
                                          :color (color :header-text-color)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
@@ -70,6 +110,17 @@
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})
+
+
+(def edn-viewer-style {:font-size "12px"})
+
+
+(def query-input-style
+  (merge textinput-style {:width "100%"
+                          :min-height "40px"
+                          :font-size "12px"
+                          :background (color :app-bg-color)
+                          :font-family "IBM Plex Mono"}))
 
 
 ;;; Components
@@ -124,36 +175,36 @@
   [_ _ _]
   (let [limit (r/atom 20)]
     (fn [headers rows add-nav!]
-      [:div (use-style devtool-table-style)
-        [:table
-         [:thead
-          [:tr (for [h headers]
-                 ^{:key h} [:th h])]]
-         [:tbody
-          (doall
-            (for [row (take @limit rows)]
+      [:div
+       [:table (use-style devtool-table-style)
+        [:thead
+         [:tr (for [h headers]
+                ^{:key h} [:th h])]]
+        [:tbody
+         (doall
+           (for [row (take @limit rows)]
 
-              ^{:key row}
-              [:tr (use-style {:cursor "pointer"
-                               ::stylefy/mode {:hover {:background-color "#EFEDEB"}}}
-                              {:on-click #(add-nav! [(first row)
-                                                     (-> row meta :row-value)])})
-               (for [i (range (count row))]
-                 (let [cell (get row i)]
-                   ^{:key (str row i cell)}
-                   [:td (if (nil? cell)
-                          ""
-                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
+             ^{:key row}
+             [:tr {:on-click #(add-nav! [(first row)
+                                         (-> row meta :row-value)])}
+              (for [i (range (count row))]
+                (let [cell (get row i)]
+                  ^{:key (str row i cell)}
+                  [:td (if (nil? cell)
+                         ""
+                         (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
-         [:a (use-style {:cursor "pointer"}
-                        {:on-click #(swap! limit + 10)})
-          "Load more"])])))
+         [button-primary {:on-click-fn #(swap! limit + 10)
+                          :style {:width "100%"
+                                  :justify-content "center"
+                                  :margin "4px 0"}
+                          :label "Load More"}])])))
 
 
 ; TODO add truncation of long strings here
 (defn edn-viewer
   [data _]
-  [:pre [:code (with-out-str (cljs.pprint/pprint data))]])
+  [:pre (use-style edn-viewer-style) [:code (with-out-str (cljs.pprint/pprint data))]])
 
 
 (defn coll-viewer
@@ -273,34 +324,28 @@
          [:div {:style {:display "flex"
                         :flex-direction "row"
                         :flex-wrap "no-wrap"
+                        :align-items "stretch"
                         :justify-content "space-between"}}
-          [:div {:style {:display "flex"
-                         :flex-direction "column"
-                         :flex-wrap "no-wrap"}}
+          [:div (use-style current-location-style)
            (doall
              (for [i (-> navs count range)]
                (let [nav (get navs i)]
                  ^{:key i}
-                 [:a (use-style {:cursor "pointer"
-                                 ::stylefy/mode {:hover {:background-color "#EFEDEB"}}}
-                                {:on-click #(swap! state (fn [s]
-                                                           (-> s
-                                                               (update :navs subvec 0 i)
-                                                               (dissoc :viewer))))})
-                  (str "<< " (first nav))])))]
-          [:div (use-style {:display "flex"
-                            :flex-direction "row"})
-           "View as: "
-           (for [v applicable-vs]
-             (let [click-fn #(swap! state assoc :viewer v)]
-               (if (= v viewer-name)
-                 ^{:key v}
-                 [button-primary {:on-click-fn click-fn
-                                  :label (name v)}]
-                 ^{:key v}
-                 [button {:on-click-fn click-fn
-                          :label (name v)}])))]]
-         [:div (pr-str (type navved-data))]
+                 [button {:label [:<> [:> mui-icons/ChevronLeft] [:span (first nav)]]
+                          :style {:padding "2px 4px"}
+                          :on-click-fn #(swap! state (fn [s]
+                                                       (-> s
+                                                           (update :navs subvec 0 i)
+                                                           (dissoc :viewer))))}])))
+           [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
+           [:div (use-style current-location-controls-style)
+            [:span "View as "]
+            (for [v applicable-vs]
+              (let [click-fn #(swap! state assoc :viewer v)]
+                ^{:key v}
+                [button {:on-click-fn click-fn
+                         :active (= v viewer-name)
+                         :label (name v)}]))]]]
          (when (d/db? navved-data)
            [button-primary {:on-click-fn #(restore-db! navved-data)
                             :label "Restore this db"}])
@@ -396,14 +441,11 @@
 (defn query-component
   [{:keys [eval-str result error]}]
   [:div (use-style {:height "100%"})
-   [autosize/textarea {:value eval-str
-                       :on-change handle-box-change!
-                       :on-key-down handle-box-key-down!
-                       :style {:width "100%"
-                               :min-height "150px"
-                               :resize :none
-                               :font-size "12px"
-                               :font-family "IBM Plex Mono"}}]
+   [autosize/textarea (use-style query-input-style
+                                 {:value eval-str
+                                  :resize "none"
+                                  :on-change handle-box-change!
+                                  :on-key-down handle-box-key-down!})]
    (if-not error
      [data-browser result]
      [error-component result])])
@@ -423,6 +465,12 @@
                    :style {:font-size "11px"}}])
 
 
+(defn devtool-close-el
+  []
+  [button {:on-click-fn #(dispatch [:toggle-devtool])
+           :label [:> mui-icons/Clear]}])
+
+
 (defn devtool-el
   [devtool? state]
   (when devtool?
@@ -430,14 +478,18 @@
           switch-panel (fn [panel] (swap! state assoc :active-panel panel))]
       [:div (use-style container-style)
        [:nav (use-style tabs-style)
-        [button {:on-click-fn #(switch-panel :query)
-                 :label "Query"}]
-        " "
-        [button {:on-click-fn #(switch-panel :txes)
-                 :label "Transactions"}]]
-       (case active-panel
-         :query [query-component @state]
-         :txes [txes-component @state])])))
+        [:div (use-style tabs-section-style)
+         [button {:on-click-fn #(switch-panel :query)
+                  :active (true? (= active-panel :query))
+                  :label [:<> [:> mui-icons/ShortText] [:span "Query"]]}]
+         [button {:on-click-fn #(switch-panel :txes)
+                  :active (true? (= active-panel :txes))
+                  :label [:<> [:> mui-icons/History] [:span "Transactions"]]}]]
+        [devtool-close-el]]
+       [:div (use-style panels-style)
+        (case active-panel
+          :query [query-component @state]
+          :txes [txes-component @state])]])))
 
 
 (defn devtool-component

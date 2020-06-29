@@ -116,5 +116,4 @@
           [:div (use-style main-content-style)
            [match-panel (-> @current-route :data :name)]]
           [right-sidebar-component]
-          [devtool-component]])
-       ])))
+          [devtool-component]])])))

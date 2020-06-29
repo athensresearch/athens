@@ -23,7 +23,7 @@
    :border [["1px solid " (color :body-text-color :opacity-low)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"
-   :transition-timing-property "ease"
+   :transition-timing-function "ease"
    ::stylefy/manual [[:placeholder {:opacity (:opacity-med OPACITIES)}]
                      [:&:hover {:box-shadow (:4 DEPTH-SHADOWS)}]
                      [:&:focus :&:focus:hover {:outline "none"
