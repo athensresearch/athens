@@ -28,9 +28,6 @@
 
 ;;; Styles
 
-(def devtool-table-style {:height "100%"
-                          :font-size "14px"})
-
 (def tabs-style {:border-bottom [["1px solid" (color :body-text-color :opacity-lower)]]
                  :margin-bottom "8px"})
 
@@ -38,7 +35,6 @@
   {:padding       "4px"
    :grid-area     "devtool"
    :border-top    [["2px solid" (color :body-text-color :opacity-lower)]]
-   :display       "flex"
    :flex-direction "column"
    :background    (color :panel-color)
    :width         "100vw"
@@ -47,6 +43,33 @@
    :bottom        "0"
    :right         0
    :z-index       2})
+
+
+(def devtool-table-style
+  {:border-collapse "collapse"
+   :font-size "12px"
+   :font-family "IBM Plex Sans Condensed"
+   :letter-spacing "-0.01em"
+   :margin "8px 0 0"
+   :min-width "100%"
+   ::stylefy/manual [[:td {:border-top (str "1px solid " (color :panel-color))
+                           :padding "2px"}]
+                     [:tbody {:vertical-align "top"}]
+                     [:th {:text-align "left" :padding "2px 2px"}]
+                     [:tr {:transition "all 0.05s ease"}]
+                     [:td:first-child :th:first-child {:padding-left "8px"}]
+                     [:td:last-child :th-last-child {:padding-right "8px"}]
+                     [:tbody [:tr:hover {:background (color :panel-color 0.15)
+                                         :color (color :header-text-color)}]]
+                     [:td>ul {:padding "0"
+                              :margin "0"
+                              :list-style "none"}]
+                     [:td [:li {:margin "0 0 4px"
+                                :padding-top "4px";
+                                :border-top (str "1px solid " (color :panel-color))}]]
+                     [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
+                     [:a {:color (color :link-color)}]
+                     [:a:hover {:text-decoration "underline"}]]})
 
 
 ;;; Components
