@@ -1,8 +1,14 @@
+# Athens
+
+[![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
+[![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
+[![twitter](https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social)](https://twitter.com/athensresearch)
+
 > I am the wisest man alive, for I know one thing, and that is that I know nothing.
 
 — Socrates
 
-# Learn More
+## Learn More
 
 To learn more about this project, please see:
 
@@ -12,11 +18,11 @@ To learn more about this project, please see:
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
 
-# Run or Contribute
+## Run or Contribute
 
 Athens is currently **read-only** and pre-alpha. If you want to run Athens or contribute, follow the instructions in [Contributing](CONTRIBUTING.md).
 
-# Patronize Us
+## Patronize Us
 
 If you would like to join our list of backers and sponsors, please see our [OpenCollective](https://opencollective.com/athens).
 
@@ -24,7 +30,7 @@ If you would like to join our list of backers and sponsors, please see our [Open
 
 [![Sponsors](https://opencollective.com/athens/tiers/sponsor.svg?avatarHeight=36)](https://opencollective.com/athens)
 
-# Join Us
+## [Join Us](https://discord.gg/GCJaV3V)
 
 If you have any input on how you want this project to unfold, please join our Discord.
 
@@ -36,11 +42,7 @@ We chat about other Tools for Thought, [graph visualizations](https://github.com
 
 We also love [Future of Coding topics](https://futureofcoding.org/episodes/046#question-thirteen-what-foc-topics-interest-you-most) such as visual programming, live programming, end-user programming, programming language theory, HCI, AR / VR / spatial software, AI / ML, and so on and so forth.
 
-Ultimately, however, we recognize technology does not exist in a vaccum. Technology shapes society as much as vice versa. There are never no externalities. If you are interested in "sensemaking" towards a better world, please join us! 
-
-[![Discord](https://i.imgur.com/lTIZXqW.png)](https://discord.gg/GCJaV3V)
-[![Twitter](https://i.imgur.com/S41NYml.png)](https://twitter.com/AthensResearch)
-
+Ultimately, however, we recognize technology does not exist in a vaccum. Technology shapes society as much as vice versa. There are never no externalities. If you are interested in "sensemaking" towards a better world, please join us!
 
 
 ---

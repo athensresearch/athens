@@ -6,6 +6,7 @@
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
+    [athens.style :refer [app-styles]]
     [athens.subs]
     [athens.views :as views]
     [re-frame.core :as rf]
@@ -29,6 +30,7 @@
 
 (defn init
   []
+  (stylefy/tag "body" app-styles)
   (stylefy/init)
   (listeners/init)
   (rf/dispatch-sync [:boot])
