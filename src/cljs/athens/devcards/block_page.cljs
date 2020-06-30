@@ -3,12 +3,59 @@
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
     [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
+    [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [transact! pull]]
-    [re-frame.core :refer [subscribe]]))
+    [re-frame.core :refer [subscribe]]
+    [stylefy.core :as stylefy :refer [use-style]]))
+
+
+;;; Styles
+
+(def title-style
+  {:position "relative"
+   :overflow "visible"
+   :flex-grow "1"
+   :margin "0.2em 0"
+   :letter-spacing "-0.03em"
+   :word-break "break-word"
+   ::stylefy/manual [[:textarea {:display "none"}]
+                     [:&:hover [:textarea {:display "block"
+                                           :z-index 1}]]
+                     [:textarea {:-webkit-appearance "none"
+                                 :cursor "text"
+                                 :resize "none"
+                                 :transform "translate3d(0,0,0)"
+                                 :color "inherit"
+                                 :font-weight "inherit"
+                                 :padding "0"
+                                 :letter-spacing "inherit"
+                                 :position "absolute"
+                                 :top "0"
+                                 :left "0"
+                                 :right "0"
+                                 :width "100%"
+                                 :min-height "100%"
+                                 :caret-color (color :link-color)
+                                 :background "transparent"
+                                 :margin "0"
+                                 :font-size "inherit"
+                                 :line-height "inherit"
+                                 :border-radius "4px"
+                                 :transition "opacity 0.15s ease"
+                                 :border "0"
+                                 :opacity "0"
+                                 :font-family "inherit"}]
+                     [:textarea:focus
+                      :.isEditing {:outline "none"
+                                   :z-index "10"
+                                   :display "block"
+                                   :opacity "1"}]
+                     [(selectors/+ :.isEditing :span) {:opacity 0}]]})
 
 
 ;;; Components
@@ -27,18 +74,17 @@
         (let [{:keys [node/title block/uid block/string]} p]
           [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])))]
 
+
    ;; Header
-   [:div {:data-uid uid :class "block-header"}
-    (if (= uid editing-uid)
-      [:h1
-       [autosize/textarea
-        {:value       string
-         :style       {:width "100%"}
-         :auto-focus  true
-         :on-change   (fn [e]
-                        ;;(prn (.. e -target -value))
-                        (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))}]]
-      [:h1 (str "• " string)])]
+   [:h1 (use-style title-style {:data-uid uid :class "block-header"})
+    [autosize/textarea
+     {:value      string
+      :class       (when (= editing-uid uid) "isEditing")
+      :auto-focus true
+      :on-change  (fn [e]
+                    (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))}]
+    [:span string]]
+
 
    ;; Children
    [:div (for [child children]

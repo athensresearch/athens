@@ -1,16 +1,17 @@
 (ns athens.devcards.node-page
   (:require
-    [athens.db :as db]
-    [athens.devcards.blocks :as blocks]
-    [athens.patterns :as patterns]
-    [athens.style :refer [color]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]
-    [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull q]]
-    [re-frame.core :refer [subscribe]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   [athens.db :as db]
+   [athens.devcards.blocks :as blocks]
+   [athens.patterns :as patterns]
+   [athens.style :refer [color]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [devcards.core :refer-macros [defcard-rg]]
+   [garden.selectors :as selectors]
+   [komponentit.autosize :as autosize]
+   [posh.reagent :refer [pull q]]
+   [re-frame.core :refer [subscribe]]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -20,10 +21,6 @@
    :overflow "visible"
    :flex-grow "1"
    :margin "0.2em 0"
-   :color (color :header-text-color)
-   :font-size "50px"
-   :font-weight 600
-   :line-height "65px"
    :letter-spacing "-0.03em"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
@@ -37,7 +34,6 @@
                                  :font-weight "inherit"
                                  :padding "0"
                                  :letter-spacing "inherit"
-                                 :background (color :app-background-color)
                                  :position "absolute"
                                  :top "0"
                                  :left "0"
@@ -45,6 +41,7 @@
                                  :width "100%"
                                  :min-height "100%"
                                  :caret-color (color :link-color)
+                                 :background "transparent"
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
@@ -57,7 +54,8 @@
                       :.isEditing {:outline "none"
                                    :z-index "10"
                                    :display "block"
-                                   :opacity "1"}]]})
+                                   :opacity "1"}]
+                     [(selectors/+ :.isEditing :span) {:opacity 0}]]})
 
 
 ;;; Components
@@ -68,14 +66,14 @@
   [:div
 
    ;; Header
-   [:div (use-style title-style {:data-uid uid :class "page-header"})
+   [:h1 (use-style title-style {:data-uid uid :class "page-header"})
     [autosize/textarea
      {:value      title
       :class       (when (= editing-uid uid) "isEditing")
       :auto-focus true
       :on-change  (fn [e]
                     [:transact-event [[:db/add [:block/uid uid] :node/title (.. e -target -value)]]])}]
-    [:h1 title]]
+    [:span title]]
 
    [:div
     (for [child children]
