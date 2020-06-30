@@ -162,6 +162,47 @@
 (posh! dsdb)
 
 
+;; history
+
+(defonce history (atom []))
+(def ^:const history-limit 10)
+
+
+(defn drop-tail [xs pred]
+  (loop [acc []
+         xs  xs]
+    (let [x (first xs)]
+      (cond
+        (nil? x) acc
+        (pred x) (conj acc x)
+        :else  (recur (conj acc x) (next xs))))))
+
+
+(defn trim-head [xs n]
+  (vec (drop (- (count xs) n) xs)))
+
+
+(defn find-prev [xs pred]
+  (last (take-while #(not (pred %)) xs)))
+
+
+(defn find-next [xs pred]
+  (fnext (drop-while #(not (pred %)) xs)))
+
+
+(d/listen! dsdb :history
+  (fn [tx-report]
+    (let [{:keys [db-before db-after]} tx-report]
+      (when (and db-before db-after)
+        (swap! history (fn [h]
+                         (-> h
+                           (drop-tail #(identical? % db-before))
+                           (conj db-after)
+                           (trim-head history-limit))))))))
+
+
+
+
 ;;; re-frame
 
 
@@ -170,6 +211,13 @@
                :loading       true
                :errors        {}
                :athena        false
+               :devtool       false
+               :left-sidebar  true
+               :right-sidebar {:open false
+                               :uids ["OaSVyM_nr"
+                                      "p1Xv2crs3"]}
+                               ;;:uids {"OaSVyM_nr" {:open false :index 0}
+                               ;;       "p1Xv2crs3" {:open true :index 1}}}
                :editing-uid   nil
                :drag-bullet   {:uid          nil
                                :x            nil

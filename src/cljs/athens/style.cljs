@@ -57,41 +57,47 @@
 
 ;; Base Styles
 
-(stylefy/tag "body" {:background-color (color :app-bg-color)
-                     :font-family "IBM Plex Sans, Sans-Serif"
-                     :color (color :body-text-color)
-                     :font-size "16px"
-                     :line-height "1.5"
-                     ::stylefy/manual [[:a {:color (color :link-color)}]
-                                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
-                                                                 :color (color :header-text-color)}]
-                                       [:h1 {:font-size "50px"
-                                             :font-weight 600
-                                             :line-height "65px"
-                                             :letter-spacing "-0.03em"}]
-                                       [:h2 {:font-size "38px"
-                                             :font-weight 500
-                                             :line-height "49px"
-                                             :letter-spacing "-0.03em"}]
-                                       [:h3 {:font-size "28px"
-                                             :font-weight 500
-                                             :line-height "36px"
-                                             :letter-spacing "-0.02em"}]
-                                       [:h4 {:font-size "21px"
-                                             :line-height "27px"}]
-                                       [:h5 {:font-size "12px"
-                                             :font-weight 500
-                                             :line-height "16px"
-                                             :letter-spacing "0.08em"
-                                             :text-transform "uppercase"}]
-                                       [:.MuiSvgIcon-root {:font-size "24px"}]
-                                       [:input {:font-family "inherit"}]
-                                       [:span
-                                        [:&.block-ref {:border-bottom [["1px" "solid" (color :highlight-color)]]}
-                                         [:&:hover {:background-color (color :highlight-color :opacity-lower)
-                                                    :cursor "alias"}]]]
-                                       [:img {:max-width "100%"
-                                              :height "auto"}]]})
+(def base-styles
+  {:background-color (color :app-bg-color)
+   :font-family      "IBM Plex Sans, Sans-Serif"
+   :color            (color :body-text-color)
+   :font-size        "16px"
+   :line-height      "1.5"
+   ::stylefy/manual  [[:a {:color (color :link-color)}]
+                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
+                                                :color  (color :header-text-color)}]
+                      [:h1 {:font-size      "50px"
+                            :font-weight    600
+                            :line-height    "65px"
+                            :letter-spacing "-0.03em"}]
+                      [:h2 {:font-size      "38px"
+                            :font-weight    500
+                            :line-height    "49px"
+                            :letter-spacing "-0.03em"}]
+                      [:h3 {:font-size      "28px"
+                            :font-weight    500
+                            :line-height    "36px"
+                            :letter-spacing "-0.02em"}]
+                      [:h4 {:font-size   "21px"
+                            :line-height "27px"}]
+                      [:h5 {:font-size      "12px"
+                            :font-weight    500
+                            :line-height    "16px"
+                            :letter-spacing "0.08em"
+                            :text-transform "uppercase"}]
+                      [:.MuiSvgIcon-root {:font-size "24px"}]
+                      [:input {:font-family "inherit"}]
+                      [:img {:max-width "100%"
+                             :height    "auto"}]]})
+
+
+(def app-styles
+  {:overflow "hidden"
+   :height   "100vh"
+   :width    "100vw"})
+
+
+(stylefy/tag "body" base-styles)
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})

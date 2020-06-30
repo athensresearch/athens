@@ -4,8 +4,10 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
+    [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
+    [athens.devcards.right-sidebar :refer [right-sidebar-component]]
     [athens.devcards.spinner :refer [initial-spinner-component]]
     [athens.subs]
     [posh.reagent :refer [pull]]
@@ -17,7 +19,12 @@
 
 
 (def app-wrapper-style
-  {:display "flex"
+  {:display "grid"
+   :grid-template-areas
+   "'left-sidebar main-content secondary-content'
+   'devtool devtool devtool'"
+   :grid-template-columns "auto 1fr auto"
+   :grid-template-rows "1fr auto"
    :height "100vh"})
 
 
@@ -105,6 +112,8 @@
        (if @loading
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
-          [left-sidebar db/dsdb]
+          [left-sidebar]
           [:div (use-style main-content-style)
-           [match-panel (-> @current-route :data :name)]]])])))
+           [match-panel (-> @current-route :data :name)]]
+          [right-sidebar-component]
+          [devtool-component]])])))
