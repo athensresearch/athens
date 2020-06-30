@@ -1,7 +1,7 @@
 (ns athens.style
   (:require
-   [garden.color :refer [opacify hex->hsl]]
-   [stylefy.core :as stylefy]))
+    [garden.color :refer [opacify hex->hsl]]
+    [stylefy.core :as stylefy]))
 
 
 (def COLORS

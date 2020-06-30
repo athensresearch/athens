@@ -1,16 +1,16 @@
 (ns athens.devcards.right-sidebar
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.devcards.block-page :refer [block-page-component]]
-   [athens.devcards.buttons :refer [button button-primary]]
-   [athens.devcards.node-page :refer [node-page-component]]
-   [athens.style :refer [color OPACITIES]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :refer [defcard-rg]]
-   [garden.color :refer [lighten]]
-   [re-frame.core :refer [dispatch subscribe]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.devcards.block-page :refer [block-page-component]]
+    [athens.devcards.buttons :refer [button button-primary]]
+    [athens.devcards.node-page :refer [node-page-component]]
+    [athens.style :refer [color OPACITIES]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :refer [defcard-rg]]
+    [garden.color :refer [lighten]]
+    [re-frame.core :refer [dispatch subscribe]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -179,30 +179,30 @@
     ;;  [button {:label [:> mui-icons/FilterList]}]
      ]
     (doall
-     (for [[uid {:keys [open node/title block/string]}] items
-           :let [node-page? (boolean title)
-                 heading (or title string)]]
-       ^{:key uid}
-       [:article (use-style sidebar-item-style)
-        [:header (use-style sidebar-item-heading-style {:class (when open "open")})
-         [button {:style sidebar-item-toggle-style
-                  :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
-                  :class (when open "open")
-                  :label [:> mui-icons/ChevronRight]}]
-         [:h2
-          (if title
-            [:<> [:> mui-icons/Description] title]
-            [:<> [:> mui-icons/FiberManualRecord] string])]
-         [:div {:class "controls"}
+      (for [[uid {:keys [open node/title block/string]}] items
+            :let [node-page? (boolean title)
+                  heading (or title string)]]
+        ^{:key uid}
+        [:article (use-style sidebar-item-style)
+         [:header (use-style sidebar-item-heading-style {:class (when open "open")})
+          [button {:style sidebar-item-toggle-style
+                   :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
+                   :class (when open "open")
+                   :label [:> mui-icons/ChevronRight]}]
+          [:h2
+           (if title
+             [:<> [:> mui-icons/Description] title]
+             [:<> [:> mui-icons/FiberManualRecord] string])]
+          [:div {:class "controls"}
         ;;  [button {:label [:> mui-icons/DragIndicator]}]
         ;;  [:hr]
-          [button {:on-click-fn #(dispatch [:right-sidebar/close-item uid])
-                   :label [:> mui-icons/Close]}]]]
-        (when open
-          [:div (use-style sidebar-item-container-style)
-           (if node-page?
-             [node-page-component [:block/uid uid]]
-             [block-page-component [:block/uid uid]])])]))]
+           [button {:on-click-fn #(dispatch [:right-sidebar/close-item uid])
+                    :label [:> mui-icons/Close]}]]]
+         (when open
+           [:div (use-style sidebar-item-container-style)
+            (if node-page?
+              [node-page-component [:block/uid uid]]
+              [block-page-component [:block/uid uid]])])]))]
    [button {:style sidebar-toggle-style
             :class (if open? "open" "closed")
             :on-click-fn #(dispatch [:right-sidebar/toggle])

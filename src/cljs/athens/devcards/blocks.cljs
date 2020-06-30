@@ -1,22 +1,22 @@
 (ns athens.devcards.blocks
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.db :as db]
-   [athens.parse-renderer :refer [parse-and-render]]
-   [athens.router :refer [navigate-uid]]
-   [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [clojure.string :refer [join]]
-   [devcards.core :refer-macros [defcard-rg]]
-   [garden.selectors :as selectors]
-   [komponentit.autosize :as autosize]
-   [posh.reagent :refer [pull]]
-   [re-frame.core  :refer [dispatch subscribe]]
-   [stylefy.core :as stylefy :refer [use-style]])
+    ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [clojure.string :refer [join]]
+    [devcards.core :refer-macros [defcard-rg]]
+    [garden.selectors :as selectors]
+    [komponentit.autosize :as autosize]
+    [posh.reagent :refer [pull]]
+    [re-frame.core  :refer [dispatch subscribe]]
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
-   (goog.events
-    KeyCodes)))
+    (goog.events
+      KeyCodes)))
 
 
 ;;; Styles
