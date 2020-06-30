@@ -480,10 +480,10 @@
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
          [button {:on-click-fn #(switch-panel :query)
-                  :active (true? (= active-panel :query))
+                  :active (= active-panel :query)
                   :label [:<> [:> mui-icons/ShortText] [:span "Query"]]}]
          [button {:on-click-fn #(switch-panel :txes)
-                  :active (true? (= active-panel :txes))
+                  :active (= active-panel :txes)
                   :label [:<> [:> mui-icons/History] [:span "Transactions"]]}]]
         [devtool-close-el]]
        [:div (use-style panels-style)
