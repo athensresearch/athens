@@ -217,10 +217,8 @@
     (cond
       (= key KeyCodes.ESC) (dispatch [:toggle-athena])
 
-      (and (= key KeyCodes.ENTER) shift) (prn "open in right-sidebar")
-      ;;(dispatch [:right-sidebar/add-item uid])
+      (and (= key KeyCodes.ENTER) shift) (dispatch [:right-sidebar/open-item (:block/uid item)])
 
-      ;; if enter AND index 0 and nil, create page
       (and (= key KeyCodes.ENTER) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
         (dispatch [:toggle-athena])

@@ -76,11 +76,21 @@
     (update db :right-sidebar/items dissoc uid)))
 
 
+;; toggle open right sidebar if not open
+;; re-arrange?
 (reg-event-db
   :right-sidebar/open-item
-  (fn [db [_ uid]]
-    (let [block @(pull db/dsdb '[:node/title :block/string] [:block/uid uid])]
-      (assoc-in db [:right-sidebar/items uid] (assoc block :open true)))))
+  (fn-traced [db [_ uid]]
+    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
+          new-item  (merge block {:open true :index -1})
+          new-items (assoc (:right-sidebar/items db) uid new-item)
+          ;; TODO: inc all indices
+          sorted-items (into (sorted-map-by (fn [k1 k2]
+                                              (compare
+                                                [(get-in new-items [k1 :index]) k2]
+                                                [(get-in new-items [k2 :index]) k1]))) new-items)]
+      (prn (:right-sidebar/items db) sorted-items)
+      (assoc db :right-sidebar/items sorted-items))))
 
 
 (reg-event-db
