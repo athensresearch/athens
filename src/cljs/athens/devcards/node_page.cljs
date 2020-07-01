@@ -6,6 +6,7 @@
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as string]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
@@ -96,7 +97,7 @@
   (let [node (->> @(pull db/dsdb db/node-pull-pattern ident) (db/sort-block))
         title (:node/title node)
         editing-uid @(subscribe [:editing-uid])]
-    (when-not (clojure.string/blank? title)
+    (when-not (string/blank? title)
       (let [linked-ref-entids     @(q db/q-refs db/dsdb (patterns/linked title))
             unlinked-ref-entids   @(q db/q-refs db/dsdb (patterns/unlinked title))]
         [node-page-el node editing-uid linked-ref-entids unlinked-ref-entids]))))

@@ -1,7 +1,9 @@
 (ns athens.parser
   (:require
+    [clojure.string :as string]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
-       :clj [instaparse.core :as insta :refer [defparser]])))
+       :clj  [instaparse.core :as insta :refer [defparser]])))
+
 
 
 (declare block-parser)
@@ -74,9 +76,9 @@
      :url-link-text-contents (fn [& raw-contents]
                                (combine-adjacent-strings raw-contents))
      :url-link-url-parts     (fn [& chars]
-                               (clojure.string/join chars))
+                               (string/join chars))
      :any-chars              (fn [& chars]
-                               (clojure.string/join chars))}
+                               (string/join chars))}
     tree))
 
 
