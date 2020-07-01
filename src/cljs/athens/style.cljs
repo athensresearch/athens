@@ -63,32 +63,29 @@
    :color            (color :body-text-color)
    :font-size        "16px"
    :line-height      "1.5"
-   ::stylefy/manual  [[:a {:color (color :link-color)}]
-                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
-                                                :color  (color :header-text-color)}]
-                      [:h1 {:font-size      "50px"
-                            :font-weight    600
-                            :line-height    "65px"
-                            :letter-spacing "-0.03em"}]
-                      [:h2 {:font-size      "38px"
-                            :font-weight    500
-                            :line-height    "49px"
-                            :letter-spacing "-0.03em"}]
-                      [:h3 {:font-size      "28px"
-                            :font-weight    500
-                            :line-height    "36px"
-                            :letter-spacing "-0.02em"}]
-                      [:h4 {:font-size   "21px"
-                            :line-height "27px"}]
-                      [:h5 {:font-size      "12px"
-                            :font-weight    500
-                            :line-height    "16px"
-                            :letter-spacing "0.08em"
-                            :text-transform "uppercase"}]
-                      [:.MuiSvgIcon-root {:font-size "24px"}]
-                      [:input {:font-family "inherit"}]
-                      [:img {:max-width "100%"
-                             :height    "auto"}]]})
+   ::stylefy/manual [[:a {:color (color :link-color)}]
+                     [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
+                                               :line-height "1.3"
+                                               :color (color :header-text-color)}]
+                     [:h1 {:font-size "3.125em"
+                           :font-weight 600
+                           :letter-spacing "-0.03em"}]
+                     [:h2 {:font-size "2.375em"
+                           :font-weight 500
+                           :letter-spacing "-0.03em"}]
+                     [:h3 {:font-size "1.75em"
+                           :font-weight 500
+                           :letter-spacing "-0.02em"}]
+                     [:h4 {:font-size "1.3125em"}]
+                     [:h5 {:font-size "0.75em"
+                           :font-weight 500
+                           :line-height "1rem"
+                           :letter-spacing "0.08em"
+                           :text-transform "uppercase"}]
+                     [:.MuiSvgIcon-root {:font-size "24px"}]
+                     [:input {:font-family "inherit"}]
+                     [:img {:max-width "100%"
+                            :height "auto"}]]})
 
 
 (def app-styles

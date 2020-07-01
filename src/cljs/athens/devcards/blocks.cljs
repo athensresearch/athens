@@ -24,15 +24,15 @@
 
 (def block-style
   {:display "flex"
-   :line-height "32px"
+   :line-height "2em"
    :position "relative"
    :justify-content "flex-start"
    :flex-direction "column"})
 
 
 (def block-disclosure-toggle-style
-  {:width "16px"
-   :height "32px"
+  {:width "1em"
+   :height "2em"
    :flex-shrink "0"
    :display "flex"
    :background "none"
@@ -51,10 +51,10 @@
 (def block-indicator-style
   {:flex-shrink "0"
    :cursor "pointer"
-   :width "12px"
-   :margin-right "4px"
+   :width "0.75em"
+   :margin-right "0.25em"
    :transition "all 0.05s ease"
-   :height "32px"
+   :height "2em"
    :color (color :panel-color)
    ::stylefy/mode [[:after {:content "''"
                             :background "currentColor"
@@ -64,17 +64,9 @@
                             :display "inline-flex"
                             :margin "50% 0 0 50%"
                             :transform "translate(-50%, -50%)"
-                            :height "5px"
-                            :width "5px"}]
+                            :height "0.3125em"
+                            :width "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
-                  ;;  [:before {:content "''"
-                  ;;            :position "absolute"
-                  ;;            :top "24px"
-                  ;;            :bottom "0"
-                  ;;            :pointer-events "none"
-                  ;;            :left "22px"
-                  ;;            :width "1px"
-                  ;;            :background (color :panel-color)}]
 
    ::stylefy/manual [[:&.open {}]
                      [:&.closed {}]
@@ -130,7 +122,6 @@
    :z-index "1"
    :flex-grow "1"
    :word-break "break-word"
-   ;;:min-height "100px" helpful for development
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -158,10 +149,10 @@
                                  :opacity "0"
                                  :font-family "inherit"}]
                      [:textarea:focus
-                      :.isEditing {:outline "none"
-                                   :z-index "10"
-                                   :display "block"
-                                   :opacity "1"}]
+                      :.is-editing {:outline "none"
+                                    :z-index "10"
+                                    :display "block"
+                                    :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
                                  :z-index "2"}]]]})
@@ -292,7 +283,7 @@ no results for pull eid returns nil
                        {:class    "block-contents"
                         :data-uid uid})
        [autosize/textarea {:value       string
-                           :class       (when (= editing-uid uid) "isEditing")
+                           :class       (when (= editing-uid uid) "is-editing")
                            :auto-focus  true
                            :on-change   (fn [e]
                                           (prn "CHANGE" (.. e -target-value)))

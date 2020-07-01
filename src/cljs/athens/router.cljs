@@ -74,8 +74,13 @@
 
 
 (defn navigate-uid
-  [uid]
-  (dispatch [:navigate :page {:id uid}]))
+  ([uid]
+   (dispatch [:navigate :page {:id uid}]))
+  ([uid e]
+   (let [shift (.. e -shiftKey)]
+     (if shift
+       (dispatch [:right-sidebar/open-item uid])
+       (navigate-uid uid)))))
 
 
 (defn init-routes!

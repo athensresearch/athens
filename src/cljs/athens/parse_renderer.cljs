@@ -69,7 +69,7 @@
                   (let [node (pull db/dsdb '[*] [:node/title title])]
                     [:span (use-style page-link {:class "page-link"})
                      [:span {:class "formatting"} "[["]
-                     [:span {:on-click #(navigate-uid (:block/uid @node))} title]
+                     [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} title]
                      [:span {:class "formatting"} "]]"]]))
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]

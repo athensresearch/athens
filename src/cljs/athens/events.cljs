@@ -40,9 +40,28 @@
 
 
 (reg-event-db
-  :toggle-right-sidebar
+  :right-sidebar/toggle
   (fn [db _]
-    (update-in db [:right-sidebar :open] not)))
+    (update db :right-sidebar/open not)))
+
+
+(reg-event-db
+  :right-sidebar/toggle-item
+  (fn [db [_ item]]
+    (update-in db [:right-sidebar/items item :open] not)))
+
+
+(reg-event-db
+  :right-sidebar/close-item
+  (fn [db [_ uid]]
+    (update db :right-sidebar/items dissoc uid)))
+
+
+(reg-event-db
+  :right-sidebar/open-item
+  (fn [db [_ uid]]
+    (let [block @(pull db/dsdb '[:node/title :block/string] [:block/uid uid])]
+      (assoc-in db [:right-sidebar/items uid] (assoc block :open true)))))
 
 
 (reg-event-db
