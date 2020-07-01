@@ -50,11 +50,11 @@
    :transition "opacity 0.5s ease"
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-open {:border-left [["1px solid " (color :panel-color :opacity-low)]]
-                               :background-color (color :panel-color :opacity-low)}
+                                  :background-color (color :panel-color :opacity-low)}
                       [:> [:div {:animation "content-appears 0.15s"
                                  :animation-fill-mode "both"}]]]
                      [:&.is-closed [:> [:div {:animation "content-disappears 0.1s"
-                                           :animation-fill-mode "both"}]]]]})
+                                              :animation-fill-mode "both"}]]]]})
 
 
 (def sidebar-toggle-style

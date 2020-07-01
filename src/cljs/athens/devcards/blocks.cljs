@@ -150,9 +150,9 @@
                                  :font-family "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
-                                   :z-index "10"
-                                   :display "block"
-                                   :opacity "1"}]
+                                    :z-index "10"
+                                    :display "block"
+                                    :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
                                  :z-index "2"}]]]})

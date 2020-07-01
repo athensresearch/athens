@@ -52,9 +52,9 @@
                                  :font-family "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
-                                   :z-index "10"
-                                   :display "block"
-                                   :opacity "1"}]
+                                    :z-index "10"
+                                    :display "block"
+                                    :opacity "1"}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
