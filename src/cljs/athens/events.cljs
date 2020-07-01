@@ -70,27 +70,31 @@
     (update-in db [:right-sidebar/items item :open] not)))
 
 
+;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
   (fn [db [_ uid]]
     (update db :right-sidebar/items dissoc uid)))
 
 
-;; toggle open right sidebar if not open
-;; re-arrange?
-(reg-event-db
+;; TODO: toggle open right sidebar if not open
+;; FIXME: what happens when item is already in sidebar? all indices increment, which is not right
+(reg-event-fx
   :right-sidebar/open-item
-  (fn-traced [db [_ uid]]
+  (fn-traced [{:keys [db]} [_ uid]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1})
           new-items (assoc (:right-sidebar/items db) uid new-item)
-          ;; TODO: inc all indices
+          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                               {}
+                               new-items)
           sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
                                                 [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) new-items)]
-      (prn (:right-sidebar/items db) sorted-items)
-      (assoc db :right-sidebar/items sorted-items))))
+                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+      {:db (assoc db :right-sidebar/items sorted-items)
+       :dispatch (when (false? (:right-sidebar/open db))
+                   [:right-sidebar/toggle])})))
 
 
 (reg-event-db

@@ -215,24 +215,37 @@
         item (get results index)]
 
     (cond
-      (= key KeyCodes.ESC) (dispatch [:toggle-athena])
+      ;; FIXME: why does this only work in Devcards?
+      (= key KeyCodes.ESC)
+      (dispatch [:toggle-athena])
 
-      (and (= key KeyCodes.ENTER) shift) (dispatch [:right-sidebar/open-item (:block/uid item)])
+      (and shift (= KeyCodes.ENTER key) (zero? index) (nil? item))
+      (let [uid (gen-block-uid)]
+        (dispatch [:toggle-athena])
+        (dispatch [:right-sidebar/open-item uid]))
 
-      (and (= key KeyCodes.ENTER) (zero? index) (nil? item))
+      (and shift (= key KeyCodes.ENTER))
+      (do
+        (dispatch [:toggle-athena])
+        (dispatch [:right-sidebar/open-item (:block/uid item)]))
+
+      (and (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
         (dispatch [:toggle-athena])
         (dispatch [:page/create query uid])
         (navigate-uid uid))
 
-      ;; if enter, navigate to page
-      (= key KeyCodes.ENTER) (do (dispatch [:toggle-athena])
-                               (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
+      (= key KeyCodes.ENTER)
+      (do (dispatch [:toggle-athena])
+        (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
 
       ;; TODO: change scroll as user reaches top or bottom
       ;; TODO: what happens when user goes to -1? or past end of list?
-      (= key KeyCodes.UP) (swap! state update :index dec)
-      (= key KeyCodes.DOWN) (swap! state update :index inc)
+      (= key KeyCodes.UP)
+      (swap! state update :index dec)
+
+      (= key KeyCodes.DOWN)
+      (swap! state update :index inc)
 
       :else nil)))
 
