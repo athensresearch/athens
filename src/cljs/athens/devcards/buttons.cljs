@@ -1,14 +1,14 @@
 (ns athens.devcards.buttons
   (:require
-    ["@material-ui/icons" :as mui-icons]
-    [athens.db]
-    [athens.style :refer [color]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]
-    [garden.color :refer [darken]]
-    [garden.selectors :as selectors]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@material-ui/icons" :as mui-icons]
+   [athens.db]
+   [athens.style :refer [color]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [devcards.core :refer-macros [defcard-rg]]
+   [garden.color :refer [darken]]
+   [garden.selectors :as selectors]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -58,18 +58,18 @@
 
 
 (defn button
-  [{:keys [disabled label on-click-fn style active]}]
+  [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn
-                                                   :class (when active "active")})
+                                                   :class [class (when active "active")]})
    label])
 
 
 (defn button-primary
-  [{:keys [disabled label on-click-fn style active]}]
+  [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn
-                                                           :class (when active "active")})
+                                                           :class [class (when active "active")]})
    label])
 
 
