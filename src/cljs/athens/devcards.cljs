@@ -10,6 +10,7 @@
     [athens.devcards.db]
     [athens.devcards.db-boxes]
     [athens.devcards.devtool]
+    [athens.devcards.dropdown]
     [athens.devcards.filters]
     [athens.devcards.icons]
     [athens.devcards.left-sidebar]
