@@ -180,8 +180,7 @@
      ]
     (doall
       (for [[uid {:keys [open node/title block/string]}] items
-            :let [node-page? (boolean title)
-                  heading (or title string)]]
+            :let [node-page? (boolean title)]]
         ^{:key uid}
         [:article (use-style sidebar-item-style)
          [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
@@ -202,9 +201,7 @@
            [:div (use-style sidebar-item-container-style)
             (if node-page?
               [node-page-component [:block/uid uid]]
-              [block-page-component [:block/uid uid]]
-              )
-            ])]))]
+              [block-page-component [:block/uid uid]])])]))]
    [button {:style sidebar-toggle-style
             :class (if open? "is-open" "is-closed")
             :on-click-fn #(dispatch [:right-sidebar/toggle])
