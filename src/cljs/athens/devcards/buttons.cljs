@@ -58,18 +58,18 @@
 
 
 (defn button
-  [{:keys [disabled label on-click-fn style active]}]
+  [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn
-                                                   :class (when active "active")})
+                                                   :class [class (when active "active")]})
    label])
 
 
 (defn button-primary
-  [{:keys [disabled label on-click-fn style active]}]
+  [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn
-                                                           :class (when active "active")})
+                                                           :class [class (when active "active")]})
    label])
 
 
