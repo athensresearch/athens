@@ -167,21 +167,23 @@
                      [:&.is-open [:h2 {:font-weight "500"}]]]})
 
 
-(def empty-message-style {:align-self "center"
-                          :display "flex"
-                          :margin "auto auto"
-                          :align-items "center"
-                          :color (color :body-text-color :opacity-med)
-                          :font-size "14px"
-                          :border-radius "8px"
-                          :line-height 1.3
-                          ::stylefy/manual [[:p {:max-width "13em"}]]})
+(def empty-message-style
+  {:align-self "center"
+   :display "flex"
+   :margin "auto auto"
+   :align-items "center"
+   :color (color :body-text-color :opacity-med)
+   :font-size "14px"
+   :border-radius "8px"
+   :line-height 1.3
+   ::stylefy/manual [[:p {:max-width "13em"}]]})
 
 
 ;;; Components
 
 
-(defn empty-message []
+(defn empty-message
+  []
   [:div (use-style empty-message-style)
    [:p "Hold shift when clicking a page link to view the page in the sidebar."]])
 
@@ -197,29 +199,29 @@
     (if (empty? items)
       [empty-message]
       (doall
-       (for [[uid {:keys [open node/title block/string]}] items
-             :let [node-page? (boolean title)]]
-         ^{:key uid}
-         [:article (use-style sidebar-item-style)
-          [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-           [button {:style sidebar-item-toggle-style
-                    :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
-                    :class (when open "is-open")
-                    :label [:> mui-icons/ChevronRight]}]
-           [:h2
-            (if title
-              [:<> [:> mui-icons/Description] title]
-              [:<> [:> mui-icons/FiberManualRecord] string])]
-           [:div {:class "controls"}
+        (for [[uid {:keys [open node/title block/string]}] items
+              :let [node-page? (boolean title)]]
+          ^{:key uid}
+          [:article (use-style sidebar-item-style)
+           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
+            [button {:style sidebar-item-toggle-style
+                     :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
+                     :class (when open "is-open")
+                     :label [:> mui-icons/ChevronRight]}]
+            [:h2
+             (if title
+               [:<> [:> mui-icons/Description] title]
+               [:<> [:> mui-icons/FiberManualRecord] string])]
+            [:div {:class "controls"}
         ;;  [button {:label [:> mui-icons/DragIndicator]}]
         ;;  [:hr]
-            [button {:on-click-fn #(dispatch [:right-sidebar/close-item uid])
-                     :label [:> mui-icons/Close]}]]]
-          (when open
-            [:div (use-style sidebar-item-container-style)
-             (if node-page?
-               [node-page-component [:block/uid uid]]
-               [block-page-component [:block/uid uid]])])])))]
+             [button {:on-click-fn #(dispatch [:right-sidebar/close-item uid])
+                      :label [:> mui-icons/Close]}]]]
+           (when open
+             [:div (use-style sidebar-item-container-style)
+              (if node-page?
+                [node-page-component [:block/uid uid]]
+                [block-page-component [:block/uid uid]])])])))]
    [button {:style sidebar-toggle-style
             :class (if open? "is-open" "is-closed")
             :on-click-fn #(dispatch [:right-sidebar/toggle])
