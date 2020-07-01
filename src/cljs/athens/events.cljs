@@ -1,12 +1,31 @@
 (ns athens.events
   (:require
     [athens.db :as db]
+    [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull #_q #_pull-many]]
     [re-frame.core :refer [reg-event-db reg-event-fx]]))
+
+
+;; Utils
+
+
+(defn get-block
+  [id]
+  @(pull db/dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+
+
+(defn get-parent
+  [id]
+  (let [eid (-> (d/entity @db/dsdb id)
+              :block/_children
+              first
+              :db/id)]
+    (get-block eid)))
+
 
 
 ;;; Events
@@ -100,7 +119,6 @@
     (assoc db :tooltip-uid uid)))
 
 
-
 ;;; event effects
 
 
@@ -162,21 +180,15 @@
       {:reset-conn next})))
 
 
+(reg-event-fx
+  :page/create
+  (fn [_ [_ title uid]]
+    (let [now (now-ts)]
+          ;;uid (gen-block-uid)]
+      {:transact [{:db/add -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
+
+
 ;;; dsdb events (transactions)
-
-
-(defn get-block
-  [id]
-  @(pull db/dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
-
-
-(defn get-parent
-  [id]
-  (let [eid (-> (d/entity @db/dsdb id)
-              :block/_children
-              first
-              :db/id)]
-    (get-block eid)))
 
 
 (def rules
@@ -190,11 +202,6 @@
     [(dec-after ?p ?at ?ch ?new-o)
      (after ?p ?at ?ch ?o)
      [(dec ?o) ?new-o]]])
-
-
-(defn gen-block-uid
-  []
-  (subs (str (random-uuid)) 27))
 
 
 (reg-event-fx
