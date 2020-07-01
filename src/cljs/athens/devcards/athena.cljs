@@ -7,7 +7,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]
-    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.util :refer [gen-block-uid]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -141,8 +141,8 @@
   (d/q '[:find (pull ?node [:db/id :node/title :block/uid]) .
          :in $ ?query
          :where [?node :node/title ?query]]
-    @db/dsdb
-    query))
+       @db/dsdb
+       query))
 
 
 (defn search-in-node-title
@@ -201,10 +201,9 @@
       (reset! state {:index   0
                      :query   query
                      :results (->> (concat [(search-exact-node-title query)]
-                                     (take 20 (search-in-node-title query))
-                                     (take 20 (search-in-block-content query)))
-                                vec)}))))
-
+                                           (take 20 (search-in-node-title query))
+                                           (take 20 (search-in-block-content query)))
+                                   vec)}))))
 
 
 (defn key-down-handler
@@ -237,7 +236,7 @@
 
       (= key KeyCodes.ENTER)
       (do (dispatch [:toggle-athena])
-        (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
+          (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
 
       ;; TODO: change scroll as user reaches top or bottom
       ;; TODO: what happens when user goes to -1? or past end of list?
@@ -282,11 +281,11 @@
     (when athena?
       [:div.athena (use-style container-style)
        [:input (use-style athena-input-style
-                 {:type        "search"
-                  :auto-focus  true
-                  :placeholder "Find or Create Page"
-                  :on-change   (fn [e] (search-handler (.. e -target -value)))
-                  :on-key-down (fn [e] (key-down-handler e s))})]
+                          {:type        "search"
+                           :auto-focus  true
+                           :placeholder "Find or Create Page"
+                           :on-change   (fn [e] (search-handler (.. e -target -value)))
+                           :on-key-down (fn [e] (key-down-handler e s))})]
        [results-el]
        [(fn []
           (let [{:keys [results query index]} @s]
@@ -314,11 +313,6 @@
                     (when string
                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))
-
-
-(defn athena-el
-  [athena? *match choice search-handler])
-
 
 
 ;;; Devcards
