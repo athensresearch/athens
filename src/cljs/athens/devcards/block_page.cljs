@@ -51,11 +51,11 @@
                                  :opacity "0"
                                  :font-family "inherit"}]
                      [:textarea:focus
-                      :.isEditing {:outline "none"
+                      :.is-editing {:outline "none"
                                    :z-index "10"
                                    :display "block"
                                    :opacity "1"}]
-                     [(selectors/+ :.isEditing :span) {:opacity 0}]]})
+                     [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
 ;;; Components
@@ -79,7 +79,7 @@
    [:h1 (use-style title-style {:data-uid uid :class "block-header"})
     [autosize/textarea
      {:value      string
-      :class       (when (= editing-uid uid) "isEditing")
+      :class       (when (= editing-uid uid) "is-editing")
       :auto-focus true
       :on-change  (fn [e]
                     (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))}]

@@ -49,11 +49,11 @@
    :justify-content "space-between"
    :transition "opacity 0.5s ease"
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&.open {:border-left [["1px solid " (color :panel-color :opacity-low)]]
+                     [:&.is-open {:border-left [["1px solid " (color :panel-color :opacity-low)]]
                                :background-color (color :panel-color :opacity-low)}
                       [:> [:div {:animation "content-appears 0.15s"
                                  :animation-fill-mode "both"}]]]
-                     [:&.closed [:> [:div {:animation "content-disappears 0.1s"
+                     [:&.is-closed [:> [:div {:animation "content-disappears 0.1s"
                                            :animation-fill-mode "both"}]]]]})
 
 
@@ -111,7 +111,7 @@
    :place-content "center"
    ::stylefy/manual [[:svg {:transition "all 0.1s ease"
                             :margin "0"}]
-                     [:&.open [:svg {:transform "rotate(90deg)"}]]]})
+                     [:&.is-open [:svg {:transform "rotate(90deg)"}]]]})
 
 
 (def sidebar-item-container-style
@@ -164,7 +164,7 @@
                            :flex "0 0 1px"
                            :height "1em"
                            :justify-self "stretch"}]
-                     [:&.open [:h2 {:font-weight "500"}]]]})
+                     [:&.is-open [:h2 {:font-weight "500"}]]]})
 
 
 ;;; Components
@@ -172,7 +172,7 @@
 
 (defn right-sidebar-el
   [open? items]
-  [:div (use-style sidebar-style {:class (if open? "open" "closed")})
+  [:div (use-style sidebar-style {:class (if open? "is-open" "is-closed")})
    [:div (use-style sidebar-content-style)
     [:header (use-style sidebar-section-heading-style)
      [:h1 "Pages and Blocks"]
@@ -184,10 +184,10 @@
                   heading (or title string)]]
         ^{:key uid}
         [:article (use-style sidebar-item-style)
-         [:header (use-style sidebar-item-heading-style {:class (when open "open")})
+         [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
           [button {:style sidebar-item-toggle-style
                    :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
-                   :class (when open "open")
+                   :class (when open "is-open")
                    :label [:> mui-icons/ChevronRight]}]
           [:h2
            (if title
@@ -202,9 +202,11 @@
            [:div (use-style sidebar-item-container-style)
             (if node-page?
               [node-page-component [:block/uid uid]]
-              [block-page-component [:block/uid uid]])])]))]
+              [block-page-component [:block/uid uid]]
+              )
+            ])]))]
    [button {:style sidebar-toggle-style
-            :class (if open? "open" "closed")
+            :class (if open? "is-open" "is-closed")
             :on-click-fn #(dispatch [:right-sidebar/toggle])
             :label (if open? [:> mui-icons/Close] [:> mui-icons/Add])}]])
 

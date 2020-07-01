@@ -149,7 +149,7 @@
                                  :opacity "0"
                                  :font-family "inherit"}]
                      [:textarea:focus
-                      :.isEditing {:outline "none"
+                      :.is-editing {:outline "none"
                                    :z-index "10"
                                    :display "block"
                                    :opacity "1"}]
@@ -283,7 +283,7 @@ no results for pull eid returns nil
                        {:class    "block-contents"
                         :data-uid uid})
        [autosize/textarea {:value       string
-                           :class       (when (= editing-uid uid) "isEditing")
+                           :class       (when (= editing-uid uid) "is-editing")
                            :auto-focus  true
                            :on-change   (fn [e]
                                           (prn "CHANGE" (.. e -target-value)))
