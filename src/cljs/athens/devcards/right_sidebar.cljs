@@ -201,8 +201,7 @@
     (if (empty? items)
       [empty-message]
       (doall
-        (for [[uid {:keys [open node/title block/string]}] items
-              :let [node-page? (boolean title)]]
+        (for [[uid {:keys [open node/title block/string]}] items]
           ^{:key uid}
           [:article (use-style sidebar-item-style)
            [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
@@ -221,7 +220,7 @@
                       :label [:> mui-icons/Close]}]]]
            (when open
              [:div (use-style sidebar-item-container-style)
-              (if node-page?
+              (if title
                 [node-page-component [:block/uid uid]]
                 [block-page-component [:block/uid uid]])])])))]
    [button {:style sidebar-toggle-style
