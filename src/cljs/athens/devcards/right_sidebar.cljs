@@ -96,6 +96,7 @@
 
 (def sidebar-item-style
   {:display "flex"
+   :flex "0 0 auto"
    :flex-direction "column"
    :border-top [["1px solid" (color :panel-color)]]})
 
@@ -125,6 +126,7 @@
 
 (def sidebar-item-heading-style
   {:font-size "16px"
+   :flex "0 0 auto"
    :display "flex"
    :align-items "center"
    :padding "4px 16px"
