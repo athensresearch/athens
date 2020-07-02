@@ -1,11 +1,11 @@
 (ns athens.devcards.breadcrumbs
   (:require
-   [athens.db]
-   [athens.style :refer [color OPACITIES]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :refer-macros [defcard-rg]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    [athens.db]
+    [athens.style :refer [color OPACITIES]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :refer-macros [defcard-rg]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -21,7 +21,11 @@
    :overflow "hidden"
    :height "inherit"
    :align-items "stretch"
-   :flex-wrap "nowrap"})
+   :flex-wrap "nowrap"
+   :color (color :body-text-color :opacity-high)
+   ::stylefy/manual [[:svg {:font-size "inherit"
+                            :color "inherit"
+                            :margin "auto 0"}]]})
 
 
 (def breadcrumb-style
@@ -32,7 +36,6 @@
    :white-space "nowrap"
    :text-overflow "ellipsis"
    :transition "all 0.3s ease"
-   :color (color :body-text-color :opacity-high)
    ::stylefy/manual [[:a {:text-decoration "none"
                           :cursor "pointer"
                           :color "inherit"}]

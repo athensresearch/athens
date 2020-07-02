@@ -6,8 +6,8 @@
     [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
-    [athens.style :refer [color]]
     [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -63,6 +63,41 @@
                                     :display "block"
                                     :opacity "1"}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
+
+
+(def references-style {:margin-block "3em"})
+
+
+(def references-heading-style
+  {:font-weight "normal"
+   :display "flex"
+   :padding "0 2rem"
+   :align-items "center"
+   ::stylefy/manual [[:svg {:margin-right "0.25em"
+                            :font-size "1rem"}]
+                     [:span {:flex "1 1 100%"}]]})
+
+
+(def references-list-style
+  {:font-size "14px"})
+
+
+(def references-group-title-style
+  {:color (color :link-color)
+   :margin-top "0"
+   :font-weight "500"
+   ::stylefy/manual [[:a:hover {:cursor "pointer"
+                                :text-decoration "underline"}]]})
+
+
+(def references-group-style
+  {:background (color :panel-color :opacity-low)
+   :padding "1rem 2rem"
+   :border-radius "4px"
+   :margin "0.5em 0"})
+
+
+(def references-group-block-style {:margin-inline-start "-2em"})
 
 
 ;;; Helpers
@@ -151,25 +186,28 @@
 
    ;; References
    (for [[linked-or-unlinked refs] ref-groups]
-     [:div {:key linked-or-unlinked}
-      [:div (use-style {:display         "flex"
-                        :justify-content "space-between"
-                        :align-items "center"})
-       [:h3 linked-or-unlinked]
-       [:span
-        [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
-                 :disabled true}]]]
-      (doall
-        (for [[group-title group] refs]
-          [:<> {:key group-title}
-           [:h4 group-title]
-           (for [{:block/keys [uid parents] :as block} group]
-             [:div {:key uid}
+     [:section (use-style references-style {:key linked-or-unlinked})
+      [:h4 (use-style references-heading-style)
+       [(r/adapt-react-class mui-icons/Link)]
+       [:span linked-or-unlinked]
+       [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                :disabled true}]]
+      [:div (use-style references-list-style)
+       (doall
+         (for [[group-title group] refs]
+           [:div (use-style references-group-style {:key group-title})
+            [:h4 (use-style references-group-title-style)
+             [:a {:on-click #(navigate-uid uid)} group-title]]
+            (for [{:block/keys [uid parents] :as block} group]
+              [:div {:key uid}
               ;; TODO: expand parent on click
-              [breadcrumbs-list {:style {:font-size "14px"}}
-               (for [{:keys [node/title block/string block/uid]} parents]
-                 [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])]
-              [block-el block]])]))])])
+               [:div (use-style references-group-block-style)
+                [block-el block]]
+               (when (> (count parents) 1)
+                 [breadcrumbs-list {:style {:font-size "12px"}}
+                  [(r/adapt-react-class mui-icons/LocationOn)]
+                  (for [{:keys [node/title block/string block/uid]} parents]
+                    [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]])])
 
 
 (defn node-page-component
