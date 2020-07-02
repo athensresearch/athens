@@ -2,7 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! #_transact! #_pull pull-many #_q]]))
+    [posh.reagent :refer [posh!]]))
 
 ;;; JSON Parsing
 
@@ -107,10 +107,10 @@
          (if (:node/title b)
            (conj res b)
            (recur (first (:block/_children b))
-             (conj res (dissoc b :block/_children)))))
-    (rest)
-    (reverse)
-    vec))
+                  (conj res (dissoc b :block/_children)))))
+       (rest)
+       (reverse)
+       vec))
 
 ;; all blocks (except for block refs) want to get all children
 (def block-pull-pattern
@@ -126,14 +126,6 @@
 
 
 ;; used for both linked and unlinked references, just different regex
-(def q-refs
-  '[:find [?e ...]
-    :in $ ?regex
-    :where
-    [?e :block/string ?s]
-    [(re-find ?regex ?s)]])
-
-
 (def q-shortcuts
   '[:find ?order ?title ?uid
     :where
@@ -155,7 +147,8 @@
 (def ^:const history-limit 10)
 
 
-(defn drop-tail [xs pred]
+(defn drop-tail
+  [xs pred]
   (loop [acc []
          xs  xs]
     (let [x (first xs)]
@@ -165,29 +158,30 @@
         :else  (recur (conj acc x) (next xs))))))
 
 
-(defn trim-head [xs n]
+(defn trim-head
+  [xs n]
   (vec (drop (- (count xs) n) xs)))
 
 
-(defn find-prev [xs pred]
+(defn find-prev
+  [xs pred]
   (last (take-while #(not (pred %)) xs)))
 
 
-(defn find-next [xs pred]
+(defn find-next
+  [xs pred]
   (fnext (drop-while #(not (pred %)) xs)))
 
 
 (d/listen! dsdb :history
-  (fn [tx-report]
-    (let [{:keys [db-before db-after]} tx-report]
-      (when (and db-before db-after)
-        (swap! history (fn [h]
-                         (-> h
-                           (drop-tail #(identical? % db-before))
-                           (conj db-after)
-                           (trim-head history-limit))))))))
-
-
+           (fn [tx-report]
+             (let [{:keys [db-before db-after]} tx-report]
+               (when (and db-before db-after)
+                 (swap! history (fn [h]
+                                  (-> h
+                                      (drop-tail #(identical? % db-before))
+                                      (conj db-after)
+                                      (trim-head history-limit))))))))
 
 
 ;;; re-frame

@@ -9,14 +9,13 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
-    [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull pull-many q]]
-    [reagent.core :as r]
+    [posh.reagent :refer [pull q]]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -77,13 +76,13 @@
 
 (defn get-ref-ids
   [pattern]
-  (d/q '[:find [?e ...]
-         :in $ ?regex
-         :where
-         [?e :block/string ?s]
-         [(re-find ?regex ?s)]]
-    @db/dsdb
-    pattern))
+  (q '[:find [?e ...]
+       :in $ ?regex
+       :where
+       [?e :block/string ?s]
+       [(re-find ?regex ?s)]]
+     db/dsdb
+     pattern))
 
 
 (defn get-block
@@ -94,7 +93,7 @@
 (defn get-parents
   [id]
   (->> @(pull db/dsdb db/parents-pull-pattern id)
-    db/shape-parent-query))
+       db/shape-parent-query))
 
 
 (defn merge-parents-and-block
@@ -113,10 +112,10 @@
   [blocks]
   (group-by (fn [x]
               (-> x
-                :block/parents
-                first
-                :node/title))
-    blocks))
+                  :block/parents
+                  first
+                  :node/title))
+            blocks))
 
 
 (defn get-data
@@ -167,12 +166,12 @@
               ;; TODO: replace with breadcrumbs?
               ;; TODO: expand parent on click
               (->> (for [{:keys [node/title block/string block/uid]} parents]
-                      [:span (use-style {:color "gray"} {:key uid}) (or title string)])
-                (interpose ">")
-                (map (fn [x]
-                       (if (= x ">")
-                         [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                         x))))
+                     [:span (use-style {:color "gray"} {:key uid}) (or title string)])
+                   (interpose ">")
+                   (map (fn [x]
+                          (if (= x ">")
+                            [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
+                            x))))
               [block-el block]])]))])])
 
 
@@ -188,8 +187,6 @@
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
         [node-page-el node editing-uid ref-groups]))))
-
-
 
 
 ;;; Devcards
