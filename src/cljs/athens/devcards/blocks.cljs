@@ -309,7 +309,7 @@ no results for pull eid returns nil
 
 (defn on-change
   [val uid]
-  (dispatch [:transact-event [[:db/add uid :block/string val]]]))
+  (dispatch [:transact-event [[:db/add [:block/uid uid] :block/string val]]]))
 
 
 (def db-on-change (debounce on-change 500))
