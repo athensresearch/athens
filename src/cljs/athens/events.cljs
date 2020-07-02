@@ -70,6 +70,19 @@
     (update-in db [:right-sidebar/items item :open] not)))
 
 
+(reg-event-db
+  :update-show-recent?
+  (fn-traced [db [_ show]]
+    (assoc db :show-recent? show)))
+
+
+(reg-event-db
+  :recent-items
+  (fn-traced [db [_ selected-page]]
+    (when (nil? ((set (:recent-items db)) selected-page))
+      (update db :recent-items conj selected-page))))
+
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item

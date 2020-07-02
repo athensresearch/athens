@@ -80,3 +80,15 @@
   :drag-bullet
   (fn-traced [db _]
              (:drag-bullet db)))
+
+
+(re-frame/reg-sub
+  :show-recent?
+  (fn-traced [db _]
+             (:show-recent? db)))
+
+
+(re-frame/reg-sub
+  :recent-items
+  (fn-traced [db _]
+             (:recent-items db)))

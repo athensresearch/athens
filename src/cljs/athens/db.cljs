@@ -211,6 +211,8 @@
                :loading            true
                :errors             {}
                :athena             false
+               :show-recent?       true
+               :recent-items       '()
                :devtool            false
                :left-sidebar       false
                :right-sidebar/open true

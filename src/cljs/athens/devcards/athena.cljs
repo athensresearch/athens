@@ -195,15 +195,19 @@
   [state]
   (fn [query]
     (if (clojure.string/blank? query)
-      (reset! state {:index 0
-                     :query nil
-                     :results []})
-      (reset! state {:index   0
-                     :query   query
-                     :results (->> (concat [(search-exact-node-title query)]
-                                           (take 20 (search-in-node-title query))
-                                           (take 20 (search-in-block-content query)))
-                                   vec)}))))
+      (do
+        (dispatch [:update-show-recent? true])
+        (reset! state {:index   0
+                       :query   nil
+                       :results []}))
+      (do
+        (dispatch [:update-show-recent? false])
+        (reset! state {:index   0
+                       :query   query
+                       :results (->> (concat [(search-exact-node-title query)]
+                                             (take 20 (search-in-node-title query))
+                                             (take 20 (search-in-block-content query)))
+                                     vec)})))))
 
 
 (defn key-down-handler
@@ -263,12 +267,29 @@
 
 (defn results-el
   []
-  [:div (use-style results-heading-style)
-   [:h5 "Results"]
-   [:span (use-style hint-style)
-    "Press "
-    [:kbd "shift + enter"]
-    " to open in right sidebar."]])
+  (let [show-recent? @(subscribe [:show-recent?])
+        recent-item-length 40
+        style-display {:style {:display (if show-recent? "block" "none")}}]
+    [:<> [:div (use-style results-heading-style)
+          [:h5 (if show-recent? "Recent" "Results")]
+          [:span (use-style hint-style)
+           "Press "
+           [:kbd "shift + enter"]
+           " to open in right sidebar."]]
+     [:div (merge (use-style results-list-style) style-display)
+      (doall
+        (for [[i x] (map-indexed (fn [x i] [x i]) (take recent-item-length @(subscribe [:recent-items])))]
+          (if (nil? x)
+            (let [query  (:query x)
+                  title  (:page-title x)
+                  uid    (:block-uid x)
+                  string (:block-string x)]
+              [:div (use-style result-style {:key      i
+                                             :on-click #(navigate-uid uid)})
+               [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
+               (when string
+                 [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
+               [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]]))))]]))
 
 
 (defn athena-component
@@ -293,8 +314,8 @@
              (doall
                (for [[i x] (map-indexed (fn [x i] [x i]) results)
                      :let [parent (:block/parent x)
-                           title  (or (:node/title parent) (:node/title x))
-                           uid    (or (:block/uid parent) (:block/uid x))
+                           title (or (:node/title parent) (:node/title x))
+                           uid (or (:block/uid parent) (:block/uid x))
                            string (:block/string x)]]
                  (if (nil? x)
                    ^{:key i}
@@ -303,12 +324,20 @@
                                                                 (dispatch [:toggle-athena])
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
-                                                  :class (when (= i index) "selected")})
+                                                  :class    (when (= i index) "selected")})
                     [:h4.title (use-sub-style result-style :title)
                      [:b "Create Page: "]
                      query]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
-                   [:div (use-style result-style {:key i :on-click #(navigate-uid uid) :class (when (= i index) "selected")})
+                   [:div (use-style result-style {:key      i
+                                                  :on-click (fn []
+                                                              (let [selected-page {:page-title   title
+                                                                                   :block-uid    uid
+                                                                                   :block-string string
+                                                                                   :query        query}]
+                                                                (dispatch [:recent-items selected-page])
+                                                                (navigate-uid uid)))
+                                                  :class    (when (= i index) "selected")})
                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                     (when string
                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
