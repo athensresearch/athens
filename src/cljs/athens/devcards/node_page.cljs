@@ -76,13 +76,13 @@
 
 (defn get-ref-ids
   [pattern]
-  (q '[:find [?e ...]
-       :in $ ?regex
-       :where
-       [?e :block/string ?s]
-       [(re-find ?regex ?s)]]
-     db/dsdb
-     pattern))
+  @(q '[:find [?e ...]
+        :in $ ?regex
+        :where
+        [?e :block/string ?s]
+        [(re-find ?regex ?s)]]
+      db/dsdb
+      pattern))
 
 
 (defn get-block
