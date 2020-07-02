@@ -13,6 +13,7 @@
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [pull]]
+    [reagent.core :as r]
     [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
@@ -208,108 +209,17 @@
                                 :display "block"}]]})
 
 
-(def dragging-style)
-  ;;{:background-color "lightblue"})
-
-
-
-;;; Components
-
-
-(declare block-component block-el toggle on-key-down db-on-change)
-
-
-(defn block-component
-  "This query is long because I'm not sure how to recursively find all child blocks with all attributes
-  '[* {:block/children [*]}] doesn't work
-Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
-no results for q returns nil
-no results for pull eid returns nil
-  "
-  [ident]
-  (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
-                   (db/sort-block))]
-    [block-el block]))
-
-
-;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
-(defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children] dbid :db/id}]
-  (let [open?       (and (seq children) open)
-        closed?     (and (seq children) (not open))
-        editing-uid @(subscribe [:editing-uid])
-        tooltip-uid @(subscribe [:tooltip-uid])
-        {:keys        [x y]
-         dragging-uid :uid
-         closest-uid  :closest/uid
-         closest-kind :closest/kind} @(subscribe [:drag-bullet])]
-
-    [:div (use-style (merge block-style
-                            (when (= dragging-uid uid) dragging-style))
-                     {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
-                      :data-uid uid})
-     [:div {:style {:display "flex"}}
-
-      ;; Toggle
-      (if (seq children)
-        [:button (use-style block-disclosure-toggle-style
-                            {:class (cond open? "open" closed? "closed")
-                             :on-click #(toggle [:block/uid uid] open)})
-         [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
-        [:span (use-style block-disclosure-toggle-style)])
-
-      ;; Bullet
-      (if (= dragging-uid uid)
-        [:span (merge (use-style block-indicator-style
-                                 {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
-                                  :data-uid uid})
-                      {:style {:transform (str "translate(" x "px, " y "px)")}})]
-
-        [:span (use-style block-indicator-style
-                          {:class    (str "bullet " (if closed? "closed" "open"))
-                           :data-uid uid
-                           :on-click #(navigate-uid uid)})])
-
-      ;; Tooltip
-      (when (and (= tooltip-uid uid)
-                 (not dragging-uid))
-        [:div (use-style tooltip-style {:class "tooltip"})
-         [:div [:b "db/id"] [:span dbid]]
-         [:div [:b "uid"] [:span uid]]
-         [:div [:b "order"] [:span order]]])
-
-      ;; Actual Contents
-      [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
-                       {:class    "block-contents"
-                        :data-uid uid})
-       [autosize/textarea {:default-value       string
-                           :class       (when (= editing-uid uid) "is-editing")
-                           :auto-focus  true
-                           :on-change   (fn [e] (db-on-change (.. e -target -value) uid))
-                           :on-key-down (fn [e] (on-key-down e uid))}]
-       [parse-and-render string]
-
-       ;; Drop Indicator
-       (when (and (= closest-uid uid)
-                  (= closest-kind :child))
-         [:span (use-style drop-area-indicator)])]]
-
-     ;; Children
-     (when open?
-       (for [child children]
-         [:div {:style {:margin-left "32px"} :key (:db/id child)}
-          [block-el child]]))
-
-     ;; Drop Indicator
-     (when (and (= closest-uid uid) (= closest-kind :sibling))
-       [:span (use-style drop-area-indicator)])]))
-
 ;; Helpers
 
+(defn fast-on-change
+  [value _uid state]
+  (swap! state assoc :string value))
+
+
 (defn on-change
-  [val uid]
-  (dispatch [:transact-event [[:db/add [:block/uid uid] :block/string val]]]))
+  [value uid state]
+  (dispatch [:transact-event [[:db/add [:block/uid uid] :block/string value]]])
+  (fast-on-change value uid state))
 
 
 (def db-on-change (debounce on-change 500))
@@ -321,7 +231,7 @@ no results for pull eid returns nil
 
 
 (defn on-key-down
-  [e uid]
+  [e uid state]
   (let [key       (.. e -keyCode)
         shift     (.. e -shiftKey)
         val       (.. e -target -value)
@@ -331,6 +241,100 @@ no results for pull eid returns nil
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (dispatch [:enter uid val sel-start])
       (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
+
+
+;;; Components
+
+
+;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
+(defn block-el
+  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  [block]
+  (let [state (r/atom {:string (:block/string block)})]
+    (fn [block]
+      (let [{:block/keys [uid string open order children] dbid :db/id} block
+            open?       (and (seq children) open)
+            closed?     (and (seq children) (not open))
+            editing-uid @(subscribe [:editing-uid])
+            tooltip-uid @(subscribe [:tooltip-uid])
+            {:keys        [x y]
+             dragging-uid :uid
+             closest-uid  :closest/uid
+             closest-kind :closest/kind} @(subscribe [:drag-bullet])]
+
+        [:div (use-style block-style
+                {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
+                 :data-uid uid})
+         [:div {:style {:display "flex"}}
+
+          ;; Toggle
+          (if (seq children)
+            [:button (use-style block-disclosure-toggle-style
+                       {:class    (cond open? "open" closed? "closed")
+                        :on-click #(toggle [:block/uid uid] open)})
+             [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+            [:span (use-style block-disclosure-toggle-style)])
+
+          ;; Bullet
+          (if (= dragging-uid uid)
+            [:span (merge (use-style block-indicator-style
+                            {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                             :data-uid uid})
+                     {:style {:transform (str "translate(" x "px, " y "px)")}})]
+
+            [:span (use-style block-indicator-style
+                     {:class    (str "bullet " (if closed? "closed" "open"))
+                      :data-uid uid
+                      :on-click #(navigate-uid uid)})])
+
+          ;; Tooltip
+          (when (and (= tooltip-uid uid) (not dragging-uid))
+            [:div (use-style tooltip-style {:class "tooltip"})
+             [:div [:b "db/id"] [:span dbid]]
+             [:div [:b "uid"] [:span uid]]
+             [:div [:b "order"] [:span order]]])
+
+          ;; Actual Contents
+          [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
+                  {:class    "block-contents"
+                   :data-uid uid})
+           [autosize/textarea {:value       (:string @state)
+                               :class       (when (= editing-uid uid) "is-editing")
+                               :auto-focus  true
+                               :on-change   (fn [e] (let [value (.. e -target -value)]
+                                                      (fast-on-change value uid state)
+                                                      (db-on-change value uid state)))
+                               :on-key-down (fn [e] (on-key-down e uid state))}]
+           [parse-and-render string]
+
+           ;; Drop Indicator
+           (when (and (= closest-uid uid) (= closest-kind :child))
+             [:span (use-style drop-area-indicator)])]]
+
+         ;; Children
+         (when open?
+           (for [child children]
+             [:div {:style {:margin-left "32px"} :key (:db/id child)}
+              [block-el child]]))
+
+         ;; Drop Indicator
+         (when (and (= closest-uid uid) (= closest-kind :sibling))
+           [:span (use-style drop-area-indicator)])]))))
+
+
+
+(defn block-component
+  "This query is long because I'm not sure how to recursively find all child blocks with all attributes
+  '[* {:block/children [*]}] doesn't work
+Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
+no results for q returns nil
+no results for pull eid returns nil
+  "
+  [ident]
+  (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
+                (db/sort-block))]
+    [block-el block]))
+
 
 
 ;;; Devcards
