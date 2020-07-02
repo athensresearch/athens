@@ -9,9 +9,10 @@
     [clojure.string :as string]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
+    [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [pull q]]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -59,6 +60,17 @@
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
+;;; Helpers
+
+
+(defn handler
+  [val uid]
+  (dispatch [:transact-event [[:db/add [:block/uid uid] :node/title val]]]))
+
+
+(def db-handler (debounce handler 500))
+
+
 ;;; Components
 
 
@@ -69,11 +81,10 @@
    ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "page-header"})
     [autosize/textarea
-     {:value      title
-      :class       (when (= editing-uid uid) "is-editing")
+     {:default-value title
+      :class      (when (= editing-uid uid) "is-editing")
       :auto-focus true
-      :on-change  (fn [e]
-                    [:transact-event [[:db/add [:block/uid uid] :node/title (.. e -target -value)]]])}]
+      :on-change  (fn [e] (db-handler (.. e -target -value) uid))}]
     [:span title]]
 
    [:div
