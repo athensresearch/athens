@@ -1,7 +1,8 @@
 (ns athens.devcards.block-page
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.blocks :refer [block-el db-on-change]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [cljsjs.react]
@@ -9,8 +10,9 @@
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [transact! pull]]
+    [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -61,28 +63,29 @@
 ;;; Components
 
 
-;; TODO: replace " > " with an icon. Get a TypeError when doing this, though. Maybe same problem as "->" issue in Athena results
 (defn block-page-el
   [{:block/keys [string children uid]} parents editing-uid]
 
   [:div
    ;; Parent Context
    [:span {:style {:color "gray"}}
-    (interpose
-      " > "
-      (for [p parents]
-        (let [{:keys [node/title block/uid block/string]} p]
-          [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])))]
+
+    (->> (for [{:keys [node/title block/uid block/string]} parents]
+           [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
+         (interpose ">")
+         (map (fn [x]
+                (if (= x ">")
+                  [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
+                  x))))]
 
 
-   ;; Header
+;; Header
    [:h1 (use-style title-style {:data-uid uid :class "block-header"})
     [autosize/textarea
-     {:value      string
-      :class       (when (= editing-uid uid) "is-editing")
+     {:default-value string
+      :class (when (= editing-uid uid) "is-editing")
       :auto-focus true
-      :on-change  (fn [e]
-                    (transact! db/dsdb [[:db/add [:block/uid uid] :block/string (.. e -target -value)]]))}]
+      :on-change  (fn [e] (db-on-change (.. e -target -value) uid))}]
     [:span string]]
 
 
@@ -98,7 +101,6 @@
         parents (->> @(pull db/dsdb db/parents-pull-pattern ident)
                      (db/shape-parent-query))
         editing-uid @(subscribe [:editing-uid])]
-    ;;(prn block parents)
     [block-page-el block parents editing-uid]))
 
 
