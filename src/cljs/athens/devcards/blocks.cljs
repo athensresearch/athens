@@ -10,6 +10,7 @@
     [clojure.string :refer [join]]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
+    [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [pull]]
     [re-frame.core  :refer [dispatch subscribe]]
@@ -215,7 +216,7 @@
 ;;; Components
 
 
-(declare block-component block-el toggle on-key-down)
+(declare block-component block-el toggle on-key-down db-on-change)
 
 
 (defn block-component
@@ -282,12 +283,10 @@ no results for pull eid returns nil
       [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
                        {:class    "block-contents"
                         :data-uid uid})
-       [autosize/textarea {:value       string
+       [autosize/textarea {:default-value       string
                            :class       (when (= editing-uid uid) "is-editing")
                            :auto-focus  true
-                           :on-change   (fn [e]
-                                          (prn "CHANGE" (.. e -target-value)))
-                           ;;(debounce (.. e -target-value)))
+                           :on-change   (fn [e] (db-on-change (.. e -target -value) uid))
                            :on-key-down (fn [e] (on-key-down e uid))}]
        [parse-and-render string]
 
@@ -308,9 +307,12 @@ no results for pull eid returns nil
 
 ;; Helpers
 
-;;(defn on-change
-;;  [v]
-;;  (dispatch [:transact-event [[:db/add [:block/uid "VQ-ybRmNh"] :block/string v]]]))
+(defn on-change
+  [val uid]
+  (dispatch [:transact-event [[:db/add uid :block/string val]]]))
+
+
+(def db-on-change (debounce on-change 500))
 
 
 (defn toggle
