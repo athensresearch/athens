@@ -3,13 +3,13 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.devcards.buttons :refer [button]]
+    [athens.devcards.filters :refer [filters-el]]
     [athens.devcards.textinput :refer [textinput]]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
-    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -27,7 +27,6 @@
    :border-radius "6px"
    :min-height "2em"
    :min-width "2em"
-   :animation "dropdown-appear 1s ease"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -38,18 +37,20 @@
    :min-width "9em"
    :align-items "stretch"
    :grid-auto-flow "row"
+   :overflow "auto"
    ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "4px"}]
                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "4px"}]]})
 
 
 (def menu-item-style
-  {:min-height "32px"})
+  {:min-height "32px"
+   ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]})
 
 
 (def menu-heading-style
   {:min-height "32px"
    :text-align "center"
-   :padding "4px 8px"
+   :padding "6px 8px"
    :display "flex"
    :align-content "flex-end"
    :justify-content "center"
@@ -94,17 +95,15 @@
 
 
 (defn dropdown
-  []
-  (let [this (r/current-component)]
-    (into [:div (use-style dropdown-style) (r/props this)]
-          (r/children this))))
+  [{:keys [style content]}]
+  [:div (use-style (merge dropdown-style style))
+   content])
 
 
 (defn menu
-  []
-  (let [this (r/current-component)]
-    (into [:div (use-style menu-style) (r/props this)]
-          (r/children this))))
+  [{:keys [style content]}]
+  [:div (use-style (merge menu-style style))
+   content])
 
 
 (defn menu-separator
@@ -113,8 +112,8 @@
 
 
 (defn menu-item
-  [{:keys [disabled label]}]
-  [button {:label label :disabled disabled :style menu-item-style}])
+  [{:keys [disabled label style]}]
+  [button {:label label :disabled disabled :style (merge menu-item-style style)}])
 
 
 (defn kbd
@@ -135,51 +134,67 @@
 ;;; Devcards
 
 
-(defcard-rg Default
-  [dropdown
-   [:p "Default dropdown with a paragraph element inside."]])
+
+(defcard-rg Slash-Menu
+  [dropdown {:content
+             [:<>
+              [textinput {:placeholder "Type to filter commands"}]
+              [menu {:style {:max-height "8em"} :content
+                     [:<>
+                      [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
+                      [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
+                      [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
+                      [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
+                      [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
+                      [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
+                      [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
+                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]]}])
 
 
-(defcard-rg With-Menu
-  [dropdown
-   [menu
-    [menu-item {:label "Label"}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"]]}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "With Keyboard Hint"] [kbd "shift-click"]]}]]])
+(defcard-rg Block-Dropdown-Menu
+  [dropdown {:content
+             [menu {:content
+                    [:<>
+                    ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
+                    ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
+                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]}]
+                     [menu-separator]
+                     [menu-item {:label [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [kbd "shift-click"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [kbd "ctrl-o"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Slideshow] [:span "View As"]  [submenu-indicator]]}]
+                     [menu-separator]
+                     [menu-item {:label [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/History] [:span "Browse Versions"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]}]]}]}])
 
 
-(defcard-rg With-Input
-  [dropdown
-   [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]])
+(def items
+  {"Amet"   {:count 6 :state :added}
+   "At"     {:count 130 :state :excluded}
+   "Diam"   {:count 6}
+   "Donec"  {:count 6}
+   "Elit"   {:count 30}
+   "Elitudomin mesucen defibocutruon"  {:count 1}
+   "Erat"   {:count 11}
+   "Est"    {:count 2}
+   "Eu"     {:count 2}
+   "Ipsum"  {:count 2 :state :excluded}
+   "Magnis" {:count 10 :state :added}
+   "Metus"  {:count 29}
+   "Mi"     {:count 7 :state :added}
+   "Quam"   {:count 1}
+   "Turpis" {:count 97}
+   "Vitae"  {:count 1}})
 
 
-(defcard-rg With-Input-And-Menu
-  [dropdown
-   [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
-   [menu
-    [menu-item {:label "Label"}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"]]}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "With Keyboard Hint"] [kbd "shift-click"]]}]]])
-
-
-(defcard-rg With-Heading-Input-And-Menu
-  [dropdown
-   [menu
-    [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
-    [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
-    [menu-item {:label "Label"}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"]]}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "With Keyboard Hint"] [kbd "shift-click"]]}]]])
-
-
-(defcard-rg With-Heading-Input-And-Menu-and-Separator
-  [dropdown
-   [menu
-    [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
-    [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
-    [menu-item {:label "Label"}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"]]}]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"] [submenu-indicator]]}]
-    [menu-separator]
-    [menu-item {:label [:<> [:> mui-icons/Face] [:span "With Keyboard Hint"] [kbd "shift-click"]]}]]])
+(defcard-rg With-Filters-and-custom-style-accommodations
+  [dropdown {:style {:width "20em" :height "20em"}
+             :content [:<>
+                       [menu-heading "Filters"]
+                       [filters-el "((some-uid))" items]]}])
 
