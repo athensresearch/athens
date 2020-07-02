@@ -69,15 +69,6 @@
    :margin "4px 0"})
 
 
-(def input-style
-  {:background (color :panel-color :opacity-low)
-   :min-height "24px"
-   :border-radius "4px"
-   :padding "4px 8px"
-   :margin-bottom "4px"
-   :border "none"})
-
-
 (def kbd-style
   {:margin-left "auto"
    :opacity "0.5"
