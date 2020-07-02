@@ -1,22 +1,22 @@
 (ns athens.devcards.dropdown
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.db]
-   [athens.devcards.buttons :refer [button]]
-   [athens.devcards.textinput :refer [textinput]]
-   [athens.style :refer [color DEPTH-SHADOWS]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [devcards.core :refer-macros [defcard-rg]]
-   [garden.selectors :as selectors]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.db]
+    [athens.devcards.buttons :refer [button]]
+    [athens.devcards.textinput :refer [textinput]]
+    [athens.style :refer [color DEPTH-SHADOWS]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [devcards.core :refer-macros [defcard-rg]]
+    [garden.selectors :as selectors]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
 
 
-(stylefy/keyframes "dropdown-appear" 
+(stylefy/keyframes "dropdown-appear"
                    [:from {:opacity 0}]
                    [:to {:opacity 1}])
 
@@ -69,50 +69,55 @@
    :margin "4px 0"})
 
 
-(def input-style {:background (color :panel-color :opacity-low)
-                  :min-height "24px"
-                  :border-radius "4px"
-                  :padding "4px 8px"
-                  :margin-bottom "4px"
-                  :border "none"})
+(def input-style
+  {:background (color :panel-color :opacity-low)
+   :min-height "24px"
+   :border-radius "4px"
+   :padding "4px 8px"
+   :margin-bottom "4px"
+   :border "none"})
 
 
-(def kbd-style {:margin-left "auto"
-                :opacity "0.5"
-                :display "inline-flex"
-                :place-content "center"
-                :padding "0 16px"
-                :font-family "inherit"
-                :font-size "0.6em"
-                ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
+(def kbd-style
+  {:margin-left "auto"
+   :opacity "0.5"
+   :display "inline-flex"
+   :place-content "center"
+   :padding "0 16px"
+   :font-family "inherit"
+   :font-size "0.6em"
+   ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
-
-(def submenu-indicator-style {:margin-left "auto"
-                              :opacity "0.5"
-                              :display "flex"
-                              :order 10
-                              :align-self "flex-end"
-                              :font-family "inherit"
-                              ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
+(def submenu-indicator-style
+  {:margin-left "auto"
+   :opacity "0.5"
+   :display "flex"
+   :order 10
+   :align-self "flex-end"
+   :font-family "inherit"
+   ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
 ;;; Components
 
 
-(defn dropdown []
+(defn dropdown
+  []
   (let [this (r/current-component)]
     (into [:div (use-style dropdown-style) (r/props this)]
           (r/children this))))
 
 
-(defn menu []
+(defn menu
+  []
   (let [this (r/current-component)]
     (into [:div (use-style menu-style) (r/props this)]
           (r/children this))))
 
 
-(defn menu-separator []
+(defn menu-separator
+  []
   [:hr (use-style menu-separator-style)])
 
 
@@ -139,14 +144,16 @@
 ;;; Devcards
 
 
-(defn menu-1 []
+(defn menu-1
+  []
   [:div (use-style menu-style)
    [menu-item {:label "label-only"}]
    [menu-item {:label [:<> [:> mui-icons/Face] [:span "label and icon"]]}]
    [menu-item {:label [:<> [:> mui-icons/Face] [:span "label and icon"] [kbd "shift-click"]]}]])
 
 
-(defn menu-with-input []
+(defn menu-with-input
+  []
   [:div (use-style menu-style)
    [textinput {:placeholder "Type to search"}]
    [menu-item {:label "Label"}]
