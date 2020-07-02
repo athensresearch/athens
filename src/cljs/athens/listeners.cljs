@@ -108,7 +108,7 @@
 
 (defn mouse-down-outside-athena
   [e]
-  (let [athena? @(subscribe [:athena])
+  (let [athena? @(subscribe [:athena/open])
         closest (.. e -target (closest ".athena"))]
     (when (and athena? (nil? closest))
       (dispatch [:toggle-athena]))))

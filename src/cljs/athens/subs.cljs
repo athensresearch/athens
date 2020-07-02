@@ -29,9 +29,9 @@
 
 
 (re-frame/reg-sub
-  :athena
+  :athena/open
   (fn-traced [db _]
-             (:athena db)))
+             (:athena/open db)))
 
 
 (re-frame/reg-sub
@@ -83,12 +83,6 @@
 
 
 (re-frame/reg-sub
-  :show-recent?
+  :athena/get-recent
   (fn-traced [db _]
-             (:show-recent? db)))
-
-
-(re-frame/reg-sub
-  :recent-items
-  (fn-traced [db _]
-             (:recent-items db)))
+             (:athena/get-recent db)))

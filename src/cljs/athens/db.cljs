@@ -210,9 +210,8 @@
                :current-route      nil
                :loading            true
                :errors             {}
-               :athena             false
-               :show-recent?       true
-               :recent-items       '()
+               :athena/open        false
+               :athena/get-recent  '()
                :devtool            false
                :left-sidebar       false
                :right-sidebar/open true
