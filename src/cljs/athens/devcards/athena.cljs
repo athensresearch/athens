@@ -278,8 +278,8 @@
            " to open in right sidebar."]]
      [:div (merge (use-style results-list-style) style-display)
       (doall
-        (for [[i x] (map-indexed (fn [x i] [x i]) (take recent-item-length @(subscribe [:recent-items])))]
-          (if (nil? x)
+        (for [[i x] (map-indexed list (take recent-item-length @(subscribe [:recent-items])))]
+          (when x
             (let [query  (:query x)
                   title  (:page-title x)
                   uid    (:block-uid x)
@@ -314,8 +314,8 @@
              (doall
                (for [[i x] (map-indexed (fn [x i] [x i]) results)
                      :let [parent (:block/parent x)
-                           title (or (:node/title parent) (:node/title x))
-                           uid (or (:block/uid parent) (:block/uid x))
+                           title  (or (:node/title parent) (:node/title x))
+                           uid    (or (:block/uid parent) (:block/uid x))
                            string (:block/string x)]]
                  (if (nil? x)
                    ^{:key i}
@@ -324,7 +324,7 @@
                                                                 (dispatch [:toggle-athena])
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
-                                                  :class    (when (= i index) "selected")})
+                                                  :class (when (= i index) "selected")})
                     [:h4.title (use-sub-style result-style :title)
                      [:b "Create Page: "]
                      query]
