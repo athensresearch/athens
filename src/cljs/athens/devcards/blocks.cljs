@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.devcards.dropdown :refer [slash-menu-component context-menu-component]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
@@ -13,8 +14,8 @@
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [pull]]
-    [reagent.core :as r]
     [re-frame.core  :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
@@ -213,7 +214,7 @@
 
 (defn fast-on-change
   [value _uid state]
-  (swap! state assoc :string value))
+  (swap! state assoc :atom-string value))
 
 
 (defn on-change
@@ -237,9 +238,11 @@
         val       (.. e -target -value)
         sel-start (.. e -target -selectionStart)]
     (cond
-      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
+      (and shift (= key KeyCodes.TAB)) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
+      (and shift (= key KeyCodes.ENTER)) (prn "start new line in textarea")
       (= key KeyCodes.ENTER) (dispatch [:enter uid val sel-start])
+      (= key KeyCodes.SLASH) (swap! state update :slash? not)
       (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
 
 
@@ -250,7 +253,9 @@
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:string (:block/string block)})]
+  (let [state (r/atom {:atom-string (:block/string block)
+                       :slash? false
+                       :context-menu? false})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
             open?       (and (seq children) open)
@@ -260,32 +265,36 @@
             {:keys        [x y]
              dragging-uid :uid
              closest-uid  :closest/uid
-             closest-kind :closest/kind} @(subscribe [:drag-bullet])]
+             closest-kind :closest/kind} @(subscribe [:drag-bullet])
+            {:keys [atom-string slash? context-menu?]} @state]
 
         [:div (use-style block-style
-                {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
-                 :data-uid uid})
+                         {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
+                          :data-uid uid})
          [:div {:style {:display "flex"}}
 
           ;; Toggle
           (if (seq children)
             [:button (use-style block-disclosure-toggle-style
-                       {:class    (cond open? "open" closed? "closed")
-                        :on-click #(toggle [:block/uid uid] open)})
+                                {:class    (cond open? "open" closed? "closed")
+                                 :on-click #(toggle [:block/uid uid] open)})
              [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
             [:span (use-style block-disclosure-toggle-style)])
 
           ;; Bullet
           (if (= dragging-uid uid)
             [:span (merge (use-style block-indicator-style
-                            {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
-                             :data-uid uid})
-                     {:style {:transform (str "translate(" x "px, " y "px)")}})]
+                                     {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                                      :data-uid uid})
+                          {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
             [:span (use-style block-indicator-style
-                     {:class    (str "bullet " (if closed? "closed" "open"))
-                      :data-uid uid
-                      :on-click #(navigate-uid uid)})])
+                              {:class    (str "bullet " (if closed? "closed" "open"))
+                               :data-uid uid
+                               :on-click #(navigate-uid uid)
+                               :on-context-menu (fn [e]
+                                                  (.. e preventDefault)
+                                                  (swap! state update :context-menu? not))})])
 
           ;; Tooltip
           (when (and (= tooltip-uid uid) (not dragging-uid))
@@ -294,16 +303,21 @@
              [:div [:b "uid"] [:span uid]]
              [:div [:b "order"] [:span order]]])
 
+          ;; Context Menu
+          (when context-menu?
+            [context-menu-component])
+
           ;; Actual Contents
           [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
-                  {:class    "block-contents"
-                   :data-uid uid})
-           [autosize/textarea {:value       (:string @state)
+                           {:class    "block-contents"
+                            :data-uid uid})
+           [autosize/textarea {:value       atom-string
                                :class       (when (= editing-uid uid) "is-editing")
                                :auto-focus  true
-                               :on-change   (fn [e] (let [value (.. e -target -value)]
-                                                      (fast-on-change value uid state)
-                                                      (db-on-change value uid state)))
+                               :on-change   (fn [e]
+                                              (let [value (.. e -target -value)]
+                                                (fast-on-change value uid state)
+                                                (db-on-change value uid state)))
                                :on-key-down (fn [e] (on-key-down e uid state))}]
            [parse-and-render string]
 
@@ -319,8 +333,10 @@
 
          ;; Drop Indicator
          (when (and (= closest-uid uid) (= closest-kind :sibling))
-           [:span (use-style drop-area-indicator)])]))))
+           [:span (use-style drop-area-indicator)])
 
+         (when slash?
+           [slash-menu-component])]))))
 
 
 (defn block-component
@@ -332,9 +348,8 @@ no results for pull eid returns nil
   "
   [ident]
   (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
-                (db/sort-block))]
+                   (db/sort-block))]
     [block-el block]))
-
 
 
 ;;; Devcards
