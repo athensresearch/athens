@@ -18,15 +18,10 @@
 (def container-style
   {:flex-basis "30em"
    :display "flex"
+   :overflow "auto"
    :flex-direction "column"})
 
-;; TODO: move to new Popover component as Title prop
-(def title-style
-  {:text-align "center"
-   :opacity (:opacity-high OPACITIES)})
 
-
-;; TODO: Replace with styled Input component
 (def search-style
   {:align-self "stretch"
    :display "flex"})
@@ -40,7 +35,7 @@
    :align-items "center"
    :text-align "right"
    :border-bottom (str "1px solid " (color :panel-color))
-   :margin "4px 0"
+   :margin "4px 0 0"
    :padding-bottom "4px"
    :justify-content "space-between"
    :font-weight "500"
@@ -69,6 +64,7 @@
    :display "flex"
    :flex "1 1 100%"
    :overflow-y "auto"
+   :padding "4px 0 0"
    :flex-direction "column"})
 
 
@@ -187,7 +183,6 @@
                                 items))]
 
         [:div (use-style container-style)
-         [:h5 (use-style title-style) "Filter"]
 
          ;; Search
          [textinput (use-style search-style
