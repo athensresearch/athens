@@ -135,23 +135,6 @@
 ;;; Devcards
 
 
-(defn menu-1
-  []
-  [:div (use-style menu-style)
-   [menu-item {:label "label-only"}]
-   [menu-item {:label [:<> [:> mui-icons/Face] [:span "label and icon"]]}]
-   [menu-item {:label [:<> [:> mui-icons/Face] [:span "label and icon"] [kbd "shift-click"]]}]])
-
-
-(defn menu-with-input
-  []
-  [:div (use-style menu-style)
-   [textinput {:placeholder "Type to search"}]
-   [menu-item {:label "Label"}]
-   [menu-item {:label [:<> [:> mui-icons/Face] [:span "Label and Icon"]]}]
-   [menu-item {:label [:<> [:> mui-icons/Face] [:span "With Keyboard Hint"] [kbd "shift-click"]]}]])
-
-
 (defcard-rg Default
   [dropdown
    [:p "Default dropdown with a paragraph element inside."]])
