@@ -102,16 +102,15 @@
   "Find path from nested block to origin node.
   Don't totally understand why query returns {:db/id nil} if no results. Returns nil when making q queries"
   [pull-results]
-  (when (:db/id pull-results)
-    (->> (loop [b   pull-results
-                res []]
-           (if (:node/title b)
-             (conj res b)
-             (recur (first (:block/_children b))
-                    (conj res (dissoc b :block/_children)))))
-         (rest)
-         (reverse)
-         (into []))))
+  (->> (loop [b   pull-results
+              res []]
+         (if (:node/title b)
+           (conj res b)
+           (recur (first (:block/_children b))
+             (conj res (dissoc b :block/_children)))))
+    (rest)
+    (reverse)
+    vec))
 
 ;; all blocks (except for block refs) want to get all children
 (def block-pull-pattern
@@ -141,18 +140,6 @@
     [?e :page/sidebar ?order]
     [?e :node/title ?title]
     [?e :block/uid ?uid]])
-
-
-(defn get-children
-  [conn entids]
-  @(pull-many conn block-pull-pattern entids))
-
-
-(defn get-parents
-  [conn entids]
-  (->> @(pull-many conn parents-pull-pattern entids)
-       (map shape-parent-query)
-       (into [])))
 
 
 ;;; posh

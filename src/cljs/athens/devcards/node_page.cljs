@@ -1,17 +1,21 @@
 (ns athens.devcards.node-page
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.blocks :as blocks]
+    [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
+    [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull q]]
+    [posh.reagent :refer [pull pull-many q]]
+    [reagent.core :as r]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -71,11 +75,62 @@
 (def db-handler (debounce handler 500))
 
 
+(defn get-ref-ids
+  [pattern]
+  (d/q '[:find [?e ...]
+         :in $ ?regex
+         :where
+         [?e :block/string ?s]
+         [(re-find ?regex ?s)]]
+    @db/dsdb
+    pattern))
+
+
+(defn get-block
+  [id]
+  @(pull db/dsdb db/block-pull-pattern id))
+
+
+(defn get-parents
+  [id]
+  (->> @(pull db/dsdb db/parents-pull-pattern id)
+    db/shape-parent-query))
+
+
+(defn merge-parents-and-block
+  [ref-ids]
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents v)))
+                           {}
+                           ref-ids)
+        blocks (map (fn [id] (get-block id)) ref-ids)]
+    (mapv
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
+
+
+(defn group-by-parent
+  [blocks]
+  (group-by (fn [x]
+              (-> x
+                :block/parents
+                first
+                :node/title))
+    blocks))
+
+
+(defn get-data
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+
+
 ;;; Components
 
 
+;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid linked-refs unlinked-refs]
+  [{:block/keys [children uid] title :node/title} editing-uid ref-groups]
+
   [:div
 
    ;; Header
@@ -87,18 +142,38 @@
       :on-change  (fn [e] (db-handler (.. e -target -value) uid))}]
     [:span title]]
 
+   ;; Children
    [:div
-    (for [child children]
-      ^{:key (:db/id child)} [blocks/block-el child])]
-   ;; TODO references
-   [:div
-    [:h4 "Linked References"]
-    (for [ref linked-refs]
-      ^{:key ref} [:p ref])]
-   [:div
-    [:h4 "Unlinked References"]
-    (for [ref unlinked-refs]
-      ^{:key ref} [:p ref])]])
+    (for [{:block/keys [uid] :as child} children]
+      ^{:key uid}
+      [block-el child])]
+
+   ;; References
+   (for [[linked-or-unlinked refs] ref-groups]
+     [:div {:key linked-or-unlinked}
+      [:div (use-style {:display         "flex"
+                        :justify-content "space-between"
+                        :align-items "center"})
+       [:h3 linked-or-unlinked]
+       [:span
+        [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                 :disabled true}]]]
+      (doall
+        (for [[group-title group] refs]
+          [:<> {:key group-title}
+           [:h4 group-title]
+           (for [{:block/keys [uid parents] :as block} group]
+             [:div {:key uid}
+              ;; TODO: replace with breadcrumbs?
+              ;; TODO: expand parent on click
+              (->> (for [{:keys [node/title block/string block/uid]} parents]
+                      [:span (use-style {:color "gray"} {:key uid}) (or title string)])
+                (interpose ">")
+                (map (fn [x]
+                       (if (= x ">")
+                         [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
+                         x))))
+              [block-el block]])]))])])
 
 
 (defn node-page-component
@@ -109,9 +184,12 @@
         title (:node/title node)
         editing-uid @(subscribe [:editing-uid])]
     (when-not (string/blank? title)
-      (let [linked-ref-entids     @(q db/q-refs db/dsdb (patterns/linked title))
-            unlinked-ref-entids   @(q db/q-refs db/dsdb (patterns/unlinked title))]
-        [node-page-el node editing-uid linked-ref-entids unlinked-ref-entids]))))
+      ;; TODO: turn ref-groups into an atom, let users toggle open/close
+      (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
+                        ["Unlinked References" (-> title patterns/unlinked get-data)]]]
+        [node-page-el node editing-uid ref-groups]))))
+
+
 
 
 ;;; Devcards
