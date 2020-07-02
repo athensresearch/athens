@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.devcards.buttons :refer [button]]
-    [athens.devcards.filters :refer [filters-el]]
+    [athens.devcards.filters :refer [filters-el items]]
     [athens.devcards.textinput :refer [textinput]]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [cljsjs.react]
@@ -131,11 +131,8 @@
   [:header (use-style menu-heading-style) [:span heading]])
 
 
-;;; Devcards
-
-
-
-(defcard-rg Slash-Menu
+(defn slash-menu-component
+  []
   [dropdown {:content
              [:<>
               [textinput {:placeholder "Type to filter commands"}]
@@ -151,12 +148,13 @@
                       [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]]}])
 
 
-(defcard-rg Block-Dropdown-Menu
+(defn context-menu-component
+  []
   [dropdown {:content
              [menu {:content
                     [:<>
-                    ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
-                    ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
+                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
+                     ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
                      [menu-item {:label [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]}]
@@ -165,31 +163,29 @@
                      [menu-item {:label [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [kbd "ctrl-o"]]}]
                      [menu-item {:label [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]}]
                      [menu-item {:label [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Slideshow] [:span "View As"]  [submenu-indicator]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]}]
                      [menu-separator]
                      [menu-item {:label [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]}]
                      [menu-item {:label [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]}]
                      [menu-item {:label [:<> [:> mui-icons/History] [:span "Browse Versions"]]}]
                      [menu-item {:label [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]}]]}]}])
 
+;;; Devcards
 
-(def items
-  {"Amet"   {:count 6 :state :added}
-   "At"     {:count 130 :state :excluded}
-   "Diam"   {:count 6}
-   "Donec"  {:count 6}
-   "Elit"   {:count 30}
-   "Elitudomin mesucen defibocutruon"  {:count 1}
-   "Erat"   {:count 11}
-   "Est"    {:count 2}
-   "Eu"     {:count 2}
-   "Ipsum"  {:count 2 :state :excluded}
-   "Magnis" {:count 10 :state :added}
-   "Metus"  {:count 29}
-   "Mi"     {:count 7 :state :added}
-   "Quam"   {:count 1}
-   "Turpis" {:count 97}
-   "Vitae"  {:count 1}})
+
+
+(defcard-rg Slash-Menu
+  "Should we have separate files for the components that are created from `athens.devcards.dropdown` primitives?
+
+  [localhost](/cards.html#!/athens.devcards.slash_menu)
+
+  [github.io/athens](/athens/cards.html#!/athens.devcards.slash_menu)"
+
+  [slash-menu-component])
+
+
+(defcard-rg Context-Menu
+  [context-menu-component])
 
 
 (defcard-rg With-Filters-and-custom-style-accommodations
@@ -197,4 +193,3 @@
              :content [:<>
                        [menu-heading "Filters"]
                        [filters-el "((some-uid))" items]]}])
-
