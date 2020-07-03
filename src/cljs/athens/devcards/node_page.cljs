@@ -195,29 +195,29 @@
       [block-el child])]
 
    ;; References
-   (for [[linked-or-unlinked refs] ref-groups]
-     (when (> (count refs) 0)
-       [:section (use-style references-style {:key linked-or-unlinked})
-        [:h4 (use-style references-heading-style)
-         [(r/adapt-react-class mui-icons/Link)]
-         [:span linked-or-unlinked]
-         [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
-                  :disabled true}]]
-        [:div (use-style references-list-style)
-         (doall
-           (for [[group-title group] refs]
-             [:div (use-style references-group-style {:key group-title})
-              [:h4 (use-style references-group-title-style)
-               [:a {:on-click #(navigate-uid uid)} group-title]]
-              (for [{:block/keys [uid parents] :as block} group]
-                [:div (use-style references-group-block-style {:key uid})
+   (doall
+    (for [[linked-or-unlinked refs] ref-groups]
+      (when (not-empty refs)
+        [:section (use-style references-style {:key linked-or-unlinked})
+         [:h4 (use-style references-heading-style)
+          [(r/adapt-react-class mui-icons/Link)]
+          [:span linked-or-unlinked]
+          [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                   :disabled true}]]
+         [:div (use-style references-list-style)
+          (for [[group-title group] refs]
+            [:div (use-style references-group-style {:key group-title})
+             [:h4 (use-style references-group-title-style)
+              [:a {:on-click #(navigate-uid uid)} group-title]]
+             (for [{:block/keys [uid parents] :as block} group]
+               [:div (use-style references-group-block-style {:key uid})
               ;; TODO: expand parent on click
-                 [block-el block]
-                 (when (> (count parents) 1)
-                   [breadcrumbs-list {:style reference-breadcrumbs-style}
-                    [(r/adapt-react-class mui-icons/LocationOn)]
-                    (for [{:keys [node/title block/string block/uid]} parents]
-                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]]))])
+                [block-el block]
+                (when (> (count parents) 1)
+                  [breadcrumbs-list {:style reference-breadcrumbs-style}
+                   [(r/adapt-react-class mui-icons/LocationOn)]
+                   (for [{:keys [node/title block/string block/uid]} parents]
+                     [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])])]])))])
 
 
 (defn node-page-component
