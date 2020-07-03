@@ -3,6 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el db-on-change]]
+    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [cljsjs.react]
@@ -66,17 +67,11 @@
 (defn block-page-el
   [{:block/keys [string children uid]} parents editing-uid]
 
-  [:div
+  [:article
    ;; Parent Context
-   [:span {:style {:color "gray"}}
-
+   [breadcrumbs-list    
     (->> (for [{:keys [node/title block/uid block/string]} parents]
-           [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
-         (interpose ">")
-         (map (fn [x]
-                (if (= x ">")
-                  [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                  x))))]
+           [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or string title)]))]
 
 
 ;; Header
