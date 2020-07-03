@@ -120,7 +120,12 @@
    :font-size "15px"
    :position "relative"
    :z-index "1"
-   :width sidebar-width})
+   :width sidebar-width
+   ::stylefy/manual [[[:h1 {:font-size "calc(1em * 1.15 * 1.15 * 1.15 * 1.15)"}]
+                      [:h2 {:font-size "calc(1em * 1.15 * 1.15 * 1.15)"}]
+                      [:h3 {:font-size "calc(1em * 1.15 * 1.15)"}]
+                      [:h4 {:font-size "calc(1em * 1.15)"}]
+                      [:h5 {:font-size "calc(1em / 1.15)"}]]]})
 
 
 (def sidebar-item-heading-style
