@@ -3,6 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
     [athens.style :refer [color]]
@@ -165,13 +166,9 @@
              [:div {:key uid}
               ;; TODO: replace with breadcrumbs?
               ;; TODO: expand parent on click
-              (->> (for [{:keys [node/title block/string block/uid]} parents]
-                     [:span (use-style {:color "gray"} {:key uid}) (or title string)])
-                   (interpose ">")
-                   (map (fn [x]
-                          (if (= x ">")
-                            [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                            x))))
+              [breadcrumbs-list {:style {:font-size "14px"}}
+               (for [{:keys [node/title block/string block/uid]} parents]
+                 [breadcrumb {:key uid} (or title string)])]
               [block-el block]])]))])])
 
 
