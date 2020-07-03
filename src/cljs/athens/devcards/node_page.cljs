@@ -96,16 +96,18 @@
    :border-radius "4px"
    :margin "0.5em 0"})
 
+
 (def reference-breadcrumbs-style
   {:font-size "12px"
    :padding "0.25rem calc(2rem - 0.5em)"})
 
 
-(def references-group-block-style {:border-top [["1px solid " (color :panel-color)]]
-                                   :padding-block-start "1em"
-                                   :margin-block-start "1em"
-                                   ::stylefy/manual [[:&:first-of-type {:border-top "0"
-                                                                        :margin-block-start "0"}]]})
+(def references-group-block-style
+  {:border-top [["1px solid " (color :panel-color)]]
+   :padding-block-start "1em"
+   :margin-block-start "1em"
+   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                        :margin-block-start "0"}]]})
 
 
 ;;; Helpers
@@ -211,11 +213,11 @@
                 [:div (use-style references-group-block-style {:key uid})
               ;; TODO: expand parent on click
                  [block-el block]
-                (when (> (count parents) 1)
-                  [breadcrumbs-list {:style reference-breadcrumbs-style}
-                   [(r/adapt-react-class mui-icons/LocationOn)]
-                   (for [{:keys [node/title block/string block/uid]} parents]
-                     [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]]))])
+                 (when (> (count parents) 1)
+                   [breadcrumbs-list {:style reference-breadcrumbs-style}
+                    [(r/adapt-react-class mui-icons/LocationOn)]
+                    (for [{:keys [node/title block/string block/uid]} parents]
+                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]]))])
 
 
 (defn node-page-component
