@@ -84,7 +84,7 @@
 
 (def references-group-title-style
   {:color (color :link-color)
-   :margin-top "0"
+   :margin "0 1.5rem"
    :font-weight "500"
    ::stylefy/manual [[:a:hover {:cursor "pointer"
                                 :text-decoration "underline"}]]})
@@ -92,12 +92,20 @@
 
 (def references-group-style
   {:background (color :panel-color :opacity-low)
-   :padding "1rem 2rem"
+   :padding "1rem 0.5rem"
    :border-radius "4px"
    :margin "0.5em 0"})
 
+(def reference-breadcrumbs-style
+  {:font-size "12px"
+   :padding "0.25rem calc(2rem - 0.5em)"})
 
-(def references-group-block-style {:margin-inline-start "-2em"})
+
+(def references-group-block-style {:border-top [["1px solid " (color :panel-color)]]
+                                   :padding-block-start "1em"
+                                   :margin-block-start "1em"
+                                   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                                                        :margin-block-start "0"}]]})
 
 
 ;;; Helpers
@@ -200,15 +208,14 @@
               [:h4 (use-style references-group-title-style)
                [:a {:on-click #(navigate-uid uid)} group-title]]
               (for [{:block/keys [uid parents] :as block} group]
-                [:div {:key uid}
+                [:div (use-style references-group-block-style {:key uid})
               ;; TODO: expand parent on click
-                 [:div (use-style references-group-block-style)
-                  [block-el block]]
-                 (when (> (count parents) 1)
-                   [breadcrumbs-list {:style {:font-size "12px"}}
-                    [(r/adapt-react-class mui-icons/LocationOn)]
-                    (for [{:keys [node/title block/string block/uid]} parents]
-                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]]))])
+                 [block-el block]
+                (when (> (count parents) 1)
+                  [breadcrumbs-list {:style reference-breadcrumbs-style}
+                   [(r/adapt-react-class mui-icons/LocationOn)]
+                   (for [{:keys [node/title block/string block/uid]} parents]
+                     [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])]))]]))])
 
 
 (defn node-page-component
