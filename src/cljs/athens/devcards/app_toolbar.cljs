@@ -73,31 +73,20 @@
   []
   (let [open? (subscribe [:left-sidebar])]
     (fn []
-      (if @open?
-        [:header (use-style app-header-style)
-         [:div (use-style app-header-control-section-style)
-          [button {:label [:> mui-icons/Menu] :on-click-fn #(dispatch [:toggle-left-sidebar])}]
-          [button {:label [:> mui-icons/Today]}]]
-          [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                           :style {:width "14rem"}
-                           :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
-         [:div (use-style app-header-secondary-controls-style)
-          [button {:label [:> mui-icons/Settings]}]
-          [:span {:style {:opacity "0.5"}} " • "]
-          [button {:label [:> mui-icons/VerticalSplit]
-                   :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]
-        [:header (use-style app-header-style)
-         [:div (use-style app-header-control-section-style)
-          [button {:label [:> mui-icons/Menu] :on-click-fn #(dispatch [:toggle-left-sidebar])}]
-          [button {:label [:> mui-icons/Today]}]]
-          [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                           :style {:width "14rem"}
-                           :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
-         [:div (use-style app-header-secondary-controls-style)
-          [button {:label [:> mui-icons/Settings]}]
-          [:span {:style {:opacity "0.5"}} " • "]
-          [button {:label [:> mui-icons/VerticalSplit]
-                   :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]))))
+      [:header (use-style app-header-style)
+       [:div (use-style app-header-control-section-style)
+        [button {
+                 :active (when @open? true)
+                 :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:toggle-left-sidebar])}]
+        [button {:label [:> mui-icons/Today]}]]
+       [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+                        :style {:width "14rem"}
+                        :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
+       [:div (use-style app-header-secondary-controls-style)
+        [button {:label [:> mui-icons/Settings]}]
+        [:span {:style {:opacity "0.5"}} " • "]
+        [button {:label [:> mui-icons/VerticalSplit]
+                 :on-click-fn #(dispatch [:right-sidebar/toggle])}]]])))
 
 
 ;;; Devcards
