@@ -77,6 +77,7 @@
    :animation-fill-mode "both"
    :animation-timing-function "ease-out"
    :flex-direction "column"
+   :color (color :body-text-color :opacity-high)
    :overflow-y "auto"})
 
 
