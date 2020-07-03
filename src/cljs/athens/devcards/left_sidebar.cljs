@@ -24,8 +24,8 @@
    :height "100%"
    :display "flex"
    :flex-direction "column"
-   :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (color :panel-color))
+   :padding "1rem 1.5rem"
+  ;;  :box-shadow (str "1px 0 " (color :panel-color))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
@@ -43,12 +43,13 @@
 
 
 (def left-sidebar-collapsed-style
-  (merge left-sidebar-style {:flex "0 0 44px"
-                             :display "grid"
+  (merge left-sidebar-style {:flex "0 0 0"
+                             :display "none"
+                            ;;  :display "grid"
                              :padding "32px 4px 16px"
                              :grid-gap "4px"
                              :width "44px"
-                             :box-shadow "1px 0 #EFEDEB"
+                             :box-shadow "none"
                              :overflow-x "hidden"
                              :grid-template-rows "auto auto 1fr"
                              :align-self "stretch"
@@ -61,7 +62,7 @@
 
 
 (def main-navigation-style
-  {:margin "0 0 32px"
+  {:margin "3.5rem 0 2rem"
    :display "grid"
    :grid-auto-flow "row"
    :grid-gap "4px"
@@ -125,21 +126,10 @@
           ;; IF COLLAPSED
           [:div (use-style left-sidebar-collapsed-style)
            [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
-                    :label [:> mui-icons/ChevronRight]}]
-           [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                            :label [:> mui-icons/Search]}]
-           [:footer (use-sub-style left-sidebar-collapsed-style :footer)
-            [button {:disabled true
-                     :label [:> mui-icons/TextFormat]}]
-            [button {:disabled true
-                     :label [:> mui-icons/Settings]}]]]
+                    :label [:> mui-icons/ChevronRight]}]]
 
           ;; IF EXPANDED
           [:div (use-style left-sidebar-style)
-           [:div (use-sub-style left-sidebar-style :top-line)
-            [athena-prompt-el]
-            [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
-                     :label [:> mui-icons/ChevronLeft]}]]
            [:nav (use-style main-navigation-style)
             [button {:disabled true :label [:<>
                                             [:> mui-icons/Today]
@@ -162,10 +152,7 @@
            ;; LOGO + BOTTOM BUTTONS
            [:footer (use-sub-style left-sidebar-style :footer)
             [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-            [button {:disabled true
-                     :label [:> mui-icons/TextFormat]}]
-            [button {:disabled true
-                     :label [:> mui-icons/Settings]}]]])))))
+            ]])))))
 
 
 ;;; Devcards

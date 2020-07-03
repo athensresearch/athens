@@ -8,7 +8,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer [defcard-rg]]
-    [garden.color :refer [lighten]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -45,12 +44,13 @@
   {:justify-self "stretch"
    :overflow "auto"
    :flex "0 0 auto"
+   :padding-top "3rem"
    :display "flex"
+   :grid-area "secondary-content"
    :justify-content "space-between"
    :transition "opacity 0.5s ease"
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&.is-open {:border-left [["1px solid " (color :panel-color :opacity-low)]]
-                                  :background-color (color :panel-color :opacity-low)}
+                     [:&.is-open
                       [:> [:div {:animation "content-appears 0.15s"
                                  :animation-fill-mode "both"}]]]
                      [:&.is-closed [:> [:div {:animation "content-disappears 0.1s"
@@ -66,7 +66,6 @@
    :z-index "10"
    :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
    ::stylefy/manual [[:& {:transition-duration "0.15s"}]
-                     [:&:hover {:background (lighten (color :panel-color) 5)}]
                      [:&:focus :active {:outline "none"
                                         :color "inherit"}]]})
 
@@ -97,8 +96,7 @@
 (def sidebar-item-style
   {:display "flex"
    :flex "0 0 auto"
-   :flex-direction "column"
-   :border-top [["1px solid" (color :panel-color)]]})
+   :flex-direction "column"})
 
 
 (def sidebar-item-toggle-style
@@ -129,11 +127,10 @@
    :display "flex"
    :flex "0 0 auto"
    :align-items "center"
+   :background (color :app-bg-color)
    :padding "4px 16px"
    :position "sticky"
-   :backdrop-filter "blur(12px)"
    :z-index "10"
-   :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -223,10 +220,11 @@
               (if title
                 [node-page-component [:block/uid uid]]
                 [block-page-component [:block/uid uid]])])])))]
-   [button {:style sidebar-toggle-style
-            :class (if open? "is-open" "is-closed")
-            :on-click-fn #(dispatch [:right-sidebar/toggle])
-            :label (if open? [:> mui-icons/Close] [:> mui-icons/Add])}]])
+  ;;  [button {:style sidebar-toggle-style
+  ;;           :class (if open? "is-open" "is-closed")
+  ;;           :on-click-fn #(dispatch [:right-sidebar/toggle])
+  ;;           :label (if open? [:> mui-icons/Close] [:> mui-icons/Add])}]
+   ])
 
 
 (defn right-sidebar-component
