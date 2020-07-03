@@ -27,6 +27,7 @@
    :border-radius "6px"
    :min-height "2em"
    :min-width "2em"
+   :background (color :app-bg-color)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -44,11 +45,13 @@
 
 (def menu-item-style
   {:min-height "32px"
+   :text-align "left"
    ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]})
 
 
 (def menu-heading-style
   {:min-height "32px"
+   :line-height "1.2"
    :text-align "center"
    :padding "6px 8px"
    :display "flex"
@@ -133,9 +136,15 @@
 
 (defn slash-menu-component
   []
-  [dropdown {:content
+  [dropdown {:style {:max-width "15em"
+                     :z-index "10"
+                     :position "absolute"
+                     :bottom "0"
+                     :transform "translateY(100%)"
+                     :left "2em"}
+             :content
              [:<>
-              [textinput {:placeholder "Type to filter commands"}]
+              [menu-heading "Type to filter commands"]
               [menu {:style {:max-height "8em"} :content
                      [:<>
                       [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
