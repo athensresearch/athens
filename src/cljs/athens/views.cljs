@@ -4,6 +4,8 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
+    [athens.devcards.buttons :refer [button-primary]]
+    [athens.devcards.daily-notes :refer [daily-notes-component]]
     [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
@@ -62,6 +64,12 @@
 ;; Panels
 
 
+(defn daily-notes-panel
+  []
+  [:div
+   [daily-notes-component]])
+
+
 (defn about-panel
   []
   [:div
@@ -72,11 +80,12 @@
   []
   (fn []
     [:div
-     [:p
-      "Upload your DB " [:a {:href ""} "(tutorial)"]]
-     [:input.input-file {:type      "file"
-                         :name      "file-input"
-                         :on-change (fn [e] (file-cb e))}]
+     ;;[:input.input-file {:type      "file"
+     ;;                    :name      "file-input"
+     ;;                    :on-change (fn [e] (file-cb e))}]
+     [button-primary {:label "Load Test Data"
+                      :on-click-fn #(dispatch [:get-local-storage-db])}]
+     ;;[button {:on-click-fn #(dispatch [:reset-db])}]
      [table db/dsdb]]))
 
 
@@ -96,9 +105,10 @@
   [:div (use-style match-panel-style)
    [(case name
       :about about-panel
+      :home daily-notes-panel
       :pages pages-panel
       :page page-panel
-      pages-panel)]])
+      daily-notes-panel)]])
 
 
 (defn main-panel

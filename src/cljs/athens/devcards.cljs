@@ -7,6 +7,7 @@
     [athens.devcards.blocks]
     [athens.devcards.breadcrumbs]
     [athens.devcards.buttons]
+    [athens.devcards.daily-notes]
     [athens.devcards.db]
     [athens.devcards.db-boxes]
     [athens.devcards.devtool]
@@ -29,6 +30,7 @@
     [cljsjs.react.dom]
     [devcards.core]
     [posh.reagent :refer [transact!]]
+    [re-frame.core :refer [dispatch-sync]]
     [stylefy.core :as stylefy]))
 
 
@@ -404,4 +406,5 @@
   []
   (stylefy/init)
   (listeners/init)
+  (dispatch-sync [:init-rfdb])
   (devcards.core/start-devcard-ui!))

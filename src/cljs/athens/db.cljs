@@ -125,20 +125,19 @@
   '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
 
 
-;; used for both linked and unlinked references, just different regex
-(def q-shortcuts
-  '[:find ?order ?title ?uid
-    :where
-    [?e :page/sidebar ?order]
-    [?e :node/title ?title]
-    [?e :block/uid ?uid]])
-
-
 ;;; posh
 
 
 (defonce dsdb (d/create-conn schema))
 (posh! dsdb)
+
+
+(defn e-by-av [a v]
+  (-> (d/datoms @dsdb :avet a v) first :e))
+
+
+;;(defn e-by-av [db a v]
+;;  (-> (d/datoms db :avet a v) first :e))
 
 
 ;; history
@@ -187,21 +186,23 @@
 ;;; re-frame
 
 
-(defonce rfdb {:user               "Jeff"
-               :current-route      nil
-               :loading            true
-               :errors             {}
-               :athena             false
-               :devtool            false
-               :left-sidebar       false
-               :right-sidebar/open true
-               :right-sidebar/items {"OaSVyM_nr" {:node/title "Athens FAQ" :open false :index 0}
-                                     "p1Xv2crs3" {:node/title "Hyperlink" :open true :index 1}
-                                     "jbiKpcmIX" {:block/string "Firstly, I wouldn't be surprised if Roam was eventually open-sourced." :open true :index 2}}
-               :editing-uid        nil
-               :drag-bullet        {:uid          nil
-                                    :x            nil
-                                    :y            nil
-                                    :closest/uid  nil
-                                    :closest/kind nil}
-               :tooltip-uid        nil})
+(defonce rfdb {:user                "Jeff"
+               :current-route       nil
+               :loading             true
+               :errors              {}
+               :athena              false
+               :devtool             false
+               :left-sidebar        true
+               :right-sidebar/open  false
+               :right-sidebar/items {}
+               ;;"OaSVyM_nr" {:node/title "Athens FAQ" :open false :index 0}
+               ;;"p1Xv2crs3" {:node/title "Hyperlink" :open true :index 1}
+               ;;"jbiKpcmIX" {:block/string "Firstly, I wouldn't be surprised if Roam was eventually open-sourced." :open true :index 2}
+               :editing-uid         nil
+               :drag-bullet         {:uid          nil
+                                     :x            nil
+                                     :y            nil
+                                     :closest/uid  nil
+                                     :closest/kind nil}
+               :tooltip-uid         nil
+               :daily-notes         []})
