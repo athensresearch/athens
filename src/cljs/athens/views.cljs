@@ -5,12 +5,13 @@
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.buttons :refer [button-primary]]
-    [athens.devcards.daily-notes :refer [daily-notes-component]]
+    [athens.devcards.daily-notes :refer [daily-notes-panel]]
     [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
     [athens.devcards.right-sidebar :refer [right-sidebar-component]]
     [athens.devcards.spinner :refer [initial-spinner-component]]
+    [athens.devcards.daily-notes :refer [db-scroll-daily-notes]]
     [athens.subs]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
@@ -28,12 +29,6 @@
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows "1fr auto"
    :height "100vh"})
-
-
-(def match-panel-style
-  {:margin "5rem auto"
-   :min-width "500px"
-   :max-width "900px"})
 
 
 (def main-content-style
@@ -62,12 +57,6 @@
 
 
 ;; Panels
-
-
-(defn daily-notes-panel
-  []
-  [:div
-   [daily-notes-component]])
 
 
 (defn about-panel
@@ -102,13 +91,12 @@
 
 (defn match-panel
   [name]
-  [:div (use-style match-panel-style)
-   [(case name
-      :about about-panel
-      :home daily-notes-panel
-      :pages pages-panel
-      :page page-panel
-      daily-notes-panel)]])
+  [(case name
+     :about about-panel
+     :home daily-notes-panel
+     :pages pages-panel
+     :page page-panel
+     daily-notes-panel)])
 
 
 (defn main-panel
@@ -123,7 +111,8 @@
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
           [left-sidebar]
-          [:div (use-style main-content-style)
+          [:div (use-style main-content-style
+                  {:on-scroll db-scroll-daily-notes})
            [match-panel (-> @current-route :data :name)]]
           [right-sidebar-component]
           [devtool-component]])])))

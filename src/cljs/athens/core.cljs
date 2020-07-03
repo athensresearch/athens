@@ -30,7 +30,7 @@
 
 (defn init
   []
-  ;;(stylefy/tag "body" app-styles)
+  (stylefy/tag "body" app-styles)
   (stylefy/init)
   (listeners/init)
   (rf/dispatch-sync [:init-rfdb])

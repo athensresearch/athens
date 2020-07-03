@@ -1,24 +1,75 @@
 (ns athens.devcards.daily-notes
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.util :refer [get-day]]
     [athens.db :as db]
     [athens.devcards.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as string]
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
+    [goog.functions :refer [debounce]]
     [posh.reagent :refer [pull pull-many q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
+    [stylefy.core :as stylefy :refer [use-style]]
+    [tick.alpha.api :as t]
+    [tick.locale-en-us]))
 
 ;;; Styles
 
+
+;;; Helpers
+
+
+
+
+(def US-format (t/formatter "MM-dd-yyyy"))
+
+
+(def title-format (t/formatter "LLLL dd, yyyy"))
+
+
+(defn date-string
+  [ts]
+  (if (< ts 1) ;; TODO why this predicate?
+    [:span "(unknown date)"]
+    (as-> (js/Date. ts) x
+      (t/instant x)
+      (t/date-time x)
+      (t/format (t/formatter "LLLL MM, yyyy h':'ma") x)
+      (string/replace x #"AM" "am")
+      (string/replace x #"PM" "pm"))))
+
+
+(defn get-day
+  "Returns today's date or a date OFFSET days before today"
+  ([] (get-day 0))
+  ([offset]
+   (let [day (t/-
+               (t/date-time)
+               (t/new-duration offset :days))]
+     {:uid   (t/format US-format day)
+      :title (t/format title-format day)})))
+
+
+(defn scroll-daily-notes
+  [e]
+  (let [rel-bottom    (.. js/document -documentElement getBoundingClientRect -bottom)
+        client-height (.. js/document -documentElement -clientHeight)
+        daily-notes @(subscribe [:daily-notes])]
+    (prn rel-bottom client-height)
+    (when (< rel-bottom (+ client-height 100))
+      (prn "DISPATCH")
+      (dispatch [:next-daily-note (get-day (count daily-notes))]))))
+
+(def db-scroll-daily-notes (debounce scroll-daily-notes 500))
+
+;;; Scroll
+
 ;;; Components
 
-(defn daily-notes-component
+(defn daily-notes-panel
   []
   (let [note-refs (subscribe [:daily-notes])]
     (if (empty? @note-refs)
@@ -29,25 +80,28 @@
                     '[*]
                     ;;'[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}]
                     (map (fn [x] [:block/uid x]) @note-refs))]
-        [:div (use-style {:display        "flex"
-                          :flex           "0 0 auto"
-                          :flex-direction "column"})
+        [:div.daily-notes (use-style {:display        "flex"
+                                      :flex           "0 0 auto"
+                                      :flex-direction "column"
+                                      :height "100vh"}
+                            {:on-scroll (fn [x] (prn "hi" x))})
 
-         (for [{:keys [block/uid node/title]} @notes]
-           [:<>
-            [:div (use-style {:min-height "550px"} {:key uid})
-             [:h1 title]]
-            ;;[node-page-component [:block/uid uid]]
-            [:hr (use-style {:border "1px solid black"
-                             :width  "100%"}
-                   {:key title})]])
+         (doall
+           (for [{:keys [block/uid node/title]} @notes]
+             ^{:key uid}
+             [:<>
+              [:div (use-style {:min-height "550px"})
+               [:h1 title]]
+              ;;[node-page-component [:block/uid uid]]
+              [:hr (use-style {:border "1px solid black"
+                               :width  "100%"}
+                     {:key title})]]))
 
          [:div
           [:h1 (use-style {:color "gray"}) "Preview"]]]))))
 
 
-
 ;;; Devcards
 
 (defcard-rg Daily-Notes
-  [daily-notes-component])
+  [daily-notes-panel])

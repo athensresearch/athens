@@ -1,6 +1,6 @@
 (ns athens.listeners
   (:require
-    [athens.util :refer [get-day]]
+    ;;[athens.util :refer [get-day]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
@@ -146,23 +146,11 @@
 
 ;;; Scroll
 
-(defn scroll-daily-notes
-  [e]
-  (let [rel-bottom    (.. js/document -documentElement getBoundingClientRect -bottom)
-        client-height (.. js/document -documentElement -clientHeight)
-        daily-notes @(subscribe [:daily-notes])]
-    (prn rel-bottom client-height)
-    (when (< rel-bottom (+ client-height 100))
-      (prn rel-bottom client-height)
-      (dispatch [:next-daily-note (get-day (count daily-notes))]))))
-
-
-
 (defn init
   []
   (events/listen js/window EventType.MOUSEDOWN mouse-down-block)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-bullet)
   (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
-  (events/listen js/window EventType.KEYDOWN key-down)
-  (events/listen js/window EventType.SCROLL scroll-daily-notes))
+  (events/listen js/window EventType.KEYDOWN key-down))
+
