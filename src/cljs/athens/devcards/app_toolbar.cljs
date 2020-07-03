@@ -81,10 +81,6 @@
           [button-primary {:on-click-fn #(dispatch [:toggle-athena])
                            :style {:width "14rem"}
                            :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
-        ;;  [breadcrumbs-list
-        ;;   [breadcrumb {:key "a"} "thing 1"]
-        ;;   [breadcrumb {:key "b"} "thing 2"]
-        ;;   [breadcrumb {:key "c"} "thing 3"]]
          [:div (use-style app-header-secondary-controls-style)
           [button {:label [:> mui-icons/Settings]}]
           [:span {:style {:opacity "0.5"}} " • "]
@@ -97,10 +93,6 @@
           [button-primary {:on-click-fn #(dispatch [:toggle-athena])
                            :style {:width "14rem"}
                            :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
-         [breadcrumbs-list
-          [breadcrumb {:key "a"} "thing 1"]
-          [breadcrumb {:key "b"} "thing 2"]
-          [breadcrumb {:key "c"} "thing 3"]]
          [:div (use-style app-header-secondary-controls-style)
           [button {:label [:> mui-icons/Settings]}]
           [:span {:style {:opacity "0.5"}} " • "]
