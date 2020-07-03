@@ -7,6 +7,7 @@
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
     [athens.style :refer [color]]
+    [athens.router :refer [navigate-uid]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -164,11 +165,10 @@
            [:h4 group-title]
            (for [{:block/keys [uid parents] :as block} group]
              [:div {:key uid}
-              ;; TODO: replace with breadcrumbs?
               ;; TODO: expand parent on click
               [breadcrumbs-list {:style {:font-size "14px"}}
                (for [{:keys [node/title block/string block/uid]} parents]
-                 [breadcrumb {:key uid} (or title string)])]
+                 [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])]
               [block-el block]])]))])])
 
 
