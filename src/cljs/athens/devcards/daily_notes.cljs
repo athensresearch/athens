@@ -55,11 +55,13 @@
 
 (defn scroll-daily-notes
   [e]
-  (let [rel-bottom    (.. js/document -documentElement getBoundingClientRect -bottom)
-        client-height (.. js/document -documentElement -clientHeight)
-        daily-notes @(subscribe [:daily-notes])]
-    (prn rel-bottom client-height)
-    (when (< rel-bottom (+ client-height 100))
+  (let [daily-notes @(subscribe [:daily-notes])
+        main-content (.. js/document (getElementById "main-content"))
+        client-height (.. main-content -clientHeight) ;; could also use -offsetHeight. get the same value
+        scroll-top (.. main-content -scrollTop)
+        ratio (/ client-height scroll-top)]
+    (prn client-height scroll-top ratio)
+    (when (<= ratio 30) ;; when scrolled all the way down, ratio is 10, because height is 110vh
       (prn "DISPATCH")
       (dispatch [:next-daily-note (get-day (count daily-notes))]))))
 
@@ -83,7 +85,7 @@
         [:div.daily-notes (use-style {:display        "flex"
                                       :flex           "0 0 auto"
                                       :flex-direction "column"
-                                      :height "100vh"}
+                                      :height "110vh"}
                             {:on-scroll (fn [x] (prn "hi" x))})
 
          (doall
