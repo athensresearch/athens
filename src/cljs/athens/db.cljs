@@ -191,14 +191,12 @@
                :current-route       nil
                :loading             true
                :errors              {}
-               :athena              false
+               :athena/open         false
+               :athena/recent-items '()
                :devtool             false
                :left-sidebar        true
                :right-sidebar/open  false
                :right-sidebar/items {}
-               ;;"OaSVyM_nr" {:node/title "Athens FAQ" :open false :index 0}
-               ;;"p1Xv2crs3" {:node/title "Hyperlink" :open true :index 1}
-               ;;"jbiKpcmIX" {:block/string "Firstly, I wouldn't be surprised if Roam was eventually open-sourced." :open true :index 2}
                :editing-uid         nil
                :drag-bullet         {:uid          nil
                                      :x            nil
