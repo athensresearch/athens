@@ -132,7 +132,8 @@
 (posh! dsdb)
 
 
-(defn e-by-av [a v]
+(defn e-by-av
+  [a v]
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 

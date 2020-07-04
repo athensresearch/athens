@@ -1,5 +1,4 @@
-(ns athens.util
-  )
+(ns athens.util)
 
 
 (defn gen-block-uid

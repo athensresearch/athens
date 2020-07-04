@@ -121,8 +121,8 @@
                              [?e :page/sidebar ?order]
                              [?e :node/title ?title]
                              [?e :block/uid ?uid]] db/dsdb)
-                    seq
-                    (sort-by first))]
+                       seq
+                       (sort-by first))]
     (if (not @open?)
 
       ;; IF COLLAPSED

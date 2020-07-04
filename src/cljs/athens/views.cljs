@@ -6,12 +6,12 @@
     [athens.devcards.block-page :refer [block-page-component]]
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.daily-notes :refer [daily-notes-panel]]
+    [athens.devcards.daily-notes :refer [db-scroll-daily-notes]]
     [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
     [athens.devcards.right-sidebar :refer [right-sidebar-component]]
     [athens.devcards.spinner :refer [initial-spinner-component]]
-    [athens.devcards.daily-notes :refer [db-scroll-daily-notes]]
     [athens.subs]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
@@ -111,8 +111,9 @@
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
           [left-sidebar]
-          [:div#main-content (use-style main-content-style
-                               {:on-scroll db-scroll-daily-notes})
+          [:div (use-style main-content-style
+                           {:on-scroll (when (= (-> @current-route :data :name) :home)
+                                         db-scroll-daily-notes)})
            [match-panel (-> @current-route :data :name)]]
           [right-sidebar-component]
           [devtool-component]])])))

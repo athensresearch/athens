@@ -82,10 +82,9 @@
              (:drag-bullet db)))
 
 
-
 (re-frame/reg-sub
   :daily-notes
   (fn-traced [db _]
-    (:daily-notes db)))
+             (:daily-notes db)))
 
 
