@@ -23,6 +23,13 @@
 
 ;;; Styles
 
+
+(def page-style {:margin "2rem auto"
+                 :padding "1rem 2rem"
+                 :flex-basis "100%"
+                 :max-width "55rem"})
+
+
 (def title-style
   {:position "relative"
    :overflow "visible"
@@ -177,7 +184,7 @@
 (defn node-page-el
   [{:block/keys [children uid] title :node/title} editing-uid ref-groups]
 
-  [:div
+  [:div (use-style page-style)
 
    ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "page-header"})

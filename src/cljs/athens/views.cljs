@@ -31,6 +31,10 @@
 
 (def main-content-style
   {:flex "1 1 100%"
+   :grid-area "main-content"
+   :align-items "stretch"
+   :justify-content "stretch"
+   :display "flex"
    :overflow-y "auto"})
 
 
@@ -78,10 +82,9 @@
   (let [current-route (subscribe [:current-route])
         uid           (-> @current-route :path-params :id)
         node-or-block @(pull db/dsdb '[*] [:block/uid uid])]
-    [:div {:style {:margin-left "40px" :margin-right "40px"}}
-     (if (:node/title node-or-block)
-       [node-page-component (:db/id node-or-block)]
-       [block-page-component (:db/id node-or-block)])]))
+    (if (:node/title node-or-block)
+      [node-page-component (:db/id node-or-block)]
+      [block-page-component (:db/id node-or-block)])))
 
 
 (defn match-panel

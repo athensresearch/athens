@@ -18,6 +18,13 @@
 
 ;;; Styles
 
+
+(def page-style {:margin "2rem auto"
+                 :padding "1rem 2rem"
+                 :flex-basis "100%"
+                 :max-width "55rem"})
+
+
 (def title-style
   {:position "relative"
    :overflow "visible"
@@ -66,7 +73,7 @@
 (defn block-page-el
   [{:block/keys [string children uid]} parents editing-uid]
 
-  [:div
+  [:div (use-style page-style)
    ;; Parent Context
    [:span {:style {:color "gray"}}
 
