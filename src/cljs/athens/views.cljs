@@ -4,7 +4,6 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
-    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
@@ -67,14 +66,11 @@
 (defn pages-panel
   []
   (fn []
-    [:div
-     ;;[:input.input-file {:type      "file"
-     ;;                    :name      "file-input"
-     ;;                    :on-change (fn [e] (file-cb e))}]
-     [button-primary {:label "Load Test Data"
-                      :on-click-fn #(dispatch [:get-local-storage-db])}]
-     ;;[button {:on-click-fn #(dispatch [:reset-db])}]
-     [table db/dsdb]]))
+    ;;[:div
+    ;; [:input.input-file {:type      "file"
+    ;;                     :name      "file-input"
+    ;;                     :on-change (fn [e] (file-cb e))}]]
+    [table db/dsdb]))
 
 
 (defn page-panel
