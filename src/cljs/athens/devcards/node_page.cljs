@@ -220,6 +220,7 @@
                       [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])])]])))])
 
 
+
 (defn node-page-component
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
