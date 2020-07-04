@@ -22,11 +22,11 @@
 
 
 
-(def page-style {:display "flex"
-                 :margin "5rem auto"
-                 :flex-basis "100%"
-                 :max-width "70rem"})
-
+(def page-style
+  {:display "flex"
+   :margin "5rem auto"
+   :flex-basis "100%"
+   :max-width "70rem"})
 
 
 (def table-style
@@ -97,21 +97,21 @@
         [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
       [:tbody
        (doall
-        (for [{uid :block/uid
-               title :node/title
-               modified :edit/time
-               created :create/time
-               children :block/children} @pages]
-          ^{:key uid}
-          [:tr
-           [:td (with-attributes
-                  (use-sub-style table-style :td-title)
-                  {:on-click #(navigate-uid uid)})
-            title]
-           [:td
-            [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
-           [:td (use-sub-style table-style :td-date) (date-string modified)]
-           [:td (use-sub-style table-style :td-date) (date-string created)]]))]]]))
+         (for [{uid :block/uid
+                title :node/title
+                modified :edit/time
+                created :create/time
+                children :block/children} @pages]
+           ^{:key uid}
+           [:tr
+            [:td (with-attributes
+                   (use-sub-style table-style :td-title)
+                   {:on-click #(navigate-uid uid)})
+             title]
+            [:td
+             [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
+            [:td (use-sub-style table-style :td-date) (date-string modified)]
+            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]]))
 
 
 ;;; Devcards

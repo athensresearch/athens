@@ -19,10 +19,11 @@
 ;;; Styles
 
 
-(def page-style {:margin "2rem auto"
-                 :padding "1rem 2rem"
-                 :flex-basis "100%"
-                 :max-width "55rem"})
+(def page-style
+  {:margin "2rem auto"
+   :padding "1rem 2rem"
+   :flex-basis "100%"
+   :max-width "55rem"})
 
 
 (def title-style
