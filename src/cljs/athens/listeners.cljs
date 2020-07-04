@@ -1,5 +1,6 @@
 (ns athens.listeners
   (:require
+    ;;[athens.util :refer [get-day]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
@@ -143,6 +144,8 @@
       (dispatch [:toggle-left-sidebar]))))
 
 
+;;; Scroll
+
 (defn init
   []
   (events/listen js/window EventType.MOUSEDOWN mouse-down-block)
@@ -150,3 +153,4 @@
   (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN key-down))
+

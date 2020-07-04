@@ -148,16 +148,16 @@
       [block-el child])]
 
    ;; References
-   (for [[linked-or-unlinked refs] ref-groups]
-     [:div {:key linked-or-unlinked}
-      [:div (use-style {:display         "flex"
-                        :justify-content "space-between"
-                        :align-items "center"})
-       [:h3 linked-or-unlinked]
-       [:span
-        [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
-                 :disabled true}]]]
-      (doall
+   (doall
+     (for [[linked-or-unlinked refs] ref-groups]
+       [:div {:key linked-or-unlinked}
+        [:div (use-style {:display         "flex"
+                          :justify-content "space-between"
+                          :align-items "center"})
+         [:h3 linked-or-unlinked]
+         [:span
+          [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                   :disabled true}]]]
         (for [[group-title group] refs]
           [:<> {:key group-title}
            [:h4 group-title]
@@ -172,7 +172,7 @@
                           (if (= x ">")
                             [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
                             x))))
-              [block-el block]])]))])])
+              [block-el block]])])]))])
 
 
 (defn node-page-component
