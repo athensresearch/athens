@@ -91,4 +91,4 @@
 (re-frame/reg-sub
   :athena/get-recent
   (fn-traced [db _]
-             (:athena/get-recent db)))
+             (:athena/recent-items db)))

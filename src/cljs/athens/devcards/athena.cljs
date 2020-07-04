@@ -194,7 +194,7 @@
 (defn create-search-handler
   [state]
   (fn [query]
-    (if (clojure.string/blank? query)
+    (if (str/blank? query)
       (reset! state {:index   0
                      :query   nil
                      :results []})
@@ -263,18 +263,18 @@
 
 (defn results-el
   [state]
-  (let [recent-item-length 40
-        search-term? (str/blank? (:query @state))]
+  (let [query? (str/blank? (:query @state))
+        recent-items @(subscribe [:athena/get-recent])]
     [:<> [:div (use-style results-heading-style)
-          [:h5 (if search-term? "Recent" "Results")]
+          [:h5 (if query? "Recent" "Results")]
           [:span (use-style hint-style)
            "Press "
            [:kbd "shift + enter"]
            " to open in right sidebar."]]
-     (when search-term?
+     (when query?
        [:div (use-style results-list-style)
         (doall
-          (for [[i x] (map-indexed list (take recent-item-length @(subscribe [:athena/get-recent])))]
+          (for [[i x] (map-indexed list recent-items)]
             (when x
               (let [{:keys [query :node/title :block/uid :block/string]} x]
                 [:div (use-style result-style {:key      i
@@ -287,12 +287,12 @@
 
 (defn athena-component
   []
-  (let [athena? @(subscribe [:athena/open])
+  (let [open? @(subscribe [:athena/open])
         s (r/atom {:index 0
                    :query nil
                    :results []})
         search-handler (debounce (create-search-handler s) 500)]
-    (when athena?
+    (when open?
       [:div.athena (use-style container-style)
        [:input (use-style athena-input-style
                           {:type        "search"
@@ -305,7 +305,7 @@
           (let [{:keys [results query index]} @s]
             [:div (use-style results-list-style)
              (doall
-               (for [[i x] (map-indexed (fn [x i] [x i]) results)
+               (for [[i x] (map-indexed list results)
                      :let [parent (:block/parent x)
                            title  (or (:node/title parent) (:node/title x))
                            uid    (or (:block/uid parent) (:block/uid x))

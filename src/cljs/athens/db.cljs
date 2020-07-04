@@ -192,7 +192,7 @@
                :loading             true
                :errors              {}
                :athena/open         false
-               :athena/get-recent   '()
+               :athena/recent-items '()
                :devtool             false
                :left-sidebar        true
                :right-sidebar/open  false

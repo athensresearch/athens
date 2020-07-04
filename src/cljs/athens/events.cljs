@@ -73,8 +73,8 @@
 (reg-event-db
   :athena/update-recent
   (fn-traced [db [_ selected-page]]
-    (when (nil? ((set (:athena/get-recent db)) selected-page))
-      (update db :athena/get-recent conj selected-page))))
+    (when (nil? ((set (:athena/recent-items db)) selected-page))
+      (update db :athena/recent-items conj selected-page))))
 
 
 ;; TODO: dec all indices > closed item
