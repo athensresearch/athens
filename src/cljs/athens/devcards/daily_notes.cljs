@@ -1,24 +1,20 @@
 (ns athens.devcards.daily-notes
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.devcards.node-page :refer [node-page-component]]
-    [athens.style :refer [DEPTH-SHADOWS color]]
+    [athens.style :refer [DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as string]
     [devcards.core :refer-macros [defcard-rg]]
-    [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull pull-many q]]
+    [posh.reagent :refer [pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
+    [stylefy.core :refer [use-style]]
     [tick.alpha.api :as t]
     [tick.locale-en-us]))
 
-;;; Styles
 
+;;; Styles
 
 
 (def daily-notes-scroll-area-style
@@ -51,21 +47,7 @@
 
 
 (def US-format (t/formatter "MM-dd-yyyy"))
-
-
 (def title-format (t/formatter "LLLL dd, yyyy"))
-
-
-(defn date-string
-  [ts]
-  (if (< ts 1) ;; TODO why this predicate?
-    [:span "(unknown date)"]
-    (as-> (js/Date. ts) x
-          (t/instant x)
-          (t/date-time x)
-          (t/format (t/formatter "LLLL MM, yyyy h':'ma") x)
-          (string/replace x #"AM" "am")
-          (string/replace x #"PM" "pm"))))
 
 
 (defn get-day
@@ -80,32 +62,30 @@
 
 
 (defn scroll-daily-notes
-  [e]
+  [_]
   (let
     [daily-notes @(subscribe [:daily-notes])
      from-bottom (.. js/document (getElementById "daily-notes") getBoundingClientRect -bottom)
      doc-height (.. js/document -documentElement -scrollHeight)
      delta (- from-bottom doc-height)]
-    (when (< delta 1) ;; doesn't always equal exactly 0 because of rounding
+    (when (< delta 1)
       (dispatch [:next-daily-note (get-day (count daily-notes))]))))
 
 
 (def db-scroll-daily-notes (debounce scroll-daily-notes 500))
 
-;;; Scroll
 
 ;;; Components
+
 
 (defn daily-notes-panel
   []
   (let [note-refs (subscribe [:daily-notes])]
-    (if (empty? @note-refs)
+    (when (empty? @note-refs)
       (dispatch [:next-daily-note (get-day)]))
     (fn []
-
       (let [notes (pull-many db/dsdb
                              '[*]
-                    ;;'[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}]
                              (map (fn [x] [:block/uid x]) @note-refs))]
         [:div#daily-notes (use-style daily-notes-scroll-area-style)
          (doall
@@ -114,7 +94,6 @@
              [:<>
               [:div (use-style daily-notes-page-style)
                [node-page-component [:block/uid uid]]]]))
-
          [:div (use-style daily-notes-notional-page-style)
           [:h1 "Earlier"]]]))))
 
