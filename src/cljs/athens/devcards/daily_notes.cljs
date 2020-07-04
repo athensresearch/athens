@@ -83,11 +83,10 @@
   [e]
   (let
     [daily-notes @(subscribe [:daily-notes])
-     scroll-area (.getElementById js/document "daily-notes")
-     page-height     (.. js/document -documentElement -scrollHeight)
-     rel-bottom    (.-bottom (.getBoundingClientRect scroll-area))]
-    (when (= (- rel-bottom page-height) 0)
-      (prn "DISPATCH")
+     from-bottom (.. js/document (getElementById "daily-notes") getBoundingClientRect -bottom)
+     doc-height (.. js/document -documentElement -scrollHeight)
+     delta (- from-bottom doc-height)]
+    (when (< delta 1) ;; doesn't always equal exactly 0 because of rounding
       (dispatch [:next-daily-note (get-day (count daily-notes))]))))
 
 
