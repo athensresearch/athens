@@ -144,10 +144,9 @@
 
 
 (reg-event-fx
-  :boot
+  :boot ;; FIXME: rename to init-dsdb?
   (fn-traced [_ _]
-             {:db         db/rfdb
-              :async-flow {:first-dispatch [:get-local-storage-db]
+             {:async-flow {:first-dispatch [:get-local-storage-db]
                            :rules          [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
                                             {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]}}))
 
@@ -205,8 +204,19 @@
   :page/create
   (fn [_ [_ title uid]]
     (let [now (now-ts)]
-          ;;uid (gen-block-uid)]
-      {:transact [{:db/add -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
+      {:transact [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
+
+
+(reg-event-fx
+  :next-daily-note
+  (fn [{:keys [db]} [_ {:keys [uid title]}]]
+    (let [new-db (update db :daily-notes conj uid)
+          now (now-ts)]
+      (if (db/e-by-av :block/uid uid)
+        {:db new-db}
+        {:db new-db
+         :transact [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
+
 
 
 ;;; dsdb events (transactions)

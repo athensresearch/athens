@@ -4,6 +4,8 @@
     [athens.devcards.all-pages :refer [table]]
     [athens.devcards.athena :refer [athena-component]]
     [athens.devcards.block-page :refer [block-page-component]]
+    [athens.devcards.buttons :refer [button-primary]]
+    [athens.devcards.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.devcards.devtool :refer [devtool-component]]
     [athens.devcards.left-sidebar :refer [left-sidebar]]
     [athens.devcards.node-page :refer [node-page-component]]
@@ -26,12 +28,6 @@
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows "1fr auto"
    :height "100vh"})
-
-
-(def match-panel-style
-  {:margin "5rem auto"
-   :min-width "500px"
-   :max-width "900px"})
 
 
 (def main-content-style
@@ -72,11 +68,12 @@
   []
   (fn []
     [:div
-     [:p
-      "Upload your DB " [:a {:href ""} "(tutorial)"]]
-     [:input.input-file {:type      "file"
-                         :name      "file-input"
-                         :on-change (fn [e] (file-cb e))}]
+     ;;[:input.input-file {:type      "file"
+     ;;                    :name      "file-input"
+     ;;                    :on-change (fn [e] (file-cb e))}]
+     [button-primary {:label "Load Test Data"
+                      :on-click-fn #(dispatch [:get-local-storage-db])}]
+     ;;[button {:on-click-fn #(dispatch [:reset-db])}]
      [table db/dsdb]]))
 
 
@@ -93,12 +90,12 @@
 
 (defn match-panel
   [name]
-  [:div (use-style match-panel-style)
-   [(case name
-      :about about-panel
-      :pages pages-panel
-      :page page-panel
-      pages-panel)]])
+  [(case name
+     :about about-panel
+     :home daily-notes-panel
+     :pages pages-panel
+     :page page-panel
+     daily-notes-panel)])
 
 
 (defn main-panel
@@ -113,7 +110,9 @@
          [initial-spinner-component]
          [:div (use-style app-wrapper-style)
           [left-sidebar]
-          [:div (use-style main-content-style)
+          [:div (use-style main-content-style
+                           {:on-scroll (when (= (-> @current-route :data :name) :home)
+                                         db-scroll-daily-notes)})
            [match-panel (-> @current-route :data :name)]]
           [right-sidebar-component]
           [devtool-component]])])))

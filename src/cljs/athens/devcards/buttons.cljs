@@ -40,6 +40,8 @@
                       [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]
                       [(selectors/& ((selectors/first-child (selectors/last-child)))) {:margin-inline-start "-4px"
                                                                                        :margin-inline-end "-4px"}]]
+                     [:span {:flex "1 0 auto"
+                             :text-align "left"}]
                      [:&.active {:background-color (darken (color :panel-color) 10)}]]})
 
 

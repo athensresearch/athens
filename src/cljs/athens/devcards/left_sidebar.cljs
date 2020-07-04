@@ -115,57 +115,64 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar])
-        shortcuts (q db/q-shortcuts db/dsdb)]
-    (fn []
-      (let [sorted-shortcuts (->> @shortcuts
-                                  (into [])
-                                  (sort-by first))]
-        (if (not @open?)
+        ;; current-route (subscribe [:current-route]) ;; TODO: disabled primary button if current route == navigation button
+        shortcuts (->> @(q '[:find ?order ?title ?uid
+                             :where
+                             [?e :page/sidebar ?order]
+                             [?e :node/title ?title]
+                             [?e :block/uid ?uid]] db/dsdb)
+                       seq
+                       (sort-by first))]
+    (if (not @open?)
 
-          ;; IF COLLAPSED
-          [:div (use-style left-sidebar-collapsed-style)
-           [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
-                    :label [:> mui-icons/ChevronRight]}]
-           [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                            :label [:> mui-icons/Search]}]
-           [:footer (use-sub-style left-sidebar-collapsed-style :footer)
-            [button {:disabled true
-                     :label [:> mui-icons/TextFormat]}]
-            [button {:disabled true
-                     :label [:> mui-icons/Settings]}]]]
+      ;; IF COLLAPSED
+      [:div (use-style left-sidebar-collapsed-style)
+       [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+                :label       [:> mui-icons/ChevronRight]}]
+       [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+                        :label       [:> mui-icons/Search]}]
+       [:footer (use-sub-style left-sidebar-collapsed-style :footer)
+        [button {:disabled true
+                 :label    [:> mui-icons/TextFormat]}]
+        [button {:disabled true
+                 :label    [:> mui-icons/Settings]}]]]
 
-          ;; IF EXPANDED
-          [:div (use-style left-sidebar-style)
-           [:div (use-sub-style left-sidebar-style :top-line)
-            [athena-prompt-el]
-            [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
-                     :label [:> mui-icons/ChevronLeft]}]]
-           [:nav (use-style main-navigation-style)
-            [button {:disabled true :label [:<>
-                                            [:> mui-icons/Today]
-                                            [:span "Daily Notes"]]}]
-            [button {:on-click-fn #(navigate :home) :label [:<>
-                                                            [:> mui-icons/FileCopy]
-                                                            [:span "All Pages"]]}]
-            [button {:disabled true :label [:<>
-                                            [:> mui-icons/BubbleChart]
-                                            [:span "Graph Overview"]]}]]
+      ;; IF EXPANDED
+      [:div (use-style left-sidebar-style)
+       [:div (use-sub-style left-sidebar-style :top-line)
+        [athena-prompt-el]
+        [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+                 :label       [:> mui-icons/ChevronLeft]}]]
+       [:nav (use-style main-navigation-style)
 
-           ;; SHORTCUTS
-           [:ol (use-style shortcuts-list-style)
-            [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
-            (doall
-              (for [[_order title uid] sorted-shortcuts]
-                ^{:key uid}
-                [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
+        [button {:on-click-fn #(navigate :home)
+                 :label       [:<>
+                               [:> mui-icons/Today]
+                               [:span "Daily Notes"]]}]
+        [button {:on-click-fn #(navigate :pages)
+                 :label       [:<>
+                               [:> mui-icons/FileCopy]
+                               [:span "All Pages"]]}]
+        [button {:disabled true
+                 :label    [:<>
+                            [:> mui-icons/BubbleChart]
+                            [:span "Graph Overview"]]}]]
 
-           ;; LOGO + BOTTOM BUTTONS
-           [:footer (use-sub-style left-sidebar-style :footer)
-            [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-            [button {:disabled true
-                     :label [:> mui-icons/TextFormat]}]
-            [button {:disabled true
-                     :label [:> mui-icons/Settings]}]]])))))
+       ;; SHORTCUTS
+       [:ol (use-style shortcuts-list-style)
+        [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
+        (doall
+          (for [[_order title uid] shortcuts]
+            ^{:key uid}
+            [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
+
+       ;; LOGO + BOTTOM BUTTONS
+       [:footer (use-sub-style left-sidebar-style :footer)
+        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
+        [button {:disabled true
+                 :label    [:> mui-icons/TextFormat]}]
+        [button {:disabled true
+                 :label    [:> mui-icons/Settings]}]]])))
 
 
 ;;; Devcards

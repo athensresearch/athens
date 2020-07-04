@@ -12,3 +12,4 @@ athens.lib.dom.attributes/with-classes
 ;; will be used for linked references
 athens.db/get-children
 athens.db/get-parents
+athens.views/file-cb

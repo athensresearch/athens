@@ -1,8 +1,12 @@
 (ns athens.devcards.node-page
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.blocks :as blocks]
+    [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+    [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -13,6 +17,7 @@
     [komponentit.autosize :as autosize]
     [posh.reagent :refer [pull q]]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -60,6 +65,51 @@
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
+(def references-style {:margin-block "3em"})
+
+
+(def references-heading-style
+  {:font-weight "normal"
+   :display "flex"
+   :padding "0 2rem"
+   :align-items "center"
+   ::stylefy/manual [[:svg {:margin-right "0.25em"
+                            :font-size "1rem"}]
+                     [:span {:flex "1 1 100%"}]]})
+
+
+(def references-list-style
+  {:font-size "14px"})
+
+
+(def references-group-title-style
+  {:color (color :link-color)
+   :margin "0 1.5rem"
+   :font-weight "500"
+   ::stylefy/manual [[:a:hover {:cursor "pointer"
+                                :text-decoration "underline"}]]})
+
+
+(def references-group-style
+  {:background (color :panel-color :opacity-low)
+   :padding "1rem 0.5rem"
+   :border-radius "4px"
+   :margin "0.5em 0"})
+
+
+(def reference-breadcrumbs-style
+  {:font-size "12px"
+   :padding "0.25rem calc(2rem - 0.5em)"})
+
+
+(def references-group-block-style
+  {:border-top [["1px solid " (color :panel-color)]]
+   :padding-block-start "1em"
+   :margin-block-start "1em"
+   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                        :margin-block-start "0"}]]})
+
+
 ;;; Helpers
 
 
@@ -71,11 +121,62 @@
 (def db-handler (debounce handler 500))
 
 
+(defn get-ref-ids
+  [pattern]
+  @(q '[:find [?e ...]
+        :in $ ?regex
+        :where
+        [?e :block/string ?s]
+        [(re-find ?regex ?s)]]
+      db/dsdb
+      pattern))
+
+
+(defn get-block
+  [id]
+  @(pull db/dsdb db/block-pull-pattern id))
+
+
+(defn get-parents
+  [id]
+  (->> @(pull db/dsdb db/parents-pull-pattern id)
+       db/shape-parent-query))
+
+
+(defn merge-parents-and-block
+  [ref-ids]
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents v)))
+                           {}
+                           ref-ids)
+        blocks (map (fn [id] (get-block id)) ref-ids)]
+    (mapv
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
+
+
+(defn group-by-parent
+  [blocks]
+  (group-by (fn [x]
+              (-> x
+                  :block/parents
+                  first
+                  :node/title))
+            blocks))
+
+
+(defn get-data
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+
+
 ;;; Components
 
 
+;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid linked-refs unlinked-refs]
+  [{:block/keys [children uid] title :node/title} editing-uid ref-groups]
+
   [:div
 
    ;; Header
@@ -87,18 +188,36 @@
       :on-change  (fn [e] (db-handler (.. e -target -value) uid))}]
     [:span title]]
 
+   ;; Children
    [:div
-    (for [child children]
-      ^{:key (:db/id child)} [blocks/block-el child])]
-   ;; TODO references
-   [:div
-    [:h4 "Linked References"]
-    (for [ref linked-refs]
-      ^{:key ref} [:p ref])]
-   [:div
-    [:h4 "Unlinked References"]
-    (for [ref unlinked-refs]
-      ^{:key ref} [:p ref])]])
+    (for [{:block/keys [uid] :as child} children]
+      ^{:key uid}
+      [block-el child])]
+
+   ;; References
+   (doall
+     (for [[linked-or-unlinked refs] ref-groups]
+       (when (not-empty refs)
+         [:section (use-style references-style {:key linked-or-unlinked})
+          [:h4 (use-style references-heading-style)
+           [(r/adapt-react-class mui-icons/Link)]
+           [:span linked-or-unlinked]
+           [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                    :disabled true}]]
+          [:div (use-style references-list-style)
+           (for [[group-title group] refs]
+             [:div (use-style references-group-style {:key group-title})
+              [:h4 (use-style references-group-title-style)
+               [:a {:on-click #(navigate-uid uid)} group-title]]
+              (for [{:block/keys [uid parents] :as block} group]
+                [:div (use-style references-group-block-style {:key uid})
+              ;; TODO: expand parent on click
+                 [block-el block]
+                 (when (> (count parents) 1)
+                   [breadcrumbs-list {:style reference-breadcrumbs-style}
+                    [(r/adapt-react-class mui-icons/LocationOn)]
+                    (for [{:keys [node/title block/string block/uid]} parents]
+                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])])]])))])
 
 
 (defn node-page-component
@@ -109,9 +228,10 @@
         title (:node/title node)
         editing-uid @(subscribe [:editing-uid])]
     (when-not (string/blank? title)
-      (let [linked-ref-entids     @(q db/q-refs db/dsdb (patterns/linked title))
-            unlinked-ref-entids   @(q db/q-refs db/dsdb (patterns/unlinked title))]
-        [node-page-el node editing-uid linked-ref-entids unlinked-ref-entids]))))
+      ;; TODO: turn ref-groups into an atom, let users toggle open/close
+      (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
+                        ["Unlinked References" (-> title patterns/unlinked get-data)]]]
+        [node-page-el node editing-uid ref-groups]))))
 
 
 ;;; Devcards

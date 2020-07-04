@@ -50,6 +50,6 @@
   (with-attributes
     {:class "foo bar"}
     {:class "baz poo"}
-    {:style {:color :red}}
-    )
-  )
+    {:style {:color :red}}))
+
+

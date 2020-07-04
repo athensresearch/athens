@@ -83,6 +83,12 @@
 
 
 (re-frame/reg-sub
+  :daily-notes
+  (fn-traced [db _]
+             (:daily-notes db)))
+
+
+(re-frame/reg-sub
   :athena/get-recent
   (fn-traced [db _]
              (:athena/get-recent db)))
