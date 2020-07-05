@@ -273,7 +273,6 @@
        map-order))
 
 
-
 (defn dec-after
   [eid order]
   (->> (d/q '[:find ?ch ?new-o
@@ -281,7 +280,6 @@
               :where (dec-after ?p ?at ?ch ?new-o)]
             @db/dsdb rules eid order)
        map-order))
-
 
 
 (defn backspace
