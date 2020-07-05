@@ -171,7 +171,7 @@
   :http/get-db
   (fn [_ _]
     {:http {:method :get
-            :url (str db/athens-url "XXX")
+            :url db/athens-url
             :opts {:with-credentials? false}
             :on-success [:http-success/get-db]
             :on-failure [:alert/set]}}))
