@@ -25,7 +25,6 @@
    :display "flex"
    :flex-direction "column"
    :padding "1rem 1.5rem"
-  ;;  :box-shadow (str "1px 0 " (color :panel-color))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
@@ -41,24 +40,6 @@
                          :small-icon {:font-size "16px"}
                          :large-icon {:font-size "22px"}}})
 
-
-(def left-sidebar-collapsed-style
-  (merge left-sidebar-style {:flex "0 0 0"
-                             :display "none"
-                            ;;  :display "grid"
-                             :padding "32px 4px 16px"
-                             :grid-gap "4px"
-                             :width "44px"
-                             :box-shadow "none"
-                             :overflow-x "hidden"
-                             :grid-template-rows "auto auto 1fr"
-                             :align-self "stretch"
-                             ::stylefy/sub-styles {:footer {:padding-top "40px"
-                                                            :align-self "flex-end"
-                                                            :margin-top "auto"
-                                                            :display "grid"
-                                                            :grid-gap "4px"
-                                                            :grid-auto-flow "row"}}}))
 
 
 (def main-navigation-style
@@ -77,7 +58,7 @@
    :list-style "none"
    :flex-direction "column"
    :padding "0"
-   :margin "0 0 32px"
+   :margin "64px 0 32px"
    :overflow-y "auto"
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
                                    :opacity (:opacity-med OPACITIES)
@@ -114,7 +95,7 @@
 
 
 (defn left-sidebar
-  []
+  [route-name]
   (let [open? (subscribe [:left-sidebar/open])
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
@@ -123,27 +104,24 @@
                              [?e :block/uid ?uid]] db/dsdb)
                        seq
                        (sort-by first))]
-        (if (not @open?)
+        (when @open?
 
-          ;; IF COLLAPSED
-          [:div (use-style left-sidebar-collapsed-style)
-           [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
-                    :label [:> mui-icons/ChevronRight]}]]
-
-          ;; IF EXPANDED
           [:div (use-style left-sidebar-style)
-           [:nav (use-style main-navigation-style)
+          ;;  [:nav (use-style main-navigation-style)
 
-            [button {:on-click-fn #(navigate :home)
-                     :label       [:<>
-                                   [:> mui-icons/Today]
-                                   [:span "Daily Notes"]]}]
-            [button {:on-click-fn #(navigate :pages) :label [:<>
-                                                             [:> mui-icons/FileCopy]
-                                                             [:span "All Pages"]]}]
-            [button {:disabled true :label [:<>
-                                            [:> mui-icons/BubbleChart]
-                                            [:span "Graph Overview"]]}]]
+          ;;   [button {:on-click-fn #(navigate :home)
+          ;;            :active (when (= route-name :home) true)
+          ;;            :label       [:<>
+          ;;                          [:> mui-icons/Today]
+          ;;                          [:span "Daily Notes"]]}]
+          ;;   [button {:on-click-fn #(navigate :pages)
+          ;;            :active (when (= route-name :pages) true)
+          ;;            :label [:<>
+          ;;                    [:> mui-icons/FileCopy]
+          ;;                    [:span "Pages"]]}]
+          ;;   [button {:disabled true :label [:<>
+          ;;                                   [:> mui-icons/BubbleChart]
+          ;;                                   [:span "Graph Overview"]]}]]
 
            ;; SHORTCUTS
            [:ol (use-style shortcuts-list-style)

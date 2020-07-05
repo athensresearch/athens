@@ -1,12 +1,13 @@
 (ns athens.devcards.app-toolbar
   (:require
-    ["@material-ui/icons" :as mui-icons]
-    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.devcards.buttons :refer [button button-primary]]
-    [athens.style :refer [color]]
-    [athens.subs]
-    [re-frame.core :refer [subscribe dispatch]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@material-ui/icons" :as mui-icons]
+   [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+   [athens.devcards.buttons :refer [button button-primary]]
+   [athens.router :refer [navigate]]
+   [athens.style :refer [color]]
+   [athens.subs]
+   [re-frame.core :refer [subscribe dispatch]]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -53,7 +54,8 @@
   []
   [:header (use-style app-header-style)
    [:div (use-style app-header-control-section-style)
-    [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+    [button {:on-click-fn #(dispatch [:athena/toggle])
+             :style {:background (color :panel-color :opacity-med)}
                      :label [:> mui-icons/Search]}]
     [button {:label [:> mui-icons/Today]}]
     [button {:label [:> mui-icons/Menu]}]]
@@ -70,23 +72,30 @@
 
 
 (defn app-header-2
-  []
-  (let [open? (subscribe [:left-sidebar])]
-    (fn []
+  [route-name]
+  (let [open? (subscribe [:left-sidebar/open])]
       [:header (use-style app-header-style)
        [:div (use-style app-header-control-section-style)
-        [button {
-                 :active (when @open? true)
-                 :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:toggle-left-sidebar])}]
-        [button {:label [:> mui-icons/Today]}]]
-       [button-primary {:on-click-fn #(dispatch [:toggle-athena])
-                        :style {:width "14rem"}
-                        :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
+        [button {:active (when @open? true)
+                 :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:left-sidebar/toggle])}]
+        [button {:on-click-fn #(navigate :home)
+                 :active (when (= route-name :home) true)
+                 :label       [:<>
+                               [:> mui-icons/Today]
+                               [:span "Timeline"]]}]
+        [button {:on-click-fn #(navigate :pages)
+                 :active (when (= route-name :pages) true)
+                 :label [:<>
+                         [:> mui-icons/FileCopy]
+                         [:span "Pages"]]}]]
+       [button {:on-click-fn #(dispatch [:athena/toggle])
+                :style {:width "14rem" :background (color :panel-color :opacity-med)}
+                :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
        [:div (use-style app-header-secondary-controls-style)
         [button {:label [:> mui-icons/Settings]}]
         [:span {:style {:opacity "0.5"}} " • "]
         [button {:label [:> mui-icons/VerticalSplit]
-                 :on-click-fn #(dispatch [:right-sidebar/toggle])}]]])))
+                 :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]))
 
 
 ;;; Devcards

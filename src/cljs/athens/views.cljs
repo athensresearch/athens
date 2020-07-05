@@ -36,6 +36,7 @@
    :grid-area "main-content"
    :align-items "flex-start"
    :justify-content "stretch"
+   :padding-top "40px"
    :display "flex"
    :overflow-y "auto"})
 
@@ -114,8 +115,8 @@
          (if @loading
            [initial-spinner-component]
            [:div (use-style app-wrapper-style)
-            [app-header-2]
-            [left-sidebar]
+            [app-header-2 route-name]
+            [left-sidebar route-name]
             [:div (use-style main-content-style
                              {:on-scroll (when (= route-name :home)
                                            db-scroll-daily-notes)})

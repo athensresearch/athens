@@ -28,9 +28,9 @@
    :color            "rgba(50, 47, 56, 1)"
    :background-color "transparent"
    :transition       "all 0.05s ease"
-   ::stylefy/mode [[:hover {:background-color "#EFEDEB"}]
-                   [:active {:color "rgba(0, 117, 225)"
-                             :background-color "rgba(0, 117, 225, 0.1)"}]
+   ::stylefy/mode [[:hover {:background (darken (color :panel-color :opacity-med) 5)}]
+                   [:active :hover:active {:color (color :body-text-color)
+                             :background-color  (darken (color :panel-color :opacity-med) 10)}]
                    [:disabled {:color "rgba(0, 0, 0, 0.3)"
                                :background-color "#EFEDEB"
                                :cursor "default"}]]
@@ -42,7 +42,7 @@
                                                                                        :margin-inline-end "-4px"}]]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
-                     [:&.active {:background-color (darken (color :panel-color) 10)}]]})
+                     [:&.active {:background-color (darken (color :panel-color :opacity-med) 10)}]]})
 
 
 (def buttons-primary-style
