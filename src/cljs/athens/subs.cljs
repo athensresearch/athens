@@ -35,15 +35,15 @@
 
 
 (re-frame/reg-sub
-  :devtool
+  :devtool/open
   (fn-traced [db _]
-             (:devtool db)))
+             (:devtool/open db)))
 
 
 (re-frame/reg-sub
-  :left-sidebar
+  :left-sidebar/open
   (fn-traced [db _]
-             (:left-sidebar db)))
+             (:left-sidebar/open db)))
 
 
 (re-frame/reg-sub
@@ -83,9 +83,9 @@
 
 
 (re-frame/reg-sub
-  :daily-notes
+  :daily-notes/items
   (fn-traced [db _]
-             (:daily-notes db)))
+             (:daily-notes/items db)))
 
 
 (re-frame/reg-sub

@@ -64,7 +64,7 @@
 (defn scroll-daily-notes
   [_]
   (let
-    [daily-notes @(subscribe [:daily-notes])
+    [daily-notes @(subscribe [:daily-notes/items])
      from-bottom (.. js/document (getElementById "daily-notes") getBoundingClientRect -bottom)
      doc-height (.. js/document -documentElement -scrollHeight)
      delta (- from-bottom doc-height)]
@@ -80,7 +80,7 @@
 
 (defn daily-notes-panel
   []
-  (let [note-refs (subscribe [:daily-notes])]
+  (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
       (when (empty? @note-refs)
         (dispatch [:next-daily-note (get-day)]))

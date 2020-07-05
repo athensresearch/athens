@@ -393,7 +393,7 @@
     (eval-box!)))
 
 
-(d/listen! dsdb :devtool listener)
+(d/listen! dsdb :devtool/open listener)
 
 
 (defn handle-box-change!
@@ -494,7 +494,7 @@
 
 (defn devtool-component
   []
-  (let [devtool? @(subscribe [:devtool])]
+  (let [devtool? @(subscribe [:devtool/open])]
     [devtool-el devtool? state*]))
 
 

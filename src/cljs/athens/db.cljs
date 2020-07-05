@@ -187,14 +187,14 @@
 ;;; re-frame
 
 
-(defonce rfdb {:user                "Jeff"
+(defonce rfdb {:user                "Socrates"
                :current-route       nil
                :loading             true
                :errors              {}
                :athena/open         false
                :athena/recent-items '()
-               :devtool             false
-               :left-sidebar        true
+               :devtool/open        false
+               :left-sidebar/open   true
                :right-sidebar/open  false
                :right-sidebar/items {}
                :editing-uid         nil
@@ -204,4 +204,4 @@
                                      :closest/uid  nil
                                      :closest/kind nil}
                :tooltip-uid         nil
-               :daily-notes         []})
+               :daily-notes/items   []})

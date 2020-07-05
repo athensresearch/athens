@@ -49,13 +49,13 @@
 (reg-event-db
   :toggle-devtool
   (fn [db _]
-    (update db :devtool not)))
+    (update db :devtool/open not)))
 
 
 (reg-event-db
   :toggle-left-sidebar
   (fn [db _]
-    (update db :left-sidebar not)))
+    (update db :left-sidebar/open not)))
 
 
 (reg-event-db
@@ -196,7 +196,7 @@
 (reg-event-db
   :daily-notes/reset
   (fn [db _]
-    (assoc db :daily-notes [])))
+    (assoc db :daily-notes/items [])))
 
 
 (reg-event-fx
@@ -229,7 +229,7 @@
 (reg-event-fx
   :next-daily-note
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes conj uid)
+    (let [new-db (update db :daily-notes/items conj uid)
           now (now-ts)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
