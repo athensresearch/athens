@@ -94,27 +94,29 @@
 (posh! dsdb)
 
 
-(defn sort-block
-  [block]
-  (if-let [children (seq (:block/children block))]
-    (assoc block :block/children
-           (sort-by :block/order (map sort-block children)))
-    block))
-
-
-;; all blocks (except for block refs) want to get all children
-(def block-pull-pattern
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-
-;; the main difference between a page and a block is that page has a title attribute
-(def node-pull-pattern
-  (conj block-pull-pattern :node/title))
-
-
 (defn e-by-av
   [a v]
   (-> (d/datoms @dsdb :avet a v) first :e))
+
+
+(defn sort-block-children
+  [block]
+  (if-let [children (seq (:block/children block))]
+    (assoc block :block/children
+           (sort-by :block/order (map sort-block-children children)))
+    block))
+
+
+(defn get-block-document
+  [id]
+  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+    sort-block-children))
+
+
+(defn get-node-document
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+    sort-block-children))
 
 
 (defn shape-parent-query
@@ -131,7 +133,7 @@
     vec))
 
 
-(defn get-parent-context
+(defn get-parents-recursively
   [id]
   (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
     shape-parent-query))

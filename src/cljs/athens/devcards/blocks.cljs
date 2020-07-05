@@ -220,15 +220,8 @@
 
 
 (defn block-component
-  "This query is long because I'm not sure how to recursively find all child blocks with all attributes
-  '[* {:block/children [*]}] doesn't work
-Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
-no results for q returns nil
-no results for pull eid returns nil
-  "
   [ident]
-  (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
-                   (db/sort-block))]
+  (let [block (db/get-block-document ident)]
     [block-el block]))
 
 

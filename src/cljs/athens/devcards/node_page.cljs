@@ -140,17 +140,12 @@
       pattern))
 
 
-(defn get-block
-  [id]
-  @(pull db/dsdb db/block-pull-pattern id))
-
-
 (defn merge-parents-and-block
   [ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parent-context v)))
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block id)) ref-ids)]
+        blocks (map (fn [id] (db/get-block-document id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -226,7 +221,7 @@
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
   [ident]
-  (let [node (->> @(pull db/dsdb db/node-pull-pattern ident) (db/sort-block))
+  (let [node (db/get-node-document ident)
         title (:node/title node)
         editing-uid @(subscribe [:editing-uid])]
     (when-not (string/blank? title)
