@@ -202,7 +202,7 @@
 
 (defonce rfdb {:user                "Socrates"
                :current-route       nil
-               :loading?             false
+               :loading?            true
                :alert               nil
                :athena/open         false
                :athena/recent-items '()

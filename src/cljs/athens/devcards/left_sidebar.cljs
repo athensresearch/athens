@@ -170,7 +170,7 @@
        [:footer (use-sub-style left-sidebar-style :footer)
         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
         [button-primary {:label "Load Test Data"
-                         :on-click-fn #(dispatch [:get-local-storage-db])}]]])))
+                         :on-click-fn #(dispatch [:get-db/init])}]]])))
         ;;[button {:disabled true
         ;;         :label    [:> mui-icons/TextFormat]}]
         ;;[button {:disabled true

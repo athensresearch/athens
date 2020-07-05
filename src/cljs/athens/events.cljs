@@ -7,7 +7,7 @@
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull #_q #_pull-many]]
-    [re-frame.core :refer [reg-event-db reg-event-fx]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]))
 
 
 ;;; re-frame app-db events
@@ -160,44 +160,50 @@
 
 
 (reg-event-fx
-  :boot ;; FIXME: rename to init-dsdb?
-  (fn-traced [_ _]
-             {:async-flow {:first-dispatch [:get-local-storage-db]
-                           :rules          [{:when :seen? :events :parse-datoms :dispatch [:loading/unset] :halt? true}
-                                            {:when :seen? :events :api-request-error :dispatch [:alert/set "Boot Error"] :halt? true}]}}))
+  :get-db/init
+  (fn [{rfdb :db} _]
+    {:db (-> db/rfdb
+           (assoc :loading? true))
+     :async-flow {:first-dispatch (if (js/localStorage.getItem "datascript/DB")
+                                    [:local-storage/get-db]
+                                    [:http/get-db])
+                  :rules          [{:when :seen?
+                                    :events :reset-conn
+                                    :dispatch-n [[:loading/unset]
+                                                 [:navigate (-> rfdb :current-route :data :name)]]
+                                    :halt? true}]}}))
 
 
 (reg-event-fx
-  :get-datoms
+  :http/get-db
   (fn [_ _]
     {:http {:method :get
             :url db/athens-url
             :opts {:with-credentials? false}
-            :on-success [:parse-datoms]
+            :on-success [:http-success/get-db]
             :on-failure [:alert/set]}}))
 
 
 (reg-event-fx
-  :parse-datoms
-  (fn [{:keys [db]} [_ json-str]]
+  :http-success/get-db
+  (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
-      {:reset-conn!          new-db
-       :set-local-storage-db new-db
-       :dispatch-n           [[:init-rfdb]
-                              [:navigate (-> db :currount-route :data :name)]
-                              [:loading/unset]]})))
+      {:dispatch-n [[:reset-conn new-db]
+                    [:local-storage/set-db new-db]]})))
 
 
 (reg-event-fx
-  :get-local-storage-db
-  (fn [{:keys [db]}]
-    (if-let [stored (js/localStorage.getItem "datascript/DB")]
-      {:reset-conn! (dt/read-transit-str stored)
-       ;;:db         (assoc (assoc db/rfdb :loading false) :current-route (:current-route db))
-       :db          (merge db/rfdb {:loading false :current-route (:current-route db)})}
-      {:dispatch [:get-datoms]
-       :db       db/rfdb})))
+  :local-storage/get-db
+  [(inject-cofx :local-storage "datascript/DB")]
+  (fn [{:keys [local-storage]} _]
+    {:dispatch [:reset-conn (dt/read-transit-str local-storage)]}))
+
+
+(reg-event-fx
+  :local-storage/set-db
+  (fn [_ [_ db]]
+    {:local-storage/set-db! db}))
 
 
 ;; Datascript
@@ -206,6 +212,12 @@
   :transact
   (fn [_ [_ datoms]]
     {:transact! datoms}))
+
+
+(reg-event-fx
+  :reset-conn
+  (fn [_ [_ db]]
+    {:reset-conn! db}))
 
 
 (reg-event-fx

@@ -31,7 +31,7 @@
 
 
 (reg-fx
-  :set-local-storage-db
+  :local-storage/set-db!
   (fn [db]
     (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
 
