@@ -85,8 +85,8 @@
 
 
 (defn match-panel
-  [name]
-  [(case name
+  [route-name]
+  [(case route-name
      :about about-panel
      :home daily-notes-panel
      :pages pages-panel
@@ -99,16 +99,17 @@
   (let [current-route (subscribe [:current-route])
         loading (subscribe [:loading])]
     (fn []
-      [:<>
-       [alert]
-       [athena-component]
-       (if @loading
-         [initial-spinner-component]
-         [:div (use-style app-wrapper-style)
-          [left-sidebar]
-          [:div (use-style main-content-style
-                           {:on-scroll (when (= (-> @current-route :data :name) :home)
-                                         db-scroll-daily-notes)})
-           [match-panel (-> @current-route :data :name)]]
-          [right-sidebar-component]
-          [devtool-component]])])))
+      (let [route-name (-> @current-route :data :name)]
+        [:<>
+         [alert]
+         [athena-component]
+         (if @loading
+           [initial-spinner-component]
+           [:div (use-style app-wrapper-style)
+            [left-sidebar]
+            [:div (use-style main-content-style
+                    {:on-scroll (when (= route-name :home)
+                                  db-scroll-daily-notes)})
+             [match-panel route-name]]
+            [right-sidebar-component]
+            [devtool-component]])]))))
