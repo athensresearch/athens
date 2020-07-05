@@ -26,8 +26,8 @@
 (reg-event-db
   :athena/update-recent-items
   (fn-traced [db [_ selected-page]]
-    (when (nil? ((set (:athena/recent-items db)) selected-page))
-      (update db :athena/recent-items conj selected-page))))
+             (when (nil? ((set (:athena/recent-items db)) selected-page))
+               (update db :athena/recent-items conj selected-page))))
 
 
 (reg-event-db
@@ -65,19 +65,19 @@
 (reg-event-fx
   :right-sidebar/open-item
   (fn-traced [{:keys [db]} [_ uid]]
-    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-          new-item  (merge block {:open true :index -1})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
-          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                               {}
-                               new-items)
-          sorted-items (into (sorted-map-by (fn [k1 k2]
-                                              (compare
-                                                [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
-      {:db (assoc db :right-sidebar/items sorted-items)
-       :dispatch (when (false? (:right-sidebar/open db))
-                   [:right-sidebar/toggle])})))
+             (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
+                   new-item  (merge block {:open true :index -1})
+                   new-items (assoc (:right-sidebar/items db) uid new-item)
+                   inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                                        {}
+                                        new-items)
+                   sorted-items (into (sorted-map-by (fn [k1 k2]
+                                                       (compare
+                                                         [(get-in new-items [k1 :index]) k2]
+                                                         [(get-in new-items [k2 :index]) k1]))) inc-items)]
+               {:db (assoc db :right-sidebar/items sorted-items)
+                :dispatch (when (false? (:right-sidebar/open db))
+                            [:right-sidebar/toggle])})))
 
 
 ;; Alerts
@@ -99,7 +99,7 @@
 (reg-event-db
   :loading/set
   (fn-traced [db]
-    (assoc-in db [:loading?] true)))
+             (assoc-in db [:loading?] true)))
 
 
 (reg-event-db
@@ -156,7 +156,7 @@
   :get-db/init
   (fn [{rfdb :db} _]
     {:db (-> db/rfdb
-           (assoc :loading? true))
+             (assoc :loading? true))
      :async-flow {:first-dispatch (if false
                                     [:local-storage/get-db]
                                     [:http/get-db])
@@ -269,9 +269,9 @@
         reindex (->> (d/q '[:find ?ch ?new-o
                             :in $ % ?p ?at
                             :where (inc-after ?p ?at ?ch ?new-o)]
-                       @db/dsdb rules (:db/id parent) (:block/order block))
-                  (map (fn [[id order]] {:db/id id :block/order order}))
-                  (concat [new-block]))]
+                          @db/dsdb rules (:db/id parent) (:block/order block))
+                     (map (fn [[id order]] {:db/id id :block/order order}))
+                     (concat [new-block]))]
     {:transact! [[:db/add (:db/id block) :block/string head]
                  {:db/id (:db/id parent)
                   :block/children reindex}]
@@ -292,9 +292,9 @@
         reindex (->> (d/q '[:find ?ch ?new-o
                             :in $ % ?p ?at
                             :where (inc-after ?p ?at ?ch ?new-o)]
-                       @db/dsdb rules (:db/id parent) (inc (:block/order block)))
-                  (map (fn [[id order]] {:db/id id :block/order order}))
-                  (concat [new-block]))]
+                          @db/dsdb rules (:db/id parent) (inc (:block/order block)))
+                     (map (fn [[id order]] {:db/id id :block/order order}))
+                     (concat [new-block]))]
     {:transact! [[:db/add (:db/id block) :block/string ""]
                  {:db/id (:db/id parent) :block/children reindex}]
      :dispatch  [:editing/uid new-uid]}))
@@ -317,17 +317,17 @@
     (let [block (db/get-block [:block/uid uid])
           parent (db/get-parent [:block/uid uid])
           older-sib (->> parent
-                      :block/children
-                      (filter #(= (dec (:block/order block)) (:block/order %)))
-                      first
-                      :db/id
-                      db/get-block)
+                         :block/children
+                         (filter #(= (dec (:block/order block)) (:block/order %)))
+                         first
+                         :db/id
+                         db/get-block)
           new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
           reindex-blocks (->> (d/q '[:find ?ch ?new-o
                                      :in $ % ?p ?at
                                      :where (dec-after ?p ?at ?ch ?new-o)]
-                                @db/dsdb rules (:db/id parent) (:block/order block))
-                           (map (fn [[id order]] {:db/id id :block/order order})))]
+                                   @db/dsdb rules (:db/id parent) (:block/order block))
+                              (map (fn [[id order]] {:db/id id :block/order order})))]
       {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
                    {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
                    {:db/id (:db/id parent) :block/children reindex-blocks}]}))) ;; reindex parent
@@ -343,9 +343,9 @@
           reindex-grandpa (->> (d/q '[:find ?ch ?new-order
                                       :in $ % ?grandpa ?parent-order
                                       :where (inc-after ?grandpa ?parent-order ?ch ?new-order)]
-                                 @db/dsdb rules (:db/id grandpa) (:block/order parent))
-                            (map (fn [[id order]] {:db/id id :block/order order}))
-                            (concat [new-block]))]
+                                    @db/dsdb rules (:db/id grandpa) (:block/order parent))
+                               (map (fn [[id order]] {:db/id id :block/order order}))
+                               (concat [new-block]))]
       (when (and parent grandpa)
         {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
                      {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
@@ -355,16 +355,16 @@
   [source source-parent target]
   (let [new-block {:block/uid (:block/uid source) :block/order 0}
         new-parent-children (->> (d/q '[:find ?ch ?new-order
-                                         :in $ % ?parent ?source-order
-                                         :where (dec-after ?parent ?source-order ?ch ?new-order)]
-                                    @db/dsdb rules (:db/id source-parent) (:block/order source))
-                              (map (fn [[id order]] {:db/id id :block/order order})))
+                                        :in $ % ?parent ?source-order
+                                        :where (dec-after ?parent ?source-order ?ch ?new-order)]
+                                      @db/dsdb rules (:db/id source-parent) (:block/order source))
+                                 (map (fn [[id order]] {:db/id id :block/order order})))
         new-target-children (->> (d/q '[:find ?ch ?new-order
                                         :in $ % ?parent ?at
                                         :where (inc-after ?parent ?at ?ch ?new-order)]
-                                   @db/dsdb rules (:dbid target) 0)
-                              (map (fn [[id order]] {:db/id id :block/order order}))
-                              (concat [new-block]))]
+                                      @db/dsdb rules (:dbid target) 0)
+                                 (map (fn [[id order]] {:db/id id :block/order order}))
+                                 (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
      {:db/add (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
      {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
@@ -391,9 +391,9 @@
                             [?ch :block/order ?order]
                             [(?between ?s-order ?t-order ?order)]
                             [(?inc-or-dec ?order) ?new-order]]
-                       @db/dsdb (:db/id parent) s-order t-order between inc-or-dec)
-                  (map (fn [[id order]] {:db/id id :block/order order}))
-                  (concat [new-block]))]
+                          @db/dsdb (:db/id parent) s-order t-order between inc-or-dec)
+                     (map (fn [[id order]] {:db/id id :block/order order}))
+                     (concat [new-block]))]
     [{:db/add (:db/id parent) :block/children reindex}]))
 
 
@@ -403,14 +403,14 @@
         source-parent-children (->> (d/q '[:find ?ch ?new-order
                                            :in $ % ?parent ?source-order
                                            :where (dec-after ?parent ?source-order ?ch ?new-order)]
-                                      @db/dsdb rules (:db/id source-parent) (:block/order source))
-                                 (map (fn [[id order]] {:db/id id :block/order order})))
+                                         @db/dsdb rules (:db/id source-parent) (:block/order source))
+                                    (map (fn [[id order]] {:db/id id :block/order order})))
         target-parent-children (->> (d/q '[:find ?ch ?new-order
                                            :in $ % ?parent ?target-order
                                            :where (inc-after ?parent ?target-order ?ch ?new-order)]
-                                      @db/dsdb rules (:db/id target-parent) (:block/order target))
-                                 (map (fn [[id order]] {:db/id id :block/order order}))
-                                 (concat [new-block]))]
+                                         @db/dsdb rules (:db/id target-parent) (:block/order target))
+                                    (map (fn [[id order]] {:db/id id :block/order order}))
+                                    (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
      {:db/id (:db/id source-parent) :block/children source-parent-children} ;; reindex source
      {:db/id (:db/id target-parent) :block/children target-parent-children}])) ;; reindex target
@@ -429,7 +429,7 @@
                   (= kind :child) (target-child source source-parent target)
                   ;; do nothing if target is directly above source
                   (and (= source-parent target-parent)
-                    (= 1 (- (:block/order source) (:block/order target)))) nil
+                       (= 1 (- (:block/order source) (:block/order target)))) nil
                   ;; re-order blocks between source and target
                   (= source-parent target-parent) (target-sibling-same-parent source target source-parent)
                   ;;; when parent is different, re-index both source-parent and target-parent
