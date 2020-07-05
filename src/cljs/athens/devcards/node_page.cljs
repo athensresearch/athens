@@ -123,7 +123,7 @@
 
 (defn handler
   [val uid]
-  (dispatch [:transact-event [[:db/add [:block/uid uid] :node/title val]]]))
+  (dispatch [:transact [[:db/add [:block/uid uid] :node/title val]]]))
 
 
 (def db-handler (debounce handler 500))

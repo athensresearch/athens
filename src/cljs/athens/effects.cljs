@@ -15,7 +15,7 @@
 
 
 (reg-fx
-  :transact
+  :transact!
   (fn [datoms]
     (prn "TX INPUTS")
     (pprint datoms)

@@ -179,9 +179,9 @@
 
 
 (reg-event-fx
-  :transact-event
+  :transact
   (fn [_ [_ datoms]]
-    {:transact datoms}))
+    {:transact! datoms}))
 
 
 (reg-event-fx
@@ -202,7 +202,7 @@
   :page/create
   (fn [_ [_ title uid]]
     (let [now (now-ts)]
-      {:transact [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
+      {:transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
 
 
 (reg-event-fx
@@ -212,8 +212,8 @@
           now (now-ts)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db new-db
-         :transact [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
+        {:db        new-db
+         :transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
 
 
 
@@ -257,10 +257,10 @@
                        @db/dsdb rules (:db/id parent) (:block/order block))
                   (map (fn [[id order]] {:db/id id :block/order order}))
                   (concat [new-block]))]
-    {:transact [[:db/add (:db/id block) :block/string head]
-                {:db/id (:db/id parent)
-                 :block/children reindex}]
-     :dispatch [:editing/uid new-uid]}))
+    {:transact! [[:db/add (:db/id block) :block/string head]
+                 {:db/id (:db/id parent)
+                  :block/children reindex}]
+     :dispatch  [:editing/uid new-uid]}))
 
 
 (defn bump-up
@@ -280,9 +280,9 @@
                        @db/dsdb rules (:db/id parent) (inc (:block/order block)))
                   (map (fn [[id order]] {:db/id id :block/order order}))
                   (concat [new-block]))]
-    {:transact [[:db/add (:db/id block) :block/string ""]
-                {:db/id (:db/id parent) :block/children reindex}]
-     :dispatch [:editing/uid new-uid]}))
+    {:transact! [[:db/add (:db/id block) :block/string ""]
+                 {:db/id (:db/id parent) :block/children reindex}]
+     :dispatch  [:editing/uid new-uid]}))
 
 
 ;; TODO: if enter at end of block, if block open, insert new 0th child. otherwise, add sibling (default behavior right now)
@@ -313,9 +313,9 @@
                                      :where (dec-after ?p ?at ?ch ?new-o)]
                                 @db/dsdb rules (:db/id parent) (:block/order block))
                            (map (fn [[id order]] {:db/id id :block/order order})))]
-      {:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                  {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                  {:db/id (:db/id parent) :block/children reindex-blocks}]}))) ;; reindex parent
+      {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                   {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
+                   {:db/id (:db/id parent) :block/children reindex-blocks}]}))) ;; reindex parent
 
 
 ;; TODO: no-op when user tries to unindent to a child out of current context
@@ -332,8 +332,8 @@
                             (map (fn [[id order]] {:db/id id :block/order order}))
                             (concat [new-block]))]
       (when (and parent grandpa)
-        {:transact [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
-                    {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
+        {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                     {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
 
 
 (defn target-child
@@ -408,7 +408,7 @@
                    target        (db/get-block [:block/uid target-uid])
                    source-parent (db/get-parent [:block/uid source-uid])
                    target-parent (db/get-parent [:block/uid target-uid])]
-               {:transact
+               {:transact!
                 (cond
                   ;; child always has same behavior: move to first child of target
                   (= kind :child) (target-child source source-parent target)

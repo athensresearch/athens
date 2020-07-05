@@ -302,7 +302,7 @@
 
 (defn on-change
   [val uid]
-  (dispatch [:transact-event [[:db/add [:block/uid uid] :block/string val]]]))
+  (dispatch [:transact [[:db/add [:block/uid uid] :block/string val]]]))
 
 
 (def db-on-change (debounce on-change 500))
@@ -310,7 +310,7 @@
 
 (defn toggle
   [id open]
-  (dispatch [:transact-event [[:db/add id :block/open (not open)]]]))
+  (dispatch [:transact [[:db/add id :block/open (not open)]]]))
 
 
 (defn on-key-down
