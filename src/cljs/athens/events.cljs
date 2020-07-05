@@ -10,10 +10,6 @@
     [re-frame.core :refer [reg-event-db reg-event-fx]]))
 
 
-
-;;; Events
-
-
 ;; app-db events
 
 
@@ -24,19 +20,19 @@
 
 
 (reg-event-db
-  :toggle-athena
+  :athena/toggle
   (fn [db _]
     (update db :athena/open not)))
 
 
 (reg-event-db
-  :toggle-devtool
+  :devtool/toggle
   (fn [db _]
     (update db :devtool/open not)))
 
 
 (reg-event-db
-  :toggle-left-sidebar
+  :left-sidebar/toggle
   (fn [db _]
     (update db :left-sidebar/open not)))
 
@@ -54,7 +50,7 @@
 
 
 (reg-event-db
-  :athena/update-recent
+  :athena/update-recent-items
   (fn-traced [db [_ selected-page]]
     (when (nil? ((set (:athena/recent-items db)) selected-page))
       (update db :athena/recent-items conj selected-page))))
@@ -111,9 +107,9 @@
 
 
 (reg-event-db
-  :editing-uid
+  :editing/uid
   (fn-traced [db [_ uid]]
-             (assoc db :editing-uid uid)))
+             (assoc db :editing/uid uid)))
 
 
 (reg-event-db
@@ -123,9 +119,9 @@
 
 
 (reg-event-db
-  :tooltip-uid
+  :tooltip/uid
   (fn [db [_ uid]]
-    (assoc db :tooltip-uid uid)))
+    (assoc db :tooltip/uid uid)))
 
 
 ;;; event effects
@@ -264,7 +260,7 @@
     {:transact [[:db/add (:db/id block) :block/string head]
                 {:db/id (:db/id parent)
                  :block/children reindex}]
-     :dispatch [:editing-uid new-uid]}))
+     :dispatch [:editing/uid new-uid]}))
 
 
 (defn bump-up
@@ -286,7 +282,7 @@
                   (concat [new-block]))]
     {:transact [[:db/add (:db/id block) :block/string ""]
                 {:db/id (:db/id parent) :block/children reindex}]
-     :dispatch [:editing-uid new-uid]}))
+     :dispatch [:editing/uid new-uid]}))
 
 
 ;; TODO: if enter at end of block, if block open, insert new 0th child. otherwise, add sibling (default behavior right now)

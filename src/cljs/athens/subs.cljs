@@ -65,15 +65,15 @@
 
 
 (re-frame/reg-sub
-  :editing-uid
+  :editing/uid
   (fn-traced [db _]
-             (:editing-uid db)))
+             (:editing/uid db)))
 
 
 (re-frame/reg-sub
-  :tooltip-uid
+  :tooltip/uid
   (fn-traced [db _]
-             (:tooltip-uid db)))
+             (:tooltip/uid db)))
 
 
 (re-frame/reg-sub

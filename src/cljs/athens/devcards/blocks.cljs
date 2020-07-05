@@ -231,8 +231,8 @@
   [{:block/keys [uid string open order children] dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
-        editing-uid @(subscribe [:editing-uid])
-        tooltip-uid @(subscribe [:tooltip-uid])
+        editing-uid @(subscribe [:editing/uid])
+        tooltip-uid @(subscribe [:tooltip/uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid

@@ -210,11 +210,11 @@
                :left-sidebar/open   true
                :right-sidebar/open  false
                :right-sidebar/items {}
-               :editing-uid         nil
+               :editing/uid         nil
                :drag-bullet         {:uid          nil
                                      :x            nil
                                      :y            nil
                                      :closest/uid  nil
                                      :closest/kind nil}
-               :tooltip-uid         nil
+               :tooltip/uid         nil
                :daily-notes/items   []})

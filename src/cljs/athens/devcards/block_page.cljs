@@ -107,7 +107,7 @@
   [ident]
   (let [block   (db/get-block-document ident)
         parents (db/get-parents-recursively ident)
-        editing-uid @(subscribe [:editing-uid])]
+        editing-uid @(subscribe [:editing/uid])]
     [block-page-el block parents editing-uid]))
 
 

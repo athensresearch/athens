@@ -127,9 +127,9 @@
 
       ;; IF COLLAPSED
       [:div (use-style left-sidebar-collapsed-style)
-       [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+       [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                 :label       [:> mui-icons/ChevronRight]}]
-       [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+       [button-primary {:on-click-fn #(dispatch [:athena/toggle])
                         :label       [:> mui-icons/Search]}]
        [:footer (use-sub-style left-sidebar-collapsed-style :footer)
         [button {:disabled true
@@ -141,7 +141,7 @@
       [:div (use-style left-sidebar-style)
        [:div (use-sub-style left-sidebar-style :top-line)
         [athena-prompt-el]
-        [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+        [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                  :label       [:> mui-icons/ChevronLeft]}]]
        [:nav (use-style main-navigation-style)
 

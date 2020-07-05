@@ -223,7 +223,7 @@
   [ident]
   (let [node (db/get-node-document ident)
         title (:node/title node)
-        editing-uid @(subscribe [:editing-uid])]
+        editing-uid @(subscribe [:editing/uid])]
     (when-not (string/blank? title)
       ;; TODO: turn ref-groups into an atom, let users toggle open/close
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
