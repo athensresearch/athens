@@ -17,11 +17,11 @@
 (reg-fx
   :transact
   (fn [datoms]
-    (prn "INPUTS")
+    (prn "TX INPUTS")
     (pprint datoms)
-    (prn "OUTPUTS")
-    (pprint (:tx-data (transact! db/dsdb datoms)))
-    (println)))
+    (prn "TX OUTPUTS")
+    (let [outputs (:tx-data (transact! db/dsdb datoms))]
+      (pprint outputs))))
 
 
 (reg-fx
