@@ -249,7 +249,7 @@
         shift     (.. e -shiftKey)
         value       (.. e -target -value)
         sel-start (.. e -target -selectionStart)]
-    (prn "KEY DOWN" value)
+    ;;(prn "KEY DOWN" value)
     (cond
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
@@ -259,20 +259,6 @@
 
 
 ;;; Components
-
-
-(defn placeholder-block-el
-  [uid]
-  [:div (use-style block-style)
-   [:div {:style {:display "flex"}}
-
-    [:span (use-style block-indicator-style {:class "bullet"})]
-
-    ;; Actual Contents
-    [:div (use-style block-content-style {:class "block-contents"})
-     [autosize/textarea {:placeholder "Click to begin editing"
-                         :auto-focus  true
-                         :on-click (fn [_] (dispatch [:page/create-first-child uid]))}]]]])
 
 
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
@@ -336,6 +322,7 @@
            [autosize/textarea {:value       (:atom-string @state)
                                :class       (when (= editing-uid uid) "is-editing")
                                :auto-focus  true
+                               :id (str "editable-uid-" uid)
                                :on-change   (fn [e]
                                               (let [value (.. e -target -value)]
                                                 (fast-on-change value uid state)

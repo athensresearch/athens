@@ -110,7 +110,7 @@
                 children :block/children} @pages]
            ^{:key uid}
            [:tr
-            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid)})
+            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid %)})
              title]
             [:td
              [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]

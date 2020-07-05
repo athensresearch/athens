@@ -161,7 +161,7 @@
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+  @(pull dsdb '[:db/id :node/title :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
 
 
 (defn get-parent
