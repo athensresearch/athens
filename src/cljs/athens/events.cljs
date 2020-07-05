@@ -199,7 +199,6 @@
     (assoc db :daily-notes [])))
 
 
-
 (reg-event-fx
   :transact-event
   (fn [_ [_ datoms]]

@@ -87,8 +87,8 @@
       (let [eids (q '[:find [?e ...]
                       :in $ [?uid ...]
                       :where [?e :block/uid ?uid]]
-                   db/dsdb
-                   @note-refs)]
+                    db/dsdb
+                    @note-refs)]
         (when (not-empty @eids)
           (let [notes (pull-many db/dsdb '[*] @eids)]
             [:div#daily-notes (use-style daily-notes-scroll-area-style)
