@@ -32,7 +32,7 @@
 (def main-content-style
   {:flex "1 1 100%"
    :grid-area "main-content"
-   :align-items "stretch"
+   :align-items "flex-start"
    :justify-content "stretch"
    :display "flex"
    :overflow-y "auto"})
