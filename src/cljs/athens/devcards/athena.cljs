@@ -158,7 +158,7 @@
        query))
 
 
-(defn get-parent-node
+(defn get-root-parent-node
   [block]
   (loop [b block]
     (if (:node/title b)
@@ -176,7 +176,7 @@
            [(re-find ?query-pattern ?txt)]]
          @db/dsdb
          (re-case-insensitive query))
-    (map get-parent-node)
+    (map get-root-parent-node)
     (map #(dissoc % :block/_children))))
 
 
@@ -216,26 +216,26 @@
     (cond
       ;; FIXME: why does this only work in Devcards?
       (= key KeyCodes.ESC)
-      (dispatch [:toggle-athena])
+      (dispatch [:athena/toggle])
 
       (and shift (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:right-sidebar/open-item uid]))
 
       (and shift (= key KeyCodes.ENTER))
       (do
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:right-sidebar/open-item (:block/uid item)]))
 
       (and (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:page/create query uid])
         (navigate-uid uid))
 
       (= key KeyCodes.ENTER)
-      (do (dispatch [:toggle-athena])
+      (do (dispatch [:athena/toggle])
           (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
 
       ;; TODO: change scroll as user reaches top or bottom
@@ -254,7 +254,7 @@
 
 (defn athena-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+  [button-primary {:on-click-fn #(dispatch [:athena/toggle])
                    :label [:<>
                            [:> mui-icons/Search]
                            [:span "Find or Create a Page"]]
@@ -314,7 +314,7 @@
                    ^{:key i}
                    [:div (use-style result-style {:on-click (fn [_]
                                                               (let [uid (gen-block-uid)]
-                                                                (dispatch [:toggle-athena])
+                                                                (dispatch [:athena/toggle])
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
                                                   :class (when (= i index) "selected")})
@@ -328,7 +328,7 @@
                                                                                    :block/uid    uid
                                                                                    :block/string string
                                                                                    :query        query}]
-                                                                (dispatch [:athena/update-recent selected-page])
+                                                                (dispatch [:athena/update-recent-items selected-page])
                                                                 (navigate-uid uid)))
                                                   :class    (when (= i index) "selected")})
                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]

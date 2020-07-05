@@ -64,12 +64,12 @@
 (defn scroll-daily-notes
   [_]
   (let
-    [daily-notes @(subscribe [:daily-notes])
+    [daily-notes @(subscribe [:daily-notes/items])
      from-bottom (.. js/document (getElementById "daily-notes") getBoundingClientRect -bottom)
      doc-height (.. js/document -documentElement -scrollHeight)
      delta (- from-bottom doc-height)]
     (when (< delta 1)
-      (dispatch [:next-daily-note (get-day (count daily-notes))]))))
+      (dispatch [:daily-note/next (get-day (count daily-notes))]))))
 
 
 (def db-scroll-daily-notes (debounce scroll-daily-notes 500))
@@ -80,10 +80,10 @@
 
 (defn daily-notes-panel
   []
-  (let [note-refs (subscribe [:daily-notes])]
+  (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
       (when (empty? @note-refs)
-        (dispatch [:next-daily-note (get-day)]))
+        (dispatch [:daily-note/next (get-day)]))
       (let [eids (q '[:find [?e ...]
                       :in $ [?uid ...]
                       :where [?e :block/uid ?uid]]

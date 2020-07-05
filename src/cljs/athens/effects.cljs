@@ -15,23 +15,23 @@
 
 
 (reg-fx
-  :transact
+  :transact!
   (fn [datoms]
-    (prn "INPUTS")
+    (prn "TX INPUTS")
     (pprint datoms)
-    (prn "OUTPUTS")
-    (pprint (:tx-data (transact! db/dsdb datoms)))
-    (println)))
+    (prn "TX OUTPUTS")
+    (let [outputs (:tx-data (transact! db/dsdb datoms))]
+      (pprint outputs))))
 
 
 (reg-fx
-  :reset-conn
+  :reset-conn!
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)))
 
 
 (reg-fx
-  :set-local-storage-db
+  :local-storage/set-db!
   (fn [db]
     (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
 

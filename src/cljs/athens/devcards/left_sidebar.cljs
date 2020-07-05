@@ -114,7 +114,7 @@
 
 (defn left-sidebar
   []
-  (let [open? (subscribe [:left-sidebar])
+  (let [open? (subscribe [:left-sidebar/open])
         ;; current-route (subscribe [:current-route]) ;; TODO: disabled primary button if current route == navigation button
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
@@ -127,9 +127,9 @@
 
       ;; IF COLLAPSED
       [:div (use-style left-sidebar-collapsed-style)
-       [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+       [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                 :label       [:> mui-icons/ChevronRight]}]
-       [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+       [button-primary {:on-click-fn #(dispatch [:athena/toggle])
                         :label       [:> mui-icons/Search]}]
        [:footer (use-sub-style left-sidebar-collapsed-style :footer)
         [button {:disabled true
@@ -141,7 +141,7 @@
       [:div (use-style left-sidebar-style)
        [:div (use-sub-style left-sidebar-style :top-line)
         [athena-prompt-el]
-        [button {:on-click-fn #(dispatch [:toggle-left-sidebar])
+        [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                  :label       [:> mui-icons/ChevronLeft]}]]
        [:nav (use-style main-navigation-style)
 
@@ -170,7 +170,7 @@
        [:footer (use-sub-style left-sidebar-style :footer)
         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
         [button-primary {:label "Load Test Data"
-                         :on-click-fn #(dispatch [:get-local-storage-db])}]]])))
+                         :on-click-fn #(dispatch [:get-db/init])}]]])))
         ;;[button {:disabled true
         ;;         :label    [:> mui-icons/TextFormat]}]
         ;;[button {:disabled true

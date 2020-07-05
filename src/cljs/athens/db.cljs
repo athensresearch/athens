@@ -2,10 +2,39 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh!]]))
+    [posh.reagent :refer [posh! pull]]))
 
-;;; JSON Parsing
 
+;; -- Example Roam DBs ---------------------------------------------------
+
+(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
+(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
+(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
+
+
+;; -- re-frame -----------------------------------------------------------
+
+(defonce rfdb {:user                "Socrates"
+               :current-route       nil
+               :loading?            true
+               :alert               nil
+               :athena/open         false
+               :athena/recent-items '()
+               :devtool/open        false
+               :left-sidebar/open   true
+               :right-sidebar/open  false
+               :right-sidebar/items {}
+               :editing/uid         nil
+               :drag-bullet         {:uid          nil
+                                     :x            nil
+                                     :y            nil
+                                     :closest/uid  nil
+                                     :closest/kind nil}
+               :tooltip/uid         nil
+               :daily-notes/items   []})
+
+
+;; -- JSON Parsing ----------------------------------------------------
 
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
@@ -71,16 +100,7 @@
       (parse-tuples edn-data))))
 
 
-;;; Example Roam DBs
-
-
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
-(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
-(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
-
-
-;;; Datascript and Posh
-
+;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
@@ -88,44 +108,6 @@
    :attrs/lookup   {:db/cardinality :db.cardinality/many}
    :block/children {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}})
-
-
-(defn sort-block
-  [block]
-  (if-let [children (seq (:block/children block))]
-    (assoc block :block/children
-           (sort-by :block/order (map sort-block children)))
-    block))
-
-
-(defn shape-parent-query
-  "Find path from nested block to origin node.
-  Don't totally understand why query returns {:db/id nil} if no results. Returns nil when making q queries"
-  [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
-       (rest)
-       (reverse)
-       vec))
-
-;; all blocks (except for block refs) want to get all children
-(def block-pull-pattern
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-;; the main difference between a page and a block is that page has a title attribute
-(def node-pull-pattern
-  (conj block-pull-pattern :node/title))
-
-;; reverse lookup, all the way up to node/title, is needed to get parent context
-(def parents-pull-pattern
-  '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
-
-
-;;; posh
 
 
 (defonce dsdb (d/create-conn schema))
@@ -137,9 +119,58 @@
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 
-;;(defn e-by-av [db a v]
-;;  (-> (d/datoms db :avet a v) first :e))
+(defn sort-block-children
+  [block]
+  (if-let [children (seq (:block/children block))]
+    (assoc block :block/children
+           (sort-by :block/order (map sort-block-children children)))
+    block))
 
+
+(defn get-block-document
+  [id]
+  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+       sort-block-children))
+
+
+(defn get-node-document
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+       sort-block-children))
+
+
+(defn shape-parent-query
+  "Normalize path from deeply nested block to root node."
+  [pull-results]
+  (->> (loop [b   pull-results
+              res []]
+         (if (:node/title b)
+           (conj res b)
+           (recur (first (:block/_children b))
+                  (conj res (dissoc b :block/_children)))))
+       (rest)
+       (reverse)
+       vec))
+
+
+(defn get-parents-recursively
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+       shape-parent-query))
+
+
+(defn get-block
+  [id]
+  @(pull dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+
+
+(defn get-parent
+  [id]
+  (-> (d/entity @dsdb id)
+      :block/_children
+      first
+      :db/id
+      get-block))
 
 ;; history
 
@@ -183,25 +214,3 @@
                                       (conj db-after)
                                       (trim-head history-limit))))))))
 
-
-;;; re-frame
-
-
-(defonce rfdb {:user                "Jeff"
-               :current-route       nil
-               :loading             true
-               :errors              {}
-               :athena/open         false
-               :athena/recent-items '()
-               :devtool             false
-               :left-sidebar        true
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :editing-uid         nil
-               :drag-bullet         {:uid          nil
-                                     :x            nil
-                                     :y            nil
-                                     :closest/uid  nil
-                                     :closest/kind nil}
-               :tooltip-uid         nil
-               :daily-notes         []})
