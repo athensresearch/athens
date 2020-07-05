@@ -81,10 +81,11 @@
   []
   (let [current-route (subscribe [:current-route])
         uid           (-> @current-route :path-params :id)
-        node-or-block @(pull db/dsdb '[*] [:block/uid uid])]
-    (if (:node/title node-or-block)
-      [node-page-component (:db/id node-or-block)]
-      [block-page-component (:db/id node-or-block)])))
+        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid uid])]
+    (cond
+      title [node-page-component id]
+      string [block-page-component id]
+      :else [:h3 "404: This page doesn't exist"])))
 
 
 (defn match-panel
