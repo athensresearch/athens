@@ -79,12 +79,12 @@
   [ts]
   (if (not ts)
     [:span "(unknown date)"]
-    (as-> (js/Date. ts) x
-          (t/instant x)
-          (t/date-time x)
-          (t/format date-col-format x)
-          (str/replace x #"AM" "am")
-          (str/replace x #"PM" "pm"))))
+    (as->
+      (t/instant ts) x
+      (t/date-time x)
+      (t/format date-col-format x)
+      (str/replace x #"AM" "am")
+      (str/replace x #"PM" "pm"))))
 
 
 (defn table
