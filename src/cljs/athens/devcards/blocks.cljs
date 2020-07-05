@@ -224,6 +224,20 @@
     [block-el block]))
 
 
+(defn placeholder-block-el
+  [uid]
+  [:div (use-style block-style)
+   [:div {:style {:display "flex"}}
+
+    [:span (use-style block-indicator-style {:class "bullet"})]
+
+    ;; Actual Contents
+    [:div (use-style block-content-style {:class "block-contents"})
+     [autosize/textarea {:placeholder "Click to begin editing"
+                         :auto-focus  true
+                         :on-click (fn [_] (dispatch [:page/create-first-child uid]))}]]]])
+
+
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"

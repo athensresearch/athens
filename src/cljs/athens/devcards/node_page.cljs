@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.blocks :refer [block-el placeholder-block-el]]
     [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
@@ -18,7 +18,8 @@
     [posh.reagent :refer [#_pull q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]
+    [tick.alpha.api :as t]))
 
 
 ;;; Styles
@@ -167,29 +168,48 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
+(defn is-timeline-page
+  [uid]
+  (boolean
+    (try
+      (let [[m d y] (string/split uid "-")]
+        (t/date (string/join "-" [y m d])))
+      (catch js/Object _ false))))
+
+
 ;;; Components
 
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid ref-groups]
+  [{:block/keys [children uid] title :node/title} editing-uid ref-groups timeline-page?]
 
   [:div (use-style page-style)
 
+   ;; TODO: implement timeline
+   ;;(when timeline-page?
+   ;;  [button {:on-click-fn #(dispatch [:jump-to-timeline uid])
+   ;;           :label [:<>
+   ;;                   [:mui-icons Left]
+   ;;                   [:span "Timeline"]]}])
+
    ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "page-header"})
-    [autosize/textarea
-     {:default-value title
-      :class      (when (= editing-uid uid) "is-editing")
-      :auto-focus true
-      :on-change  (fn [e] (db-handler (.. e -target -value) uid))}]
+    (when-not timeline-page?
+      [autosize/textarea
+       {:default-value title
+        :class      (when (= editing-uid uid) "is-editing")
+        :auto-focus true
+        :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
     [:span title]]
 
    ;; Children
-   [:div
-    (for [{:block/keys [uid] :as child} children]
-      ^{:key uid}
-      [block-el child])]
+   (if (not children)
+     [placeholder-block-el uid]
+     [:div
+      (for [{:block/keys [uid] :as child} children]
+        ^{:key uid}
+        [block-el child])])
 
    ;; References
    (doall
@@ -221,14 +241,14 @@
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
   [ident]
-  (let [node (db/get-node-document ident)
-        title (:node/title node)
-        editing-uid @(subscribe [:editing/uid])]
+  (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
+        editing-uid @(subscribe [:editing/uid])
+        timeline-page? (is-timeline-page uid)]
     (when-not (string/blank? title)
       ;; TODO: turn ref-groups into an atom, let users toggle open/close
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
-        [node-page-el node editing-uid ref-groups]))))
+        [node-page-el node editing-uid ref-groups timeline-page?]))))
 
 
 ;;; Devcards

@@ -221,6 +221,16 @@
 
 
 (reg-event-fx
+  :page/create-first-child
+  (fn [_ [_ page-uid]]
+    (let [now (now-ts)
+          child-uid (gen-block-uid)
+          child {:db/id -1 :create/time now :edit/time now :block/uid child-uid :block/order 0 :block/open true :block/string ""}]
+      {:transact! [{:db/id [:block/uid page-uid] :block/children [child]}]
+       :dispatch [:editing/uid child-uid]})))
+
+
+(reg-event-fx
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
