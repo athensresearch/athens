@@ -25,7 +25,7 @@
 
 
 (reg-fx
-  :reset-conn
+  :reset-conn!
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)))
 

@@ -10,7 +10,7 @@
     [re-frame.core :refer [reg-event-db reg-event-fx]]))
 
 
-;; app-db events
+;;; re-frame app-db events
 
 
 (reg-event-db
@@ -23,6 +23,13 @@
   :athena/toggle
   (fn [db _]
     (update db :athena/open not)))
+
+
+(reg-event-db
+  :athena/update-recent-items
+  (fn-traced [db [_ selected-page]]
+    (when (nil? ((set (:athena/recent-items db)) selected-page))
+      (update db :athena/recent-items conj selected-page))))
 
 
 (reg-event-db
@@ -47,13 +54,6 @@
   :right-sidebar/toggle-item
   (fn [db [_ item]]
     (update-in db [:right-sidebar/items item :open] not)))
-
-
-(reg-event-db
-  :athena/update-recent-items
-  (fn-traced [db [_ selected-page]]
-    (when (nil? ((set (:athena/recent-items db)) selected-page))
-      (update db :athena/recent-items conj selected-page))))
 
 
 ;; TODO: dec all indices > closed item
@@ -124,7 +124,13 @@
     (assoc db :tooltip/uid uid)))
 
 
-;;; event effects
+(reg-event-db
+  :daily-notes/reset
+  (fn [db _]
+    (assoc db :daily-notes/items [])))
+
+
+;;; event effects and dsdb transactions
 
 
 (reg-event-fx
@@ -150,32 +156,20 @@
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
-      {:reset-conn new-db
+      {:reset-conn!          new-db
        :set-local-storage-db new-db
-       :db (assoc db/rfdb :loading false)})))
-
-
-(reg-event-fx
-  :reset-dsdb
-  (fn []
-    {:reset-conn (d/empty-db db/schema)}))
+       :db                   (assoc db/rfdb :loading false)})))
 
 
 (reg-event-fx
   :get-local-storage-db
   (fn [{:keys [db]}]
     (if-let [stored (js/localStorage.getItem "datascript/DB")]
-      {:reset-conn (dt/read-transit-str stored)
+      {:reset-conn! (dt/read-transit-str stored)
        ;;:db         (assoc (assoc db/rfdb :loading false) :current-route (:current-route db))
-       :db         (merge db/rfdb {:loading false :current-route (:current-route db)})}
+       :db          (merge db/rfdb {:loading false :current-route (:current-route db)})}
       {:dispatch [:get-datoms]
        :db       db/rfdb})))
-
-
-(reg-event-db
-  :daily-notes/reset
-  (fn [db _]
-    (assoc db :daily-notes/items [])))
 
 
 (reg-event-fx
@@ -188,14 +182,14 @@
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
-      {:reset-conn prev})))
+      {:reset-conn! prev})))
 
 
 (reg-event-fx
   :redo
   (fn [_ _]
     (when-let [next (db/find-next @db/history #(identical? @db/dsdb %))]
-      {:reset-conn next})))
+      {:reset-conn! next})))
 
 
 (reg-event-fx
@@ -216,8 +210,6 @@
          :transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
 
 
-
-;;; dsdb events (transactions)
 
 
 (def rules
