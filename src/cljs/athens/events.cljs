@@ -6,7 +6,6 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [posh.reagent :refer [pull #_q #_pull-many]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]))
 
 

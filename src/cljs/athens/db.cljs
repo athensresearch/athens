@@ -130,13 +130,13 @@
 (defn get-block-document
   [id]
   (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}] id)
-    sort-block-children))
+       sort-block-children))
 
 
 (defn get-node-document
   [id]
   (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...}] id)
-    sort-block-children))
+       sort-block-children))
 
 
 (defn shape-parent-query
@@ -147,16 +147,16 @@
          (if (:node/title b)
            (conj res b)
            (recur (first (:block/_children b))
-             (conj res (dissoc b :block/_children)))))
-    (rest)
-    (reverse)
-    vec))
+                  (conj res (dissoc b :block/_children)))))
+       (rest)
+       (reverse)
+       vec))
 
 
 (defn get-parents-recursively
   [id]
   (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
-    shape-parent-query))
+       shape-parent-query))
 
 
 (defn get-block
@@ -167,10 +167,10 @@
 (defn get-parent
   [id]
   (-> (d/entity @dsdb id)
-    :block/_children
-    first
-    :db/id
-    get-block))
+      :block/_children
+      first
+      :db/id
+      get-block))
 
 ;; history
 

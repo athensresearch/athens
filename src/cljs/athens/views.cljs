@@ -42,7 +42,6 @@
 
 
 (defn alert
-  "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
   (let [alert- (subscribe [:alert])]
     (when-not (nil? @alert-)
@@ -89,6 +88,8 @@
 
 
 (defn match-panel
+  "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
+  created when app inits. This is expected, but perhaps shouldn't be a side effect here."
   [route-name]
   [(case route-name
      :about about-panel

@@ -10,7 +10,6 @@
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))

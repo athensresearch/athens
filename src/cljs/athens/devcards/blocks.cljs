@@ -12,7 +12,6 @@
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull]]
     [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
