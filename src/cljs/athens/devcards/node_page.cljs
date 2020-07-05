@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.devcards.blocks :refer [block-el placeholder-block-el]]
+    [athens.devcards.blocks :refer [block-el]]
     [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
@@ -204,12 +204,10 @@
     [:span title]]
 
    ;; Children
-   (if (not children)
-     [placeholder-block-el uid]
-     [:div
-      (for [{:block/keys [uid] :as child} children]
-        ^{:key uid}
-        [block-el child])])
+   [:div
+    (for [{:block/keys [uid] :as child} children]
+      ^{:key uid}
+      [block-el child])]
 
    ;; References
    (doall
