@@ -10,23 +10,6 @@
     [re-frame.core :refer [reg-event-db reg-event-fx]]))
 
 
-;; Utils
-
-
-(defn get-block
-  [id]
-  @(pull db/dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
-
-
-(defn get-parent
-  [id]
-  (let [eid (-> (d/entity @db/dsdb id)
-              :block/_children
-              first
-              :db/id)]
-    (get-block eid)))
-
-
 
 ;;; Events
 
@@ -262,8 +245,8 @@
 ;; TODO but how to set focus... especially async
 (defn split-block
   [uid val sel-start]
-  (let [parent (get-parent [:block/uid uid])
-        block (get-block [:block/uid uid])
+  (let [parent (db/get-parent [:block/uid uid])
+        block (db/get-block [:block/uid uid])
         head (subs val 0 sel-start)
         tail (subs val sel-start)
         new-uid (gen-block-uid)
@@ -286,8 +269,8 @@
 
 (defn bump-up
   [uid val sel-start]
-  (let [parent (get-parent [:block/uid uid])
-        block (get-block [:block/uid uid])
+  (let [parent (db/get-parent [:block/uid uid])
+        block (db/get-block [:block/uid uid])
         tail (subs val sel-start)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
@@ -320,14 +303,14 @@
 (reg-event-fx
   :indent
   (fn [_ [_ uid]]
-    (let [block (get-block [:block/uid uid])
-          parent (get-parent [:block/uid uid])
+    (let [block (db/get-block [:block/uid uid])
+          parent (db/get-parent [:block/uid uid])
           older-sib (->> parent
                       :block/children
                       (filter #(= (dec (:block/order block)) (:block/order %)))
                       first
                       :db/id
-                      get-block)
+                      db/get-block)
           new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
           reindex-blocks (->> (d/q '[:find ?ch ?new-o
                                      :in $ % ?p ?at
@@ -343,8 +326,8 @@
 (reg-event-fx
   :unindent
   (fn [_ [_ uid]]
-    (let [parent (get-parent [:block/uid uid])
-          grandpa (get-parent (:db/id parent))
+    (let [parent (db/get-parent [:block/uid uid])
+          grandpa (db/get-parent (:db/id parent))
           new-block {:block/uid uid :block/order (inc (:block/order parent))}
           reindex-grandpa (->> (d/q '[:find ?ch ?new-order
                                       :in $ % ?grandpa ?parent-order
@@ -425,10 +408,10 @@
 (reg-event-fx
   :drop-bullet
   (fn-traced [_ [_ source-uid target-uid kind]]
-             (let [source        (get-block [:block/uid source-uid])
-                   target        (get-block [:block/uid target-uid])
-                   source-parent (get-parent [:block/uid source-uid])
-                   target-parent (get-parent [:block/uid target-uid])]
+             (let [source        (db/get-block [:block/uid source-uid])
+                   target        (db/get-block [:block/uid target-uid])
+                   source-parent (db/get-parent [:block/uid source-uid])
+                   target-parent (db/get-parent [:block/uid target-uid])]
                {:transact
                 (cond
                   ;; child always has same behavior: move to first child of target

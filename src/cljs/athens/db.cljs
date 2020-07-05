@@ -139,6 +139,21 @@
     shape-parent-query))
 
 
+(defn get-block
+  [id]
+  @(pull dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+
+
+(defn get-parent
+  [id]
+  (-> (d/entity @dsdb id)
+    :block/_children
+    first
+    :db/id
+    get-block))
+
+
+
 ;; history
 
 (defonce history (atom []))
