@@ -44,9 +44,9 @@
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
-  (let [alert-msg (subscribe [:alert])]
-    (when-not (nil? @alert-msg)
-      (js/alert (str @alert-msg))
+  (let [alert- (subscribe [:alert])]
+    (when-not (nil? @alert-)
+      (js/alert (str @alert-))
       (dispatch [:alert/unset]))))
 
 
