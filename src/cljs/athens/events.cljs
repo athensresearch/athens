@@ -124,13 +124,30 @@
     (assoc db :tooltip/uid uid)))
 
 
+;; Daily Notes
+
+
 (reg-event-db
   :daily-notes/reset
   (fn [db _]
     (assoc db :daily-notes/items [])))
 
 
-;;; event effects and dsdb transactions
+(reg-event-fx
+  :daily-note/next
+  (fn [{:keys [db]} [_ {:keys [uid title]}]]
+    (let [new-db (update db :daily-notes/items conj uid)
+          now (now-ts)]
+      (if (db/e-by-av :block/uid uid)
+        {:db new-db}
+        {:db        new-db
+         :transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
+
+
+;;; Event Effects and Datascript Transactions
+
+
+;; Import/Export
 
 
 (reg-event-fx
@@ -172,10 +189,19 @@
        :db       db/rfdb})))
 
 
+;; Datascript
+
 (reg-event-fx
   :transact
   (fn [_ [_ datoms]]
     {:transact! datoms}))
+
+
+(reg-event-fx
+  :page/create
+  (fn [_ [_ title uid]]
+    (let [now (now-ts)]
+      {:transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
 
 
 (reg-event-fx
@@ -192,26 +218,7 @@
       {:reset-conn! next})))
 
 
-(reg-event-fx
-  :page/create
-  (fn [_ [_ title uid]]
-    (let [now (now-ts)]
-      {:transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]})))
-
-
-(reg-event-fx
-  :next-daily-note
-  (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items conj uid)
-          now (now-ts)]
-      (if (db/e-by-av :block/uid uid)
-        {:db new-db}
-        {:db        new-db
-         :transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
-
-
-
-
+;; TODO: move to db
 (def rules
   '[[(after ?p ?at ?ch ?o)
      [?p :block/children ?ch]
