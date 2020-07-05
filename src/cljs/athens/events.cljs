@@ -10,8 +10,7 @@
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]))
 
 
-;;; re-frame app-db events
-
+;; -- re-frame app-db events ---------------------------------------------
 
 (reg-event-db
   :init-rfdb
@@ -84,7 +83,6 @@
 
 ;; Alerts
 
-
 (reg-event-db
   :alert/set
   (fn-traced [db alert]
@@ -99,7 +97,6 @@
 
 ;; Loading
 
-
 (reg-event-db
   :loading/set
   (fn-traced [db]
@@ -112,8 +109,7 @@
              (assoc-in db [:loading?] false)))
 
 
-;; Event Listeners
-
+;; Block Events
 
 (reg-event-db
   :editing/uid
@@ -135,13 +131,13 @@
 
 ;; Daily Notes
 
-
 (reg-event-db
   :daily-notes/reset
   (fn [db _]
     (assoc db :daily-notes/items [])))
 
 
+;; TODO: don't use app-db, use dsdb
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
@@ -153,18 +149,16 @@
          :transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now}]}))))
 
 
-;;; Event Effects and Datascript Transactions
-
+;; -- event-fx and Datascript Transactions -------------------------------
 
 ;; Import/Export
-
 
 (reg-event-fx
   :get-db/init
   (fn [{rfdb :db} _]
     {:db (-> db/rfdb
            (assoc :loading? true))
-     :async-flow {:first-dispatch (if (js/localStorage.getItem "datascript/DB")
+     :async-flow {:first-dispatch (if false
                                     [:local-storage/get-db]
                                     [:http/get-db])
                   :rules          [{:when :seen?
@@ -178,7 +172,7 @@
   :http/get-db
   (fn [_ _]
     {:http {:method :get
-            :url db/athens-url
+            :url (str db/athens-url "XXX")
             :opts {:with-credentials? false}
             :on-success [:http-success/get-db]
             :on-failure [:alert/set]}}))

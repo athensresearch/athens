@@ -4,8 +4,37 @@
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull]]))
 
-;;; JSON Parsing
 
+;; -- Example Roam DBs ---------------------------------------------------
+
+(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
+(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
+(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
+
+
+;; -- re-frame -----------------------------------------------------------
+
+(defonce rfdb {:user                "Socrates"
+               :current-route       nil
+               :loading?            true
+               :alert               nil
+               :athena/open         false
+               :athena/recent-items '()
+               :devtool/open        false
+               :left-sidebar/open   true
+               :right-sidebar/open  false
+               :right-sidebar/items {}
+               :editing/uid         nil
+               :drag-bullet         {:uid          nil
+                                     :x            nil
+                                     :y            nil
+                                     :closest/uid  nil
+                                     :closest/kind nil}
+               :tooltip/uid         nil
+               :daily-notes/items   []})
+
+
+;; -- JSON Parsing ----------------------------------------------------
 
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
@@ -71,16 +100,7 @@
       (parse-tuples edn-data))))
 
 
-;;; Example Roam DBs
-
-
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
-(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
-(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
-
-
-;;; Datascript and Posh
-
+;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
@@ -152,8 +172,6 @@
     :db/id
     get-block))
 
-
-
 ;; history
 
 (defonce history (atom []))
@@ -196,25 +214,3 @@
                                       (conj db-after)
                                       (trim-head history-limit))))))))
 
-
-;;; re-frame
-
-
-(defonce rfdb {:user                "Socrates"
-               :current-route       nil
-               :loading?            true
-               :alert               nil
-               :athena/open         false
-               :athena/recent-items '()
-               :devtool/open        false
-               :left-sidebar/open   true
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :editing/uid         nil
-               :drag-bullet         {:uid          nil
-                                     :x            nil
-                                     :y            nil
-                                     :closest/uid  nil
-                                     :closest/kind nil}
-               :tooltip/uid         nil
-               :daily-notes/items   []})
