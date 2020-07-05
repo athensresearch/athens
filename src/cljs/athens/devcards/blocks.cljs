@@ -13,6 +13,7 @@
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [re-frame.core  :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
@@ -212,16 +213,44 @@
 
 
 
+;; Helpers
+
+(defn fast-on-change
+  [value _uid state]
+  (swap! state assoc :atom-string value))
+
+
+(defn on-change
+  [value uid state]
+  (prn "CHANGE")
+  (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]])
+  (fast-on-change value uid state))
+
+
+(def db-on-change (debounce on-change 500))
+
+
+(defn toggle
+  [id open]
+  (dispatch [:transact [[:db/add id :block/open (not open)]]]))
+
+
+(defn on-key-down
+  [e uid _state]
+  (let [key       (.. e -keyCode)
+        shift     (.. e -shiftKey)
+        value       (.. e -target -value)
+        sel-start (.. e -target -selectionStart)]
+    (prn "KEY DOWN" value)
+    (cond
+      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
+      (= key KeyCodes.TAB) (dispatch [:indent uid])
+      (= key KeyCodes.ENTER) (do (.preventDefault e)
+                                 (dispatch [:enter uid value sel-start]))
+      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
+
+
 ;;; Components
-
-
-(declare block-component block-el toggle on-key-down db-on-change)
-
-
-(defn block-component
-  [ident]
-  (let [block (db/get-block-document ident)]
-    [block-el block]))
 
 
 (defn placeholder-block-el
@@ -241,102 +270,89 @@
 ;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [{:block/keys [uid string open order children] dbid :db/id}]
-  (let [open?       (and (seq children) open)
-        closed?     (and (seq children) (not open))
-        editing-uid @(subscribe [:editing/uid])
-        tooltip-uid @(subscribe [:tooltip/uid])
-        {:keys        [x y]
-         dragging-uid :uid
-         closest-uid  :closest/uid
-         closest-kind :closest/kind} @(subscribe [:drag-bullet])]
+  [block]
+  (let [state (r/atom {:atom-string   (:block/string block)
+                       :slash?        false
+                       :context-menu? false})]
+    (fn [block]
+      (let [{:block/keys [uid string open order children] dbid :db/id} block
+            open?       (and (seq children) open)
+            closed?     (and (seq children) (not open))
+            editing-uid @(subscribe [:editing/uid])
+            tooltip-uid @(subscribe [:tooltip/uid])
+            {:keys        [x y]
+             dragging-uid :uid
+             closest-uid  :closest/uid
+             closest-kind :closest/kind} @(subscribe [:drag-bullet])]
 
-    [:div (use-style (merge block-style
-                            (when (= dragging-uid uid) dragging-style))
-                     {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
-                      :data-uid uid})
-     [:div {:style {:display "flex"}}
+        [:div (use-style (merge block-style
+                                (when (= dragging-uid uid) dragging-style))
+                         {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
+                          :data-uid uid})
+         [:div {:style {:display "flex"}}
 
-      ;; Toggle
-      (if (seq children)
-        [:button (use-style block-disclosure-toggle-style
-                            {:class (cond open? "open" closed? "closed")
-                             :on-click #(toggle [:block/uid uid] open)})
-         [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
-        [:span (use-style block-disclosure-toggle-style)])
+          ;; Toggle
+          (if (seq children)
+            [:button (use-style block-disclosure-toggle-style
+                                {:class    (cond open? "open" closed? "closed")
+                                 :on-click #(toggle [:block/uid uid] open)})
+             [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+            [:span (use-style block-disclosure-toggle-style)])
 
-      ;; Bullet
-      (if (= dragging-uid uid)
-        [:span (merge (use-style block-indicator-style
-                                 {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
-                                  :data-uid uid})
-                      {:style {:transform (str "translate(" x "px, " y "px)")}})]
+          ;; Bullet
+          (if (= dragging-uid uid)
+            [:span (merge (use-style block-indicator-style
+                                     {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
+                                      :data-uid uid})
+                          {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
-        [:span (use-style block-indicator-style
-                          {:class    (str "bullet " (if closed? "closed" "open"))
-                           :data-uid uid
-                           :on-click #(navigate-uid uid)})])
+            [:span (use-style block-indicator-style
+                              {:class    (str "bullet " (if closed? "closed" "open"))
+                               :data-uid uid
+                               :on-click #(navigate-uid uid)})])
 
-      ;; Tooltip
-      (when (and (= tooltip-uid uid)
-                 (not dragging-uid))
-        [:div (use-style tooltip-style {:class "tooltip"})
-         [:div [:b "db/id"] [:span dbid]]
-         [:div [:b "uid"] [:span uid]]
-         [:div [:b "order"] [:span order]]])
+          ;; Tooltip
+          (when (and (= tooltip-uid uid)
+                     (not dragging-uid))
+            [:div (use-style tooltip-style {:class "tooltip"})
+             [:div [:b "db/id"] [:span dbid]]
+             [:div [:b "uid"] [:span uid]]
+             [:div [:b "order"] [:span order]]])
 
-      ;; Actual Contents
-      [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
-                       {:class    "block-contents"
-                        :data-uid uid})
-       [autosize/textarea {:default-value       string
-                           :class       (when (= editing-uid uid) "is-editing")
-                           :auto-focus  true
-                           :on-change   (fn [e] (db-on-change (.. e -target -value) uid))
-                           :on-key-down (fn [e] (on-key-down e uid))}]
-       [parse-and-render string]
+          ;; Actual Contents
+          [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
+                           {:class    "block-contents"
+                            :data-uid uid})
+           [autosize/textarea {:value       (:atom-string @state)
+                               :class       (when (= editing-uid uid) "is-editing")
+                               :auto-focus  true
+                               :on-change   (fn [e]
+                                              (let [value (.. e -target -value)]
+                                                (fast-on-change value uid state)
+                                                (db-on-change value uid state)))
+                               :on-key-down (fn [e] (on-key-down e uid state))}]
+           [parse-and-render string]
 
-       ;; Drop Indicator
-       (when (and (= closest-uid uid)
-                  (= closest-kind :child))
-         [:span (use-style drop-area-indicator)])]]
+           ;; Drop Indicator
+           (when (and (= closest-uid uid)
+                      (= closest-kind :child))
+             [:span (use-style drop-area-indicator)])]]
 
-     ;; Children
-     (when open?
-       (for [child children]
-         [:div {:style {:margin-left "32px"} :key (:db/id child)}
-          [block-el child]]))
+         ;; Children
+         (when open?
+           (for [child children]
+             [:div {:style {:margin-left "32px"} :key (:db/id child)}
+              [block-el child]]))
 
-     ;; Drop Indicator
-     (when (and (= closest-uid uid) (= closest-kind :sibling))
-       [:span (use-style drop-area-indicator)])]))
-
-;; Helpers
-
-(defn on-change
-  [val uid]
-  (dispatch [:transact [[:db/add [:block/uid uid] :block/string val]]]))
-
-
-(def db-on-change (debounce on-change 500))
-
-
-(defn toggle
-  [id open]
-  (dispatch [:transact [[:db/add id :block/open (not open)]]]))
+         ;; Drop Indicator
+         (when (and (= closest-uid uid) (= closest-kind :sibling))
+           [:span (use-style drop-area-indicator)])]))))
 
 
-(defn on-key-down
-  [e uid]
-  (let [key       (.. e -keyCode)
-        shift     (.. e -shiftKey)
-        val       (.. e -target -value)
-        sel-start (.. e -target -selectionStart)]
-    (cond
-      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
-      (= key KeyCodes.TAB) (dispatch [:indent uid])
-      (= key KeyCodes.ENTER) (dispatch [:enter uid val sel-start])
-      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
+(defn block-component
+  [ident]
+  (let [block (db/get-block-document ident)]
+    [block-el block]))
 
 
 ;;; Devcards
