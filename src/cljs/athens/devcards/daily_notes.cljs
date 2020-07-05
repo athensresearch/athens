@@ -7,7 +7,7 @@
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull-many]]
+    [posh.reagent :refer [q pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]
     [tick.alpha.api :as t]
@@ -81,21 +81,25 @@
 (defn daily-notes-panel
   []
   (let [note-refs (subscribe [:daily-notes])]
-    (when (empty? @note-refs)
-      (dispatch [:next-daily-note (get-day)]))
     (fn []
-      (let [notes (pull-many db/dsdb
-                             '[*]
-                             (map (fn [x] [:block/uid x]) @note-refs))]
-        [:div#daily-notes (use-style daily-notes-scroll-area-style)
-         (doall
-           (for [{:keys [block/uid]} @notes]
-             ^{:key uid}
-             [:<>
-              [:div (use-style daily-notes-page-style)
-               [node-page-component [:block/uid uid]]]]))
-         [:div (use-style daily-notes-notional-page-style)
-          [:h1 "Earlier"]]]))))
+      (when (empty? @note-refs)
+        (dispatch [:next-daily-note (get-day)]))
+      (let [eids (q '[:find [?e ...]
+                      :in $ [?uid ...]
+                      :where [?e :block/uid ?uid]]
+                    db/dsdb
+                    @note-refs)]
+        (when (not-empty @eids)
+          (let [notes (pull-many db/dsdb '[*] @eids)]
+            [:div#daily-notes (use-style daily-notes-scroll-area-style)
+             (doall
+               (for [{:keys [block/uid]} @notes]
+                 ^{:key uid}
+                 [:<>
+                  [:div (use-style daily-notes-page-style)
+                   [node-page-component [:block/uid uid]]]]))
+             [:div (use-style daily-notes-notional-page-style)
+              [:h1 "Earlier"]]]))))))
 
 
 ;;; Devcards

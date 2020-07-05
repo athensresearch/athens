@@ -84,8 +84,7 @@
     (update db :right-sidebar/items dissoc uid)))
 
 
-;; TODO: toggle open right sidebar if not open
-;; FIXME: what happens when item is already in sidebar? all indices increment, which is not right
+;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
   (fn-traced [{:keys [db]} [_ uid]]
@@ -114,6 +113,12 @@
   :clear-errors
   (fn-traced [db]
              (assoc-in db [:errors] {})))
+
+
+(reg-event-db
+  :set-loading
+  (fn-traced [db]
+    (assoc-in db [:loading] true)))
 
 
 (reg-event-db
@@ -161,14 +166,20 @@
             :on-failure [:alert-failure]}}))
 
 
-;; FIXME? I reset db/dsdb and store its value in localStorage in the same step. How do we ensure the order of operations is correct?
 (reg-event-fx
   :parse-datoms
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
       {:reset-conn new-db
-       :set-local-storage-db nil})))
+       :set-local-storage-db new-db
+       :db (assoc db/rfdb :loading false)})))
+
+
+(reg-event-fx
+  :reset-dsdb
+  (fn []
+    {:reset-conn (d/empty-db db/schema)}))
 
 
 (reg-event-fx
@@ -176,8 +187,16 @@
   (fn [{:keys [db]}]
     (if-let [stored (js/localStorage.getItem "datascript/DB")]
       {:reset-conn (dt/read-transit-str stored)
-       :db         (assoc db :loading false)}
-      {:dispatch [:get-datoms]})))
+       ;;:db         (assoc (assoc db/rfdb :loading false) :current-route (:current-route db))
+       :db         (merge db/rfdb {:loading false :current-route (:current-route db)})}
+      {:dispatch [:get-datoms]
+       :db       db/rfdb})))
+
+
+(reg-event-db
+  :daily-notes/reset
+  (fn [db _]
+    (assoc db :daily-notes [])))
 
 
 (reg-event-fx
