@@ -76,7 +76,7 @@
 
 (defn date-string
   [ts]
-  (if (< ts 1)
+  (if (not ts)
     [:span "(unknown date)"]
     (as-> (js/Date. ts) x
       (t/instant x)
