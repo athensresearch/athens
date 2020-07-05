@@ -115,12 +115,14 @@
 
 (defn left-sidebar
   []
-  (let [open? (subscribe [:left-sidebar])
-        shortcuts (q db/q-shortcuts db/dsdb)]
-    (fn []
-      (let [sorted-shortcuts (->> @shortcuts
-                                  (into [])
-                                  (sort-by first))]
+  (let [open? (subscribe [:left-sidebar/open])
+        shortcuts (->> @(q '[:find ?order ?title ?uid
+                             :where
+                             [?e :page/sidebar ?order]
+                             [?e :node/title ?title]
+                             [?e :block/uid ?uid]] db/dsdb)
+                       seq
+                       (sort-by first))]
         (if (not @open?)
 
           ;; IF COLLAPSED
@@ -131,12 +133,14 @@
           ;; IF EXPANDED
           [:div (use-style left-sidebar-style)
            [:nav (use-style main-navigation-style)
-            [button {:disabled true :label [:<>
-                                            [:> mui-icons/Today]
-                                            [:span "Daily Notes"]]}]
-            [button {:on-click-fn #(navigate :home) :label [:<>
-                                                            [:> mui-icons/FileCopy]
-                                                            [:span "All Pages"]]}]
+
+            [button {:on-click-fn #(navigate :home)
+                     :label       [:<>
+                                   [:> mui-icons/Today]
+                                   [:span "Daily Notes"]]}]
+            [button {:on-click-fn #(navigate :pages) :label [:<>
+                                                             [:> mui-icons/FileCopy]
+                                                             [:span "All Pages"]]}]
             [button {:disabled true :label [:<>
                                             [:> mui-icons/BubbleChart]
                                             [:span "Graph Overview"]]}]]
@@ -145,14 +149,16 @@
            [:ol (use-style shortcuts-list-style)
             [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
             (doall
-              (for [[_order title uid] sorted-shortcuts]
+              (for [[_order title uid] shortcuts]
                 ^{:key uid}
                 [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
 
            ;; LOGO + BOTTOM BUTTONS
            [:footer (use-sub-style left-sidebar-style :footer)
             [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-            ]])))))
+            [button-primary {:label "Load Test Data"
+                             :on-click-fn #(dispatch [:get-db/init])}]
+            ]])))
 
 
 ;;; Devcards

@@ -3,7 +3,6 @@
     [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
@@ -21,13 +20,23 @@
 ;;; Styles
 
 
+
+(def page-style
+  {:display "flex"
+   :margin "5rem auto"
+   :flex-basis "100%"
+   :max-width "70rem"})
+
+
 (def table-style
-  {:width "100%"
+  {:flex "1 1 100%"
+   :margin "0 1rem"
    :text-align "left"
    :border-collapse "collapse"
    ::stylefy/sub-styles {:th-date {:text-align "right"}
                          :td-title {:color (color :link-color)
                                     :width "15vw"
+                                    :cursor "pointer"
                                     :min-width "10em"
                                     :word-break "break-word"
                                     :font-weight "500"
@@ -45,26 +54,36 @@
                                    :font-size "12px"
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
-                      [:tr
-                       [:td {:border-top (str "1px solid " (color :panel-color))}]
-                       [:&:hover {:background-color (color :panel-color :opacity-lower)
+                      [:tr {:transition "background 0.1s ease"}
+                       [:td {:border-top (str "1px solid " (color :panel-color))
+                             :transition "box-shadow 0.1s ease"}
+                        [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
+                                                                :box-shadow "-16px 0 transparent"}]
+                        [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
+                                                               :box-shadow "16px 0 transparent"}]]
+                       [:&:hover {:background-color (color :panel-color :opacity-low)
                                   :border-radius "8px"}
-                        [:td [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
-                                                                     :box-shadow "-16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]
-                        [:td [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
-                                                                    :box-shadow "16px 0 hsla(30, 11.11%, 93%, 0.1)"}]]]]]
+                        [:td [(selectors/& (selectors/first-child)) {:box-shadow [["-16px 0 " (color :panel-color :opacity-low)]]}]]
+                        [:td [(selectors/& (selectors/last-child)) {:box-shadow [["16px 0 " (color :panel-color :opacity-low)]]}]]]]]
                      [:td :th {:padding "8px"}]
                      [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
 
 ;;; Components
 
+(def date-col-format (t/formatter "LLLL MM, yyyy h':'mma"))
 
-(defn- date-string
-  [x]
-  (if (< x 1)
+
+(defn date-string
+  [ts]
+  (if (not ts)
     [:span "(unknown date)"]
-    (str/replace (str/replace (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x)))) #"AM" "am") #"PM" "pm")))
+    (as->
+      (t/instant ts) x
+      (t/date-time x)
+      (t/format date-col-format x)
+      (str/replace x #"AM" "am")
+      (str/replace x #"PM" "pm"))))
 
 
 (defn table
@@ -74,30 +93,29 @@
                        [?e :node/title ?t]]
                      db/dsdb)
         pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
-    [:table (use-style table-style)
-     [:thead
-      [:tr
-       [:th [:h5 "Title"]]
-       [:th [:h5 "Body"]]
-       [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
-       [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
-     [:tbody
-      (doall
-        (for [{uid :block/uid
-               title :node/title
-               modified :edit/time
-               created :create/time
-               children :block/children} @pages]
-          ^{:key uid}
-          [:tr
-           [:td (with-attributes
-                  (use-sub-style table-style :td-title)
-                  {:on-click #(navigate-uid uid)})
-            title]
-           [:td
-            [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
-           [:td (use-sub-style table-style :td-date) (date-string modified)]
-           [:td (use-sub-style table-style :td-date) (date-string created)]]))]]))
+    [:div (use-style page-style)
+     [:table (use-style table-style)
+      [:thead
+       [:tr
+        [:th [:h5 "Title"]]
+        [:th [:h5 "Body"]]
+        [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
+        [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
+      [:tbody
+       (doall
+         (for [{uid :block/uid
+                title :node/title
+                modified :edit/time
+                created :create/time
+                children :block/children} @pages]
+           ^{:key uid}
+           [:tr
+            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid)})
+             title]
+            [:td
+             [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
+            [:td (use-sub-style table-style :td-date) (date-string modified)]
+            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]]))
 
 
 ;;; Devcards

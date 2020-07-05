@@ -12,7 +12,6 @@
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull]]
     [re-frame.core  :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
@@ -220,15 +219,8 @@
 
 
 (defn block-component
-  "This query is long because I'm not sure how to recursively find all child blocks with all attributes
-  '[* {:block/children [*]}] doesn't work
-Also, why does datascript return a reaction of {:db/id nil} when pulling for [:block/uid uid]?
-no results for q returns nil
-no results for pull eid returns nil
-  "
   [ident]
-  (let [block (->> @(pull db/dsdb db/block-pull-pattern ident)
-                   (db/sort-block))]
+  (let [block (db/get-block-document ident)]
     [block-el block]))
 
 
@@ -238,8 +230,8 @@ no results for pull eid returns nil
   [{:block/keys [uid string open order children] dbid :db/id}]
   (let [open?       (and (seq children) open)
         closed?     (and (seq children) (not open))
-        editing-uid @(subscribe [:editing-uid])
-        tooltip-uid @(subscribe [:tooltip-uid])
+        editing-uid @(subscribe [:editing/uid])
+        tooltip-uid @(subscribe [:tooltip/uid])
         {:keys        [x y]
          dragging-uid :uid
          closest-uid  :closest/uid
@@ -309,7 +301,7 @@ no results for pull eid returns nil
 
 (defn on-change
   [val uid]
-  (dispatch [:transact-event [[:db/add [:block/uid uid] :block/string val]]]))
+  (dispatch [:transact [[:db/add [:block/uid uid] :block/string val]]]))
 
 
 (def db-on-change (debounce on-change 500))
@@ -317,7 +309,7 @@ no results for pull eid returns nil
 
 (defn toggle
   [id open]
-  (dispatch [:transact-event [[:db/add id :block/open (not open)]]]))
+  (dispatch [:transact [[:db/add id :block/open (not open)]]]))
 
 
 (defn on-key-down

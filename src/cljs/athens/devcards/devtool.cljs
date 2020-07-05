@@ -393,7 +393,7 @@
     (eval-box!)))
 
 
-(d/listen! dsdb :devtool listener)
+(d/listen! dsdb :devtool/open listener)
 
 
 (defn handle-box-change!
@@ -458,7 +458,7 @@
 
 (defn devtool-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:toggle-devtool])
+  [button-primary {:on-click-fn #(dispatch [:devtool/toggle])
                    :label [:<>
                            [:> mui-icons/Build]
                            [:span "Toggle devtool"]]
@@ -467,7 +467,7 @@
 
 (defn devtool-close-el
   []
-  [button {:on-click-fn #(dispatch [:toggle-devtool])
+  [button {:on-click-fn #(dispatch [:devtool/toggle])
            :label [:> mui-icons/Clear]}])
 
 
@@ -494,7 +494,7 @@
 
 (defn devtool-component
   []
-  (let [devtool? @(subscribe [:devtool])]
+  (let [devtool? @(subscribe [:devtool/open])]
     [devtool-el devtool? state*]))
 
 

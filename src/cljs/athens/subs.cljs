@@ -17,33 +17,33 @@
 
 
 (re-frame/reg-sub
-  :errors
+  :alert
   (fn [db _]
-    (:errors db)))
+    (:alert db)))
 
 
 (re-frame/reg-sub
-  :loading
+  :loading?
   (fn [db _]
-    (:loading db)))
+    (:loading? db)))
 
 
 (re-frame/reg-sub
-  :athena
+  :athena/open
   (fn-traced [db _]
-             (:athena db)))
+             (:athena/open db)))
 
 
 (re-frame/reg-sub
-  :devtool
+  :devtool/open
   (fn-traced [db _]
-             (:devtool db)))
+             (:devtool/open db)))
 
 
 (re-frame/reg-sub
-  :left-sidebar
+  :left-sidebar/open
   (fn-traced [db _]
-             (:left-sidebar db)))
+             (:left-sidebar/open db)))
 
 
 (re-frame/reg-sub
@@ -65,18 +65,30 @@
 
 
 (re-frame/reg-sub
-  :editing-uid
+  :editing/uid
   (fn-traced [db _]
-             (:editing-uid db)))
+             (:editing/uid db)))
 
 
 (re-frame/reg-sub
-  :tooltip-uid
+  :tooltip/uid
   (fn-traced [db _]
-             (:tooltip-uid db)))
+             (:tooltip/uid db)))
 
 
 (re-frame/reg-sub
   :drag-bullet
   (fn-traced [db _]
              (:drag-bullet db)))
+
+
+(re-frame/reg-sub
+  :daily-notes/items
+  (fn-traced [db _]
+             (:daily-notes/items db)))
+
+
+(re-frame/reg-sub
+  :athena/get-recent
+  (fn-traced [db _]
+             (:athena/recent-items db)))

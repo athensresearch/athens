@@ -2,10 +2,39 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh!]]))
+    [posh.reagent :refer [posh! pull]]))
 
-;;; JSON Parsing
 
+;; -- Example Roam DBs ---------------------------------------------------
+
+(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
+(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
+(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
+
+
+;; -- re-frame -----------------------------------------------------------
+
+(defonce rfdb {:user                "Socrates"
+               :current-route       nil
+               :loading?            true
+               :alert               nil
+               :athena/open         false
+               :athena/recent-items '()
+               :devtool/open        false
+               :left-sidebar/open   true
+               :right-sidebar/open  false
+               :right-sidebar/items {}
+               :editing/uid         nil
+               :drag-bullet         {:uid          nil
+                                     :x            nil
+                                     :y            nil
+                                     :closest/uid  nil
+                                     :closest/kind nil}
+               :tooltip/uid         nil
+               :daily-notes/items   []})
+
+
+;; -- JSON Parsing ----------------------------------------------------
 
 (def str-kw-mappings
   "Maps attributes from \"Export All as JSON\" to original datascript attributes."
@@ -71,16 +100,7 @@
       (parse-tuples edn-data))))
 
 
-;;; Example Roam DBs
-
-
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
-(def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
-(def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
-
-
-;;; Datascript and Posh
-
+;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
   {:block/uid      {:db/unique :db.unique/identity}
@@ -90,17 +110,37 @@
                     :db/valueType :db.type/ref}})
 
 
-(defn sort-block
+(defonce dsdb (d/create-conn schema))
+(posh! dsdb)
+
+
+(defn e-by-av
+  [a v]
+  (-> (d/datoms @dsdb :avet a v) first :e))
+
+
+(defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
     (assoc block :block/children
-           (sort-by :block/order (map sort-block children)))
+           (sort-by :block/order (map sort-block-children children)))
     block))
 
 
+(defn get-block-document
+  [id]
+  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+       sort-block-children))
+
+
+(defn get-node-document
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+       sort-block-children))
+
+
 (defn shape-parent-query
-  "Find path from nested block to origin node.
-  Don't totally understand why query returns {:db/id nil} if no results. Returns nil when making q queries"
+  "Normalize path from deeply nested block to root node."
   [pull-results]
   (->> (loop [b   pull-results
               res []]
@@ -112,34 +152,25 @@
        (reverse)
        vec))
 
-;; all blocks (except for block refs) want to get all children
-(def block-pull-pattern
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}])
 
-;; the main difference between a page and a block is that page has a title attribute
-(def node-pull-pattern
-  (conj block-pull-pattern :node/title))
-
-;; reverse lookup, all the way up to node/title, is needed to get parent context
-(def parents-pull-pattern
-  '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
+(defn get-parents-recursively
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+       shape-parent-query))
 
 
-;; used for both linked and unlinked references, just different regex
-(def q-shortcuts
-  '[:find ?order ?title ?uid
-    :where
-    [?e :page/sidebar ?order]
-    [?e :node/title ?title]
-    [?e :block/uid ?uid]])
+(defn get-block
+  [id]
+  @(pull dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
 
 
-;;; posh
-
-
-(defonce dsdb (d/create-conn schema))
-(posh! dsdb)
-
+(defn get-parent
+  [id]
+  (-> (d/entity @dsdb id)
+      :block/_children
+      first
+      :db/id
+      get-block))
 
 ;; history
 
@@ -183,25 +214,3 @@
                                       (conj db-after)
                                       (trim-head history-limit))))))))
 
-
-;;; re-frame
-
-
-(defonce rfdb {:user               "Jeff"
-               :current-route      nil
-               :loading            true
-               :errors             {}
-               :athena             false
-               :devtool            false
-               :left-sidebar       false
-               :right-sidebar/open true
-               :right-sidebar/items {"OaSVyM_nr" {:node/title "Athens FAQ" :open false :index 0}
-                                     "p1Xv2crs3" {:node/title "Hyperlink" :open true :index 1}
-                                     "jbiKpcmIX" {:block/string "Firstly, I wouldn't be surprised if Roam was eventually open-sourced." :open true :index 2}}
-               :editing-uid        nil
-               :drag-bullet        {:uid          nil
-                                    :x            nil
-                                    :y            nil
-                                    :closest/uid  nil
-                                    :closest/kind nil}
-               :tooltip-uid        nil})

@@ -158,7 +158,7 @@
        query))
 
 
-(defn get-parent-node
+(defn get-root-parent-node
   [block]
   (loop [b block]
     (if (:node/title b)
@@ -176,7 +176,7 @@
            [(re-find ?query-pattern ?txt)]]
          @db/dsdb
          (re-case-insensitive query))
-    (map get-parent-node)
+    (map get-root-parent-node)
     (map #(dissoc % :block/_children))))
 
 
@@ -194,9 +194,9 @@
 (defn create-search-handler
   [state]
   (fn [query]
-    (if (clojure.string/blank? query)
-      (reset! state {:index 0
-                     :query nil
+    (if (str/blank? query)
+      (reset! state {:index   0
+                     :query   nil
                      :results []})
       (reset! state {:index   0
                      :query   query
@@ -216,26 +216,26 @@
     (cond
       ;; FIXME: why does this only work in Devcards?
       (= key KeyCodes.ESC)
-      (dispatch [:toggle-athena])
+      (dispatch [:athena/toggle])
 
       (and shift (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:right-sidebar/open-item uid]))
 
       (and shift (= key KeyCodes.ENTER))
       (do
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:right-sidebar/open-item (:block/uid item)]))
 
       (and (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
-        (dispatch [:toggle-athena])
+        (dispatch [:athena/toggle])
         (dispatch [:page/create query uid])
         (navigate-uid uid))
 
       (= key KeyCodes.ENTER)
-      (do (dispatch [:toggle-athena])
+      (do (dispatch [:athena/toggle])
           (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
 
       ;; TODO: change scroll as user reaches top or bottom
@@ -254,7 +254,7 @@
 
 (defn athena-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:toggle-athena])
+  [button-primary {:on-click-fn #(dispatch [:athena/toggle])
                    :label [:<>
                            [:> mui-icons/Search]
                            [:span "Find or Create a Page"]]
@@ -262,23 +262,37 @@
 
 
 (defn results-el
-  []
-  [:div (use-style results-heading-style)
-   [:h5 "Results"]
-   [:span (use-style hint-style)
-    "Press "
-    [:kbd "shift + enter"]
-    " to open in right sidebar."]])
+  [state]
+  (let [query? (str/blank? (:query @state))
+        recent-items @(subscribe [:athena/get-recent])]
+    [:<> [:div (use-style results-heading-style)
+          [:h5 (if query? "Recent" "Results")]
+          [:span (use-style hint-style)
+           "Press "
+           [:kbd "shift + enter"]
+           " to open in right sidebar."]]
+     (when query?
+       [:div (use-style results-list-style)
+        (doall
+          (for [[i x] (map-indexed list recent-items)]
+            (when x
+              (let [{:keys [query :node/title :block/uid :block/string]} x]
+                [:div (use-style result-style {:key      i
+                                               :on-click #(navigate-uid uid)})
+                 [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
+                 (when string
+                   [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
+                 [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]]))))])]))
 
 
 (defn athena-component
   []
-  (let [athena? @(subscribe [:athena])
+  (let [open? @(subscribe [:athena/open])
         s (r/atom {:index 0
                    :query nil
                    :results []})
         search-handler (debounce (create-search-handler s) 500)]
-    (when athena?
+    (when open?
       [:div.athena (use-style container-style)
        [:input (use-style athena-input-style
                           {:type        "search"
@@ -286,12 +300,12 @@
                            :placeholder "Find or Create Page"
                            :on-change   (fn [e] (search-handler (.. e -target -value)))
                            :on-key-down (fn [e] (key-down-handler e s))})]
-       [results-el]
+       [results-el s]
        [(fn []
           (let [{:keys [results query index]} @s]
             [:div (use-style results-list-style)
              (doall
-               (for [[i x] (map-indexed (fn [x i] [x i]) results)
+               (for [[i x] (map-indexed list results)
                      :let [parent (:block/parent x)
                            title  (or (:node/title parent) (:node/title x))
                            uid    (or (:block/uid parent) (:block/uid x))
@@ -300,7 +314,7 @@
                    ^{:key i}
                    [:div (use-style result-style {:on-click (fn [_]
                                                               (let [uid (gen-block-uid)]
-                                                                (dispatch [:toggle-athena])
+                                                                (dispatch [:athena/toggle])
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
                                                   :class (when (= i index) "selected")})
@@ -308,7 +322,15 @@
                      [:b "Create Page: "]
                      query]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
-                   [:div (use-style result-style {:key i :on-click #(navigate-uid uid) :class (when (= i index) "selected")})
+                   [:div (use-style result-style {:key      i
+                                                  :on-click (fn []
+                                                              (let [selected-page {:node/title   title
+                                                                                   :block/uid    uid
+                                                                                   :block/string string
+                                                                                   :query        query}]
+                                                                (dispatch [:athena/update-recent-items selected-page])
+                                                                (navigate-uid uid)))
+                                                  :class    (when (= i index) "selected")})
                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                     (when string
                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])

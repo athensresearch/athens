@@ -11,13 +11,20 @@
     [devcards.core :refer-macros [defcard-rg]]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
+
+
+(def page-style
+  {:margin "2rem auto"
+   :padding "1rem 2rem"
+   :flex-basis "100%"
+   :max-width "55rem"})
+
 
 (def title-style
   {:position "relative"
@@ -67,7 +74,7 @@
 (defn block-page-el
   [{:block/keys [string children uid]} parents editing-uid]
 
-  [:article
+  [:article (use-style page-style)
    ;; Parent Context
    [breadcrumbs-list    
     (->> (for [{:keys [node/title block/uid block/string]} parents]
@@ -92,10 +99,9 @@
 
 (defn block-page-component
   [ident]
-  (let [block   @(pull db/dsdb db/block-pull-pattern ident)
-        parents (->> @(pull db/dsdb db/parents-pull-pattern ident)
-                     (db/shape-parent-query))
-        editing-uid @(subscribe [:editing-uid])]
+  (let [block   (db/get-block-document ident)
+        parents (db/get-parents-recursively ident)
+        editing-uid @(subscribe [:editing/uid])]
     [block-page-el block parents editing-uid]))
 
 

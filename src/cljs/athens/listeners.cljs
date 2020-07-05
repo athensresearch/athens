@@ -1,5 +1,6 @@
 (ns athens.listeners
   (:require
+    ;;[athens.util :refer [get-day]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
@@ -80,7 +81,7 @@
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
     (when closest
-      (dispatch [:editing-uid (.. closest -dataset -uid)]))))
+      (dispatch [:editing/uid (.. closest -dataset -uid)]))))
 
 
 ;;; Show tooltip
@@ -91,16 +92,16 @@
   (let [class-list (array-seq (.. e -target -classList))
         closest (.. e -target (closest ".tooltip"))
         uid (.. e -target -dataset -uid)
-        tooltip-uid @(subscribe [:tooltip-uid])]
+        tooltip-uid @(subscribe [:tooltip/uid])]
     (cond
       ;; if mouse over bullet, show tooltip
-      (some #(= "bullet" %) class-list) (dispatch [:tooltip-uid uid])
+      (some #(= "bullet" %) class-list) (dispatch [:tooltip/uid uid])
       ;; if mouse over a child of bullet, keep tooltip-uid
       closest nil
       ;; if tooltip is already nil, don't overwrite tooltip-uid
       (nil? tooltip-uid) nil
       ;; otherwise mouse is no longer over a bullet or tooltip. clear the tooltip-uid
-      :else (dispatch [:tooltip-uid nil]))))
+      :else (dispatch [:tooltip/uid nil]))))
 
 
 ;;; Close Athena
@@ -108,10 +109,10 @@
 
 (defn mouse-down-outside-athena
   [e]
-  (let [athena? @(subscribe [:athena])
+  (let [athena? @(subscribe [:athena/open])
         closest (.. e -target (closest ".athena"))]
     (when (and athena? (nil? closest))
-      (dispatch [:toggle-athena]))))
+      (dispatch [:athena/toggle]))))
 
 
 ;;; Hotkeys
@@ -131,17 +132,19 @@
       (dispatch [:undo])
 
       (and (= key KeyCodes.K) meta)
-      (dispatch [:toggle-athena])
+      (dispatch [:athena/toggle])
 
       (and (= key KeyCodes.G) ctrl)
-      (dispatch [:toggle-devtool])
+      (dispatch [:devtool/toggle])
 
       (and (= key KeyCodes.R) ctrl)
       (dispatch [:right-sidebar/toggle])
 
       (and (= key KeyCodes.L) ctrl)
-      (dispatch [:toggle-left-sidebar]))))
+      (dispatch [:left-sidebar/toggle]))))
 
+
+;;; Scroll
 
 (defn init
   []
@@ -150,3 +153,4 @@
   (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN key-down))
+

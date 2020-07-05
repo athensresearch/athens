@@ -3,8 +3,10 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.devcards.blocks :refer [block-el]]
+    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.devcards.buttons :refer [button]]
     [athens.patterns :as patterns]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -13,13 +15,21 @@
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [pull q]]
+    [posh.reagent :refer [#_pull q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
+
+
+(def page-style
+  {:margin "2rem auto"
+   :padding "1rem 2rem"
+   :flex-basis "100%"
+   :max-width "55rem"})
+
 
 (def title-style
   {:position "relative"
@@ -63,12 +73,57 @@
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
+(def references-style {:margin-block "3em"})
+
+
+(def references-heading-style
+  {:font-weight "normal"
+   :display "flex"
+   :padding "0 2rem"
+   :align-items "center"
+   ::stylefy/manual [[:svg {:margin-right "0.25em"
+                            :font-size "1rem"}]
+                     [:span {:flex "1 1 100%"}]]})
+
+
+(def references-list-style
+  {:font-size "14px"})
+
+
+(def references-group-title-style
+  {:color (color :link-color)
+   :margin "0 1.5rem"
+   :font-weight "500"
+   ::stylefy/manual [[:a:hover {:cursor "pointer"
+                                :text-decoration "underline"}]]})
+
+
+(def references-group-style
+  {:background (color :panel-color :opacity-low)
+   :padding "1rem 0.5rem"
+   :border-radius "4px"
+   :margin "0.5em 0"})
+
+
+(def reference-breadcrumbs-style
+  {:font-size "12px"
+   :padding "0.25rem calc(2rem - 0.5em)"})
+
+
+(def references-group-block-style
+  {:border-top [["1px solid " (color :panel-color)]]
+   :padding-block-start "1em"
+   :margin-block-start "1em"
+   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                        :margin-block-start "0"}]]})
+
+
 ;;; Helpers
 
 
 (defn handler
   [val uid]
-  (dispatch [:transact-event [[:db/add [:block/uid uid] :node/title val]]]))
+  (dispatch [:transact [[:db/add [:block/uid uid] :node/title val]]]))
 
 
 (def db-handler (debounce handler 500))
@@ -85,23 +140,12 @@
       pattern))
 
 
-(defn get-block
-  [id]
-  @(pull db/dsdb db/block-pull-pattern id))
-
-
-(defn get-parents
-  [id]
-  (->> @(pull db/dsdb db/parents-pull-pattern id)
-       db/shape-parent-query))
-
-
 (defn merge-parents-and-block
   [ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents v)))
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block id)) ref-ids)]
+        blocks (map (fn [id] (db/get-block-document id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -130,7 +174,7 @@
 (defn node-page-el
   [{:block/keys [children uid] title :node/title} editing-uid ref-groups]
 
-  [:div
+  [:div (use-style page-style)
 
    ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "page-header"})
@@ -148,40 +192,38 @@
       [block-el child])]
 
    ;; References
-   (for [[linked-or-unlinked refs] ref-groups]
-     [:div {:key linked-or-unlinked}
-      [:div (use-style {:display         "flex"
-                        :justify-content "space-between"
-                        :align-items "center"})
-       [:h3 linked-or-unlinked]
-       [:span
-        [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
-                 :disabled true}]]]
-      (doall
-        (for [[group-title group] refs]
-          [:<> {:key group-title}
-           [:h4 group-title]
-           (for [{:block/keys [uid parents] :as block} group]
-             [:div {:key uid}
-              ;; TODO: replace with breadcrumbs?
+   (doall
+     (for [[linked-or-unlinked refs] ref-groups]
+       (when (not-empty refs)
+         [:section (use-style references-style {:key linked-or-unlinked})
+          [:h4 (use-style references-heading-style)
+           [(r/adapt-react-class mui-icons/Link)]
+           [:span linked-or-unlinked]
+           [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
+                    :disabled true}]]
+          [:div (use-style references-list-style)
+           (for [[group-title group] refs]
+             [:div (use-style references-group-style {:key group-title})
+              [:h4 (use-style references-group-title-style)
+               [:a {:on-click #(navigate-uid uid)} group-title]]
+              (for [{:block/keys [uid parents] :as block} group]
+                [:div (use-style references-group-block-style {:key uid})
               ;; TODO: expand parent on click
-              (->> (for [{:keys [node/title block/string block/uid]} parents]
-                     [:span (use-style {:color "gray"} {:key uid}) (or title string)])
-                   (interpose ">")
-                   (map (fn [x]
-                          (if (= x ">")
-                            [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                            x))))
-              [block-el block]])]))])])
+                 [block-el block]
+                 (when (> (count parents) 1)
+                   [breadcrumbs-list {:style reference-breadcrumbs-style}
+                    [(r/adapt-react-class mui-icons/LocationOn)]
+                    (for [{:keys [node/title block/string block/uid]} parents]
+                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])])]])))])
 
 
 (defn node-page-component
   "One diff between datascript and posh: we don't have pull in q for posh
   https://github.com/mpdairy/posh/issues/21"
   [ident]
-  (let [node (->> @(pull db/dsdb db/node-pull-pattern ident) (db/sort-block))
+  (let [node (db/get-node-document ident)
         title (:node/title node)
-        editing-uid @(subscribe [:editing-uid])]
+        editing-uid @(subscribe [:editing/uid])]
     (when-not (string/blank? title)
       ;; TODO: turn ref-groups into an atom, let users toggle open/close
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
