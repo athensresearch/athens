@@ -3,7 +3,6 @@
     [athens.db :as db]
     [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.lib.dom.attributes :refer [with-attributes]]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
@@ -104,9 +103,7 @@
                 children :block/children} @pages]
            ^{:key uid}
            [:tr
-            [:td (with-attributes
-                   (use-sub-style table-style :td-title)
-                   {:on-click #(navigate-uid uid)})
+            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid)})
              title]
             [:td
              [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
