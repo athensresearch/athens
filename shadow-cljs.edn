@@ -12,7 +12,8 @@
 
                 :compiler-options {:source-map true
                                    :source-map-detail-level :all
-                                   :source-map-include-sources-content true}
+                                   :source-map-include-sources-content true
+                                   :optimizations :simple}
 
 
                 :dev             {:compiler-options

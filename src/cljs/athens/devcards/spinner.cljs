@@ -5,6 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -85,12 +86,19 @@
 (goog-define COMMIT_URL false)
 
 
-(defn ^:export initial-spinner-component
+(defn initial-spinner-component
   []
   [:div (use-style initial-spinner-container)
    (when COMMIT_URL
      [:a {:href COMMIT_URL} COMMIT_URL])
    [spinner-component]])
+
+
+(defn ^:export init-spinner
+  []
+  (stylefy/init)
+  (r/render [initial-spinner-component]
+            (.getElementById js/document "app")))
 
 
 ;;; Devcards
