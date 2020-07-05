@@ -34,7 +34,7 @@
   (stylefy/init)
   (listeners/init)
   (rf/dispatch-sync [:init-rfdb])
-  (rf/dispatch-sync [:clear-loading])
+  (rf/dispatch-sync [:loading/unset])
   ;;(rf/dispatch-sync [:boot])
   (dev-setup)
   (mount-root))
