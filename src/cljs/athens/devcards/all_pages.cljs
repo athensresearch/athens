@@ -72,7 +72,7 @@
 
 ;;; Components
 
-(def date-col-format (t/formatter "LLLL MM, yyyy h':'ma"))
+(def date-col-format (t/formatter "LLLL MM, yyyy h':'mma"))
 
 (defn date-string
   [ts]
