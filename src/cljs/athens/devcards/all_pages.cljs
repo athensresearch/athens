@@ -72,13 +72,18 @@
 
 ;;; Components
 
+(def date-col-format (t/formatter "LLLL MM, yyyy h':'ma"))
 
-(defn- date-string
-  [x]
-  (if (< x 1)
+(defn date-string
+  [ts]
+  (if (< ts 1)
     [:span "(unknown date)"]
-    (str/replace (str/replace (t/format (t/formatter "LLLL MM, yyyy h':'ma") (t/date-time (t/instant (js/Date. x)))) #"AM" "am") #"PM" "pm")))
-
+    (as-> (js/Date. ts) x
+      (t/instant x)
+      (t/date-time x)
+      (t/format date-col-format x)
+      (str/replace x #"AM" "am")
+      (str/replace x #"PM" "pm"))))
 
 (defn table
   []
