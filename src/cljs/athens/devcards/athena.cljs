@@ -158,7 +158,7 @@
        query))
 
 
-(defn get-parent-node
+(defn get-root-parent-node
   [block]
   (loop [b block]
     (if (:node/title b)
@@ -176,7 +176,7 @@
            [(re-find ?query-pattern ?txt)]]
          @db/dsdb
          (re-case-insensitive query))
-    (map get-parent-node)
+    (map get-root-parent-node)
     (map #(dissoc % :block/_children))))
 
 

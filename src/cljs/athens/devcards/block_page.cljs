@@ -106,8 +106,7 @@
 (defn block-page-component
   [ident]
   (let [block   @(pull db/dsdb db/block-pull-pattern ident)
-        parents (->> @(pull db/dsdb db/parents-pull-pattern ident)
-                     (db/shape-parent-query))
+        parents (db/get-parent-context ident)
         editing-uid @(subscribe [:editing-uid])]
     [block-page-el block parents editing-uid]))
 

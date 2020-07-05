@@ -2,7 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh!]]))
+    [posh.reagent :refer [posh! pull]]))
 
 ;;; JSON Parsing
 
@@ -90,6 +90,10 @@
                     :db/valueType :db.type/ref}})
 
 
+(defonce dsdb (d/create-conn schema))
+(posh! dsdb)
+
+
 (defn sort-block
   [block]
   (if-let [children (seq (:block/children block))]
@@ -98,38 +102,14 @@
     block))
 
 
-(defn shape-parent-query
-  "Find path from nested block to origin node.
-  Don't totally understand why query returns {:db/id nil} if no results. Returns nil when making q queries"
-  [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
-       (rest)
-       (reverse)
-       vec))
-
 ;; all blocks (except for block refs) want to get all children
 (def block-pull-pattern
   '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}])
 
+
 ;; the main difference between a page and a block is that page has a title attribute
 (def node-pull-pattern
   (conj block-pull-pattern :node/title))
-
-;; reverse lookup, all the way up to node/title, is needed to get parent context
-(def parents-pull-pattern
-  '[:db/id :node/title :block/uid :block/string {:block/_children ...}])
-
-
-;;; posh
-
-
-(defonce dsdb (d/create-conn schema))
-(posh! dsdb)
 
 
 (defn e-by-av
@@ -137,8 +117,24 @@
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 
-;;(defn e-by-av [db a v]
-;;  (-> (d/datoms db :avet a v) first :e))
+(defn shape-parent-query
+  "Normalize path from deeply nested block to root node."
+  [pull-results]
+  (->> (loop [b   pull-results
+              res []]
+         (if (:node/title b)
+           (conj res b)
+           (recur (first (:block/_children b))
+             (conj res (dissoc b :block/_children)))))
+    (rest)
+    (reverse)
+    vec))
+
+
+(defn get-parent-context
+  [id]
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+    shape-parent-query))
 
 
 ;; history

@@ -145,15 +145,9 @@
   @(pull db/dsdb db/block-pull-pattern id))
 
 
-(defn get-parents
-  [id]
-  (->> @(pull db/dsdb db/parents-pull-pattern id)
-       db/shape-parent-query))
-
-
 (defn merge-parents-and-block
   [ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents v)))
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parent-context v)))
                            {}
                            ref-ids)
         blocks (map (fn [id] (get-block id)) ref-ids)]
