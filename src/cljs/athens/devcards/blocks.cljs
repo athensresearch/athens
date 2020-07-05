@@ -28,7 +28,15 @@
    :line-height "2em"
    :position "relative"
    :justify-content "flex-start"
-   :flex-direction "column"})
+   :flex-direction "column"
+   ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
+                                                     :position "absolute"
+                                                     :width "1px"
+                                                     :left "calc(1.25em + 1px)"
+                                                     :top "2em"
+                                                     :bottom "0"
+                                                     :transform "translateX(50%)"
+                                                     :background (color :panel-color)}]]})
 
 
 (def block-disclosure-toggle-style
@@ -287,7 +295,9 @@
 
         [:div (use-style (merge block-style
                                 (when (= dragging-uid uid) dragging-style))
-                         {:class    (join " " ["block-container" (when (= dragging-uid uid) "dragging")])
+                         {:class    (join " " ["block-container"
+                                               (when (= dragging-uid uid) "dragging")
+                                               (when (and (seq children) open) "show-tree-indicator")])
                           :data-uid uid})
          [:div {:style {:display "flex"}}
 
