@@ -82,28 +82,37 @@
                    [:right-sidebar/toggle])})))
 
 
-(reg-event-db
-  :alert-failure
-  (fn-traced [db error]
-             (assoc-in db [:errors] error)))
+;; Alerts
 
 
 (reg-event-db
-  :clear-errors
+  :alert/set
+  (fn-traced [db alert]
+             (assoc db :alert alert)))
+
+
+(reg-event-db
+  :alert/unset
   (fn-traced [db]
-             (assoc-in db [:errors] {})))
+             (assoc db :alert nil)))
+
+
+;; Loading
 
 
 (reg-event-db
-  :set-loading
+  :loading/set
   (fn-traced [db]
-    (assoc-in db [:loading] true)))
+    (assoc-in db [:loading?] true)))
 
 
 (reg-event-db
-  :clear-loading
+  :loading/unset
   (fn-traced [db]
-             (assoc-in db [:loading] false)))
+             (assoc-in db [:loading?] false)))
+
+
+;; Event Listeners
 
 
 (reg-event-db
@@ -154,8 +163,8 @@
   :boot ;; FIXME: rename to init-dsdb?
   (fn-traced [_ _]
              {:async-flow {:first-dispatch [:get-local-storage-db]
-                           :rules          [{:when :seen? :events :parse-datoms :dispatch [:clear-loading] :halt? true}
-                                            {:when :seen? :events :api-request-error :dispatch [:alert-failure "Boot Error"] :halt? true}]}}))
+                           :rules          [{:when :seen? :events :parse-datoms :dispatch [:loading/unset] :halt? true}
+                                            {:when :seen? :events :api-request-error :dispatch [:alert/set "Boot Error"] :halt? true}]}}))
 
 
 (reg-event-fx
@@ -165,17 +174,19 @@
             :url db/athens-url
             :opts {:with-credentials? false}
             :on-success [:parse-datoms]
-            :on-failure [:alert-failure]}}))
+            :on-failure [:alert/set]}}))
 
 
 (reg-event-fx
   :parse-datoms
-  (fn [_ [_ json-str]]
+  (fn [{:keys [db]} [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
       {:reset-conn!          new-db
        :set-local-storage-db new-db
-       :db                   (assoc db/rfdb :loading false)})))
+       :dispatch-n           [[:init-rfdb]
+                              [:navigate (-> db :currount-route :data :name)]
+                              [:loading/unset]]})))
 
 
 (reg-event-fx

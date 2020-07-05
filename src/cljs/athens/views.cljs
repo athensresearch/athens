@@ -44,10 +44,10 @@
 (defn alert
   "When `:errors` subscription is updated, global alert will be called with its contents and then cleared."
   []
-  (let [errors (subscribe [:errors])]
-    (when (seq @errors)
-      (js/alert (str @errors))
-      (dispatch [:clear-errors]))))
+  (let [alert-msg (subscribe [:alert])]
+    (when-not (nil? @alert-msg)
+      (js/alert (str @alert-msg))
+      (dispatch [:alert/unset]))))
 
 
 (defn file-cb
@@ -101,7 +101,7 @@
 (defn main-panel
   []
   (let [current-route (subscribe [:current-route])
-        loading (subscribe [:loading])]
+        loading (subscribe [:loading?])]
     (fn []
       (let [route-name (-> @current-route :data :name)]
         [:<>

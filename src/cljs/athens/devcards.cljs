@@ -407,5 +407,5 @@
   (stylefy/init)
   (listeners/init)
   (dispatch-sync [:init-rfdb])
-  (dispatch-sync [:clear-loading])
+  (dispatch-sync [:loading/unset])
   (devcards.core/start-devcard-ui!))

@@ -17,15 +17,15 @@
 
 
 (re-frame/reg-sub
-  :errors
+  :alert
   (fn [db _]
-    (:errors db)))
+    (:alert db)))
 
 
 (re-frame/reg-sub
-  :loading
+  :loading?
   (fn [db _]
-    (:loading db)))
+    (:loading? db)))
 
 
 (re-frame/reg-sub
