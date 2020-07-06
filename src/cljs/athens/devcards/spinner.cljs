@@ -5,7 +5,7 @@
     [devcards.core :refer-macros [defcard-rg]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
-    
+
 (defcard-rg Default-Spinner
   [spinner-component (use-style spinner-style)])
 
