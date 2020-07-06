@@ -230,8 +230,7 @@
 (defn on-change
   [value uid state]
   (prn "CHANGE")
-  (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]])
-  (fast-on-change value uid state))
+  (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]]))
 
 
 (def db-on-change (debounce on-change 500))
@@ -243,30 +242,28 @@
 
 
 (defn on-key-down
-  [e uid _state]
+  [e uid state]
   (let [key       (.. e -keyCode)
         shift     (.. e -shiftKey)
         value       (.. e -target -value)
-        sel-start (.. e -target -selectionStart)]
+        index (.. e -target -selectionStart)]
     ;;(prn "KEY DOWN" value)
     (cond
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (do (.preventDefault e)
-                                 (dispatch [:enter uid value sel-start]))
-      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
+                                 (dispatch [:enter uid value index state]))
+      (and (= key KeyCodes.BACKSPACE) (zero? index)) (dispatch [:backspace uid state]))))
 
 
 ;;; Components
 
 
-;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
+ ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:atom-string   (:block/string block)
-                       :slash?        false
-                       :context-menu? false})]
+  (let [state (r/atom {:atom-string   (:block/string block)})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
             open?       (and (seq children) open)

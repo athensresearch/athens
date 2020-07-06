@@ -283,7 +283,7 @@
 
 
 (defn backspace
-  [uid]
+  [uid state]
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
         reindex (dec-after (:db/id parent) (:block/order block))
@@ -296,18 +296,20 @@
                   [:editing/uid editing-uid]]}))
 
 
+;; TODO: if tail, join it with older sibling or parent block
+;; why does this jump up sometimes if previous block has content?
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid]]
-    (backspace uid)))
+  (fn [_ [_ uid state]]
+    (backspace uid state)))
 
 
 (defn split-block
-  [uid val sel-start]
+  [uid val index state]
   (let [parent (db/get-parent [:block/uid uid])
         block (db/get-block [:block/uid uid])
-        head (subs val 0 sel-start)
-        tail (subs val sel-start)
+        head (subs val 0 index)
+        tail (subs val index)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (inc (:block/order block))
@@ -316,6 +318,7 @@
                    :block/string tail}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
+    (swap! state assoc :atom-string head) ;; TODO: bad vibes but easiest solution right now
     {:transact! [[:db/add (:db/id block) :block/string head]
                  {:db/id (:db/id parent)
                   :block/children reindex}]
@@ -323,21 +326,21 @@
 
 
 (defn bump-up
-  [uid val sel-start]
+  "If user presses enter at the start of non-empty string, push that block down and
+  and start editing a new block in the position of originating block - 'bump up' "
+  [uid]
   (let [parent (db/get-parent [:block/uid uid])
         block (db/get-block [:block/uid uid])
-        tail (subs val sel-start)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (:block/order block)
                    :block/uid    new-uid
                    :block/open   true
-                   :block/string tail}
-        reindex (->> (inc-after (:db/id parent) (inc (:block/order block)))
+                   :block/string ""}
+        reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:transact! [[:db/add (:db/id block) :block/string ""]
-                 {:db/id (:db/id parent) :block/children reindex}]
-     :dispatch  [:editing/uid new-uid]}))
+    {:transact! [{:db/id (:db/id parent) :block/children reindex :block/string ""}]
+     :dispatch [:editing/uid new-uid]}))
 
 
 (defn new-block
@@ -356,21 +359,21 @@
 
 
 (defn enter
-  [uid val sel-start]
+  [uid val index state]
   (let [block       (db/get-block [:block/uid uid])
         parent      (db/get-parent [:block/uid uid])
         root-block? (boolean (:node/title parent))]
     (cond
-      (not (zero? sel-start)) (split-block uid val sel-start)
+      (not (zero? index)) (split-block uid val index state)
       (and (empty? val) root-block?) (new-block block parent)
       (empty? val) {:dispatch [:unindent uid]}
-      (and (zero? sel-start) val) (bump-up uid val sel-start))))
+      (and (zero? index) val) (bump-up uid))))
 
 
 (reg-event-fx
   :enter
-  (fn [_ [_ uid val sel-start]]
-    (enter uid val sel-start)))
+  (fn [_ [_ uid val index state]]
+    (enter uid val index state)))
 
 
 (defn indent
