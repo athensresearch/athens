@@ -8,6 +8,7 @@
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]))
 
+
 (defcard-rg Create-Page
   "Press button and then search \"test\" "
   [button-primary {:on-click-fn (fn []
