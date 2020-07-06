@@ -1,5 +1,6 @@
 (ns athens.devcards.blocks
   (:require
+    [athens.views.blocks :refer [block-component]]
     [devcards.core :refer-macros [defcard-rg]]))
 
 (defcard-rg Block

@@ -1,5 +1,6 @@
 (ns athens.devcards.node-page
   (:require
+    [athens.views.node-page :refer [node-page-component]]
     [devcards.core :refer-macros [defcard-rg]]))
 
 

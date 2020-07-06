@@ -1,6 +1,5 @@
 (ns athens.views.textinput
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
     [cljsjs.react]

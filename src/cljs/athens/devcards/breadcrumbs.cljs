@@ -1,5 +1,6 @@
 (ns athens.devcards.breadcrumbs
   (:require
+    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [devcards.core :refer-macros [defcard-rg]]))
 
 

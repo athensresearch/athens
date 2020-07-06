@@ -1,6 +1,9 @@
 (ns athens.devcards.right-sidebar
   (:require
-    [devcards.core :refer [defcard-rg]]))
+    [athens.views.buttons :refer [button-primary]]
+    [athens.views.right-sidebar :refer [right-sidebar-component]]
+    [devcards.core :refer [defcard-rg]]
+    [re-frame.core :refer [dispatch]]))
 
 
 ;;(defcard-rg Init

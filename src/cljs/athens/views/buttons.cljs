@@ -1,6 +1,5 @@
 (ns athens.views.buttons
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color]]
     [cljsjs.react]

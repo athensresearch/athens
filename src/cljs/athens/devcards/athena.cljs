@@ -1,9 +1,10 @@
 (ns athens.devcards.athena
   (:require
     [athens.db :as db]
-    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.subs]
+    [athens.views.athena :refer [athena-prompt-el athena-component]]
+    [athens.views.buttons :refer [button-primary]]
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]))
 

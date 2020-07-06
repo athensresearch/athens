@@ -4,6 +4,7 @@
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.views.all-pages :refer [table]]
     [athens.views.buttons :refer [button-primary]]
+    [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
     [tick.locale-en-us]))
@@ -20,11 +21,11 @@
   [button-primary {:label "Create Page"
                    :on-click-fn (fn []
                                   (let [n (:max-eid @db/dsdb)]
-                                    (transact! db/dsdb [{:node/title     (str "Test Title " n)
-                                                         :block/uid      (str "uid" n)
-                                                         :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
-                                                         :create/time    (.getTime (js/Date.))
-                                                         :edit/time      (.getTime (js/Date.))}])))}])
+                                    (d/transact! db/dsdb [{:node/title     (str "Test Title " n)
+                                                           :block/uid      (str "uid" n)
+                                                           :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
+                                                           :create/time    (.getTime (js/Date.))
+                                                           :edit/time      (.getTime (js/Date.))}])))}])
 
 
 (defcard-rg Load-Real-DB

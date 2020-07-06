@@ -1,6 +1,6 @@
 (ns athens.devcards.parser
   (:require
-    [athens.devcards.blocks :refer [block-el]]
+    [athens.views.blocks :refer [block-el]]
     #_[athens.parse-renderer :refer [parse-and-render]]
     #_[athens.parser :refer [parse-to-ast combine-adjacent-strings]]
     #_[cljs.test :refer [is testing are async]]
@@ -29,4 +29,3 @@
   [:<>
    (for [s strings]
      ^{:key s} [block-el {:block/string s}])])
-

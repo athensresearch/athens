@@ -1,6 +1,7 @@
 (ns athens.devcards.spinner
   (:require
     [athens.db]
+    [athens.views.spinner :refer [spinner-component spinner-style]]
     [devcards.core :refer-macros [defcard-rg]]
     [stylefy.core :as stylefy :refer [use-style]]))
 

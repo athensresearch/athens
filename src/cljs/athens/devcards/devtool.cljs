@@ -2,10 +2,10 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [dsdb]]
-    [athens.devcards.buttons :refer [button-primary button]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.devcards.textinput :refer [textinput-style]]
     [athens.style :refer [color]]
+    [athens.views.buttons :refer [button-primary button]]
+    [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
     [cljsjs.react]
     [cljsjs.react.dom]
