@@ -2,7 +2,7 @@
   (:require
    ["@material-ui/icons" :as mui-icons]
    [athens.devcards.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-   [athens.devcards.buttons :refer [button button-primary]]
+   [athens.devcards.buttons :refer [button]]
    [athens.router :refer [navigate]]
    [athens.style :refer [color]]
    [athens.subs]
@@ -47,28 +47,19 @@
           ::stylefy/manual [[:button {:color "inherit"}]]}))
 
 
+(def separator-style {:border "0"
+                      :background (color :panel-color :opacity-high)
+                      :margin-inline "20%"
+                      :margin-block "0"
+                      :inline-size "1px"
+                      :block-size "auto"})
+
+
 ;;; Components
 
 
-(defn app-header
-  []
-  [:header (use-style app-header-style)
-   [:div (use-style app-header-control-section-style)
-    [button {:on-click-fn #(dispatch [:athena/toggle])
-             :style {:background (color :panel-color :opacity-med)}
-                     :label [:> mui-icons/Search]}]
-    [button {:label [:> mui-icons/Today]}]
-    [button {:label [:> mui-icons/Menu]}]]
-   [breadcrumbs-list
-    [breadcrumb {:key "a"} "thing 1"]
-    [breadcrumb {:key "b"} "thing 2"]
-    [breadcrumb {:key "c"} "thing 3"]]
-   [:div (use-style app-header-secondary-controls-style)
-    [button {:label [:> mui-icons/Settings]}]
-    [button {:label [:> mui-icons/TextFormat]}]
-    [:span {:style {:opacity "0.5"}} " • "]
-    [button {:label [:> mui-icons/VerticalSplit]
-             :on-click-fn #(dispatch [:right-sidebar/toggle])}]]])
+(defn separator[]
+  [:hr (use-style separator-style)])
 
 
 (defn app-header-2
@@ -78,6 +69,7 @@
        [:div (use-style app-header-control-section-style)
         [button {:active (when @open? true)
                  :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:left-sidebar/toggle])}]
+        [separator]
         [button {:on-click-fn #(navigate :home)
                  :active (when (= route-name :home) true)
                  :label       [:<>
@@ -90,10 +82,11 @@
                          [:span "Pages"]]}]]
        [button {:on-click-fn #(dispatch [:athena/toggle])
                 :style {:width "14rem" :background (color :panel-color :opacity-med)}
+                :active (when @(subscribe [:athena/open]) true)
                 :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]
        [:div (use-style app-header-secondary-controls-style)
         [button {:label [:> mui-icons/Settings]}]
-        [:span {:style {:opacity "0.5"}} " • "]
+        [separator]
         [button {:label [:> mui-icons/VerticalSplit]
                  :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]))
 
