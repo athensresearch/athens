@@ -19,7 +19,6 @@
     [reagent.core :as r]
     [reagent.ratom]
     [sci.core :as sci]
-    [shadow.remote.runtime.cljs.browser]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
