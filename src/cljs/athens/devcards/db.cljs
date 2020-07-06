@@ -1,7 +1,7 @@
 (ns athens.devcards.db
   (:require
     [athens.db :as db]
-    [athens.devcards.buttons :refer [button-primary]]
+    [athens.views.buttons :refer [button-primary]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljsjs.react]

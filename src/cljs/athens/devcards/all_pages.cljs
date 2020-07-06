@@ -1,125 +1,12 @@
 (ns athens.devcards.all-pages
   (:require
     [athens.db :as db]
-    [athens.devcards.buttons :refer [button-primary]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.router :refer [navigate-uid]]
-    [athens.style :as style :refer [color OPACITIES]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [clojure.string :as str]
+    [athens.views.all-pages :refer [table]]
+    [athens.views.buttons :refer [button-primary]]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
-    [garden.selectors :as selectors]
-    [posh.reagent :refer [transact! pull-many q]]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]
-    [tick.alpha.api :as t]
     [tick.locale-en-us]))
-
-
-;;; Styles
-
-
-
-(def page-style
-  {:display "flex"
-   :margin "5rem auto"
-   :flex-basis "100%"
-   :max-width "70rem"})
-
-
-(def table-style
-  {:flex "1 1 100%"
-   :margin "0 1rem"
-   :text-align "left"
-   :border-collapse "collapse"
-   ::stylefy/sub-styles {:th-date {:text-align "right"}
-                         :td-title {:color (color :link-color)
-                                    :width "15vw"
-                                    :cursor "pointer"
-                                    :min-width "10em"
-                                    :word-break "break-word"
-                                    :font-weight "500"
-                                    :font-size "21px"
-                                    :line-height "27px"}
-                         :body-preview {:white-space "wrap"
-                                        :word-break "break-word"
-                                        :overflow "hidden"
-                                        :text-overflow "ellipsis"
-                                        :display "-webkit-box"
-                                        :-webkit-line-clamp "3"
-                                        :-webkit-box-orient "vertical"}
-                         :td-date {:text-align "right"
-                                   :opacity (:opacity-high OPACITIES)
-                                   :font-size "12px"
-                                   :min-width "9em"}}
-   ::stylefy/manual [[:tbody {:vertical-align "top"}
-                      [:tr {:transition "background 0.1s ease"}
-                       [:td {:border-top (str "1px solid " (color :panel-color))
-                             :transition "box-shadow 0.1s ease"}
-                        [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
-                                                                :box-shadow "-16px 0 transparent"}]
-                        [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
-                                                               :box-shadow "16px 0 transparent"}]]
-                       [:&:hover {:background-color (color :panel-color :opacity-low)
-                                  :border-radius "8px"}
-                        [:td [(selectors/& (selectors/first-child)) {:box-shadow [["-16px 0 " (color :panel-color :opacity-low)]]}]]
-                        [:td [(selectors/& (selectors/last-child)) {:box-shadow [["16px 0 " (color :panel-color :opacity-low)]]}]]]]]
-                     [:td :th {:padding "8px"}]
-                     [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
-
-
-;;; Components
-
-(def date-col-format (t/formatter "LLLL MM, yyyy h':'mma"))
-
-
-(defn date-string
-  [ts]
-  (if (not ts)
-    [:span "(unknown date)"]
-    (as->
-      (t/instant ts) x
-      (t/date-time x)
-      (t/format date-col-format x)
-      (str/replace x #"AM" "am")
-      (str/replace x #"PM" "pm"))))
-
-
-(defn table
-  []
-  (let [page-eids (q '[:find [?e ...]
-                       :where
-                       [?e :node/title ?t]]
-                     db/dsdb)
-        pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
-    [:div (use-style page-style)
-     [:table (use-style table-style)
-      [:thead
-       [:tr
-        [:th [:h5 "Title"]]
-        [:th [:h5 "Body"]]
-        [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
-        [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
-      [:tbody
-       (doall
-         (for [{uid :block/uid
-                title :node/title
-                modified :edit/time
-                created :create/time
-                children :block/children} @pages]
-           ^{:key uid}
-           [:tr
-            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid %)})
-             title]
-            [:td
-             [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
-            [:td (use-sub-style table-style :td-date) (date-string modified)]
-            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]]))
-
-
-;;; Devcards
-
 
 (defcard "# All Pages — [#100](https://github.com/athensresearch/athens/issues/100)")
 

@@ -4,9 +4,9 @@
                 :output-dir      "resources/public/js/compiled"
                 :asset-path      "/js/compiled"
                 :modules         {:shared {:entries [athens.style
-                                                     athens.devcards.spinner]
-                                           :preloads [devtools.preload
-                                                      day8.re-frame-10x.preload]}
+                                                     athens.views.spinner]}
+                                           ; :preloads [devtools.preload
+                                           ;            day8.re-frame-10x.preload]}
                                   :app {:init-fn athens.core/init
                                         :depends-on #{:shared}}}
 
