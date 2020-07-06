@@ -21,7 +21,7 @@ To run the development build of Athens, follow the instructions in [Contributing
 
 ## [Join Discord](https://discord.gg/GCJaV3V)
 
-Our Discord community is a space for (collaboration and learning)[CONTRIBUTING.md#values] (especially about Clojure!).
+Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUCT.md#values) (especially about Clojure!).
 
 We chat about other Tools for Thought, [graph visualizations](https://github.com/athensresearch/athens/issues/21), [graph DBs, decentralized DBs](https://github.com/athensresearch/athens/issues/9), blockchains, [open protocols, knowledge markets](https://github.com/athensresearch/athens/blob/master/VISION.md#a-protocol-for-knowledge-markets), [education](https://github.com/athensresearch/athens/blob/master/doc/ClojureFam.md), philosophy, and governance.
 
