@@ -1,4 +1,4 @@
-(ns athens.devcards.data-browser
+(ns athens.views.data-browser
   (:require
     [athens.db :as db]
     [athens.style :refer [COLORS HSL-COLORS]]
