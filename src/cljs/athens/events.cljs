@@ -282,8 +282,10 @@
        map-order))
 
 
+;; TODO: if tail, append it to prev-block, which can be older sibling or parent block
+;; FIXME: why does this jump up sometimes if previous block has content?
 (defn backspace
-  [uid state]
+  [uid value]
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
         reindex (dec-after (:db/id parent) (:block/order block))
@@ -291,17 +293,20 @@
                         :block/children
                         (get (dec (:block/order block)))
                         :block/uid)]
-    {:dispatch-n [[:transact [[:db/retractEntity [:block/uid uid]]
-                              {:db/id (:db/id parent) :block/children reindex}]]
-                  [:editing/uid editing-uid]]}))
+
+    (cond
+      (and (:node/title parent) (zero? (:block/order block))) nil
+
+      :else {:dispatch-n [[:transact [[:db/retractEntity [:block/uid uid]]
+                                      {:db/id (:db/id parent) :block/children reindex}]]
+                          [:editing/uid editing-uid]]})))
 
 
-;; TODO: if tail, join it with older sibling or parent block
-;; why does this jump up sometimes if previous block has content?
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid state]]
-    (backspace uid state)))
+  (fn [_ [_ uid value index state]]
+    (backspace uid value)))
+
 
 
 (defn split-block

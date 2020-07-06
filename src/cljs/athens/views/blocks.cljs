@@ -253,7 +253,7 @@
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (do (.preventDefault e)
                                  (dispatch [:enter uid value index state]))
-      (and (= key KeyCodes.BACKSPACE) (zero? index)) (dispatch [:backspace uid state]))))
+      (and (= key KeyCodes.BACKSPACE) (zero? index)) (dispatch [:backspace uid value]))))
 
 
 ;;; Components
