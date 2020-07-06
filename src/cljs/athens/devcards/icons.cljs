@@ -17,7 +17,8 @@
 
 
 (defcard-rg Icon-Types
-  "Use the different built-in icon types by appending one of `Outlined`, `Rounded`, `TwoTone`, or `Sharp` to the icon name."
+  "Use the different built-in icon types by appending one of `Outlined`, `Rounded`, `TwoTone`, or `Sharp` to the icon name.
+  List of icons: [https://material-ui.com/components/material-icons/](https://material-ui.com/components/material-icons/)"
   [:div
    [:> mui-icons/Directions]
    [:> mui-icons/DirectionsOutlined]
@@ -27,7 +28,7 @@
 
 
 (defcard-rg Styling-icons
-  "Color, opacity, and other properties can be applied to icons by placing them in an element with those styles applied."
+  "To use icons in lazy seqs (like `for` loops or `map`), or to apply other properties like styles, use `r/adapt-react-class`. See [https://github.com/reagent-project/reagent/issues/369](https://github.com/reagent-project/reagent/issues/369)."
   [:div
    [(r/adapt-react-class mui-icons/Face) {:style {:color (color :link-color)}}]
    [(r/adapt-react-class mui-icons/Face) {:style {:color (color :highlight-color)}}]
