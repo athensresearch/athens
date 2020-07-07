@@ -282,32 +282,132 @@
        map-order))
 
 
-(defn backspace
+;; xxx 2 kinds of operations
+;; write operations, it's nice to have entire block and entire parent block to make TXes
+;; read operations (navigation), only need uids
+
+;; xxx these all assume all blocks are open. have to skip closed blocks
+;; TODO: focus AND set selection-start for :editing/uid
+
+(defn prev-sibling-uid
+  [uid]
+  (d/q '[:find ?sib-uid .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(dec ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+       @db/dsdb uid))
+
+;; if order 0, go to parent
+;; if order n, go to prev siblings deepest child
+(defn prev-block-uid
   [uid]
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
+        deepest-child-prev-sibling (db/deepest-child-block [:block/uid (prev-sibling-uid uid)])]
+    (if (zero? (:block/order block))
+      (:block/uid parent)
+      (:block/uid deepest-child-prev-sibling))))
+
+
+(reg-event-fx
+  :up
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (prev-block-uid uid)]}))
+
+
+(reg-event-fx
+  :left
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (prev-block-uid uid)]}))
+
+
+(defn next-sibling-block
+  [uid]
+  (d/q '[:find (pull ?sib [*]) .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(inc ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+       @db/dsdb uid))
+
+
+(defn next-sibling-block-recursively
+  [uid]
+  (loop [uid uid]
+    (let [sib (next-sibling-block uid)
+          parent (db/get-parent [:block/uid uid])]
+      (if (or sib (:node/title parent))
+        sib
+        (recur (:block/uid parent))))))
+
+;; if child, go to child 0
+;; else recursively find next sibling of parent
+(defn next-block-uid
+  [uid]
+  (let [block (->> (db/get-block [:block/uid uid])
+                   db/sort-block-children)
+        ch (:block/children block)
+        next-block-recursive (next-sibling-block-recursively uid)]
+    (cond
+      ch (:block/uid (first ch))
+      next-block-recursive (:block/uid next-block-recursive))))
+
+
+(reg-event-fx
+  :down
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (next-block-uid uid)]}))
+
+
+(reg-event-fx
+  :right
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (next-block-uid uid)]}))
+
+
+;; no-op if root 0th child
+;; otherwise delete block and join with previous block
+(defn backspace
+  [uid value]
+  (let [block (db/get-block [:block/uid uid])
+        parent (db/get-parent [:block/uid uid])
         reindex (dec-after (:db/id parent) (:block/order block))
-        editing-uid (-> parent
-                        :block/children
-                        (get (dec (:block/order block)))
-                        :block/uid)]
-    {:dispatch-n [[:transact [[:db/retractEntity [:block/uid uid]]
-                              {:db/id (:db/id parent) :block/children reindex}]]
-                  [:editing/uid editing-uid]]}))
+        prev-block-uid- (prev-block-uid uid)
+        {prev-block-string :block/string} (db/get-block [:block/uid prev-block-uid-])]
+    (cond
+      (and (:node/title parent) (zero? (:block/order block))) nil
+      (:block/children block) nil
+      :else {:dispatch-n [[:transact [[:db/retractEntity [:block/uid uid]]
+                                      [:db/add [:block/uid prev-block-uid-] :block/string (str prev-block-string value)]
+                                      {:db/id (:db/id parent) :block/children reindex}]]
+                          [:editing/uid prev-block-uid-]]})))
 
 
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid]]
-    (backspace uid)))
+  (fn [_ [_ uid value]]
+    (backspace uid value)))
 
 
 (defn split-block
-  [uid val sel-start]
+  [uid val index state]
   (let [parent (db/get-parent [:block/uid uid])
         block (db/get-block [:block/uid uid])
-        head (subs val 0 sel-start)
-        tail (subs val sel-start)
+        head (subs val 0 index)
+        tail (subs val index)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (inc (:block/order block))
@@ -316,6 +416,7 @@
                    :block/string tail}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
+    (swap! state assoc :atom-string head) ;; FIXME: bad vibes - but easiest solution right now
     {:transact! [[:db/add (:db/id block) :block/string head]
                  {:db/id (:db/id parent)
                   :block/children reindex}]
@@ -323,21 +424,21 @@
 
 
 (defn bump-up
-  [uid val sel-start]
+  "If user presses enter at the start of non-empty string, push that block down and
+  and start editing a new block in the position of originating block - 'bump up' "
+  [uid]
   (let [parent (db/get-parent [:block/uid uid])
         block (db/get-block [:block/uid uid])
-        tail (subs val sel-start)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (:block/order block)
                    :block/uid    new-uid
                    :block/open   true
-                   :block/string tail}
-        reindex (->> (inc-after (:db/id parent) (inc (:block/order block)))
+                   :block/string ""}
+        reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:transact! [[:db/add (:db/id block) :block/string ""]
-                 {:db/id (:db/id parent) :block/children reindex}]
-     :dispatch  [:editing/uid new-uid]}))
+    {:transact! [{:db/id (:db/id parent) :block/children reindex :block/string ""}]
+     :dispatch [:editing/uid new-uid]}))
 
 
 (defn new-block
@@ -356,21 +457,21 @@
 
 
 (defn enter
-  [uid val sel-start]
+  [uid val index state]
   (let [block       (db/get-block [:block/uid uid])
         parent      (db/get-parent [:block/uid uid])
         root-block? (boolean (:node/title parent))]
     (cond
-      (not (zero? sel-start)) (split-block uid val sel-start)
+      (not (zero? index)) (split-block uid val index state)
       (and (empty? val) root-block?) (new-block block parent)
       (empty? val) {:dispatch [:unindent uid]}
-      (and (zero? sel-start) val) (bump-up uid val sel-start))))
+      (and (zero? index) val) (bump-up uid))))
 
 
 (reg-event-fx
   :enter
-  (fn [_ [_ uid val sel-start]]
-    (enter uid val sel-start)))
+  (fn [_ [_ uid val index state]]
+    (enter uid val index state)))
 
 
 (defn indent

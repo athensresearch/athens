@@ -222,7 +222,7 @@
            (for [[group-title group] refs]
              [:div (use-style references-group-style {:key group-title})
               [:h4 (use-style references-group-title-style)
-               [:a {:on-click #(navigate-uid uid)} group-title]]
+               [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
               (for [{:block/keys [uid parents] :as block} group]
                 [:div (use-style references-group-block-style {:key uid})
               ;; TODO: expand parent on click

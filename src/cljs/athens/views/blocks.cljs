@@ -228,10 +228,8 @@
 
 
 (defn on-change
-  [value uid state]
-  (prn "CHANGE")
-  (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]])
-  (fast-on-change value uid state))
+  [value uid]
+  (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]]))
 
 
 (def db-on-change (debounce on-change 500))
@@ -242,31 +240,39 @@
   (dispatch [:transact [[:db/add id :block/open (not open)]]]))
 
 
+;; xxx left and up are similar
+;; xxx down and right are similar
 (defn on-key-down
-  [e uid _state]
+  [e uid state]
   (let [key       (.. e -keyCode)
         shift     (.. e -shiftKey)
         value       (.. e -target -value)
-        sel-start (.. e -target -selectionStart)]
-    ;;(prn "KEY DOWN" value)
+        index (.. e -target -selectionStart)
+        block-start? (zero? index)
+        block-end? (= index (count value))
+        top-row? true ;; TODO
+        bottom-row? true] ;; TODO
     (cond
+      (and (= key KeyCodes.UP) top-row?) (dispatch [:up uid])
+      (and (= key KeyCodes.LEFT) block-start?) (dispatch [:left uid])
+      (and (= key KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
+      (and (= key KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
+
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (do (.preventDefault e)
-                                 (dispatch [:enter uid value sel-start]))
-      (and (= key KeyCodes.BACKSPACE) (zero? sel-start)) (dispatch [:backspace uid]))))
+                                 (dispatch [:enter uid value index state]))
+      (and (= key KeyCodes.BACKSPACE) block-start?) (dispatch [:backspace uid value]))))
 
 
 ;;; Components
 
 
-;; TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case
+ ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:atom-string   (:block/string block)
-                       :slash?        false
-                       :context-menu? false})]
+  (let [state (r/atom {:atom-string   (:block/string block)})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
             open?       (and (seq children) open)
@@ -277,6 +283,10 @@
              dragging-uid :uid
              closest-uid  :closest/uid
              closest-kind :closest/kind} @(subscribe [:drag-bullet])]
+
+        ;; FIXME: bad vibes - if not editing-uid, allow ratom to be updated by side effects
+        (when (< (count (:atom-string @state)) (count string))
+          (swap! state assoc :atom-string string))
 
         [:div (use-style (merge block-style
                                 (when (= dragging-uid uid) dragging-style))
