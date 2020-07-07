@@ -393,7 +393,7 @@
       :else {:dispatch-later [{:ms 0 :dispatch [:transact [[:db/retractEntity [:block/uid uid]]
                                                            [:db/add [:block/uid prev-block-uid-] :block/string (str prev-block-string value)]
                                                            {:db/id (:db/id parent) :block/children reindex}]]}
-                              {:ms 1 :dispatch [:editing/uid prev-block-uid-]}]})))
+                              {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})))
 
 
 (reg-event-fx
