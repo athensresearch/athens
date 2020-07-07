@@ -5,6 +5,7 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.views.dropdown :refer [slash-menu-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [join]]
@@ -278,7 +279,8 @@
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:atom-string   (:block/string block)})]
+  (let [state (r/atom {:atom-string (:block/string block)
+                       :slash? false})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
             open?       (and (seq children) open)
@@ -356,6 +358,9 @@
            (for [child children]
              [:div {:style {:margin-left "32px"} :key (:db/id child)}
               [block-el child]]))
+
+         (when (:slash? @state)
+           [slash-menu-component])
 
          ;; Drop Indicator
          (when (and (= closest-uid uid) (= closest-kind :sibling))
