@@ -248,21 +248,27 @@
         shift     (.. e -shiftKey)
         value       (.. e -target -value)
         index (.. e -target -selectionStart)
+        end (.. e -target -selectionEnd)
         block-start? (zero? index)
         block-end? (= index (count value))
         top-row? true ;; TODO
         bottom-row? true] ;; TODO
+    (prn index end)
     (cond
       (and (= key KeyCodes.UP) top-row?) (dispatch [:up uid])
       (and (= key KeyCodes.LEFT) block-start?) (dispatch [:left uid])
       (and (= key KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
       (and (= key KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
 
-      (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
+      (and shift (= key KeyCodes.TAB)) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
+
+      (and shift (= key KeyCodes.ENTER)) nil
       (= key KeyCodes.ENTER) (do (.preventDefault e)
                                  (dispatch [:enter uid value index state]))
-      (and (= key KeyCodes.BACKSPACE) block-start?) (dispatch [:backspace uid value]))))
+
+      (and (= key KeyCodes.BACKSPACE) block-start? (= index end)) (dispatch [:backspace uid value])
+      (and (= key KeyCodes.SLASH)) (swap! state update :slash? not))))
 
 
 ;;; Components
@@ -284,8 +290,9 @@
              closest-uid  :closest/uid
              closest-kind :closest/kind} @(subscribe [:drag-bullet])]
 
-        ;; FIXME: bad vibes - if not editing-uid, allow ratom to be updated by side effects
-        (when (< (count (:atom-string @state)) (count string))
+        ;; xxx: bad vibes - if not editing-uid, allow ratom to be appended by joining two blocks (deleting at start)
+        (when (and (not (= editing-uid uid))
+                   (< (count (:atom-string @state)) (count string)))
           (swap! state assoc :atom-string string))
 
         [:div (use-style (merge block-style
