@@ -1,7 +1,7 @@
 (ns athens.views.athena
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
+    [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [athens.subs]
@@ -10,7 +10,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    [datascript.core :as d]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -126,56 +125,6 @@
 
 
 ;;; Utilities
-
-
-(defn re-case-insensitive
-  "More options here https://clojuredocs.org/clojure.core/re-pattern"
-  [query]
-  (re-pattern (str "(?i)" query)))
-
-
-(defn search-exact-node-title
-  [query]
-  (d/q '[:find (pull ?node [:db/id :node/title :block/uid]) .
-         :in $ ?query
-         :where [?node :node/title ?query]]
-       @db/dsdb
-       query))
-
-
-(defn search-in-node-title
-  [query]
-  (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
-         :in $ ?query-pattern ?query
-         :where
-         [?node :node/title ?title]
-         [(re-find ?query-pattern ?title)]
-         [(not= ?title ?query)]] ;; ignore exact match to avoid duplicate
-       @db/dsdb
-       (re-case-insensitive query)
-       query))
-
-
-(defn get-root-parent-node
-  [block]
-  (loop [b block]
-    (if (:node/title b)
-      (assoc block :block/parent b)
-      (recur (first (:block/_children b))))))
-
-
-(defn search-in-block-content
-  [query]
-  (->>
-    (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-           :in $ ?query-pattern
-           :where
-           [?block :block/string ?txt]
-           [(re-find ?query-pattern ?txt)]]
-         @db/dsdb
-         (re-case-insensitive query))
-    (map get-root-parent-node)
-    (map #(dissoc % :block/_children))))
 
 
 (defn highlight-match
