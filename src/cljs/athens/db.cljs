@@ -161,7 +161,7 @@
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]}] id))
 
 
 (defn get-parent
@@ -171,6 +171,18 @@
       first
       :db/id
       get-block))
+
+
+(defn deepest-child-block
+  [id]
+  (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] id))]
+    (loop [block document]
+      (if (nil? (:block/children block))
+        block
+        (let [ch (:block/children block)
+              n  (count ch)]
+          (recur (get ch (dec n))))))))
+
 
 ;; history
 

@@ -228,8 +228,7 @@
 
 
 (defn on-change
-  [value uid state]
-  (prn "CHANGE")
+  [value uid]
   (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]]))
 
 
@@ -284,6 +283,10 @@
              dragging-uid :uid
              closest-uid  :closest/uid
              closest-kind :closest/kind} @(subscribe [:drag-bullet])]
+
+        ;; FIXME: bad vibes - if not editing-uid, allow ratom to be updated by side effects
+        (when (< (count (:atom-string @state)) (count string))
+          (swap! state assoc :atom-string string))
 
         [:div (use-style (merge block-style
                                 (when (= dragging-uid uid) dragging-style))

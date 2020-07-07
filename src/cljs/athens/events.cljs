@@ -289,33 +289,20 @@
 ;; xxx these all assume all blocks are open. have to skip closed blocks
 ;; TODO: focus AND set selection-start for :editing/uid
 
-
-
-(defn deepest-child-block
-  [id]
-  (let [document (->> @(posh.reagent/pull db/dsdb '[:block/order :block/uid {:block/children ...}] id))]
-    (loop [block document]
-      (if (nil? (:block/children block))
-        block
-        (let [ch (:block/children block)
-              n  (count ch)]
-          (recur (get ch (dec n))))))))
-
-
 (defn prev-sibling-uid
   [uid]
-  @(posh.reagent/q '[:find ?sib-uid .
-                     :in $ ?block-uid
-                     :where
-                     [?block :block/uid ?block-uid]
-                     [?block :block/order ?block-o]
-                     [?parent :block/children ?block]
-                     [?parent :block/children ?sib]
-                     [?sib :block/order ?sib-o]
-                     [?sib :block/uid ?sib-uid]
-                     [(dec ?block-o) ?prev-sib-o]
-                     [(= ?sib-o ?prev-sib-o)]]
-     db/dsdb uid))
+  (d/q '[:find ?sib-uid .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(dec ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+       @db/dsdb uid))
 
 ;; if order 0, go to parent
 ;; if order n, go to prev siblings deepest child
@@ -323,15 +310,17 @@
   [uid]
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
-        deepest-child-prev-sibling (deepest-child-block [:block/uid (prev-sibling-uid uid)])]
+        deepest-child-prev-sibling (db/deepest-child-block [:block/uid (prev-sibling-uid uid)])]
     (if (zero? (:block/order block))
       (:block/uid parent)
       (:block/uid deepest-child-prev-sibling))))
+
 
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (prev-block-uid uid)]}))
+
 
 (reg-event-fx
   :left
@@ -352,7 +341,8 @@
          [?sib :block/uid ?sib-uid]
          [(inc ?block-o) ?prev-sib-o]
          [(= ?sib-o ?prev-sib-o)]]
-    @db/dsdb uid))
+       @db/dsdb uid))
+
 
 (defn next-sibling-block-recursively
   [uid]
@@ -368,7 +358,7 @@
 (defn next-block-uid
   [uid]
   (let [block (->> (db/get-block [:block/uid uid])
-                db/sort-block-children)
+                   db/sort-block-children)
         ch (:block/children block)
         next-block-recursive (next-sibling-block-recursively uid)]
     (cond
@@ -381,38 +371,35 @@
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (next-block-uid uid)]}))
 
+
 (reg-event-fx
   :right
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (next-block-uid uid)]}))
 
 
-
-;; TODO: if tail, append it to prev-block, which can be older sibling or parent block
-;; FIXME: why does this jump up sometimes if previous block has content?
+;; no-op if root 0th child
+;; otherwise delete block and join with previous block
 (defn backspace
   [uid value]
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
         reindex (dec-after (:db/id parent) (:block/order block))
-        editing-uid (-> parent
-                        :block/children
-                        (get (dec (:block/order block)))
-                        :block/uid)]
-
+        prev-block-uid- (prev-block-uid uid)
+        {prev-block-string :block/string} (db/get-block [:block/uid prev-block-uid-])]
     (cond
       (and (:node/title parent) (zero? (:block/order block))) nil
-
+      (:block/children block) nil
       :else {:dispatch-n [[:transact [[:db/retractEntity [:block/uid uid]]
+                                      [:db/add [:block/uid prev-block-uid-] :block/string (str prev-block-string value)]
                                       {:db/id (:db/id parent) :block/children reindex}]]
-                          [:editing/uid editing-uid]]})))
+                          [:editing/uid prev-block-uid-]]})))
 
 
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
     (backspace uid value)))
-
 
 
 (defn split-block
@@ -429,7 +416,7 @@
                    :block/string tail}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
-    (swap! state assoc :atom-string head) ;; TODO: bad vibes but easiest solution right now
+    (swap! state assoc :atom-string head) ;; FIXME: bad vibes - but easiest solution right now
     {:transact! [[:db/add (:db/id block) :block/string head]
                  {:db/id (:db/id parent)
                   :block/children reindex}]
