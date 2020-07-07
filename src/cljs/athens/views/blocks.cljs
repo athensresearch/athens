@@ -251,14 +251,13 @@
         index (.. e -target -selectionStart)
         block-start? (zero? index)
         block-end? (= index (count value))
-        top-row? true
-        bottom-row? true]
+        top-row? true ;; TODO
+        bottom-row? true] ;; TODO
     (cond
       (and (= key KeyCodes.UP) top-row?) (dispatch [:up uid])
-      (and (= key KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
       (and (= key KeyCodes.LEFT) block-start?) (dispatch [:left uid])
+      (and (= key KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
       (and (= key KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
-      ;;(and (= key KeyCodes.H) (zero? index)) (dispatch [:right])
 
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])

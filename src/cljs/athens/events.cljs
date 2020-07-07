@@ -282,7 +282,16 @@
        map-order))
 
 
-(defn deepest-child
+;; xxx 2 kinds of operations
+;; write operations, it's nice to have entire block and entire parent block to make TXes
+;; read operations (navigation), only need uids
+
+;; xxx these all assume all blocks are open. have to skip closed blocks
+;; TODO: focus AND set selection-start for :editing/uid
+
+
+
+(defn deepest-child-block
   [id]
   (let [document (->> @(posh.reagent/pull db/dsdb '[:block/order :block/uid {:block/children ...}] id))]
     (loop [block document]
@@ -309,46 +318,26 @@
      db/dsdb uid))
 
 ;; if order 0, go to parent
-;; if order n, go to sibling n-1's deepest child
-(defn prev-block
-  [id]
-  (let [block (db/get-block id)
-        parent (db/get-parent id)
-        prev-sibling (prev-sibling-uid (:block/uid block))
-        deepest-child-older-sibling (deepest-child [:block/uid prev-sibling])]
+;; if order n, go to prev siblings deepest child
+(defn prev-block-uid
+  [uid]
+  (let [block (db/get-block [:block/uid uid])
+        parent (db/get-parent [:block/uid uid])
+        deepest-child-prev-sibling (deepest-child-block [:block/uid (prev-sibling-uid uid)])]
     (if (zero? (:block/order block))
-      parent
-      deepest-child-older-sibling)))
-
+      (:block/uid parent)
+      (:block/uid deepest-child-prev-sibling))))
 
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (-> (prev-block [:block/uid uid])
-                               :block/uid)]}))
+    {:dispatch [:editing/uid (prev-block-uid uid)]}))
 
-
-;; TODO: now we need to focus AND set selection-start? for :editing/uid
 (reg-event-fx
   :left
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (-> (prev-block [:block/uid uid])
-                               :block/uid)]}))
+    {:dispatch [:editing/uid (prev-block-uid uid)]}))
 
-(defn next-sibling-uid
-  [uid]
-  @(posh.reagent/q '[:find ?sib-uid .
-                     :in $ ?block-uid
-                     :where
-                     [?block :block/uid ?block-uid]
-                     [?block :block/order ?block-o]
-                     [?parent :block/children ?block]
-                     [?parent :block/children ?sib]
-                     [?sib :block/order ?sib-o]
-                     [?sib :block/uid ?sib-uid]
-                     [(inc ?block-o) ?prev-sib-o]
-                     [(= ?sib-o ?prev-sib-o)]]
-     db/dsdb uid))
 
 (defn next-sibling-block
   [uid]
@@ -365,42 +354,37 @@
          [(= ?sib-o ?prev-sib-o)]]
     @db/dsdb uid))
 
-(defn recursively-next-sibling
+(defn next-sibling-block-recursively
   [uid]
   (loop [uid uid]
-    (let [block (next-sibling-block uid)
+    (let [sib (next-sibling-block uid)
           parent (db/get-parent [:block/uid uid])]
-      (if (or block (:node/title parent))
-        block
+      (if (or sib (:node/title parent))
+        sib
         (recur (:block/uid parent))))))
 
 ;; if child, go to child 0
-;; if n+1 sibling, go
 ;; else recursively find next sibling of parent
-(defn next-block
-  [id]
-  (let [block (->> (db/get-block id)
-                   db/sort-block-children)
+(defn next-block-uid
+  [uid]
+  (let [block (->> (db/get-block [:block/uid uid])
+                db/sort-block-children)
         ch (:block/children block)
-        next-sibling (db/get-block [:block/uid (next-sibling-uid (:block/uid block))])]
+        next-block-recursive (next-sibling-block-recursively uid)]
     (cond
-      ch (first ch)
-      next-sibling next-sibling)))
+      ch (:block/uid (first ch))
+      next-block-recursive (:block/uid next-block-recursive))))
 
-
-;; 2 kinds of operations
-;; write operations, it's nice to have entire block and entire parent block to make TXes
-;; read operations (navigation), only need uids
 
 (reg-event-fx
   :down
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (-> (next-block [:block/uid uid])
-                                 :block/uid)]}))
+    {:dispatch [:editing/uid (next-block-uid uid)]}))
 
-
-
-;; xxx these all assume all blocks are open. have to skip closed blocks
+(reg-event-fx
+  :right
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (next-block-uid uid)]}))
 
 
 
