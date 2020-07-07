@@ -123,7 +123,7 @@
   [block]
   (if-let [children (seq (:block/children block))]
     (assoc block :block/children
-           (sort-by :block/order (map sort-block-children children)))
+           (vec (sort-by :block/order (map sort-block-children children))))
     block))
 
 

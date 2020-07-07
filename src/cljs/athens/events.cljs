@@ -282,6 +282,128 @@
        map-order))
 
 
+(defn deepest-child
+  [id]
+  (let [document (->> @(posh.reagent/pull db/dsdb '[:block/order :block/uid {:block/children ...}] id))]
+    (loop [block document]
+      (if (nil? (:block/children block))
+        block
+        (let [ch (:block/children block)
+              n  (count ch)]
+          (recur (get ch (dec n))))))))
+
+
+(defn prev-sibling-uid
+  [uid]
+  @(posh.reagent/q '[:find ?sib-uid .
+                     :in $ ?block-uid
+                     :where
+                     [?block :block/uid ?block-uid]
+                     [?block :block/order ?block-o]
+                     [?parent :block/children ?block]
+                     [?parent :block/children ?sib]
+                     [?sib :block/order ?sib-o]
+                     [?sib :block/uid ?sib-uid]
+                     [(dec ?block-o) ?prev-sib-o]
+                     [(= ?sib-o ?prev-sib-o)]]
+     db/dsdb uid))
+
+;; if order 0, go to parent
+;; if order n, go to sibling n-1's deepest child
+(defn prev-block
+  [id]
+  (let [block (db/get-block id)
+        parent (db/get-parent id)
+        prev-sibling (prev-sibling-uid (:block/uid block))
+        deepest-child-older-sibling (deepest-child [:block/uid prev-sibling])]
+    (if (zero? (:block/order block))
+      parent
+      deepest-child-older-sibling)))
+
+
+(reg-event-fx
+  :up
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (-> (prev-block [:block/uid uid])
+                               :block/uid)]}))
+
+
+;; TODO: now we need to focus AND set selection-start? for :editing/uid
+(reg-event-fx
+  :left
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (-> (prev-block [:block/uid uid])
+                               :block/uid)]}))
+
+(defn next-sibling-uid
+  [uid]
+  @(posh.reagent/q '[:find ?sib-uid .
+                     :in $ ?block-uid
+                     :where
+                     [?block :block/uid ?block-uid]
+                     [?block :block/order ?block-o]
+                     [?parent :block/children ?block]
+                     [?parent :block/children ?sib]
+                     [?sib :block/order ?sib-o]
+                     [?sib :block/uid ?sib-uid]
+                     [(inc ?block-o) ?prev-sib-o]
+                     [(= ?sib-o ?prev-sib-o)]]
+     db/dsdb uid))
+
+(defn next-sibling-block
+  [uid]
+  (d/q '[:find (pull ?sib [*]) .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(inc ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+    @db/dsdb uid))
+
+(defn recursively-next-sibling
+  [uid]
+  (loop [uid uid]
+    (let [block (next-sibling-block uid)
+          parent (db/get-parent [:block/uid uid])]
+      (if (or block (:node/title parent))
+        block
+        (recur (:block/uid parent))))))
+
+;; if child, go to child 0
+;; if n+1 sibling, go
+;; else recursively find next sibling of parent
+(defn next-block
+  [id]
+  (let [block (->> (db/get-block id)
+                   db/sort-block-children)
+        ch (:block/children block)
+        next-sibling (db/get-block [:block/uid (next-sibling-uid (:block/uid block))])]
+    (cond
+      ch (first ch)
+      next-sibling next-sibling)))
+
+
+;; 2 kinds of operations
+;; write operations, it's nice to have entire block and entire parent block to make TXes
+;; read operations (navigation), only need uids
+
+(reg-event-fx
+  :down
+  (fn [_ [_ uid]]
+    {:dispatch [:editing/uid (-> (next-block [:block/uid uid])
+                                 :block/uid)]}))
+
+
+
+;; xxx these all assume all blocks are open. have to skip closed blocks
+
+
+
 ;; TODO: if tail, append it to prev-block, which can be older sibling or parent block
 ;; FIXME: why does this jump up sometimes if previous block has content?
 (defn backspace
@@ -304,7 +426,7 @@
 
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid value index state]]
+  (fn [_ [_ uid value]]
     (backspace uid value)))
 
 

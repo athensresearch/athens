@@ -241,19 +241,30 @@
   (dispatch [:transact [[:db/add id :block/open (not open)]]]))
 
 
+;; xxx left and up are similar
+;; xxx down and right are similar
 (defn on-key-down
   [e uid state]
   (let [key       (.. e -keyCode)
         shift     (.. e -shiftKey)
         value       (.. e -target -value)
-        index (.. e -target -selectionStart)]
-    ;;(prn "KEY DOWN" value)
+        index (.. e -target -selectionStart)
+        block-start? (zero? index)
+        block-end? (= index (count value))
+        top-row? true
+        bottom-row? true]
     (cond
+      (and (= key KeyCodes.UP) top-row?) (dispatch [:up uid])
+      (and (= key KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
+      (and (= key KeyCodes.LEFT) block-start?) (dispatch [:left uid])
+      (and (= key KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
+      ;;(and (= key KeyCodes.H) (zero? index)) (dispatch [:right])
+
       (and (= key KeyCodes.TAB) shift) (dispatch [:unindent uid])
       (= key KeyCodes.TAB) (dispatch [:indent uid])
       (= key KeyCodes.ENTER) (do (.preventDefault e)
                                  (dispatch [:enter uid value index state]))
-      (and (= key KeyCodes.BACKSPACE) (zero? index)) (dispatch [:backspace uid value]))))
+      (and (= key KeyCodes.BACKSPACE) block-start?) (dispatch [:backspace uid value]))))
 
 
 ;;; Components
