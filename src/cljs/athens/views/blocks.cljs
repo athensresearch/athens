@@ -11,6 +11,7 @@
     [clojure.string :refer [join]]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
+    [goog.dom.selection :refer [setStart getStart getText]]
     [komponentit.autosize :as autosize]
     [re-frame.core  :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -247,6 +248,7 @@
   [e uid state]
   (let [key       (.. e -keyCode)
         shift     (.. e -shiftKey)
+        target       (.. e -target)
         value       (.. e -target -value)
         index (.. e -target -selectionStart)
         end (.. e -target -selectionEnd)
@@ -254,7 +256,9 @@
         block-end? (= index (count value))
         top-row? true ;; TODO
         bottom-row? true] ;; TODO
-    (prn index end)
+
+    (prn "KEYDOWN" value)
+
     (cond
       (and (= key KeyCodes.UP) top-row?) (dispatch [:up uid])
       (and (= key KeyCodes.LEFT) block-start?) (dispatch [:left uid])
@@ -269,7 +273,28 @@
                                  (dispatch [:enter uid value index state]))
 
       (and (= key KeyCodes.BACKSPACE) block-start? (= index end)) (dispatch [:backspace uid value])
-      (and (= key KeyCodes.SLASH)) (swap! state update :slash? not))))
+
+      (and (= key KeyCodes.SLASH)) (swap! state update :slash? not)
+
+      (and (= key KeyCodes.OPEN_SQUARE_BRACKET))
+      (do
+        (let [string (:atom-string @state)
+              head (subs string 0 index)
+              tail (subs string index)
+              new-str (str head "[]" tail)
+              double-brackets? (subs new-str (dec index) (+ index 3))]
+          (js/setTimeout
+            (fn []
+              (fast-on-change new-str uid state)
+              (setStart target index)
+              (when double-brackets?
+                (swap! state assoc :search/page true)))
+            0)))
+
+
+      ;; xxx: why doesn't Closure have open parens?
+      ;; xxx: and should we use KeyCodes.SHIFT or e.shiftKey?
+      (and shift (= key KeyCodes.NINE)) (swap! state update :search/block not))))
 
 
 ;;; Components
@@ -280,7 +305,9 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
   (let [state (r/atom {:atom-string (:block/string block)
-                       :slash? false})]
+                       :slash? false
+                       :search/page false
+                       :search/block false})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
             open?       (and (seq children) open)
@@ -340,12 +367,13 @@
            [autosize/textarea {:value       (:atom-string @state)
                                :class       (when (= editing-uid uid) "is-editing")
                                :auto-focus  true
-                               :id (str "editable-uid-" uid)
+                               :id          (str "editable-uid-" uid)
                                :on-change   (fn [e]
                                               (let [value (.. e -target -value)]
                                                 (fast-on-change value uid state)
                                                 (db-on-change value uid state)))
-                               :on-key-down (fn [e] (on-key-down e uid state))}]
+                               :on-key-down (fn [e]
+                                              (on-key-down e uid state))}]
            [parse-and-render string]
 
            ;; Drop Indicator
@@ -360,6 +388,12 @@
               [block-el child]]))
 
          (when (:slash? @state)
+           [slash-menu-component])
+
+         (when (:search/page @state)
+           [slash-menu-component])
+
+         (when (:search/block @state)
            [slash-menu-component])
 
          ;; Drop Indicator
