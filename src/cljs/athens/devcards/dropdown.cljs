@@ -1,8 +1,6 @@
 (ns athens.devcards.dropdown
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.views.dropdown :refer [slash-menu-component block-context-menu-component filter-dropdown-component]]
-    [athens.views.textinput :refer [textinput]]
     [devcards.core :refer-macros [defcard-rg]]))
 
 

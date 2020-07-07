@@ -5,14 +5,14 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.views.dropdown :refer [slash-menu-component]]
+    [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [join]]
+    [clojure.string :as str :refer [join #_replace]]
     [garden.selectors :as selectors]
+    [goog.dom.selection :refer [setStart getStart setEnd getEnd #_setText getText setCursorPosition #_getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [debounce]]
-    [goog.dom.selection :refer [setStart getStart setEnd getEnd setText getText setCursorPosition getEndPoints]]
     [komponentit.autosize :as autosize]
     [re-frame.core  :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -225,11 +225,6 @@
 
 ;; Helpers
 
-(defn fast-on-change
-  [value _uid state]
-  (swap! state assoc :atom-string value))
-
-
 (defn on-change
   [value uid]
   (dispatch [:transact [[:db/add [:block/uid uid] :block/string value]]]))
@@ -259,6 +254,7 @@
         end          (getEnd target)
         selection    (getText target)
         string       (:atom-string @state)
+        query        (:search/query @state)
         block-start? (zero? start)
         block-end?   (= start (count string))
         top-row?     true                                   ;; TODO
@@ -314,6 +310,8 @@
       ;; default backspace: delete a character
       (= key-code KeyCodes.BACKSPACE) (let [head (subs string 0 (dec start))
                                             new-str (str head tail)]
+                                        (when (or (:search/page @state) (:search/block @state))
+                                          (swap! state assoc :search/query (subs query 0 (dec (count query)))))
                                         (swap! state assoc :atom-string new-str))
 
       ;; open slash commands
@@ -328,7 +326,7 @@
         (js/setTimeout (fn []
                          (setStart target (inc start))
                          (setEnd target (inc end)))
-          10)
+                       10)
         (swap! state assoc :atom-string new-str))
 
       ;; default: auto-create close bracket
@@ -340,6 +338,9 @@
         ;; if second bracket, open search
         (when double-brackets?
           (swap! state assoc :search/page true)))
+
+      ;; TODO: close bracket should not be created if open bracket already exists or user just made a link
+      ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
       ;; -- Parentheses --------------------------------------------------------
 
@@ -371,8 +372,9 @@
       ;; -- Default: Add new character -----------------------------------------
 
       (and (not meta) (not ctrl) (not alt) (isCharacterKey key-code))
-
       (let [new-str (str head key tail)]
+        (when (or (:search/page @state) (:search/block @state))
+          (swap! state assoc :search/query (str (:search/query @state) key)))
         (swap! state assoc :atom-string new-str)))))
 
       ;;:else (prn "non-event" key key-code))))
@@ -388,6 +390,7 @@
   (let [state (r/atom {:atom-string (:block/string block)
                        :slash? false
                        :search/page false
+                       :search/query nil
                        :search/block false})]
     (fn [block]
       (let [{:block/keys [uid string open order children] dbid :db/id} block
@@ -441,7 +444,8 @@
              [:div [:b "uid"] [:span uid]]
              [:div [:b "order"] [:span order]]])
 
-          ;; Actual Contents
+          ;; Actual string contents - two elements, one for reading and one for writing
+          ;; seems hacky, but so far no better way to click into the correct position with one conditional element
           [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
                            {:class    "block-contents"
                             :data-uid uid})
@@ -468,10 +472,19 @@
            [slash-menu-component])
 
          (when (:search/page @state)
-           [slash-menu-component])
+           (let [query (:search/query @state)
+                 results (when (not (str/blank? query))
+                           (db/search-in-node-title query))]
+             [dropdown {:content
+                        (if (not query)
+                          [:div "Start Typing!"]
+                          (for [{:keys [node/title block/uid]} results]
+                            ^{:key uid}
+                            [:div {:on-click #(navigate-uid uid)} title]))}]))
 
-         (when (:search/block @state)
-           [slash-menu-component])
+         ;; TODO: block search. will be pretty much same as page search
+         ;;(when (:search/block @state)
+         ;;  [slash-menu-component])
 
          ;; Drop Indicator
          (when (and (= closest-uid uid) (= closest-kind :sibling))
