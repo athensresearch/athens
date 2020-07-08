@@ -24,14 +24,7 @@
                :left-sidebar/open   true
                :right-sidebar/open  false
                :right-sidebar/items {}
-               :editing/uid         nil
-               :dragging-global     false
-               :drag-bullet         {:uid          nil
-                                     :x            nil
-                                     :y            nil
-                                     :closest/uid  nil
-                                     :closest/kind nil}
-               :tooltip/uid         nil
+               ;;:dragging-global     false
                :daily-notes/items   []})
 
 
