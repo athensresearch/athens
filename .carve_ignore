@@ -11,3 +11,4 @@ athens.db/ego-url
 ;; will be used for JSON import
 user/str-kw-mappings
 athens.views/file-cb
+athens.views.blocks/drop-area-indicator

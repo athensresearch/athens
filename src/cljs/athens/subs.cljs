@@ -71,15 +71,9 @@
 
 
 (re-frame/reg-sub
-  :tooltip/uid
+  :dragging-global
   (fn-traced [db _]
-             (:tooltip/uid db)))
-
-
-(re-frame/reg-sub
-  :drag-bullet
-  (fn-traced [db _]
-             (:drag-bullet db)))
+             (:dragging-global db)))
 
 
 (re-frame/reg-sub

@@ -5,7 +5,6 @@
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
     [athens.views.buttons :refer [button]]
     [athens.views.filters :refer [filters-el]]
-    [athens.views.textinput :refer [textinput]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -16,8 +15,10 @@
 
 
 (stylefy/keyframes "dropdown-appear"
-                   [:from {:opacity 0}]
-                   [:to {:opacity 1}])
+                   [:from {:opacity 0
+                           :transform "translateY(-10%)"}]
+                   [:to {:opacity 1
+                         :transform "translateY(0)"}])
 
 
 (def dropdown-style
@@ -27,6 +28,9 @@
    :border-radius "6px"
    :min-height "2em"
    :min-width "2em"
+   :animation "dropdown-appear 0.125s"
+   :animation-fill-mode "both"
+   :background (color :app-bg-color)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -135,25 +139,23 @@
 
 
 (defn slash-menu-component
-  []
-  [dropdown {:content
-             [:<>
-              [textinput {:placeholder "Type to filter commands"}]
-              [menu {:style {:max-height "8em"} :content
-                     [:<>
-                      [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]]}])
+  [{:keys [style]}]
+  [dropdown {:style style :content
+             [menu {:style {:max-height "8em"} :content
+                    [:<>
+                     [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
 
 
 (defn block-context-menu-component
-  []
-  [dropdown {:content
+  [style]
+  [dropdown {:style style :content
              [menu {:content
                     [:<>
                      ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
