@@ -486,11 +486,9 @@
                        db/get-block)
         new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
         reindex-blocks (->> (dec-after (:db/id parent) (:block/order block)))]
-    (if (zero? (:block/order block)) ; If the block is already the top in it's level, do not indent
-      {}
-      {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                   {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                   {:db/id (:db/id parent) :block/children reindex-blocks}]})))
+    {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
+                 {:db/id (:db/id parent) :block/children reindex-blocks}]}))
 
 
 (reg-event-fx
@@ -500,25 +498,22 @@
 
 
 (defn unindent
-  [uid context-root]
+  [uid context-root-uid]
   (let [parent (db/get-parent [:block/uid uid])
         grandpa (db/get-parent (:db/id parent))
         new-block {:block/uid uid :block/order (inc (:block/order parent))}
         reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
                              (concat [new-block]))]
-    (if (= (:block/uid parent) context-root) ; if the parent node is the context-root, prevent unindent
-      {}
-      (when (and parent grandpa)
-        {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
-                     {:db/id (:db/id grandpa) :block/children reindex-grandpa}]}))))
+    (when-not (= (:block/uid parent) context-root-uid) ; if the parent node is the context-root, prevent unindent
+      {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                   {:db/id (:db/id grandpa) :block/children reindex-grandpa}]})))
 
 
 (reg-event-fx
   :unindent
-  ; Pass in the reframe db as a cofx to the :unindent event handler
   (fn [{rfdb :db} [_ uid]]
-    (let [context-root (get-in rfdb [:current-route :path-params :id])]
-      (unindent uid context-root))))
+    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
+      (unindent uid context-root-uid))))
 
 
 (defn target-child
