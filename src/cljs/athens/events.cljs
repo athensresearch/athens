@@ -486,9 +486,11 @@
                        db/get-block)
         new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
         reindex-blocks (->> (dec-after (:db/id parent) (:block/order block)))]
-    {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                 {:db/id (:db/id parent) :block/children reindex-blocks}]}))
+    (if (zero? (:block/order block)) ; If the block is already the top in it's level, do not indent
+      {}
+      {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                   {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
+                   {:db/id (:db/id parent) :block/children reindex-blocks}]})))
 
 
 (reg-event-fx
@@ -497,7 +499,6 @@
     (indent uid)))
 
 
-;; TODO: no-op when user tries to unindent to a child out of current context
 (defn unindent
   [uid context-root]
   (let [parent (db/get-parent [:block/uid uid])
