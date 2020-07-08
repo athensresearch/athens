@@ -270,8 +270,10 @@
       (and (= key-code KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
 
       ;; -- Tab ----------------------------------------------------------------
-      (and shift (= key-code KeyCodes.TAB)) (dispatch [:unindent uid])
-      (= key-code KeyCodes.TAB) (dispatch [:indent uid])
+      (and shift (= key-code KeyCodes.TAB)) (do (.. e preventDefault) 
+                                                (dispatch [:unindent uid]))
+      (= key-code KeyCodes.TAB) (do (.. e preventDefault) 
+                                    (dispatch [:indent uid]))
 
       ;; -- Enter --------------------------------------------------------------
 
@@ -455,30 +457,30 @@
                                :on-change (fn [_] (db-on-change (:atom-string @state) uid))
                                :on-key-down (fn [e] (on-key-down e uid state))}]
            [parse-and-render string]
-           
-           
+
+
          ;; Slash menu
-         (when (:slash? @state)
-           [slash-menu-component {:style {:position "absolute"
-                                          :top "100%"
-                                          :left "-0.125em"}}])
+           (when (:slash? @state)
+             [slash-menu-component {:style {:position "absolute"
+                                            :top "100%"
+                                            :left "-0.125em"}}])
 
          ;; Page search menu
-         (when (:search/page @state)
-           (let [query (:search/query @state)
-                 results (when (not (str/blank? query))
-                           (db/search-in-node-title query))]
-             [dropdown {:style {:position "absolute"
-                                :top "100%"
-                                :left "-0.125em"}
-                        :content
-                        (if (not query)
-                          [:div "Start Typing!"]
-                          (for [{:keys [node/title block/uid]} results]
-                            ^{:key uid}
-                            [:div {:on-click #(navigate-uid uid)} title]))}]))
-           
-           
+           (when (:search/page @state)
+             (let [query (:search/query @state)
+                   results (when (not (str/blank? query))
+                             (db/search-in-node-title query))]
+               [dropdown {:style {:position "absolute"
+                                  :top "100%"
+                                  :left "-0.125em"}
+                          :content
+                          (if (not query)
+                            [:div "Start Typing!"]
+                            (for [{:keys [node/title block/uid]} results]
+                              ^{:key uid}
+                              [:div {:on-click #(navigate-uid uid)} title]))}]))
+
+
 
            ;; Drop Indicator
            (when (and (= closest-uid uid)
