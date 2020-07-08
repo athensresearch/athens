@@ -34,6 +34,17 @@
    :opacity-higher 0.85})
 
 
+;; Based on Bootstrap's excellent Z-index set
+(def ZINDICES
+  {:zindex-dropdown          1000
+   :zindex-sticky            1020
+   :zindex-fixed             1030
+   :zindex-modal-backdrop    1040
+   :zindex-modal             1050
+   :zindex-popover           1060
+   :zindex-tooltip           1070})
+
+
 ;; Color
 ;; Provide color keyword
 ;; (optional) Provide alpha value, either keyword or 0-1

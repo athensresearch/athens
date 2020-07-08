@@ -84,7 +84,7 @@
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
-                     [:&.dragging {:z-index "1000"
+                     [:&.dragging {:z-index 1
                                    :cursor "grabbing"
                                    :color (color :body-text-color)}]]})
 
@@ -110,7 +110,7 @@
    :color (color :body-text-color :opacity-low)
    :position "relative"
    :transform-origin "left"
-   :z-index "1000"
+   :z-index 3
    :width "100%"
    ;;:animation "drop-area-appear .5s ease"
    ::stylefy/manual [[:&:after {:position "absolute"
@@ -157,12 +157,12 @@
                                  :font-family "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
-                                    :z-index "10"
+                                    :z-index 3
                                     :display "block"
                                     :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
-                                 :z-index "2"}]]]})
+                                 :z-index 2}]]]})
 
 
 (stylefy/keyframes "tooltip-appear"

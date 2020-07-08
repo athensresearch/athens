@@ -27,7 +27,7 @@
                                              :right "-0.2em"
                                              :left "-0.2em"
                                              :bottom "-1px"
-                                             :z-index "-1"
+                                             :z-index -1
                                              :opacity "0"
                                              :border-radius "4px"
                                              :transition "all 0.05s ease"
