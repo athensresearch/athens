@@ -80,6 +80,12 @@
                             [:right-sidebar/toggle])})))
 
 
+(reg-event-db
+  :dragging-global/toggle
+  (fn [db _]
+    (update db :dragging-global not)))
+
+
 ;; Alerts
 
 (reg-event-db

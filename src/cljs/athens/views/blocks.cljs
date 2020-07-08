@@ -11,10 +11,11 @@
     [clojure.string :as str :refer [join #_replace]]
     [garden.selectors :as selectors]
     [goog.dom.selection :refer [setStart getStart setEnd getEnd #_setText getText setCursorPosition #_getEndPoints]]
+    [goog.dom.classlist :as classlist :refer [add remove toggle]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [re-frame.core  :refer [dispatch subscribe]]
+    [re-frame.core  :refer [dispatch subscribe dispatch-sync]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
@@ -59,7 +60,7 @@
    ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]]})
 
 
-(def block-indicator-style
+(def bullet-style
   {:flex-shrink "0"
    :cursor "pointer"
    :width "0.75em"
@@ -79,17 +80,15 @@
                             :width "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
 
-   ::stylefy/manual [[:&.open {}]
-                     [:&.closed {}]
-                     [:&.closed [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
-                                                                  :opacity (:opacity-med OPACITIES)}]]
-                     [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
-                     [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
+   ::stylefy/manual [[:&.closed-with-children {}]
+                     [:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
+                                                                                :opacity (:opacity-med OPACITIES)}]]
+                     [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
+                     [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
                      [:&.dragging {:z-index "1000"
                                    :cursor "grabbing"
-                                   :color (color :body-text-color)}]
-                     [:&.selected {}]]})
+                                   :color (color :body-text-color)}]]})
 
 
 (stylefy/keyframes "drop-area-appear"
@@ -106,16 +105,19 @@
                     {:opacity (:opacity-med OPACITIES)}])
 
 
+(def drag-target-style
+  {:border "1px solid red"})
+
 (def drop-area-indicator
   {:display "block"
    :height "1px"
    :margin-bottom "-1px"
-   :color (color :body-text-color)
+   :color (color :body-text-color :opacity-low)
    :position "relative"
    :transform-origin "left"
    :z-index "1000"
    :width "100%"
-   :animation "drop-area-appear .5s ease"
+   ;;:animation "drop-area-appear .5s ease"
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
                                 :top "-0.5px"
@@ -123,7 +125,7 @@
                                 :bottom "-0.5px"
                                 :left "0"
                                 :border-radius "100px"
-                                :animation "drop-area-color-pulse 1s ease infinite alternate"
+                                ;;:animation "drop-area-color-pulse 1s ease infinite alternate"
                                 :background "currentColor"}]]})
 
 
@@ -217,8 +219,8 @@
                                 :display "block"}]]})
 
 
-(def dragging-style)
-  ;;{:background-color "lightblue"})
+(def dragging-style
+  {:background-color "lightblue"})
 
 
 
@@ -381,8 +383,100 @@
 
 ;;; Components
 
+(defn toggle-el
+  [{:block/keys [open uid children]}]
+  (if (seq children)
+    [:button (use-style block-disclosure-toggle-style
+              {:class    (if open "open" "closed")
+               :on-click #(toggle [:block/uid uid] open)})
+     [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+    [:span (use-style block-disclosure-toggle-style)]))
 
- ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
+
+(defn tooltip-el
+  [{:block/keys [uid order] dbid :db/id}]
+  [:div (use-style tooltip-style {:class "tooltip"})
+   [:div [:b "db/id"] [:span dbid]]
+   [:div [:b "uid"] [:span uid]]
+   [:div [:b "order"] [:span order]]])
+
+
+(defn drag-bullet-start
+  [e state]
+  (swap! state merge @state {:bullet/active    true
+                             :bullet/initial-x (.. e -clientX)
+                             :bullet/initial-y (.. e -clientY)}))
+
+(defn drag-bullet
+  [e state]
+  (when (:bullet/active @state)
+    (let [{:bullet/keys [initial-x initial-y]} @state
+          client-x  (.. e -clientX)
+          client-y  (.. e -clientY)
+          current-x (- client-x initial-x)
+          current-y (- client-y initial-y)]
+      (.. e preventDefault)
+      (swap! state merge @state {:bullet/current-x current-x
+                                 :bullet/current-y current-y}))))
+
+(defn drag-bullet-end
+  [_ state]
+  (swap! state merge @state {:bullet/active    false
+                             :bullet/initial-x 0
+                             :bullet/initial-y 0
+                             :bullet/current-x 0
+                             :bullet/current-y 0}))
+
+
+(defn drag-start-handler
+  [e state]
+  ;;(.. e stopPropagation)
+  (prn "START")
+  (dispatch [:dragging-global/toggle])
+  (swap! state update :dragging not))
+
+(defn drag-end-handler
+  [e state]
+  ;;(.. e stopPropagation)
+  (prn "END")
+  (dispatch [:dragging-global/toggle])
+  (swap! state update :dragging not))
+
+(defn drag-enter-container
+  [e state value]
+  ;;(prn "ENTER")
+  (.. e stopPropagation)
+  (swap! state assoc :drag-target :container))
+
+(defn a-new-handler
+  [e state]
+  (prn "NEW END"))
+
+(defn drag-leave-container
+  [e state]
+  (.. e stopPropagation)
+  ;;(prn "LEAVE")
+  (swap! state assoc :drag-target nil))
+
+;;(defn drag-enter-contents
+;;  [e state value]
+;;  ;;(prn "ENTER")
+;;  (.. e stopPropagation)
+;;  (swap! state assoc :drag-target :contents))
+
+;;(defn drag-over-handler
+;;  [e]
+;;  (.. e preventDefault)
+;;  ;;(prn "OVER")
+;;  (set! (.. e -dataTransfer -dropEffect) "move"))
+
+
+;;(defn drag-leave-handler
+;;  [e state]
+;;  ;;(prn "LEAVE")
+;;  (swap! state update :drag-target not))
+
+;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
@@ -390,15 +484,17 @@
                        :slash? false
                        :search/page false
                        :search/query nil
-                       :search/block false})]
+                       :search/block false
+                       :dragging false
+                       :drag-target false})]
     (fn [block]
-      (let [{:block/keys [uid string open order children] dbid :db/id} block
-            open?       (and (seq children) open)
-            closed?     (and (seq children) (not open))
+      (let [{:block/keys [uid string open children]} block
             editing-uid @(subscribe [:editing/uid])
             tooltip-uid @(subscribe [:tooltip/uid])
-            {:keys        [x y]
-             dragging-uid :uid
+            dragging-global @(subscribe [:dragging-global])
+            {dragging :dragging
+             drag-target :drag-target} @state
+            {dragging-uid :uid
              closest-uid  :closest/uid
              closest-kind :closest/kind} @(subscribe [:drag-bullet])]
 
@@ -407,97 +503,109 @@
                    (< (count (:atom-string @state)) (count string)))
           (swap! state assoc :atom-string string))
 
-        [:div (use-style (merge block-style
-                                (when (= dragging-uid uid) dragging-style))
-                         {:class    (join " " ["block-container"
-                                               (when (= dragging-uid uid) "dragging")
-                                               (when (and (seq children) open) "show-tree-indicator")])
-                          :data-uid uid})
-         [:div {:style {:display "flex"}}
+        [:<>
 
-          ;; Toggle
-          (if (seq children)
-            [:button (use-style block-disclosure-toggle-style
-                                {:class    (cond open? "open" closed? "closed")
-                                 :on-click #(toggle [:block/uid uid] open)})
-             [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
-            [:span (use-style block-disclosure-toggle-style)])
+         (when dragging-global
+           [:div.drag-n-drop (use-style
+                               (merge {:background-color "black"
+                                       :height "2px"}
+                                      (when (= drag-target :container) {:background-color "red"})))])
 
-          ;; Bullet
-          (if (= dragging-uid uid)
-            [:span (merge (use-style block-indicator-style
-                                     {:class    (join " " ["bullet" "dragging" (if closed? "closed" "open")])
-                                      :data-uid uid})
-                          {:style {:transform (str "translate(" x "px, " y "px)")}})]
 
-            [:span (use-style block-indicator-style
-                              {:class    (str "bullet " (if closed? "closed" "open"))
-                               :data-uid uid
-                               :on-click #(navigate-uid uid)})])
+         [:div (use-style (merge block-style
+                                 (when dragging dragging-style))
+                 {:class         ["block-container"
+                                  ;; TODO: is it possible to make this a conditional -style map you can merge like above?
+                                  (when (and (seq children) open) "show-tree-indicator")]
+                  :data-uid      uid
+                  ;;:on-drag-enter (fn [e] (drag-enter-container e state nil))
+                  ;;:on-drag-leave (fn [e] (drag-leave-container e state))
+                  :on-drag-start (fn [e] (prn "START")
+                                   (dispatch-sync [:dragging-global/toggle]))
+                                   ;;(swap! state update :dragging not))
+                  :on-drag-end   (fn [e]
+                                   (prn "END")
+                                   #_(a-new-handler e state))})
+                  ;;:on-drag-over  (fn [e] (drag-over-handler e))})
 
-          ;; Tooltip
-          (when (and (= tooltip-uid uid)
-                     (not dragging-uid))
-            [:div (use-style tooltip-style {:class "tooltip"})
-             [:div [:b "db/id"] [:span dbid]]
-             [:div [:b "uid"] [:span uid]]
-             [:div [:b "order"] [:span order]]])
 
-          ;; Actual string contents - two elements, one for reading and one for writing
-          ;; seems hacky, but so far no better way to click into the correct position with one conditional element
-          [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
-                           {:class    "block-contents"
-                            :data-uid uid})
-           [autosize/textarea {:value       (:atom-string @state)
-                               :class       (when (= editing-uid uid) "is-editing")
-                               :auto-focus  true
-                               :id          (str "editable-uid-" uid)
-                               :on-change (fn [_] (db-on-change (:atom-string @state) uid))
-                               :on-key-down (fn [e] (on-key-down e uid state))}]
-           [parse-and-render string]
-           
-           
-         ;; Slash menu
-         (when (:slash? @state)
-           [slash-menu-component {:style {:position "absolute"
-                                          :top "100%"
-                                          :left "-0.125em"}}])
+          [:div {:style {:display "flex"}}
 
-         ;; Page search menu
-         (when (:search/page @state)
-           (let [query (:search/query @state)
-                 results (when (not (str/blank? query))
-                           (db/search-in-node-title query))]
-             [dropdown {:style {:position "absolute"
-                                :top "100%"
-                                :left "-0.125em"}
-                        :content
-                        (if (not query)
-                          [:div "Start Typing!"]
-                          (for [{:keys [node/title block/uid]} results]
-                            ^{:key uid}
-                            [:div {:on-click #(navigate-uid uid)} title]))}]))
-           
-           
+           [toggle-el block]
 
-           ;; Drop Indicator
-           (when (and (= closest-uid uid)
-                      (= closest-kind :child))
-             [:span (use-style drop-area-indicator)])]]
+           ;;(prn "UPDATE" current-x current-y)
+           ;; Bullet
+           [:span (merge (use-style bullet-style
+                                    {:class ["bullet"
+                                             ;;(when active "dragging")
+                                             (when (and (seq children) (not open))
+                                               "closed-with-children")]
+                                     :draggable true
+                                     :data-uid uid}))]
+           ;;:on-mouse-down (fn [e] (drag-bullet-start e state))
+           ;;:on-mouse-move (fn [e] (drag-bullet e state))
+           ;;:on-mouse-up   (fn [e] (drag-bullet-end e state))})
+           ;;:on-click #(when (not= dragging-uid uid) (navigate-uid uid))})
+           ;;{:style {:transform (str "translate(" current-x "px, " current-y "px)")}})]
 
-         ;; Children
-         (when open?
-           (for [child children]
-             [:div {:style {:margin-left "32px"} :key (:db/id child)}
-              [block-el child]]))
+           ;;;; Tooltip
+           ;;(when (and (= tooltip-uid uid) (not dragging-uid))
+           ;;  [tooltip-el block])
 
-         ;; TODO: block search. will be pretty much same as page search
-         ;;(when (:search/block @state)
-         ;;  [slash-menu-component])
 
-         ;; Drop Indicator
-         (when (and (= closest-uid uid) (= closest-kind :sibling))
-           [:span (use-style drop-area-indicator)])]))))
+           ;; Actual string contents - two elements, one for reading and one for writing
+           ;; seems hacky, but so far no better way to click into the correct position with one conditional element
+           [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
+                            {:class    "block-contents"
+                             ;;:on-drag-enter (fn [e] (drag-enter-handler e state :child))
+                             :data-uid uid})
+            [autosize/textarea {:value       (:atom-string @state)
+                                :class       (when (= editing-uid uid) "is-editing")
+                                :auto-focus  true
+                                :id          (str "editable-uid-" uid)
+                                :on-change (fn [_] (db-on-change (:atom-string @state) uid))
+                                :on-key-down (fn [e] (on-key-down e uid state))}]
+            [parse-and-render string]]]
+
+
+          ;; Slash menu
+          (when (:slash? @state)
+            [slash-menu-component {:style {:position "absolute"
+                                           :top "100%"
+                                           :left "-0.125em"}}])
+
+          ;; Page search menu
+          (when (:search/page @state)
+            (let [query (:search/query @state)
+                  results (when (not (str/blank? query))
+                            (db/search-in-node-title query))]
+              [dropdown {:style {:position "absolute"
+                                 :top "100%"
+                                 :left "-0.125em"}
+                         :content
+                         (if (not query)
+                           [:div "Start Typing!"]
+                           (for [{:keys [node/title block/uid]} results]
+                             ^{:key uid}
+                             [:div {:on-click #(navigate-uid uid)} title]))}]))
+
+          ;;(when dragging-global
+          ;;  [:div.drag-n-drop.child (use-style
+          ;;                            (merge {:height "2px"}
+          ;;                               (when (= drag-target :child) {:background-color "red"})))])
+
+
+          ;; Children
+          (when open
+            (for [child children]
+              [:div {:style {:margin-left "32px"} :key (:db/id child)}
+               [block-el child]]))]]))))
+
+          ;; TODO: block search. will be pretty much same as page search
+          ;;(when (:search/block @state)
+          ;;  [slash-menu-component])
+         ;;(when dragging-global
+         ;;  [:span.drag-n-drop (use-style drop-area-indicator)])]))))
 
 
 (defn block-component

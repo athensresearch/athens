@@ -25,6 +25,7 @@
                :right-sidebar/open  false
                :right-sidebar/items {}
                :editing/uid         nil
+               :dragging-global     false
                :drag-bullet         {:uid          nil
                                      :x            nil
                                      :y            nil

@@ -11,11 +11,9 @@
       KeyCodes)))
 
 
-;;; Drag Bullet to Re-order Block
 
 
 (declare mouse-move-bullet mouse-up-bullet)
-
 
 (defn mouse-down-bullet
   [e]
@@ -70,10 +68,41 @@
                     :closest/kind closest-kind}])))))
 
 
-;;; Turn read block or header into editable on mouse down
+
+;; -- Drag and Drop Bullet -----------------------------------------------
+
+(defn drag-bullet-start
+  [e state]
+  (swap! state merge @state {:bullet/active    true
+                             :bullet/initial-x (.. e -clientX)
+                             :bullet/initial-y (.. e -clientY)}))
+
+(defn drag-bullet
+  [e state]
+  (when (:bullet/active @state)
+    (let [{:bullet/keys [initial-x initial-y]} @state
+          client-x  (.. e -clientX)
+          client-y  (.. e -clientY)
+          current-x (- client-x initial-x)
+          current-y (- client-y initial-y)]
+      (.. e preventDefault)
+      (swap! state merge @state {:bullet/current-x current-x
+                                 :bullet/current-y current-y}))))
+
+(defn drag-bullet-end
+  [_ state]
+  (swap! state merge @state {:bullet/active    false
+                             :bullet/initial-x 0
+                             :bullet/initial-y 0
+                             :bullet/current-x 0
+                             :bullet/current-y 0}))
 
 
-(defn mouse-down-block
+
+
+;; -- Turn read block or header into editable on mouse down --------------
+
+(defn edit-block
   [e]
   ;; Consider refactor if we add more editable targets
   (let [closest-block (.. e -target (closest ".block-contents"))
@@ -84,10 +113,9 @@
       (dispatch [:editing/uid (.. closest -dataset -uid)]))))
 
 
-;;; Show tooltip
+;; -- Show Tooltip--------------------------------------------------------
 
-
-(defn mouse-over-bullet
+(defn show-tooltip
   [e]
   (let [class-list (array-seq (.. e -target -classList))
         closest (.. e -target (closest ".tooltip"))
@@ -104,8 +132,7 @@
       :else (dispatch [:tooltip/uid nil]))))
 
 
-;;; Close Athena
-
+;; -- Close Athena -------------------------------------------------------
 
 (defn mouse-down-outside-athena
   [e]
@@ -115,7 +142,8 @@
       (dispatch [:athena/toggle]))))
 
 
-;;; Hotkeys
+;; -- Hotkeys ------------------------------------------------------------
+
 
 (defn key-down
   [e]
@@ -144,13 +172,15 @@
       (dispatch [:left-sidebar/toggle]))))
 
 
-;;; Scroll
-
 (defn init
   []
-  (events/listen js/window EventType.MOUSEDOWN mouse-down-block)
-  (events/listen js/window EventType.MOUSEDOWN mouse-down-bullet)
-  (events/listen js/window EventType.MOUSEOVER mouse-over-bullet)
+  ;;(events/listen js/window EventType.MOUSEDOWN drag-bullet-start)
+  ;;(events/listen js/window EventType.MOUSEMOVE drag-bullet)
+  ;;(events/listen js/window EventType.MOUSEUP   drag-bullet-end)
+
+  ;;(events/listen js/window EventType.MOUSEOVER show-tooltip)
+  (events/listen js/window EventType.MOUSEDOWN edit-block)
+
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN key-down))
 

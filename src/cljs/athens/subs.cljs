@@ -79,7 +79,13 @@
 (re-frame/reg-sub
   :drag-bullet
   (fn-traced [db _]
-             (:drag-bullet db)))
+    (:drag-bullet db)))
+
+
+(re-frame/reg-sub
+  :dragging-global
+  (fn-traced [db _]
+             (:dragging-global db)))
 
 
 (re-frame/reg-sub
