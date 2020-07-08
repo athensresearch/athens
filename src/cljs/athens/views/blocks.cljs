@@ -443,33 +443,40 @@
              [:div [:b "db/id"] [:span dbid]]
              [:div [:b "uid"] [:span uid]]
              [:div [:b "order"] [:span order]]])
-
-          ;; Actual string contents - two elements, one for reading and one for writing
-          ;; seems hacky, but so far no better way to click into the correct position with one conditional element
-          [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
-                           {:class    "block-contents"
-                            :data-uid uid})
-           [autosize/textarea {:value       (:atom-string @state)
-                               :class       (when (= editing-uid uid) "is-editing")
-                               :auto-focus  true
-                               :id          (str "editable-uid-" uid)
-                               :on-change (fn [_] (db-on-change (:atom-string @state) uid))
-                               :on-key-down (fn [e] (on-key-down e uid state))}]
-           [parse-and-render string]
+          
+          ;; Hacky wraper div to give the slash menu a static-positioned element
+          ;; to hang from. This should be removed when we're able to place tooltips,
+          ;; menus, and popups at arbitrary screen coordinates.
+          [:div {:style {:flex "1 1 100%"}}
+           ;; Actual string contents - two elements, one for reading and one for writing
+           ;; seems hacky, but so far no better way to click into the correct position with one conditional element
+           [:div (use-style (merge block-content-style {:user-select (when dragging-uid "none")})
+                            {:class    "block-contents"
+                             :data-uid uid})
+            [autosize/textarea {:value       (:atom-string @state)
+                                :class       (when (= editing-uid uid) "is-editing")
+                                :auto-focus  true
+                                :id          (str "editable-uid-" uid)
+                                :on-change (fn [_] (db-on-change (:atom-string @state) uid))
+                                :on-key-down (fn [e] (on-key-down e uid state))}]
+            [parse-and-render string]
 
            ;; Drop Indicator
-           (when (and (= closest-uid uid)
-                      (= closest-kind :child))
-             [:span (use-style drop-area-indicator)])]]
+            (when (and (= closest-uid uid)
+                       (= closest-kind :child))
+              [:span (use-style drop-area-indicator)])]]
+
+        ;; Slash menu
+          (when (:slash? @state)
+            [slash-menu-component {:style {:position "absolute"
+                                           :top "100%"
+                                           :left "0"}}])]
 
          ;; Children
          (when open?
            (for [child children]
              [:div {:style {:margin-left "32px"} :key (:db/id child)}
               [block-el child]]))
-
-         (when (:slash? @state)
-           [slash-menu-component])
 
          (when (:search/page @state)
            (let [query (:search/query @state)

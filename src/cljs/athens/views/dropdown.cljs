@@ -26,6 +26,7 @@
    :border-radius "6px"
    :min-height "2em"
    :min-width "2em"
+   :background (color :app-bg-color)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -134,10 +135,8 @@
 
 
 (defn slash-menu-component
-  []
-  [dropdown {:content
-             [:<>
-              [textinput {:placeholder "Type to filter commands"}]
+  [{:keys [style]}]
+  [dropdown {:style style :content
               [menu {:style {:max-height "8em"} :content
                      [:<>
                       [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
@@ -147,12 +146,12 @@
                       [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
                       [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
                       [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]]}])
+                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
 
 
 (defn block-context-menu-component
-  []
-  [dropdown {:content
+  [style]
+  [dropdown {:style style :content
              [menu {:content
                     [:<>
                      ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
