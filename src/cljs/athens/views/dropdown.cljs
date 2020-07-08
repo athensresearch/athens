@@ -5,7 +5,6 @@
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]
     [athens.views.filters :refer [filters-el]]
-    [athens.views.textinput :refer [textinput]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -137,16 +136,16 @@
 (defn slash-menu-component
   [{:keys [style]}]
   [dropdown {:style style :content
-              [menu {:style {:max-height "8em"} :content
-                     [:<>
-                      [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
-                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
+             [menu {:style {:max-height "8em"} :content
+                    [:<>
+                     [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
 
 
 (defn block-context-menu-component
