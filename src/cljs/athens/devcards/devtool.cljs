@@ -3,7 +3,8 @@
     [athens.db :as db :refer [dsdb]]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.views.buttons :refer [button-primary button]]
-    [athens.views.devtool :refer [state* handler devtool-prompt-el devtool-component]]
+    [athens.views.devtool :refer [state* handler devtool-prompt-el
+                                  devtool-component initial-state eval-box!]]
     [datascript.db]
     [devcards.core :as devcards :refer [defcard-rg]]
     [me.tonsky.persistent-sorted-set]
