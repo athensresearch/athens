@@ -253,6 +253,7 @@
         query        (:search/query @state)
         block-start? (zero? start)
         block-end?   (= start (count string))
+        block-zero?  (zero? (:block/order (db/get-block [:block/uid uid])))
         top-row?     true                                   ;; TODO
         bottom-row?  true                                   ;; TODO
         head         (subs string 0 start)
@@ -267,8 +268,11 @@
       (and (= key-code KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
 
       ;; -- Tab ----------------------------------------------------------------
-      (and shift (= key-code KeyCodes.TAB)) (dispatch [:unindent uid])
-      (= key-code KeyCodes.TAB) (dispatch [:indent uid])
+      (and shift (= key-code KeyCodes.TAB)) (do (.. e preventDefault)
+                                                (dispatch [:unindent uid]))
+      (= key-code KeyCodes.TAB) (do (.. e preventDefault)
+                                    (when-not block-zero?
+                                      (dispatch [:indent uid])))
 
       ;; -- Enter --------------------------------------------------------------
 

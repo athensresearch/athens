@@ -497,23 +497,23 @@
     (indent uid)))
 
 
-;; TODO: no-op when user tries to unindent to a child out of current context
 (defn unindent
-  [uid]
+  [uid context-root-uid]
   (let [parent (db/get-parent [:block/uid uid])
         grandpa (db/get-parent (:db/id parent))
         new-block {:block/uid uid :block/order (inc (:block/order parent))}
         reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
                              (concat [new-block]))]
-    (when (and parent grandpa)
+    (when-not (= (:block/uid parent) context-root-uid) ; if the parent node is the context-root, prevent unindent
       {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
                    {:db/id (:db/id grandpa) :block/children reindex-grandpa}]})))
 
 
 (reg-event-fx
   :unindent
-  (fn [_ [_ uid]]
-    (unindent uid)))
+  (fn [{rfdb :db} [_ uid]]
+    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
+      (unindent uid context-root-uid))))
 
 
 (defn target-child
