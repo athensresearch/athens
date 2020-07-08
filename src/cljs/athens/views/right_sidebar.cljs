@@ -62,7 +62,7 @@
    :align-items "flex-start"
    :padding "80px 4px 0"
    :position "relative"
-   :z-index "10"
+   :z-index 3
    :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
    ::stylefy/manual [[:& {:transition-duration "0.15s"}]
                      [:&:hover {:background (lighten (color :panel-color) 5)}]
@@ -119,7 +119,7 @@
    :line-height "24px"
    :font-size "15px"
    :position "relative"
-   :z-index "1"
+   :z-index 1
    :width sidebar-width})
 
 
@@ -131,7 +131,7 @@
    :padding "4px 16px"
    :position "sticky"
    :backdrop-filter "blur(12px)"
-   :z-index "10"
+   :z-index 2
    :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"

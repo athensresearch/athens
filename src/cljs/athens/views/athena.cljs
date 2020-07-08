@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid]]
     [athens.views.buttons :refer [button-primary]]
@@ -32,10 +32,10 @@
    :position      "fixed"
    :overflow      "hidden"
    :max-height    "60vh"
+   :z-index       (:zindex-modal ZINDICES)
    :top           "50%"
    :left          "50%"
-   :transform     "translate(-50%, -50%)"
-   :z-index       2})
+   :transform     "translate(-50%, -50%)"})
 
 
 (def athena-input-style

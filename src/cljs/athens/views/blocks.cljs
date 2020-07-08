@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -86,7 +86,7 @@
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
-                     [:&.dragging {:z-index "1000"
+                     [:&.dragging {:z-index 1
                                    :cursor "grabbing"
                                    :color (color :body-text-color)}]
                      [:&.selected {}]]})
@@ -113,7 +113,7 @@
    :color (color :body-text-color)
    :position "relative"
    :transform-origin "left"
-   :z-index "1000"
+   :z-index 3
    :width "100%"
    :animation "drop-area-appear .5s ease"
    ::stylefy/manual [[:&:after {:position "absolute"
@@ -130,7 +130,7 @@
 (def block-content-style
   {:position "relative"
    :overflow "visible"
-   :z-index "1"
+   :z-index 1
    :flex-grow "1"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
@@ -161,12 +161,12 @@
                                  :font-family "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
-                                    :z-index "10"
+                                    :z-index 3
                                     :display "block"
                                     :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
-                                 :z-index "2"}]]]})
+                                 :z-index 2}]]]})
 
 
 (stylefy/keyframes "tooltip-appear"

@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
-    [athens.style :refer [color DEPTH-SHADOWS]]
+    [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
     [athens.views.buttons :refer [button]]
     [athens.views.filters :refer [filters-el]]
     [athens.views.textinput :refer [textinput]]
@@ -22,6 +22,7 @@
 
 (def dropdown-style
   {:display "inline-flex"
+   :z-index (:zindex-dropdown ZINDICES)
    :padding "4px"
    :border-radius "6px"
    :min-height "2em"
