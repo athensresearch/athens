@@ -457,10 +457,28 @@
            [parse-and-render string]
            
            
+         ;; Slash menu
          (when (:slash? @state)
            [slash-menu-component {:style {:position "absolute"
                                           :top "100%"
                                           :left "-0.125em"}}])
+
+         ;; Page search menu
+         (when (:search/page @state)
+           (let [query (:search/query @state)
+                 results (when (not (str/blank? query))
+                           (db/search-in-node-title query))]
+             [dropdown {:style {:position "absolute"
+                                :top "100%"
+                                :left "-0.125em"}
+                        :content
+                        (if (not query)
+                          [:div "Start Typing!"]
+                          (for [{:keys [node/title block/uid]} results]
+                            ^{:key uid}
+                            [:div {:on-click #(navigate-uid uid)} title]))}]))
+           
+           
 
            ;; Drop Indicator
            (when (and (= closest-uid uid)
@@ -472,17 +490,6 @@
            (for [child children]
              [:div {:style {:margin-left "32px"} :key (:db/id child)}
               [block-el child]]))
-
-         (when (:search/page @state)
-           (let [query (:search/query @state)
-                 results (when (not (str/blank? query))
-                           (db/search-in-node-title query))]
-             [dropdown {:content
-                        (if (not query)
-                          [:div "Start Typing!"]
-                          (for [{:keys [node/title block/uid]} results]
-                            ^{:key uid}
-                            [:div {:on-click #(navigate-uid uid)} title]))}]))
 
          ;; TODO: block search. will be pretty much same as page search
          ;;(when (:search/block @state)
