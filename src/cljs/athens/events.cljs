@@ -80,6 +80,12 @@
                             [:right-sidebar/toggle])})))
 
 
+(reg-event-db
+  :dragging-global/toggle
+  (fn [db _]
+    (update db :dragging-global not)))
+
+
 ;; Alerts
 
 (reg-event-db
@@ -122,12 +128,6 @@
   (fn-traced [db [_ uid]]
              (js/setTimeout (focus-el (str "editable-uid-" uid)) 300)
              (assoc db :editing/uid uid)))
-
-
-(reg-event-db
-  :drag-bullet
-  (fn [db [_ map]]
-    (assoc db :drag-bullet map)))
 
 
 (reg-event-db
@@ -536,10 +536,12 @@
 
 
 (defn target-sibling-same-parent
+  "Give source block target block's order
+  Increment all block orders between source and target-1"
   [source target parent]
   (let [t-order (:block/order target)
         s-order (:block/order source)
-        new-block {:db/id (:db/id source) :block/order (inc t-order)}
+        new-source-block {:db/id (:db/id source) :block/order t-order}
         inc-or-dec (if (> s-order t-order) inc dec)
         reindex (->> (d/q '[:find ?ch ?new-order
                             :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
@@ -548,25 +550,27 @@
                             [?ch :block/order ?order]
                             [(?between ?s-order ?t-order ?order)]
                             [(?inc-or-dec ?order) ?new-order]]
-                          @db/dsdb (:db/id parent) s-order t-order between inc-or-dec)
+                          @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
                      map-order
-                     (concat [new-block]))]
+                     (concat [new-source-block]))]
     [{:db/add (:db/id parent) :block/children reindex}]))
 
 
 (defn target-sibling-diff-parent
   [source target source-parent target-parent]
-  (let [new-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
+  (let [new-block              {:db/id (:db/id source) :block/order (:block/order target)}
         source-parent-children (->> (d/q '[:find ?ch ?new-order
                                            :in $ % ?parent ?source-order
                                            :where (dec-after ?parent ?source-order ?ch ?new-order)]
                                          @db/dsdb rules (:db/id source-parent) (:block/order source))
                                     map-order)
-        target-parent-children (->> (inc-after (:db/id target-parent) (:block/order target))
+        target-parent-children (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
                                     (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children source-parent-children} ;; reindex source
-     {:db/id (:db/id target-parent) :block/children target-parent-children}])) ;; reindex target
+     ;; reindex source
+     {:db/id (:db/id source-parent) :block/children source-parent-children}
+     ;; reindex target
+     {:db/id (:db/id target-parent) :block/children target-parent-children}]))
 
 
 (defn drop-bullet
@@ -579,9 +583,6 @@
      (cond
        ;; child always has same behavior: move to first child of target
        (= kind :child) (target-child source source-parent target)
-       ;; do nothing if target is directly above source
-       (and (= source-parent target-parent)
-            (= 1 (- (:block/order source) (:block/order target)))) nil
        ;; re-order blocks between source and target
        (= source-parent target-parent) (target-sibling-same-parent source target source-parent)
        ;;; when parent is different, re-index both source-parent and target-parent
