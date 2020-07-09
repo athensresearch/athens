@@ -5,11 +5,9 @@
    [athens.style :refer [color]]
    [cljsjs.react]
    [cljsjs.react.dom]
-   [clojure.string :refer [join]]
    [devcards.core :refer-macros [defcard-rg]]
    [garden.color :refer [darken]]
    [garden.selectors :as selectors]
-   [reagent.core :as r]
    [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -90,44 +88,22 @@
 ;;; Components
 
 
-;; (defn button
-;;   [{:keys [disabled label on-click-fn style active class]}]
-;;   [:button (use-style (merge buttons-style style) {:disabled disabled
-;;                                                    :on-click on-click-fn
-;;                                                    :class [class (when active "active")]})
-;;    label])
-
-
 (defn button
   "Creates a button control"
-  [props & children]
-  [:button
-   (merge (dissoc props :disabled :on-click-fn :active :label :class)
-          (use-style (merge buttons-style (:style props))
-                     {:disabled (:disabled props)
-                      :class (join " " [(:class props) (when (:active props) "active")])
-                      :on-click (:on-click-fn props)}))
-   (:label props) children])
+  [{:keys [disabled label on-click-fn style active class]}]
+  [:button (use-style (merge buttons-style style) {:disabled disabled
+                                                   :on-click on-click-fn
+                                                   :class [class (when active "active")]})
+   label])
 
 
 (defn button-primary
   "Creates a button control"
-  [props & children]
-  [:button
-   (merge (dissoc props :disabled :on-click-fn :active :label :class)
-          (use-style (merge buttons-primary-style (:style props))
-                     {:disabled (:disabled props)
-                      :class (join " " [(:class props) (when (:active props) "active")])
-                      :on-click (:on-click-fn props)}))
-   (:label props) children])
-
-
-;; (defn button-primary
-;;   [{:keys [disabled label on-click-fn style active class]}]
-;;   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
-;;                                                            :on-click on-click-fn
-;;                                                            :class [class (when active "active")]})
-;;    label])
+  [{:keys [disabled label on-click-fn style active class]}]
+  [:button (use-style (merge buttons-primary-style style) {:disabled disabled
+                                                   :on-click on-click-fn
+                                                   :class [class (when active "active")]})
+   label])
 
 
 ;;; Devcards
@@ -151,9 +127,9 @@
              :active true}]
     [button {:label [:> mui-icons/Face]
              :active true}]
-    [button {:active true} [:<>
-                        ;;     [:> mui-icons/Face]
-                            [:span "Button"]]]
+    [button {:active true :label [:<>
+                                  [:> mui-icons/Face]
+                                  [:span "Button"]]}]
     [button {:label [:<>
                      [:span "Button"]
                      [:> mui-icons/ChevronRight]]
