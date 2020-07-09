@@ -129,7 +129,12 @@
        [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                 :label       [:> mui-icons/ChevronRight]}]
        [button-primary {:on-click-fn #(dispatch [:athena/toggle])
-                        :label       [:> mui-icons/Search]}]]
+                        :label       [:> mui-icons/Search]}]
+       [:footer (use-sub-style left-sidebar-collapsed-style :footer)
+        [button {:disabled true
+                 :label    [:> mui-icons/TextFormat]}]
+        [button {:disabled true
+                 :label    [:> mui-icons/Settings]}]]]
 
       ;; IF EXPANDED
       [:div (use-style left-sidebar-style)

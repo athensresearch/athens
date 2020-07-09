@@ -9,6 +9,9 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
+;;; Styles
+
+
 (def button-icons-style
   {:margin-block-start "-0.0835em"
    :margin-block-end "-0.0835em"})
@@ -22,9 +25,6 @@
 (def button-icons-only-child-style
   {:margin-inline-start "-4px"
    :margin-inline-end "-4px"})
-
-
-;;; Styles
 
 
 (def buttons-style
