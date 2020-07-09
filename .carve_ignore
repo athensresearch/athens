@@ -1,11 +1,14 @@
 ;; Init is called by shadow-cljs (https://github.com/athensresearch/athens/blob/c90f3023a1c4480b50ed61d07f973d8c29e08bf8/shadow-cljs.edn#L6)
 athens.core/init
 
+;; called by index.html
+athens.devcards.spinner/init_spinner
+
 ;; URLs can be used if we want to examine other DBs
 athens.db/help-url
 athens.db/ego-url
 
-;; str-kw-mappings will be used for JSON import (see https://github.com/athensresearch/athens/issues/31)
+;; will be used for JSON import
 user/str-kw-mappings
-
 athens.views/file-cb
+athens.views.blocks/drop-area-indicator

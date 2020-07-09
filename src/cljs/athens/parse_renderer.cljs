@@ -27,7 +27,7 @@
                                              :right "-0.2em"
                                              :left "-0.2em"
                                              :bottom "-1px"
-                                             :z-index "-1"
+                                             :z-index -1
                                              :opacity "0"
                                              :border-radius "4px"
                                              :transition "all 0.05s ease"
@@ -64,7 +64,7 @@
   [tree]
   (insta/transform
     {:block     (fn [& contents]
-                  (concat [:span {:class "block"}] contents))
+                  (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
      :page-link (fn [title]
                   (let [node (pull db/dsdb '[*] [:node/title title])]
                     [:span (use-style page-link {:class "page-link"})

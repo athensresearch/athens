@@ -1,8 +1,8 @@
 (ns athens.devcards.parser
   (:require
-    [athens.devcards.blocks :refer [block-el]]
     #_[athens.parse-renderer :refer [parse-and-render]]
     #_[athens.parser :refer [parse-to-ast combine-adjacent-strings]]
+    [athens.views.blocks :refer [block-el]]
     #_[cljs.test :refer [is testing are async]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -29,4 +29,3 @@
   [:<>
    (for [s strings]
      ^{:key s} [block-el {:block/string s}])])
-

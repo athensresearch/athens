@@ -24,13 +24,7 @@
                :left-sidebar/open   true
                :right-sidebar/open  false
                :right-sidebar/items {}
-               :editing/uid         nil
-               :drag-bullet         {:uid          nil
-                                     :x            nil
-                                     :y            nil
-                                     :closest/uid  nil
-                                     :closest/kind nil}
-               :tooltip/uid         nil
+               ;;:dragging-global     false
                :daily-notes/items   []})
 
 
@@ -123,7 +117,7 @@
   [block]
   (if-let [children (seq (:block/children block))]
     (assoc block :block/children
-           (sort-by :block/order (map sort-block-children children)))
+           (vec (sort-by :block/order (map sort-block-children children))))
     block))
 
 
@@ -161,7 +155,7 @@
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :block/uid :block/order {:block/children [:block/uid :block/order]}] id))
+  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]}] id))
 
 
 (defn get-parent
@@ -171,6 +165,68 @@
       first
       :db/id
       get-block))
+
+
+(defn deepest-child-block
+  [id]
+  (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] id))]
+    (loop [block document]
+      (if (nil? (:block/children block))
+        block
+        (let [ch (:block/children block)
+              n  (count ch)]
+          (recur (get ch (dec n))))))))
+
+
+(defn re-case-insensitive
+  "More options here https://clojuredocs.org/clojure.core/re-pattern"
+  [query]
+  (re-pattern (str "(?i)" query)))
+
+
+(defn search-exact-node-title
+  [query]
+  (d/q '[:find (pull ?node [:db/id :node/title :block/uid]) .
+         :in $ ?query
+         :where [?node :node/title ?query]]
+       @dsdb
+       query))
+
+
+(defn search-in-node-title
+  [query]
+  (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
+         :in $ ?query-pattern ?query
+         :where
+         [?node :node/title ?title]
+         [(re-find ?query-pattern ?title)]
+         [(not= ?title ?query)]] ;; ignore exact match to avoid duplicate
+       @dsdb
+       (re-case-insensitive query)
+       query))
+
+
+(defn get-root-parent-node
+  [block]
+  (loop [b block]
+    (if (:node/title b)
+      (assoc block :block/parent b)
+      (recur (first (:block/_children b))))))
+
+
+(defn search-in-block-content
+  [query]
+  (->>
+    (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
+           :in $ ?query-pattern
+           :where
+           [?block :block/string ?txt]
+           [(re-find ?query-pattern ?txt)]]
+         @dsdb
+         (re-case-insensitive query))
+    (map get-root-parent-node)
+    (map #(dissoc % :block/_children))))
+
 
 ;; history
 
