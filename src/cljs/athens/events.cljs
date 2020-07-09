@@ -518,10 +518,10 @@
 
 (defn target-child
   [source source-parent target]
-  (let [new-block {:block/uid (:block/uid source) :block/order 0}
+  (let [new-source-block {:block/uid (:block/uid source) :block/order 0}
         new-parent-children (->> (dec-after (:db/id source-parent) (:block/order source)))
-        new-target-children (->> (inc-after (:dbid target) 0)
-                                 (concat [new-block]))]
+        new-target-children (->> (inc-after (:dbid target) (dec 0))
+                                 (concat [new-source-block]))]
     [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
      {:db/add (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
      {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
@@ -537,26 +537,30 @@
 
 (defn target-sibling-same-parent
   "Give source block target block's order
-  Increment all block orders between source and target-1"
+    When source is below target, increment block orders between source and target-1
+    When source is above target, decrement block order between...";; TODO
+
   [source target parent]
-  (let [t-order (:block/order target)
-        s-order (:block/order source)
-        new-source-block {:db/id (:db/id source) :block/order t-order}
-        inc-or-dec (if (> s-order t-order) inc dec)
-        reindex (->> (d/q '[:find ?ch ?new-order
-                            :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
-                            :where
-                            [?parent :block/children ?ch]
-                            [?ch :block/order ?order]
-                            [(?between ?s-order ?t-order ?order)]
-                            [(?inc-or-dec ?order) ?new-order]]
-                          @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
-                     map-order
-                     (concat [new-source-block]))]
-    [{:db/add (:db/id parent) :block/children reindex}]))
+  (let [s-order (:block/order source)
+        t-order (:block/order target)]
+    (if (= s-order (dec t-order))
+      nil
+      (let [new-source-block {:db/id (:db/id source) :block/order t-order}
+            inc-or-dec       (if (> s-order t-order) inc dec)
+            reindex          (->> (d/q '[:find ?ch ?new-order
+                                         :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
+                                         :where
+                                         [?parent :block/children ?ch]
+                                         [?ch :block/order ?order]
+                                         [(?between ?s-order ?t-order ?order)]
+                                         [(?inc-or-dec ?order) ?new-order]]
+                                       @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
+                                  map-order
+                                  (concat [new-source-block]))]
+        [{:db/add (:db/id parent) :block/children reindex}]))))
 
 
-(defn target-sibling-diff-parent
+(defn diff-parent
   [source target source-parent target-parent]
   (let [new-block              {:db/id (:db/id source) :block/order (:block/order target)}
         source-parent-children (->> (d/q '[:find ?ch ?new-order
@@ -581,12 +585,12 @@
         target-parent (db/get-parent [:block/uid target-uid])]
     {:transact!
      (cond
-       ;; child always has same behavior: move to first child of target
+       ;; child always has same behavior: move to 0th child of target
        (= kind :child) (target-child source source-parent target)
        ;; re-order blocks between source and target
        (= source-parent target-parent) (target-sibling-same-parent source target source-parent)
        ;;; when parent is different, re-index both source-parent and target-parent
-       (not= source-parent target-parent) (target-sibling-diff-parent source target source-parent target-parent))}))
+       (not= source-parent target-parent) (diff-parent source target source-parent target-parent))}))
 
 
 (reg-event-fx
