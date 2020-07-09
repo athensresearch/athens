@@ -8,15 +8,20 @@
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy :refer [use-style]]))
 
-(def button-icons-style {:margin-block-start "-0.0835em"
-                         :margin-block-end "-0.0835em"})
+
+(def button-icons-style
+  {:margin-block-start "-0.0835em"
+   :margin-block-end "-0.0835em"})
+
 
 (def button-icons-not-last-child-style {:margin-inline-end "0.251em"})
 
 (def button-icons-not-first-child-style {:margin-inline-style "0.251em"})
 
-(def button-icons-only-child-style {:margin-inline-start "-4px"
-                                    :margin-inline-end "-4px"})
+
+(def button-icons-only-child-style
+  {:margin-inline-start "-4px"
+   :margin-inline-end "-4px"})
 
 
 ;;; Styles
@@ -69,18 +74,6 @@
                                            [(selectors/& (selectors/not (selectors/last-child))) button-icons-not-last-child-style]
                                            [(selectors/& (selectors/not (selectors/first-child))) button-icons-not-first-child-style]
                                            [(selectors/& ((selectors/first-child (selectors/last-child)))) button-icons-only-child-style]]]}))
-
-
-(def devcard-section-style {:display "grid"
-                            :grid-auto-flow "column"
-                            :justify-content "flex-start"
-                            :align-items "center"
-                            :grid-gap "1rem"
-                            :padding "1rem"
-                            :margin "1rem"
-                            :border-top [["1px solid" (color :panel-color)]]
-                            ::stylefy/manual [[:h3 {:font-weight "normal"
-                                                    :font-size "16px"}]]})
 
 
 ;;; Components
