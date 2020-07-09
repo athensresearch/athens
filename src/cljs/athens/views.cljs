@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.subs]
+    [athens.devcards.app-toolbar :refer [app-header-2]]
     [athens.views.all-pages :refer [table]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.block-page :refer [block-page-component]]

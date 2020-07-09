@@ -42,6 +42,7 @@
 
 (def sidebar-style
   {:justify-self "stretch"
+   :grid-area "secondary-content"
    :overflow "auto"
    :flex "0 0 auto"
    :display "flex"
