@@ -112,7 +112,7 @@
 
 
 (defn left-sidebar
-  []
+  [route-name]
   (let [open? (subscribe [:left-sidebar/open])
         ;; current-route (subscribe [:current-route]) ;; TODO: disabled primary button if current route == navigation button
         shortcuts (->> @(q '[:find ?order ?title ?uid
@@ -129,12 +129,7 @@
        [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
                 :label       [:> mui-icons/ChevronRight]}]
        [button-primary {:on-click-fn #(dispatch [:athena/toggle])
-                        :label       [:> mui-icons/Search]}]
-       [:footer (use-sub-style left-sidebar-collapsed-style :footer)
-        [button {:disabled true
-                 :label    [:> mui-icons/TextFormat]}]
-        [button {:disabled true
-                 :label    [:> mui-icons/Settings]}]]]
+                        :label       [:> mui-icons/Search]}]]
 
       ;; IF EXPANDED
       [:div (use-style left-sidebar-style)
@@ -145,10 +140,12 @@
        [:nav (use-style main-navigation-style)
 
         [button {:on-click-fn #(navigate :home)
+                 :active      (when (= route-name :home) true)
                  :label       [:<>
                                [:> mui-icons/Today]
                                [:span "Daily Notes"]]}]
         [button {:on-click-fn #(navigate :pages)
+                 :active      (when (= route-name :pages) true)
                  :label       [:<>
                                [:> mui-icons/FileCopy]
                                [:span "All Pages"]]}]

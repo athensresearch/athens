@@ -111,7 +111,7 @@
          (if @loading
            [initial-spinner-component]
            [:div (use-style app-wrapper-style)
-            [left-sidebar]
+            [left-sidebar route-name]
             [:div (use-style main-content-style
                              {:on-scroll (when (= route-name :home)
                                            db-scroll-daily-notes)})
