@@ -504,7 +504,8 @@
         new-block {:block/uid uid :block/order (inc (:block/order parent))}
         reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
                              (concat [new-block]))]
-    (when-not (= (:block/uid parent) context-root-uid) ; if the parent node is the context-root, prevent unindent
+    ;; if parent is context-root or has node/title, no-op
+    (when-not (or (:node/title parent) (= (:block/uid parent) context-root-uid))
       {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
                    {:db/id (:db/id grandpa) :block/children reindex-grandpa}]})))
 
