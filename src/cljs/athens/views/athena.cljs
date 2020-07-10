@@ -46,7 +46,8 @@
    :line-height    "49px"
    :letter-spacing "-0.03em"
    :border-radius "4px 4px 0 0"
-   :color          "#433F38"
+   :background     (color :panel-color)
+   :color          (color :body-text-color)
    :caret-color    (color :link-color)
    :padding "24px"
    :cursor "text"
@@ -78,6 +79,7 @@
    :grid-template-columns "1fr auto"
    :padding "8px 32px"
    :background (color :body-text-color 0.02)
+   :color (color :body-text-color)
    :transition "all .05s ease"
    :border-top [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
@@ -101,13 +103,13 @@
    ::stylefy/mode {:hover {:background (color :link-color)
                            :color (color :app-bg-color)}}
    ::stylefy/manual [[:&.selected {:background (color :link-color)
-                                   :color (color :app-bg-color)}
+                                   :color (color :body-text-color)}
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]
                      [:&:hover [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-highlight-style
-  {:color "#000"
+  {:color (color :body-text-color)
    :font-weight "500"})
 
 
@@ -119,7 +121,7 @@
                             :font-family "inherit"
                             :font-size "12px"
                             :font-weight 600
-                            :border "1px solid rgba(67, 63, 56, 0.25)"
+                            :background (color :body-text-color :opacity-lower)
                             :border-radius "4px"
                             :padding "0 4px"}]]})
 

@@ -1,18 +1,31 @@
 (ns athens.style
   (:require
-    [garden.color :refer [opacify hex->hsl]]
+    [garden.color :refer [opacify hex->hsl rgb]]
     [stylefy.core :as stylefy]))
 
 
+;; (def COLORS
+;;   {:link-color         "#0075E1"
+;;    :highlight-color    "#F9A132"
+;;    :warning-color      "#D20000"
+;;    :confirmation-color "#009E23"
+;;    :header-text-color  "#322F38"
+;;    :body-text-color    "#433F38"
+;;    :panel-color        "#EFEDEB"
+;;    :app-bg-color       "#FFFFFF"})
+
+
 (def COLORS
-  {:link-color         "#0075E1"
-   :highlight-color    "#F9A132"
-   :warning-color      "#D20000"
-   :confirmation-color "#009E23"
-   :header-text-color  "#322F38"
-   :body-text-color    "#433F38"
-   :panel-color        "#EFEDEB"
-   :app-bg-color       "#FFFFFF"})
+  {
+  ;;  :link-color         (rgb 0 117 225)
+   :link-color         "#2399E7"
+   :highlight-color    "#FBBE63"
+   :warning-color      "#DE3C21"
+   :confirmation-color "#189E36"
+   :header-text-color  "#999"
+   :body-text-color    "#E3E3E3"
+   :panel-color        "#333"
+   :app-bg-color       "#111"})
 
 
 (def HSL-COLORS
