@@ -47,7 +47,7 @@
                              :padding "32px 4px 16px"
                              :grid-gap "4px"
                              :width "44px"
-                             :box-shadow "1px 0 #EFEDEB"
+                             :box-shadow (str "1px 0 " (color :border-color))
                              :overflow-x "hidden"
                              :grid-template-rows "auto auto 1fr"
                              :align-self "stretch"
