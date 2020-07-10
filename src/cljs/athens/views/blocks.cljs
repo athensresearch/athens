@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.keybindings :refer [block-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
@@ -220,7 +221,6 @@
   {:background-color "lightblue"})
 
 
-
 ;; Helpers
 
 (defn on-change
@@ -234,152 +234,6 @@
 (defn toggle
   [id open]
   (dispatch [:transact [[:db/add id :block/open (not open)]]]))
-
-
-(defn on-key-down
-  "The most important question in all of Athens:
-
-    Vim vs Emacs"
-  [e uid state]
-  (let [key          (.. e -key)
-        key-code     (.. e -keyCode)
-        shift        (.. e -shiftKey)
-        meta         (.. e -metaKey)
-        ctrl         (.. e -ctrlKey)
-        alt          (.. e -altKey)
-        target       (.. e -target)
-        start        (getStart target)
-        end          (getEnd target)
-        selection    (getText target)
-        string       (:atom-string @state)
-        query        (:search/query @state)
-        block-start? (zero? start)
-        block-end?   (= start (count string))
-        block-zero?  (zero? (:block/order (db/get-block [:block/uid uid])))
-        top-row?     true                                   ;; TODO
-        bottom-row?  true                                   ;; TODO
-        head         (subs string 0 start)
-        tail         (subs string end)]
-
-    (cond
-
-      ;; -- Arrow Keys ---------------------------------------------------------
-      (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
-      (and (= key-code KeyCodes.LEFT) block-start?) (dispatch [:left uid])
-      (and (= key-code KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
-      (and (= key-code KeyCodes.RIGHT) block-end?) (dispatch [:right uid])
-
-      ;; -- Tab ----------------------------------------------------------------
-      (and shift (= key-code KeyCodes.TAB)) (do (.. e preventDefault)
-                                                (dispatch [:unindent uid]))
-      (= key-code KeyCodes.TAB) (do (.. e preventDefault)
-                                    (when-not block-zero?
-                                      (dispatch [:indent uid])))
-
-      ;; -- Enter --------------------------------------------------------------
-
-      ;; shift-enter: add line break
-      (and shift (= key-code KeyCodes.ENTER))
-      (swap! state assoc :atom-string (str head "\n" tail))
-
-      ;; enter: depends on context
-      (= key-code KeyCodes.ENTER) (do (.. e preventDefault)
-                                      (dispatch [:enter uid string start state]))
-
-      ;; -- Backspace ----------------------------------------------------------
-
-      ;; if selection, delete entire selection
-      (and (not= selection "") (= key-code KeyCodes.BACKSPACE))
-      (let [new-tail (subs string end)
-            new-str (str head new-tail)]
-        (swap! state assoc :atom-string new-str))
-
-      ;; if meta, delete to start of line
-      (and meta (= key-code KeyCodes.BACKSPACE)) (swap! state assoc :atom-string tail)
-
-      ;; if at block start, dispatch (requires context)
-      (and (= key-code KeyCodes.BACKSPACE) block-start? (= start end)) (dispatch [:backspace uid string])
-
-      ;; if within brackets, delete close bracket as well
-      (and (= key-code KeyCodes.BACKSPACE) (= "[]" (subs string (dec start) (inc start))))
-      (let [head (subs string 0 (dec start))
-            tail (subs string (inc start))
-            new-str (str head tail)]
-        (js/setTimeout #(setCursorPosition target (dec start)) 10)
-        (swap! state assoc :atom-string new-str)
-        (swap! state assoc :search/page false))
-
-      ;; default backspace: delete a character
-      (= key-code KeyCodes.BACKSPACE) (let [head (subs string 0 (dec start))
-                                            new-str (str head tail)]
-                                        (when (or (:search/page @state) (:search/block @state))
-                                          (swap! state assoc :search/query (subs query 0 (dec (count query)))))
-                                        (swap! state assoc :atom-string new-str))
-
-      ;; open slash commands
-      (and (= key-code KeyCodes.SLASH)) (swap! state update :slash? not)
-
-      ;; -- Open Bracket -------------------------------------------------------
-
-      ;; if selection, add brackets around selection
-      (and (not= "" selection) (= key-code KeyCodes.OPEN_SQUARE_BRACKET))
-      (let [surround-selection (str "[" selection "]")
-            new-str (str head surround-selection tail)]
-        (js/setTimeout (fn []
-                         (setStart target (inc start))
-                         (setEnd target (inc end)))
-                       10)
-        (swap! state assoc :atom-string new-str))
-
-      ;; default: auto-create close bracket
-      (= key-code KeyCodes.OPEN_SQUARE_BRACKET)
-      (let [new-str (str head "[]" tail)
-            double-brackets? (= "[[]]" (subs new-str (dec start) (+ start 3)))]
-        (js/setTimeout #(setCursorPosition target (inc start)) 10)
-        (swap! state assoc :atom-string new-str)
-        ;; if second bracket, open search
-        (when double-brackets?
-          (swap! state assoc :search/page true)))
-
-      ;; TODO: close bracket should not be created if open bracket already exists or user just made a link
-      ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
-
-      ;; -- Parentheses --------------------------------------------------------
-
-      ;; xxx: why doesn't Closure have parens key codes?
-      (and shift (= key-code KeyCodes.NINE)) (swap! state update :search/block not)
-
-      ;; -- Hotkeys ------------------------------------------------------------
-
-      (and meta (= key-code KeyCodes.A))
-      (do
-        (setStart target 0)
-        (setEnd target end))
-
-      ;; TODO: undo. conflicts with datascript undo
-      (and meta (= key-code KeyCodes.Z)) nil
-
-      ;; TODO: cut
-      (and meta (= key-code KeyCodes.X)) nil
-
-      ;; TODO: paste. magical
-      (and meta (= key-code KeyCodes.V)) nil
-
-      ;; TODO: bold
-      (and meta (= key-code KeyCodes.B)) nil
-
-      ;; TODO: italicize
-      (and meta (= key-code KeyCodes.I)) nil
-
-      ;; -- Default: Add new character -----------------------------------------
-
-      (and (not meta) (not ctrl) (not alt) (isCharacterKey key-code))
-      (let [new-str (str head key tail)]
-        (when (or (:search/page @state) (:search/block @state))
-          (swap! state assoc :search/query (str (:search/query @state) key)))
-        (swap! state assoc :atom-string new-str)))))
-
-      ;;:else (prn "non-event" key key-code))))
 
 
 ;;; Components
@@ -430,6 +284,11 @@
 (defn block-content-el
   [{:block/keys [string uid children]} state]
   (let [editing-uid @(subscribe [:editing/uid])]
+
+    (when (and (not (= editing-uid uid))
+            (< (count (:atom-string @state)) (count string)))
+      (swap! state assoc :atom-string string))
+
     [:div (use-style block-content-style
             {:class         "block-content"
              :on-drag-enter (fn [e]
@@ -460,8 +319,11 @@
                          :class       [(when (= editing-uid uid) "is-editing") "textarea"]
                          :auto-focus  true
                          :id          (str "editable-uid-" uid)
-                         :on-change   (fn [_] (db-on-change (:atom-string @state) uid))
-                         :on-key-down (fn [e] (on-key-down e uid state))}]
+                         :on-change   (fn [e]
+                                        (let [value (.. e -target -value)]
+                                          (when (not= string (:atom-string @state))
+                                            (db-on-change (:atom-string @state) uid))))
+                         :on-key-down (fn [e] (block-key-down e uid state))}]
      [parse-and-render string]
      ;; don't show drop indicator when dragging to its children
      (when (and (empty? children) (not (:dragging @state)))
@@ -507,9 +369,7 @@
             last-child? (= order (dec (count (:block/children parent))))]
 
         ;; xxx: bad vibes - if not editing-uid, allow ratom to be appended by joining two blocks (deleting at start)
-        (when (and (not (= editing-uid uid))
-                   (< (count (:atom-string @state)) (count string)))
-          (swap! state assoc :atom-string string))
+
         ;;(prn "target" uid drag-target)
 
         [:<>
