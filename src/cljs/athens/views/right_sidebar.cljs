@@ -22,11 +22,10 @@
    :display "flex"
    :justify-content "space-between"
    :transition-property "width, border, background"
-   :transition-duration "0.1s"
    :transition-timing-function "ease-out"
    :background-color (color :panel-color :opacity-low)
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&:hover {:transition-duration "0.35s"}]
+                     [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish
                      [:&.is-closed {:width "2rem"}]
                      [:&.is-open {:width "calc(2rem + 32vw)"
                                   :box-shadow [["inset 1px 0 " (color :panel-color :opacity-low)]]
