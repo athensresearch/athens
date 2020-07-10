@@ -45,10 +45,10 @@
                      [:&:active
                       :&:hover:active
                       :&.is-active {:color (color :body-text-color)
-                                 :background-color  (darken (color :panel-color :opacity-med) 10)}]
+                                    :background-color  (darken (color :panel-color :opacity-med) 10)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
-                                   :background-color (color :panel-color :opacity-higher)
-                                   :cursor "default"}]
+                                                      :background-color (color :panel-color :opacity-higher)
+                                                      :cursor "default"}]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
                      [:.MuiSvgIcon-root button-icons-style
@@ -64,10 +64,10 @@
                                           [:&:active
                                            :&:hover:active
                                            :&.is-active {:color "white"
-                                                      :background-color (color :link-color)}]
+                                                         :background-color (color :link-color)}]
                                           [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
-                                                        :background-color (color :panel-color :opacity-higher)
-                                                        :cursor "default"}]
+                                                                           :background-color (color :panel-color :opacity-higher)
+                                                                           :cursor "default"}]
                                           [:span {:flex "1 0 auto"
                                                   :text-align "left"}]
                                           [:.MuiSvgIcon-root button-icons-style
