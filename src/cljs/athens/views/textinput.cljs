@@ -15,10 +15,10 @@
    :color (color :body-text-color)
    :caret-color (color :link-color)
    :border-radius "4px"
-   :background (color :panel-color)
+   :background (color :background-minus-1)
    :padding "2px 8px"
    :flex-basis "100%"
-   :border [["1px solid " (color :body-text-color :opacity-low)]]
+   :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"
    :transition-timing-function "ease"

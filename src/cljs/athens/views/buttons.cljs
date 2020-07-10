@@ -40,7 +40,7 @@
                                                                                        :margin-inline-end "-4px"}]]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
-                     [:&.active {:background-color (darken (color :panel-color) 10)}]]})
+                     [:&.active {:background-color (darken (color :background-minus-1) 10)}]]})
 
 
 (def buttons-primary-style

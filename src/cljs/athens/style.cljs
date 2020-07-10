@@ -1,6 +1,6 @@
 (ns athens.style
   (:require
-    [garden.color :refer [opacify hex->hsl rgb]]
+    [garden.color :refer [opacify hex->hsl]]
     [stylefy.core :as stylefy]))
 
 
@@ -11,21 +11,27 @@
 ;;    :confirmation-color "#009E23"
 ;;    :header-text-color  "#322F38"
 ;;    :body-text-color    "#433F38"
-;;    :panel-color        "#EFEDEB"
-;;    :app-bg-color       "#FFFFFF"})
+;;    :border-color       "hsla(32, 81%, 10%, 0.08)"
+;;    :background-plus-2  "#FFFFFF"
+;;    :background-plus-1  "#FFFFFF"
+;;    :background-color   "#FFFFFF"
+;;    :background-minus-1 "#FAF8F6"
+;;    :background-minus-2 "#EFEDEB" })
 
 
 (def COLORS
-  {
-  ;;  :link-color         (rgb 0 117 225)
-   :link-color         "#2399E7"
+  {:link-color         "#2399E7"
    :highlight-color    "#FBBE63"
    :warning-color      "#DE3C21"
    :confirmation-color "#189E36"
-   :header-text-color  "#999"
-   :body-text-color    "#E3E3E3"
-   :panel-color        "#333"
-   :app-bg-color       "#111"})
+   :header-text-color  "#BABABA"
+   :body-text-color    "#AAA"
+   :border-color       "hsla(32, 81%, 90%, 0.08)"
+   :background-minus-2  "#111"
+   :background-minus-1  "#151515"
+   :background-color   "#1A1A1A"
+   :background-plus-1 "#222"
+   :background-plus-2 "#333"})
 
 
 (def HSL-COLORS
@@ -82,7 +88,7 @@
 ;; Base Styles
 
 (def base-styles
-  {:background-color (color :app-bg-color)
+  {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
    :font-size        "16px"
@@ -118,7 +124,7 @@
    :width    "100vw"})
 
 
-(stylefy/tag "body" base-styles)
+(stylefy/tag "html" base-styles)
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})

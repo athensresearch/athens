@@ -23,13 +23,13 @@
    :justify-content "space-between"
    :transition-property "width, border, background"
    :transition-timing-function "ease-out"
-   :background-color (color :panel-color :opacity-low)
+   :background-color (color :background-minus-1)
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish.
                      [:&.is-closed {:width "2rem"}]
                      [:&.is-open {:width "calc(2rem + 32vw)"
-                                  :box-shadow [["inset 1px 0 " (color :panel-color :opacity-low)]]
-                                  :background-color (color :panel-color :opacity-low)}]]})
+                                  :box-shadow [["inset 1px 0 " (color :background-minus-1 :opacity-low)]]
+                                  :background-color (color :background-minus-1)}]]})
 
 
 (def sidebar-content-style
@@ -53,10 +53,10 @@
    :padding "80px 4px 0"
    :position "relative"
    :z-index 3
-   :background (color :app-bg-color)
-   :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
+   :background (color :background-color)
+   :box-shadow [["inset 1px 0 0 " (color :border-color)]]
    ::stylefy/manual [[:& {:transition "all 0.3s ease"}] ;; Transitions have to be applied in this selector in order to override the button style. This is a hack and it's gross.
-                     [:&.is-open :&:hover {:background (lighten (color :panel-color) 5)}]
+                     [:&.is-open :&:hover {:background (color :background-minus-1)}]
                      [:&:focus :active {:outline "none"
                                         :color "inherit"}]]})
 
@@ -78,7 +78,7 @@
   {:display "flex"
    :flex "0 0 auto"
    :flex-direction "column"
-   :border-top [["1px solid" (color :panel-color)]]})
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def sidebar-item-toggle-style
@@ -113,7 +113,7 @@
    :position "sticky"
    :backdrop-filter "blur(12px)"
    :z-index 2
-   :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
+   :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -140,7 +140,7 @@
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
                      [:hr {:width "1px"
-                           :background (color :panel-color)
+                           :background (color :background-minus-1)
                            :border "0"
                            :margin "4px"
                            :flex "0 0 1px"

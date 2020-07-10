@@ -28,7 +28,7 @@
    :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
    :flex-direction "column"
-   :background    (color :app-bg-color)
+   :background    (color :background-plus-1)
    :position      "fixed"
    :overflow      "hidden"
    :max-height    "60vh"
@@ -46,7 +46,7 @@
    :line-height    "49px"
    :letter-spacing "-0.03em"
    :border-radius "4px 4px 0 0"
-   :background     (color :panel-color)
+   :background     (color :background-plus-2)
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
    :padding "24px"
@@ -56,20 +56,20 @@
 
 
 (def results-list-style
-  {:background    (color :app-bg-color)
+  {:background    (color :background-color)
    :overflow-y "auto"
    :max-height "100%"})
 
 
 (def results-heading-style
   {:padding "4px 18px"
-   :background (color :app-bg-color)
+   :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
    :top "0"
    :justify-content "space-between"
-   :box-shadow [["0 1px 0 0 " (color :body-text-color :opacity-lower)]]
-   :border-top [["1px solid" (color :body-text-color :opacity-lower)]]})
+   :box-shadow [["0 1px 0 0 " (color :border-color)]]
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def result-style
@@ -77,11 +77,11 @@
    :grid-template "\"title icon\" \"preview icon\""
    :grid-gap "0 12px"
    :grid-template-columns "1fr auto"
-   :padding "8px 32px"
-   :background (color :body-text-color 0.02)
+   :padding "12px 32px"
+   :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"
-   :border-top [["1px solid " (color :body-text-color :opacity-lower)]]
+   :border-top [["1px solid " (color :border-color)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
                                  :font-size "16px"
                                  :margin "0"
@@ -90,22 +90,13 @@
                          :preview {:grid-area "preview"
                                    :white-space "wrap"
                                    :word-break "break-word"
-                                  ;;  :overflow "hidden"
-                                  ;;  :text-overflow "ellipsis"
-                                  ;;  :display "-webkit-box"
-                                  ;;  :-webkit-line-clamp "2"
-                                  ;;  :-webkit-box-orient "vertical"
-                                   :color (color :body-text-color :opacity-med)}
+                                   :color (color :body-text-color :opacity-low)}
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
-
-   ::stylefy/mode {:hover {:background (color :link-color)
-                           :color (color :app-bg-color)}}
-   ::stylefy/manual [[:&.selected {:background (color :link-color)
-                                   :color (color :body-text-color)}
-                      [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]
-                     [:&:hover [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
+   ::stylefy/manual [[:&.selected :&:hover {:background (color :link-color)
+                                   :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
+                      [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-highlight-style

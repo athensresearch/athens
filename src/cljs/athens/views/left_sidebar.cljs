@@ -24,7 +24,7 @@
    :display "flex"
    :flex-direction "column"
    :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (color :panel-color))
+   :box-shadow (str "1px 0 " (color :border-color))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"

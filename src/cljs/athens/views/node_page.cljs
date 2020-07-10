@@ -99,7 +99,7 @@
 
 
 (def references-group-style
-  {:background (color :panel-color :opacity-low)
+  {:background (color :background-minus-2 :opacity-med)
    :padding "1rem 0.5rem"
    :border-radius "4px"
    :margin "0.5em 0"})
@@ -111,7 +111,7 @@
 
 
 (def references-group-block-style
-  {:border-top [["1px solid " (color :panel-color)]]
+  {:border-top [["1px solid " (color :border-color)]]
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
