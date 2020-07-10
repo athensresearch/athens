@@ -25,7 +25,7 @@
    :transition-timing-function "ease-out"
    :background-color (color :panel-color :opacity-low)
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish
+                     [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish.
                      [:&.is-closed {:width "2rem"}]
                      [:&.is-open {:width "calc(2rem + 32vw)"
                                   :box-shadow [["inset 1px 0 " (color :panel-color :opacity-low)]]
@@ -53,9 +53,10 @@
    :padding "80px 4px 0"
    :position "relative"
    :z-index 3
+   :background (color :app-bg-color)
    :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
-   ::stylefy/manual [[:& {:transition-duration "0.15s"}]
-                     [:&:hover {:background (lighten (color :panel-color) 5)}]
+   ::stylefy/manual [[:& {:transition "all 0.3s ease"}] ;; Transitions have to be applied in this selector in order to override the button style. This is a hack and it's gross.
+                     [:&.is-open :&:hover {:background (lighten (color :panel-color) 5)}]
                      [:&:focus :active {:outline "none"
                                         :color "inherit"}]]})
 
