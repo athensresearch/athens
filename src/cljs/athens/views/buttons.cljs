@@ -46,7 +46,7 @@
                       :&:hover:active
                       :&.is-active {:color (color :body-text-color)
                                  :background-color  (darken (color :panel-color :opacity-med) 10)}]
-                     [:&:disabled {:color (color :body-text-color 0.3)
+                     [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                    :background-color (color :panel-color :opacity-higher)
                                    :cursor "default"}]
                      [:span {:flex "1 0 auto"
@@ -65,7 +65,7 @@
                                            :&:hover:active
                                            :&.is-active {:color "white"
                                                       :background-color (color :link-color)}]
-                                          [:&:disabled {:color (color :body-text-color 0.3)
+                                          [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                                         :background-color (color :panel-color :opacity-higher)
                                                         :cursor "default"}]
                                           [:span {:flex "1 0 auto"
