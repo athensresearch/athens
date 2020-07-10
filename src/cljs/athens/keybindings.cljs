@@ -1,23 +1,11 @@
 (ns athens.keybindings
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.selectors :as selectors]
-    [goog.dom :refer [getAncestorByClass]]
-    [goog.dom.classlist :refer [contains]]
-    [goog.dom.selection :refer [setStart getStart setEnd getEnd #_setText getText setCursorPosition getEndPoints]]
+    [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [debounce]]
-    [komponentit.autosize :as autosize]
-    [re-frame.core  :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+    [re-frame.core :refer [dispatch]])
   (:import
     (goog.events
       KeyCodes)))
@@ -30,6 +18,7 @@
         ctrl (.. e -ctrlKey)
         alt (.. e -altKey)]
     {:shift shift :meta meta :ctrl ctrl :alt alt}))
+
 
 (defn get-end-points
   [e]
@@ -45,13 +34,13 @@
         event {:key key :key-code key-code :target target :value value}
         modifiers (modifier-keys e)
         [start end] (get-end-points e)
-        selection    (getText target)
+        selection (getText target)
         head (subs value 0 start)
-        tail (subs value start)]
+        tail (subs value end)]
     (merge modifiers event
-      {:start start :end end}
-      {:head head :tail tail}
-      {:selection selection})))
+           {:start start :end end}
+           {:head head :tail tail}
+           {:selection selection})))
 
 
 (defn arrow-key?
@@ -110,21 +99,40 @@
       shift (swap! state assoc :atom-string (str head "\n" tail))
       ;; cmd-enter: toggle todo/done
       meta (let [first    (subs value 0 12)
-                   new-tail (subs value 12)
-                   new-head (cond (= first "{{[[TODO]]}}") "{{[[DONE]]}}"
-                                  (= first "{{[[DONE]]}}") ""
-                                  :else "{{[[TODO]]}} ")
-                   new-str  (str new-head new-tail)]
-               (swap! state assoc :atom-string new-str))
+                 new-tail (subs value 12)
+                 new-head (cond (= first "{{[[TODO]]}}") "{{[[DONE]]}}"
+                                (= first "{{[[DONE]]}}") ""
+                                :else "{{[[TODO]]}} ")
+                 new-str  (str new-head new-tail)]
+             (swap! state assoc :atom-string new-str))
       ;; default: may mutate blocks
       :else (do (.. e preventDefault)
                 (dispatch [:enter uid value start state])))))
 
 
+;; todo: do this for ** and __
+(def PAIR-CHARS
+  {"(" ")"
+   "[" "]"
+   "{" "}"
+   "\"" "\""})
+  ;;"`" "`"
+  ;;"*" "*"
+   ;;"_" "_"})
+
+
+(defn surround
+  "https://github.com/tpope/vim-surround"
+  [selection around]
+  (if-let [complement (get PAIR-CHARS around)]
+    (str around selection complement)
+    (str around selection around)))
+
+
 ;; TODO: it's ctrl for windows and linux right?
 (defn handle-system-shortcuts
   "Assumes meta is selected"
-  [e uid state]
+  [e _ state]
   (let [{:keys [key-code target end selection]} (destruct-event e)]
     (cond
       (= key-code KeyCodes.A) (do (setStart target 0)
@@ -140,119 +148,112 @@
       (= key-code KeyCodes.V) (prn "paste")
 
       ;; TODO: bold
-      (= key-code KeyCodes.B) (prn "bold")
+      (= key-code KeyCodes.B) (let [new-str (surround selection "**")]
+                                (swap! state assoc :atom-string new-str))
 
       ;; TODO: italicize
-      (= key-code KeyCodes.I) (prn "italics"))))
+      (= key-code KeyCodes.I) (let [new-str (surround selection "__")]
+                                (swap! state assoc :atom-string new-str)))))
 
 
-(defn pair-char? [e]
-  (let [{:keys [key-code key]} (destruct-event e)]
-    ;;(prn key-code key)
-    (or (= key-code KeyCodes.OPEN_SQUARE_BRACKET)
-        (= key-code KeyCodes.NINE))))
+(defn pair-char?
+  [e]
+  (let [{:keys [key]} (destruct-event e)
+        pair-char-set (-> PAIR-CHARS
+                          seq
+                          flatten
+                          set)]
+    (pair-char-set key)))
+
 
 (defn handle-pair-char
-  [e uid state]
-  nil)
-  ;;(cond
-  ;;  ;; -- Curly Braces -------------------------------------------------------
-  ;;  ;; default: auto-create
-  ;;  (and shift (= key-code KeyCodes.OPEN_SQUARE_BRACKET))
-  ;;  (let [new-str (str head "{}" tail)]
-  ;;    (js/setTimeout #(setCursorPosition target (inc start)) 10)
-  ;;    (swap! state assoc :atom-string new-str))
-  ;;
-  ;;
-  ;;  ;; if selection, add brackets around selection
-  ;;  (and (not= "" selection) (= key-code KeyCodes.OPEN_SQUARE_BRACKET))
-  ;;  (let [surround-selection (str "[" selection "]")
-  ;;        new-str (str head surround-selection tail)]
-  ;;    (js/setTimeout (fn []
-  ;;                     (setStart target (inc start))
-  ;;                     (setEnd target (inc end)))
-  ;;     10)
-  ;;    (swap! state assoc :atom-string new-str))))
-  ;;
-    ;;;; default: auto-create close bracket
-    ;;(= key-code KeyCodes.OPEN_SQUARE_BRACKET)
-    ;;(let [new-str (str head "[]" tail)
-    ;;      double-brackets? (= "[[]]" (subs new-str (dec start) (+ start 3)))]
-    ;;  (js/setTimeout #(setCursorPosition target (inc start)) 10)
-    ;;  (swap! state assoc :atom-string new-str)
-    ;;  ;; if second bracket, open search
-    ;;  (when double-brackets?
-    ;;    (swap! state assoc :search/page true)))))
+  [e _ state]
+  (let [{:keys [key head tail target start end selection]} (destruct-event e)
+        close-pair (get PAIR-CHARS key)]
+    (cond
+      (= start end) (let [new-str (str head key close-pair tail)]
+                      (js/setTimeout #(setCursorPosition target (inc start)) 10)
+                      (swap! state assoc :atom-string new-str))
+      (not= start end) (let [surround-selection (surround selection key)
+                             new-str (str head surround-selection tail)]
+                         (swap! state assoc :atom-string new-str)
+                         (js/setTimeout (fn []
+                                          (setStart target (inc start))
+                                          (setEnd target (inc end)))
+                                        10)))
 
-    ;; TODO: close bracket should not be created if open bracket already exists or user just made a link
+    ;; this is naive way to begin doing inline search. how to begin search with non-empty parens?
+    (let [four-char (subs (:atom-string @state) (dec start) (+ start 3))
+          double-brackets? (= "[[]]" four-char)
+          double-parens?   (= "(())" four-char)]
+      (cond
+        double-brackets? (swap! state assoc :search/page true)
+        double-parens? (swap! state assoc :search/block true)))))
+
+    ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
-    ;; -- Parentheses --------------------------------------------------------
-    ;;(and shift (= key-code KeyCodes.NINE)) (swap! state update :search/block not)))
 
 
 (defn handle-backspace
   [e uid state]
-  (let [{:keys [key-code selection start end value head tail target meta]} (destruct-event e)]
-    (prn "BKSPACE" (not= selection "") meta)
+  (let [{:keys [start end value head tail target meta]} (destruct-event e)
+        possible-pair (subs value (dec start) (inc start))]
+
     (cond
       ;; if selection, delete selected text
-      (not= selection "") (let [new-tail (subs value end)
-                                new-str (str head new-tail)]
-                            (swap! state assoc :atom-string new-str))
+      (not= start end) (let [new-tail (subs value end)
+                             new-str (str head new-tail)]
+                         (swap! state assoc :atom-string new-str))
 
       ;; if meta, delete to start of line
-      ;; xxx meta is mainly handled in system cmds. should it be here or there?
       meta (swap! state assoc :atom-string tail)
 
       ;; if at block start, dispatch (requires context)
       (block-start? e) (dispatch [:backspace uid value])
 
       ;; if within brackets, delete close bracket as well
-      ;; TODO implement for parens and curly braces
-      (= "[]" (subs value (dec start) (inc start)))
-      (let [head (subs value 0 (dec start))
-            tail (subs value (inc start))
+      ;; todo: parameterize, use PAIR-CHARS
+      (some #(= possible-pair %) ["[]" "{}" "()"])
+      (let [head    (subs value 0 (dec start))
+            tail    (subs value (inc start))
             new-str (str head tail)]
-        (js/setTimeout #(setCursorPosition target (dec start)) 10)
         (swap! state assoc :atom-string new-str)
-        (swap! state assoc :search/page false))
+        (swap! state assoc :search/page false)
+        (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
       ;; default backspace: delete a character
-      :else (let [head (subs value 0 (dec start))
-                  new-str (str head tail)]
-              ;;(when (or (:search/page @state) (:search/block @state))
-              ;;  (swap! state assoc :search/query (subs query 0 (dec (count query)))))
+      :else (let [head    (subs value 0 (dec start))
+                  new-str (str head tail)
+                  {:search/keys [query]} @state]
+              (cond
+                ;;(= (get value start) KeyCodes.SLASH)
+                ;;(swap! state update :slash? not)
+                query (swap! state assoc :search/query (subs query 0 (dec (count query)))))
               (swap! state assoc :atom-string new-str)))))
+
 
 ;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
 (defn block-key-down
-  "Three big buckets
-  - empty text selection
-  - non-empty text selection
-  - multi-block selection"
-
   [e uid state]
-  (let [{:keys [shift meta ctrl alt key key-code target start end value head tail selection]} (destruct-event e)
-        block-start? (block-start? e)
-        string       (:atom-string @state)
-        query        (:search/query @state)]
+  (let [{:keys [meta ctrl alt key key-code head tail]} (destruct-event e)]
     (cond
-
       (arrow-key? e) (handle-arrow-key e uid)
       (pair-char? e) (handle-pair-char e uid state)
       (= key-code KeyCodes.TAB) (handle-tab e uid)
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-      (= key-code KeyCodes.SLASH) (swap! state update :slash? not)
       meta (handle-system-shortcuts e uid state)
-
       ;; -- Default: Add new character -----------------------------------------
       (and (not meta) (not ctrl) (not alt) (isCharacterKey key-code))
       (let [new-str (str head key tail)]
-        ;;(when (or (:search/page @state) (:search/block @state)))
-          ;;(swap! state assoc :search/query (str (:search/query @state) key)))
+        (cond
+          (= key-code KeyCodes.SLASH)
+          (swap! state assoc :slash? true)
+
+          (or (:search/page @state) (:search/block @state))
+          (swap! state assoc :search/query (str (:search/query @state) key)))
         (swap! state assoc :atom-string new-str)))))
 
-      ;;:else (prn "non-event" key key-code))))
+;;:else (prn "non-event" key key-code))))
 

@@ -12,16 +12,11 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
-    [goog.dom.selection :refer [setStart getStart setEnd getEnd #_setText getText setCursorPosition #_getEndPoints]]
-    [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [re-frame.core  :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
-  (:import
-    (goog.events
-      KeyCodes)))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -242,8 +237,8 @@
   [{:block/keys [open uid children]}]
   (if (seq children)
     [:button (use-style block-disclosure-toggle-style
-              {:class    (if open "open" "closed")
-               :on-click #(toggle [:block/uid uid] open)})
+                        {:class    (if open "open" "closed")
+                         :on-click #(toggle [:block/uid uid] open)})
      [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
@@ -254,8 +249,8 @@
   (let [{:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
-              {:class          "tooltip"
-               :on-mouse-leave #(swap! state assoc :tooltip false)})
+                       {:class          "tooltip"
+                        :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
        [:div [:b "order"] [:span order]]])))
@@ -264,19 +259,20 @@
 (defn bullet-el
   [{:block/keys [uid children open]} state]
   [:span (merge (use-style bullet-style
-                  {:class         [(when (and (seq children) (not open))
-                                     "closed-with-children")]
-                   :draggable     true
-                   :on-mouse-over #(swap! state assoc :tooltip true)
-                   :on-mouse-out  (fn [e] (when-not (contains (.. e -relatedTarget) "tooltip")
-                                            (swap! state assoc :tooltip false)))
-                   :on-drag-end   (fn [_] (swap! state assoc :dragging false))
-                   :on-drag-start (fn [e]
-                                    (.. e stopPropagation)
-                                    (set! (.. e -dataTransfer -effectAllowed) "move")
+                           {:class         [(when (and (seq children) (not open))
+                                              "closed-with-children")]
+                            :draggable     true
+                            :on-mouse-over #(swap! state assoc :tooltip true)
+                            :on-mouse-out  (fn [e]
+                                             (when-not (contains (.. e -relatedTarget) "tooltip")
+                                               (swap! state assoc :tooltip false)))
+                            :on-drag-end   (fn [_] (swap! state assoc :dragging false))
+                            :on-drag-start (fn [e]
+                                             (.. e stopPropagation)
+                                             (set! (.. e -dataTransfer -effectAllowed) "move")
                                     ;;(prn "UID" uid)
-                                    (.. e -dataTransfer (setData "text/plain" uid))
-                                    (swap! state assoc :dragging true))}))])
+                                             (.. e -dataTransfer (setData "text/plain" uid))
+                                             (swap! state assoc :dragging true))}))])
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -286,49 +282,48 @@
   (let [editing-uid @(subscribe [:editing/uid])]
 
     (when (and (not (= editing-uid uid))
-            (< (count (:atom-string @state)) (count string)))
+               (< (count (:atom-string @state)) (count string)))
       (swap! state assoc :atom-string string))
 
     [:div (use-style block-content-style
-            {:class         "block-content"
-             :on-drag-enter (fn [e]
-                              (.. e stopPropagation)
-                              (swap! state assoc :drag-target :child))
-             :on-drag-over  (fn [e]
-                              (.. e preventDefault)
-                              (.. e stopPropagation)
-                              false)
-             :on-drag-leave (fn [e]
-                              (.. e stopPropagation)
-                              (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
-                                    source-container  (getAncestorByClass (.. e -target) "block-container")]
-                                (cond
-                                  (= related-container source-container) nil
-                                  :else (swap! state assoc :drag-target nil))))
-             :on-drop       (fn [e]
-                              (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
-                                    parent-dragging (getAncestorByClass (.. e -target) "dragging")]
-                                (.. e preventDefault)
-                                (.. e stopPropagation)
-                                (swap! state assoc :dragging false)
-                                (swap! state assoc :drag-target nil)
-                                (when (and (nil? parent-dragging) (not= source-uid uid))
-                                  (dispatch [:drop-bullet source-uid uid :child]))))})
+                     {:class         "block-content"
+                      :on-drag-enter (fn [e]
+                                       (.. e stopPropagation)
+                                       (swap! state assoc :drag-target :child))
+                      :on-drag-over  (fn [e]
+                                       (.. e preventDefault)
+                                       (.. e stopPropagation)
+                                       false)
+                      :on-drag-leave (fn [e]
+                                       (.. e stopPropagation)
+                                       (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
+                                             source-container  (getAncestorByClass (.. e -target) "block-container")]
+                                         (cond
+                                           (= related-container source-container) nil
+                                           :else (swap! state assoc :drag-target nil))))
+                      :on-drop       (fn [e]
+                                       (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
+                                             parent-dragging (getAncestorByClass (.. e -target) "dragging")]
+                                         (.. e preventDefault)
+                                         (.. e stopPropagation)
+                                         (swap! state assoc :dragging false)
+                                         (swap! state assoc :drag-target nil)
+                                         (when (and (nil? parent-dragging) (not= source-uid uid))
+                                           (dispatch [:drop-bullet source-uid uid :child]))))})
 
      [autosize/textarea {:value       (:atom-string @state)
                          :class       [(when (= editing-uid uid) "is-editing") "textarea"]
                          :auto-focus  true
                          :id          (str "editable-uid-" uid)
-                         :on-change   (fn [e]
-                                        (let [value (.. e -target -value)]
-                                          (when (not= string (:atom-string @state))
-                                            (db-on-change (:atom-string @state) uid))))
+                         :on-change   (fn [_]
+                                        (when (not= string (:atom-string @state))
+                                          (db-on-change (:atom-string @state) uid)))
                          :on-key-down (fn [e] (block-key-down e uid state))}]
      [parse-and-render string]
      ;; don't show drop indicator when dragging to its children
      (when (and (empty? children) (not (:dragging @state)))
        [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                      (when (= (:drag-target @state) :child) {:background-color "red"})))])]))
+                                           (when (= (:drag-target @state) :child) {:background-color "red"})))])]))
 
 ;; flipped around
 
@@ -338,16 +333,14 @@
     (let [query   (:search/query @state)
           results (when (not (clojure.string/blank? query))
                     (db/search-in-node-title query))]
-      ;;(prn query)
-      [dropdown {:style {:position "absolute"
-                         :top      "100%"
-                         :left     "-0.125em"}
-                 :content (if (not query)
+      [dropdown {:style   {:position "absolute"
+                           :top      "100%"
+                           :left     "-0.125em"}
+                 :content (if (or (not query) (clojure.string/blank? query))
                             [:div "Start Typing!"]
                             (for [{:keys [node/title block/uid]} results]
                               ^{:key uid}
                               [:div {:on-click #(navigate-uid uid)} title]))}])))
-
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
@@ -362,8 +355,7 @@
                        :dragging false
                        :drag-target nil})]
     (fn [block]
-      (let [{:block/keys [uid string open children order]} block
-            editing-uid @(subscribe [:editing/uid])
+      (let [{:block/keys [uid #_string open children order]} block
             {dragging :dragging drag-target :drag-target} @state
             parent (db/get-parent [:block/uid uid])
             last-child? (= order (dec (count (:block/children parent))))]
@@ -379,33 +371,34 @@
          ;; FIXME drop-area-indicator styles no longer work because using a div now and document structure has changed
          (when true
            [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                          (when (= drag-target :container) {:background-color "blue"})))])
+                                               (when (= drag-target :container) {:background-color "blue"})))])
 
          [:div.block-container
           (use-style (merge block-style (when dragging dragging-style))
             ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
-            {:class         [(when dragging "dragging")
-                             (when (and (seq children) open) "show-tree-indicator")]
-             :on-drag-enter (fn [e]
-                              (.. e stopPropagation)
-                              (swap! state assoc :drag-target :container))
-             :on-drag-over  (fn [e]
-                              (.. e preventDefault)
-                              (.. e stopPropagation)
-                              false)
-             :on-drag-leave (fn [e]
-                              (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
-                                    source-container  (getAncestorByClass (.. e -target) "block-container")]
-                                (when-not (= related-container source-container)
-                                  (swap! state assoc :drag-target nil))))
-             :on-drop       (fn [e] (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
-                                          parent-dragging (getAncestorByClass (.. e -target) "dragging")]
-                                      (.. e preventDefault)
-                                      (.. e stopPropagation)
-                                      (swap! state assoc :dragging false)
-                                      (swap! state assoc :drag-target nil)
-                                      (when (and (nil? parent-dragging) (not= source-uid uid))
-                                        (dispatch [:drop-bullet source-uid uid :sibling]))))})
+                     {:class         [(when dragging "dragging")
+                                      (when (and (seq children) open) "show-tree-indicator")]
+                      :on-drag-enter (fn [e]
+                                       (.. e stopPropagation)
+                                       (swap! state assoc :drag-target :container))
+                      :on-drag-over  (fn [e]
+                                       (.. e preventDefault)
+                                       (.. e stopPropagation)
+                                       false)
+                      :on-drag-leave (fn [e]
+                                       (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
+                                             source-container  (getAncestorByClass (.. e -target) "block-container")]
+                                         (when-not (= related-container source-container)
+                                           (swap! state assoc :drag-target nil))))
+                      :on-drop       (fn [e]
+                                       (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
+                                             parent-dragging (getAncestorByClass (.. e -target) "dragging")]
+                                         (.. e preventDefault)
+                                         (.. e stopPropagation)
+                                         (swap! state assoc :dragging false)
+                                         (swap! state assoc :drag-target nil)
+                                         (when (and (nil? parent-dragging) (not= source-uid uid))
+                                           (dispatch [:drop-bullet source-uid uid :sibling]))))})
 
           [:div {:style {:display "flex"}}
            [toggle-el block]
@@ -426,7 +419,7 @@
 
          (when last-child?
            [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                          (when (= drag-target :container) {:background-color "green"})))])]))))
+                                               (when (= drag-target :container) {:background-color "green"})))])]))))
 
 
 (defn block-component
