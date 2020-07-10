@@ -112,9 +112,10 @@
 
 
 (defn left-sidebar
-  [route-name]
+  []
   (let [open? (subscribe [:left-sidebar/open])
-        ;; current-route (subscribe [:current-route]) ;; TODO: disabled primary button if current route == navigation button
+        current-route (subscribe [:current-route])
+        route-name (-> @current-route :data :name)
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
                              [?e :page/sidebar ?order]
