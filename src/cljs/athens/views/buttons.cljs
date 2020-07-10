@@ -44,7 +44,7 @@
    ::stylefy/manual [[:&:hover {:background (darken (color :panel-color :opacity-low) 10)}]
                      [:&:active
                       :&:hover:active
-                      :&.active {:color (color :body-text-color)
+                      :&.is-active {:color (color :body-text-color)
                                  :background-color  (darken (color :panel-color :opacity-med) 10)}]
                      [:&:disabled {:color (color :body-text-color 0.3)
                                    :background-color (color :panel-color :opacity-higher)
@@ -63,7 +63,7 @@
                         ::stylefy/manual [[:&:hover {:background (color :link-color :opacity-low)}]
                                           [:&:active
                                            :&:hover:active
-                                           :&.active {:color "white"
+                                           :&.is-active {:color "white"
                                                       :background-color (color :link-color)}]
                                           [:&:disabled {:color (color :body-text-color 0.3)
                                                         :background-color (color :panel-color :opacity-higher)
@@ -84,7 +84,7 @@
   [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn
-                                                   :class [class (when active "active")]})
+                                                   :class [class (when active "is-active")]})
    label])
 
 
@@ -93,5 +93,5 @@
   [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn
-                                                           :class [class (when active "active")]})
+                                                           :class [class (when active "is-active")]})
    label])
