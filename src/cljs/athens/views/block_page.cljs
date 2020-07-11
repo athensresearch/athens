@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color]]
+    [athens.style :refer [cssv]]
     [athens.views.blocks :refer [block-el db-on-change]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -48,7 +48,7 @@
                                  :right "0"
                                  :width "100%"
                                  :min-height "100%"
-                                 :caret-color (color :link-color)
+                                 :caret-color (cssv "link-color")
                                  :background "transparent"
                                  :margin "0"
                                  :font-size "inherit"

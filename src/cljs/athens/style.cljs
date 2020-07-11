@@ -4,6 +4,12 @@
     [stylefy.core :as stylefy]))
 
 
+(defn cssv [variable]
+  ;; Helper for accessing CSS Custom Properties defined
+  ;; in the application's :root
+  (str "var(--" variable ")"))
+
+
 ;; (def COLORS
 ;;   {:link-color         "#0075E1"
 ;;    :highlight-color    "#F9A132"
@@ -27,11 +33,11 @@
    :header-text-color  "#BABABA"
    :body-text-color    "#AAA"
    :border-color       "hsla(32, 81%, 90%, 0.08)"
-   :background-minus-2  "#111"
-   :background-minus-1  "#151515"
+   :background-minus-1 "#151515"
+   :background-minus-2 "#111"
    :background-color   "#1A1A1A"
-   :background-plus-1 "#222"
-   :background-plus-2 "#333"})
+   :background-plus-1  "#222"
+   :background-plus-2  "#333"})
 
 
 (def HSL-COLORS
@@ -88,15 +94,15 @@
 ;; Base Styles
 
 (def base-styles
-  {:background-color (color :background-color)
+  {:background-color (cssv "background-color")
    :font-family      "IBM Plex Sans, Sans-Serif"
-   :color            (color :body-text-color)
+   :color            (cssv "body-text-color")
    :font-size        "16px"
    :line-height      "1.5"
-   ::stylefy/manual [[:a {:color (color :link-color)}]
+   ::stylefy/manual [[:a {:color (cssv "link-color")}]
                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                                :line-height "1.3"
-                                               :color (color :header-text-color)}]
+                                               :color (cssv "header-text-color")}]
                      [:h1 {:font-size "3.125em"
                            :font-weight 600
                            :letter-spacing "-0.03em"}]
@@ -125,6 +131,20 @@
 
 
 (stylefy/tag "html" base-styles)
+
+
+(stylefy/tag ":root" {:--link-color         "#2399E7"
+                      :--highlight-color    "#FBBE63"
+                      :--warning-color      "#DE3C21"
+                      :--confirmation-color "#189E36"
+                      :--header-text-color  "#BABABA"
+                      :--body-text-color    "#AAA"
+                      :--border-color       "hsla(32, 81%, 90%, 0.08)"
+                      :--background-minus-1 "#151515"
+                      :--background-minus-2 "#111"
+                      :--background-color   "#1A1A1A"
+                      :--background-plus-1  "#222"
+                      :--background-plus-2  "#333"})
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})

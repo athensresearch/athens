@@ -24,7 +24,7 @@
   {:display "grid"
    :grid-gap "0.25rem"
    ::stylefy/manual [[:div {:border-radius "1000px"
-                            :background (color :link-color)
+                            :background (cssv "link-color")
                             :height "4rem"
                             :margin "auto"
                             :width "4rem"}]]})

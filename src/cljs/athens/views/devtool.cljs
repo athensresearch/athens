@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [dsdb]]
-    [athens.style :refer [color]]
+    [athens.style :refer [color cssv]]
     [athens.views.buttons :refer [button-primary button]]
     [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
@@ -31,7 +31,7 @@
 (def container-style
   {:grid-area     "devtool"
    :flex-direction "column"
-   :background    (color :background-minus-1)
+   :background    (cssv "background-minus-1")
    :position      "relative"
    :width         "100vw"
    :height        "33vh"
@@ -88,7 +88,7 @@
    :margin "8px 0 0"
    :border-spacing "0"
    :min-width "100%"
-   ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
+   ::stylefy/manual [[:td {:border-top [["1px solid " (cssv "border-color")]]
                            :padding "2px"}]
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "left" :padding "2px 2px" :white-space "nowrap"}]
@@ -97,15 +97,15 @@
                      [:td:last-child :th-last-child {:padding-right "8px"}]
                      [:tbody [:tr:hover {:cursor "pointer"
                                          :background (darken (color :background-minus-1) 2.5)
-                                         :color (color :header-text-color)}]]
+                                         :color (cssv "header-text-color")}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
                      [:td [:li {:margin "0 0 4px"
                                 :padding-top "4px";
-                                :border-top (str "1px solid " (color :border-color))}]]
+                                :border-top (str "1px solid " (cssv "border-color"))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
-                     [:a {:color (color :link-color)}]
+                     [:a {:color (cssv "link-color")}]
                      [:a:hover {:text-decoration "underline"}]]})
 
 
@@ -116,7 +116,7 @@
   (merge textinput-style {:width "100%"
                           :min-height "40px"
                           :font-size "12px"
-                          :background (color :background-color)
+                          :background (cssv "background-color")
                           :font-family "IBM Plex Mono"}))
 
 

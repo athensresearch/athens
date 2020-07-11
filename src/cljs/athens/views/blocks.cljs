@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [color cssv DEPTH-SHADOWS OPACITIES]]
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -39,7 +39,7 @@
                                                      :top "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
-                                                     :background (color :border-color)}]]})
+                                                     :background (cssv "border-color")}]]})
 
 
 (def block-disclosure-toggle-style
@@ -56,7 +56,7 @@
    :padding "0"
    :-webkit-appearance "none"
    :color (color :body-text-color 0.4)
-   ::stylefy/mode [[:hover {:color (color :link-color)}]
+   ::stylefy/mode [[:hover {:color (cssv "link-color")}]
                    [":is(button)" {:cursor "pointer"}]]
    ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]]})
 
@@ -79,17 +79,17 @@
                             :transform "translate(-50%, -50%)"
                             :height "0.3125em"
                             :width "0.3125em"}]
-                   [:hover {:color (color :link-color)}]]
+                   [:hover {:color (cssv "link-color")}]]
 
    ::stylefy/manual [[:&.closed-with-children {}]
-                     [:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
+                     [:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (cssv :body-text-color))
                                                                                 :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
                      [:&.dragging {:z-index 1
                                    :cursor "grabbing"
-                                   :color (color :body-text-color)}]]})
+                                   :color (cssv "body-text-color")}]]})
 
 
 (stylefy/keyframes "drop-area-appear"
@@ -141,20 +141,20 @@
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
                                  :padding "0"
-                                 :background (color :background-minus-1)
+                                 :background (cssv "background-minus-1")
                                  :position "absolute"
                                  :top "0"
                                  :left "0"
                                  :right "0"
                                  :width "100%"
                                  :min-height "100%"
-                                 :caret-color (color :link-color)
+                                 :caret-color (cssv "link-color")
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
                                  :border-radius "4px"
                                  :transition "opacity 0.15s ease"
-                                 :box-shadow (str "-4px 0 0 0" (color :background-minus-1))
+                                 :box-shadow (str "-4px 0 0 0" (cssv "background-minus-1"))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
@@ -182,7 +182,7 @@
    :position "absolute"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :flex-direction "column"
-   :background-color (color :background-plus-1)
+   :background-color (cssv "background-plus-1")
    :padding "8px 12px"
    :border-radius "4px"
    :line-height "24px"
@@ -205,7 +205,7 @@
                           :opacity (:opacity-med OPACITIES)}]
                      [:span {:display "table-cell"
                              :user-select "all"}
-                      [:&:hover {:color (color :header-text-color)}]]
+                      [:&:hover {:color (cssv "header-text-color")}]]
                      [:&:after {:content "''"
                                 :position "absolute"
                                 :top "-12px"

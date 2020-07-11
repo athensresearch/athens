@@ -1,7 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [color cssv OPACITIES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
     [athens.views.node-page :refer [node-page-component]]
@@ -22,13 +22,13 @@
    :justify-content "space-between"
    :transition-property "width, border, background"
    :transition-timing-function "ease-out"
-   :background-color (color :background-minus-1)
+   :background-color (cssv "background-minus-1")
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish.
                      [:&.is-closed {:width "2rem"}]
                      [:&.is-open {:width "calc(2rem + 32vw)"
                                   :box-shadow [["inset 1px 0 " (color :background-minus-1 :opacity-low)]]
-                                  :background-color (color :background-minus-1)}]]})
+                                  :background-color (cssv "background-minus-1")}]]})
 
 
 (def sidebar-content-style
@@ -52,10 +52,10 @@
    :padding "80px 4px 0"
    :position "relative"
    :z-index 3
-   :background (color :background-color)
-   :box-shadow [["inset 1px 0 0 " (color :border-color)]]
+   :background (cssv "background-color")
+   :box-shadow [["inset 1px 0 0 " (cssv "border-color")]]
    ::stylefy/manual [[:& {:transition "all 0.3s ease"}] ;; Transitions have to be applied in this selector in order to override the button style. This is a hack and it's gross.
-                     [:&.is-open :&:hover {:background (color :background-minus-1)}]
+                     [:&.is-open :&:hover {:background (cssv "background-minus-1")}]
                      [:&:focus :active {:outline "none"
                                         :color "inherit"}]]})
 
@@ -77,7 +77,7 @@
   {:display "flex"
    :flex "0 0 auto"
    :flex-direction "column"
-   :border-top [["1px solid" (color :border-color)]]})
+   :border-top [["1px solid" (cssv "border-color")]]})
 
 
 (def sidebar-item-toggle-style
@@ -112,7 +112,7 @@
    :position "sticky"
    :backdrop-filter "blur(12px)"
    :z-index 2
-   :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
+   :background (cssv "background-minus-1") ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -125,7 +125,7 @@
                            :max-width "100%"
                            :overflow "hidden"
                            :align-items "center"
-                           :color (color :body-text-color)}
+                           :color (cssv "body-text-color")}
                       [:svg {:opacity (:opacity-med OPACITIES)
                              :display "inline"
                              :vertical-align "-4px"
@@ -139,7 +139,7 @@
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
                      [:hr {:width "1px"
-                           :background (color :background-minus-1)
+                           :background (cssv "background-minus-1")
                            :border "0"
                            :margin "4px"
                            :flex "0 0 1px"

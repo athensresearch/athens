@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :refer [navigate navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [cssv OPACITIES]]
     [athens.views.athena :refer [athena-prompt-el]]
     [athens.views.buttons :refer [button button-primary]]
     [cljsjs.react]
@@ -24,7 +24,7 @@
    :display "flex"
    :flex-direction "column"
    :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (color :border-color))
+   :box-shadow (str "1px 0 " (cssv "border-color"))
    ::stylefy/manual [[]]
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
@@ -47,7 +47,7 @@
                              :padding "32px 4px 16px"
                              :grid-gap "4px"
                              :width "44px"
-                             :box-shadow (str "1px 0 " (color :border-color))
+                             :box-shadow (str "1px 0 " (cssv "border-color"))
                              :overflow-x "hidden"
                              :grid-template-rows "auto auto 1fr"
                              :align-self "stretch"
@@ -85,7 +85,7 @@
 
 
 (def shortcut-style
-  {:color (color :link-color)
+  {:color (cssv "link-color")
    :cursor "pointer"
    :display "flex"
    :flex "0 0 auto"
@@ -103,7 +103,7 @@
    :text-decoration "none"
    :justify-self "flex-start"
    :align-self "center"
-   :color (color :header-text-color)
+   :color (cssv "header-text-color")
    :transition "all 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 

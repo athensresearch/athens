@@ -3,7 +3,7 @@
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [color cssv OPACITIES]]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -16,9 +16,9 @@
 
 (def page-link {:cursor "pointer"
                 :text-decoration "none"
-                :color (color :link-color)
+                :color (cssv "link-color")
                 :position "relative"
-                ::stylefy/manual [[:.formatting {:color (color :body-text-color)
+                ::stylefy/manual [[:.formatting {:color (cssv "body-text-color")
                                                  :opacity (:opacity-low OPACITIES)}]
                                   [:&:after {:content "''"
                                              :display "inline-block"
@@ -44,13 +44,13 @@
 
 (def url-link {:cursor "pointer"
                :text-decoration "none"
-               :color (color :link-color)
+               :color (cssv "link-color")
                ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
 
 
 (def block-ref {:font-size "0.9em"
                 :transition "background 0.05s ease"
-                :border-bottom [["1px" "solid" (color :highlight-color)]]
+                :border-bottom [["1px" "solid" (cssv "highlight-color")]]
                 ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                                          :cursor "alias"}]]})
 

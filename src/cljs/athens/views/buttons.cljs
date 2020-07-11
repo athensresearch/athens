@@ -1,7 +1,7 @@
 (ns athens.views.buttons
   (:require
     [athens.db]
-    [athens.style :refer [color]]
+    [athens.style :refer [color cssv]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -27,7 +27,7 @@
 
 
 (def buttons-style
-  {:cursor "pointer"
+  {:cursor           "pointer"
    :padding          "0.375rem 0.625rem"
    :margin           "0"
    :font-family      "inherit"
@@ -37,13 +37,13 @@
    :border           "none"
    :display          "inline-flex"
    :align-items      "center"
-   :color            (color :body-text-color)
+   :color            (cssv "link-color")
    :background-color "transparent"
    :transition       "all 0.075s ease"
    ::stylefy/manual [[:&:hover {:background (color :body-text-color :opacity-lower)}]
                      [:&:active
                       :&:hover:active
-                      :&.is-active {:color (color :body-text-color)
+                      :&.is-active {:color (cssv "body-text-color")
                                     :background-color  (color :body-text-color :opacity-low)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                                       :background-color (color :body-text-color :opacity-lower)
@@ -57,13 +57,13 @@
 
 
 (def buttons-primary-style
-  (merge buttons-style {:color (color :link-color)
+  (merge buttons-style {:color (cssv "link-color")
                         :background-color (color :link-color :opacity-lower)
                         ::stylefy/manual [[:&:hover {:background (color :link-color :opacity-low)}]
                                           [:&:active
                                            :&:hover:active
                                            :&.is-active {:color "white"
-                                                         :background-color (color :link-color)}]
+                                                         :background-color (cssv "link-color")}]
                                           [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                                                            :background-color (color :body-text-color :opacity-lower)
                                                                            :cursor "default"}]
