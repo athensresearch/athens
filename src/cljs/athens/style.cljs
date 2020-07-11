@@ -5,10 +5,17 @@
 
 
 (defn cssv
-  [variable]
   ;; Helper for accessing CSS Custom Properties defined
   ;; in the application's :root
+  ([variable]
+   ;; When the variable is alone, reformat it and pass it through
   (str "var(--" variable ")"))
+  
+  ([variable alpha]
+   ;; 1. Create a new color with the requested alpha value
+   ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
+   ;; 2. Return the custom property name of the new color
+   (str "var(--" variable "-" alpha ")")))
 
 
 (def COLORS
