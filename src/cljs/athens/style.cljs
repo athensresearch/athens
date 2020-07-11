@@ -11,22 +11,37 @@
   (str "var(--" variable ")"))
 
 
-;; (def COLORS
-;;   {:link-color         "#0075E1"
-;;    :highlight-color    "#F9A132"
-;;    :warning-color      "#D20000"
-;;    :confirmation-color "#009E23"
-;;    :header-text-color  "#322F38"
-;;    :body-text-color    "#433F38"
-;;    :border-color       "hsla(32, 81%, 10%, 0.08)"
-;;    :background-plus-2  "#FFFFFF"
-;;    :background-plus-1  "#FFFFFF"
-;;    :background-color   "#FFFFFF"
-;;    :background-minus-1 "#FAF8F6"
-;;    :background-minus-2 "#EFEDEB" })
-
-
 (def COLORS
+  {:link-color         "#2399E7"
+   :highlight-color    "#FBBE63"
+   :warning-color      "#DE3C21"
+   :confirmation-color "#189E36"
+   :header-text-color  "#BABABA"
+   :body-text-color    "#AAA"
+   :border-color       "hsla(32, 81%, 90%, 0.08)"
+   :background-minus-1 "#151515"
+   :background-minus-2 "#111"
+   :background-color   "#1A1A1A"
+   :background-plus-1  "#222"
+   :background-plus-2  "#333"})
+
+
+(def THEME-LIGHT
+  {:link-color         "#0075E1"
+   :highlight-color    "#F9A132"
+   :warning-color      "#D20000"
+   :confirmation-color "#009E23"
+   :header-text-color  "#322F38"
+   :body-text-color    "#433F38"
+   :border-color       "hsla(32, 81%, 10%, 0.08)"
+   :background-plus-2  "#FFFFFF"
+   :background-plus-1  "#FFFFFF"
+   :background-color   "#FFFFFF"
+   :background-minus-1 "#FAF8F6"
+   :background-minus-2 "#EFEDEB"})
+
+
+(def THEME-DARK
   {:link-color         "#2399E7"
    :highlight-color    "#FBBE63"
    :warning-color      "#DE3C21"
@@ -134,18 +149,33 @@
 (stylefy/tag "html" base-styles)
 
 
-(stylefy/tag ":root" {:--link-color         (:link-color COLORS)
-                      :--highlight-color    (:highlight-color COLORS)
-                      :--warning-color      (:warning-color COLORS)
-                      :--confirmation-color (:confirmation-color COLORS)
-                      :--header-text-color  (:header-text-color COLORS)
-                      :--body-text-color    (:body-text-color COLORS)
-                      :--border-color       (:border-color COLORS)
-                      :--background-minus-1 (:background-minus-1 COLORS)
-                      :--background-minus-2 (:background-minus-2 COLORS)
-                      :--background-color   (:background-color COLORS)
-                      :--background-plus-1  (:background-plus-1 COLORS)
-                      :--background-plus-2  (:background-plus-2 COLORS)})
+(stylefy/tag ":root" {:--link-color         (:link-color THEME-LIGHT)
+                      :--highlight-color    (:highlight-color THEME-LIGHT)
+                      :--warning-color      (:warning-color THEME-LIGHT)
+                      :--confirmation-color (:confirmation-color THEME-LIGHT)
+                      :--header-text-color  (:header-text-color THEME-LIGHT)
+                      :--body-text-color    (:body-text-color THEME-LIGHT)
+                      :--border-color       (:border-color THEME-LIGHT)
+                      :--background-minus-1 (:background-minus-1 THEME-LIGHT)
+                      :--background-minus-2 (:background-minus-2 THEME-LIGHT)
+                      :--background-color   (:background-color THEME-LIGHT)
+                      :--background-plus-1  (:background-plus-1 THEME-LIGHT)
+                      :--background-plus-2  (:background-plus-2 THEME-LIGHT)
+                      
+                      ::stylefy/media {{:prefers-color-scheme "dark"} {:--link-color         (:link-color THEME-DARK)
+                                                                       :--highlight-color    (:highlight-color THEME-DARK)
+                                                                       :--warning-color      (:warning-color THEME-DARK)
+                                                                       :--confirmation-color (:confirmation-color THEME-DARK)
+                                                                       :--header-text-color  (:header-text-color THEME-DARK)
+                                                                       :--body-text-color    (:body-text-color THEME-DARK)
+                                                                       :--border-color       (:border-color THEME-DARK)
+                                                                       :--background-minus-1 (:background-minus-1 THEME-DARK)
+                                                                       :--background-minus-2 (:background-minus-2 THEME-DARK)
+                                                                       :--background-color   (:background-color THEME-DARK)
+                                                                       :--background-plus-1  (:background-plus-1 THEME-DARK)
+                                                                       :--background-plus-2  (:background-plus-2 THEME-DARK)}}
+
+                      })
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})
