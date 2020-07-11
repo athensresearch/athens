@@ -1,7 +1,6 @@
 (ns athens.devcards.app-toolbar
   (:require
    ["@material-ui/icons" :as mui-icons]
-   [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
    [athens.views.buttons :refer [button]]
    [athens.router :refer [navigate]]
    [athens.style :refer [color]]
@@ -15,19 +14,18 @@
  
 (def app-header-style {:grid-area "app-header"
                        :justify-content "flex-start"
-                      ;;  :position "absolute"
                        :backdrop-filter "blur(6px)"
                        :border-bottom "1px solid rgba(0,0,0,0.05)"
                        :background-clip "padding-box"
-                      ;;  :top "0"
-                      ;;  :left "0"
-                      ;;  :right "0"
                        :align-items "center"
                        :font-size "16px"
                        :display "grid"
+                       :position "absolute"
+                       :top 0
+                       :right 0
+                       :left 0
                        :grid-template-columns "auto 1fr auto"
                        :z-index "1000"
-                       :background (color :app-bg-color :opacity-higher)
                        :grid-auto-flow "column"
                        :grid-gap "1rem"
                        :padding "0.5rem"

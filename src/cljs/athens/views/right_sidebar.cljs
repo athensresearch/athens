@@ -46,6 +46,7 @@
    :overflow "auto"
    :flex "0 0 auto"
    :display "flex"
+   :padding-top "48px"
    :justify-content "space-between"
    :transition "opacity 0.5s ease"
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
@@ -55,20 +56,6 @@
                                  :animation-fill-mode "both"}]]]
                      [:&.is-closed [:> [:div {:animation "content-disappears 0.1s"
                                               :animation-fill-mode "both"}]]]]})
-
-
-(def sidebar-toggle-style
-  {:border-radius "0"
-   :flex-shrink "0"
-   :align-items "flex-start"
-   :padding "80px 4px 0"
-   :position "relative"
-   :z-index 3
-   :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
-   ::stylefy/manual [[:& {:transition-duration "0.15s"}]
-                     [:&:hover {:background (lighten (color :panel-color) 5)}]
-                     [:&:focus :active {:outline "none"
-                                        :color "inherit"}]]})
 
 
 (def sidebar-content-style
@@ -222,11 +209,7 @@
              [:div (use-style sidebar-item-container-style)
               (if title
                 [node-page-component [:block/uid uid]]
-                [block-page-component [:block/uid uid]])])])))]
-   [button {:style sidebar-toggle-style
-            :class (if open? "is-open" "is-closed")
-            :on-click-fn #(dispatch [:right-sidebar/toggle])
-            :label (if open? [:> mui-icons/Close] [:> mui-icons/Add])}]])
+                [block-page-component [:block/uid uid]])])])))]])
 
 
 (defn right-sidebar-component
