@@ -4,7 +4,6 @@
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.color :refer [darken]]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy :refer [use-style]]))
 

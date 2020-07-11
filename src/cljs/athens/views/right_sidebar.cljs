@@ -7,7 +7,6 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.color :refer [lighten]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 

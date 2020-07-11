@@ -95,7 +95,7 @@
                                        :color "transparent"
                                        :margin "auto auto"}}
    ::stylefy/manual [[:&.selected :&:hover {:background (color :link-color)
-                                   :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
+                                            :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
