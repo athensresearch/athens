@@ -4,7 +4,8 @@
     [stylefy.core :as stylefy]))
 
 
-(defn cssv [variable]
+(defn cssv
+  [variable]
   ;; Helper for accessing CSS Custom Properties defined
   ;; in the application's :root
   (str "var(--" variable ")"))
