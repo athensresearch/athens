@@ -1,7 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.style :refer [color cssv OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
     [athens.views.node-page :refer [node-page-component]]
@@ -62,7 +62,7 @@
   {:display "flex"
    :flex "0 0 auto"
    :flex-direction "column"
-   :border-top [["1px solid" (cssv "border-color")]]})
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def sidebar-item-toggle-style
@@ -96,7 +96,7 @@
    :padding "4px 16px"
    :position "sticky"
    :z-index 2
-   :background (cssv "background-minus-1") ;; FIXME: Replace with weighted-mix color function
+   :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -109,7 +109,7 @@
                            :max-width "100%"
                            :overflow "hidden"
                            :align-items "center"
-                           :color (cssv "body-text-color")}
+                           :color (color :body-text-color)}
                       [:svg {:opacity (:opacity-med OPACITIES)
                              :display "inline"
                              :vertical-align "-4px"
@@ -123,7 +123,7 @@
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
                      [:hr {:width "1px"
-                           :background (cssv "background-minus-1")
+                           :background (color :background-minus-1)
                            :border "0"
                            :margin "4px"
                            :flex "0 0 1px"

@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
-    [athens.style :as style :refer [cssv color OPACITIES]]
+    [athens.style :as style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -29,7 +29,7 @@
    :text-align "left"
    :border-collapse "collapse"
    ::stylefy/sub-styles {:th-date {:text-align "right"}
-                         :td-title {:color (cssv "link-color")
+                         :td-title {:color (color :link-color)
                                     :width "15vw"
                                     :cursor "pointer"
                                     :min-width "10em"
@@ -50,7 +50,7 @@
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr {:transition "background 0.1s ease"}
-                       [:td {:border-top (str "1px solid " (cssv "border-color"))
+                       [:td {:border-top (str "1px solid " (color :border-color))
                              :transition "box-shadow 0.1s ease"}
                         [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                 :box-shadow "-16px 0 transparent"}]

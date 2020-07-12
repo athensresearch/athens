@@ -4,18 +4,18 @@
     [stylefy.core :as stylefy]))
 
 
-(defn cssv
-  ;; Helper for accessing CSS Custom Properties defined
-  ;; in the application's :root
-  ([variable]
-   ;; When the variable is alone, reformat it and pass it through
-  (str "var(--" variable ")"))
+;; (defn cssv
+;;   ;; Helper for accessing CSS Custom Properties defined
+;;   ;; in the application's :root
+;;   ([variable]
+;;    ;; When the variable is alone, reformat it and pass it through
+;;   (str "var(--" variable ")"))
   
-  ([variable alpha]
-   ;; 1. Create a new color with the requested alpha value
-   ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
-   ;; 2. Return the custom property name of the new color
-   (str "var(--" variable "-" alpha ")")))
+;;   ([variable alpha]
+;;    ;; 1. Create a new color with the requested alpha value
+;;    ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
+;;    ;; 2. Return the custom property name of the new color
+;;    (str "var(--" variable "-" alpha ")")))
 
 
 (def COLORS
@@ -117,15 +117,15 @@
 ;; Base Styles
 
 (def base-styles
-  {:background-color (cssv "background-color")
+  {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
-   :color            (cssv "body-text-color")
+   :color            (color :body-text-color)
    :font-size        "16px"
    :line-height      "1.5"
-   ::stylefy/manual [[:a {:color (cssv "link-color")}]
+   ::stylefy/manual [[:a {:color (color :link-color)}]
                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
                                                :line-height "1.3"
-                                               :color (cssv "header-text-color")}]
+                                               :color (color :header-text-color)}]
                      [:h1 {:font-size "3.125em"
                            :font-weight 600
                            :letter-spacing "-0.03em"}]

@@ -1,7 +1,7 @@
 (ns athens.views.spinner
   (:require
     [athens.db]
-    [athens.style :refer [cssv OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [reagent.core :as r]
@@ -51,8 +51,8 @@
   {:width "3em"
    :height "3em"
    :border-radius "1000px"
-   :border (str "1.5px solid " (cssv "background-minus-1"))
-   :border-top-color (cssv "link-color")
+   :border (str "1.5px solid " (color :background-minus-1))
+   :border-top-color (color :link-color)
    :animation "spinning 3s linear infinite"})
 
 

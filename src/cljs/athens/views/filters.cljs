@@ -1,7 +1,7 @@
 (ns athens.views.filters
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.style :refer [color cssv OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :refer [textinput]]
     [cljsjs.react]
@@ -33,7 +33,7 @@
    :font-size "12px"
    :align-items "center"
    :text-align "right"
-   :border-bottom (str "1px solid " (cssv "background-minus-1"))
+   :border-bottom (str "1px solid " (color :background-minus-1))
    :margin "4px 0 0"
    :padding-bottom "4px"
    :justify-content "space-between"
@@ -83,21 +83,21 @@
 
 (def added-style
   {:background-color (color :link-color :opacity-low)
-   :color (cssv "link-color")
+   :color (color :link-color)
    ::stylefy/manual [[:&:hover {:background (color :link-color 0.3)}]
                      [:&:active {:transform "scale(0.99)"}]]})
 
 
 (def excluded-style
   {:background-color (color :warning-color :opacity-low)
-   :color (cssv "warning-color")
+   :color (color :warning-color)
    ::stylefy/manual [[:&:hover {:background (color :warning-color 0.3)}]
                      [:&:active {:transform "scale(0.99)"}]]})
 
 
 (def count-style
   {:padding "0 1em 0 0"
-   :color (cssv "body-text-currentColor")
+   :color (color :body-text-currentColor)
    :font-weight "bold"
    :font-size "11px"
    :text-align "right"
@@ -106,7 +106,7 @@
 
 (def filter-name-style
   {:flex "1 1 100%"
-   :color (cssv "body-text-currentColor")
+   :color (color :body-text-currentColor)
    :text-align "left"})
 
 

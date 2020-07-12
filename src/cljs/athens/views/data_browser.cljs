@@ -1,7 +1,7 @@
 (ns athens.views.data-browser
   (:require
     [athens.db :as db]
-    [athens.style :refer [cssv COLORS HSL-COLORS]]
+    [athens.style :refer [color COLORS HSL-COLORS]]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.color :refer [opacify]]
@@ -162,7 +162,7 @@
    :letter-spacing "-0.01em"
    :margin "8px 0 0"
    :min-width "100%"
-   ::stylefy/manual [[:td {:border-top (str "1px solid " (cssv "border-color"))
+   ::stylefy/manual [[:td {:border-top (str "1px solid " (color :border-color))
                            :padding "2px"}]
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "left" :padding "2px 2px"}]
@@ -176,7 +176,7 @@
                               :list-style "none"}]
                      [:td [:li {:margin "0 0 4px"
                                 :padding-top "4px";
-                                :border-top (str "1px solid " (cssv "border-color"))}]]
+                                :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (:link-color COLORS)}]
                      [:a:hover {:text-decoration "underline"}]]})

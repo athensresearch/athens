@@ -1,7 +1,7 @@
 (ns athens.views.buttons
   (:require
     [athens.db]
-    [athens.style :refer [color cssv]]
+    [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -57,13 +57,13 @@
 
 
 (def buttons-primary-style
-  (merge buttons-style {:color (cssv "link-color")
+  (merge buttons-style {:color (color :link-color)
                         :background-color (color :link-color :opacity-lower)
                         ::stylefy/manual [[:&:hover {:background (color :link-color :opacity-low)}]
                                           [:&:active
                                            :&:hover:active
                                            :&.is-active {:color "white"
-                                                         :background-color (cssv "link-color")}]
+                                                         :background-color (color :link-color)}]
                                           [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                                                            :background-color (color :body-text-color :opacity-lower)
                                                                            :cursor "default"}]

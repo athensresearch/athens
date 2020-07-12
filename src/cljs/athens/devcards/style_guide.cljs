@@ -1,7 +1,7 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [color cssv COLORS OPACITIES]]
+    [athens.style :refer [color COLORS OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -24,7 +24,7 @@
   {:display "grid"
    :grid-gap "0.25rem"
    ::stylefy/manual [[:div {:border-radius "1000px"
-                            :background (cssv "link-color")
+                            :background (color :link-color)
                             :height "4rem"
                             :margin "auto"
                             :width "4rem"}]]})

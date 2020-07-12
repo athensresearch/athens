@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [cssv color DEPTH-SHADOWS OPACITIES ZINDICES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid]]
     [athens.views.buttons :refer [button-primary]]
@@ -28,7 +28,7 @@
    :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
    :flex-direction "column"
-   :background    (cssv "background-plus-1")
+   :background    (color :background-plus-1)
    :position      "fixed"
    :overflow      "hidden"
    :max-height    "60vh"
@@ -46,9 +46,9 @@
    :line-height    "49px"
    :letter-spacing "-0.03em"
    :border-radius "4px 4px 0 0"
-   :background     (cssv "background-plus-2")
-   :color          (cssv "body-text-color")
-   :caret-color    (cssv "link-color")
+   :background     (color :background-plus-2)
+   :color          (color :body-text-color)
+   :caret-color    (color :link-color)
    :padding "24px"
    :cursor "text"
    ::stylefy/mode {:focus {:outline "none"}
@@ -56,20 +56,20 @@
 
 
 (def results-list-style
-  {:background    (cssv "background-color")
+  {:background    (color :background-color)
    :overflow-y "auto"
    :max-height "100%"})
 
 
 (def results-heading-style
   {:padding "4px 18px"
-   :background (cssv "background-plus-2")
+   :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
    :top "0"
    :justify-content "space-between"
-   :box-shadow [["0 1px 0 0 " (cssv "border-color")]]
-   :border-top [["1px solid" (cssv "border-color")]]})
+   :box-shadow [["0 1px 0 0 " (color :border-color)]]
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def result-style
@@ -78,14 +78,14 @@
    :grid-gap "0 12px"
    :grid-template-columns "1fr auto"
    :padding "12px 32px"
-   :background (cssv "background-plus-1")
-   :color (cssv "body-text-color")
+   :background (color :background-plus-1)
+   :color (color :body-text-color)
    :transition "all .05s ease"
-   :border-top [["1px solid " (cssv "border-color")]]
+   :border-top [["1px solid " (color :border-color)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
                                  :font-size "16px"
                                  :margin "0"
-                                 :color (cssv "header-text-color")
+                                 :color (color :header-text-color)
                                  :font-weight "500"}
                          :preview {:grid-area "preview"
                                    :white-space "wrap"
@@ -94,13 +94,13 @@
                          :link-leader {:grid-area "icon"
                                        :color "transparent"
                                        :margin "auto auto"}}
-   ::stylefy/manual [[:&.selected :&:hover {:background (cssv "link-color")
+   ::stylefy/manual [[:&.selected :&:hover {:background (color :link-color)
                                             :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-highlight-style
-  {:color (cssv "body-text-color")
+  {:color (color :body-text-color)
    :font-weight "500"})
 
 

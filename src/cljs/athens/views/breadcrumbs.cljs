@@ -1,7 +1,7 @@
 (ns athens.views.breadcrumbs
   (:require
     [athens.db]
-    [athens.style :refer [cssv color OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -38,9 +38,9 @@
    ::stylefy/manual [[:a {:text-decoration "none"
                           :cursor "pointer"
                           :color "inherit"}]
-                     [:&:last-child {:color (cssv "body-text-color")}]
+                     [:&:last-child {:color (color :body-text-color)}]
                      [:&:hover {:flex-shrink "0"
-                                :color (cssv "link-color")}]
+                                :color (color :link-color)}]
                      [:&:before {:display "inline-block"
                                  :padding "0 0.15em"
                                  :content "'>'"

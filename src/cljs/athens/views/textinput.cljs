@@ -1,7 +1,7 @@
 (ns athens.views.textinput
   (:require
     [athens.db]
-    [athens.style :refer [cssv OPACITIES DEPTH-SHADOWS]]
+    [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -12,13 +12,13 @@
 
 (def textinput-style
   {:min-height "32px"
-   :color (cssv "body-text-color")
-   :caret-color (cssv "link-color")
+   :color (color :body-text-color)
+   :caret-color (color :link-color)
    :border-radius "4px"
-   :background (cssv "background-minus-1")
+   :background (color :background-minus-1)
    :padding "2px 8px"
    :flex-basis "100%"
-   :border [["1px solid " (cssv "border-color")]]
+   :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"
    :transition-timing-function "ease"
@@ -44,7 +44,7 @@
    :pointer-events "none"
    :transform "translateY(-50%)"
    :left "6px"
-   :color (cssv "body-text-color")
+   :color (color :body-text-color)
    :opacity (:opacity-med OPACITIES)
    ::stylefy/manual [[:svg {:font-size "20px"}]]})
 

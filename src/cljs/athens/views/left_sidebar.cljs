@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [cssv OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
     [athens.views.buttons :refer [button-primary]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -53,7 +53,7 @@
 
 
 (def shortcut-style
-  {:color (cssv "link-color")
+  {:color (color :link-color)
    :cursor "pointer"
    :display "flex"
    :flex "0 0 auto"
@@ -71,7 +71,7 @@
    :text-decoration "none"
    :justify-self "flex-start"
    :align-self "center"
-   :color (cssv "header-text-color")
+   :color (color :header-text-color)
    :transition "all 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 

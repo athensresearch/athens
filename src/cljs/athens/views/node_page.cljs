@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color cssv]]
+    [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -55,7 +55,7 @@
                                  :right "0"
                                  :width "100%"
                                  :min-height "100%"
-                                 :caret-color (cssv "link-color")
+                                 :caret-color (color :link-color)
                                  :background "transparent"
                                  :margin "0"
                                  :font-size "inherit"
@@ -91,7 +91,7 @@
 
 
 (def references-group-title-style
-  {:color (cssv "link-color")
+  {:color (color :link-color)
    :margin "0 1.5rem"
    :font-weight "500"
    ::stylefy/manual [[:a:hover {:cursor "pointer"
@@ -111,7 +111,7 @@
 
 
 (def references-group-block-style
-  {:border-top [["1px solid " (cssv "border-color")]]
+  {:border-top [["1px solid " (color :border-color)]]
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
