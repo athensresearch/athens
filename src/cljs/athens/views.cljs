@@ -1,7 +1,7 @@
 (ns athens.views
   (:require
     [athens.db :as db]
-    [athens.devcards.app-toolbar :refer [app-header-2]]
+    [athens.devcards.app-toolbar :refer [app-toolbar]]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
     [athens.views.athena :refer [athena-component]]
@@ -114,7 +114,7 @@
          (if @loading
            [initial-spinner-component]
            [:div (use-style app-wrapper-style)
-            [app-header-2 route-name]
+            [app-toolbar route-name]
             [left-sidebar route-name]
             [:div (use-style main-content-style
                              {:on-scroll (when (= route-name :home)

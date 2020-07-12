@@ -67,10 +67,12 @@
   [:hr (use-style separator-style)])
 
 
-(defn app-header-2
-  [route-name]
+(defn app-toolbar
+  []
   (let [left-open? (subscribe [:left-sidebar/open])
-        right-open? (subscribe [:right-sidebar/open])]
+        right-open? (subscribe [:right-sidebar/open])
+        current-route (subscribe [:current-route])
+        route-name (-> @current-route :data :name)]
 
     [:header (use-style app-header-style)
      [:div (use-style app-header-control-section-style)
