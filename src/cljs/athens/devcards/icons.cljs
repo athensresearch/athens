@@ -40,6 +40,3 @@
    [(r/adapt-react-class mui-icons/Face) {:style {:opacity (:opacity-med OPACITIES)}}]
    [(r/adapt-react-class mui-icons/Face) {:style {:opacity (:opacity-high OPACITIES)}}]
    [(r/adapt-react-class mui-icons/Face) {:style {:color (color :header-text-color)}}]])
-
-
-[(r/adapt-react-class mui-icons/Face) {:style {:color (color :body-text-color)}}]
