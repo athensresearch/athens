@@ -76,13 +76,13 @@
 
     [:header (use-style app-header-style)
      [:div (use-style app-header-control-section-style)
-      [button {:active (when @left-open? true)
+      [button {:active @left-open?
                :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:left-sidebar/toggle])}]
-      [separator]
-      [button {:on-click-fn #(navigate :home)
-               :label [:> mui-icons/ChevronLeft]}]
-      [button {:on-click-fn #(navigate :home)
-               :label [:> mui-icons/ChevronRight]}]
+      ;; [separator] // for Electron implementation
+      ;; [button {:on-click-fn #(navigate :home)
+      ;;          :label [:> mui-icons/ChevronLeft]}]
+      ;; [button {:on-click-fn #(navigate :home)
+      ;;          :label [:> mui-icons/ChevronRight]}]
       [separator]
       [button {:on-click-fn #(navigate :home)
                :active (when (= route-name :home) true)
@@ -99,7 +99,7 @@
       [button {:label [:> mui-icons/Settings]}]
       [separator]
       [button {:label [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]
-               :active (when @right-open? true)
+               :active @right-open?
                :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]))
 
 
