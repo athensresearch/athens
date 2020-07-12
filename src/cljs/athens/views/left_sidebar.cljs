@@ -1,11 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.router :refer [navigate navigate-uid]]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
-    [athens.views.athena :refer [athena-prompt-el]]
-    [athens.views.buttons :refer [button button-primary]]
+    [athens.views.buttons :refer [button-primary]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -37,16 +35,6 @@
                                   :grid-gap "4px"}
                          :small-icon {:font-size "16px"}
                          :large-icon {:font-size "22px"}}})
-
-
-(def main-navigation-style
-  {:margin "0 0 32px"
-   :display "grid"
-   :grid-auto-flow "row"
-   :grid-gap "4px"
-   :justify-content "flex-start"
-   ::stylefy/manual [[:svg {:font-size "16px"}]
-                     [:button {:justify-self "flex-start"}]]})
 
 
 (def shortcuts-list-style
@@ -94,8 +82,6 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        current-route (subscribe [:current-route])
-        route-name (-> @current-route :data :name)
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
                              [?e :page/sidebar ?order]
@@ -114,9 +100,9 @@
        [:ol (use-style shortcuts-list-style)
         [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
         (doall
-         (for [[_order title uid] shortcuts]
-           ^{:key uid}
-           [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
+          (for [[_order title uid] shortcuts]
+            ^{:key uid}
+            [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
 
        ;; LOGO + BOTTOM BUTTONS
        [:footer (use-sub-style left-sidebar-style :footer)
