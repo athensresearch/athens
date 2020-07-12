@@ -37,13 +37,13 @@
    :border           "none"
    :display          "inline-flex"
    :align-items      "center"
-   :color            (cssv "link-color")
+   :color            (color :body-text-color)
    :background-color "transparent"
    :transition       "all 0.075s ease"
    ::stylefy/manual [[:&:hover {:background (color :body-text-color :opacity-lower)}]
                      [:&:active
                       :&:hover:active
-                      :&.is-active {:color (cssv "body-text-color")
+                      :&.is-active {:color (color :body-text-color)
                                     :background-color  (color :body-text-color :opacity-low)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
                                                       :background-color (color :body-text-color :opacity-lower)
