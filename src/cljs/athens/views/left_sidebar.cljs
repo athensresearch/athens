@@ -89,9 +89,7 @@
                              [?e :block/uid ?uid]] db/dsdb)
                        seq
                        (sort-by first))]
-    (if (not @open?)
-
-      [:div]
+    (when @open?
 
       ;; IF EXPANDED
       [:div (use-style left-sidebar-style)
