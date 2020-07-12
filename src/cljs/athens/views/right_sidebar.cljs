@@ -7,7 +7,6 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.color :refer [lighten]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -18,17 +17,19 @@
 (def sidebar-style
   {:justify-self "stretch"
    :overflow "hidden"
-   :width "2rem"
+   :width "0"
+   :grid-area "secondary-content"
    :display "flex"
    :justify-content "space-between"
+   :padding-top "44px"
    :transition-property "width, border, background"
+   :transition-duration "0.35s"
    :transition-timing-function "ease-out"
    :background-color (color :panel-color :opacity-low)
+   :box-shadow [["0 -100px 0 " (color :panel-color :opacity-low) ", inset 1px 0 " (color :panel-color :opacity-low)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&:hover {:transition-duration "0.35s"}] ;; Apply a smooth transition only when hovering, otherwise browser resizing will seem sluggish.
-                     [:&.is-closed {:width "2rem"}]
-                     [:&.is-open {:width "calc(2rem + 32vw)"
-                                  :box-shadow [["inset 1px 0 " (color :panel-color :opacity-low)]]
+                     [:&.is-closed {:width "0"}]
+                     [:&.is-open {:width "32vw"
                                   :background-color (color :panel-color :opacity-low)}]]})
 
 
@@ -36,7 +37,7 @@
   {:display "flex"
    :flex "0 0 32vw"
    :flex-direction "column"
-   :margin-left 0
+   :margin-left "0"
    :transition "all 0.35s ease-out"
    :overflow-y "auto"
    ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
@@ -44,29 +45,12 @@
                      [:&.is-open {:opacity 1}]]})
 
 
-(def sidebar-toggle-style
-  {:border-radius "0"
-   :flex "0 0 auto"
-   :align-items "flex-start"
-   :justify-self "flex-end"
-   :margin-left "auto"
-   :padding "80px 4px 0"
-   :position "relative"
-   :z-index 3
-   :background (color :app-bg-color)
-   :box-shadow [["inset 1px 0 0 " (color :panel-color)]]
-   ::stylefy/manual [[:& {:transition "all 0.3s ease"}] ;; Transitions have to be applied in this selector in order to override the button style. This is a hack and it's gross.
-                     [:&.is-open :&:hover {:background (lighten (color :panel-color) 5)}]
-                     [:&:focus :active {:outline "none"
-                                        :color "inherit"}]]})
-
-
 (def sidebar-section-heading-style
   {:font-size "14px"
    :display "flex"
    :flex-direction "row"
    :align-items "center"
-   :min-height "40px"
+   :min-height "44px"
    :padding "8px 16px 8px 24px"
    ::stylefy/manual [[:h1 {:font-size "inherit"
                            :margin "0 auto 0 0"
@@ -90,7 +74,7 @@
    :border-radius "1000px"
    :cursor "pointer"
    :place-content "center"
-   ::stylefy/manual [[:svg {:transition "all 0.1s linear"
+   ::stylefy/manual [[:svg {:transition "all 0.1s ease-out"
                             :margin "0"}]
                      [:&.is-open [:svg {:transform "rotate(90deg)"}]]]})
 
@@ -111,7 +95,6 @@
    :align-items "center"
    :padding "4px 16px"
    :position "sticky"
-   :backdrop-filter "blur(12px)"
    :z-index 2
    :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
    :top "0"
@@ -135,7 +118,7 @@
                                   :flex "0 0 auto"
                                   :align-items "stretch"
                                   :flex-direction "row"
-                                  :transition "opacity 0.3s linear"
+                                  :transition "opacity 0.3s ease-out"
                                   :opacity "0.25"}]
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
@@ -174,8 +157,8 @@
   [open? items]
   [:div (use-style sidebar-style {:class (if open? "is-open" "is-closed")})
    [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
-    [:header (use-style sidebar-section-heading-style)
-     [:h1 "Pages and Blocks"]]
+    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents 
+    ;;  [:h1 "Pages and Blocks"]]
     ;;  [button {:label [:> mui-icons/FilterList]}]
 
     (if (empty? items)
@@ -202,11 +185,7 @@
              [:div (use-style sidebar-item-container-style)
               (if title
                 [node-page-component [:block/uid uid]]
-                [block-page-component [:block/uid uid]])])])))]
-   [button {:style sidebar-toggle-style
-            :class (if open? "is-open" "is-closed")
-            :on-click-fn #(dispatch [:right-sidebar/toggle])
-            :label (if open? [:> mui-icons/Close] [:> mui-icons/Add])}]])
+                [block-page-component [:block/uid uid]])])])))]])
 
 
 (defn right-sidebar-component

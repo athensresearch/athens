@@ -1,11 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.router :refer [navigate navigate-uid]]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
-    [athens.views.athena :refer [athena-prompt-el]]
-    [athens.views.buttons :refer [button button-primary]]
+    [athens.views.buttons :refer [button-primary]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -23,9 +21,7 @@
    :height "100%"
    :display "flex"
    :flex-direction "column"
-   :padding "32px 32px 16px 32px"
-   :box-shadow (str "1px 0 " (color :panel-color))
-   ::stylefy/manual [[]]
+   :padding "80px 32px 16px 32px"
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
                                     :flex "0 0 auto"
@@ -39,34 +35,6 @@
                                   :grid-gap "4px"}
                          :small-icon {:font-size "16px"}
                          :large-icon {:font-size "22px"}}})
-
-
-(def left-sidebar-collapsed-style
-  (merge left-sidebar-style {:flex "0 0 44px"
-                             :display "grid"
-                             :padding "32px 4px 16px"
-                             :grid-gap "4px"
-                             :width "44px"
-                             :box-shadow "1px 0 #EFEDEB"
-                             :overflow-x "hidden"
-                             :grid-template-rows "auto auto 1fr"
-                             :align-self "stretch"
-                             ::stylefy/sub-styles {:footer {:padding-top "40px"
-                                                            :align-self "flex-end"
-                                                            :margin-top "auto"
-                                                            :display "grid"
-                                                            :grid-gap "4px"
-                                                            :grid-auto-flow "row"}}}))
-
-
-(def main-navigation-style
-  {:margin "0 0 32px"
-   :display "grid"
-   :grid-auto-flow "row"
-   :grid-gap "4px"
-   :justify-content "flex-start"
-   ::stylefy/manual [[:svg {:font-size "16px"}]
-                     [:button {:justify-self "flex-start"}]]})
 
 
 (def shortcuts-list-style
@@ -114,8 +82,6 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        current-route (subscribe [:current-route])
-        route-name (-> @current-route :data :name)
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
                              [?e :page/sidebar ?order]
@@ -123,42 +89,10 @@
                              [?e :block/uid ?uid]] db/dsdb)
                        seq
                        (sort-by first))]
-    (if (not @open?)
-
-      ;; IF COLLAPSED
-      [:div (use-style left-sidebar-collapsed-style)
-       [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
-                :label       [:> mui-icons/ChevronRight]}]
-       [button-primary {:on-click-fn #(dispatch [:athena/toggle])
-                        :label       [:> mui-icons/Search]}]
-       [:footer (use-sub-style left-sidebar-collapsed-style :footer)
-        [button {:disabled true
-                 :label    [:> mui-icons/TextFormat]}]
-        [button {:disabled true
-                 :label    [:> mui-icons/Settings]}]]]
+    (when @open?
 
       ;; IF EXPANDED
       [:div (use-style left-sidebar-style)
-       [:div (use-sub-style left-sidebar-style :top-line)
-        [athena-prompt-el]
-        [button {:on-click-fn #(dispatch [:left-sidebar/toggle])
-                 :label       [:> mui-icons/ChevronLeft]}]]
-       [:nav (use-style main-navigation-style)
-
-        [button {:on-click-fn #(navigate :home)
-                 :active      (when (= route-name :home) true)
-                 :label       [:<>
-                               [:> mui-icons/Today]
-                               [:span "Daily Notes"]]}]
-        [button {:on-click-fn #(navigate :pages)
-                 :active      (when (= route-name :pages) true)
-                 :label       [:<>
-                               [:> mui-icons/FileCopy]
-                               [:span "All Pages"]]}]
-        [button {:disabled true
-                 :label    [:<>
-                            [:> mui-icons/BubbleChart]
-                            [:span "Graph Overview"]]}]]
 
        ;; SHORTCUTS
        [:ol (use-style shortcuts-list-style)
@@ -173,7 +107,3 @@
         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
         [button-primary {:label "Load Test Data"
                          :on-click-fn #(dispatch [:get-db/init])}]]])))
-;;[button {:disabled true
-;;         :label    [:> mui-icons/TextFormat]}]
-;;[button {:disabled true
-;;         :label    [:> mui-icons/Settings]}]]])))
