@@ -4,7 +4,6 @@
     [athens.style :refer [color]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.color :refer [darken]]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -28,7 +27,7 @@
 
 
 (def buttons-style
-  {:cursor "pointer"
+  {:cursor           "pointer"
    :padding          "0.375rem 0.625rem"
    :margin           "0"
    :font-family      "inherit"
@@ -41,13 +40,13 @@
    :color            (color :body-text-color)
    :background-color "transparent"
    :transition       "all 0.075s ease"
-   ::stylefy/manual [[:&:hover {:background (darken (color :panel-color :opacity-low) 10)}]
+   ::stylefy/manual [[:&:hover {:background (color :body-text-color :opacity-lower)}]
                      [:&:active
                       :&:hover:active
                       :&.is-active {:color (color :body-text-color)
-                                    :background-color  (darken (color :panel-color :opacity-med) 10)}]
+                                    :background-color  (color :body-text-color :opacity-low)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
-                                                      :background-color (color :panel-color :opacity-higher)
+                                                      :background-color (color :body-text-color :opacity-lower)
                                                       :cursor "default"}]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
@@ -66,7 +65,7 @@
                                            :&.is-active {:color "white"
                                                          :background-color (color :link-color)}]
                                           [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
-                                                                           :background-color (color :panel-color :opacity-higher)
+                                                                           :background-color (color :body-text-color :opacity-lower)
                                                                            :cursor "default"}]
                                           [:span {:flex "1 0 auto"
                                                   :text-align "left"}]

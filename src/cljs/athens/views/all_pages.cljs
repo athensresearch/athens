@@ -50,16 +50,16 @@
                                    :min-width "9em"}}
    ::stylefy/manual [[:tbody {:vertical-align "top"}
                       [:tr {:transition "background 0.1s ease"}
-                       [:td {:border-top (str "1px solid " (color :panel-color))
+                       [:td {:border-top (str "1px solid " (color :border-color))
                              :transition "box-shadow 0.1s ease"}
                         [(selectors/& (selectors/first-child)) {:border-radius "8px 0 0 8px"
                                                                 :box-shadow "-16px 0 transparent"}]
                         [(selectors/& (selectors/last-child)) {:border-radius "0 8px 8px 0"
                                                                :box-shadow "16px 0 transparent"}]]
-                       [:&:hover {:background-color (color :panel-color :opacity-low)
+                       [:&:hover {:background-color (color :background-minus-1 :opacity-med)
                                   :border-radius "8px"}
-                        [:td [(selectors/& (selectors/first-child)) {:box-shadow [["-16px 0 " (color :panel-color :opacity-low)]]}]]
-                        [:td [(selectors/& (selectors/last-child)) {:box-shadow [["16px 0 " (color :panel-color :opacity-low)]]}]]]]]
+                        [:td [(selectors/& (selectors/first-child)) {:box-shadow [["-16px 0 " (color :background-minus-1 :opacity-med)]]}]]
+                        [:td [(selectors/& (selectors/last-child)) {:box-shadow [["16px 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "8px"}]
                      [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
