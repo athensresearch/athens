@@ -12,9 +12,24 @@
 ;;; Styles
 
 
+(def button-icons-style
+  {:margin-block-start "-0.0835em"
+   :margin-block-end "-0.0835em"})
+
+
+(def button-icons-not-last-child-style {:margin-inline-end "0.251em"})
+
+(def button-icons-not-first-child-style {:margin-inline-style "0.251em"})
+
+
+(def button-icons-only-child-style
+  {:margin-inline-start "-4px"
+   :margin-inline-end "-4px"})
+
+
 (def buttons-style
   {:cursor "pointer"
-   :padding          "6px 10px"
+   :padding          "0.375rem 0.625rem"
    :margin           "0"
    :font-family      "inherit"
    :font-size        "inherit"
@@ -23,51 +38,60 @@
    :border           "none"
    :display          "inline-flex"
    :align-items      "center"
-   :color            "rgba(50, 47, 56, 1)"
+   :color            (color :body-text-color)
    :background-color "transparent"
-   :transition       "all 0.05s ease"
-   ::stylefy/mode [[:hover {:background-color "#EFEDEB"}]
-                   [:active {:color "rgba(0, 117, 225)"
-                             :background-color "rgba(0, 117, 225, 0.1)"}]
-                   [:disabled {:color "rgba(0, 0, 0, 0.3)"
-                               :background-color "#EFEDEB"
-                               :cursor "default"}]]
-   ::stylefy/manual [[:svg {:margin-block-start "-0.0835em"
-                            :margin-block-end "-0.0835em"}
-                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-inline-end "0.251em"}]
-                      [(selectors/& (selectors/not (selectors/first-child))) {:margin-inline-start "0.251em"}]
-                      [(selectors/& ((selectors/first-child (selectors/last-child)))) {:margin-inline-start "-4px"
-                                                                                       :margin-inline-end "-4px"}]]
+   :transition       "all 0.075s ease"
+   ::stylefy/manual [[:&:hover {:background (darken (color :panel-color :opacity-low) 10)}]
+                     [:&:active
+                      :&:hover:active
+                      :&.is-active {:color (color :body-text-color)
+                                    :background-color  (darken (color :panel-color :opacity-med) 10)}]
+                     [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
+                                                      :background-color (color :panel-color :opacity-higher)
+                                                      :cursor "default"}]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
-                     [:&.active {:background-color (darken (color :panel-color) 10)}]]})
+                     [:.MuiSvgIcon-root button-icons-style
+                      [(selectors/& (selectors/not (selectors/last-child))) button-icons-not-last-child-style]
+                      [(selectors/& (selectors/not (selectors/first-child))) button-icons-not-first-child-style]
+                      [(selectors/& ((selectors/first-child (selectors/last-child)))) button-icons-only-child-style]]]})
 
 
 (def buttons-primary-style
-  (merge buttons-style {:color "rgba(0, 117, 225)"
-                        :background-color "rgba(0, 117, 225, 0.1)"
-                        ::stylefy/mode [[:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
-                                        [:active {:color "white"
-                                                  :background-color "rgba(0, 117, 225, 1)"}]
-                                        [:disabled {:color "rgba(0, 0, 0, 0.3)"
-                                                    :background-color "#EFEDEB"
-                                                    :cursor "default"}]]}))
+  (merge buttons-style {:color (color :link-color)
+                        :background-color (color :link-color :opacity-lower)
+                        ::stylefy/manual [[:&:hover {:background (color :link-color :opacity-low)}]
+                                          [:&:active
+                                           :&:hover:active
+                                           :&.is-active {:color "white"
+                                                         :background-color (color :link-color)}]
+                                          [:&:disabled :&:disabled:active {:color (color :body-text-color 0.3)
+                                                                           :background-color (color :panel-color :opacity-higher)
+                                                                           :cursor "default"}]
+                                          [:span {:flex "1 0 auto"
+                                                  :text-align "left"}]
+                                          [:.MuiSvgIcon-root button-icons-style
+                                           [(selectors/& (selectors/not (selectors/last-child))) button-icons-not-last-child-style]
+                                           [(selectors/& (selectors/not (selectors/first-child))) button-icons-not-first-child-style]
+                                           [(selectors/& ((selectors/first-child (selectors/last-child)))) button-icons-only-child-style]]]}))
 
 
 ;;; Components
 
 
 (defn button
+  "Creates a button control"
   [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-style style) {:disabled disabled
                                                    :on-click on-click-fn
-                                                   :class [class (when active "active")]})
+                                                   :class [class (when active "is-active")]})
    label])
 
 
 (defn button-primary
+  "Creates a button control"
   [{:keys [disabled label on-click-fn style active class]}]
   [:button (use-style (merge buttons-primary-style style) {:disabled disabled
                                                            :on-click on-click-fn
-                                                           :class [class (when active "active")]})
+                                                           :class [class (when active "is-active")]})
    label])

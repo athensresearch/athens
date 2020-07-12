@@ -7,7 +7,6 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.color :refer [lighten]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -15,57 +14,35 @@
 ;;; Styles
 
 
-(def sidebar-width "32vw")
-
-
-(stylefy/keyframes "content-appears"
-                   [:from
-                    {:opacity "0"
-                     :width "0"
-                     :transform "translateX(10%)"}]
-                   [:to
-                    {:opacity "1"
-                     :width sidebar-width
-                     :transform "translateX(0)"}])
-
-
-(stylefy/keyframes "content-disappears"
-                   [:from
-                    {:opacity "1"
-                     :width sidebar-width
-                     :transform "translateX(0)"}]
-                   [:to
-                    {:opacity "0"
-                     :width "0"
-                     :transform "translateX(10%)"}])
-
-
 (def sidebar-style
   {:justify-self "stretch"
+   :overflow "hidden"
+   :width "0"
    :grid-area "secondary-content"
-   :overflow "auto"
-   :flex "0 0 auto"
    :display "flex"
-   :padding-top "48px"
    :justify-content "space-between"
-   :transition "opacity 0.5s ease"
+   :padding-top "44px"
+   :transition-property "width, border, background"
+   :transition-duration "0.35s"
+   :transition-timing-function "ease-out"
+   :background-color (color :panel-color :opacity-low)
+   :box-shadow [["0 -100px 0 " (color :panel-color :opacity-low) ", inset 1px 0 " (color :panel-color :opacity-low)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&.is-open {:border-left [["1px solid " (color :panel-color :opacity-low)]]
-                                  :background-color (color :panel-color :opacity-low)}
-                      [:> [:div {:animation "content-appears 0.15s"
-                                 :animation-fill-mode "both"}]]]
-                     [:&.is-closed [:> [:div {:animation "content-disappears 0.1s"
-                                              :animation-fill-mode "both"}]]]]})
+                     [:&.is-closed {:width "0"}]
+                     [:&.is-open {:width "32vw"
+                                  :background-color (color :panel-color :opacity-low)}]]})
 
 
 (def sidebar-content-style
   {:display "flex"
-   :width sidebar-width
-   :opacity "0"
-   :animation-fill-mode "both"
-   :animation-timing-function "ease-out"
+   :flex "0 0 32vw"
    :flex-direction "column"
-   :overflow-y "auto"})
+   :margin-left "0"
+   :transition "all 0.35s ease-out"
+   :overflow-y "auto"
+   ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
+                                    :opacity 0}]
+                     [:&.is-open {:opacity 1}]]})
 
 
 (def sidebar-section-heading-style
@@ -73,7 +50,7 @@
    :display "flex"
    :flex-direction "row"
    :align-items "center"
-   :min-height "40px"
+   :min-height "44px"
    :padding "8px 16px 8px 24px"
    ::stylefy/manual [[:h1 {:font-size "inherit"
                            :margin "0 auto 0 0"
@@ -97,7 +74,7 @@
    :border-radius "1000px"
    :cursor "pointer"
    :place-content "center"
-   ::stylefy/manual [[:svg {:transition "all 0.1s ease"
+   ::stylefy/manual [[:svg {:transition "all 0.1s ease-out"
                             :margin "0"}]
                      [:&.is-open [:svg {:transform "rotate(90deg)"}]]]})
 
@@ -108,7 +85,7 @@
    :font-size "15px"
    :position "relative"
    :z-index 1
-   :width sidebar-width})
+   :width "32vw"})
 
 
 (def sidebar-item-heading-style
@@ -118,7 +95,6 @@
    :align-items "center"
    :padding "4px 16px"
    :position "sticky"
-   :backdrop-filter "blur(12px)"
    :z-index 2
    :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
    :top "0"
@@ -142,7 +118,7 @@
                                   :flex "0 0 auto"
                                   :align-items "stretch"
                                   :flex-direction "row"
-                                  :transition "opacity 0.3s ease"
+                                  :transition "opacity 0.3s ease-out"
                                   :opacity "0.25"}]
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
@@ -180,9 +156,9 @@
 (defn right-sidebar-el
   [open? items]
   [:div (use-style sidebar-style {:class (if open? "is-open" "is-closed")})
-   [:div (use-style sidebar-content-style)
-    [:header (use-style sidebar-section-heading-style)
-     [:h1 "Pages and Blocks"]]
+   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
+    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents 
+    ;;  [:h1 "Pages and Blocks"]]
     ;;  [button {:label [:> mui-icons/FilterList]}]
 
     (if (empty? items)
