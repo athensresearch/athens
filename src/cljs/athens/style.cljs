@@ -145,11 +145,11 @@
   "Maps theme keys to css variable keys."
   [theme]
   (reduce-kv
-   (fn [m k v]
-     (let [css-k (keyword (str "--" (symbol k)))]
-       (assoc m css-k v)))
-   {}
-   theme))
+    (fn [m k v]
+      (let [css-k (keyword (str "--" (symbol k)))]
+        (assoc m css-k v)))
+    {}
+    theme))
 
 
 (stylefy/tag "html" base-styles)
