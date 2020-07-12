@@ -44,8 +44,7 @@
 
 (def app-header-secondary-controls-style
   (merge app-header-control-section-style
-         {
-          :color (color :body-text-color :opacity-med)
+         {:color (color :body-text-color :opacity-med)
           :justify-self "flex-end"
           :backdrop-filter "blur(6px)"
           :margin-left "auto"

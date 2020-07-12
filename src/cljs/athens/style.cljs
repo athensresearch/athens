@@ -10,7 +10,7 @@
 ;;   ([variable]
 ;;    ;; When the variable is alone, reformat it and pass it through
 ;;   (str "var(--" variable ")"))
-  
+
 ;;   ([variable alpha]
 ;;    ;; 1. Create a new color with the requested alpha value
 ;;    ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
@@ -168,7 +168,7 @@
                       :--background-color   (:background-color THEME-LIGHT)
                       :--background-plus-1  (:background-plus-1 THEME-LIGHT)
                       :--background-plus-2  (:background-plus-2 THEME-LIGHT)
-                      
+
                       ::stylefy/media {{:prefers-color-scheme "dark"} {:--link-color         (:link-color THEME-DARK)
                                                                        :--highlight-color    (:highlight-color THEME-DARK)
                                                                        :--warning-color      (:warning-color THEME-DARK)
@@ -180,9 +180,7 @@
                                                                        :--background-minus-2 (:background-minus-2 THEME-DARK)
                                                                        :--background-color   (:background-color THEME-DARK)
                                                                        :--background-plus-1  (:background-plus-1 THEME-DARK)
-                                                                       :--background-plus-2  (:background-plus-2 THEME-DARK)}}
-
-                      })
+                                                                       :--background-plus-2  (:background-plus-2 THEME-DARK)}}})
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})
