@@ -69,6 +69,7 @@
                   (let [node (pull db/dsdb '[*] [:node/title title])]
                     [:span (use-style page-link {:class "page-link"})
                      [:span {:class "formatting"} "[["]
+                     ;; TODO: Add recursive rendering for nested link based on the AST
                      [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} title]
                      [:span {:class "formatting"} "]]"]]))
      :block-ref (fn [uid]
