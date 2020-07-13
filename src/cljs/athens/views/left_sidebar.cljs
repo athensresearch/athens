@@ -21,7 +21,7 @@
    :height "100%"
    :display "flex"
    :flex-direction "column"
-   :padding "80px 32px 16px 32px"
+   :padding "120px 32px 16px 32px"
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
                                     :flex "0 0 auto"

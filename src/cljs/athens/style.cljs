@@ -4,15 +4,51 @@
     [stylefy.core :as stylefy]))
 
 
+;; (defn cssv
+;;   ;; Helper for accessing CSS Custom Properties defined
+;;   ;; in the application's :root
+;;   ([variable]
+;;    ;; When the variable is alone, reformat it and pass it through
+;;   (str "var(--" variable ")"))
+
+;;   ([variable alpha]
+;;    ;; 1. Create a new color with the requested alpha value
+;;    ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
+;;    ;; 2. Return the custom property name of the new color
+;;    (str "var(--" variable "-" alpha ")")))
+
+
 (def COLORS
+  {:link-color         "#2399E7"
+   :highlight-color    "#FBBE63"
+   :warning-color      "#DE3C21"
+   :confirmation-color "#189E36"
+   :header-text-color  "#BABABA"
+   :body-text-color    "#AAA"
+   :border-color       "hsla(32, 81%, 90%, 0.08)"
+   :background-minus-1 "#151515"
+   :background-minus-2 "#111"
+   :background-color   "#1A1A1A"
+   :background-plus-1  "#222"
+   :background-plus-2  "#333"})
+
+
+(def THEME-LIGHT
   {:link-color         "#0075E1"
    :highlight-color    "#F9A132"
    :warning-color      "#D20000"
    :confirmation-color "#009E23"
    :header-text-color  "#322F38"
    :body-text-color    "#433F38"
-   :panel-color        "#EFEDEB"
-   :app-bg-color       "#FFFFFF"})
+   :border-color       "hsla(32, 81%, 10%, 0.08)"
+   :background-plus-2  "#FFFFFF"
+   :background-plus-1  "#FFFFFF"
+   :background-color   "#FFFFFF"
+   :background-minus-1 "#FAF8F6"
+   :background-minus-2 "#EFEDEB"})
+
+
+(def THEME-DARK COLORS)
 
 
 (def HSL-COLORS
@@ -69,7 +105,7 @@
 ;; Base Styles
 
 (def base-styles
-  {:background-color (color :app-bg-color)
+  {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
    :font-size        "16px"
@@ -105,7 +141,22 @@
    :width    "100vw"})
 
 
-(stylefy/tag "body" base-styles)
+(defn remap-theme-keys
+  "Maps theme keys to css variable keys."
+  [theme]
+  (reduce-kv
+    (fn [m k v]
+      (let [css-k (keyword (str "--" (symbol k)))]
+        (assoc m css-k v)))
+    {}
+    theme))
+
+
+(stylefy/tag "html" base-styles)
+
+
+(stylefy/tag ":root" (merge (remap-theme-keys THEME-LIGHT)
+                            {::stylefy/media {{:prefers-color-scheme "dark"} (remap-theme-keys THEME-DARK)}}))
 
 
 (stylefy/tag "*" {:box-sizing "border-box"})

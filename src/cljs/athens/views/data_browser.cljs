@@ -1,7 +1,7 @@
 (ns athens.views.data-browser
   (:require
     [athens.db :as db]
-    [athens.style :refer [COLORS HSL-COLORS]]
+    [athens.style :refer [color COLORS HSL-COLORS]]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.color :refer [opacify]]
@@ -162,21 +162,21 @@
    :letter-spacing "-0.01em"
    :margin "8px 0 0"
    :min-width "100%"
-   ::stylefy/manual [[:td {:border-top (str "1px solid " (:panel-color COLORS))
+   ::stylefy/manual [[:td {:border-top (str "1px solid " (color :border-color))
                            :padding "2px"}]
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "left" :padding "2px 2px"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "8px"}]
                      [:td:last-child :th-last-child {:padding-right "8px"}]
-                     [:tbody [:tr:hover {:background (opacify (:panel-color HSL-COLORS) 0.15)
+                     [:tbody [:tr:hover {:background (opacify (:background-minus-1 HSL-COLORS) 0.15)
                                          :color (:header-text-color COLORS)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
                      [:td [:li {:margin "0 0 4px"
                                 :padding-top "4px";
-                                :border-top (str "1px solid " (:panel-color COLORS))}]]
+                                :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (:link-color COLORS)}]
                      [:a:hover {:text-decoration "underline"}]]})

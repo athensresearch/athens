@@ -30,7 +30,7 @@
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
    :animation-fill-mode "both"
-   :background (color :app-bg-color)
+   :background (color :background-plus-1)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -67,7 +67,7 @@
 
 (def menu-separator-style
   {:border "0"
-   :background (color :panel-color)
+   :background (color :border-color)
    :align-self "stretch"
    :justify-self "stretch"
    :height "1px"

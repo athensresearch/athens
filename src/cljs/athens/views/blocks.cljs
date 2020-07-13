@@ -36,7 +36,7 @@
                                                      :top "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
-                                                     :background (color :panel-color)}]]})
+                                                     :background (color :border-color)}]]})
 
 
 (def block-disclosure-toggle-style
@@ -52,6 +52,7 @@
    :justify-content "center"
    :padding "0"
    :-webkit-appearance "none"
+   :color (color :body-text-color 0.4)
    ::stylefy/mode [[:hover {:color (color :link-color)}]
                    [":is(button)" {:cursor "pointer"}]]
    ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]]})
@@ -64,7 +65,7 @@
    :margin-right "0.25em"
    :transition "all 0.05s ease"
    :height "2em"
-   :color (color :panel-color)
+   :color (color :body-text-color :opacity-low)
    ::stylefy/mode [[:after {:content "''"
                             :background "currentColor"
                             :transition "all 0.05s ease"
@@ -77,10 +78,8 @@
                             :width "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
 
-   ::stylefy/manual [[:&.closed-with-children {}]
-                     [:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
+   ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
                                                                                 :opacity (:opacity-med OPACITIES)}]]
-                     [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
                      [:&.dragging {:z-index 1
@@ -137,7 +136,7 @@
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
                                  :padding "0"
-                                 :background (color :panel-color)
+                                 :background (color :background-minus-1)
                                  :position "absolute"
                                  :top "0"
                                  :left "0"
@@ -150,7 +149,7 @@
                                  :line-height "inherit"
                                  :border-radius "4px"
                                  :transition "opacity 0.15s ease"
-                                 :box-shadow (str "-4px 0 0 0" (color :panel-color))
+                                 :box-shadow (str "-4px 0 0 0" (color :background-minus-1))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
@@ -178,7 +177,7 @@
    :position "absolute"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :flex-direction "column"
-   :background-color "white"
+   :background-color (color :background-plus-1)
    :padding "8px 12px"
    :border-radius "4px"
    :line-height "24px"
