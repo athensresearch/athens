@@ -128,8 +128,8 @@
    :flex-grow "1"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
+                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:display "block"
+                                                                                       :z-index 1}]]]
                      [:textarea {:-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
@@ -155,9 +155,9 @@
                                  :font-family "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
-                                    :z-index 3
-                                    :display "block"
-                                    :opacity "1"}]
+                                        :z-index 3
+                                        :display "block"
+                                        :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
                                  :z-index 2}]]]})
