@@ -6,6 +6,10 @@
   * [Automated Deploys](#automated-deploys)
   * [Manual Deploys](#manual-deploys)
 - [Connecting your REPL](#connecting-your-repl)
+  * [Cursive](#Cursive)
+  * [Cider](#Cider)
+  * [Calva](#Calva)
+  * [Fireplace](#Fireplace)
 - [Using re-frame-10x](#using-re-frame-10x)
 - [Running CI Scripts Locally](#running-ci-scripts-locally)
   * [Testing](#testing)
@@ -88,7 +92,37 @@ Notes:
 
 # Connecting your REPL
 
-- [ ] TODO: write this section for each editor (Cursive, CIDER, Calva, Fireplace, etc.)
+* Refer shadow-cljs documentation for more details related to [editor integration](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration).
+* nREPL port information can be found in [shadow-cljs.edn](https://github.com/athensresearch/athens/blob/master/shadow-cljs.edn) file.
+* Make sure you can run [athens locally](#Running Athens Locally) before proceeding with this section.
+
+## Cursive
+Follow Cursive [user guide](https://cursive-ide.com/userguide/index.html) to install the plugin.
+After, installing cursive plugin follow the below instructions to set up the cljs REPL.
+1. Navigate to the root directory and execute `npx shadow-cljs pom`.
+2. Then in Intellij File → New → Project from Existing Sources then select the generated pom.xml in the project directory.
+3. Start the local http server `lein dev`
+4. Once the project has been opened in Intellij IDEA, Run → Edit Configurations.
+5. \+ → Clojure REPL → Remote
+6. Name: REPL for athens
+
+   Connection type: nREPL
+
+   Connection details: Host: localhost, Port: 8777 (port number defined in the shadow-cljs.edn file)
+![nREPL config](doc/athens-cursive-nrepl-config.PNG)
+7. Run → Run and select the created nREPL configuration.
+8. Once the clj REPL is started run `(shadow/repl :app)` to switch to cljs REPL.
+![switch to nrepl](doc/athens-cursive-cljs-nrepl.PNG)
+
+
+## CIDER
+- [ ] TODO
+
+## Calva
+- [ ] TODO
+
+## Fireplace
+- [ ] TODO
 
 # Using re-frame-10x
 
