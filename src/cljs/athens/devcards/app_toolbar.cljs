@@ -27,7 +27,7 @@
    :z-index "1000"
    :grid-auto-flow "column"
    :padding "0.25rem 0.75rem 0.25rem 0.25rem"
-                      ;;  :padding "0.25rem 0.75rem 0.25rem 66px" ;; Electron styling
+   ;; :padding "0.25rem 0.75rem 0.25rem 66px" ;; Electron styling
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"}]]})
 
@@ -35,7 +35,8 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :backdrop-filter "blur(6px) contrast(50%) brightness(170%)"
+   :background (:color :background-color :opacity-med)
+   :backdrop-filter "blur(6px)"
    :padding "0.25rem"
    :border-radius "6px"
    :grid-gap "0.25rem"})
@@ -52,7 +53,7 @@
 
 (def separator-style
   {:border "0"
-   :background (color :panel-color :opacity-high)
+   :background (color :background-minus-1 :opacity-high)
    :margin-inline "20%"
    :margin-block "0"
    :inline-size "1px"
@@ -91,7 +92,7 @@
                :active (when (= route-name :pages) true)
                :label [:> mui-icons/FileCopy]}]
       [button {:on-click-fn #(dispatch [:athena/toggle])
-               :style {:width "14rem" :margin-left "1rem" :background (color :panel-color :opacity-med)}
+               :style {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
                :active (when @(subscribe [:athena/open]) true)
                :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]]
 

@@ -25,12 +25,12 @@
    :transition-property "width, border, background"
    :transition-duration "0.35s"
    :transition-timing-function "ease-out"
-   :background-color (color :panel-color :opacity-low)
-   :box-shadow [["0 -100px 0 " (color :panel-color :opacity-low) ", inset 1px 0 " (color :panel-color :opacity-low)]]
+   :background-color (color :background-minus-1)
+   :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
                      [:&.is-open {:width "32vw"
-                                  :background-color (color :panel-color :opacity-low)}]]})
+                                  :background-color (color :background-minus-1)}]]})
 
 
 (def sidebar-content-style
@@ -62,7 +62,7 @@
   {:display "flex"
    :flex "0 0 auto"
    :flex-direction "column"
-   :border-top [["1px solid" (color :panel-color)]]})
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def sidebar-item-toggle-style
@@ -96,7 +96,7 @@
    :padding "4px 16px"
    :position "sticky"
    :z-index 2
-   :background "#FBFAFA" ;; FIXME: Replace with weighted-mix color function
+   :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -123,7 +123,7 @@
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
                      [:hr {:width "1px"
-                           :background (color :panel-color)
+                           :background (color :background-minus-1)
                            :border "0"
                            :margin "4px"
                            :flex "0 0 1px"
