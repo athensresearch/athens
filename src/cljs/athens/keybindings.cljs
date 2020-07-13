@@ -117,14 +117,14 @@
                  new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
              (swap! state merge {:atom-string  new-str
                                  :search/query nil
-                                 :search/block  false}))
+                                 :search/page  false}))
       ;; auto-complete block ref
       block (let [{:keys [block/uid]} (get results index)
                   new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
               (prn "NEW" new-str)
               (swap! state merge {:atom-string  new-str
                                   :search/query nil
-                                  :search/block  false}))
+                                  :search/block false}))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :atom-string (str head "\n" tail))
