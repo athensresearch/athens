@@ -1,12 +1,12 @@
 (ns athens.parse-renderer
   (:require
-   [athens.db :as db]
-   [athens.parser :as parser]
-   [athens.router :refer [navigate-uid]]
-   [athens.style :refer [color OPACITIES]]
-   [instaparse.core :as insta]
-   [posh.reagent :refer [pull #_q]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    [athens.db :as db]
+    [athens.parser :as parser]
+    [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color OPACITIES]]
+    [instaparse.core :as insta]
+    [posh.reagent :refer [pull #_q]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (declare parse-and-render)

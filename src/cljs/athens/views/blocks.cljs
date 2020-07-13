@@ -1,26 +1,26 @@
 (ns athens.views.blocks
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.db :as db]
-   [athens.keybindings :refer [block-key-down]]
-   [athens.parse-renderer :refer [parse-and-render]]
-   [athens.parser :as parser]
-   [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-   [athens.util :refer [now-ts gen-block-uid]]
-   [athens.views.all-pages :refer [date-string]]
-   [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [datascript.core :as d]
-   [garden.selectors :as selectors]
-   [goog.dom :refer [getAncestorByClass]]
-   [goog.dom.classlist :refer [contains]]
-   [goog.functions :refer [debounce]]
-   [instaparse.core :as parse]
-   [komponentit.autosize :as autosize]
-   [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.db :as db]
+    [athens.keybindings :refer [block-key-down]]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parser :as parser]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.views.all-pages :refer [date-string]]
+    [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [datascript.core :as d]
+    [garden.selectors :as selectors]
+    [goog.dom :refer [getAncestorByClass]]
+    [goog.dom.classlist :refer [contains]]
+    [goog.functions :refer [debounce]]
+    [instaparse.core :as parse]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -353,13 +353,13 @@
                  :content (if (clojure.string/blank? query)
                             [:div "Start Typing!"]
                             (doall
-                             [:<>
-                              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                ^{:key (str "inline-search-item" uid)}
-                                [:div (use-style
-                                       (merge {} (when (= index i) inline-selected-search-option))
-                                       {:on-click #(prn "expand")})
-                                 (or title string)])]))}])))
+                              [:<>
+                               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                                 ^{:key (str "inline-search-item" uid)}
+                                 [:div (use-style
+                                         (merge {} (when (= index i) inline-selected-search-option))
+                                         {:on-click #(prn "expand")})
+                                  (or title string)])]))}])))
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
