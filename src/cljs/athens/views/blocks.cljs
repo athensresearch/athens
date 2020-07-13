@@ -348,7 +348,8 @@
                                  ^{:key (str "inline-search-item" uid)}
                                  [:div (use-style
                                          (merge menu-item-style {:min-height "24px"} (when (= index i) inline-selected-search-option))
-                                         {:on-click #(prn "expand")})
+                                         {:on-click #(prn "expand")
+                                          :id (str "result-" i)})
                                   (or title string)])]))}])))
 
 

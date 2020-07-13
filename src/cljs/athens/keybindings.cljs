@@ -83,7 +83,12 @@
                                            (.. e preventDefault)
                                            (if (= index (dec (count results)))
                                              (swap! state assoc :search/index 0)
-                                             (swap! state update :search/index inc))))
+                                             (swap! state update :search/index inc))
+                                           ;; TODO: Only scroll into view if item isn't in view to begin with
+                                           ;; TODO: can't get the right item id to scroll to. Why not?
+                                           ;; TODO: apply same to arrow-up too
+                                           ;; (.scrollIntoView (.getElementById js/document (str "result-" :search/index)))
+                                           ))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
