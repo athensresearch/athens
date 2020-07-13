@@ -94,7 +94,7 @@ Notes:
 
 * Refer shadow-cljs documentation for more details related to [editor integration](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration).
 * nREPL port information can be found in [shadow-cljs.edn](https://github.com/athensresearch/athens/blob/master/shadow-cljs.edn) file.
-* Make sure you can run [athens locally](#Running Athens Locally) before proceeding with this section.
+* Make sure you can run athens locally before proceeding with this section.
 
 ## Cursive
 Follow Cursive [user guide](https://cursive-ide.com/userguide/index.html) to install the plugin.
