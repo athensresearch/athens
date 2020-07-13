@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [athens.views.buttons :refer [button]]
+    [athens.views.buttons :refer [button buttons-style]]
     [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -42,13 +42,16 @@
    :align-items "stretch"
    :grid-auto-flow "row"
    :overflow "auto"
+   :scroll-snap-type "y proximity"
    ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "4px"}]
                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "4px"}]]})
 
 
-(def menu-item-style
-  {:min-height "32px"
-   ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]})
+(def menu-item-style (merge
+                      buttons-style
+                      {:min-height "32px"
+                       :scroll-snap-align "start"
+                       ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
 
 
 (def menu-heading-style

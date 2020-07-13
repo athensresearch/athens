@@ -7,7 +7,7 @@
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
     [athens.util :refer [now-ts]]
     [athens.views.all-pages :refer [date-string]]
-    [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
+    [athens.views.dropdown :refer [slash-menu-component menu-item-style menu-style dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -328,7 +328,7 @@
 
 (def inline-selected-search-option
   {:background-color (color :link-color)
-   :color            (color :app-bg-color)})
+   :color            "#ffffff"})
 
 
 (defn page-search-el
@@ -337,15 +337,17 @@
     (when (or block page)
       [dropdown {:style   {:position "absolute"
                            :top      "100%"
-                           :left     "-0.125em"}
+                           :max-height "20rem"
+                           :left     "1.75em"
+                           }
                  :content (if (clojure.string/blank? query)
                             [:div "Start Typing!"]
                             (doall
-                              [:<>
+                              [:div (use-style menu-style)
                                (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                  ^{:key (str "inline-search-item" uid)}
                                  [:div (use-style
-                                         (merge {} (when (= index i) inline-selected-search-option))
+                                         (merge menu-item-style {:min-height "24px"} (when (= index i) inline-selected-search-option))
                                          {:on-click #(prn "expand")})
                                   (or title string)])]))}])))
 
