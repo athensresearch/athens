@@ -78,17 +78,19 @@
                                          (.. e preventDefault)
                                          (if (= index 0)
                                            (swap! state assoc :search/index (dec (count results)))
-                                           (swap! state update :search/index dec)))
+                                           (swap! state update :search/index dec))
+                                           ;; TODO: Only scroll into view if item isn't in view to begin with
+                                           ;; TODO: Only scroll the dropdown, not the whole page
+                                           ;; TODO: apply same to arrow-down too
+                                         (.scrollIntoView (.getElementById js/document (str "result-" (:search/index @state)))
+                                                          {:behavior "smooth" :block "nearest" :inline "start"}))
               (= key-code KeyCodes.DOWN) (do
                                            (.. e preventDefault)
                                            (if (= index (dec (count results)))
                                              (swap! state assoc :search/index 0)
                                              (swap! state update :search/index inc))
-                                           ;; TODO: Only scroll into view if item isn't in view to begin with
-                                           ;; TODO: can't get the right item id to scroll to. Why not?
-                                           ;; TODO: apply same to arrow-up too
-                                           ;; (.scrollIntoView (.getElementById js/document (str "result-" :search/index)))
-                                           ))
+                                           (.scrollIntoView (.getElementById js/document (str "result-" (:search/index @state)))
+                                                            {:behavior "smooth" :block "nearest" :inline "end"})))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
