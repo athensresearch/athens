@@ -1,12 +1,12 @@
 (ns athens.parse-renderer
   (:require
-    [athens.db :as db]
-    [athens.parser :as parser]
-    [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
-    [instaparse.core :as insta]
-    [posh.reagent :refer [pull #_q]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   [athens.db :as db]
+   [athens.parser :as parser]
+   [athens.router :refer [navigate-uid]]
+   [athens.style :refer [color OPACITIES]]
+   [instaparse.core :as insta]
+   [posh.reagent :refer [pull #_q]]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (declare parse-and-render)
@@ -74,30 +74,30 @@
   "Transforms Instaparse output to Hiccup."
   [tree]
   (insta/transform
-    {:block     (fn [& contents]
-                  (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
-     :page-link (fn [title] (render-page-link title))
-     :block-ref (fn [uid]
-                  (let [block (pull db/dsdb '[*] [:block/uid uid])]
-                    [:span (use-style block-ref {:class "block-ref"})
-                     [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
-     :hashtag   (fn [tag-name]
-                  (let [node (pull db/dsdb '[*] [:node/title tag-name])]
-                    [:span (use-style hashtag) {:class    "hashtag"
-                                                :on-click #(navigate-uid (:block/uid @node))}
-                     [:span {:class "formatting"} "#"]
-                     [:span {:class "contents"} tag-name]]))
-     :url-image (fn [{url :url alt :alt}]
-                  [:img (use-style image {:class "url-image"
-                                          :alt   alt
-                                          :src   url})])
-     :url-link  (fn [{url :url} text]
-                  [:a (use-style url-link {:class "url-link"
-                                           :href  url})
-                   text])
-     :bold      (fn [text]
-                  [:strong {:class "contents bold"} text])}
-    tree))
+   {:block     (fn [& contents]
+                 (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
+    :page-link (fn [title] (render-page-link title))
+    :block-ref (fn [uid]
+                 (let [block (pull db/dsdb '[*] [:block/uid uid])]
+                   [:span (use-style block-ref {:class "block-ref"})
+                    [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
+    :hashtag   (fn [tag-name]
+                 (let [node (pull db/dsdb '[*] [:node/title tag-name])]
+                   [:span (use-style hashtag) {:class    "hashtag"
+                                               :on-click #(navigate-uid (:block/uid @node))}
+                    [:span {:class "formatting"} "#"]
+                    [:span {:class "contents"} tag-name]]))
+    :url-image (fn [{url :url alt :alt}]
+                 [:img (use-style image {:class "url-image"
+                                         :alt   alt
+                                         :src   url})])
+    :url-link  (fn [{url :url} text]
+                 [:a (use-style url-link {:class "url-link"
+                                          :href  url})
+                  text])
+    :bold      (fn [text]
+                 [:strong {:class "contents bold"} text])}
+   tree))
 
 
 (defn parse-and-render
