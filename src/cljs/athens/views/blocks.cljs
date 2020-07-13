@@ -5,11 +5,12 @@
     [athens.keybindings :refer [block-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.util :refer [now-ts]]
+    [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
@@ -17,7 +18,9 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]
+    [athens.parser :as parser]
+    [instaparse.core :as parse]))
 
 
 ;;; Styles
@@ -221,7 +224,18 @@
 (defn on-change
   [value uid]
   ;; (prn "ONCHANGE" value)
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]]))
+  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
+  ;; automatically add non-existent pages
+  ;; TODO: delete pages that are no longer connected to anything else
+  (parse/transform {:page-link (fn [& title]
+                                            (if-not (db/search-exact-node-title (apply + title)) (let [uid (gen-block-uid)]
+                                                                                     (d/transact! db/dsdb [{:node/title     (str apply + title)
+                                                                                                             :block/uid      (str uid)
+                                                                                                             :edit/time      (now-ts)
+                                                                                                             :create/time    (now-ts)
+                                                                                                          }])) nil)
+                                            (str "[[" (apply + title) "]]")
+                                            )} (parser/parse-to-ast value)))
 
 
 (def db-on-change (debounce on-change 1000))

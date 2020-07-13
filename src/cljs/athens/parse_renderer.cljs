@@ -54,6 +54,17 @@
                 ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                                          :cursor "alias"}]]})
 
+;;; Helper functions for recursive link rendering
+(defn render-page-link
+  "Renders a page link given the title of the page."
+  [title]
+  (let [node (pull db/dsdb '[*] [:node/title title])]
+    [:span (use-style page-link {:class "page-link"})
+     [:span {:class "formatting"} "[["]
+     ;; TODO: Add recursive rendering for nested link based on the AST
+     [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} title]
+     [:span {:class "formatting"} "]]"]]))
+
 
 ;;; Components
 
@@ -65,13 +76,7 @@
   (insta/transform
     {:block     (fn [& contents]
                   (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
-     :page-link (fn [title]
-                  (let [node (pull db/dsdb '[*] [:node/title title])]
-                    [:span (use-style page-link {:class "page-link"})
-                     [:span {:class "formatting"} "[["]
-                     ;; TODO: Add recursive rendering for nested link based on the AST
-                     [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} title]
-                     [:span {:class "formatting"} "]]"]]))
+     :page-link (fn [title] (render-page-link title))
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]
                     [:span (use-style block-ref {:class "block-ref"})
