@@ -105,20 +105,19 @@
   {:display "block"
    :height "1px"
    :margin-bottom "-1px"
-   :color (color :body-text-color :opacity-low)
+   :color (color :link-color :opacity-high)
    :position "relative"
    :transform-origin "left"
    :z-index 3
    :width "100%"
-   ;;:animation "drop-area-appear .5s ease"
+   :opacity 0
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
                                 :top "-0.5px"
                                 :right "0"
                                 :bottom "-0.5px"
-                                :left "0"
+                                :left "2em"
                                 :border-radius "100px"
-                                ;;:animation "drop-area-color-pulse 1s ease infinite alternate"
                                 :background "currentColor"}]]})
 
 
@@ -128,8 +127,8 @@
    :flex-grow "1"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
+                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:display "block"
+                                                                                       :z-index 1}]]]
                      [:textarea {:-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
@@ -213,7 +212,7 @@
 
 
 (def dragging-style
-  {:background-color "lightblue"})
+  {:opacity "0.25"})
 
 
 ;; Helpers
@@ -321,8 +320,8 @@
      [parse-and-render string]
      ;; don't show drop indicator when dragging to its children
      (when (and (empty? children) (not (:dragging @state)))
-       [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                           (when (= (:drag-target @state) :child) {:background-color "red"})))])]))
+       [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                           (when (= (:drag-target @state) :child) {:opacity 1})))])]))
 
 ;; flipped around
 
@@ -391,8 +390,8 @@
          ;; need surface to drag over. probably a better way to do this
          ;; FIXME drop-area-indicator styles no longer work because using a div now and document structure has changed
          (when true
-           [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                               (when (= drag-target :container) {:background-color "blue"})))])
+           [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                               (when (= drag-target :container) {:opacity "1"})))])
 
          [:div.block-container
           (use-style (merge block-style (when dragging dragging-style))
@@ -439,8 +438,8 @@
                [block-el child]]))]
 
          (when last-child?
-           [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                               (when (= drag-target :container) {:background-color "green"})))])]))))
+           [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                               (when (= drag-target :container) {:opacity 1})))])]))))
 
 
 (defn block-component
