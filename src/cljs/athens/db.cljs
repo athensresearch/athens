@@ -123,13 +123,13 @@
 
 (defn get-block-document
   [id]
-  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
        sort-block-children))
 
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...}] id)
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
        sort-block-children))
 
 
@@ -225,7 +225,7 @@
          @dsdb
          (re-case-insensitive query))
     (map get-root-parent-node)
-    (map #(dissoc % :block/_children))))
+    (mapv #(dissoc % :block/_children))))
 
 
 ;; history

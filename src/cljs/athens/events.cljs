@@ -391,7 +391,7 @@
       (and (:node/title parent) (zero? (:block/order block))) nil
       (:block/children block) nil
       :else {:dispatch-later [{:ms 0 :dispatch [:transact [[:db/retractEntity [:block/uid uid]]
-                                                           [:db/add [:block/uid prev-block-uid-] :block/string (str prev-block-string value)]
+                                                           {:db/id [:block/uid prev-block-uid-] :block/string (str prev-block-string value) :edit/time (now-ts)}
                                                            {:db/id (:db/id parent) :block/children reindex}]]}
                               {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})))
 
@@ -403,7 +403,7 @@
 
 
 (defn split-block
-  [uid val index state]
+  [uid val index]
   (let [parent (db/get-parent [:block/uid uid])
         block (db/get-block [:block/uid uid])
         head (subs val 0 index)
@@ -416,8 +416,7 @@
                    :block/string tail}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
-    (swap! state assoc :atom-string head) ;; FIXME: bad vibes - but easiest solution right now
-    {:transact! [[:db/add (:db/id block) :block/string head]
+    {:transact! [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
                  {:db/id (:db/id parent)
                   :block/children reindex}]
      :dispatch  [:editing/uid new-uid]}))
@@ -457,12 +456,12 @@
 
 
 (defn enter
-  [uid val index state]
+  [uid val index]
   (let [block       (db/get-block [:block/uid uid])
         parent      (db/get-parent [:block/uid uid])
         root-block? (boolean (:node/title parent))]
     (cond
-      (not (zero? index)) (split-block uid val index state)
+      (not (zero? index)) (split-block uid val index)
       (and (empty? val) root-block?) (new-block block parent)
       (empty? val) {:dispatch [:unindent uid]}
       (and (zero? index) val) (bump-up uid))))
@@ -470,8 +469,8 @@
 
 (reg-event-fx
   :enter
-  (fn [_ [_ uid val index state]]
-    (enter uid val index state)))
+  (fn [_ [_ uid val index]]
+    (enter uid val index)))
 
 
 (defn indent

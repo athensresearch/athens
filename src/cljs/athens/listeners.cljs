@@ -13,15 +13,15 @@
 
 ;; -- Turn read block or header into editable on mouse down --------------
 
-(defn edit-block
-  [e]
-  ;; Consider refactor if we add more editable targets
-  (let [closest-block (.. e -target (closest ".block-contents"))
-        closest-block-header (.. e -target (closest ".block-header"))
-        closest-page-header (.. e -target (closest ".page-header"))
-        closest (or closest-block closest-block-header closest-page-header)]
-    (when closest
-      (dispatch [:editing/uid (.. closest -dataset -uid)]))))
+;; (defn edit-block
+;;   [e]
+;;   ;; Consider refactor if we add more editable targets
+;;   (let [closest-block (.. e -target (closest ".block-content"))
+;;         closest-block-header (.. e -target (closest ".block-header"))
+;;         closest-page-header (.. e -target (closest ".page-header"))
+;;         closest (or closest-block closest-block-header closest-page-header)]
+;;     (when closest
+;;       (dispatch [:editing/uid (.. closest -dataset -uid)]))))
 
 
 ;; -- Close Athena -------------------------------------------------------
@@ -66,7 +66,7 @@
 
 (defn init
   []
-  (events/listen js/window EventType.MOUSEDOWN edit-block)
+  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN key-down))
 
