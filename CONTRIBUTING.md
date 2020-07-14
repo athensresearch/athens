@@ -147,7 +147,7 @@ OS - Windows 10
 3. Pick shadow-cljs.
 4. Enter the host and port (auto fills this input) `localhost:8777`.
 5. Select `:app` profile.
-5. `ctrl+shift+p`, then run load the current namespace in REPL window.
+6. `ctrl+shift+p`, then run load the current namespace in REPL window.
 ![load the namespace](doc/vscode-calva-repl-config.PNG)
 
 ## Fireplace
