@@ -6,7 +6,7 @@
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [re-frame.core :refer [dispatch]])
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -44,13 +44,17 @@
            {:selection selection})))
 
 
-(defn arrow-key?
+(def ARROW-KEYS
+  {KeyCodes.UP    :up
+   KeyCodes.LEFT  :left
+   KeyCodes.DOWN  :down
+   KeyCodes.RIGHT :right})
+
+
+(defn arrow-key-direction
   [e]
-  (let [{:keys [key-code]} (destruct-event e)]
-    (or (= key-code KeyCodes.UP)
-        (= key-code KeyCodes.LEFT)
-        (= key-code KeyCodes.DOWN)
-        (= key-code KeyCodes.RIGHT))))
+  (let [key-code (.. e -keyCode)]
+    (ARROW-KEYS key-code)))
 
 
 (defn block-start?
@@ -66,14 +70,35 @@
 
 
 (defn handle-arrow-key
+  "May want to flatten this into multiple handlers."
   [e uid state]
-  (let [{:keys [key-code]} (destruct-event e)
+  (let [{:keys [key-code shift target]} (destruct-event e)
         ;; TODO
         top-row?    true
         bottom-row? true
-        {:search/keys [query index results]} @state]
+        {:search/keys [query index results]} @state
+        selected-items @(subscribe [:selected/items])
+        direction (arrow-key-direction e)]
 
+    (prn selected-items (and shift direction))
     (cond
+
+      ;; items already selected, go up or down
+      (and shift (seq selected-items) (= :up direction) (dispatch [:selected/up]))
+      (and shift (seq selected-items) (= :down direction) (dispatch [:selected/down]))
+
+      ;; Only select block if leaving block content (up on top row or down on bottom row). Otherwise select text
+      (and shift (= :up direction) top-row?) (do
+                                               (.. target blur)
+                                               (dispatch [:editing/uid nil])
+                                               (dispatch [:selected/add-item uid]))
+
+      (and shift (= :down direction) bottom-row?) (do
+                                                    (.. target blur)
+                                                    (dispatch [:editing/uid nil])
+                                                    (dispatch [:selected/add-item uid]))
+
+      ;; up and down should be handled by the dropdown menu if possible
       query (cond
               (= key-code KeyCodes.UP) (do
                                          (.. e preventDefault)
@@ -301,7 +326,7 @@
   [e uid state]
   (let [{:keys [meta key-code]} (destruct-event e)]
     (cond
-      (arrow-key? e) (handle-arrow-key e uid state)
+      (arrow-key-direction e) (handle-arrow-key e uid state)
       (pair-char? e) (handle-pair-char e uid state)
       (= key-code KeyCodes.TAB) (handle-tab e uid)
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
