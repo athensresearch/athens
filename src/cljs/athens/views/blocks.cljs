@@ -326,11 +326,6 @@
 
 ;; flipped around
 
-(def inline-selected-search-option
-  {:background-color (color :link-color)
-   :color            "#ffffff"})
-
-
 (defn page-search-el
   [_block state]
   (let [{:search/keys [page block query results index]} @state]
