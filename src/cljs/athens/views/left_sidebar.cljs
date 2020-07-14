@@ -3,11 +3,13 @@
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
+    [athens.util :refer [mouse-offset vertical-center]]
     [athens.views.buttons :refer [button-primary]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
-    [re-frame.core :as re-frame :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
@@ -79,6 +81,47 @@
 ;;; Components
 
 
+(defn shortcut-component
+  [[_ _ _]]
+  (let [drag (r/atom nil)]
+    (fn [[order title uid]]
+      [:li
+       [:a (use-style (merge shortcut-style
+                             (case @drag
+                               :above {:border-top [["1px" "solid" (color :link-color)]]}
+                               :below {:border-bottom [["1px" "solid" (color :link-color)]]}
+                               {}))
+                      {:on-click      (fn [e] (navigate-uid uid e))
+                       :draggable     true
+                       :on-drag-over  (fn [e]
+                                        (.. e preventDefault)
+                                        (let [offset       (mouse-offset e)
+                                              middle-y     (vertical-center (.. e -target))
+                                     ;; find closest li because sometimes event.target is anchor tag
+                                     ;; if nextSibling is null, then target is last li and therefore end of list
+                                              closest-li   (.. e -target (closest "li"))
+                                              next-sibling (.. closest-li -nextElementSibling)
+                                              last-child?  (nil? next-sibling)]
+                                          (cond
+                                            (> middle-y (:y offset)) (reset! drag :above)
+                                            (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
+                       :on-drag-start (fn [e]
+                                        (set! (.. e -dataTransfer -dropEffect) "move")
+                                        (.. e -dataTransfer (setData "text/plain" order)))
+                       :on-drag-end   (fn [_])
+                       :on-drag-leave (fn [_] (reset! drag nil))
+                       :on-drop       (fn [e]
+                                        (let [source-order (js/parseInt (.. e -dataTransfer (getData "text/plain")))]
+                                          (prn source-order order)
+                                          (cond
+                                            (= source-order order) nil
+                                            (and (= source-order (dec order)) (= @drag :above)) nil
+                                            (= @drag :below) (dispatch [:left-sidebar/drop-below source-order order])
+                                            :else (dispatch [:left-sidebar/drop-above source-order order])))
+                                        (reset! drag nil))})
+        title]])))
+
+
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
@@ -98,9 +141,9 @@
        [:ol (use-style shortcuts-list-style)
         [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
         (doall
-          (for [[_order title uid] shortcuts]
-            ^{:key uid}
-            [:li>a (use-style shortcut-style {:on-click #(navigate-uid uid)}) title]))]
+          (for [sh shortcuts]
+            ^{:key (str "left-sidebar-" (second sh))}
+            [shortcut-component sh]))]
 
        ;; LOGO + BOTTOM BUTTONS
        [:footer (use-sub-style left-sidebar-style :footer)
