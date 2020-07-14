@@ -1,8 +1,8 @@
 # Athens
-  
+
+[![twitter](https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social)](https://twitter.com/athensresearch)
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
-[![twitter](https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social)](https://twitter.com/athensresearch)
 [![sponsor](https://opencollective.com/athens/tiers/sponsor/badge.svg?label=sponsors)](https://opencollective.com/athens)
 [![backers](https://opencollective.com/athens/tiers/backer/badge.svg?label=backers)](https://opencollective.com/athens)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens)
