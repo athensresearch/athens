@@ -292,20 +292,13 @@
       {:reset-conn! next})))
 
 
-;; TODO: should be able to use :keys now: https://github.com/tonsky/datascript/blob/master/docs/queries.md
-(defn map-order
-  [blocks]
-  (map (fn [[id order]] {:db/id id :block/order order}) blocks))
-
-
 (defn inc-after
   [eid order]
   (->> (d/q '[:find ?ch ?new-o
-              ;;:keys db/id block/order
+              :keys db/id block/order
               :in $ % ?p ?at
               :where (inc-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)
-       map-order))
+            @db/dsdb rules eid order)))
 
 
 (defn dec-after
@@ -313,8 +306,7 @@
   (->> (d/q '[:find ?ch ?new-o
               :in $ % ?p ?at
               :where (dec-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)
-       map-order))
+            @db/dsdb rules eid order)))
 
 
 (reg-event-fx
@@ -487,7 +479,7 @@
         new-target-children (->> (inc-after (:dbid target) (dec 0))
                                  (concat [new-source-block]))]
     [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
-     {:db/add (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
+     {:db/id (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
      {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
 
 
@@ -512,6 +504,7 @@
       (let [new-source-block {:db/id (:db/id source) :block/order t-order}
             inc-or-dec       (if (> s-order t-order) inc dec)
             reindex          (->> (d/q '[:find ?ch ?new-order
+                                         :keys db/id block/order
                                          :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
                                          :where
                                          [?parent :block/children ?ch]
@@ -519,19 +512,18 @@
                                          [(?between ?s-order ?t-order ?order)]
                                          [(?inc-or-dec ?order) ?new-order]]
                                        @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
-                                  map-order
                                   (concat [new-source-block]))]
-        [{:db/add (:db/id parent) :block/children reindex}]))))
+        [{:db/id (:db/id parent) :block/children reindex}]))))
 
 
 (defn diff-parent
   [source target source-parent target-parent]
   (let [new-block              {:db/id (:db/id source) :block/order (:block/order target)}
         source-parent-children (->> (d/q '[:find ?ch ?new-order
+                                           :keys db/id block/order
                                            :in $ % ?parent ?source-order
                                            :where (dec-after ?parent ?source-order ?ch ?new-order)]
-                                         @db/dsdb rules (:db/id source-parent) (:block/order source))
-                                    map-order)
+                                         @db/dsdb rules (:db/id source-parent) (:block/order source)))
         target-parent-children (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
                                     (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
@@ -563,12 +555,6 @@
              (drop-bullet source-uid target-uid kind)))
 
 
-(defn map-sidebar
-  [shortcuts]
-  (mapv (fn [[eid page-sidebar]] {:db/id eid :page/sidebar page-sidebar})
-        shortcuts))
-
-
 (defn left-sidebar-drop-above
   [s-order t-order]
   (let [source-eid (d/q '[:find ?e .
@@ -580,6 +566,7 @@
                                                       t-order)}
         inc-or-dec (if (< s-order t-order) dec inc)
         new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :keys db/id page/sidebar
                                 :in $ ?s-order ?t-order ?between ?inc-or-dec
                                 :where
                                 [?shortcut :page/sidebar ?order]
@@ -589,7 +576,6 @@
                                                  t-order
                                                  (dec t-order))
                               between inc-or-dec)
-                         map-sidebar
                          (concat [new-source]))]
     new-indices))
 
@@ -608,13 +594,13 @@
                         @db/dsdb s-order)
         new-source {:db/id source-eid :page/sidebar t-order}
         new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :keys db/id page/sidebar
                                 :in $ ?s-order ?t-order ?between
                                 :where
                                 [?shortcut :page/sidebar ?order]
                                 [(?between ?s-order ?t-order ?order)]
                                 [(dec ?order) ?new-order]]
                               @db/dsdb s-order (inc t-order) between)
-                         map-sidebar
                          (concat [new-source]))]
     new-indices))
 
