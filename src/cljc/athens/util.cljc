@@ -11,6 +11,7 @@
   (-> (js/Date.) .getTime))
 
 
+;; TODO: move all these DOM utilities to a .cljs file instead of cljc
 (defn scroll-if-needed
   ;; https://stackoverflow.com/a/45851497
   [element container]
@@ -26,3 +27,19 @@
         (set!
           (.. container -scrollTop)
           (- offsetBottom (.. container -offsetHeight)))))))
+
+
+(defn mouse-offset
+  [e]
+  (let [rect (.. e -target getBoundingClientRect)
+        offset-x (- (.. e -pageX) (.. rect -left))
+        offset-y (- (.. e -pageY) (.. rect -top))]
+    {:x offset-x :y offset-y}))
+
+
+(defn vertical-center
+  [el]
+  (let [rect (.. el getBoundingClientRect)]
+    (-> (- (.. rect -bottom)
+           (.. rect -top))
+        (/ 2))))

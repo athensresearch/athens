@@ -563,6 +563,68 @@
              (drop-bullet source-uid target-uid kind)))
 
 
+(defn map-sidebar
+  [shortcuts]
+  (mapv (fn [[eid page-sidebar]] {:db/id eid :page/sidebar page-sidebar})
+        shortcuts))
+
+
+(defn left-sidebar-drop-above
+  [s-order t-order]
+  (let [source-eid (d/q '[:find ?e .
+                          :in $ ?s-order
+                          :where [?e :page/sidebar ?s-order]]
+                        @db/dsdb s-order)
+        new-source {:db/id source-eid :page/sidebar (if (< s-order t-order)
+                                                      (dec t-order)
+                                                      t-order)}
+        inc-or-dec (if (< s-order t-order) dec inc)
+        new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :in $ ?s-order ?t-order ?between ?inc-or-dec
+                                :where
+                                [?shortcut :page/sidebar ?order]
+                                [(?between ?s-order ?t-order ?order)]
+                                [(?inc-or-dec ?order) ?new-order]]
+                              @db/dsdb s-order (if (< s-order t-order)
+                                                 t-order
+                                                 (dec t-order))
+                              between inc-or-dec)
+                         map-sidebar
+                         (concat [new-source]))]
+    new-indices))
+
+
+(reg-event-fx
+  :left-sidebar/drop-above
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
+
+
+(defn left-sidebar-drop-below
+  [s-order t-order]
+  (let [source-eid (d/q '[:find ?e .
+                          :in $ ?s-order
+                          :where [?e :page/sidebar ?s-order]]
+                        @db/dsdb s-order)
+        new-source {:db/id source-eid :page/sidebar t-order}
+        new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :in $ ?s-order ?t-order ?between
+                                :where
+                                [?shortcut :page/sidebar ?order]
+                                [(?between ?s-order ?t-order ?order)]
+                                [(dec ?order) ?new-order]]
+                              @db/dsdb s-order (inc t-order) between)
+                         map-sidebar
+                         (concat [new-source]))]
+    new-indices))
+
+
+(reg-event-fx
+  :left-sidebar/drop-below
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
+
+
 ;;;; TODO: delete the following logic when re-implementing title merge
 
 ;;(defn node-with-title
