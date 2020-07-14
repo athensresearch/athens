@@ -6,10 +6,10 @@
   * [Automated Deploys](#automated-deploys)
   * [Manual Deploys](#manual-deploys)
 - [Connecting your REPL](#connecting-your-repl)
-  * [Cursive](#Cursive)
-  * [Cider](#Cider)
-  * [Calva](#Calva)
-  * [Fireplace](#Fireplace)
+  * [Cursive](#cursive)
+  * [Cider](#cider)
+  * [Calva](#calva)
+  * [Vim Plugins](#vim-plugins)
 - [Using re-frame-10x](#using-re-frame-10x)
 - [Running CI Scripts Locally](#running-ci-scripts-locally)
   * [Testing](#testing)
@@ -92,67 +92,73 @@ Notes:
 
 # Connecting your REPL
 
-* Refer shadow-cljs documentation for more details related to [editor integration](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration).
-* nREPL port information can be found in [shadow-cljs.edn](https://github.com/athensresearch/athens/blob/master/shadow-cljs.edn) file.
-* Make sure you can run athens locally before proceeding with this section.
+* Make sure you can run Athens locally before proceeding with this section.
+* Refer to shadow-cljs [editor integration docs](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration) for more details.
+* nREPL port is 8777, as defined in [shadow-cljs.edn](./shadow-cljs.edn).
 
 ## Cursive
 
-Follow Cursive [user guide](https://cursive-ide.com/userguide/index.html) to install the plugin.
-After, installing cursive plugin follow the below instructions to set up the cljs REPL.
-
-Editor - IntelliJ IDEA 2020.1.3 (Community Edition) Build #IC-201.8538.31, built on July 7, 2020\
-Cursive plugin: 1.9.2 Built on: 2020-07-02 14:21
+```
+Editor - IntelliJ IDEA 2020.1.3 (Community Edition) Build #IC-201.8538.31, built on July 7, 2020
+Cursive plugin: 1.9.2 Built on: 2020-07-02
 OS - Windows 10
+```
 
-1. Navigate to the root directory and execute `npx shadow-cljs pom`.
-2. Then in Intellij File → New → Project from Existing Sources then select the generated pom.xml in the project directory.
-3. Start the local http server `lein dev`
-4. Once the project has been opened in Intellij IDEA, Run → Edit Configurations.
-5. \+ → Clojure REPL → Remote
-6. Name: REPL for athens\
-   Connection type: nREPL\
-   Connection details: Host: localhost, Port: 8777 (port number is defined in the shadow-cljs.edn file)\
+1. [Install Cursive](https://cursive-ide.com/userguide/index.html)
+1. In a terminal, navigate to the repository root and generate a pom.xml file: `npx shadow-cljs pom`.
+1. In Intellij, go to `File → New → Project from Existing Sources...`, then select the generated pom.xml in the project directory.
+1. In a terminal, start a development server: `lein dev`
+1. Once the project has been opened in Intellij IDEA, go to `Run → Edit Configurations...`.
+   - Click `+ → Clojure REPL → Remote`
+   - Name: "REPL for Athens"
+   - Connection type: nREPL
+   - Connection details: Host: localhost, Port: 8777
 ![nREPL config](doc/athens-cursive-nrepl-config.PNG)
-7. Run → Run and select the created nREPL configuration.
-8. Once the clj REPL is started run `(shadow/repl :app)` to switch to cljs REPL.
+1. Go to `Run → Run...` and select the configuration you just created.
+1. Once the clj REPL is started, run `(shadow/repl :app)` to switch to cljs REPL.
 ![switch to nrepl](doc/athens-cursive-cljs-nrepl.PNG)
 
 
 ## CIDER
 
+```
 Editor - GNU Emacs 26.3 (build 1, x86_64-apple-darwin19.3.0, Carbon Version 162 AppKit 1894.3) of 2020-04-27\
 OS - MacOS Catalina v10.15.5
+```
 
 1. Navigate to any file within your local athens folder.
-2. `M-x cider-jack-in-cljs`
+1. Run `M-x cider-jack-in-cljs`
 ![cider-jack-in-cljs](doc/emacs-cider-jack-in.png)
-3. Choose `shadow-cljs`
+1. Choose `shadow-cljs`
 ![choose cljs](doc/emacs-cider-shadow-cljs.png)
-4. You should see something like.
+1. You should see something like.
 ![start repl](doc/emacs-cider-starting-server.png)
-5. Choose `shadow` and then you should be able to choose which `shadow-cljs` build to run.
+1. Choose `shadow` and then you should be able to choose which `shadow-cljs` build to run.
 ![shadow cljs profile](doc/emacs-cider-shadow-cljs-profile.png)
-6. You should see a new buffer open within your current Emacs window with a ClojureScript REPL.
+1. You should see a new buffer open within your current Emacs window with a ClojureScript REPL.
 ![shadow cljs REPL connected](doc/emacs-cider-connected-repl.png)
 
 ## Calva
 
-Editor - Visual Studio Code\
+```
+Editor - Visual Studio Code
 Cursive plugin: 1.47.0 Built on: 2020-07-09
 OS - Windows 10
+```
 
-1. Navigate to the root directory and start the server `lein dev`.
-2. In vscode, `ctrl+shift+p`, then find Calva: connect to a running REPL server in the project.
+1. In a terminal, navigate to the repository root, and start a development server: `lein dev`.
+2. In VS Code, run `ctrl+shift+p`, and choose `Calva: Connect to a Running Repl Server in the Project`
 3. Pick shadow-cljs.
-4. Enter the host and port (auto fills this input) `localhost:8777`.
+4. Enter the host and port: `localhost:8777`.
 5. Select `:app` profile.
-6. `ctrl+shift+p`, then run load the current namespace in REPL window.
+6. Run `ctrl+shift+p`, then run load the current namespace in REPL window.
 ![load the namespace](doc/vscode-calva-repl-config.PNG)
 
-## Fireplace
+## Vim Plugins
 
-- [ ] TODO
+- [ ] TODO vim-iced
+- [ ] TODO conjure
+- [ ] TODO fireplace
 
 # Using re-frame-10x
 
