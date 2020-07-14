@@ -373,10 +373,10 @@
             {dragging :dragging drag-target :drag-target state-edit-time :edit/time} @state
             parent (db/get-parent [:block/uid uid])
             last-child? (= order (dec (count (:block/children parent))))
-            editing-uid @(subscribe [:editing/uid])
-            is-editing (= (:block/uid block) editing-uid)]
+            is-editing @(subscribe [:editing/is-editing uid])
+            is-selected @(subscribe [:selected/is-selected uid])]
 
-        ;;(prn uid state-edit-time edit-time)
+        ;;(prn uid is-selected)
 
         ;; if block is updated in datascript, update local block state
         (when (< state-edit-time edit-time)
@@ -394,7 +394,9 @@
                                                (when (= drag-target :container) {:opacity "1"})))])
 
          [:div.block-container
-          (use-style (merge block-style (when dragging dragging-style))
+          (use-style (merge block-style
+                            (when dragging dragging-style)
+                            (when is-selected {:background-color (color :link-color :opacity-low)}))
             ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
                      {:class         [(when dragging "dragging")
                                       (when (and (seq children) open) "show-tree-indicator")]
