@@ -80,7 +80,7 @@
    (let [shift (.. e -shiftKey)]
      (if shift
        (do
-         (.empty (.getSelection js/window))
+         (.. js/window getSelection empty)
          (.. e preventDefault)
          (dispatch [:right-sidebar/open-item uid]))
        (navigate-uid uid)))))
