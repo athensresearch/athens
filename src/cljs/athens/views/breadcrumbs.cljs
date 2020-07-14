@@ -54,7 +54,7 @@
 
 (defn breadcrumbs-list
   [{:keys [style]} & children]
-  (into [:ol (use-style (merge breadcrumbs-list-style style)) children]))
+  (into [:ol (use-style (merge breadcrumbs-list-style style))] children))
 
 
 (defn breadcrumb

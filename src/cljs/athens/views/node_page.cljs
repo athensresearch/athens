@@ -220,19 +220,22 @@
            [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
                     :disabled true}]]
           [:div (use-style references-list-style)
-           (for [[group-title group] refs]
-             [:div (use-style references-group-style {:key group-title})
-              [:h4 (use-style references-group-title-style)
-               [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
-              (for [{:block/keys [uid parents] :as block} group]
-                [:div (use-style references-group-block-style {:key uid})
-              ;; TODO: expand parent on click
-                 [block-el block]
-                 (when (> (count parents) 1)
-                   [breadcrumbs-list {:style reference-breadcrumbs-style}
-                    [(r/adapt-react-class mui-icons/LocationOn)]
-                    (for [{:keys [node/title block/string block/uid]} parents]
-                      [breadcrumb {:key uid :on-click #(navigate-uid uid)} (or title string)])])])])]])))])
+           (doall
+             (for [[group-title group] refs]
+               [:div (use-style references-group-style {:key (str "group-" group-title)})
+                [:h4 (use-style references-group-title-style)
+                 [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
+                (doall
+                  (for [{:block/keys [uid parents] :as block} group]
+                    [:div (use-style references-group-block-style {:key (str "ref-" uid)})
+                ;; TODO: expand parent on click
+                     [block-el block]
+                     (when (> (count parents) 1)
+                       [breadcrumbs-list {:style reference-breadcrumbs-style}
+                        [(r/adapt-react-class mui-icons/LocationOn)]
+                        (doall
+                          (for [{:keys [node/title block/string block/uid]} parents]
+                            [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]])))])
 
 
 (defn node-page-component
