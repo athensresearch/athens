@@ -4,8 +4,9 @@
     [athens.db :as db]
     [athens.keybindings :refer [block-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.util :refer [now-ts]]
+    [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
@@ -14,6 +15,7 @@
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
     [goog.functions :refer [debounce]]
+    [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -220,7 +222,19 @@
 (defn on-change
   [value uid]
   ;; (prn "ONCHANGE" value)
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]]))
+  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
+  ;; automatically add non-existent pages
+  ;; TODO: delete pages that are no longer connected to anything else
+  (parse/transform {:page-link (fn [& title]
+                                 (let [inner-title (apply + title)]
+                                   (when (nil? (db/search-exact-node-title inner-title))
+                                     (let [now (now-ts)
+                                           uid (gen-block-uid)]
+                                       (dispatch [:transact [{:node/title     inner-title
+                                                              :block/uid      uid
+                                                              :edit/time      now
+                                                              :create/time    now}]])))
+                                   (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
 
 
 (def db-on-change (debounce on-change 1000))
