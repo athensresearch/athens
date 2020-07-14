@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [athens.views.buttons :refer [button]]
+    [athens.views.buttons :refer [button buttons-style]]
     [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -30,7 +30,7 @@
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
    :animation-fill-mode "both"
-   :background (color :background-plus-1)
+   :background (color :background-plus-2)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
@@ -47,8 +47,15 @@
 
 
 (def menu-item-style
-  {:min-height "32px"
-   ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]})
+  (merge
+    buttons-style
+    {:min-height "24px"
+     ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
+
+
+(def menu-item-active-style
+  {:background (color :link-color)
+   :color "#fff"})
 
 
 (def menu-heading-style
@@ -100,7 +107,7 @@
 
 (defn dropdown
   [{:keys [style content]}]
-  [:div (use-style (merge dropdown-style style))
+  [:div (use-style (merge dropdown-style style) {:id "dropdown"})
    content])
 
 

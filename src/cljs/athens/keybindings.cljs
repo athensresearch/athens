@@ -1,6 +1,7 @@
 (ns athens.keybindings
   (:require
     [athens.db :as db]
+    [athens.util :refer [scroll-if-needed]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -103,12 +104,16 @@
                                          (.. e preventDefault)
                                          (if (= index 0)
                                            (swap! state assoc :search/index (dec (count results)))
-                                           (swap! state update :search/index dec)))
+                                           (swap! state update :search/index dec))
+                                         (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                           (.getElementById js/document "dropdown-menu")))
               (= key-code KeyCodes.DOWN) (do
                                            (.. e preventDefault)
                                            (if (= index (dec (count results)))
                                              (swap! state assoc :search/index 0)
-                                             (swap! state update :search/index inc))))
+                                             (swap! state update :search/index inc))
+                                           (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                             (.getElementById js/document "dropdown-menu"))))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
