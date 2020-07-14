@@ -1,7 +1,7 @@
 (ns athens.keybindings
   (:require
     [athens.db :as db]
-    [athens.util :refer [scrollIfNeeded]]
+    [athens.util :refer [scroll-if-needed]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -80,15 +80,15 @@
                                          (if (= index 0)
                                            (swap! state assoc :search/index (dec (count results)))
                                            (swap! state update :search/index dec))
-                                         (scrollIfNeeded (.getElementById js/document (str "result-" (:search/index @state)))
-                                                         (.getElementById js/document "dropdown-menu")))
+                                         (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                           (.getElementById js/document "dropdown-menu")))
               (= key-code KeyCodes.DOWN) (do
                                            (.. e preventDefault)
                                            (if (= index (dec (count results)))
                                              (swap! state assoc :search/index 0)
                                              (swap! state update :search/index inc))
-                                           (scrollIfNeeded (.getElementById js/document (str "result-" (:search/index @state)))
-                                                           (.getElementById js/document "dropdown-menu"))))
+                                           (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                             (.getElementById js/document "dropdown-menu"))))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
