@@ -1,6 +1,7 @@
 (ns athens.views
   (:require
     [athens.db :as db]
+    [athens.devcards.app-toolbar :refer [app-toolbar]]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
     [athens.views.athena :refer [athena-component]]
@@ -13,7 +14,7 @@
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
-    [stylefy.core :refer [use-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -22,10 +23,11 @@
 (def app-wrapper-style
   {:display "grid"
    :grid-template-areas
-   "'left-sidebar main-content secondary-content'
+   "'app-header app-header app-header'
+    'left-sidebar main-content secondary-content'
    'devtool devtool devtool'"
    :grid-template-columns "auto 1fr auto"
-   :grid-template-rows "1fr auto"
+   :grid-template-rows "auto 1fr auto"
    :height "100vh"})
 
 
@@ -34,6 +36,7 @@
    :grid-area "main-content"
    :align-items "flex-start"
    :justify-content "stretch"
+   :padding-top "40px"
    :display "flex"
    :overflow-y "auto"})
 
@@ -111,6 +114,7 @@
          (if @loading
            [initial-spinner-component]
            [:div (use-style app-wrapper-style)
+            [app-toolbar]
             [left-sidebar]
             [:div (use-style main-content-style
                              {:on-scroll (when (= route-name :home)

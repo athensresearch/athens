@@ -1,6 +1,7 @@
 (ns athens.listeners
   (:require
     ;;[athens.util :refer [get-day]]
+    [athens.keybindings :refer [arrow-key-direction]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
@@ -11,17 +12,61 @@
       KeyCodes)))
 
 
-;; -- Turn read block or header into editable on mouse down --------------
+;; -- shift-up/down when multi-block selection ---------------------------
 
-(defn edit-block
+;; can no longer use on-key-down from keybindings.cljs. textarea is no longer focused, so events must be handled globally
+(defn multi-block-selection
   [e]
-  ;; Consider refactor if we add more editable targets
-  (let [closest-block (.. e -target (closest ".block-contents"))
+  (let [selected-items @(subscribe [:selected/items])]
+    (when (not-empty selected-items)
+      (let [shift     (.. e -shiftKey)
+            key-code (.. e -keyCode)
+            direction (arrow-key-direction e)]
+        ;; what should tab/shift-tab do? roam and workflowy have slightly different behavior
+        (cond
+          (= key-code KeyCodes.ENTER) (do
+                                        (dispatch [:editing/uid (first selected-items)])
+                                        (dispatch [:selected/clear-items]))
+          (= key-code KeyCodes.BACKSPACE) (dispatch [:selected/delete selected-items])
+          (and shift (= direction :up)) (dispatch [:selected/up selected-items])
+          (and shift (= direction :down)) (dispatch [:selected/down selected-items])
+          (= direction :up) (do
+                              (.preventDefault e)
+                              (dispatch [:selected/clear-items])
+                              (dispatch [:up (first selected-items)]))
+          (= direction :down) (do
+                                (.preventDefault e)
+                                (dispatch [:selected/clear-items])
+                                (dispatch [:down (last selected-items)])))))))
+
+
+;; -- When user clicks elsewhere -----------------------------------------
+
+(defn unfocus
+  [e]
+  (let [selected-items @(subscribe [:selected/items])
+        editing-uid    @(subscribe [:editing/uid])
+        closest-block (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
-    (when closest
-      (dispatch [:editing/uid (.. closest -dataset -uid)]))))
+    (when (not-empty selected-items)
+      (dispatch [:selected/clear-items]))
+    (when (and (nil? closest) editing-uid)
+      (dispatch [:editing/uid nil]))))
+
+
+;; -- Turn read block or header into editable on mouse down --------------
+
+;; (defn edit-block
+;;   [e]
+;;   ;; Consider refactor if we add more editable targets
+;;   (let [closest-block (.. e -target (closest ".block-content"))
+;;         closest-block-header (.. e -target (closest ".block-header"))
+;;         closest-page-header (.. e -target (closest ".page-header"))
+;;         closest (or closest-block closest-block-header closest-page-header)]
+;;     (when closest
+;;       (dispatch [:editing/uid (.. closest -dataset -uid)]))))
 
 
 ;; -- Close Athena -------------------------------------------------------
@@ -66,7 +111,9 @@
 
 (defn init
   []
-  (events/listen js/window EventType.MOUSEDOWN edit-block)
+  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
+  (events/listen js/window EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
+  (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down))
 

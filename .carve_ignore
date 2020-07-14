@@ -12,3 +12,4 @@ athens.db/ego-url
 user/str-kw-mappings
 athens.views/file-cb
 athens.views.blocks/drop-area-indicator
+athens.views.right-sidebar/sidebar-section-heading-style

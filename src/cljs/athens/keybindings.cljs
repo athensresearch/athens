@@ -5,7 +5,7 @@
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [re-frame.core :refer [dispatch]])
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -43,13 +43,17 @@
            {:selection selection})))
 
 
-(defn arrow-key?
+(def ARROW-KEYS
+  {KeyCodes.UP    :up
+   KeyCodes.LEFT  :left
+   KeyCodes.DOWN  :down
+   KeyCodes.RIGHT :right})
+
+
+(defn arrow-key-direction
   [e]
-  (let [{:keys [key-code]} (destruct-event e)]
-    (or (= key-code KeyCodes.UP)
-        (= key-code KeyCodes.LEFT)
-        (= key-code KeyCodes.DOWN)
-        (= key-code KeyCodes.RIGHT))))
+  (let [key-code (.. e -keyCode)]
+    (ARROW-KEYS key-code)))
 
 
 (defn block-start?
@@ -65,15 +69,51 @@
 
 
 (defn handle-arrow-key
-  [e uid]
-  (let [{:keys [key-code]} (destruct-event e)
-        top-row?    true                                    ;; TODO
-        bottom-row? true]                                   ;; TODO
+  "May want to flatten this into multiple handlers."
+  [e uid state]
+  (let [{:keys [key-code shift target]} (destruct-event e)
+        ;; TODO
+        top-row?    true
+        bottom-row? true
+        {:search/keys [query index results]} @state
+        selected-items @(subscribe [:selected/items])
+        direction (arrow-key-direction e)]
+
+    (prn selected-items (and shift direction))
     (cond
-      (and (= key-code KeyCodes.UP) top-row?)           (dispatch [:up uid])
-      (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
-      (and (= key-code KeyCodes.DOWN) bottom-row?)      (dispatch [:down uid])
-      (and (= key-code KeyCodes.RIGHT) (block-end? e))  (dispatch [:right uid]))))
+
+      ;; items already selected, go up or down
+      (and shift (seq selected-items) (= :up direction) (dispatch [:selected/up]))
+      (and shift (seq selected-items) (= :down direction) (dispatch [:selected/down]))
+
+      ;; Only select block if leaving block content (up on top row or down on bottom row). Otherwise select text
+      (and shift (= :up direction) top-row?) (do
+                                               (.. target blur)
+                                               (dispatch [:editing/uid nil])
+                                               (dispatch [:selected/add-item uid]))
+
+      (and shift (= :down direction) bottom-row?) (do
+                                                    (.. target blur)
+                                                    (dispatch [:editing/uid nil])
+                                                    (dispatch [:selected/add-item uid]))
+
+      ;; up and down should be handled by the dropdown menu if possible
+      query (cond
+              (= key-code KeyCodes.UP) (do
+                                         (.. e preventDefault)
+                                         (if (= index 0)
+                                           (swap! state assoc :search/index (dec (count results)))
+                                           (swap! state update :search/index dec)))
+              (= key-code KeyCodes.DOWN) (do
+                                           (.. e preventDefault)
+                                           (if (= index (dec (count results)))
+                                             (swap! state assoc :search/index 0)
+                                             (swap! state update :search/index inc))))
+      :else (cond
+              (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
+              (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
+              (and (= key-code KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
+              (and (= key-code KeyCodes.RIGHT) (block-end? e)) (dispatch [:right uid])))))
 
 
 (defn handle-tab
@@ -93,21 +133,35 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift meta start head tail value]} (destruct-event e)]
+  (let [{:keys [shift meta start head tail value]} (destruct-event e)
+        {:search/keys [query index results page block]} @state]
+    (.. e preventDefault)
     (cond
+      ;; auto-complete link
+      page (let [{:keys [node/title]} (get results index)
+                 new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
+             (swap! state merge {:atom-string  new-str
+                                 :search/query nil
+                                 :search/page  false}))
+      ;; auto-complete block ref
+      block (let [{:keys [block/uid]} (get results index)
+                  new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
+              (prn "NEW" new-str)
+              (swap! state merge {:atom-string  new-str
+                                  :search/query nil
+                                  :search/block false}))
+
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :atom-string (str head "\n" tail))
       ;; cmd-enter: toggle todo/done
-      meta (let [first    (subs value 0 12)
-                 new-tail (subs value 12)
-                 new-head (cond (= first "{{[[TODO]]}}") "{{[[DONE]]}}"
-                                (= first "{{[[DONE]]}}") ""
-                                :else "{{[[TODO]]}} ")
-                 new-str  (str new-head new-tail)]
+      meta (let [first    (subs value 0 13)
+                 new-tail (subs value 13)
+                 new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
+                               (= first "{{[[DONE]]}} ") new-tail
+                               :else (str "{{[[TODO]]}} " value))]
              (swap! state assoc :atom-string new-str))
       ;; default: may mutate blocks
-      :else (do (.. e preventDefault)
-                (dispatch [:enter uid value start state])))))
+      :else (dispatch [:enter uid value start]))))
 
 
 ;; todo: do this for ** and __
@@ -226,34 +280,57 @@
       :else (let [head    (subs value 0 (dec start))
                   new-str (str head tail)
                   {:search/keys [query]} @state]
-              (cond
-                ;;(= (get value start) KeyCodes.SLASH)
-                ;;(swap! state update :slash? not)
-                query (swap! state assoc :search/query (subs query 0 (dec (count query)))))
+              (when query
+                (swap! state assoc :search/query (subs query 0 (dec (count query)))))
               (swap! state assoc :atom-string new-str)))))
+
+
+(defn is-character-key?
+  "Closure returns true even when using modifier keys. We do not make that assumption."
+  [e]
+  (let [{:keys [meta ctrl alt key-code]} (destruct-event e)]
+    (and (not meta) (not ctrl) (not alt)
+         (isCharacterKey key-code))))
+
+
+(defn write-char
+  [e _ state]
+  (let [{:keys [head tail key key-code]} (destruct-event e)
+        new-str (str head key tail)
+        {:search/keys [page block query]} @state
+        new-query (str query key)]
+    (cond
+      ;; FIXME: must press slash twice to close
+      (= key-code KeyCodes.SLASH) (swap! state update :slash? not)
+
+      ;; when in-line search dropdown is open
+      block (let [results (db/search-in-block-content query)]
+              (swap! state assoc :search/query new-query)
+              (swap! state assoc :search/results results))
+
+    ;; when in-line search dropdown is open
+      page (let [results (db/search-in-node-title query)]
+             (swap! state assoc :search/query new-query)
+             (swap! state assoc :search/results results)))
+
+    (swap! state merge {:atom-string new-str})))
 
 
 ;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
 (defn block-key-down
   [e uid state]
-  (let [{:keys [meta ctrl alt key key-code head tail]} (destruct-event e)]
+  (let [{:keys [meta key-code]} (destruct-event e)]
     (cond
-      (arrow-key? e) (handle-arrow-key e uid)
+      (arrow-key-direction e) (handle-arrow-key e uid state)
       (pair-char? e) (handle-pair-char e uid state)
       (= key-code KeyCodes.TAB) (handle-tab e uid)
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
       meta (handle-system-shortcuts e uid state)
-      ;; -- Default: Add new character -----------------------------------------
-      (and (not meta) (not ctrl) (not alt) (isCharacterKey key-code))
-      (let [new-str (str head key tail)]
-        (cond
-          (= key-code KeyCodes.SLASH)
-          (swap! state assoc :slash? true)
 
-          (or (:search/page @state) (:search/block @state))
-          (swap! state assoc :search/query (str (:search/query @state) key)))
-        (swap! state assoc :atom-string new-str)))))
+      ;; -- Default: Add new character -----------------------------------------
+      (is-character-key? e) (write-char e uid state))))
+
 
 ;;:else (prn "non-event" key key-code))))
 

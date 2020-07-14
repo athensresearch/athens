@@ -31,7 +31,7 @@
 (def container-style
   {:grid-area     "devtool"
    :flex-direction "column"
-   :background    (color :panel-color)
+   :background    (color :background-minus-1)
    :position      "relative"
    :width         "100vw"
    :height        "33vh"
@@ -44,7 +44,7 @@
 (def tabs-style
   {:padding "0 8px"
    :flex "0 0 auto"
-   :background (darken (color :panel-color) 5)
+   :background (darken (color :background-minus-1) 5)
    :display "flex"
    :align-items "stretch"
    :justify-content "space-between"
@@ -66,7 +66,7 @@
    :align-items "center"
    :flex "1 1 100%"
    :font-size "14px"
-   :border-bottom [["1px solid" (darken (color :panel-color) 10)]]})
+   :border-bottom [["1px solid" (darken (color :background-minus-1) 10)]]})
 
 
 (def current-location-name-style
@@ -88,7 +88,7 @@
    :margin "8px 0 0"
    :border-spacing "0"
    :min-width "100%"
-   ::stylefy/manual [[:td {:border-top [["1px solid " (darken (color :panel-color) 5)]]
+   ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
                            :padding "2px"}]
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "left" :padding "2px 2px" :white-space "nowrap"}]
@@ -96,14 +96,14 @@
                      [:td:first-child :th:first-child {:padding-left "8px"}]
                      [:td:last-child :th-last-child {:padding-right "8px"}]
                      [:tbody [:tr:hover {:cursor "pointer"
-                                         :background (darken (color :panel-color) 2.5)
+                                         :background (darken (color :background-minus-1) 2.5)
                                          :color (color :header-text-color)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
                      [:td [:li {:margin "0 0 4px"
                                 :padding-top "4px";
-                                :border-top (str "1px solid " (color :panel-color))}]]
+                                :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})
@@ -116,7 +116,7 @@
   (merge textinput-style {:width "100%"
                           :min-height "40px"
                           :font-size "12px"
-                          :background (color :app-bg-color)
+                          :background (color :background-color)
                           :font-family "IBM Plex Mono"}))
 
 

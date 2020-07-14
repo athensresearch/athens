@@ -33,7 +33,7 @@
    :font-size "12px"
    :align-items "center"
    :text-align "right"
-   :border-bottom (str "1px solid " (color :panel-color))
+   :border-bottom (str "1px solid " (color :background-minus-1))
    :margin "4px 0 0"
    :padding-bottom "4px"
    :justify-content "space-between"
@@ -77,7 +77,7 @@
    :margin-block-end "1px"
    :user-select     "none"
    :transition      "all 0.1s ease"
-   ::stylefy/manual [[:&:hover {:background (color :panel-color :opacity-med)}]
+   ::stylefy/manual [[:&:hover {:background (color :background-minus-1 :opacity-med)}]
                      [:&:active {:transform "scale(0.99)"}]]})
 
 
@@ -97,7 +97,7 @@
 
 (def count-style
   {:padding "0 1em 0 0"
-   :color (color :body-text-color)
+   :color (color :body-text-currentColor)
    :font-weight "bold"
    :font-size "11px"
    :text-align "right"
@@ -106,7 +106,7 @@
 
 (def filter-name-style
   {:flex "1 1 100%"
-   :color (color :body-text-color)
+   :color (color :body-text-currentColor)
    :text-align "left"})
 
 
