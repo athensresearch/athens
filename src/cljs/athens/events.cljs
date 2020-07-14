@@ -131,7 +131,7 @@
 
 
 (reg-event-db
-  :un-editing
+  :stop-editing
   (fn-traced [db [_ uid]]
              (js/setTimeout (focus-el (str "editable-uid-" uid)) 300)
              (dissoc db :editing/uid uid)))
