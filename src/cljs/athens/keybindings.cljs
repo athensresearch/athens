@@ -108,6 +108,12 @@
               (dispatch [:indent uid])))))
 
 
+(defn handle-escape
+  [e uid]
+  (.. e preventDefault)
+  (dispatch [:un-editing uid]))
+
+
 ;;(defn cycle-todo
 ;;  [])
 
@@ -306,6 +312,7 @@
       (= key-code KeyCodes.TAB) (handle-tab e uid)
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+      (= key-code KeyCodes.ESC) (handle-escape e uid)
       meta (handle-system-shortcuts e uid state)
 
       ;; -- Default: Add new character -----------------------------------------

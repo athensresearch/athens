@@ -154,8 +154,7 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
-                     [:textarea:focus
-                      :.is-editing {:outline "none"
+                     [:.is-editing {:outline "none"
                                     :z-index 3
                                     :display "block"
                                     :opacity "1"}]
