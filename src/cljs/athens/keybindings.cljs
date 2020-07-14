@@ -80,9 +80,6 @@
                                          (if (= index 0)
                                            (swap! state assoc :search/index (dec (count results)))
                                            (swap! state update :search/index dec))
-                                           ;; TODO: Only scroll into view if item isn't in view to begin with
-                                           ;; TODO: Only scroll the dropdown, not the whole page
-                                           ;; TODO: apply same to arrow-down too
                                          (scrollIfNeeded (.getElementById js/document (str "result-" (:search/index @state)))
                                                          (.getElementById js/document "dropdown-menu")))
               (= key-code KeyCodes.DOWN) (do
