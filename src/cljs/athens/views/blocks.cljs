@@ -227,14 +227,15 @@
   ;; automatically add non-existent pages
   ;; TODO: delete pages that are no longer connected to anything else
   (parse/transform {:page-link (fn [& title]
-                                 (if (nil? (db/search-exact-node-title (apply + title)))
-                                   (let [uid (gen-block-uid)]
-                                     (dispatch [:transact [{:node/title     (apply + title)
-                                                            :block/uid      (str uid)
-                                                            :edit/time      (now-ts)
-                                                            :create/time    (now-ts)}]]))
-                                   nil)
-                                 (str "[[" (apply + title) "]]"))} (parser/parse-to-ast value)))
+                                 (let [inner-title (apply + title)]
+                                   (when (nil? (db/search-exact-node-title inner-title))
+                                     (let [now (now-ts)
+                                           uid (gen-block-uid)]
+                                       (dispatch [:transact [{:node/title     inner-title
+                                                              :block/uid      uid
+                                                              :edit/time      now
+                                                              :create/time    now}]])))
+                                   (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
 
 
 (def db-on-change (debounce on-change 1000))
