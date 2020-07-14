@@ -1,7 +1,7 @@
 (ns athens.subs
   (:require
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :as re-frame]))
+    [re-frame.core :as re-frame :refer [subscribe]]))
 
 
 (re-frame/reg-sub
@@ -68,6 +68,28 @@
   :editing/uid
   (fn-traced [db _]
              (:editing/uid db)))
+
+
+(re-frame/reg-sub
+  :editing/is-editing
+  (fn [_]
+    [(subscribe [:editing/uid])])
+  (fn [[editing-uid] [_ uid]]
+    (= editing-uid uid)))
+
+
+(re-frame/reg-sub
+  :selected/items
+  (fn [db _]
+    (:selected/items db)))
+
+
+(re-frame/reg-sub
+  :selected/is-selected
+  (fn [_]
+    [(subscribe [:selected/items])])
+  (fn [[selected-items] [_ uid]]
+    ((set selected-items) uid)))
 
 
 (re-frame/reg-sub

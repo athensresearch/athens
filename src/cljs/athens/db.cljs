@@ -25,7 +25,8 @@
                :right-sidebar/open  false
                :right-sidebar/items {}
                ;;:dragging-global     false
-               :daily-notes/items   []})
+               :daily-notes/items   []
+               :selected/items   []})
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -111,6 +112,19 @@
 (defn e-by-av
   [a v]
   (-> (d/datoms @dsdb :avet a v) first :e))
+
+
+(def rules
+  '[[(after ?p ?at ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?at)]]
+    [(inc-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(inc ?o) ?new-o]]
+    [(dec-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(dec ?o) ?new-o]]])
 
 
 (defn sort-block-children
@@ -227,6 +241,77 @@
     (map get-root-parent-node)
     (mapv #(dissoc % :block/_children))))
 
+
+;; xxx 2 kinds of operations
+;; write operations, it's nice to have entire block and entire parent block to make TXes
+;; read operations (navigation), only need uids
+
+;; xxx these all assume all blocks are open. have to skip closed blocks
+;; TODO: focus AND set selection-start for :editing/uid
+
+(defn prev-sibling-uid
+  [uid]
+  (d/q '[:find ?sib-uid .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(dec ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+       @dsdb uid))
+
+;; if order 0, go to parent
+;; if order n, go to prev siblings deepest child
+(defn prev-block-uid
+  [uid]
+  (let [block (get-block [:block/uid uid])
+        parent (get-parent [:block/uid uid])
+        deepest-child-prev-sibling (deepest-child-block [:block/uid (prev-sibling-uid uid)])]
+    (if (zero? (:block/order block))
+      (:block/uid parent)
+      (:block/uid deepest-child-prev-sibling))))
+
+
+(defn next-sibling-block
+  [uid]
+  (d/q '[:find (pull ?sib [*]) .
+         :in $ ?block-uid
+         :where
+         [?block :block/uid ?block-uid]
+         [?block :block/order ?block-o]
+         [?parent :block/children ?block]
+         [?parent :block/children ?sib]
+         [?sib :block/order ?sib-o]
+         [?sib :block/uid ?sib-uid]
+         [(inc ?block-o) ?prev-sib-o]
+         [(= ?sib-o ?prev-sib-o)]]
+       @dsdb uid))
+
+
+(defn next-sibling-block-recursively
+  [uid]
+  (loop [uid uid]
+    (let [sib (next-sibling-block uid)
+          parent (get-parent [:block/uid uid])]
+      (if (or sib (:node/title parent))
+        sib
+        (recur (:block/uid parent))))))
+
+;; if child, go to child 0
+;; else recursively find next sibling of parent
+(defn next-block-uid
+  [uid]
+  (let [block (->> (get-block [:block/uid uid])
+                   sort-block-children)
+        ch (:block/children block)
+        next-block-recursive (next-sibling-block-recursively uid)]
+    (cond
+      ch (:block/uid (first ch))
+      next-block-recursive (:block/uid next-block-recursive))))
 
 ;; history
 
