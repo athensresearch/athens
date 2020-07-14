@@ -46,13 +46,16 @@
                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "4px"}]]})
 
 
-(def menu-item-style (merge
-                      buttons-style
-                      {:min-height "24px"
-                       ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
+(def menu-item-style
+  (merge
+    buttons-style
+    {:min-height "24px"
+     ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
 
-(def menu-item-active-style {:background (color :link-color)
-                             :color "#fff"})
+
+(def menu-item-active-style
+  {:background (color :link-color)
+   :color "#fff"})
 
 
 (def menu-heading-style

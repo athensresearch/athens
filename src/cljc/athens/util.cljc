@@ -19,5 +19,5 @@
           scrollBottom (+ (.-scrollTop container) (.-offsetHeight container))]
       (when (> offsetBottom scrollBottom)
         (set!
-         (.-scrollTop container)
-         (- offsetBottom (.-offsetHeight container)))))))
+          (.-scrollTop container)
+          (- offsetBottom (.-offsetHeight container)))))))
