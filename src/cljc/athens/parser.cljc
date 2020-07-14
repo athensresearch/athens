@@ -17,7 +17,9 @@
    
    <syntax-in-block> = (page-link | block-ref | hashtag | url-image | url-link | bold)
    
-   page-link = <'[['> any-chars <']]'>
+   <any-non-page-link-chars> = #'[^\\[\\]]*'
+   <page-link-content> = (any-non-page-link-chars | page-link)*
+   page-link = <'[['> page-link-content <']]'>
    
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
    

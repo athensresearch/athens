@@ -4,8 +4,9 @@
     [athens.db :as db]
     [athens.keybindings :refer [block-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.util :refer [now-ts]]
+    [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
@@ -14,6 +15,7 @@
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
     [goog.functions :refer [debounce]]
+    [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -105,20 +107,19 @@
   {:display "block"
    :height "1px"
    :margin-bottom "-1px"
-   :color (color :body-text-color :opacity-low)
+   :color (color :link-color :opacity-high)
    :position "relative"
    :transform-origin "left"
    :z-index 3
    :width "100%"
-   ;;:animation "drop-area-appear .5s ease"
+   :opacity 0
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
                                 :top "-0.5px"
                                 :right "0"
                                 :bottom "-0.5px"
-                                :left "0"
+                                :left "2em"
                                 :border-radius "100px"
-                                ;;:animation "drop-area-color-pulse 1s ease infinite alternate"
                                 :background "currentColor"}]]})
 
 
@@ -128,8 +129,8 @@
    :flex-grow "1"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
+                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:display "block"
+                                                                                       :z-index 1}]]]
                      [:textarea {:-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
@@ -213,7 +214,7 @@
 
 
 (def dragging-style
-  {:background-color "lightblue"})
+  {:opacity "0.25"})
 
 
 ;; Helpers
@@ -221,7 +222,19 @@
 (defn on-change
   [value uid]
   ;; (prn "ONCHANGE" value)
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]]))
+  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
+  ;; automatically add non-existent pages
+  ;; TODO: delete pages that are no longer connected to anything else
+  (parse/transform {:page-link (fn [& title]
+                                 (let [inner-title (apply + title)]
+                                   (when (nil? (db/search-exact-node-title inner-title))
+                                     (let [now (now-ts)
+                                           uid (gen-block-uid)]
+                                       (dispatch [:transact [{:node/title     inner-title
+                                                              :block/uid      uid
+                                                              :edit/time      now
+                                                              :create/time    now}]])))
+                                   (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
 
 
 (def db-on-change (debounce on-change 1000))
@@ -321,8 +334,8 @@
      [parse-and-render string]
      ;; don't show drop indicator when dragging to its children
      (when (and (empty? children) (not (:dragging @state)))
-       [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                           (when (= (:drag-target @state) :child) {:background-color "red"})))])]))
+       [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                           (when (= (:drag-target @state) :child) {:opacity 1})))])]))
 
 ;; flipped around
 
@@ -391,8 +404,8 @@
          ;; need surface to drag over. probably a better way to do this
          ;; FIXME drop-area-indicator styles no longer work because using a div now and document structure has changed
          (when true
-           [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                               (when (= drag-target :container) {:background-color "blue"})))])
+           [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                               (when (= drag-target :container) {:opacity "1"})))])
 
          [:div.block-container
           (use-style (merge block-style (when dragging dragging-style))
@@ -439,8 +452,8 @@
                [block-el child]]))]
 
          (when last-child?
-           [:div.drag-n-drop (use-style (merge {:height "2px"}
-                                               (when (= drag-target :container) {:background-color "green"})))])]))))
+           [:div.drag-n-drop (use-style (merge drop-area-indicator
+                                               (when (= drag-target :container) {:opacity 1})))])]))))
 
 
 (defn block-component
