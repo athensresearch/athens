@@ -32,7 +32,9 @@
                                              :border-radius "4px"
                                              :transition "all 0.05s ease"
                                              :background (color :link-color 0.1)}]
-                                  [:&:hover:after {:opacity "1"}]]})
+                                  [:&:hover:after {:opacity "1"}]
+                                  [:&:hover {
+                                             :z-index 1}]]})
 
 
 (def hashtag {::stylefy/mode [[:hover {:text-decoration "underline"}]]
@@ -54,6 +56,21 @@
                 ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                                          :cursor "alias"}]]})
 
+;;; Helper functions for recursive link rendering
+(defn render-page-link
+  "Renders a page link given the title of the page."
+  [title]
+  ;; This method feels a bit hacky: it extracts the DOM tree of its children components and re-wrap the content in double parentheses. Should we do something about it?
+  ;; TODO: touch from inner content should navigate to the inner (children) page, but in this implementation doesn't work
+  (let [node (pull db/dsdb '[*] [:node/title (str "" (apply + (map (fn [el]
+                                                             (if (string? el)
+                                                               el
+                                                               (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title)))])]
+    [:span (use-style page-link {:class "page-link"})
+     [:span {:class "formatting"} "[["]
+     [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} (concat title)]
+     [:span {:class "formatting"} "]]"]]))
+
 
 ;;; Components
 
@@ -65,12 +82,7 @@
   (insta/transform
     {:block     (fn [& contents]
                   (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
-     :page-link (fn [title]
-                  (let [node (pull db/dsdb '[*] [:node/title title])]
-                    [:span (use-style page-link {:class "page-link"})
-                     [:span {:class "formatting"} "[["]
-                     [:span {:on-click (fn [e] (navigate-uid (:block/uid @node) e))} title]
-                     [:span {:class "formatting"} "]]"]]))
+     :page-link (fn [& title] (render-page-link title))
      :block-ref (fn [uid]
                   (let [block (pull db/dsdb '[*] [:block/uid uid])]
                     [:span (use-style block-ref {:class "block-ref"})
@@ -91,7 +103,7 @@
                    text])
      :bold      (fn [text]
                   [:strong {:class "contents bold"} text])}
-    tree))
+   tree))
 
 
 (defn parse-and-render

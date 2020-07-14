@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.parse-renderer :as parse-renderer]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
@@ -200,7 +201,7 @@
         :class      (when (= editing-uid uid) "is-editing")
         :auto-focus true
         :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
-    [:span title]]
+    (parse-renderer/parse-and-render title)]
 
    ;; Children
    [:div
