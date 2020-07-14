@@ -30,7 +30,7 @@
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
    :animation-fill-mode "both"
-   :background (color :background-plus-1)
+   :background (color :background-plus-2)
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]
    :flex-direction "column"})
 
