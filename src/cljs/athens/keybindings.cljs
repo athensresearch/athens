@@ -136,7 +136,7 @@
 (defn handle-escape
   [e uid]
   (.. e preventDefault)
-  (dispatch [:un-editing uid]))
+  (dispatch [:stop-editing uid]))
 
 
 ;;(defn cycle-todo
