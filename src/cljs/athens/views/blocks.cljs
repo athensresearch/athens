@@ -11,7 +11,6 @@
     [athens.views.dropdown :refer [slash-menu-component #_menu dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
