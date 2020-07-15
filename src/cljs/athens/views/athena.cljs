@@ -23,8 +23,8 @@
 
 
 (def container-style
-  {:width         "784px"
-   :border-radius "4px"
+  {:width         "49rem"
+   :border-radius "0.25rem"
    :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
    :flex-direction "column"
@@ -41,16 +41,16 @@
 (def athena-input-style
   {:width "100%"
    :border 0
-   :font-size      "38px"
+   :font-size      "2.375"
    :font-weight    "300"
-   :line-height    "49px"
+   :line-height    "1.3"
    :letter-spacing "-0.03em"
-   :border-radius "4px 4px 0 0"
+   :border-radius  "0.25rem 0.25rem 0 0"
    :background     (color :background-plus-2)
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
-   :padding "24px"
-   :cursor "text"
+   :padding        "1.5rem"
+   :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}}})
 
@@ -62,7 +62,7 @@
 
 
 (def results-heading-style
-  {:padding "4px 18px"
+  {:padding "0.25rem 1.125rem"
    :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
@@ -75,15 +75,15 @@
 (def result-style
   {:display "grid"
    :grid-template "\"title icon\" \"preview icon\""
-   :grid-gap "0 12px"
+   :grid-gap "0 0.75rem"
    :grid-template-columns "1fr auto"
-   :padding "12px 32px"
+   :padding "0.75rem 2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"
    :border-top [["1px solid " (color :border-color)]]
    ::stylefy/sub-styles {:title {:grid-area "title"
-                                 :font-size "16px"
+                                 :font-size "1rem"
                                  :margin "0"
                                  :color (color :header-text-color)
                                  :font-weight "500"}

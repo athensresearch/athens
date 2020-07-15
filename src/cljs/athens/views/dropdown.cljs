@@ -24,8 +24,8 @@
 (def dropdown-style
   {:display "inline-flex"
    :z-index (:zindex-dropdown ZINDICES)
-   :padding "4px"
-   :border-radius "6px"
+   :padding "0.25rem"
+   :border-radius "cal(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :min-height "2em"
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
@@ -37,20 +37,20 @@
 
 (def menu-style
   {:display "grid"
-   :grid-gap "2px"
+   :grid-gap "0.125rem"
    :min-width "9em"
    :align-items "stretch"
    :grid-auto-flow "row"
    :overflow "auto"
-   ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "4px"}]
-                     [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "4px"}]]})
+   ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "0.25rem"}]
+                     [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "0.25rem"}]]})
 
 
 (def menu-item-style
   (merge
     buttons-style
-    {:min-height "24px"
-     ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
+    {:min-height "1.5rem"
+     ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "0.375rem" :margin-left "-0.125rem"}]]}))
 
 
 (def menu-item-active-style
@@ -59,9 +59,9 @@
 
 
 (def menu-heading-style
-  {:min-height "32px"
+  {:min-height "2rem"
    :text-align "center"
-   :padding "6px 8px"
+   :padding "0.375rem 0.5rem"
    :display "flex"
    :align-content "flex-end"
    :justify-content "center"
@@ -78,7 +78,7 @@
    :align-self "stretch"
    :justify-self "stretch"
    :height "1px"
-   :margin "4px 0"})
+   :margin "0.25rem 0"})
 
 
 (def kbd-style
@@ -86,7 +86,7 @@
    :opacity "0.5"
    :display "inline-flex"
    :place-content "center"
-   :padding "0 16px"
+   :padding "0 1rem"
    :font-family "inherit"
    :font-size "0.6em"
    ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})

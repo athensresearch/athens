@@ -160,22 +160,22 @@
    :font-size "12px"
    :font-family "IBM Plex Sans Condensed"
    :letter-spacing "-0.01em"
-   :margin "8px 0 0"
+   :margin "0.5rem 0 0"
    :min-width "100%"
    ::stylefy/manual [[:td {:border-top (str "1px solid " (color :border-color))
-                           :padding "2px"}]
+                           :padding "0.125rem"}]
                      [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "2px 2px"}]
+                     [:th {:text-align "left" :padding "0.125rem 0.125rem"}]
                      [:tr {:transition "all 0.05s ease"}]
-                     [:td:first-child :th:first-child {:padding-left "8px"}]
-                     [:td:last-child :th-last-child {:padding-right "8px"}]
+                     [:td:first-child :th:first-child {:padding-left "0.5rem"}]
+                     [:td:last-child :th-last-child {:padding-right "0.5rem"}]
                      [:tbody [:tr:hover {:background (opacify (:background-minus-1 HSL-COLORS) 0.15)
                                          :color (:header-text-color COLORS)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
-                     [:td [:li {:margin "0 0 4px"
-                                :padding-top "4px";
+                     [:td [:li {:margin "0 0 0.25rem"
+                                :padding-top "0.25rem";
                                 :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (:link-color COLORS)}]
@@ -183,7 +183,7 @@
 
 
 (def footer-style
-  {:margin "8px 0"
+  {:margin "0.5rem 0"
    ::stylefy/manual [[:a {:color (:link-color COLORS)}]]})
 
 

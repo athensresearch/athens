@@ -34,15 +34,15 @@
    :align-items "center"
    :text-align "right"
    :border-bottom (str "1px solid " (color :background-minus-1))
-   :margin "4px 0 0"
-   :padding-bottom "4px"
+   :margin "0.25rem 0 0"
+   :padding-bottom "0.25rem"
    :justify-content "space-between"
    :font-weight "500"
    :color (color :body-text-color :opacity-high)
    ::stylefy/manual [[:svg {:font-size "20px"}]]})
 
 
-(def sort-control-style {:padding "4px 6px"
+(def sort-control-style {:padding "0.25rem 0.375rem"
                          ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
 
 
@@ -63,7 +63,7 @@
    :display "flex"
    :flex "1 1 100%"
    :overflow-y "auto"
-   :padding "4px 0 0"
+   :padding "0.25rem 0 0"
    :flex-direction "column"})
 
 
@@ -71,9 +71,9 @@
   {:width           "100%"
    :display         "flex"
    :justify-content "space-between"
-   :padding         "2px 8px"
+   :padding         "0.125rem 0.5rem"
    :align-items     "center"
-   :border-radius   "4px"
+   :border-radius   "0.25rem"
    :margin-block-end "1px"
    :user-select     "none"
    :transition      "all 0.1s ease"

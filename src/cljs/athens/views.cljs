@@ -36,7 +36,7 @@
    :grid-area "main-content"
    :align-items "flex-start"
    :justify-content "stretch"
-   :padding-top "40px"
+   :padding-top "2.5rem"
    :display "flex"
    :overflow-y "auto"})
 

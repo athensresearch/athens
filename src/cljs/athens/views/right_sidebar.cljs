@@ -21,7 +21,7 @@
    :grid-area "secondary-content"
    :display "flex"
    :justify-content "space-between"
-   :padding-top "44px"
+   :padding-top "2.75rem"
    :transition-property "width, border, background"
    :transition-duration "0.35s"
    :transition-timing-function "ease-out"
@@ -50,8 +50,8 @@
    :display "flex"
    :flex-direction "row"
    :align-items "center"
-   :min-height "44px"
-   :padding "8px 16px 8px 24px"
+   :min-height "2.75rem"
+   :padding "0.5rem 1rem 0.25rem 1.5rem"
    ::stylefy/manual [[:h1 {:font-size "inherit"
                            :margin "0 auto 0 0"
                            :line-height "1"
@@ -66,10 +66,10 @@
 
 
 (def sidebar-item-toggle-style
-  {:margin "auto 8px auto 0"
+  {:margin "auto 0.5rem auto 0"
    :flex "0 0 auto"
-   :width "28px"
-   :height "28px"
+   :width "1.75rem"
+   :height "1.75rem"
    :padding "0"
    :border-radius "1000px"
    :cursor "pointer"
@@ -80,8 +80,8 @@
 
 
 (def sidebar-item-container-style
-  {:padding "0 32px 20px"
-   :line-height "24px"
+  {:padding "0 2rem 1.25rem"
+   :line-height "1.5rem"
    :font-size "15px"
    :position "relative"
    :z-index 1
@@ -93,7 +93,7 @@
    :display "flex"
    :flex "0 0 auto"
    :align-items "center"
-   :padding "4px 16px"
+   :padding "0.25rem 1rem"
    :position "sticky"
    :z-index 2
    :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
@@ -125,7 +125,7 @@
                      [:hr {:width "1px"
                            :background (color :background-minus-1)
                            :border "0"
-                           :margin "4px"
+                           :margin "0.25rem"
                            :flex "0 0 1px"
                            :height "1em"
                            :justify-self "stretch"}]
@@ -141,7 +141,7 @@
    :text-align "center"
    :color (color :body-text-color :opacity-med)
    :font-size "14px"
-   :border-radius "8px"
+   :border-radius "0.5rem"
    :line-height 1.3
    ::stylefy/manual [[:svg {:opacity (:opacity-low OPACITIES)
                             :font-size "80px"}]

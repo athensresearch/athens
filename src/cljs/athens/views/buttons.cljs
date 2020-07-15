@@ -22,8 +22,8 @@
 
 
 (def button-icons-only-child-style
-  {:margin-inline-start "-4px"
-   :margin-inline-end "-4px"})
+  {:margin-inline-start "-0.25rem"
+   :margin-inline-end "-0.25rem"})
 
 
 (def buttons-style
@@ -32,7 +32,7 @@
    :margin           "0"
    :font-family      "inherit"
    :font-size        "inherit"
-   :border-radius    "4px"
+   :border-radius    "0.25rem"
    :font-weight      "500"
    :border           "none"
    :display          "inline-flex"
