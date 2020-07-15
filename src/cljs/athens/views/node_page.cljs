@@ -36,7 +36,7 @@
   {:position "relative"
    :overflow "visible"
    :flex-grow "1"
-   :margin "0.2em 0"
+   :margin "0.2em 0 0.2em 1rem"
    :letter-spacing "-0.03em"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]

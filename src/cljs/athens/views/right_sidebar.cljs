@@ -138,11 +138,12 @@
    :flex-direction "column"
    :margin "auto auto"
    :align-items "center"
+   :text-align "center"
    :color (color :body-text-color :opacity-med)
    :font-size "14px"
    :border-radius "8px"
    :line-height 1.3
-   ::stylefy/manual [[:svg {:opacity (:opacity-med OPACITIES)
+   ::stylefy/manual [[:svg {:opacity (:opacity-low OPACITIES)
                             :font-size "80px"}]
                      [:p {:max-width "13em"}]]})
 
@@ -154,7 +155,8 @@
   []
   [:div (use-style empty-message-style)
    [:> mui-icons/VerticalSplit]
-   [:p "Hold shift when clicking a page link to view the page in the sidebar."]])
+   [:p
+    "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
 
 (defn right-sidebar-el
