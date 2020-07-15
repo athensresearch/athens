@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db]
+    [athens.db :as db :refer [rules]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -84,6 +84,54 @@
   :dragging-global/toggle
   (fn [db _]
     (update db :dragging-global not)))
+
+
+(reg-event-db
+  :selected/add-item
+  (fn [db [_ uid]]
+    (update db :selected/items conj uid)))
+
+
+(reg-event-db
+  :selected/clear-items
+  (fn [db _]
+    (assoc db :selected/items [])))
+
+
+(reg-event-db
+  :selected/up
+  (fn [db [_ selected-items]]
+    (let [first-item (first selected-items)
+          prev-block-uid- (db/prev-block-uid first-item)
+          prev-block (db/get-block [:block/uid prev-block-uid-])
+          ;;parent (db/get-parent [:block/uid first-item])
+          new-vec (cond
+                    ;; if prev-block is root node TODO: (OR context root), don't do anything
+                    (:node/title prev-block) nil
+                    ;; if prev block is parent, replace head of vector with parent
+                    ;; TODO needs to replace all children blocks of the parent
+                    ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
+                    ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
+                    :else (into [prev-block-uid-] selected-items))]
+      (assoc db :selected/items new-vec))))
+
+
+(reg-event-db
+  :selected/down
+  (fn [db [_ selected-items]]
+    (let [last-item (last selected-items)
+          next-block-uid- (db/next-block-uid last-item)
+          new-vec (conj selected-items next-block-uid-)]
+      (assoc db :selected/items new-vec))))
+
+
+(reg-event-fx
+  :selected/delete
+  (fn [{:keys [db]} [_ selected-items]]
+    (let [retract-vecs (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
+                             selected-items)]
+      {:dispatch [:transact retract-vecs]
+       :db       (assoc db :selected/items [])})))
 
 
 ;; Alerts
@@ -244,33 +292,13 @@
       {:reset-conn! next})))
 
 
-(def rules
-  '[[(after ?p ?at ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?at)]]
-    [(inc-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(inc ?o) ?new-o]]
-    [(dec-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(dec ?o) ?new-o]]])
-
-
-;; TODO: should be able to use :keys now: https://github.com/tonsky/datascript/blob/master/docs/queries.md
-(defn map-order
-  [blocks]
-  (map (fn [[id order]] {:db/id id :block/order order}) blocks))
-
-
 (defn inc-after
   [eid order]
   (->> (d/q '[:find ?ch ?new-o
-              ;;:keys db/id block/order
+              :keys db/id block/order
               :in $ % ?p ?at
               :where (inc-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)
-       map-order))
+            @db/dsdb rules eid order)))
 
 
 (defn dec-after
@@ -278,104 +306,32 @@
   (->> (d/q '[:find ?ch ?new-o
               :in $ % ?p ?at
               :where (dec-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)
-       map-order))
-
-
-;; xxx 2 kinds of operations
-;; write operations, it's nice to have entire block and entire parent block to make TXes
-;; read operations (navigation), only need uids
-
-;; xxx these all assume all blocks are open. have to skip closed blocks
-;; TODO: focus AND set selection-start for :editing/uid
-
-(defn prev-sibling-uid
-  [uid]
-  (d/q '[:find ?sib-uid .
-         :in $ ?block-uid
-         :where
-         [?block :block/uid ?block-uid]
-         [?block :block/order ?block-o]
-         [?parent :block/children ?block]
-         [?parent :block/children ?sib]
-         [?sib :block/order ?sib-o]
-         [?sib :block/uid ?sib-uid]
-         [(dec ?block-o) ?prev-sib-o]
-         [(= ?sib-o ?prev-sib-o)]]
-       @db/dsdb uid))
-
-;; if order 0, go to parent
-;; if order n, go to prev siblings deepest child
-(defn prev-block-uid
-  [uid]
-  (let [block (db/get-block [:block/uid uid])
-        parent (db/get-parent [:block/uid uid])
-        deepest-child-prev-sibling (db/deepest-child-block [:block/uid (prev-sibling-uid uid)])]
-    (if (zero? (:block/order block))
-      (:block/uid parent)
-      (:block/uid deepest-child-prev-sibling))))
+            @db/dsdb rules eid order)))
 
 
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (prev-block-uid uid)]}))
+    ;; FIXME: specify behavior when going up would go to title or context-root
+    {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
 
 
 (reg-event-fx
   :left
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (prev-block-uid uid)]}))
-
-
-(defn next-sibling-block
-  [uid]
-  (d/q '[:find (pull ?sib [*]) .
-         :in $ ?block-uid
-         :where
-         [?block :block/uid ?block-uid]
-         [?block :block/order ?block-o]
-         [?parent :block/children ?block]
-         [?parent :block/children ?sib]
-         [?sib :block/order ?sib-o]
-         [?sib :block/uid ?sib-uid]
-         [(inc ?block-o) ?prev-sib-o]
-         [(= ?sib-o ?prev-sib-o)]]
-       @db/dsdb uid))
-
-
-(defn next-sibling-block-recursively
-  [uid]
-  (loop [uid uid]
-    (let [sib (next-sibling-block uid)
-          parent (db/get-parent [:block/uid uid])]
-      (if (or sib (:node/title parent))
-        sib
-        (recur (:block/uid parent))))))
-
-;; if child, go to child 0
-;; else recursively find next sibling of parent
-(defn next-block-uid
-  [uid]
-  (let [block (->> (db/get-block [:block/uid uid])
-                   db/sort-block-children)
-        ch (:block/children block)
-        next-block-recursive (next-sibling-block-recursively uid)]
-    (cond
-      ch (:block/uid (first ch))
-      next-block-recursive (:block/uid next-block-recursive))))
+    {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
 
 
 (reg-event-fx
   :down
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (next-block-uid uid)]}))
+    {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
 
 (reg-event-fx
   :right
   (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (next-block-uid uid)]}))
+    {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
 
 ;; no-op if root 0th child
@@ -385,7 +341,7 @@
   (let [block (db/get-block [:block/uid uid])
         parent (db/get-parent [:block/uid uid])
         reindex (dec-after (:db/id parent) (:block/order block))
-        prev-block-uid- (prev-block-uid uid)
+        prev-block-uid- (db/prev-block-uid uid)
         {prev-block-string :block/string} (db/get-block [:block/uid prev-block-uid-])]
     (cond
       (and (:node/title parent) (zero? (:block/order block))) nil
@@ -523,7 +479,7 @@
         new-target-children (->> (inc-after (:dbid target) (dec 0))
                                  (concat [new-source-block]))]
     [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
-     {:db/add (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
+     {:db/id (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
      {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
 
 
@@ -548,6 +504,7 @@
       (let [new-source-block {:db/id (:db/id source) :block/order t-order}
             inc-or-dec       (if (> s-order t-order) inc dec)
             reindex          (->> (d/q '[:find ?ch ?new-order
+                                         :keys db/id block/order
                                          :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
                                          :where
                                          [?parent :block/children ?ch]
@@ -555,19 +512,18 @@
                                          [(?between ?s-order ?t-order ?order)]
                                          [(?inc-or-dec ?order) ?new-order]]
                                        @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
-                                  map-order
                                   (concat [new-source-block]))]
-        [{:db/add (:db/id parent) :block/children reindex}]))))
+        [{:db/id (:db/id parent) :block/children reindex}]))))
 
 
 (defn diff-parent
   [source target source-parent target-parent]
   (let [new-block              {:db/id (:db/id source) :block/order (:block/order target)}
         source-parent-children (->> (d/q '[:find ?ch ?new-order
+                                           :keys db/id block/order
                                            :in $ % ?parent ?source-order
                                            :where (dec-after ?parent ?source-order ?ch ?new-order)]
-                                         @db/dsdb rules (:db/id source-parent) (:block/order source))
-                                    map-order)
+                                         @db/dsdb rules (:db/id source-parent) (:block/order source)))
         target-parent-children (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
                                     (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
@@ -597,6 +553,63 @@
   :drop-bullet
   (fn-traced [_ [_ source-uid target-uid kind]]
              (drop-bullet source-uid target-uid kind)))
+
+
+(defn left-sidebar-drop-above
+  [s-order t-order]
+  (let [source-eid (d/q '[:find ?e .
+                          :in $ ?s-order
+                          :where [?e :page/sidebar ?s-order]]
+                        @db/dsdb s-order)
+        new-source {:db/id source-eid :page/sidebar (if (< s-order t-order)
+                                                      (dec t-order)
+                                                      t-order)}
+        inc-or-dec (if (< s-order t-order) dec inc)
+        new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :keys db/id page/sidebar
+                                :in $ ?s-order ?t-order ?between ?inc-or-dec
+                                :where
+                                [?shortcut :page/sidebar ?order]
+                                [(?between ?s-order ?t-order ?order)]
+                                [(?inc-or-dec ?order) ?new-order]]
+                              @db/dsdb s-order (if (< s-order t-order)
+                                                 t-order
+                                                 (dec t-order))
+                              between inc-or-dec)
+                         (concat [new-source]))]
+    new-indices))
+
+
+(reg-event-fx
+  :left-sidebar/drop-above
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
+
+
+(defn left-sidebar-drop-below
+  [s-order t-order]
+  (let [source-eid (d/q '[:find ?e .
+                          :in $ ?s-order
+                          :where [?e :page/sidebar ?s-order]]
+                        @db/dsdb s-order)
+        new-source {:db/id source-eid :page/sidebar t-order}
+        new-indices (->> (d/q '[:find ?shortcut ?new-order
+                                :keys db/id page/sidebar
+                                :in $ ?s-order ?t-order ?between
+                                :where
+                                [?shortcut :page/sidebar ?order]
+                                [(?between ?s-order ?t-order ?order)]
+                                [(dec ?order) ?new-order]]
+                              @db/dsdb s-order (inc t-order) between)
+                         (concat [new-source]))]
+    new-indices))
+
+
+(reg-event-fx
+  :left-sidebar/drop-below
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
+
 
 ;;;; TODO: delete the following logic when re-implementing title merge
 
