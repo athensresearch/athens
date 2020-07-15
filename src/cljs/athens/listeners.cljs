@@ -5,7 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       EventType
@@ -56,16 +56,12 @@
   (let [target             (.. e -target)
         related-target     (.. e -relatedTarget)
         target-uid         (get-dataset-uid target)
-        related-target-uid (get-dataset-uid related-target)
+        _related-target-uid (get-dataset-uid related-target)
         selected-items     @(subscribe [:selected/items])
-        set-items (set selected-items)]
+        _set-items (set selected-items)]
     (.. e stopPropagation)
     (.. target blur)
     (dispatch [:selected/add-item target-uid])))
-    ;;(js/console.log e dx dy)
-    ;;(if (set-items target-uid)
-    ;;  (dispatch-sync [:selected/remove-item target-uid])
-    ;;  (dispatch-sync [:selected/add-item target-uid]))))
 
 
 (defn multi-block-select-up

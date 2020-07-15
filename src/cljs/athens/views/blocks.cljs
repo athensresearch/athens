@@ -13,7 +13,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
-    [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [goog.functions :refer [debounce]]
@@ -302,10 +301,10 @@
 (defn block-content-el
   [_ _ _]
   (fn [block state is-editing]
-    (let [{:block/keys [string uid children]} block]
+    (let [{:block/keys [string uid]} block]
       [:div (use-style block-content-style
-              {:class         "block-content"
-               :on-click      (fn [_] (dispatch [:editing/uid uid]))})
+                       {:class         "block-content"
+                        :on-click      (fn [_] (dispatch [:editing/uid uid]))})
        [autosize/textarea {:value         (:atom-string @state)
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
@@ -329,24 +328,23 @@
   [_ _]
   (fn [{:block/keys [uid children open]} state]
     [:span (merge (use-style bullet-style
-                    {:class         [(when (and (seq children) (not open))
-                                       "closed-with-children")]
-                     :on-mouse-over #(swap! state assoc :tooltip true)
-                     :on-mouse-out  (fn [e]
-                                      (let [related (.. e -relatedTarget)]
-                                        (when-not (and related (contains related "tooltip"))
-                                          (swap! state assoc :tooltip false))))
-                     :draggable     true
-                     :on-drag-start (fn [e]
-                                      (set! (.. e -dataTransfer -effectAllowed) "move")
-                                      (.. e -dataTransfer (setData "text/plain" uid))
+                             {:class         [(when (and (seq children) (not open))
+                                                "closed-with-children")]
+                              :on-mouse-over #(swap! state assoc :tooltip true)
+                              :on-mouse-out  (fn [e]
+                                               (let [related (.. e -relatedTarget)]
+                                                 (when-not (and related (contains related "tooltip"))
+                                                   (swap! state assoc :tooltip false))))
+                              :draggable     true
+                              :on-drag-start (fn [e]
+                                               (set! (.. e -dataTransfer -effectAllowed) "move")
+                                               (.. e -dataTransfer (setData "text/plain" uid))
                                       ;;(dispatch [:dragging/uid uid])
-                                      (swap! state assoc :dragging true))
-                     :on-drag-end   (fn [_]
+                                               (swap! state assoc :dragging true))
+                              :on-drag-end   (fn [_]
                                       ;; FIXME: not always called
-                                      (prn "DRAG END BULLET")
-                                      (swap! state assoc :dragging false))}))]))
-
+                                               (prn "DRAG END BULLET")
+                                               (swap! state assoc :dragging false))}))]))
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
@@ -384,44 +382,44 @@
         [:div.block-container
 
          (use-style (merge block-style
-                      (when dragging dragging-style)
-                      (when is-selected {:background-color (color :link-color :opacity-low)}))
+                           (when dragging dragging-style)
+                           (when is-selected {:background-color (color :link-color :opacity-low)}))
            ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
-           {:class         [(when dragging "dragging")
-                            (when (and (seq children) open) "show-tree-indicator")]
-            :data-uid      uid
-            :on-drag-over  (fn [e]
-                             (.. e preventDefault)
-                             (.. e stopPropagation)
+                    {:class         [(when dragging "dragging")
+                                     (when (and (seq children) open) "show-tree-indicator")]
+                     :data-uid      uid
+                     :on-drag-over  (fn [e]
+                                      (.. e preventDefault)
+                                      (.. e stopPropagation)
                              ;; if last block-container (i.e. no siblings), allow drop below
                              ;; if block or ancestor has css dragging class, do not show drop indicator
-                             (let [offset            (mouse-offset e)
-                                   middle-y          (vertical-center (.. e -target))
-                                   closest-container (.. e -target (closest ".block-container"))
-                                   next-sibling      (.. closest-container -nextElementSibling)
-                                   last-child?       (nil? next-sibling)
-                                   dragging-ancestor (.. e -target (closest ".dragging"))
-                                   not-dragging?     (nil? dragging-ancestor)
-                                   target            (when not-dragging?
-                                                       (cond
+                                      (let [offset            (mouse-offset e)
+                                            middle-y          (vertical-center (.. e -target))
+                                            closest-container (.. e -target (closest ".block-container"))
+                                            next-sibling      (.. closest-container -nextElementSibling)
+                                            last-child?       (nil? next-sibling)
+                                            dragging-ancestor (.. e -target (closest ".dragging"))
+                                            not-dragging?     (nil? dragging-ancestor)
+                                            target            (when not-dragging?
+                                                                (cond
                                                          ;; if above midpoint, show drop indicator above block
-                                                         (< (:y offset) middle-y) :above
+                                                                  (< (:y offset) middle-y) :above
                                                          ;; if no children and over 50 pixels from the left, show child drop indicator
-                                                         (and (empty? children) (< 50 (:x offset))) :child
+                                                                  (and (empty? children) (< 50 (:x offset))) :child
                                                          ;; if below midpoint and last child, show drop indicator below
-                                                         (and last-child? (< middle-y (:y offset))) :below))]
-                               (swap! state assoc :drag-target target)))
-            :on-drag-enter (fn [_])
-            :on-drag-leave (fn [_]
-                             (swap! state assoc :drag-target nil))
-            :on-drop       (fn [e]
-                             (.. e stopPropagation)
-                             (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
-                               (cond
-                                 (nil? drag-target) nil
-                                 (= source-uid uid) nil)
-                               (dispatch [:drop-bullet source-uid uid drag-target])
-                               (swap! state assoc :drag-target nil)))})
+                                                                  (and last-child? (< middle-y (:y offset))) :below))]
+                                        (swap! state assoc :drag-target target)))
+                     :on-drag-enter (fn [_])
+                     :on-drag-leave (fn [_]
+                                      (swap! state assoc :drag-target nil))
+                     :on-drop       (fn [e]
+                                      (.. e stopPropagation)
+                                      (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
+                                        (cond
+                                          (nil? drag-target) nil
+                                          (= source-uid uid) nil)
+                                        (dispatch [:drop-bullet source-uid uid drag-target])
+                                        (swap! state assoc :drag-target nil)))})
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
          [:div {:style {:display "flex"}}

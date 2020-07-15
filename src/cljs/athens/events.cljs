@@ -449,10 +449,10 @@
                        :db/id
                        db/get-block)
         new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
-        reindex-blocks (->> (dec-after (:db/id parent) (:block/order block)))]
+        reindex (dec-after (:db/id parent) (:block/order block))]
     {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
                  {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                 {:db/id (:db/id parent) :block/children reindex-blocks}]}))
+                 {:db/id (:db/id parent) :block/children reindex}]}))
 
 
 (reg-event-fx
@@ -481,15 +481,16 @@
       (unindent uid context-root-uid))))
 
 
-(defn target-child
+(defn drop-child
+  "Order will always be 0"
   [source source-parent target]
   (let [new-source-block {:block/uid (:block/uid source) :block/order 0}
-        new-parent-children (->> (dec-after (:db/id source-parent) (:block/order source)))
-        new-target-children (->> (inc-after (:dbid target) (dec 0))
-                                 (concat [new-source-block]))]
-    [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]] ;; retract source from parent
-     {:db/id (:db/id source-parent) :block/children new-parent-children} ;; reindex parent without source
-     {:db/id (:db/id target) :block/children new-target-children}])) ;; reindex target. include source
+        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
+        reindex-target-parent (->> (inc-after (:dbid target) (dec 0))
+                                   (concat [new-source-block]))]
+    [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
+     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+     {:db/id (:db/id target) :block/children reindex-target-parent}]))
 
 
 (defn between
@@ -500,10 +501,11 @@
     (and (< t x) (< x s))))
 
 
-(defn target-sibling-same-parent
+(defn drop-above-same-parent
   "Give source block target block's order
     When source is below target, increment block orders between source and target-1
     When source is above target, decrement block order between...";; TODO
+
   [source target parent]
   (let [s-order (:block/order source)
         t-order (:block/order target)]
@@ -524,21 +526,15 @@
         [{:db/id (:db/id parent) :block/children reindex}]))))
 
 
-(defn diff-parent
+(defn drop-above-diff-parent
   [source target source-parent target-parent]
-  (let [new-block              {:db/id (:db/id source) :block/order (:block/order target)}
-        source-parent-children (->> (d/q '[:find ?ch ?new-order
-                                           :keys db/id block/order
-                                           :in $ % ?parent ?source-order
-                                           :where (dec-after ?parent ?source-order ?ch ?new-order)]
-                                         @db/dsdb rules (:db/id source-parent) (:block/order source)))
-        target-parent-children (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
-                                    (concat [new-block]))]
+  (let [new-block             {:db/id (:db/id source) :block/order (:block/order target)}
+        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
+        reindex-target-parent (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
+                                   (concat [new-block]))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     ;; reindex source
-     {:db/id (:db/id source-parent) :block/children source-parent-children}
-     ;; reindex target
-     {:db/id (:db/id target-parent) :block/children target-parent-children}]))
+     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]))
 
 
 (defn drop-below-same-parent
@@ -553,9 +549,9 @@
   "source block's new order is target-order + 1"
   [source source-parent target target-parent]
   (let [new-source-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
-        reindex-source   (dec-after (:db/id source-parent) (:block/order source))]
+        reindex-source-parent   (dec-after (:db/id source-parent) (:block/order source))]
     [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children reindex-source}
+     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
      {:db/id (:db/id target-parent) :block/children [new-source-block]}]))
 
 
@@ -569,14 +565,11 @@
         same-parent? (= source-parent target-parent)]
     {:transact!
      (cond
-       ;; child always has same behavior: move to 0th child of target
-       (= kind :child) (target-child source source-parent target)
-       (and (= kind :below) same-parent?) (drop-below-same-parent source source-parent target)
+       (= kind :child)                          (drop-child             source source-parent target)
+       (and (= kind :below) same-parent?)       (drop-below-same-parent source source-parent target)
        (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
-       ;; re-order blocks between source and target
-       (and (= kind :above) same-parent?) (target-sibling-same-parent source target source-parent)
-       ;;; when parent is different, re-index both source-parent and target-parent
-       (and (= kind :above) (not same-parent?)) (diff-parent source target source-parent target-parent))}))
+       (and (= kind :above) same-parent?)       (drop-above-same-parent source target source-parent)
+       (and (= kind :above) (not same-parent?)) (drop-above-diff-parent source target source-parent target-parent))}))
 
 
 (reg-event-fx
