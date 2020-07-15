@@ -304,6 +304,7 @@
 (defn dec-after
   [eid order]
   (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
               :in $ % ?p ?at
               :where (dec-after ?p ?at ?ch ?new-o)]
             @db/dsdb rules eid order)))
