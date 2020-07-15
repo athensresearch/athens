@@ -149,19 +149,19 @@
     ;; (when @open?
 
       ;; IF EXPANDED
-      [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
-       [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
+    [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
+     [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
 
        ;; SHORTCUTS
-       [:ol (use-style shortcuts-list-style)
-        [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
-        (doall
-          (for [sh shortcuts]
-            ^{:key (str "left-sidebar-" (second sh))}
-            [shortcut-component sh]))]
+      [:ol (use-style shortcuts-list-style)
+       [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
+       (doall
+         (for [sh shortcuts]
+           ^{:key (str "left-sidebar-" (second sh))}
+           [shortcut-component sh]))]
 
        ;; LOGO + BOTTOM BUTTONS
-       [:footer (use-sub-style left-sidebar-style :footer)
-        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-        [button-primary {:label "Load Test Data"
-                         :on-click-fn #(dispatch [:get-db/init])}]]]]))
+      [:footer (use-sub-style left-sidebar-style :footer)
+       [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
+       [button-primary {:label "Load Test Data"
+                        :on-click-fn #(dispatch [:get-db/init])}]]]]))
