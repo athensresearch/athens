@@ -66,10 +66,8 @@
 
 (defn multi-block-select-up
   [e]
-  (let []
-    (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
-    (events/unlisten js/window EventType.MOUSEUP multi-block-select-up)
-    (prn "UP")))
+  (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
+  (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
 
 ;; -- When user clicks elsewhere -----------------------------------------
 
