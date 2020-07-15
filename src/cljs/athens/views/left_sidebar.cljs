@@ -37,7 +37,8 @@
                                   :grid-gap "4px"}
                          :small-icon {:font-size "16px"}
                          :large-icon {:font-size "22px"}}
-   ::stylefy/manual [[:&.is-open {:width "288px"}]]})
+   ::stylefy/manual [[:&.is-open {:width "288px"}]
+                     [:&.is-closed {:width "0"}]]})
 
 
 (def left-sidebar-content-style
@@ -48,7 +49,8 @@
    :padding "120px 0 16px"
    :transition "opacity 0.5s ease"
    :opacity 0
-   ::stylefy/manual [[:&.is-open {:opacity 1}]]})
+   ::stylefy/manual [[:&.is-open {:opacity 1}]
+                     [:&.is-closed {:opacity 0}]]})
 
 
 (def shortcuts-list-style
