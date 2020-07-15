@@ -133,6 +133,18 @@
               (dispatch [:indent uid])))))
 
 
+(defn handle-escape
+  [e state]
+  (.. e preventDefault)
+  (prn @state)
+  (prn state)
+  (cond
+    (:slash? @state) (swap! state assoc :slash? false)
+    (:search/page @state) (swap! state assoc :search/page false)
+    (:search/block @state) (swap! state assoc :search/block false)
+    :else (dispatch [:editing/uid nil])))
+
+
 ;;(defn cycle-todo
 ;;  [])
 
@@ -331,6 +343,7 @@
       (= key-code KeyCodes.TAB) (handle-tab e uid)
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+      (= key-code KeyCodes.ESC) (handle-escape e state)
       meta (handle-system-shortcuts e uid state)
 
       ;; -- Default: Add new character -----------------------------------------
