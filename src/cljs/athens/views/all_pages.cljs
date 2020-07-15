@@ -25,7 +25,7 @@
 
 (def table-style
   {:flex "1 1 100%"
-   :margin "0 1rem"
+   :margin "0 2rem"
    :text-align "left"
    :border-collapse "collapse"
    ::stylefy/sub-styles {:th-date {:text-align "right"}
