@@ -504,7 +504,6 @@
   "Give source block target block's order
     When source is below target, increment block orders between source and target-1
     When source is above target, decrement block order between...";; TODO
-
   [source target parent]
   (let [s-order (:block/order source)
         t-order (:block/order target)]
@@ -542,20 +541,42 @@
      {:db/id (:db/id target-parent) :block/children target-parent-children}]))
 
 
+(defn drop-below-same-parent
+  "source block's new order is target block's order"
+  [source source-parent target]
+  (let [new-source-block {:db/id (:db/id source) :block/order (:block/order target)}
+        reindex (dec-after (:db/id source-parent) (:block/order source))]
+    (concat [new-source-block] reindex)))
+
+
+(defn drop-below-diff-parent
+  "source block's new order is target-order + 1"
+  [source source-parent target target-parent]
+  (let [new-source-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
+        reindex-source   (dec-after (:db/id source-parent) (:block/order source))]
+    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
+     {:db/id (:db/id source-parent) :block/children reindex-source}
+     {:db/id (:db/id target-parent) :block/children [new-source-block]}]))
+
+
+;; TODO: don't transact when we know TXes won't change anything
 (defn drop-bullet
   [source-uid target-uid kind]
   (let [source        (db/get-block [:block/uid source-uid])
         target        (db/get-block [:block/uid target-uid])
         source-parent (db/get-parent [:block/uid source-uid])
-        target-parent (db/get-parent [:block/uid target-uid])]
+        target-parent (db/get-parent [:block/uid target-uid])
+        same-parent? (= source-parent target-parent)]
     {:transact!
      (cond
        ;; child always has same behavior: move to 0th child of target
        (= kind :child) (target-child source source-parent target)
+       (and (= kind :below) same-parent?) (drop-below-same-parent source source-parent target)
+       (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
        ;; re-order blocks between source and target
-       (= source-parent target-parent) (target-sibling-same-parent source target source-parent)
+       (and (= kind :above) same-parent?) (target-sibling-same-parent source target source-parent)
        ;;; when parent is different, re-index both source-parent and target-parent
-       (not= source-parent target-parent) (diff-parent source target source-parent target-parent))}))
+       (and (= kind :above) (not same-parent?)) (diff-parent source target source-parent target-parent))}))
 
 
 (reg-event-fx
