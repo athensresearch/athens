@@ -17,26 +17,38 @@
 
 
 (def left-sidebar-style
-  {:flex "0 0 288px"
+  {:width 0
    :grid-area "left-sidebar"
-   :width "288px"
    :height "100%"
    :display "flex"
    :flex-direction "column"
-   :padding "120px 32px 16px 32px"
+   :overflow-y "auto"
+   :transition "width 0.5s ease"
    ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
                                     :display "flex"
                                     :flex "0 0 auto"
                                     :justify-content "space-between"}
-                         :footer {:margin-top "auto"
-                                  :flex "0 0 auto"
+                         :footer {:flex "0 0 auto"
+                                  :margin "auto 32px 0"
                                   :align-self "stretch"
                                   :display "grid"
                                   :grid-auto-flow "column"
                                   :grid-template-columns "1fr auto auto"
                                   :grid-gap "4px"}
                          :small-icon {:font-size "16px"}
-                         :large-icon {:font-size "22px"}}})
+                         :large-icon {:font-size "22px"}}
+   ::stylefy/manual [[:&.is-open {:width "288px"}]]})
+
+
+(def left-sidebar-content-style
+  {:width "288px"
+   :height "100%"
+   :display "flex"
+   :flex-direction "column"
+   :padding "120px 0 16px"
+   :transition "opacity 0.5s ease"
+   :opacity 0
+   ::stylefy/manual [[:&.is-open {:opacity 1}]]})
 
 
 (def shortcuts-list-style
@@ -44,7 +56,7 @@
    :display "flex"
    :list-style "none"
    :flex-direction "column"
-   :padding "0"
+   :padding "0 32px"
    :margin "0 0 32px"
    :overflow-y "auto"
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
@@ -132,10 +144,11 @@
                              [?e :block/uid ?uid]] db/dsdb)
                        seq
                        (sort-by first))]
-    (when @open?
+    ;; (when @open?
 
       ;; IF EXPANDED
-      [:div (use-style left-sidebar-style)
+      [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
+       [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
 
        ;; SHORTCUTS
        [:ol (use-style shortcuts-list-style)
@@ -149,4 +162,4 @@
        [:footer (use-sub-style left-sidebar-style :footer)
         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
         [button-primary {:label "Load Test Data"
-                         :on-click-fn #(dispatch [:get-db/init])}]]])))
+                         :on-click-fn #(dispatch [:get-db/init])}]]]]))
