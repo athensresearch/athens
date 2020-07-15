@@ -107,14 +107,7 @@
 (def hint-style
   {:color "inherit"
    :opacity (:opacity-med OPACITIES)
-   :font-size "14px"
-   ::stylefy/manual [[:kbd {:text-transform "uppercase"
-                            :font-family "inherit"
-                            :font-size "12px"
-                            :font-weight 600
-                            :background (color :body-text-color :opacity-lower)
-                            :border-radius "4px"
-                            :padding "0 4px"}]]})
+   :font-size "14px"})
 
 
 ;;; Utilities

@@ -131,6 +131,14 @@
                            :text-transform "uppercase"}]
                      [:.MuiSvgIcon-root {:font-size "24px"}]
                      [:input {:font-family "inherit"}]
+                     [:kbd {:text-transform "uppercase"
+                            :font-family "inherit"
+                            :font-size "0.85em"
+                            :letter-spacing "0.05em"
+                            :font-weight 600
+                            :background (color :body-text-color :opacity-lower)
+                            :border-radius "4px"
+                            :padding "0 4px"}]
                      [:img {:max-width "100%"
                             :height "auto"}]]})
 
