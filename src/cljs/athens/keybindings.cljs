@@ -129,7 +129,7 @@
         block-zero? (zero? (:block/order (db/get-block [:block/uid uid])))]
     (cond
       shift (dispatch [:unindent uid])
-      :else (when-not block-zero? 
+      :else (when-not block-zero?
               (dispatch [:indent uid])))))
 
 
