@@ -5,7 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType
@@ -39,6 +39,41 @@
                                 (dispatch [:selected/clear-items])
                                 (dispatch [:down (last selected-items)])))))))
 
+
+;; -- When dragging across multiple blocks to select ---------------------
+
+(defn get-dataset-uid
+  [el]
+  (let [block (when el (.. el (closest ".block-container")))
+        uid (when block (.. block -dataset -uid))]
+    uid))
+
+
+(defn multi-block-select-over
+  "If going over something, add it.
+  If leaving it, remove"
+  [e]
+  (let [target             (.. e -target)
+        related-target     (.. e -relatedTarget)
+        target-uid         (get-dataset-uid target)
+        related-target-uid (get-dataset-uid related-target)
+        selected-items     @(subscribe [:selected/items])
+        set-items (set selected-items)]
+    (.. e stopPropagation)
+    (.. target blur)
+    (dispatch [:selected/add-item target-uid])))
+    ;;(js/console.log e dx dy)
+    ;;(if (set-items target-uid)
+    ;;  (dispatch-sync [:selected/remove-item target-uid])
+    ;;  (dispatch-sync [:selected/add-item target-uid]))))
+
+
+(defn multi-block-select-up
+  [e]
+  (let []
+    (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
+    (events/unlisten js/window EventType.MOUSEUP multi-block-select-up)
+    (prn "UP")))
 
 ;; -- When user clicks elsewhere -----------------------------------------
 

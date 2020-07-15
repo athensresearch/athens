@@ -3,6 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [block-key-down]]
+    [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
@@ -14,13 +15,16 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
+    [goog.events :as events]
     [goog.functions :refer [debounce]]
     [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
+    [stylefy.core :as stylefy :refer [use-style]])
+  (:import
+    (goog.events
+      EventType)))
 
 ;;; Styles
 
@@ -302,14 +306,21 @@
       [:div (use-style block-content-style
               {:class         "block-content"
                :on-click      (fn [_] (dispatch [:editing/uid uid]))})
-       [autosize/textarea {:value       (:atom-string @state)
-                           :class       [(when is-editing "is-editing") "textarea"]
-                           :auto-focus  true
-                           :id          (str "editable-uid-" uid)
+       [autosize/textarea {:value         (:atom-string @state)
+                           :class         [(when is-editing "is-editing") "textarea"]
+                           :auto-focus    true
+                           :id            (str "editable-uid-" uid)
                            ;; never actually use on-change. rather, use :string-listener to update datascript. necessary to make react happy
-                           :on-change   (fn [_])
-                           :on-key-down (fn [e]
-                                          (block-key-down e uid state))}]
+                           :on-change     (fn [_])
+                           :on-key-down   (fn [e] (block-key-down e uid state))
+                           :on-mouse-down (fn [e]
+                                            (if (.. e -shiftKey)
+                                              (prn "find linear distance between source and target block. select all")
+                                              (do
+                                                (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
+                                                (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]
+
+;;(dispatch [:selected/add-item uid]))}]
        [parse-and-render string]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
@@ -370,69 +381,66 @@
           (let [new-state {:edit/time edit-time :atom-string string}]
             (swap! state merge new-state)))
 
-        [:<>
+        [:div.block-container
 
+         (use-style (merge block-style
+                      (when dragging dragging-style)
+                      (when is-selected {:background-color (color :link-color :opacity-low)}))
+           ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
+           {:class         [(when dragging "dragging")
+                            (when (and (seq children) open) "show-tree-indicator")]
+            :data-uid      uid
+            :on-drag-over  (fn [e]
+                             (.. e preventDefault)
+                             (.. e stopPropagation)
+                             ;; if last block-container (i.e. no siblings), allow drop below
+                             ;; if block or ancestor has css dragging class, do not show drop indicator
+                             (let [offset            (mouse-offset e)
+                                   middle-y          (vertical-center (.. e -target))
+                                   closest-container (.. e -target (closest ".block-container"))
+                                   next-sibling      (.. closest-container -nextElementSibling)
+                                   last-child?       (nil? next-sibling)
+                                   dragging-ancestor (.. e -target (closest ".dragging"))
+                                   not-dragging?     (nil? dragging-ancestor)
+                                   target            (when not-dragging?
+                                                       (cond
+                                                         ;; if above midpoint, show drop indicator above block
+                                                         (< (:y offset) middle-y) :above
+                                                         ;; if no children and over 50 pixels from the left, show child drop indicator
+                                                         (and (empty? children) (< 50 (:x offset))) :child
+                                                         ;; if below midpoint and last child, show drop indicator below
+                                                         (and last-child? (< middle-y (:y offset))) :below))]
+                               (swap! state assoc :drag-target target)))
+            :on-drag-enter (fn [_])
+            :on-drag-leave (fn [_]
+                             (swap! state assoc :drag-target nil))
+            :on-drop       (fn [e]
+                             (.. e stopPropagation)
+                             (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
+                               (cond
+                                 (nil? drag-target) nil
+                                 (= source-uid uid) nil)
+                               (dispatch [:drop-bullet source-uid uid drag-target])
+                               (swap! state assoc :drag-target nil)))})
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
+         [:div {:style {:display "flex"}}
+          [toggle-el block]
+          [bullet-el block state]
+          [tooltip-el block state]
+          [block-content-el block state is-editing]]
 
-         [:div.block-container
+         (when (:slash? @state)
+           [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
+         [page-search-el block state]
 
-          (use-style (merge block-style
-                       (when dragging dragging-style)
-                       (when is-selected {:background-color (color :link-color :opacity-low)}))
-            ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
-            {:class         [(when dragging "dragging")
-                             (when (and (seq children) open) "show-tree-indicator")]
-             :on-drag-over  (fn [e]
-                              (.. e preventDefault)
-                              (.. e stopPropagation)
-                              ;; if last block-container (i.e. no siblings), allow drop below
-                              ;; if block or ancestor has css dragging class, do not show drop indicator
-                              (let [offset            (mouse-offset e)
-                                    middle-y          (vertical-center (.. e -target))
-                                    closest-container (.. e -target (closest ".block-container"))
-                                    next-sibling      (.. closest-container -nextElementSibling)
-                                    last-child?       (nil? next-sibling)
-                                    dragging-ancestor (.. e -target (closest ".dragging"))
-                                    not-dragging?     (nil? dragging-ancestor)
-                                    target            (when not-dragging?
-                                                        (cond
-                                                          ;; if above midpoint, show drop indicator above block
-                                                          (< (:y offset) middle-y) :above
-                                                          ;; if no children and over 50 pixels from the left, show child drop indicator
-                                                          (and (empty? children) (< 50 (:x offset))) :child
-                                                          ;; if below midpoint and last child, show drop indicator below
-                                                          (and last-child? (< middle-y (:y offset))) :below))]
-                                (swap! state assoc :drag-target target)))
-             :on-drag-enter (fn [_])
-             :on-drag-leave (fn [_]
-                              (swap! state assoc :drag-target nil))
-             :on-drop       (fn [e]
-                              (.. e stopPropagation)
-                              (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
-                                (cond
-                                  (nil? drag-target) nil
-                                  (= source-uid uid) nil)
-                                (dispatch [:drop-bullet source-uid uid drag-target])
-                                (swap! state assoc :drag-target nil)))})
-          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
+         ;; Children
+         (when (and open (seq children))
+           (for [child children]
+             [:div {:style {:margin-left "32px"} :key (:db/id child)}
+              [block-el child]]))
 
-          [:div {:style {:display "flex"}}
-           [toggle-el block]
-           [bullet-el block state]
-           [tooltip-el block state]
-           [block-content-el block state is-editing]]
-
-          (when (:slash? @state)
-            [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
-          [page-search-el block state]
-
-          ;; Children
-          (when (and open (seq children))
-            (for [child children]
-              [:div {:style {:margin-left "32px"} :key (:db/id child)}
-               [block-el child]]))
-
-          [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]]))))
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))
 
 
 (defn block-component

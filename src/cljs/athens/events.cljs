@@ -93,6 +93,14 @@
 
 
 (reg-event-db
+  :selected/remove-item
+  (fn [db [_ uid]]
+    (update db :selected/items (fn [items]
+                                 (vec
+                                   (remove #(= uid %) items))))))
+
+
+(reg-event-db
   :selected/clear-items
   (fn [db _]
     (assoc db :selected/items [])))
