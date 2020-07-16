@@ -41,7 +41,7 @@
 (def athena-input-style
   {:width "100%"
    :border 0
-   :font-size      "2.375"
+   :font-size      "2.375rem"
    :font-weight    "300"
    :line-height    "1.3"
    :letter-spacing "-0.03em"
