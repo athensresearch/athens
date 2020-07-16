@@ -40,6 +40,35 @@
                                 (dispatch [:down (last selected-items)])))))))
 
 
+;; -- When dragging across multiple blocks to select ---------------------
+
+(defn get-dataset-uid
+  [el]
+  (let [block (when el (.. el (closest ".block-container")))
+        uid (when block (.. block -dataset -uid))]
+    uid))
+
+
+(defn multi-block-select-over
+  "If going over something, add it.
+  If leaving it, remove"
+  [e]
+  (let [target             (.. e -target)
+        related-target     (.. e -relatedTarget)
+        target-uid         (get-dataset-uid target)
+        _related-target-uid (get-dataset-uid related-target)
+        selected-items     @(subscribe [:selected/items])
+        _set-items (set selected-items)]
+    (.. e stopPropagation)
+    (.. target blur)
+    (dispatch [:selected/add-item target-uid])))
+
+
+(defn multi-block-select-up
+  [_]
+  (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
+  (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
+
 ;; -- When user clicks elsewhere -----------------------------------------
 
 (defn unfocus
