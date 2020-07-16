@@ -65,7 +65,7 @@
 
 
 (defn multi-block-select-up
-  [e]
+  [_]
   (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
   (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
 
