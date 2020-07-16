@@ -3,24 +3,27 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [block-key-down]]
+    [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
-    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.dropdown :refer [slash-menu-component menu-item-style menu-item-active-style menu-style dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
-    [goog.dom :refer [getAncestorByClass]]
     [goog.dom.classlist :refer [contains]]
+    [goog.events :as events]
     [goog.functions :refer [debounce]]
     [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
+    [stylefy.core :as stylefy :refer [use-style]])
+  (:import
+    (goog.events
+      EventType)))
 
 ;;; Styles
 
@@ -270,72 +273,6 @@
        [:div [:b "last edit"] [:span (date-string edit-time)]]])))
 
 
-(defn bullet-el
-  [{:block/keys [uid children open]} state]
-  [:span (merge (use-style bullet-style
-                           {:class         [(when (and (seq children) (not open))
-                                              "closed-with-children")]
-                            :draggable     true
-                            :on-mouse-over #(swap! state assoc :tooltip true)
-                            :on-mouse-out  (fn [e]
-                                             (let [related (.. e -relatedTarget)]
-                                               (when-not (and related (contains related "tooltip"))
-                                                 (swap! state assoc :tooltip false))))
-                            :on-drag-end   (fn [_] (swap! state assoc :dragging false))
-                            :on-drag-start (fn [e]
-                                             (.. e stopPropagation)
-                                             (set! (.. e -dataTransfer -effectAllowed) "move")
-                                    ;;(prn "UID" uid)
-                                             (.. e -dataTransfer (setData "text/plain" uid))
-                                             (swap! state assoc :dragging true))}))])
-
-
-;; Actual string contents - two elements, one for reading and one for writing
-;; seems hacky, but so far no better way to click into the correct position with one conditional element
-(defn block-content-el
-  [block state is-editing]
-  (let [{:block/keys [string uid children]} block]
-    [:div (use-style block-content-style
-                     {:class         "block-content"
-                      :on-click      (fn [_] (dispatch [:editing/uid uid]))
-                      :on-drag-enter (fn [e]
-                                       (.. e stopPropagation)
-                                       (swap! state assoc :drag-target :child))
-                      :on-drag-over  (fn [e]
-                                       (.. e preventDefault)
-                                       (.. e stopPropagation)
-                                       false)
-                      :on-drag-leave (fn [e]
-                                       (.. e stopPropagation)
-                                       (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
-                                             source-container  (getAncestorByClass (.. e -target) "block-container")]
-                                         (cond
-                                           (= related-container source-container) nil
-                                           :else (swap! state assoc :drag-target nil))))
-                      :on-drop       (fn [e]
-                                       (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
-                                             parent-dragging (getAncestorByClass (.. e -target) "dragging")]
-                                         (.. e preventDefault)
-                                         (.. e stopPropagation)
-                                         (swap! state assoc :dragging false)
-                                         (swap! state assoc :drag-target nil)
-                                         (when (and (nil? parent-dragging) (not= source-uid uid))
-                                           (dispatch [:drop-bullet source-uid uid :child]))))})
-
-     [autosize/textarea {:value       (:atom-string @state)
-                         :class       [(when is-editing "is-editing") "textarea"]
-                         :auto-focus  true
-                         :id          (str "editable-uid-" uid)
-                         ;; never actually use on change. rather, use :string-listener to update datascript. necessary to make react happy
-                         :on-change   (fn [_])
-                         :on-key-down (fn [e]
-                                        (block-key-down e uid state))}]
-     [parse-and-render string]
-     ;; don't show drop indicator when dragging to its children
-     (when (and (empty? children) (not (:dragging @state)))
-       [:div.drag-n-drop (use-style (merge drop-area-indicator
-                                           (when (= (:drag-target @state) :child) {:opacity 1})))])]))
-
 ;; flipped around
 
 (defn page-search-el
@@ -359,6 +296,57 @@
                                   (or title string)])]))}])))
 
 
+;; Actual string contents - two elements, one for reading and one for writing
+;; seems hacky, but so far no better way to click into the correct position with one conditional element
+(defn block-content-el
+  [_ _ _]
+  (fn [block state is-editing]
+    (let [{:block/keys [string uid]} block]
+      [:div (use-style block-content-style
+                       {:class         "block-content"
+                        :on-click      (fn [_] (dispatch [:editing/uid uid]))})
+       [autosize/textarea {:value         (:atom-string @state)
+                           :class         [(when is-editing "is-editing") "textarea"]
+                           :auto-focus    true
+                           :id            (str "editable-uid-" uid)
+                           ;; never actually use on-change. rather, use :string-listener to update datascript. necessary to make react happy
+                           :on-change     (fn [_])
+                           :on-key-down   (fn [e] (block-key-down e uid state))
+                           :on-mouse-down (fn [e]
+                                            (if (.. e -shiftKey)
+                                              (prn "find linear distance between source and target block. select all")
+                                              (do
+                                                (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
+                                                (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]
+
+;;(dispatch [:selected/add-item uid]))}]
+       [parse-and-render string]
+       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
+
+
+(defn bullet-el
+  [_ _]
+  (fn [{:block/keys [uid children open]} state]
+    [:span (merge (use-style bullet-style
+                             {:class         [(when (and (seq children) (not open))
+                                                "closed-with-children")]
+                              :on-mouse-over #(swap! state assoc :tooltip true)
+                              :on-mouse-out  (fn [e]
+                                               (let [related (.. e -relatedTarget)]
+                                                 (when-not (and related (contains related "tooltip"))
+                                                   (swap! state assoc :tooltip false))))
+                              :draggable     true
+                              :on-drag-start (fn [e]
+                                               (set! (.. e -dataTransfer -effectAllowed) "move")
+                                               (.. e -dataTransfer (setData "text/plain" uid))
+                                      ;;(dispatch [:dragging/uid uid])
+                                               (swap! state assoc :dragging true))
+                              :on-drag-end   (fn [_]
+                                      ;; FIXME: not always called
+                                               (prn "DRAG END BULLET")
+                                               (swap! state assoc :dragging false))}))]))
+
+
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
@@ -379,10 +367,8 @@
                      (db-on-change atom-string (:block/uid block))))))
 
     (fn [block]
-      (let [{:block/keys [uid string open children order] edit-time :edit/time} block
+      (let [{:block/keys [uid string open children] edit-time :edit/time} block
             {dragging :dragging drag-target :drag-target state-edit-time :edit/time} @state
-            parent (db/get-parent [:block/uid uid])
-            last-child? (= order (dec (count (:block/children parent))))
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -393,65 +379,66 @@
           (let [new-state {:edit/time edit-time :atom-string string}]
             (swap! state merge new-state)))
 
+        [:div.block-container
 
-        [:<>
+         (use-style (merge block-style
+                           (when dragging dragging-style)
+                           (when is-selected {:background-color (color :link-color :opacity-low)}))
+           ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
+                    {:class         [(when dragging "dragging")
+                                     (when (and (seq children) open) "show-tree-indicator")]
+                     :data-uid      uid
+                     :on-drag-over  (fn [e]
+                                      (.. e preventDefault)
+                                      (.. e stopPropagation)
+                             ;; if last block-container (i.e. no siblings), allow drop below
+                             ;; if block or ancestor has css dragging class, do not show drop indicator
+                                      (let [offset            (mouse-offset e)
+                                            middle-y          (vertical-center (.. e -target))
+                                            closest-container (.. e -target (closest ".block-container"))
+                                            next-sibling      (.. closest-container -nextElementSibling)
+                                            last-child?       (nil? next-sibling)
+                                            dragging-ancestor (.. e -target (closest ".dragging"))
+                                            not-dragging?     (nil? dragging-ancestor)
+                                            target            (when not-dragging?
+                                                                (cond
+                                                         ;; if above midpoint, show drop indicator above block
+                                                                  (< (:y offset) middle-y) :above
+                                                         ;; if no children and over 50 pixels from the left, show child drop indicator
+                                                                  (and (empty? children) (< 50 (:x offset))) :child
+                                                         ;; if below midpoint and last child, show drop indicator below
+                                                                  (and last-child? (< middle-y (:y offset))) :below))]
+                                        (swap! state assoc :drag-target target)))
+                     :on-drag-enter (fn [_])
+                     :on-drag-leave (fn [_]
+                                      (swap! state assoc :drag-target nil))
+                     :on-drop       (fn [e]
+                                      (.. e stopPropagation)
+                                      (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
+                                        (cond
+                                          (nil? drag-target) nil
+                                          (= source-uid uid) nil)
+                                        (dispatch [:drop-bullet source-uid uid drag-target])
+                                        (swap! state assoc :drag-target nil)))})
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
-         ;; should be (when dragging-global) but this causes react to void the original component, preventing on-drag-end from firing
-         ;; need surface to drag over. probably a better way to do this
-         ;; FIXME drop-area-indicator styles no longer work because using a div now and document structure has changed
-         (when true
-           [:div.drag-n-drop (use-style (merge drop-area-indicator
-                                               (when (= drag-target :container) {:opacity "1"})))])
+         [:div {:style {:display "flex"}}
+          [toggle-el block]
+          [bullet-el block state]
+          [tooltip-el block state]
+          [block-content-el block state is-editing]]
 
-         [:div.block-container
-          (use-style (merge block-style
-                            (when dragging dragging-style)
-                            (when is-selected {:background-color (color :link-color :opacity-low)}))
-            ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
-                     {:class         [(when dragging "dragging")
-                                      (when (and (seq children) open) "show-tree-indicator")]
-                      :on-drag-enter (fn [e]
-                                       (.. e stopPropagation)
-                                       (swap! state assoc :drag-target :container))
-                      :on-drag-over  (fn [e]
-                                       (.. e preventDefault)
-                                       (.. e stopPropagation)
-                                       false)
-                      :on-drag-leave (fn [e]
-                                       (let [related-container (getAncestorByClass (.. e -relatedTarget) "block-container")
-                                             source-container  (getAncestorByClass (.. e -target) "block-container")]
-                                         (when-not (= related-container source-container)
-                                           (swap! state assoc :drag-target nil))))
-                      :on-drop       (fn [e]
-                                       (let [source-uid      (.. e -dataTransfer (getData "text/plain"))
-                                             parent-dragging (getAncestorByClass (.. e -target) "dragging")]
-                                         (.. e preventDefault)
-                                         (.. e stopPropagation)
-                                         (swap! state assoc :dragging false)
-                                         (swap! state assoc :drag-target nil)
-                                         (when (and (nil? parent-dragging) (not= source-uid uid))
-                                           (dispatch [:drop-bullet source-uid uid :sibling]))))})
+         (when (:slash? @state)
+           [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
+         [page-search-el block state]
 
-          [:div {:style {:display "flex"}}
-           [toggle-el block]
-           [bullet-el block state]
-           [tooltip-el block state]
-           [block-content-el block state is-editing]]
+         ;; Children
+         (when (and open (seq children))
+           (for [child children]
+             [:div {:style {:margin-left "32px"} :key (:db/id child)}
+              [block-el child]]))
 
-          (when (:slash? @state)
-            [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
-          [page-search-el block state]
-
-          ;; Children
-          ;; if last element and no children, allow drop
-          (when (and open (seq children))
-            (for [child children]
-              [:div {:style {:margin-left "32px"} :key (:db/id child)}
-               [block-el child]]))]
-
-         (when last-child?
-           [:div.drag-n-drop (use-style (merge drop-area-indicator
-                                               (when (= drag-target :container) {:opacity 1})))])]))))
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))
 
 
 (defn block-component
