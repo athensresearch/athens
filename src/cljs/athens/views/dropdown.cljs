@@ -49,8 +49,7 @@
 (def menu-item-style
   (merge
     buttons-style
-    {:min-height "24px"
-     ::stylefy/manual [[:svg:first-child {:font-size "16px" :margin-right "6px" :margin-left "-2px"}]]}))
+    {:min-height "24px"}))
 
 
 (def menu-item-active-style
@@ -79,17 +78,6 @@
    :justify-self "stretch"
    :height "1px"
    :margin "4px 0"})
-
-
-(def kbd-style
-  {:margin-left "auto"
-   :opacity "0.5"
-   :display "inline-flex"
-   :place-content "center"
-   :padding "0 16px"
-   :font-family "inherit"
-   :font-size "0.6em"
-   ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
 (def submenu-indicator-style
@@ -127,11 +115,6 @@
   [button {:label label :disabled disabled :style (merge menu-item-style style)}])
 
 
-(defn kbd
-  [text]
-  [:kbd (use-style kbd-style) text])
-
-
 (defn submenu-indicator
   []
   [:> mui-icons/ChevronRight (use-style submenu-indicator-style)])
@@ -150,14 +133,25 @@
   [dropdown {:style style :content
              [menu {:style {:max-height "8em"} :content
                     [:<>
-                     [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [kbd "cmd-enter"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [kbd "[["]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [kbd "(("]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]}]
                      [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
                      [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
                      [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
+
+
+(defn page-menu-component
+  [{:keys [style]}]
+  [dropdown {:style (merge {:font-size "14px"} style) :content
+             [menu {:content
+                    [:<>
+                     ;; TODO: Add to / Remove from Bookmarks, depending on which it is
+                     [menu-item {:label [:<> [:> mui-icons/BookmarkBorder] [:span "Add to Shortcuts"]]}]
+                     [menu-separator]
+                     [menu-item {:label [:<> [:> mui-icons/Delete] [:span "Delete Page"]]}]]}]}])
 
 
 (defn block-context-menu-component
@@ -171,8 +165,8 @@
                      [menu-item {:label [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]}]
                      [menu-separator]
-                     [menu-item {:label [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [kbd "shift-click"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [kbd "ctrl-o"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]}]
+                     [menu-item {:label [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]}]
                      [menu-item {:label [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]}]
                      [menu-item {:label [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]}]
                      [menu-item {:label [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]}]
