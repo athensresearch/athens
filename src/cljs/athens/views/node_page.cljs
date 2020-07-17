@@ -13,7 +13,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
-    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
@@ -187,7 +186,6 @@
       (let [[m d y] (string/split uid "-")]
         (t/date (string/join "-" [y m d])))
       (catch js/Object _ false))))
-
 
 
 ;;; Components

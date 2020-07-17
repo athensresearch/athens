@@ -299,8 +299,7 @@
 (reg-event-fx
   :page/unmake-shortcut
   (fn [_ [_ uid]]
-      {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
-
+    {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
 
 
 (reg-event-fx
@@ -649,7 +648,6 @@
   :left-sidebar/drop-below
   (fn-traced [_ [_ source-order target-order]]
              {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
-
 
 
 ;;;; TODO: delete the following logic when re-implementing title merge
