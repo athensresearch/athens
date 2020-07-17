@@ -33,6 +33,7 @@
     [:block "it’s " [:bold "very"] " important"]
     "it’s **very** important"))
 
+
 (deftest parser-pre-formatted-tests
   (are [x y] (= x (parse-to-ast y))
     [:block "Hello " [:pre-formatted "world"]]
