@@ -36,7 +36,7 @@
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
    
    hashtag = hashtag-bare | hashtag-delimited
-   <hashtag-bare> = <'#'> #'[a-zA-Z0-9_\\-]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
+   <hashtag-bare> = <'#'> #'[^\\ \\_\\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
    <hashtag-delimited> = <'#'> <'[['> #'[^\\]]+' <']]'>
 
    url-image = <'!'> url-link-text url-link-url
@@ -62,8 +62,8 @@
    (* Note that since our grammar is a left-recursive one, we only use the opening chars in the pair. *)
    (* IMPORTANT: if you are adding new reserved characters to the list, remember to change them all in the following regex & update the list above! *)
    (* Regex could be a thinker at times, but you can use this tool https://regex101.com/ for a visual debugging experience. *)
-   <non-reserved-char> = #'[^\\(\\[\\*\\<\\`\\{\\#\\!]'
-   <reserved-char> = #'[\\(\\[\\*\\<\\`\\{\\#\\!]'
+   <non-reserved-char> =  #'[^\\(\\[\\*\\<\\`\\{\\#\\!]'
+   <reserved-char> =       #'[\\(\\[\\*\\<\\`\\{\\#\\!]'
    <non-reserved-chars> = #'[^\\(\\[\\*\\<\\`\\{\\#\\!]*'
    <any-char> = #'\\w|\\W'
    <any-chars> = #'[\\w|\\W]+'
