@@ -36,7 +36,7 @@
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
    
    hashtag = hashtag-bare | hashtag-delimited
-   <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
+   <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
    <hashtag-delimited> = <'#'> <'[['> #'[^\\]]+' <']]'>
 
    url-image = <'!'> url-link-text url-link-url
