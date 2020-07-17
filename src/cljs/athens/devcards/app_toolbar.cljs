@@ -70,27 +70,29 @@
                     {:opacity "1"}])
 
 
-(def modal-contents-style {:display "flex"
-                           :padding "1.5rem"
-                           :flex-direction "column"
-                           :align-items "center"
-                           ::stylefy/manual [[:p {:max-width "24rem"
-                                                  :text-align "center"}]
-                                             [:button {:font-size "18px"}]]})
+(def modal-contents-style
+  {:display "flex"
+   :padding "1.5rem"
+   :flex-direction "column"
+   :align-items "center"
+   ::stylefy/manual [[:p {:max-width "24rem"
+                          :text-align "center"}]
+                     [:button {:font-size "18px"}]]})
 
 
-(def features-table-style {:background (color :background-plus-1 :opacity-low)
-                           :border-radius "0.5rem"
-                           :margin "0.5rem auto 1.25rem"
-                           ::stylefy/manual [[:th {:font-weight "normal"
-                                                   :opacity "0.75"
-                                                   :padding-block-start "0.5rem"
-                                                   :text-align "left"}]
-                                             [:th :td {:padding-inline "0.25rem"
-                                                       :padding-block "0.125rem"}]
-                                             [:tr:last-child [:td {:padding-block-end "0.5rem"}]]
-                                             [:th:first-child :td:first-child {:padding-inline-start "1rem"}]
-                                             [:th:last-child :td:last-child {:padding-inline-end "1rem"}]]})
+(def features-table-style
+  {:background (color :background-plus-1 :opacity-low)
+   :border-radius "0.5rem"
+   :margin "0.5rem auto 1.25rem"
+   ::stylefy/manual [[:th {:font-weight "normal"
+                           :opacity "0.75"
+                           :padding-block-start "0.5rem"
+                           :text-align "left"}]
+                     [:th :td {:padding-inline "0.25rem"
+                               :padding-block "0.125rem"}]
+                     [:tr:last-child [:td {:padding-block-end "0.5rem"}]]
+                     [:th:first-child :td:first-child {:padding-inline-start "1rem"}]
+                     [:th:last-child :td:last-child {:padding-inline-end "1rem"}]]})
 
 
 ;;; Components
@@ -101,15 +103,19 @@
   [:hr (use-style separator-style)])
 
 
-(defn feature-yes []
-   [(r/adapt-react-class mui-icons/Check) {:style {:margin "auto"
-                                                   :display "block"
-                                                   :color (color :confirmation-color)}}])
+(defn feature-yes
+  []
+  [(r/adapt-react-class mui-icons/Check) {:style {:margin "auto"
+                                                  :display "block"
+                                                  :color (color :confirmation-color)}}])
 
-(defn feature-no []
-   [(r/adapt-react-class mui-icons/Close) {:style {:margin "auto"
-                                                   :display "block"
-                                                   :color (color :warning-color)}}])
+
+(defn feature-no
+  []
+  [(r/adapt-react-class mui-icons/Close) {:style {:margin "auto"
+                                                  :display "block"
+                                                  :color (color :warning-color)}}])
+
 
 (defn features-table
   []
@@ -183,9 +189,9 @@
        (when @import-modal-open?
          [:div (use-style modal-style)
           [modal/modal
-           {:title [:div.modal__title [:> mui-icons/Publish][:h4 "Import to Athens"] [button
-                                                  {:on-click-fn #(reset! import-modal-open? false)
-                                                   :label [:> mui-icons/Close]}]]
+           {:title [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
+                                                                                       {:on-click-fn #(reset! import-modal-open? false)
+                                                                                        :label [:> mui-icons/Close]}]]
             :content [:div (use-style modal-contents-style)
                       ;; TODO: Write intro copy
                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
