@@ -62,7 +62,7 @@
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
-                                 :border-radius "4px"
+                                 :border-radius "0.25rem"
                                  :transition "opacity 0.15s ease"
                                  :border "0"
                                  :opacity "0"
@@ -103,7 +103,7 @@
 (def references-group-style
   {:background (color :background-minus-2 :opacity-med)
    :padding "1rem 0.5rem"
-   :border-radius "4px"
+   :border-radius "0.25rem"
    :margin "0.5em 0"})
 
 

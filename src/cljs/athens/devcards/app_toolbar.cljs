@@ -20,7 +20,6 @@
    :justify-content "flex-start"
    :background-clip "padding-box"
    :align-items "center"
-   :font-size "16px"
    :display "grid"
    :position "absolute"
    :top 0
@@ -39,9 +38,9 @@
   {:display "grid"
    :grid-auto-flow "column"
    :background (:color :background-color :opacity-med)
-   :backdrop-filter "blur(6px)"
+   :backdrop-filter "blur(0.375rem)"
    :padding "0.25rem"
-   :border-radius "6px"
+   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :grid-gap "0.25rem"})
 
 
@@ -49,7 +48,6 @@
   (merge app-header-control-section-style
          {:color (color :body-text-color :opacity-med)
           :justify-self "flex-end"
-          :backdrop-filter "blur(6px)"
           :margin-left "auto"
           ::stylefy/manual [[:button {:color "inherit"}]]}))
 

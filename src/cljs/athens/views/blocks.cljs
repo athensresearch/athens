@@ -26,6 +26,10 @@
       EventType)))
 
 ;;; Styles
+;;; 
+;;; Blocks use Em units in many places rather than Rem units because
+;;; blocks need to scale with their container: sidebar blocks are
+;;; smaller than main content blocks, for instance.
 
 
 (def block-style
@@ -75,7 +79,7 @@
                             :background "currentColor"
                             :transition "all 0.05s ease"
                             :border-radius "100px"
-                            :box-shadow "0 0 0 2px transparent"
+                            :box-shadow "0 0 0 0.125rem transparent"
                             :display "inline-flex"
                             :margin "50% 0 0 50%"
                             :transform "translate(-50%, -50%)"
@@ -83,7 +87,7 @@
                             :width "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
 
-   ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 2px " (color :body-text-color))
+   ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 0.125rem " (color :body-text-color))
                                                                                 :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
@@ -151,9 +155,9 @@
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
-                                 :border-radius "4px"
+                                 :border-radius "0.25rem"
                                  :transition "opacity 0.15s ease"
-                                 :box-shadow (str "-4px 0 0 0" (color :background-minus-1))
+                                 :box-shadow (str "-0.25rem 0 0 0" (color :background-minus-1))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
@@ -181,18 +185,18 @@
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :flex-direction "column"
    :background-color (color :background-plus-1)
-   :padding "8px 12px"
-   :border-radius "4px"
-   :line-height "24px"
-   :left "8px"
-   :top "32px"
-   :transform-origin "8px 24px"
-   :min-width "150px"
+   :padding "0.5rem 0.75rem"
+   :border-radius "0.25rem"
+   :line-height "1.75rem"
+   :left "0.5rem"
+   :top "2rem"
+   :transform-origin "0.5rem 1.5rem"
+   :min-width "9rem"
    :animation "tooltip-appear .2s ease"
    :transition "background .1s ease"
    :display "table"
    :color (color :body-text-color :opacity-high)
-   :border-spacing "4px"
+   :border-spacing "0.25rem"
    ::stylefy/manual [[:div {:display "table-row"}]
                      [:b {:display "table-cell"
                           :user-select "none"
@@ -206,11 +210,11 @@
                       [:&:hover {:color (color :header-text-color)}]]
                      [:&:after {:content "''"
                                 :position "absolute"
-                                :top "-12px"
-                                :bottom "-16px"
+                                :top "-0.75rem"
+                                :bottom "-1rem"
                                 :border-radius "inherit"
-                                :left "-16px"
-                                :right "-16px"
+                                :left "-1rem"
+                                :right "-1rem"
                                 :z-index -1
                                 :display "block"}]]})
 
@@ -435,7 +439,7 @@
          ;; Children
          (when (and open (seq children))
            (for [child children]
-             [:div {:style {:margin-left "32px"} :key (:db/id child)}
+             [:div {:style {:margin-left "2rem"} :key (:db/id child)}
               [block-el child]]))
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))

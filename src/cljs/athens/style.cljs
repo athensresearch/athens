@@ -108,7 +108,7 @@
   {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
-   :font-size        "16px"
+   :font-size        "16px" ;; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual [[:a {:color (color :link-color)}]
                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
@@ -126,10 +126,10 @@
                      [:h4 {:font-size "1.3125em"}]
                      [:h5 {:font-size "0.75em"
                            :font-weight 500
-                           :line-height "1rem"
+                           :line-height "1em"
                            :letter-spacing "0.08em"
                            :text-transform "uppercase"}]
-                     [:.MuiSvgIcon-root {:font-size "24px"}]
+                     [:.MuiSvgIcon-root {:font-size "1.5rem"}]
                      [:input {:font-family "inherit"}]
                      [:kbd {:text-transform "uppercase"
                             :font-family "inherit"
@@ -137,8 +137,8 @@
                             :letter-spacing "0.05em"
                             :font-weight 600
                             :background (color :body-text-color :opacity-lower)
-                            :border-radius "4px"
-                            :padding "0 4px"}]
+                            :border-radius "0.25rem"
+                            :padding "0 0.25rem"}]
                      [:img {:max-width "100%"
                             :height "auto"}]]})
 

@@ -11,12 +11,12 @@
 
 
 (def textinput-style
-  {:min-height "32px"
+  {:min-height "2rem"
    :color (color :body-text-color)
    :caret-color (color :link-color)
-   :border-radius "4px"
+   :border-radius "0.25rem"
    :background (color :background-minus-1)
-   :padding "2px 8px"
+   :padding "0.125rem 0.5rem"
    :flex-basis "100%"
    :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
@@ -34,7 +34,7 @@
    :display "inline-flex"
    :align-items "stretch"
    :justify-content "stretch"
-   ::stylefy/manual [[:input {:padding-left "28px"}]]})
+   ::stylefy/manual [[:input {:padding-left "1.75"}]]})
 
 
 (def input-icon
@@ -43,7 +43,7 @@
    :display "flex"
    :pointer-events "none"
    :transform "translateY(-50%)"
-   :left "6px"
+   :left "0.375rem"
    :color (color :body-text-color)
    :opacity (:opacity-med OPACITIES)
    ::stylefy/manual [[:svg {:font-size "20px"}]]})
