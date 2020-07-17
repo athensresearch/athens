@@ -25,7 +25,7 @@
    "Vitae"  {:count 1}})
 
 
-(def devcard-wrapper {:width "300px"})
+(def devcard-wrapper {:width "18rem"})
 
 
 (defcard-rg Filters

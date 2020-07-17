@@ -24,29 +24,29 @@
    :flex-direction "column"
    :overflow-y "auto"
    :transition "width 0.5s ease"
-   ::stylefy/sub-styles {:top-line {:margin-bottom "40px"
+   ::stylefy/sub-styles {:top-line {:margin-bottom "2.5rem"
                                     :display "flex"
                                     :flex "0 0 auto"
                                     :justify-content "space-between"}
                          :footer {:flex "0 0 auto"
-                                  :margin "auto 32px 0"
+                                  :margin "auto 2rem 0"
                                   :align-self "stretch"
                                   :display "grid"
                                   :grid-auto-flow "column"
                                   :grid-template-columns "1fr auto auto"
-                                  :grid-gap "4px"}
+                                  :grid-gap "0.25rem"}
                          :small-icon {:font-size "16px"}
                          :large-icon {:font-size "22px"}}
-   ::stylefy/manual [[:&.is-open {:width "288px"}]
+   ::stylefy/manual [[:&.is-open {:width "18rem"}]
                      [:&.is-closed {:width "0"}]]})
 
 
 (def left-sidebar-content-style
-  {:width "288px"
+  {:width "18rem"
    :height "100%"
    :display "flex"
    :flex-direction "column"
-   :padding "120px 0 16px"
+   :padding "7.5rem 0 1rem"
    :transition "opacity 0.5s ease"
    :opacity 0
    ::stylefy/manual [[:&.is-open {:opacity 1}]
@@ -58,13 +58,13 @@
    :display "flex"
    :list-style "none"
    :flex-direction "column"
-   :padding "0 32px"
-   :margin "0 0 32px"
+   :padding "0 2rem"
+   :margin "0 0 2rem"
    :overflow-y "auto"
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
                                    :opacity (:opacity-med OPACITIES)
                                    :line-height "1"
-                                   :margin "0 0 4px"
+                                   :margin "0 0 0.25rem"
                                    :font-size "inherit"}}})
 
 
@@ -73,7 +73,7 @@
    :cursor "pointer"
    :display "flex"
    :flex "0 0 auto"
-   :padding "4px 0"
+   :padding "0.25rem 0"
    :transition "all 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 

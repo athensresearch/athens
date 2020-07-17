@@ -35,14 +35,14 @@
    :position      "relative"
    :width         "100vw"
    :height        "33vh"
-   :display "flex"
+   :display       "flex"
    :overflow-y    "auto"
    :right         0
    :z-index       2})
 
 
 (def tabs-style
-  {:padding "0 8px"
+  {:padding "0 0.5rem"
    :flex "0 0 auto"
    :background (darken (color :background-minus-1) 5)
    :display "flex"
@@ -58,7 +58,7 @@
 
 (def panels-style
   {:overflow-y "auto"
-   :padding "8px"})
+   :padding "0.5rem"})
 
 
 (def current-location-style
@@ -85,24 +85,24 @@
    :font-size "12px"
    :font-family "IBM Plex Sans Condensed"
    :letter-spacing "-0.01em"
-   :margin "8px 0 0"
+   :margin "0.5rem 0 0"
    :border-spacing "0"
    :min-width "100%"
    ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
-                           :padding "2px"}]
+                           :padding "0.125rem"}]
                      [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "2px 2px" :white-space "nowrap"}]
+                     [:th {:text-align "left" :padding "0.125rem 0.125rem" :white-space "nowrap"}]
                      [:tr {:transition "all 0.05s ease"}]
-                     [:td:first-child :th:first-child {:padding-left "8px"}]
-                     [:td:last-child :th-last-child {:padding-right "8px"}]
+                     [:td:first-child :th:first-child {:padding-left "0.5rem"}]
+                     [:td:last-child :th-last-child {:padding-right "0.5rem"}]
                      [:tbody [:tr:hover {:cursor "pointer"
                                          :background (darken (color :background-minus-1) 2.5)
                                          :color (color :header-text-color)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
-                     [:td [:li {:margin "0 0 4px"
-                                :padding-top "4px";
+                     [:td [:li {:margin "0 0 0.25rem"
+                                :padding-top "0.25rem";
                                 :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (color :link-color)}]
@@ -114,7 +114,7 @@
 
 (def query-input-style
   (merge textinput-style {:width "100%"
-                          :min-height "40px"
+                          :min-height "2.5rem"
                           :font-size "12px"
                           :background (color :background-color)
                           :font-family "IBM Plex Mono"}))
@@ -194,7 +194,7 @@
          [button-primary {:on-click-fn #(swap! limit + 10)
                           :style {:width "100%"
                                   :justify-content "center"
-                                  :margin "4px 0"}
+                                  :margin "0.25rem 0"}
                           :label "Load More"}])])))
 
 
@@ -329,7 +329,7 @@
                (let [nav (get navs i)]
                  ^{:key i}
                  [button {:label [:<> [:> mui-icons/ChevronLeft] [:span (first nav)]]
-                          :style {:padding "2px 4px"}
+                          :style {:padding "0.125rem 0.25rem"}
                           :on-click-fn #(swap! state (fn [s]
                                                        (-> s
                                                            (update :navs subvec 0 i)

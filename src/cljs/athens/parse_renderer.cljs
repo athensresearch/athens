@@ -29,7 +29,7 @@
                                              :bottom "-1px"
                                              :z-index -1
                                              :opacity "0"
-                                             :border-radius "4px"
+                                             :border-radius "0.25rem"
                                              :transition "all 0.05s ease"
                                              :background (color :link-color 0.1)}]
                                   [:&:hover:after {:opacity "1"}]
@@ -41,7 +41,7 @@
               ::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
 
 
-(def image {:border-radius "2px"})
+(def image {:border-radius "0.125rem"})
 
 
 (def url-link {:cursor "pointer"

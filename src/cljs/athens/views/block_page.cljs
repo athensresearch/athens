@@ -53,7 +53,7 @@
                                  :margin "0"
                                  :font-size "inherit"
                                  :line-height "inherit"
-                                 :border-radius "4px"
+                                 :border-radius "0.25rem"
                                  :transition "opacity 0.15s ease"
                                  :border "0"
                                  :opacity "0"

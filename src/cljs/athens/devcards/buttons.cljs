@@ -7,7 +7,7 @@
 
 
 (defcard-rg Default-Button
-  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "8px"})
+  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "0.5rem"})
    [button {:label "Button"}]
    [button {:label [:> mui-icons/Face]}]
    [button {:label [:<>
@@ -27,7 +27,7 @@
 
 
 (defcard-rg Primary-Button
-  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "8px"})
+  [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "0.5rem"})
    [button-primary {:label "Button"}]
    [button-primary {:label [:> mui-icons/Face]}]
    [button-primary {:label [:<>
