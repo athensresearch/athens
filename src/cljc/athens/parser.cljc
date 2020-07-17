@@ -50,6 +50,7 @@
    <url-link-url-part> = (backslash-escaped-paren | '(' url-link-url-part* ')') / any-char
    <backslash-escaped-paren> = <'\\\\'> ('(' | ')')
    
+   (* The following regular expression expresses this: (any character except '*') <- This repeated as many times as possible *)
    <non-bold-chars> = #'[^\\*]*'
    bold = <'**'> non-bold-chars <'**'>
    
