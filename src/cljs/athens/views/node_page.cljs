@@ -13,6 +13,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
@@ -188,12 +189,18 @@
       (catch js/Object _ false))))
 
 
+
 ;;; Components
 
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]
+  [{:block/keys [children uid] title :node/title has-shortcut? :page/sidebar}
+   editing-uid
+   ref-groups
+   timeline-page?
+   show-page-menu?
+   page-menu-position]
 
   [:div (use-style page-style)
 
@@ -219,7 +226,11 @@
              :label [:> mui-icons/ExpandMore]
              :style page-menu-toggle-style}]
     (when @show-page-menu?
-      [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
+      [page-menu-component {:style {:position "fixed"
+                                    :left (str (:x @page-menu-position) "px")
+                                    :top (str (:y @page-menu-position) "px")}
+                            :uid uid
+                            :has-shortcut? has-shortcut?}])
     (parse-renderer/parse-and-render title)]
 
    ;; Children
@@ -270,4 +281,6 @@
       ;; TODO: turn ref-groups into an atom, let users toggle open/close
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
-        [node-page-el node editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]))))
+        [node-page-el node editing-uid ref-groups timeline-page? show-page-menu?
+        ;;  has-shortcut?
+         page-menu-position]))))

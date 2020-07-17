@@ -8,6 +8,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
+    [re-frame.core :refer [dispatch]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -25,7 +26,7 @@
   {:display "inline-flex"
    :z-index (:zindex-dropdown ZINDICES)
    :padding "0.25rem"
-   :border-radius "cal(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :min-height "2em"
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
@@ -144,12 +145,19 @@
 
 
 (defn page-menu-component
-  [{:keys [style]}]
+  [{:keys [style uid has-shortcut?]}]
   [dropdown {:style (merge {:font-size "14px"} style) :content
              [menu {:content
                     [:<>
-                     ;; TODO: Add to / Remove from Bookmarks, depending on which it is
-                     [menu-item {:label [:<> [:> mui-icons/BookmarkBorder] [:span "Add to Shortcuts"]]}]
+                     (if has-shortcut?
+                       [:button (use-style menu-item-style {:on-click #(dispatch [:page/unmake-shortcut uid])})
+                        [:<>
+                         [:> mui-icons/BookmarkBorder]
+                         [:span "Remove Shortcut"]]]
+                       [:button (use-style menu-item-style {:on-click #(dispatch [:page/make-shortcut uid])})
+                        [:<>
+                         [:> mui-icons/Bookmark]
+                         [:span "Add Shortcut"]]])
                      [menu-separator]
                      [menu-item {:label [:<> [:> mui-icons/Delete] [:span "Delete Page"]]}]]}]}])
 

@@ -287,6 +287,23 @@
 
 
 (reg-event-fx
+  :page/make-shortcut
+  (fn [_ [_ uid]]
+    (let [sidebar-ents (d/q '[:find ?e
+                              :where
+                              [?e :page/sidebar _]]
+                            @db/dsdb)]
+      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
+
+
+(reg-event-fx
+  :page/unmake-shortcut
+  (fn [_ [_ uid]]
+      {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
+
+
+
+(reg-event-fx
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
@@ -632,6 +649,7 @@
   :left-sidebar/drop-below
   (fn-traced [_ [_ source-order target-order]]
              {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
+
 
 
 ;;;; TODO: delete the following logic when re-implementing title merge
