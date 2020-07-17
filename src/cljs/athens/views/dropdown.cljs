@@ -148,6 +148,7 @@
   [dropdown {:style (merge {:font-size "14px"} style) :content
              [menu {:content
                     [:<>
+                     ;; TODO: Add to / Remove from Bookmarks, depending on which it is
                      [menu-item {:label [:<> [:> mui-icons/BookmarkBorder] [:span "Add to Shortcuts"]]}]
                      [menu-separator]
                      [menu-item {:label [:<> [:> mui-icons/Delete] [:span "Delete Page"]]}]]}]}])
