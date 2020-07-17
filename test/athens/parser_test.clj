@@ -38,10 +38,10 @@
   (are [x y] (= x (parse-to-ast y))
     [:block "Hello " [:pre-formatted "world"]]
     "Hello `world`"
-    
+
     [:block "Hello " [:pre-formatted "Mars"]]
     "Hello ```Mars```"
-    
+
     [:block "Hello " [:pre-formatted "world"] " and " [:pre-formatted "Mars"]]
     "Hello `world` and `Mars`"))
 
