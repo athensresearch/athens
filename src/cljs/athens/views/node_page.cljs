@@ -200,8 +200,7 @@
    show-page-menu?
    page-menu-position]
 
-  [:div (use-style page-style)
-
+  [:div (use-style page-style {:class ["node-page"]})
    ;; TODO: implement timeline
    ;;(when timeline-page?
    ;;  [button {:on-click-fn #(dispatch [:jump-to-timeline uid])
