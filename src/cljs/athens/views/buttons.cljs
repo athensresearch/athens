@@ -50,6 +50,7 @@
                                                       :cursor "default"}]
                      [:span {:flex "1 0 auto"
                              :text-align "left"}]
+                     [:kbd {:margin-inline-start "1rem"}]
                      [:.MuiSvgIcon-root button-icons-style
                       [(selectors/& (selectors/not (selectors/last-child))) button-icons-not-last-child-style]
                       [(selectors/& (selectors/not (selectors/first-child))) button-icons-not-first-child-style]

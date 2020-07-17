@@ -9,6 +9,7 @@
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
+    [athens.views.dropdown :refer [page-menu-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -119,6 +120,16 @@
                                         :margin-block-start "0"}]]})
 
 
+(def page-menu-toggle-style
+  {:position "absolute"
+   :left "-0.5rem"
+   :border-radius "1000px"
+   :padding "0.375rem 0.5rem"
+   :color (color :body-text-color :opacity-high)
+   :top "50%"
+   :transform "translate(-100%, -50%)"})
+
+
 ;;; Helpers
 
 
@@ -182,7 +193,7 @@
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid ref-groups timeline-page?]
+  [{:block/keys [children uid] title :node/title} editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]
 
   [:div (use-style page-style)
 
@@ -201,6 +212,14 @@
         :class      (when (= editing-uid uid) "is-editing")
         :auto-focus true
         :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
+    [button {:on-click-fn (fn [e]
+                            (doall (swap! show-page-menu? not)
+                                   (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
+             :active (when @show-page-menu? true)
+             :label [:> mui-icons/ExpandMore]
+             :style page-menu-toggle-style}]
+    (when @show-page-menu?
+      [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
     (parse-renderer/parse-and-render title)]
 
    ;; Children
@@ -244,9 +263,11 @@
   [ident]
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])
-        timeline-page? (is-timeline-page uid)]
+        timeline-page? (is-timeline-page uid)
+        show-page-menu? (r/atom false)
+        page-menu-position (r/atom {:x 0 :y 0})]
     (when-not (string/blank? title)
       ;; TODO: turn ref-groups into an atom, let users toggle open/close
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
-        [node-page-el node editing-uid ref-groups timeline-page?]))))
+        [node-page-el node editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]))))
