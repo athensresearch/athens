@@ -66,6 +66,7 @@
    :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
+   :align-items "center"
    :top "0"
    :justify-content "space-between"
    :box-shadow [["0 1px 0 0 " (color :border-color)]]
@@ -73,30 +74,35 @@
 
 
 (def result-style
-  {:display "grid"
-   :grid-template "\"title icon\" \"preview icon\""
-   :grid-gap "0 0.75rem"
-   :grid-template-columns "1fr auto"
+  {
+   :display "flex"
    :padding "0.75rem 2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"
    :border-top [["1px solid " (color :border-color)]]
-   ::stylefy/sub-styles {:title {:grid-area "title"
-                                 :font-size "1rem"
+   ::stylefy/sub-styles {:title {:font-size "1rem"
                                  :margin "0"
                                  :color (color :header-text-color)
                                  :font-weight "500"}
-                         :preview {:grid-area "preview"
-                                   :white-space "wrap"
+                         :preview {:white-space "wrap"
                                    :word-break "break-word"
-                                   :color (color :body-text-color :opacity-low)}
-                         :link-leader {:grid-area "icon"
-                                       :color "transparent"
+                                   :color (color :body-text-color :opacity-med)}
+                         :link-leader {:color "transparent"
                                        :margin "auto auto"}}
-   ::stylefy/manual [[:&.selected :&:hover {:background (color :link-color)
+   ::stylefy/manual [[:b {:font-weight "500"
+                          :opacity (:opacity-high OPACITIES)}]
+                     [:&.selected :&:hover {:background (color :link-color)
                                             :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
+
+
+(def result-body-style
+  {:flex "1 1 100%"
+   :display "flex"
+   :flex-direction "column"
+   :justify-content "center"
+   :align-items "flex-start"})
 
 
 (def result-highlight-style
@@ -251,10 +257,13 @@
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
                                                   :class (when (= i index) "selected")})
-                    [:h4.title (use-sub-style result-style :title)
-                     [:b "Create Page: "]
-                     query]
+                    
+                    [:div (use-style result-body-style)
+                     [:h4.title (use-sub-style result-style :title)
+                      [:b "Create Page: "]
+                      query]]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
+                   
                    [:div (use-style result-style {:key      i
                                                   :on-click (fn []
                                                               (let [selected-page {:node/title   title
@@ -264,7 +273,9 @@
                                                                 (dispatch [:athena/update-recent-items selected-page])
                                                                 (navigate-uid uid)))
                                                   :class    (when (= i index) "selected")})
-                    [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
-                    (when string
-                      [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
-                    [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))
+                    [:div (use-style result-body-style)
+
+                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
+                     (when string
+                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
+                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))
