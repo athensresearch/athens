@@ -29,7 +29,7 @@
    
    <syntax-in-component> = (page-link | block-ref)
    <any-non-component-reserved-chars> = #'[^\\{\\}]*'
-   component = <'{{'> (syntax-in-component / any-non-component-reserved-chars)* <'}}'>
+   component = <'{{'> any-non-component-reserved-chars <'}}'>
    
    (* The following regular expression expresses this: (any character except '[' or ']') <- This repeated as many times as possible *)
    <any-non-page-link-chars> = #'[^\\[\\]]*'

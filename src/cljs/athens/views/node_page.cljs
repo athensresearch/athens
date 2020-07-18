@@ -219,7 +219,7 @@
              :style page-menu-toggle-style}]
     (when @show-page-menu?
       [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
-    (parse-renderer/parse-and-render title)]
+    (parse-renderer/parse-and-render title uid)]
 
    ;; Children
    [:div

@@ -1,5 +1,6 @@
 (ns athens.parse-renderer
   (:require
+    [athens.components-util :as components-util]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -78,19 +79,21 @@
 ;; Instaparse transforming docs: https://github.com/Engelberg/instaparse#transforming-the-tree
 (defn transform
   "Transforms Instaparse output to Hiccup."
-  [tree]
+  [tree uid]
   (insta/transform
     {:block         (fn [& contents]
                       (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
+     :component     (fn [contents]
+                      (components-util/render-component contents uid))
      :page-link     (fn [& title] (render-page-link title))
      :block-ref     (fn [uid]
                       (let [block (pull db/dsdb '[*] [:block/uid uid])]
                         [:span (use-style block-ref {:class "block-ref"})
-                         [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block))]]))
+                         [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block) uid)]]))
      :hashtag       (fn [tag-name]
                       (let [node (pull db/dsdb '[*] [:node/title tag-name])]
-                        [:span (use-style hashtag) {:class    "hashtag"
-                                                    :on-click #(navigate-uid (:block/uid @node))}
+                        [:span (use-style hashtag {:class    "hashtag"
+                                                   :on-click #(navigate-uid (:block/uid @node))}) 
                          [:span {:class "formatting"} "#"]
                          [:span {:class "contents"} tag-name]]))
      :url-image     (fn [{url :url alt :alt}]
@@ -110,11 +113,11 @@
 
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
-  [string]
+  [string uid]
   (let [result (parser/parse-to-ast string)]
     (if (insta/failure? result)
       [:span
        {:title (pr-str (insta/get-failure result))
         :style {:color "red"}}
        string]
-      [vec (transform result)])))
+      [vec (transform result uid)])))
