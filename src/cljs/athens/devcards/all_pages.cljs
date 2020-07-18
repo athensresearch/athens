@@ -3,7 +3,7 @@
     [athens.db :as db]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.views.all-pages :refer [table]]
-    [athens.views.buttons :refer [button-primary]]
+    [athens.views.buttons :refer [button]]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
@@ -19,14 +19,14 @@
 
 (defcard-rg Create-Page
   "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [button-primary {:label "Create Page"
-                   :on-click-fn (fn []
-                                  (let [n (:max-eid @db/dsdb)]
-                                    (d/transact! db/dsdb [{:node/title     (str "Test Title " n)
-                                                           :block/uid      (str "uid" n)
-                                                           :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
-                                                           :create/time    (.getTime (js/Date.))
-                                                           :edit/time      (.getTime (js/Date.))}])))}])
+  [button {:on-click (fn []
+                       (let [n (:max-eid @db/dsdb)]
+                         (d/transact! db/dsdb [{:node/title     (str "Test Title " n)
+                                                :block/uid      (str "uid" n)
+                                                :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
+                                                :create/time    (.getTime (js/Date.))
+                                                :edit/time      (.getTime (js/Date.))}])))}
+   "Create Page"])
 
 
 (defcard-rg Load-Real-DB

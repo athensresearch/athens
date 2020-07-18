@@ -6,10 +6,11 @@
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.all-pages :refer [date-string]]
-    [athens.views.dropdown :refer [slash-menu-component menu-item-style menu-item-active-style menu-style dropdown]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.dropdown :refer [slash-menu-component menu-style dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -36,6 +37,7 @@
   {:display "flex"
    :line-height "2em"
    :position "relative"
+   :border-radius "0.125rem"
    :justify-content "flex-start"
    :flex-direction "column"
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
@@ -45,7 +47,22 @@
                                                      :top "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
-                                                     :background (color :border-color)}]]})
+                                                     :background (color :border-color)}]
+                     [:&:after {:content "''"
+                                :z-index -1
+                                :position "absolute"
+                                :top "0.75px"
+                                :right 0
+                                :bottom "0.75px"
+                                :left 0
+                                :opacity 0
+                                :pointer-events "none"
+                                :border-radius "0.25rem"
+                                :transition "opacity 0.075s ease"
+                                :background (color :link-color :opacity-lower)
+                                :box-shadow [["0 0.25rem 0.5rem -0.25rem" (color :background-color :opacity-med)]]}]
+                     [:&.is-selected:after {:opacity 1}]
+                     [:.block-container {:margin-left "2rem"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -186,7 +203,7 @@
 
 
 (def tooltip-style
-  {:z-index    4
+  {:z-index (:zindex-dropdown ZINDICES)
    :position "absolute"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :flex-direction "column"
@@ -230,8 +247,6 @@
 
 
 (stylefy/class "dragging" dragging-style)
-
-(stylefy/class "is-selected" {:background-color (color :link-color :opacity-low)})
 
 ;; Helpers
 
@@ -303,10 +318,10 @@
                               [:div (use-style menu-style {:id "dropdown-menu"})
                                (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                  ^{:key (str "inline-search-item" uid)}
-                                 [:div (use-style
-                                         (merge menu-item-style (when (= index i) menu-item-active-style))
-                                         {:on-click #(prn "expand")
-                                          :id (str "result-" i)})
+                                 [button
+                                  {:on-click #(prn "expand")
+                                   :active (when (= index i) true)
+                                   :id (str "result-" i)}
                                   (or title string)])]))}])))
 
 
@@ -462,7 +477,7 @@
          ;; Children
          (when (and open (seq children))
            (for [child children]
-             [:div {:style {:margin-left "2rem"} :key (:db/id child)}
+             [:div {:key (:db/id child)}
               [block-el child]]))
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))

@@ -6,10 +6,11 @@
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid]]
-    [athens.views.buttons :refer [button-primary]]
+    [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -35,7 +36,11 @@
    :z-index       (:zindex-modal ZINDICES)
    :top           "50%"
    :left          "50%"
-   :transform     "translate(-50%, -50%)"})
+   :transform     "translate(-50%, -50%)"
+   ;; Styling for the states of the custom search-cancel button, which depend on the input contents
+   ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
+   ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
+                     [(selectors/+ :input:valid :button) {:opacity 1}]]})
 
 
 (def athena-input-style
@@ -49,10 +54,31 @@
    :background     (color :background-plus-2)
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
-   :padding        "1.5rem"
+   :padding        "1.5rem 4rem 1.5rem 1.5rem"
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
-                   "::placeholder" {:color (color :body-text-color :opacity-low)}}})
+                   "::placeholder" {:color (color :body-text-color :opacity-low)}
+                   "::-webkit-search-cancel-button" {:display "none"} ;; We replace the button elsewhere
+                   }})
+
+
+(def search-cancel-button-style
+  {:background "none"
+   :color "inherit"
+   :position "absolute"
+   :transition "opacity 0.1s ease, background 0.1s ease"
+   :cursor "pointer"
+   :border 0
+   :right "2rem"
+   :place-items "center"
+   :place-content "center"
+   :height "2.5rem"
+   :width "2.5rem"
+   :border-radius "1000px"
+   :display "flex"
+   :transform "translate(0%, -50%)"
+   :top "50%"
+   ::stylefy/manual [[:&:hover :&:focus {:background (color :background-plus-1)}]]})
 
 
 (def results-list-style
@@ -66,6 +92,7 @@
    :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
+   :align-items "center"
    :top "0"
    :justify-content "space-between"
    :box-shadow [["0 1px 0 0 " (color :border-color)]]
@@ -73,30 +100,34 @@
 
 
 (def result-style
-  {:display "grid"
-   :grid-template "\"title icon\" \"preview icon\""
-   :grid-gap "0 0.75rem"
-   :grid-template-columns "1fr auto"
+  {:display "flex"
    :padding "0.75rem 2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"
    :border-top [["1px solid " (color :border-color)]]
-   ::stylefy/sub-styles {:title {:grid-area "title"
-                                 :font-size "1rem"
+   ::stylefy/sub-styles {:title {:font-size "1rem"
                                  :margin "0"
                                  :color (color :header-text-color)
                                  :font-weight "500"}
-                         :preview {:grid-area "preview"
-                                   :white-space "wrap"
+                         :preview {:white-space "wrap"
                                    :word-break "break-word"
-                                   :color (color :body-text-color :opacity-low)}
-                         :link-leader {:grid-area "icon"
-                                       :color "transparent"
+                                   :color (color :body-text-color :opacity-med)}
+                         :link-leader {:color "transparent"
                                        :margin "auto auto"}}
-   ::stylefy/manual [[:&.selected :&:hover {:background (color :link-color)
+   ::stylefy/manual [[:b {:font-weight "500"
+                          :opacity (:opacity-high OPACITIES)}]
+                     [:&.selected :&:hover {:background (color :link-color)
                                             :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
+
+
+(def result-body-style
+  {:flex "1 1 100%"
+   :display "flex"
+   :flex-direction "column"
+   :justify-content "center"
+   :align-items "flex-start"})
 
 
 (def result-highlight-style
@@ -187,11 +218,12 @@
 
 (defn athena-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:athena/toggle])
-                   :label [:<>
-                           [:> mui-icons/Search]
-                           [:span "Find or Create a Page"]]
-                   :style {:font-size "11px"}}])
+  [button {:on-click #(dispatch [:athena/toggle])
+           :primary true
+           :style {:font-size "11px"}}
+   [:<>
+    [:> mui-icons/Search]
+    [:span "Find or Create a Page"]]])
 
 
 (defn results-el
@@ -227,12 +259,18 @@
         search-handler (debounce (create-search-handler s) 500)]
     (when open?
       [:div.athena (use-style container-style)
-       [:input (use-style athena-input-style
-                          {:type        "search"
-                           :auto-focus  true
-                           :placeholder "Find or Create Page"
-                           :on-change   (fn [e] (search-handler (.. e -target -value)))
-                           :on-key-down (fn [e] (key-down-handler e s))})]
+       [:header {:style {:position "relative"}}
+        [:input (use-style athena-input-style
+                           {:type        "search"
+                            :id          "athena-input"
+                            :auto-focus  true
+                            :required    true
+                            :placeholder "Find or Create Page"
+                            :on-change   (fn [e] (search-handler (.. e -target -value)))
+                            :on-key-down (fn [e] (key-down-handler e s))})]
+        [:button (use-style search-cancel-button-style
+                            {:on-click #(set! (.-value (.getElementById js/document "athena-input")))})
+         [:> mui-icons/Close]]]
        [results-el s]
        [(fn []
           (let [{:keys [results query index]} @s]
@@ -251,10 +289,13 @@
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
                                                   :class (when (= i index) "selected")})
-                    [:h4.title (use-sub-style result-style :title)
-                     [:b "Create Page: "]
-                     query]
+
+                    [:div (use-style result-body-style)
+                     [:h4.title (use-sub-style result-style :title)
+                      [:b "Create Page: "]
+                      query]]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
+
                    [:div (use-style result-style {:key      i
                                                   :on-click (fn []
                                                               (let [selected-page {:node/title   title
@@ -264,7 +305,9 @@
                                                                 (dispatch [:athena/update-recent-items selected-page])
                                                                 (navigate-uid uid)))
                                                   :class    (when (= i index) "selected")})
-                    [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
-                    (when string
-                      [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
+                    [:div (use-style result-body-style)
+
+                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
+                     (when string
+                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))

@@ -34,7 +34,7 @@
    :display "inline-flex"
    :align-items "stretch"
    :justify-content "stretch"
-   ::stylefy/manual [[:input {:padding-left "1.75"}]]})
+   ::stylefy/manual [[:input {:padding-left "1.75rem"}]]})
 
 
 (def input-icon
@@ -51,27 +51,14 @@
 
 ;;; Components
 
+
 (defn textinput
-  [{:keys [type
-           autoFocus
-           defaultValue
-           placeholder
-           on-change
-           value
-           style
-           icon]}]
-  (if icon
-    [:div (use-style input-wrap)
-     [:input (use-style (merge textinput-style style) {:type type
-                                                       :autoFocus autoFocus
-                                                       :defaultValue defaultValue
-                                                       :value value
-                                                       :on-change on-change
-                                                       :placeholder placeholder})]
-     [:span (use-style input-icon) icon]]
-    [:input (use-style (merge textinput-style style) {:type type
-                                                      :autoFocus autoFocus
-                                                      :defaultValue defaultValue
-                                                      :value value
-                                                      :on-change on-change
-                                                      :placeholder placeholder})]))
+  [{:keys [style icon class] :as props}]
+  (let [props- (dissoc props :style :icon :class)]
+    (if icon
+      [:div (use-style input-wrap)
+       [:input (use-style (merge textinput-style style)
+                          (merge props- {:class (vec (flatten class))}))]
+       [:span (use-style input-icon) icon]]
+      [:input (use-style (merge textinput-style style)
+                         (merge props- {:class (vec (flatten class))}))])))
