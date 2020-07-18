@@ -74,8 +74,7 @@
 
 
 (def result-style
-  {
-   :display "flex"
+  {:display "flex"
    :padding "0.75rem 2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
@@ -257,13 +256,13 @@
                                                                 (dispatch [:page/create query uid])
                                                                 (navigate-uid uid)))
                                                   :class (when (= i index) "selected")})
-                    
+
                     [:div (use-style result-body-style)
                      [:h4.title (use-sub-style result-style :title)
                       [:b "Create Page: "]
                       query]]
                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
-                   
+
                    [:div (use-style result-style {:key      i
                                                   :on-click (fn []
                                                               (let [selected-page {:node/title   title
@@ -278,4 +277,4 @@
                      [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                      (when string
                        [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
-                     [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))
+                    [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))
