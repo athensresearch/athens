@@ -212,10 +212,10 @@
         :auto-focus true
         :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
     [button {:on-click (fn [e]
-                             (doall (swap! show-page-menu? not)
-                                    (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
-                 :active (when @show-page-menu? true)
-                 :style page-menu-toggle-style}
+                         (doall (swap! show-page-menu? not)
+                                (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
+             :active (when @show-page-menu? true)
+             :style page-menu-toggle-style}
      [:> mui-icons/ExpandMore]]
     (when @show-page-menu?
       [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])

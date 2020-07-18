@@ -1,15 +1,15 @@
 (ns athens.devcards.db
   (:require
-   [athens.db :as db]
-   [athens.views.buttons :refer [button]]
-   [cljs-http.client :as http]
-   [cljs.core.async :refer [go <!]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [datascript.core :as d]
-   [devcards.core :refer [defcard defcard-rg]]
-   [posh.reagent :refer [transact!]]
-   [reagent.core :as r]))
+    [athens.db :as db]
+    [athens.views.buttons :refer [button]]
+    [cljs-http.client :as http]
+    [cljs.core.async :refer [go <!]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [datascript.core :as d]
+    [devcards.core :refer [defcard defcard-rg]]
+    [posh.reagent :refer [transact!]]
+    [reagent.core :as r]))
 
 
 ;;; Components
@@ -33,7 +33,7 @@
                   (load-real-db!))]
     (fn []
       [button {:disabled @pressed?
-                   :on-click handler} "Load Real Data"])))
+               :on-click handler} "Load Real Data"])))
 
 
 (defn reset-db-button

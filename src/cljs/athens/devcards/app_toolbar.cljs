@@ -158,7 +158,7 @@
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active @left-open?
-                      :on-click #(dispatch [:left-sidebar/toggle])}
+                  :on-click #(dispatch [:left-sidebar/toggle])}
           [:> mui-icons/Menu]]
       ;; [separator] // for Electron implementation
       ;; [button {:on-click-fn #(navigate :home)
@@ -167,13 +167,13 @@
       ;;          :label [:> mui-icons/ChevronRight]}]
          [separator]
          [button {:on-click #(navigate :home)
-                      :active (when (= route-name :home) true)} [:> mui-icons/Today]]
+                  :active (when (= route-name :home) true)} [:> mui-icons/Today]]
          [button {:on-click #(navigate :pages)
-                      :active (when (= route-name :pages) true)}
+                  :active (when (= route-name :pages) true)}
           [:> mui-icons/FileCopy]]
          [button {:on-click #(dispatch [:athena/toggle])
-                      :style {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
-                      :active (when @(subscribe [:athena/open]) true)}
+                  :style {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                  :active (when @(subscribe [:athena/open]) true)}
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
@@ -181,7 +181,7 @@
           [:> mui-icons/Publish]]
          [separator]
          [button {:active @right-open?
-                      :on-click #(dispatch [:right-sidebar/toggle])}
+                  :on-click #(dispatch [:right-sidebar/toggle])}
           [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
 
        (when @import-modal-open?

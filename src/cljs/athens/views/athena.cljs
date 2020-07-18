@@ -188,8 +188,8 @@
 (defn athena-prompt-el
   []
   [button {:on-click #(dispatch [:athena/toggle])
-               :primary true
-               :style {:font-size "11px"}}
+           :primary true
+           :style {:font-size "11px"}}
    [:<>
     [:> mui-icons/Search]
     [:span "Find or Create a Page"]]])

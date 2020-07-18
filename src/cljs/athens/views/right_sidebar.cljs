@@ -175,8 +175,8 @@
           [:article (use-style sidebar-item-style)
            [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
             [button {:style sidebar-item-toggle-style
-                         :on-click #(dispatch [:right-sidebar/toggle-item uid])
-                         :class (when open "is-open")}
+                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                     :class (when open "is-open")}
              [:> mui-icons/ChevronRight]]
             [:h2
              (if title

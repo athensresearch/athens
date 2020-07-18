@@ -11,19 +11,19 @@
    [button "Button"]
    [button [:> mui-icons/Face]]
    [button [:<>
-                [:> mui-icons/Face]
-                [:span "Button"]]]
+            [:> mui-icons/Face]
+            [:span "Button"]]]
    [button [:<>
-                [:span "Button"]
-                [:> mui-icons/ChevronRight]]]
+            [:span "Button"]
+            [:> mui-icons/ChevronRight]]]
    [button {:disabled true} "Button"]
    [button {:disabled true} [:> mui-icons/Face]]
    [button {:disabled true} [:<>
-                                 [:> mui-icons/Face]
-                                 [:span "Button"]]]
+                             [:> mui-icons/Face]
+                             [:span "Button"]]]
    [button {:disabled true} [:<>
-                                 [:span "Button"]
-                                 [:> mui-icons/ChevronRight]]]])
+                             [:span "Button"]
+                             [:> mui-icons/ChevronRight]]]])
 
 
 (defcard-rg Primary-Button
@@ -31,16 +31,16 @@
    [button {:primary true} "Button"]
    [button {:primary true} [:> mui-icons/Face]]
    [button {:primary true} [:<>
-                [:> mui-icons/Face]
-                [:span "Button"]]]
+                            [:> mui-icons/Face]
+                            [:span "Button"]]]
    [button {:primary true} [:<>
-                [:span "Button"]
-                [:> mui-icons/ChevronRight]]]
+                            [:span "Button"]
+                            [:> mui-icons/ChevronRight]]]
    [button {:primary true :disabled true} "Button"]
    [button {:primary true :disabled true} [:> mui-icons/Face]]
    [button {:primary true :disabled true} [:<>
-                                 [:> mui-icons/Face]
-                                 [:span "Button"]]]
+                                           [:> mui-icons/Face]
+                                           [:span "Button"]]]
    [button {:primary true :disabled true} [:<>
-                                 [:span "Button"]
-                                 [:> mui-icons/ChevronRight]]]])
+                                           [:span "Button"]
+                                           [:> mui-icons/ChevronRight]]]])
