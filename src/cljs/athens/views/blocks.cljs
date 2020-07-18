@@ -36,6 +36,7 @@
   {:display "flex"
    :line-height "2em"
    :position "relative"
+   :border-radius "0.125rem"
    :justify-content "flex-start"
    :flex-direction "column"
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
@@ -45,7 +46,20 @@
                                                      :top "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
-                                                     :background (color :border-color)}]]})
+                                                     :background (color :border-color)}]
+                     [:&:after {:content "''"
+                                :position "absolute"
+                                :top "0.75px"
+                                :right 0
+                                :bottom "0.75px"
+                                :left 0
+                                :opacity 0
+                                :pointer-events "none"
+                                :border-radius "inherit"
+                                :transition "opacity 0.075s ease"
+                                :border [["1px solid " (color :body-text-color 0.06)]]
+                                :background (color :link-color :opacity-low)}]
+                     [:&.is-selected:after {:opacity 1}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -230,8 +244,6 @@
 
 
 (stylefy/class "dragging" dragging-style)
-
-(stylefy/class "is-selected" {:background-color (color :link-color :opacity-low)})
 
 ;; Helpers
 
