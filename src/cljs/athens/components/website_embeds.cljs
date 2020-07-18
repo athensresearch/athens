@@ -7,7 +7,7 @@
              [:span {:id (str content uid)}
               [:iframe {:width       640
                         :height      360
-                        :src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9]+)" content) 1))
+                        :src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
                         :allow       "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]])})
 
 
