@@ -6,7 +6,7 @@
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES]]
+    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.dropdown :refer [slash-menu-component menu-item-style menu-item-active-style menu-style dropdown]]
@@ -48,6 +48,7 @@
                                                      :transform "translateX(50%)"
                                                      :background (color :border-color)}]
                      [:&:after {:content "''"
+                                :z-index -1
                                 :position "absolute"
                                 :top "0.75px"
                                 :right 0
@@ -55,11 +56,12 @@
                                 :left 0
                                 :opacity 0
                                 :pointer-events "none"
-                                :border-radius "inherit"
+                                :border-radius "0.25rem"
                                 :transition "opacity 0.075s ease"
-                                :border [["1px solid " (color :body-text-color 0.06)]]
-                                :background (color :link-color :opacity-low)}]
-                     [:&.is-selected:after {:opacity 1}]]})
+                                :background (color :link-color :opacity-lower)
+                                :box-shadow [["0 0.25rem 0.5rem -0.25rem" (color :background-color :opacity-med)]]}]
+                     [:&.is-selected:after {:opacity 1}]
+                     [:.block-container {:margin-left "2rem"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -200,7 +202,7 @@
 
 
 (def tooltip-style
-  {:z-index    4
+  {:z-index (:zindex-dropdown ZINDICES)
    :position "absolute"
    :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :flex-direction "column"
@@ -474,7 +476,7 @@
          ;; Children
          (when (and open (seq children))
            (for [child children]
-             [:div {:style {:margin-left "2rem"} :key (:db/id child)}
+             [:div {:key (:db/id child)}
               [block-el child]]))
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))
