@@ -50,7 +50,6 @@
                                          :margin-inline-end "0.5rem"}]]]})
 
 
-
 (def menu-heading-style
   {:min-height "2rem"
    :text-align "center"
