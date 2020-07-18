@@ -145,11 +145,11 @@
 
 
 (defn page-menu-component
-  [{:keys [style uid has-shortcut?]}]
+  [{:keys [style uid is-shortcut?]}]
   [dropdown {:style (merge {:font-size "14px"} style) :content
              [menu {:content
                     [:<>
-                     (if has-shortcut?
+                     (if is-shortcut?
                        [:button (use-style menu-item-style {:on-click #(dispatch [:page/unmake-shortcut uid])})
                         [:<>
                          [:> mui-icons/BookmarkBorder]

@@ -193,7 +193,7 @@
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title has-shortcut? :page/sidebar}
+  [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar}
    editing-uid
    ref-groups
    timeline-page?
@@ -227,7 +227,7 @@
                                     :left (str (:x @page-menu-position) "px")
                                     :top (str (:y @page-menu-position) "px")}
                             :uid uid
-                            :has-shortcut? has-shortcut?}])
+                            :is-shortcut? is-shortcut?}])
     (parse-renderer/parse-and-render title)]
 
    ;; Children
@@ -279,5 +279,5 @@
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
         [node-page-el node editing-uid ref-groups timeline-page? show-page-menu?
-        ;;  has-shortcut?
+        ;;  is-shortcut?
          page-menu-position]))))

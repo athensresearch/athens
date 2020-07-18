@@ -285,17 +285,17 @@
 
 
 (reg-event-fx
-  :page/make-shortcut
+  :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents (d/q '[:find ?e
+    (let [sidebar-ents (d/q '[:find (count ?e) .
                               :where
                               [?e :page/sidebar _]]
                             @db/dsdb)]
-      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
+      {:transact! [{:block/uid uid :page/sidebar sidebar-ents}]})))
 
 
 (reg-event-fx
-  :page/unmake-shortcut
+  :page/remove-shortcut
   (fn [_ [_ uid]]
     {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
 
