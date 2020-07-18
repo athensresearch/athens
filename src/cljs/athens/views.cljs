@@ -52,14 +52,6 @@
       (dispatch [:alert/unset]))))
 
 
-(defn file-cb
-  [e]
-  (let [fr (js/FileReader.)
-        file (.. e -target -files (item 0))]
-    (set! (.-onload fr) #(dispatch [:parse-datoms (.. % -target -result)]))
-    (.readAsText fr file)))
-
-
 ;; Panels
 
 

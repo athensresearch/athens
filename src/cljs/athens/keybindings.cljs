@@ -74,13 +74,16 @@
   [e uid state]
   (let [{:keys [key-code shift target]} (destruct-event e)
         ;; TODO
-        top-row?    true
-        bottom-row? true
+        top-row?       true
+        bottom-row?    true
         {:search/keys [query index results]} @state
         selected-items @(subscribe [:selected/items])
-        direction (arrow-key-direction e)]
-
-    (prn selected-items (and shift direction))
+        direction      (arrow-key-direction e)
+        line-height    (-> (.. js/window (getComputedStyle target) -lineHeight) js/parseInt)
+        height  (.. target -offsetHeight)
+        lines (-> (/ height line-height) js/Math.ceil)]
+    (prn "ARROW" line-height height lines)
+    ;;(prn selected-items (and shift direction))
     (cond
 
       ;; items already selected, go up or down

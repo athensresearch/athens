@@ -1,6 +1,7 @@
 (ns athens.db
   (:require
     [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull]]))
 
@@ -31,41 +32,58 @@
 
 ;; -- JSON Parsing ----------------------------------------------------
 
-(def str-kw-mappings
-  "Maps attributes from \"Export All as JSON\" to original datascript attributes."
-  {"children" :block/children
-   "create-email" :create/email
-   "create-time" :create/time
-   "edit-email" :edit/email
-   "edit-time" :edit/time
-   "email" :user/email
-   "emoji" :ent/emoji
-   "emojis" :ent/emojis
-   "props" :block/props
-   "string" :block/string
-   "text-align" :block/text-align
-   "time" nil
-   "title" :node/title
-   "uid" :block/uid
-   "users" nil
-   "heading" :block/heading})
+
+;; keys are native Roam attributes
+;; vals are attributes pulled from
+;; window.roamAlphaAPI.q(`[:find [?a ...] :where [_ ?a _]]`)
+(def attr-mappings
+  {:attrs/lookup       "lookup"
+   :block/children     "children"
+   :block/heading      "heading"
+   :block/open         "open"
+   :block/order        "order"
+   :block/props        "props"
+   :block/refs         "refs"
+   :block/string       "string"
+   :block/text-align   "text-align"
+   :block/uid          "uid"
+   :children/view-type "view-type"
+   :create/email       "email"
+   :create/time        "time"
+   ;; datascript id
+   :db/id              :db/id
+   :edit/email         "email"
+   :edit/seen-by       "seen-by"
+   :edit/time          "time"
+   :ent/emojis         "emojis"
+   :entity/attrs       "attrs"
+   :entity/image-url   "image-url"
+   :entity/title       "title"
+   :log/id             "id"
+   :node/title         "title"
+   :page/sidebar       "sidebar"
+   :user/color         "color"
+   :user/display-name  "display-name"
+   :user/email         "email"
+   :user/photo-url     "photo-url"
+   :user/settings      "settings"
+   :user/uid           "uid"
+   :vc/blocks          "blocks"
+   :window/filters     "filters"
+   :window/id          "id"})
+
+(def ATTRS (set (keys attr-mappings)))
 
 
-(defn convert-key
-  [k]
-  (get str-kw-mappings k k))
-
-
-(defn parse-hms
-  "Parses JSON retrieved from Roam's \"Export all as JSON\". Not fully functional."
-  [hms]
-  (if (not (coll? hms))
-    hms
-    (map #(reduce (fn [acc [k v]]
-                    (assoc acc (convert-key k) (parse-hms v)))
-                  {}
-                  %)
-         hms)))
+(defn walker
+  "If value is a string, starts with \":\", and exists in
+  ATTRS set, then convert that value."
+  [x]
+  (if-let [attr (and (string? x)
+                     (= ":" (first x))
+                     (ATTRS (keyword (subs x 1))))]
+    attr
+    x))
 
 
 (defn parse-tuples
@@ -78,20 +96,12 @@
        (map #(cons :db/add %))))
 
 
-(defn json-str-to-edn
-  "Convert a JSON str to EDN. May receive JSON through an HTTP request or file upload."
-  [json-str]
-  (->> json-str
-       (js/JSON.parse)
-       (js->clj)))
-
-
 (defn str-to-db-tx
-  "Deserializes a JSON string into EDN and then Datoms."
+  "Deserializes a JSON string into EDN and then to a valid datascript transaction (datoms or maps)."
   [json-str]
-  (let [edn-data (json-str-to-edn json-str)]
-    (if (coll? (first edn-data))
-      (parse-hms edn-data)
+  (let [edn-data (-> json-str js/JSON.parse js->clj)]
+    (if (map? (first edn-data))
+      (walk/postwalk walker edn-data)
       (parse-tuples edn-data))))
 
 
