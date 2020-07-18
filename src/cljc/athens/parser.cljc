@@ -25,7 +25,11 @@
    pre-formatted = <'`'> any-non-pre-formatted-chars <'`'>
    
    (* Because code blocks are pre-formatted, we process them before these applied syntaxes. *)
-   <syntax-in-block> = (page-link | block-ref | hashtag | url-image | url-link | bold)
+   <syntax-in-block> = (component | page-link | block-ref | hashtag | url-image | url-link | bold)
+   
+   <syntax-in-component> = (page-link | block-ref)
+   <any-non-component-reserved-chars> = #'[^\\{\\}]*'
+   component = <'{{'> (syntax-in-component / any-non-component-reserved-chars)* <'}}'>
    
    (* The following regular expression expresses this: (any character except '[' or ']') <- This repeated as many times as possible *)
    <any-non-page-link-chars> = #'[^\\[\\]]*'
