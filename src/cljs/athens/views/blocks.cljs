@@ -320,7 +320,7 @@
                                  ^{:key (str "inline-search-item" uid)}
                                  [button
                                   {:on-click #(prn "expand")
-                                   :active (when (= index i))
+                                   :active (when (= index i) true)
                                    :id (str "result-" i)}
                                   (or title string)])]))}])))
 
