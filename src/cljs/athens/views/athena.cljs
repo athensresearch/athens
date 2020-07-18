@@ -10,6 +10,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -35,7 +36,11 @@
    :z-index       (:zindex-modal ZINDICES)
    :top           "50%"
    :left          "50%"
-   :transform     "translate(-50%, -50%)"})
+   :transform     "translate(-50%, -50%)"
+   ;; Styling for the states of the custom search-cancel button, which depend on the input contents
+   ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
+   ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
+                     [(selectors/+ :input:valid :button) {:opacity 1}]]})
 
 
 (def athena-input-style
@@ -49,10 +54,31 @@
    :background     (color :background-plus-2)
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
-   :padding        "1.5rem"
+   :padding        "1.5rem 4rem 1.5rem 1.5rem"
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
-                   "::placeholder" {:color (color :body-text-color :opacity-low)}}})
+                   "::placeholder" {:color (color :body-text-color :opacity-low)}
+                   "::-webkit-search-cancel-button" {:display "none"} ;; We replace the button elsewhere
+                   }})
+
+
+(def search-cancel-button-style
+  {:background "none"
+   :color "inherit"
+   :position "absolute"
+   :transition "opacity 0.1s ease, background 0.1s ease"
+   :cursor "pointer"
+   :border 0
+   :right "2rem"
+   :place-items "center"
+   :place-content "center"
+   :height "2.5rem"
+   :width "2.5rem"
+   :border-radius "1000px"
+   :display "flex"
+   :transform "translate(0%, -50%)"
+   :top "50%"
+   ::stylefy/manual [[:&:hover :&:focus {:background (color :background-plus-1)}]]})
 
 
 (def results-list-style
@@ -227,12 +253,18 @@
         search-handler (debounce (create-search-handler s) 500)]
     (when open?
       [:div.athena (use-style container-style)
-       [:input (use-style athena-input-style
-                          {:type        "search"
-                           :auto-focus  true
-                           :placeholder "Find or Create Page"
-                           :on-change   (fn [e] (search-handler (.. e -target -value)))
-                           :on-key-down (fn [e] (key-down-handler e s))})]
+       [:header {:style {:position "relative"}}
+        [:input (use-style athena-input-style
+                           {:type        "search"
+                            :id          "athena-input"
+                            :auto-focus  true
+                            :required    true
+                            :placeholder "Find or Create Page"
+                            :on-change   (fn [e] (search-handler (.. e -target -value)))
+                            :on-key-down (fn [e] (key-down-handler e s))})]
+        [:button (use-style search-cancel-button-style
+                            {:on-click #(set! (.-value (.getElementById js/document "athena-input")))})
+         [:> mui-icons/Close]]]
        [results-el s]
        [(fn []
           (let [{:keys [results query index]} @s]
