@@ -48,7 +48,7 @@
 
 (deftest parser-component-tests
   (are [x y] (= x (parse-to-ast y))
-    [:block [:component [:page-link "TODO"]] " Pick up groceries"]
+    [:block [:component "[[TODO]]"] " Pick up groceries"]
     "{{[[TODO]]}} Pick up groceries"
 
     [:block [:component "AnotherComponent"] " Another Content"]
