@@ -58,6 +58,12 @@
 
 
 (defn breadcrumb
-  [{:keys [style on-click]} & label]
-  [:li (use-style (merge breadcrumb-style style) {:title label})
-   [:a {:on-click on-click} label]])
+  "Keep interface as close to vanilla hiccup as possible.
+  Dissoc :style :active and :class because we don't want to merge them in directly.
+  Can pass in a :key prop to make react happy, as a :key or ^{:key}. Just works"
+  ([children] [breadcrumb {} children])
+  ([{:keys [style class] :as props} children]
+   (let [props- (dissoc props :style :class)]
+     [:li (use-style (merge breadcrumb-style style))
+      [:a (merge props- {:class class})
+       children]])))
