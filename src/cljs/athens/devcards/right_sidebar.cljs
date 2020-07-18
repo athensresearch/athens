@@ -6,11 +6,6 @@
     [re-frame.core :refer [dispatch]]))
 
 
-;;(defcard-rg Init
-;;  [button {:on-click #(dispatch [:open-in-rightbar "data"])} "Toggle"])
-
-
-
 (defcard-rg Toggle
   [button {:primary true :on-click-fn #(dispatch [:right-sidebar/toggle])} "Toggle"])
 

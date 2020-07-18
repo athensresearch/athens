@@ -138,7 +138,6 @@
 
 (defn left-sidebar
   []
-  []
   (let [open? (subscribe [:left-sidebar/open])
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
