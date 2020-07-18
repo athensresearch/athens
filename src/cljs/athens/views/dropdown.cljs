@@ -50,16 +50,6 @@
                                          :margin-inline-end "0.5rem"}]]]})
 
 
-(def menu-item-style
-  (merge
-    buttons-style
-    {:min-height "1.5rem"}))
-
-
-(def menu-item-active-style
-  {:background (color :link-color)
-   :color "#fff"})
-
 
 (def menu-heading-style
   {:min-height "2rem"
