@@ -136,9 +136,10 @@
                             :font-size "0.85em"
                             :letter-spacing "0.05em"
                             :font-weight 600
+                            :display "inline-flex"
                             :background (color :body-text-color :opacity-lower)
                             :border-radius "0.25rem"
-                            :padding "0 0.25rem"}]
+                            :padding "0.25em 0.5em"}]
                      [:img {:max-width "100%"
                             :height "auto"}]]})
 

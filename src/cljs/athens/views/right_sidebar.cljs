@@ -165,7 +165,7 @@
    [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
     ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents 
     ;;  [:h1 "Pages and Blocks"]]
-    ;;  [button {:label [:> mui-icons/FilterList]}]
+    ;;  [button [:> mui-icons/FilterList]]
 
     (if (empty? items)
       [empty-message]
@@ -175,18 +175,18 @@
           [:article (use-style sidebar-item-style)
            [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
             [button {:style sidebar-item-toggle-style
-                     :on-click-fn #(dispatch [:right-sidebar/toggle-item uid])
-                     :class (when open "is-open")
-                     :label [:> mui-icons/ChevronRight]}]
+                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                     :class (when open "is-open")}
+             [:> mui-icons/ChevronRight]]
             [:h2
              (if title
                [:<> [:> mui-icons/Description] title]
                [:<> [:> mui-icons/FiberManualRecord] string])]
             [:div {:class "controls"}
-        ;;  [button {:label [:> mui-icons/DragIndicator]}]
+        ;;  [button [:> mui-icons/DragIndicator]]
         ;;  [:hr]
-             [button {:on-click-fn #(dispatch [:right-sidebar/close-item uid])
-                      :label [:> mui-icons/Close]}]]]
+             [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+              [:> mui-icons/Close]]]]
            (when open
              [:div (use-style sidebar-item-container-style)
               (if title
