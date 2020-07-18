@@ -22,7 +22,8 @@
    "This is a block ref: ((lxMRAb5Y5))"                                     ;; TODO
    "This is a **very** important block"
    "This is an [external link](https://github.com/athensresearch/athens/)"
-   "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])
+   "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"
+   "This is a piece of `preformatted code` or ```monospace text```"])
 
 
 (defcard-rg Parse

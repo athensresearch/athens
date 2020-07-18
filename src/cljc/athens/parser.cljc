@@ -9,6 +9,7 @@
 
 
 ;; Instaparse docs: https://github.com/Engelberg/instaparse#readme
+;; Main parser documentation: `doc/parser.md` in this repository
 
 (defparser block-parser
   "(* Welcome to the Athens Block Parser! *)
