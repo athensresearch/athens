@@ -205,29 +205,27 @@
       ;; TODO: what happens when user goes to -1? or past end of list?
       (= key KeyCodes.UP)
       (when (> index 0)
-        (do
-          (swap! state update :index dec)
-          (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
-                next-el (.. select-el -previousElementSibling)
-                athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
-                result-el (nth (array-seq (.. athena-el -children)) 2)
-                result-box (.. result-el getBoundingClientRect)
-                next-box (.. next-el getBoundingClientRect)]
-            (if (< (.. next-box -top) (.. result-box -top))
-              (.. next-el (scrollIntoView true {:behavior "auto"}))))))
+        (swap! state update :index dec)
+        (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
+              next-el (.. select-el -previousElementSibling)
+              athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
+              result-el (nth (array-seq (.. athena-el -children)) 2)
+              result-box (.. result-el getBoundingClientRect)
+              next-box (.. next-el getBoundingClientRect)]
+          (when (< (.. next-box -top) (.. result-box -top))
+            (.. next-el (scrollIntoView true {:behavior "auto"})))))
 
       (= key KeyCodes.DOWN)
       (when (< index (dec (count results)))
-        (do
-          (swap! state update :index inc)
-          (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
-                next-el (.. select-el -nextElementSibling)
-                athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
-                result-el (nth (array-seq (.. athena-el -children)) 2)
-                result-box (.. result-el getBoundingClientRect)
-                next-box (.. next-el getBoundingClientRect)]
-            (if (> (.. next-box -bottom) (.. result-box -bottom))
-              (.. next-el (scrollIntoView false {:behavior "auto"}))))))
+        (swap! state update :index inc)
+        (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
+              next-el (.. select-el -nextElementSibling)
+              athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
+              result-el (nth (array-seq (.. athena-el -children)) 2)
+              result-box (.. result-el getBoundingClientRect)
+              next-box (.. next-el getBoundingClientRect)]
+          (when (> (.. next-box -bottom) (.. result-box -bottom))
+            (.. next-el (scrollIntoView false {:behavior "auto"})))))
 
       :else nil)))
 
