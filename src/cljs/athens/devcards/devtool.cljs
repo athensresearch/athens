@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db :refer [dsdb]]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.views.buttons :refer [button-primary button]]
+    [athens.views.buttons :refer [button]]
     [athens.views.devtool :refer [state* handler devtool-prompt-el
                                   devtool-component initial-state eval-box!]]
     [datascript.db]
@@ -18,15 +18,14 @@
 
 (defcard-rg Create-Page
   "Press button and then search \"test\" "
-  [button-primary {:on-click-fn handler
-                   :label "Create Test Pages and Blocks"}])
+  [button {:on-click handler} "Create Test Pages and Blocks"])
 
 
 (defcard-rg Reset-to-all-pages
   (fn []
-    [button {:on-click-fn #(do (swap! state* assoc :eval-str (:eval-str initial-state))
-                               (eval-box!))
-             :label "Reset"}]))
+    [button {:on-click #(do (swap! state* assoc :eval-str (:eval-str initial-state))
+                            (eval-box!))}
+     "Reset"]))
 
 
 (defcard-rg Devtool-box

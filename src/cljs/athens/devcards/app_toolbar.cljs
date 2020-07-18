@@ -4,7 +4,7 @@
     [athens.router :refer [navigate]]
     [athens.style :refer [color]]
     [athens.subs]
-    [athens.views.buttons :refer [button button-primary]]
+    [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [komponentit.modal :as modal]
     [re-frame.core :refer [subscribe dispatch]]
@@ -158,43 +158,43 @@
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active @left-open?
-                  :label [:> mui-icons/Menu] :on-click-fn #(dispatch [:left-sidebar/toggle])}]
+                      :on-click #(dispatch [:left-sidebar/toggle])}
+          [:> mui-icons/Menu]]
       ;; [separator] // for Electron implementation
       ;; [button {:on-click-fn #(navigate :home)
       ;;          :label [:> mui-icons/ChevronLeft]}]
       ;; [button {:on-click-fn #(navigate :home)
       ;;          :label [:> mui-icons/ChevronRight]}]
          [separator]
-         [button {:on-click-fn #(navigate :home)
-                  :active (when (= route-name :home) true)
-                  :label [:> mui-icons/Today]}]
-         [button {:on-click-fn #(navigate :pages)
-                  :active (when (= route-name :pages) true)
-                  :label [:> mui-icons/FileCopy]}]
-         [button {:on-click-fn #(dispatch [:athena/toggle])
-                  :style {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
-                  :active (when @(subscribe [:athena/open]) true)
-                  :label [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]}]]
+         [button {:on-click #(navigate :home)
+                      :active (when (= route-name :home) true)} [:> mui-icons/Today]]
+         [button {:on-click #(navigate :pages)
+                      :active (when (= route-name :pages) true)}
+          [:> mui-icons/FileCopy]]
+         [button {:on-click #(dispatch [:athena/toggle])
+                      :style {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                      :active (when @(subscribe [:athena/open]) true)}
+          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
-         [button {:on-click-fn #(reset! import-modal-open? true)
-                  :label [:> mui-icons/Publish]}]
+         [button {:on-click #(reset! import-modal-open? true)}
+          [:> mui-icons/Publish]]
          [separator]
-         [button {:label [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]
-                  :active @right-open?
-                  :on-click-fn #(dispatch [:right-sidebar/toggle])}]]]
+         [button {:active @right-open?
+                      :on-click #(dispatch [:right-sidebar/toggle])}
+          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
 
        (when @import-modal-open?
          [:div (use-style modal-style)
           [modal/modal
            {:title [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
-                                                                                       {:on-click-fn #(reset! import-modal-open? false)
-                                                                                        :label [:> mui-icons/Close]}]]
+                                                                                       {:on-click #(reset! import-modal-open? false)}
+                                                                                       [:> mui-icons/Close]]]
             :content [:div (use-style modal-contents-style)
                       ;; TODO: Write intro copy
                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
                       [features-table]
                       ;; TODO: Create browser file dialog and actually import stuff
-                      [:div [button-primary {:label "Add Files"}]]]
+                      [:div [button {:primary true} "Add Files"]]]
             :on-close #(reset! import-modal-open? false)}]])])))
 

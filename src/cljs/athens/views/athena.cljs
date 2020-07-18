@@ -6,7 +6,7 @@
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid]]
-    [athens.views.buttons :refer [button-primary]]
+    [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -187,11 +187,12 @@
 
 (defn athena-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:athena/toggle])
-                   :label [:<>
-                           [:> mui-icons/Search]
-                           [:span "Find or Create a Page"]]
-                   :style {:font-size "11px"}}])
+  [button {:on-click #(dispatch [:athena/toggle])
+               :primary true
+               :style {:font-size "11px"}}
+   [:<>
+    [:> mui-icons/Search]
+    [:span "Find or Create a Page"]]])
 
 
 (defn results-el

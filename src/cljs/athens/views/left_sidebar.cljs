@@ -4,7 +4,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    [athens.views.buttons :refer [button-primary]]
+    [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -136,7 +136,7 @@
         title]])))
 
 
-(defn left-sidebar
+(defn left-sidebar[]
   []
   (let [open? (subscribe [:left-sidebar/open])
         shortcuts (->> @(q '[:find ?order ?title ?uid
@@ -163,5 +163,4 @@
        ;; LOGO + BOTTOM BUTTONS
       [:footer (use-sub-style left-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-       [button-primary {:label "Load Test Data"
-                        :on-click-fn #(dispatch [:get-db/init])}]]]]))
+       [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))

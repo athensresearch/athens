@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
-    [athens.views.buttons :refer [button-primary button]]
+    [athens.views.buttons :refer [button]]
     [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
     [cljsjs.react]
@@ -191,11 +191,11 @@
                          ""
                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
-         [button-primary {:on-click-fn #(swap! limit + 10)
-                          :style {:width "100%"
-                                  :justify-content "center"
-                                  :margin "0.25rem 0"}
-                          :label "Load More"}])])))
+         [button {:on-click #(swap! limit + 10)
+                      :style {:width "100%"
+                              :justify-content "center"
+                              :margin "0.25rem 0"}}
+          "Load More"])])))
 
 
 ; TODO add truncation of long strings here
@@ -328,24 +328,25 @@
              (for [i (-> navs count range)]
                (let [nav (get navs i)]
                  ^{:key i}
-                 [button {:label [:<> [:> mui-icons/ChevronLeft] [:span (first nav)]]
-                          :style {:padding "0.125rem 0.25rem"}
-                          :on-click-fn #(swap! state (fn [s]
-                                                       (-> s
-                                                           (update :navs subvec 0 i)
-                                                           (dissoc :viewer))))}])))
+                 [button {:style {:padding "0.125rem 0.25rem"}
+                              :on-click #(swap! state (fn [s]
+                                                        (-> s
+                                                            (update :navs subvec 0 i)
+                                                            (dissoc :viewer))))}
+                  [:<> [:> mui-icons/ChevronLeft] [:span (first nav)]]])))
            [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
            [:div (use-style current-location-controls-style)
             [:span "View as "]
             (for [v applicable-vs]
               (let [click-fn #(swap! state assoc :viewer v)]
                 ^{:key v}
-                [button {:on-click-fn click-fn
-                         :active (= v viewer-name)
-                         :label (name v)}]))]]]
+                [button {:on-click click-fn
+                             :active (= v viewer-name)}
+                 (name v)]))]]]
          (when (d/db? navved-data)
-           [button-primary {:on-click-fn #(restore-db! navved-data)
-                            :label "Restore this db"}])
+           [button {:on-click #(restore-db! navved-data)
+                        :primary true}
+            "Restore this db"])
          [viewer datafied-data add-nav!]]))))
 
 
@@ -455,17 +456,18 @@
 
 (defn devtool-prompt-el
   []
-  [button-primary {:on-click-fn #(dispatch [:devtool/toggle])
-                   :label [:<>
-                           [:> mui-icons/Build]
-                           [:span "Toggle devtool"]]
-                   :style {:font-size "11px"}}])
+  [button {:on-click #(dispatch [:devtool/toggle])
+               :primary true
+               :style {:font-size "11px"}}
+   [:<>
+    [:> mui-icons/Build]
+    [:span "Toggle devtool"]]])
 
 
 (defn devtool-close-el
   []
-  [button {:on-click-fn #(dispatch [:devtool/toggle])
-           :label [:> mui-icons/Clear]}])
+  [button {:on-click #(dispatch [:devtool/toggle])}
+   [:> mui-icons/Clear]])
 
 
 (defn devtool-el
@@ -476,12 +478,12 @@
       [:div (use-style container-style)
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
-         [button {:on-click-fn #(switch-panel :query)
-                  :active (= active-panel :query)
-                  :label [:<> [:> mui-icons/ShortText] [:span "Query"]]}]
-         [button {:on-click-fn #(switch-panel :txes)
-                  :active (= active-panel :txes)
-                  :label [:<> [:> mui-icons/History] [:span "Transactions"]]}]]
+         [button {:on-click #(switch-panel :query)
+                      :active (= active-panel :query)}
+          [:<> [:> mui-icons/ShortText] [:span "Query"]]]
+         [button {:on-click #(switch-panel :txes)
+                      :active (= active-panel :txes)}]
+         [:<> [:> mui-icons/History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)
         (case active-panel

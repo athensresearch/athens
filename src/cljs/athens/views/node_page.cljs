@@ -198,10 +198,10 @@
   [:div (use-style page-style {:class ["node-page"]})
    ;; TODO: implement timeline
    ;;(when timeline-page?
-   ;;  [button {:on-click-fn #(dispatch [:jump-to-timeline uid])
-   ;;           :label [:<>
-   ;;                   [:mui-icons Left]
-   ;;                   [:span "Timeline"]]}])
+   ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
+   ;;              [:<>
+   ;;               [:mui-icons Left]
+   ;;               [:span "Timeline"]]}])
 
    ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "page-header"})
@@ -211,12 +211,12 @@
         :class      (when (= editing-uid uid) "is-editing")
         :auto-focus true
         :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
-    [button {:on-click-fn (fn [e]
-                            (doall (swap! show-page-menu? not)
-                                   (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
-             :active (when @show-page-menu? true)
-             :label [:> mui-icons/ExpandMore]
-             :style page-menu-toggle-style}]
+    [button {:on-click (fn [e]
+                             (doall (swap! show-page-menu? not)
+                                    (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
+                 :active (when @show-page-menu? true)
+                 :style page-menu-toggle-style}
+     [:> mui-icons/ExpandMore]]
     (when @show-page-menu?
       [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
     (parse-renderer/parse-and-render title)]
@@ -235,8 +235,7 @@
           [:h4 (use-style references-heading-style)
            [(r/adapt-react-class mui-icons/Link)]
            [:span linked-or-unlinked]
-           [button {:label    [(r/adapt-react-class mui-icons/FilterList)]
-                    :disabled true}]]
+           [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
           [:div (use-style references-list-style)
            (doall
              (for [[group-title group] refs]
