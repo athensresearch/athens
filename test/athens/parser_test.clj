@@ -18,6 +18,12 @@
     [:block "A " [:page-link "link"] "."]
     "A [[link]]."
 
+    [:block "A " [:page-link "link"] " and another " [:page-link "link"] "."]
+    "A [[link]] and another [[link]]."
+
+    [:block "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]
+    "Some [[Nested [[Links]]]] and something"
+
     [:block "[[text"]
     "[[text"
 
@@ -26,6 +32,18 @@
 
     [:block "it’s " [:bold "very"] " important"]
     "it’s **very** important"))
+
+
+(deftest parser-pre-formatted-tests
+  (are [x y] (= x (parse-to-ast y))
+    [:block "Hello " [:pre-formatted "world"]]
+    "Hello `world`"
+
+    [:block "Hello " [:pre-formatted "Mars"]]
+    "Hello ```Mars```"
+
+    [:block "Hello " [:pre-formatted "world"] " and " [:pre-formatted "Mars"]]
+    "Hello `world` and `Mars`"))
 
 
 (deftest parser-hashtag-tests
