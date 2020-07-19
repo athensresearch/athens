@@ -6,7 +6,8 @@
 
 (defn default-component
   [content uid]
-  [:span {:id uid} [:button {:class "component-default"} content]])
+  ((constantly nil) uid)
+  [:span [:button content]])
 
 ;; TODO: use metaprogramming to achieve dynamic rendering with both basic components and custom components
 (defn render-component
