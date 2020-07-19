@@ -20,23 +20,17 @@
   {:match #"\[\[TODO\]\]"
    :render (fn [content uid]
              ((constantly nil) content uid)
-             [:span [:input {:type     "checkbox"
-                             :on-click (fn [e]
-                                         (.. e preventDefault)
-                                         (.. e stopPropagation)
-                                         (todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}"))}]])})
+             [:input {:type     "checkbox"
+                             :on-click #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
 
 
 (def component-done
   {:match #"\[\[DONE\]\]"
    :render (fn [content uid]
              ((constantly nil) content uid)
-             [:span [:input {:type     "checkbox"
+             [:input {:type     "checkbox"
                              :checked  "true"
-                             :on-click (fn [e]
-                                         (.. e preventDefault)
-                                         (.. e stopPropagation)
-                                         (todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}"))}]])})
+                             :on-click #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
 
 
 (def components [component-todo component-done])

@@ -7,7 +7,7 @@
 (defn default-component
   [content uid]
   ((constantly nil) uid)
-  [:span [:button content]])
+  [:button content])
 
 ;; TODO: use metaprogramming to achieve dynamic rendering with both basic components and custom components
 (defn render-component
@@ -17,6 +17,9 @@
         render     (some (fn [comp]
                            (when (re-matches (:match comp) content)
                              (:render comp))) components)]
-    (if render
-      [render            content uid]
-      [default-component content uid])))
+    [:span {:on-click (fn [e]
+                        (.. e preventDefault)
+                        (.. e stopPropagation))}
+      (if render
+        [render            content uid]
+        [default-component content uid])]))
