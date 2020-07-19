@@ -204,28 +204,32 @@
       ;; TODO: change scroll as user reaches top or bottom
       ;; TODO: what happens when user goes to -1? or past end of list?
       (= key KeyCodes.UP)
-      (when (> index 0)
-        (swap! state update :index dec)
-        (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
-              next-el (.. select-el -previousElementSibling)
-              athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
-              result-el (nth (array-seq (.. athena-el -children)) 2)
+      (do
+        (swap! state update :index #(dec (if (zero? index) (count results) index)))
+        (let [cur-index (get @state :index)
+              input-el (.. e -target)
+              result-el (.. (. input-el closest "div.athena") -lastElementChild)
               result-box (.. result-el getBoundingClientRect)
+              next-el (nth (array-seq (.. result-el -children)) cur-index)
               next-box (.. next-el getBoundingClientRect)]
-          (when (< (.. next-box -top) (.. result-box -top))
-            (.. next-el (scrollIntoView true {:behavior "auto"})))))
+          (if (= cur-index (dec (count results)))
+            (.. next-el (scrollIntoView false {:behavior "auto"}))
+            (when (< (.. next-box -top) (.. result-box -top))
+              (.. next-el (scrollIntoView true {:behavior "auto"}))))))
 
       (= key KeyCodes.DOWN)
-      (when (< index (dec (count results)))
-        (swap! state update :index inc)
-        (let [select-el (first (array-seq (. js/document getElementsByClassName "selected")))
-              next-el (.. select-el -nextElementSibling)
-              athena-el (first (array-seq (. js/document getElementsByClassName "athena")))
-              result-el (nth (array-seq (.. athena-el -children)) 2)
+      (do
+        (swap! state update :index #(if (= index (dec (count results))) 0 (inc %)))
+        (let [cur-index (get @state :index)
+              input-el (.. e -target)
+              result-el (.. (. input-el closest "div.athena") -lastElementChild)
               result-box (.. result-el getBoundingClientRect)
+              next-el (nth (array-seq (.. result-el -children)) cur-index)
               next-box (.. next-el getBoundingClientRect)]
-          (when (> (.. next-box -bottom) (.. result-box -bottom))
-            (.. next-el (scrollIntoView false {:behavior "auto"})))))
+          (if (zero? cur-index)
+            (.. next-el (scrollIntoView true {:behavior "auto"}))
+            (when (> (.. next-box -bottom) (.. result-box -bottom))
+              (.. next-el (scrollIntoView false {:behavior "auto"}))))))
 
       :else nil)))
 
