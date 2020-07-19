@@ -1,13 +1,9 @@
 (ns athens.components.components-util
   (:require
-    [athens.components.todo :as todo]
-    [athens.components.website-embeds :as website-embeds]))
+    [athens.components.default-components :as default-components]))
 
 
-(def components (concat todo/components website-embeds/components))
-
-
-(defn default-component
+(defn empty-component
   [content _]
   [:button content])
 
@@ -17,10 +13,10 @@
   [content uid]
   (let [render     (some (fn [comp]
                            (when (re-matches (:match comp) content)
-                             (:render comp))) components)]
+                             (:render comp))) default-components/components)]
     [:span {:on-click (fn [e]
                         (.. e preventDefault)
                         (.. e stopPropagation))}
      (if render
        [render            content uid]
-       [default-component content uid])]))
+       [empty-component   content uid])]))
