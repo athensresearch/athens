@@ -169,14 +169,15 @@
                                            (take 20 (search-in-block-content query)))
                                    vec)}))))
 
+
 (defn is-beyond-rect?
   "Checks if any part of the element is above or below the container's bounding rect"
   [element container]
   (let [el-box (.. element getBoundingClientRect)
         cont-box (.. container getBoundingClientRect)]
     (or
-     (> (.. el-box -bottom) (.. cont-box -bottom))
-     (< (.. el-box -top) (.. cont-box -top)))))
+      (> (.. el-box -bottom) (.. cont-box -bottom))
+      (< (.. el-box -top) (.. cont-box -top)))))
 
 
 (defn key-down-handler
@@ -215,26 +216,22 @@
       (= key KeyCodes.UP)
       (do
         (swap! state update :index #(dec (if (zero? index) (count results) index)))
-        (let [cur-index (get @state :index)
+        (let [cur-index (:index @state)
               input-el (.. e -target)
               result-el (.. (. input-el closest "div.athena") -lastElementChild)
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
-          (if (= cur-index (dec (count results)))
-            (.. next-el (scrollIntoView false {:behavior "auto"}))
-            (when (is-beyond-rect? next-el result-el)
-              (.. next-el (scrollIntoView true {:behavior "auto"}))))))
+          (when (is-beyond-rect? next-el result-el)
+            (.. next-el (scrollIntoView (not= cur-index (dec (count results))) {:behavior "auto"})))))
 
       (= key KeyCodes.DOWN)
       (do
         (swap! state update :index #(if (= index (dec (count results))) 0 (inc %)))
-        (let [cur-index (get @state :index)
+        (let [cur-index (:index @state)
               input-el (.. e -target)
               result-el (.. (. input-el closest "div.athena") -lastElementChild)
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
-          (if (zero? cur-index)
-            (.. next-el (scrollIntoView true {:behavior "auto"}))
-            (when (is-beyond-rect? next-el result-el)
-              (.. next-el (scrollIntoView false {:behavior "auto"}))))))
+          (when (is-beyond-rect? next-el result-el)
+            (.. next-el (scrollIntoView (zero? cur-index) {:behavior "auto"})))))
 
       :else nil)))
 
