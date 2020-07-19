@@ -20,6 +20,6 @@
     [:span {:on-click (fn [e]
                         (.. e preventDefault)
                         (.. e stopPropagation))}
-      (if render
-        [render            content uid]
-        [default-component content uid])]))
+     (if render
+       [render            content uid]
+       [default-component content uid])]))

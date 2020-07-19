@@ -21,7 +21,7 @@
    :render (fn [content uid]
              ((constantly nil) content uid)
              [:input {:type     "checkbox"
-                             :on-click #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
+                      :on-click #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
 
 
 (def component-done
@@ -29,8 +29,8 @@
    :render (fn [content uid]
              ((constantly nil) content uid)
              [:input {:type     "checkbox"
-                             :checked  "true"
-                             :on-click #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
+                      :checked  "true"
+                      :on-click #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
 
 
 (def components [component-todo component-done])
