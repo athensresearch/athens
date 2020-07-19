@@ -83,6 +83,7 @@
   (insta/transform
     {:block         (fn [& contents]
                       (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
+     ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
                       (components-util/render-component (first contents) uid))
      :page-link     (fn [& title] (render-page-link title))
