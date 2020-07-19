@@ -58,6 +58,8 @@
 
 
 (defn breadcrumb
-  [{:keys [style on-click]} & label]
-  [:li (use-style (merge breadcrumb-style style) {:title label})
-   [:a {:on-click on-click} label]])
+  ([children] [breadcrumb {} children])
+  ([{:keys [style] :as props} children]
+   [:li (use-style (merge breadcrumb-style style))
+    [:a (merge props)
+     children]]))

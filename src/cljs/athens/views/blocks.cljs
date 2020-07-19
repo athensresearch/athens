@@ -9,7 +9,8 @@
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.all-pages :refer [date-string]]
-    [athens.views.dropdown :refer [slash-menu-component menu-item-style menu-item-active-style menu-style dropdown]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.dropdown :refer [slash-menu-component menu-style dropdown]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -317,10 +318,10 @@
                               [:div (use-style menu-style {:id "dropdown-menu"})
                                (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                  ^{:key (str "inline-search-item" uid)}
-                                 [:div (use-style
-                                         (merge menu-item-style (when (= index i) menu-item-active-style))
-                                         {:on-click #(prn "expand")
-                                          :id (str "result-" i)})
+                                 [button
+                                  {:on-click #(prn "expand")
+                                   :active (when (= index i) true)
+                                   :id (str "result-" i)}
                                   (or title string)])]))}])))
 
 

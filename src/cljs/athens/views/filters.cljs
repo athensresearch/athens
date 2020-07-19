@@ -143,8 +143,8 @@
             filtered-items (reduce-kv
                              (fn [m k v]
                                (if (re-find
-                                     (re-pattern (str "(?i)" (:search @s)))
-                                     k)
+                                    (re-pattern (str "(?i)" (:search @s)))
+                                    k)
                                  (assoc m k v)
                                  m))
                              {}
@@ -173,24 +173,24 @@
 
          ;; Controls
          [:div (use-style controls-style)
-          [button {:label       [:> mui-icons/Sort]
-                   :style sort-control-style
-                   :on-click-fn (fn [_]
-                                  (swap! s assoc :sort (if (= sort_ :lex)
-                                                         :count
-                                                         :lex)))}]
+          [button {:style sort-control-style
+                   :on-click (fn [_]
+                               (swap! s assoc :sort (if (= sort_ :lex)
+                                                      :count
+                                                      :lex)))}
+           [:> mui-icons/Sort]]
           [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
           [:span (str num-filters " Active")]
-          [button {:label "Reset"
-                   :style reset-control-style
-                   :on-click-fn (fn [_]
-                                  (swap! s assoc :items
-                                         (reduce-kv
-                                          (fn [m k v]
-                                            (assoc m k (dissoc v :state)))
-                                          {}
-                                          (:items @s))))}]]
-
+          [button {:style reset-control-style
+                   :on-click (fn [_]
+                               (swap! s assoc :items
+                                      (reduce-kv
+                                       (fn [m k v]
+                                         (assoc m k (dissoc v :state)))
+                                       {}
+                                       (:items @s))))}
+           "Reset"]]
+         
 
          ;; List
          [:div (use-style filter-list-style)

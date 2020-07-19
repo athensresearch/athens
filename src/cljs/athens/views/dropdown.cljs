@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [athens.views.buttons :refer [button buttons-style]]
+    [athens.views.buttons :refer [button]]
     [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -44,18 +44,11 @@
    :grid-auto-flow "row"
    :overflow "auto"
    ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "0.25rem"}]
-                     [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "0.25rem"}]]})
-
-
-(def menu-item-style
-  (merge
-    buttons-style
-    {:min-height "1.5rem"}))
-
-
-(def menu-item-active-style
-  {:background (color :link-color)
-   :color "#fff"})
+                     [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "0.25rem"}]
+                     [:button {:min-height "1.5rem"}
+                      [:svg:first-child {:font-size "16px"
+                                         :margin-inline-start "0"
+                                         :margin-inline-end "0.5rem"}]]]})
 
 
 (def menu-heading-style
@@ -111,11 +104,6 @@
   [:hr (use-style menu-separator-style)])
 
 
-(defn menu-item
-  [{:keys [disabled label style]}]
-  [button {:label label :disabled disabled :style (merge menu-item-style style)}])
-
-
 (defn submenu-indicator
   []
   [:> mui-icons/ChevronRight (use-style submenu-indicator-style)])
@@ -134,14 +122,14 @@
   [dropdown {:style style :content
              [menu {:style {:max-height "8em"} :content
                     [:<>
-                     [menu-item {:label [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Timer] [:span "Current Time"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Today] [:span "Today"]]}]]}]}])
+                     [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
+                     [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
+                     [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
+                     [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
+                     [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
+                     [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
+                     [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
+                     [button [:<> [:> mui-icons/Today] [:span "Today"]]]]}]}])
 
 
 (defn page-menu-component
@@ -150,16 +138,16 @@
              [menu {:content
                     [:<>
                      (if is-shortcut?
-                       [:button (use-style menu-item-style {:on-click #(dispatch [:page/unmake-shortcut uid])})
+                       [button {:on-click #(dispatch [:page/unmake-shortcut uid])}
                         [:<>
                          [:> mui-icons/BookmarkBorder]
                          [:span "Remove Shortcut"]]]
-                       [:button (use-style menu-item-style {:on-click #(dispatch [:page/make-shortcut uid])})
+                       [button {:on-click #(dispatch [:page/make-shortcut uid])}
                         [:<>
                          [:> mui-icons/Bookmark]
                          [:span "Add Shortcut"]]])
                      [menu-separator]
-                     [menu-item {:label [:<> [:> mui-icons/Delete] [:span "Delete Page"]]}]]}]}])
+                     [button [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]}]}])
 
 
 (defn block-context-menu-component
@@ -169,20 +157,20 @@
                     [:<>
                      ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
                      ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
-                     [menu-item {:label [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]}]
+                     [button [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]]
+                     [button [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]]
+                     [button [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]]
                      [menu-separator]
-                     [menu-item {:label [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]}]
+                     [button [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
+                     [button [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
+                     [button [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]]
+                     [button [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]]
+                     [button [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]]
                      [menu-separator]
-                     [menu-item {:label [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/History] [:span "Browse Versions"]]}]
-                     [menu-item {:label [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]}]]}]}])
+                     [button [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]]
+                     [button [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]]
+                     [button [:<> [:> mui-icons/History] [:span "Browse Versions"]]]
+                     [button [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]]]}]}])
 
 
 (def items

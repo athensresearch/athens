@@ -9,6 +9,7 @@
 
 
 ;; Instaparse docs: https://github.com/Engelberg/instaparse#readme
+;; Main parser documentation: `doc/parser.md` in this repository
 
 (defparser block-parser
   "(* Welcome to the Athens Block Parser! *)
@@ -22,7 +23,9 @@
    
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
    <any-non-pre-formatted-chars> = #'[^\\`]*'
-   pre-formatted = <'`'> any-non-pre-formatted-chars <'`'>
+   pre-formatted = block-pre-formatted | inline-pre-formatted
+   <block-pre-formatted> = <'```'> any-non-pre-formatted-chars <'```'>
+   <inline-pre-formatted> = <'`'> any-non-pre-formatted-chars <'`'>
    
    (* Because code blocks are pre-formatted, we process them before these applied syntaxes. *)
    <syntax-in-block> = (page-link | block-ref | hashtag | url-image | url-link | bold)
