@@ -18,16 +18,14 @@
 
 (def component-todo
   {:match #"\[\[TODO\]\]"
-   :render (fn [content uid]
-             ((constantly nil) content uid)
+   :render (fn [_ uid]
              [:input {:type     "checkbox"
                       :on-click #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
 
 
 (def component-done
   {:match #"\[\[DONE\]\]"
-   :render (fn [content uid]
-             ((constantly nil) content uid)
+   :render (fn [_ uid]
              [:input {:type     "checkbox"
                       :checked  "true"
                       :on-click #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})

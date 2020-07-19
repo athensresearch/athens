@@ -4,6 +4,9 @@
     [athens.components.website-embeds :as website-embeds]))
 
 
+(def components (concat todo/components website-embeds/components))
+
+
 (defn default-component
   [content uid]
   ((constantly nil) uid)
@@ -13,8 +16,7 @@
 (defn render-component
   "Renders a component using its parse tree & its uid."
   [content uid]
-  (let [components (concat todo/components website-embeds/components)
-        render     (some (fn [comp]
+  (let [render     (some (fn [comp]
                            (when (re-matches (:match comp) content)
                              (:render comp))) components)]
     [:span {:on-click (fn [e]

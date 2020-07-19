@@ -3,8 +3,7 @@
 
 (def component-youtube-embed
   {:match  #"\[\[youtube\]\]\:.*"
-   :render (fn [content uid]
-             ((constantly nil) uid)
+   :render (fn [content _]
              [:iframe {:width       640
                        :height      360
                        :src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
@@ -18,8 +17,7 @@
 
 (def component-generic-embed
   {:match  #"iframe\:.*"
-   :render (fn [content uid]
-             ((constantly nil) uid)
+   :render (fn [content _]
              [:iframe {:width       640
                        :height      360
                        :src         (find-weblink content)}])})
