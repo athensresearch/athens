@@ -83,8 +83,8 @@
   (insta/transform
     {:block         (fn [& contents]
                       (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
-     :component     (fn [contents]
-                      (components-util/render-component contents uid))
+     :component     (fn [& contents]
+                      (components-util/render-component (first contents) uid))
      :page-link     (fn [& title] (render-page-link title))
      :block-ref     (fn [uid]
                       (let [block (pull db/dsdb '[*] [:block/uid uid])]

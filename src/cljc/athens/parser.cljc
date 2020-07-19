@@ -109,7 +109,9 @@
      :url-link-url-parts     (fn [& chars]
                                (string/join chars))
      :any-chars              (fn [& chars]
-                               (string/join chars))}
+                               (string/join chars))
+     :component              (fn [raw-content-string]
+                               (into [] (concat [:component raw-content-string] (into [] (rest (block-parser raw-content-string))))))}
     tree))
 
 
