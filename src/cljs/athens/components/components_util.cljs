@@ -1,4 +1,4 @@
-(ns athens.components-util
+(ns athens.components.components-util
   (:require
     [athens.components.todo :as todo]
     [athens.components.website-embeds :as website-embeds]))
@@ -14,10 +14,9 @@
   "Renders a component using its parse tree & its uid."
   [content uid]
   (let [components (concat todo/components website-embeds/components)
-        rendered   (some (fn [comp]
-                           (if (re-matches (get comp :match) content)
-                             (get comp :render)
-                             nil)) components)]
-    (if rendered
-      (rendered          content uid)
-      (default-component content uid))))
+        render     (some (fn [comp]
+                           (when (re-matches (:match comp) content)
+                             (:render comp))) components)]
+    (if render
+      [render            content uid]
+      [default-component content uid])))

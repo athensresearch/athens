@@ -1,6 +1,6 @@
 (ns athens.parse-renderer
   (:require
-    [athens.components-util :as components-util]
+    [athens.components.components-util :as components-util]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]

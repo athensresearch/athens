@@ -13,7 +13,6 @@
 
 (defn find-weblink
   [content]
-
   (re-find #"http.*" content))
 
 
