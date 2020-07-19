@@ -8,8 +8,7 @@
 
 
 (defn default-component
-  [content uid]
-  ((constantly nil) uid)
+  [content _]
   [:button content])
 
 ;; TODO: use metaprogramming to achieve dynamic rendering with both basic components and custom components
