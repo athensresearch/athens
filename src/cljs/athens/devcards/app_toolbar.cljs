@@ -204,7 +204,7 @@
                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
                       [:p "To export a Roam database to the " [:code "json triplet"] " format that Athens understands, refer to the official Athens documentation."]
                       [features-table]
-                      [:input {:type "file" 
+                      [:input {:type "file"
                                :id "db-import-add-files"
                                :style {:display "none"}
                                :on-change (fn [e] (file-cb e) (reset! import-modal-open? false))}]
