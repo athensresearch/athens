@@ -364,7 +364,7 @@
                                                 (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]
 
 ;;(dispatch [:selected/add-item uid]))}]
-       [parse-and-render string]
+       [parse-and-render string uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 

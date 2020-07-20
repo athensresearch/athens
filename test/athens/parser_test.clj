@@ -64,6 +64,15 @@
     "learn #اَلْعَرَبِيَّةُ in a year"))
 
 
+(deftest parser-component-tests
+  (are [x y] (= x (parse-to-ast y))
+    [:block [:component "[[TODO]]" [:page-link "TODO"]] " Pick up groceries"]
+    "{{[[TODO]]}} Pick up groceries"
+
+    [:block [:component "AnotherComponent" "AnotherComponent"] " Another Content"]
+    "{{AnotherComponent}} Another Content"))
+
+
 (deftest parser-url-image-tests
   ;; Few tests because this parser largely depends on `url-link`
   (are [x y] (= x (parse-to-ast y))
