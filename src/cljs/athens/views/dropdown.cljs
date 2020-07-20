@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [athens.views.buttons :refer [button]]
+    [athens.views.buttons :refer [button buttons-style]]
     [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -50,6 +50,11 @@
                                          :margin-inline-start "0"
                                          :margin-inline-end "0.5rem"}]]]})
 
+(def menu-item-style
+  (merge {}
+         buttons-style))
+
+
 
 (def menu-heading-style
   {:min-height "2rem"
@@ -84,103 +89,54 @@
    ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
-;;; Primitives
-
-
-(defn dropdown
-  [{:keys [style content]}]
-  [:div (use-style (merge dropdown-style style) {:id "dropdown"})
-   content])
-
-
-(defn menu
-  [{:keys [style content]}]
-  [:div (use-style (merge menu-style style))
-   content])
-
-
-(defn menu-separator
-  []
-  [:hr (use-style menu-separator-style)])
-
-
-(defn submenu-indicator
-  []
-  [:> mui-icons/ChevronRight (use-style submenu-indicator-style)])
-
-
-(defn menu-heading
-  [heading]
-  [:header (use-style menu-heading-style) [:span heading]])
-
-
 ;;; Components
-
-
-(defn slash-menu-component
-  [{:keys [style]}]
-  [dropdown {:style style :content
-             [menu {:style {:max-height "8em"} :content
-                    [:<>
-                     [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
-                     [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
-                     [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
-                     [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
-                     [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
-                     [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
-                     [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
-                     [button [:<> [:> mui-icons/Today] [:span "Today"]]]]}]}])
-
-(stylefy/class "dropdown" dropdown-style)
-(stylefy/class "menu" menu-style)
-(stylefy/class "menu-item" athens.views.buttons/buttons-style)
-(stylefy/class "menu-separator" menu-separator-style)
-
-(defn block-context-menu-component
-  [style]
-  [dropdown {:style style :content
-             [menu {:content
-                    [:<>
-                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
-                     ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
-                     [button [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]]
-                     [button [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]]
-                     [button [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]]
-                     [menu-separator]
-                     [button [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
-                     [button [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
-                     [button [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]]
-                     [button [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]]
-                     [button [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]]
-                     [menu-separator]
-                     [button [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]]
-                     [button [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]]
-                     [button [:<> [:> mui-icons/History] [:span "Browse Versions"]]]
-                     [button [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]]]}]}])
-
-
-(def items
-  {"Amet"   {:count 6 :state :added}
-   "At"     {:count 130 :state :excluded}
-   "Diam"   {:count 6}
-   "Donec"  {:count 6}
-   "Elit"   {:count 30}
-   "Elitudomin mesucen defibocutruon"  {:count 1}
-   "Erat"   {:count 11}
-   "Est"    {:count 2}
-   "Eu"     {:count 2}
-   "Ipsum"  {:count 2 :state :excluded}
-   "Magnis" {:count 10 :state :added}
-   "Metus"  {:count 29}
-   "Mi"     {:count 7 :state :added}
-   "Quam"   {:count 1}
-   "Turpis" {:count 97}
-   "Vitae"  {:count 1}})
-
-
-(defn filter-dropdown-component
-  []
-  [dropdown {:style   {:width "20em" :height "20em"}
-             :content [:<>
-                       [menu-heading "Filters"]
-                       [filters-el "((some-uid))" items]]}])
+;;
+;;
+;;(defn block-context-menu-component
+;;  [style]
+;;  [dropdown {:style style :content
+;;             [menu {:content
+;;                    [:<>
+;;                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
+;;                     ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
+;;                     [button [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]]
+;;                     [button [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]]
+;;                     [button [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]]
+;;                     [menu-separator]
+;;                     [button [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
+;;                     [button [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
+;;                     [button [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]]
+;;                     [button [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]]
+;;                     [button [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]]
+;;                     [menu-separator]
+;;                     [button [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]]
+;;                     [button [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]]
+;;                     [button [:<> [:> mui-icons/History] [:span "Browse Versions"]]]
+;;                     [button [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]]]}]}])
+;;
+;;
+;;(def items
+;;  {"Amet"   {:count 6 :state :added}
+;;   "At"     {:count 130 :state :excluded}
+;;   "Diam"   {:count 6}
+;;   "Donec"  {:count 6}
+;;   "Elit"   {:count 30}
+;;   "Elitudomin mesucen defibocutruon"  {:count 1}
+;;   "Erat"   {:count 11}
+;;   "Est"    {:count 2}
+;;   "Eu"     {:count 2}
+;;   "Ipsum"  {:count 2 :state :excluded}
+;;   "Magnis" {:count 10 :state :added}
+;;   "Metus"  {:count 29}
+;;   "Mi"     {:count 7 :state :added}
+;;   "Quam"   {:count 1}
+;;   "Turpis" {:count 97}
+;;   "Vitae"  {:count 1}})
+;;
+;;
+;;(defn filter-dropdown-component
+;;  []
+;;  [dropdown {:style   {:width "20em" :height "20em"}
+;;             :content [:<>
+;;                       [menu-heading "Filters"]
+;;                       [filters-el "((some-uid))" items]]}])

@@ -9,7 +9,7 @@
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
-    ;;[athens.views.dropdown :refer [page-menu-component]]
+    [athens.views.dropdown :refer [dropdown-style menu-item-style menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -217,34 +217,35 @@
               :class         (when (= editing-uid uid) "is-editing")
               :auto-focus    true
               :on-change     (fn [e] (db-handler (.. e -target -value) uid))}])
-          [:button.button {:class    [(when show "active")]
-                           :on-click (fn [e]
-                                       (if show
-                                         (swap! state assoc :menu/show false)
-                                         (let [rect (.. e -target getBoundingClientRect)]
-                                           (swap! state merge {:menu/show true
-                                                               :menu/x    (.. rect -left)
-                                                               :menu/y    (.. rect -bottom)}))))
-                           :style    page-menu-toggle-style}
+          [button {:class    [(when show "active")]
+                   :on-click (fn [e]
+                               (if show
+                                 (swap! state assoc :menu/show false)
+                                 (let [rect (.. e -target getBoundingClientRect)]
+                                   (swap! state merge {:menu/show true
+                                                       :menu/x    (.. rect -left)
+                                                       :menu/y    (.. rect -bottom)}))))
+                   :style    page-menu-toggle-style}
            [:> mui-icons/ExpandMore]]
 
           (when show
-            [:div.dropdown {:style {:font-size "14px"
-                                    :position "fixed"
-                                    :left (str x "px")
-                                    :top (str y "px")}}
-             [:div.menu
+            [:div (merge (use-style dropdown-style)
+                    {:style {:font-size "14px"
+                             :position "fixed"
+                             :left (str x "px")
+                             :top (str y "px")}})
+             [:div (use-style menu-style)
               (if is-shortcut?
-                [:button.menu-item {:on-click #(dispatch [:page/remove-shortcut uid])}
+                [button {:on-click #(dispatch [:page/remove-shortcut uid])}
                  [:<>
                   [:> mui-icons/BookmarkBorder]
                   [:span "Remove Shortcut"]]]
-                [:button.menu-item {:on-click #(dispatch [:page/add-shortcut uid])}
+                [button {:on-click #(dispatch [:page/add-shortcut uid])}
                  [:<>
                   [:> mui-icons/Bookmark]
                   [:span "Add Shortcut"]]])
-              [:hr.menu-separator]
-              [:button.menu-item {:disabled true}
+              [:hr (use-style menu-separator-style)]
+              [button {:disabled true}
                [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
           (parse-renderer/parse-and-render title uid)]
 
