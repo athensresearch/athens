@@ -93,6 +93,7 @@ Notes:
 # Connecting your REPL
 
 * Make sure you can run Athens locally before proceeding with this section.
+* Clojure environment [setup windows](https://www.notion.so/Beginner-Clojure-Environment-Setup-Windows-36f70c16b9a7420da3cd797a3eb712fa) .
 * Refer to shadow-cljs [editor integration docs](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration) for more details.
 * nREPL port is 8777, as defined in [shadow-cljs.edn](./shadow-cljs.edn).
 
