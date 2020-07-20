@@ -5,7 +5,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
-    [athens.util :refer [gen-block-uid]]
+    [athens.util :refer [gen-block-uid is-beyond-rect?]]
     [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -170,16 +170,6 @@
                                    vec)}))))
 
 
-(defn is-beyond-rect?
-  "Checks if any part of the element is above or below the container's bounding rect"
-  [element container]
-  (let [el-box (.. element getBoundingClientRect)
-        cont-box (.. container getBoundingClientRect)]
-    (or
-      (> (.. el-box -bottom) (.. cont-box -bottom))
-      (< (.. el-box -top) (.. cont-box -top)))))
-
-
 (defn key-down-handler
   [e state]
   (let [key (.. e -keyCode)
@@ -187,7 +177,6 @@
         {:keys [index query results]} @state
         item (get results index)]
     (cond
-      ;; FIXME: why does this only work in Devcards?
       (= key KeyCodes.ESC)
       (dispatch [:athena/toggle])
 
@@ -211,24 +200,34 @@
       (do (dispatch [:athena/toggle])
           (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
 
-      ;; TODO: change scroll as user reaches top or bottom
-      ;; TODO: what happens when user goes to -1? or past end of list?
       (= key KeyCodes.UP)
       (do
-        (swap! state update :index #(dec (if (zero? index) (count results) index)))
+        (.. e preventDefault)
+        (swap! state update :index #(dec (if (zero? %) (count results) %)))
         (let [cur-index (:index @state)
+
+              ;; Search input box
               input-el (.. e -target)
-              result-el (.. (. input-el closest "div.athena") -lastElementChild)
+
+              ;; Get the result list container which is the last element child
+              ;; of the whole athena component
+
+              result-el (.. input-el (closest "div.athena") -lastElementChild)
+
+              ;; Get next element in the result list
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
+
+          ;; Check if next el is beyond the bounds of the result list and scroll if so
           (when (is-beyond-rect? next-el result-el)
             (.. next-el (scrollIntoView (not= cur-index (dec (count results))) {:behavior "auto"})))))
 
       (= key KeyCodes.DOWN)
       (do
-        (swap! state update :index #(if (= index (dec (count results))) 0 (inc %)))
+        (.. e preventDefault)
+        (swap! state update :index #(if (= % (dec (count results))) 0 (inc %)))
         (let [cur-index (:index @state)
               input-el (.. e -target)
-              result-el (.. (. input-el closest "div.athena") -lastElementChild)
+              result-el (.. input-el (closest "div.athena") -lastElementChild)
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
           (when (is-beyond-rect? next-el result-el)
             (.. next-el (scrollIntoView (zero? cur-index) {:behavior "auto"})))))
