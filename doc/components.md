@@ -1,6 +1,6 @@
 # Athens Components Documentation
 
-Components are special syntaxes in blocks that allow complex interactions and data display from an end-user perspective. Athens has an open attitude for components: we believe that it is an important part of end-user programming. Thus, users can not only contribute to the components directory through this repository (following the general components syntax), but can also add custom components directly in the user-end, then share it with the entire Athens community (coming soon).
+Components are special syntaxes in blocks that allow complex interactions and data display from an end-user perspective. Currently we only support a couple of components (see below), but new components would be gradually added.
 
 This documentation provides a technical overview regarding how Athens components are processed in the frontend. If you have any ideas or suggestions, feel free to open an issue!
 
@@ -10,7 +10,7 @@ The Athens [parser](./parser.md) considers everything in double curly brackets (
 
 After the parsing process, the `:component` list would be a variadic list in which the first element is the unparsed string for more efficient pattern matching while rest of the elements are parsed tree for things like dynamic references & auto page creation. Will add documentation.
 
-Relavant code:
+Relevant code:
 
 * <../src/cljc/athens/parser.cljc>
 * <../src/cljs/athens/components>

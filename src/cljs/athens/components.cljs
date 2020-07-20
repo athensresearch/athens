@@ -1,4 +1,4 @@
-(ns athens.components.default-components
+(ns athens.components
   (:require
     [athens.db :as db]
     [athens.util :refer [now-ts]]
@@ -57,6 +57,25 @@
                        :src         (find-weblink content)}])})
 
 
-;; Exports
+;; Components
 (def components [component-todo component-done component-youtube-embed component-generic-embed])
 
+
+;; ---- Render function for custom components
+(defn empty-component
+  [content _]
+  [:button content])
+
+
+;; TODO: use metaprogramming to achieve dynamic rendering with both basic components and custom components
+(defn render-component
+  "Renders a component using its parse tree & its uid."
+  [content uid]
+  (let [render     (some (fn [comp]
+                           (when (re-matches (:match comp) content)
+                             (:render comp))) components)]
+    [:span {:on-click (fn [e]
+                        (.. e stopPropagation))}
+     (if render
+       [render            content uid]
+       [empty-component   content uid])]))

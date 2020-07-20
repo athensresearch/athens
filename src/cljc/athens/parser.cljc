@@ -111,7 +111,7 @@
      :any-chars              (fn [& chars]
                                (string/join chars))
      :component              (fn [raw-content-string]
-                               (into [:component raw-content-string] (subvec (block-parser raw-content-string) 1)))}
+                               (into [:component raw-content-string] (rest (block-parser raw-content-string))))}
     tree))
 
 

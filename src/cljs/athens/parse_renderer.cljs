@@ -1,6 +1,6 @@
 (ns athens.parse-renderer
   (:require
-    [athens.components.components-util :as components-util]
+    [athens.components :as components]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -85,7 +85,7 @@
                       (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
-                      (components-util/render-component (first contents) uid))
+                      (components/render-component (first contents) uid))
      :page-link     (fn [& title] (render-page-link title))
      :block-ref     (fn [uid]
                       (let [block (pull db/dsdb '[*] [:block/uid uid])]
