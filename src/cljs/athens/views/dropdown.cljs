@@ -131,24 +131,10 @@
                      [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
                      [button [:<> [:> mui-icons/Today] [:span "Today"]]]]}]}])
 
-
-(defn page-menu-component
-  [{:keys [style uid is-shortcut?]}]
-  [dropdown {:style (merge {:font-size "14px"} style) :content
-             [menu {:content
-                    [:<>
-                     (if is-shortcut?
-                       [button {:on-click #(dispatch [:page/unmake-shortcut uid])}
-                        [:<>
-                         [:> mui-icons/BookmarkBorder]
-                         [:span "Remove Shortcut"]]]
-                       [button {:on-click #(dispatch [:page/make-shortcut uid])}
-                        [:<>
-                         [:> mui-icons/Bookmark]
-                         [:span "Add Shortcut"]]])
-                     [menu-separator]
-                     [button [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]}]}])
-
+(stylefy/class "dropdown" dropdown-style)
+(stylefy/class "menu" menu-style)
+(stylefy/class "menu-item" athens.views.buttons/buttons-style)
+(stylefy/class "menu-separator" menu-separator-style)
 
 (defn block-context-menu-component
   [style]

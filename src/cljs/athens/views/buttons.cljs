@@ -70,6 +70,7 @@
 
 ;;; Components
 
+(stylefy/class "button" buttons-style)
 
 (defn button
   "Keep button interface as close to vanilla hiccup as possible.

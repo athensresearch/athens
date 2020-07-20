@@ -287,13 +287,14 @@
 (reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents (d/q '[:find (count ?e) .
+    (let [sidebar-ents (d/q '[:find ?e
                               :where
                               [?e :page/sidebar _]]
                             @db/dsdb)]
-      {:transact! [{:block/uid uid :page/sidebar sidebar-ents}]})))
+      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
 
 
+;; TODO: reindex
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
