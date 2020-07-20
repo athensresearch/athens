@@ -43,3 +43,13 @@
     (-> (- (.. rect -bottom)
            (.. rect -top))
         (/ 2))))
+
+
+(defn is-beyond-rect?
+  "Checks if any part of the element is above or below the container's bounding rect"
+  [element container]
+  (let [el-box (.. element getBoundingClientRect)
+        cont-box (.. container getBoundingClientRect)]
+    (or
+      (> (.. el-box -bottom) (.. cont-box -bottom))
+      (< (.. el-box -top) (.. cont-box -top)))))
