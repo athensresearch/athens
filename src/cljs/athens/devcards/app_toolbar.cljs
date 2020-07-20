@@ -11,6 +11,15 @@
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
+;;; Helper functions
+(defn file-cb
+  [e]
+  (let [fr (js/FileReader.)
+        file (.. e -target -files (item 0))]
+    ;; TODO: maybe rename `http-success/get-db` into a more intuitive name like `get-db/parse-triplet-json-and-import` ?
+    (set! (.-onload fr) #(dispatch [:http-success/get-db (.. % -target -result)]))
+    (.readAsText fr file)))
+
 
 ;;; Styles
 
@@ -193,8 +202,13 @@
             :content [:div (use-style modal-contents-style)
                       ;; TODO: Write intro copy
                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
+                      [:p "To export a Roam database to the " [:code "json triplet"] " format that Athens understands, refer to the official Athens documentation."]
                       [features-table]
-                      ;; TODO: Create browser file dialog and actually import stuff
-                      [:div [button {:primary true} "Add Files"]]]
+                      [:input {:type "file" 
+                               :id "db-import-add-files"
+                               :style {:display "none"}
+                               :on-change (fn [e] (file-cb e) (reset! import-modal-open? false))}]
+                      [:div [button {:primary true
+                                     :on-click #(.click (.getElementById js/document "db-import-add-files"))} "Add Files"]]]
             :on-close #(reset! import-modal-open? false)}]])])))
 
