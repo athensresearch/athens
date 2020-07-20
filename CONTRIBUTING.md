@@ -37,6 +37,8 @@ These dependencies are needed to get Athens up and running. To install them, fol
 1. [Java 11 and Leiningen](https://purelyfunctional.tv/guide/how-to-install-clojure/) (Leiningen installs Clojure)
 1. [Node 12](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 
+*If you want to use Windows Subsystem for Linux (WSL), [try this tutorial](https://www.notion.so/Beginner-Clojure-Environment-Setup-Windows-36f70c16b9a7420da3cd797a3eb712fa#6a53854de58d4f07ba6319d868fba29c).*
+
 After you've got these dependencies, clone the Git repository to your hard drive:
 
 ```

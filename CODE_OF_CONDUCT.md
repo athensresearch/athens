@@ -8,6 +8,7 @@
   * [Kicking and Banning](#kicking-and-banning)
   * [Auto-Moderation](#auto-moderation)
   * [Pruning](#pruning)
+  * [Contributor Channels](#contributor-channels)
 - [Discord Official](#discord-official)
   * [Discord Guidelines](#discord-guidelines)
   * [Discord Terms of Service](#discord-terms-of-service)
@@ -77,6 +78,10 @@ It warns members and deletes messages in the following cases:
 ## Pruning
 
 Collaboration implies participation. Members of the Discord who do not message after a certain number of days are "pruned" and will need to be re-invited to rejoin the Discord.
+
+## Contributor Channels
+
+In the "Athens (Product)" section, we have set up specific channels for those who have made non-trivial contributions to engineering and/or design. This way, communications between contributors can flow freely, while still allowing aspiring contributors to gain invaluable context about how and why certain decisions are made. More context about this change in our Discord can be found [here](https://www.notion.so/athensresearch/Open-Source-Conversations-Discord-a8c959de3b194cefadd48b497fc12079).
 
 # Discord Official
 

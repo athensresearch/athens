@@ -223,12 +223,8 @@
              :style page-menu-toggle-style}
      [:> mui-icons/ExpandMore]]
     (when @show-page-menu?
-      [page-menu-component {:style {:position "fixed"
-                                    :left (str (:x @page-menu-position) "px")
-                                    :top (str (:y @page-menu-position) "px")}
-                            :uid uid
-                            :is-shortcut? is-shortcut?}])
-    (parse-renderer/parse-and-render title)]
+      [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
+    (parse-renderer/parse-and-render title uid)]
 
    ;; Children
    [:div

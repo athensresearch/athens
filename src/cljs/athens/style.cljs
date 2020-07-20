@@ -141,7 +141,9 @@
                             :border-radius "0.25rem"
                             :padding "0.25em 0.5em"}]
                      [:img {:max-width "100%"
-                            :height "auto"}]]})
+                            :height "auto"}]
+                     [":focus" {:outline-width 0}]
+                     [":focus-visible" {:outline-width "1px"}]]})
 
 
 (def app-styles
