@@ -285,6 +285,23 @@
 
 
 (reg-event-fx
+  :page/add-shortcut
+  (fn [_ [_ uid]]
+    (let [sidebar-ents (d/q '[:find ?e
+                              :where
+                              [?e :page/sidebar _]]
+                            @db/dsdb)]
+      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
+
+
+;; TODO: reindex
+(reg-event-fx
+  :page/remove-shortcut
+  (fn [_ [_ uid]]
+    {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
+
+
+(reg-event-fx
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]

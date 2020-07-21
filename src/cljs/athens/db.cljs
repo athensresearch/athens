@@ -200,7 +200,7 @@
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order :page/sidebar {:block/children ...} :edit/time] id)
        sort-block-children))
 
 

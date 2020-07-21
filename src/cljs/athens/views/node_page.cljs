@@ -9,7 +9,7 @@
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [page-menu-component]]
+    [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -193,66 +193,94 @@
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  [{:block/keys [children uid] title :node/title} editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]
+  [_ _ _ _]
+  (let [state (r/atom {:menu/show false
+                       :menu/x nil
+                       :menu/y nil})]
+    (fn [block editing-uid ref-groups timeline-page?]
+      (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
+            {:menu/keys [show x y]} @state]
 
-  [:div (use-style page-style {:class ["node-page"]})
-   ;; TODO: implement timeline
-   ;;(when timeline-page?
-   ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
-   ;;              [:<>
-   ;;               [:mui-icons Left]
-   ;;               [:span "Timeline"]]}])
+        [:div (use-style page-style {:class ["node-page"]})
+         ;; TODO: implement timeline
+         ;;(when timeline-page?
+         ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
+         ;;              [:<>
+         ;;               [:mui-icons Left]
+         ;;               [:span "Timeline"]]}])
 
-   ;; Header
-   [:h1 (use-style title-style {:data-uid uid :class "page-header"})
-    (when-not timeline-page?
-      [autosize/textarea
-       {:default-value title
-        :class      (when (= editing-uid uid) "is-editing")
-        :auto-focus true
-        :on-change  (fn [e] (db-handler (.. e -target -value) uid))}])
-    [button {:on-click (fn [e]
-                         (doall (swap! show-page-menu? not)
-                                (reset! page-menu-position {:x (.. e -target getBoundingClientRect -left) :y (.. e -target getBoundingClientRect -bottom)})))
-             :active (when @show-page-menu? true)
-             :style page-menu-toggle-style}
-     [:> mui-icons/ExpandMore]]
-    (when @show-page-menu?
-      [page-menu-component {:style {:position "fixed" :left (str (:x @page-menu-position) "px") :top (str (:y @page-menu-position) "px")}}])
-    (parse-renderer/parse-and-render title uid)]
+         ;; Header
+         [:h1 (use-style title-style {:data-uid uid :class "page-header"})
+          (when-not timeline-page?
+            [autosize/textarea
+             {:default-value title
+              :class         (when (= editing-uid uid) "is-editing")
+              :auto-focus    true
+              :on-change     (fn [e] (db-handler (.. e -target -value) uid))}])
+          [button {:class    [(when show "active")]
+                   :on-click (fn [e]
+                               (if show
+                                 (swap! state assoc :menu/show false)
+                                 (let [rect (.. e -target getBoundingClientRect)]
+                                   (swap! state merge {:menu/show true
+                                                       :menu/x    (.. rect -left)
+                                                       :menu/y    (.. rect -bottom)}))))
+                   :style    page-menu-toggle-style}
+           [:> mui-icons/ExpandMore]]
 
-   ;; Children
-   [:div
-    (for [{:block/keys [uid] :as child} children]
-      ^{:key uid}
-      [block-el child])]
+          (when show
+            [:div (merge (use-style dropdown-style)
+                         {:style {:font-size "14px"
+                                  :position "fixed"
+                                  :left (str x "px")
+                                  :top (str y "px")}})
+             [:div (use-style menu-style)
+              (if is-shortcut?
+                [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                 [:<>
+                  [:> mui-icons/BookmarkBorder]
+                  [:span "Remove Shortcut"]]]
+                [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                 [:<>
+                  [:> mui-icons/Bookmark]
+                  [:span "Add Shortcut"]]])
+              [:hr (use-style menu-separator-style)]
+              [button {:disabled true}
+               [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
+          (parse-renderer/parse-and-render title uid)]
 
-   ;; References
-   (doall
-     (for [[linked-or-unlinked refs] ref-groups]
-       (when (not-empty refs)
-         [:section (use-style references-style {:key linked-or-unlinked})
-          [:h4 (use-style references-heading-style)
-           [(r/adapt-react-class mui-icons/Link)]
-           [:span linked-or-unlinked]
-           [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
-          [:div (use-style references-list-style)
-           (doall
-             (for [[group-title group] refs]
-               [:div (use-style references-group-style {:key (str "group-" group-title)})
-                [:h4 (use-style references-group-title-style)
-                 [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
-                (doall
-                  (for [{:block/keys [uid parents] :as block} group]
-                    [:div (use-style references-group-block-style {:key (str "ref-" uid)})
-                ;; TODO: expand parent on click
-                     [block-el block]
-                     (when (> (count parents) 1)
-                       [breadcrumbs-list {:style reference-breadcrumbs-style}
-                        [(r/adapt-react-class mui-icons/LocationOn)]
-                        (doall
-                          (for [{:keys [node/title block/string block/uid]} parents]
-                            [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]])))])
+         ;; Children
+         [:div
+          (for [{:block/keys [uid] :as child} children]
+            ^{:key uid}
+            [block-el child])]
+
+         ;; References
+         (doall
+           (for [[linked-or-unlinked refs] ref-groups]
+             (when (not-empty refs)
+               [:section (use-style references-style {:key linked-or-unlinked})
+                [:h4 (use-style references-heading-style)
+                 [(r/adapt-react-class mui-icons/Link)]
+                 [:span linked-or-unlinked]
+                 [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+                [:div (use-style references-list-style)
+                 (doall
+                   (for [[group-title group] refs]
+                     [:div (use-style references-group-style {:key (str "group-" group-title)})
+                      [:h4 (use-style references-group-title-style)
+                       [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
+                      (doall
+                        (for [{:block/keys [uid parents] :as block} group]
+                          [:div (use-style references-group-block-style {:key (str "ref-" uid)})
+                           ;; TODO: expand parent on click
+                           [block-el block]
+                           (when (> (count parents) 1)
+                             [breadcrumbs-list {:style reference-breadcrumbs-style}
+                              [(r/adapt-react-class mui-icons/LocationOn)]
+                              (doall
+                                (for [{:keys [node/title block/string block/uid]} parents]
+                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]])))]))))
 
 
 (defn node-page-component
@@ -261,11 +289,9 @@
   [ident]
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])
-        timeline-page? (is-timeline-page uid)
-        show-page-menu? (r/atom false)
-        page-menu-position (r/atom {:x 0 :y 0})]
+        timeline-page? (is-timeline-page uid)]
     (when-not (string/blank? title)
-      ;; TODO: turn ref-groups into an atom, let users toggle open/close
+      ;; TODO: let users toggle open/close references
       (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
                         ["Unlinked References" (-> title patterns/unlinked get-data)]]]
-        [node-page-el node editing-uid ref-groups timeline-page? show-page-menu? page-menu-position]))))
+        [node-page-el node editing-uid ref-groups timeline-page?]))))

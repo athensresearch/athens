@@ -10,7 +10,7 @@
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.all-pages :refer [date-string]]
     [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [slash-menu-component menu-style dropdown]]
+    [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -308,21 +308,40 @@
   [_block state]
   (let [{:search/keys [page block query results index]} @state]
     (when (or block page)
-      [dropdown {:style   {:position "absolute"
-                           :top      "100%"
-                           :max-height "20rem"
-                           :left     "1.75em"}
-                 :content (if (clojure.string/blank? query)
-                            [:div "Start Typing!"]
-                            (doall
-                              [:div (use-style menu-style {:id "dropdown-menu"})
-                               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                 ^{:key (str "inline-search-item" uid)}
-                                 [button
-                                  {:on-click #(prn "expand")
-                                   :active (when (= index i) true)
-                                   :id (str "result-" i)}
-                                  (or title string)])]))}])))
+      [:div (merge (use-style dropdown-style)
+                   {:style {:position "absolute"
+                            :top      "100%"
+                            :max-height "20rem"
+                            :left     "1.75em"}})
+       (if (clojure.string/blank? query)
+         [:div "Start Typing!"]
+         (doall
+           [:div (use-style menu-style {:id "dropdown-menu"})
+            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+              ^{:key (str "inline-search-item" uid)}
+              [button
+               {:on-click #(prn "expand")
+                :active (when (= index i) true)
+                :id (str "result-" i)}
+               (or title string)])]))])))
+
+
+(defn slash-menu-el
+  [state]
+  (let [{:keys [slash?]} @state]
+    (when slash?
+      [:div (merge (use-style dropdown-style)
+                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+       [:div (merge (use-style menu-style)
+                    {:style {:max-height "8em"}})
+        [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
+        [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
+        [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
+        [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
+        [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
+        [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
+        [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
+        [button [:<> [:> mui-icons/Today] [:span "Today"]]]]])))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -470,8 +489,9 @@
           [tooltip-el block state]
           [block-content-el block state is-editing]]
 
-         (when (:slash? @state)
-           [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
+         [slash-menu-el state]
+
+
          [page-search-el block state]
 
          ;; Children
