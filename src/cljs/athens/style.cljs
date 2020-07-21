@@ -131,6 +131,7 @@
                            :text-transform "uppercase"}]
                      [:.MuiSvgIcon-root {:font-size "1.5rem"}]
                      [:input {:font-family "inherit"}]
+                     [:code {:font-family "IBM Plex Mono"}]
                      [:kbd {:text-transform "uppercase"
                             :font-family "inherit"
                             :font-size "0.85em"

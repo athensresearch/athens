@@ -188,12 +188,15 @@
                      [:span [:span
                              :a {:position "relative"
                                  :z-index 2}]]
+                     [:img {:border-radius "0.25rem"}]
+                     ;; Embeds
+                     [:embed :iframe {:border "0"
+                                      :border-radius "0.25rem"}]
+                     ;;  Checkbox components
                      [(selectors/attr= :type :checkbox) {:vertical-align "-0.325em"
                                                          :background (color :background-minus-1)
                                                          :border "none"
-                                                        ;;  :box-shadow [["0 0 0 1px " (color :link-color)]]
-                                                        ;;  :box-shadow [["0 0 0 1px " (color :border-color)]]
-                                                         :box-shadow [["0 0 0 1px " (color :body-text-color)]]
+                                                         :box-shadow [["0 0 0 1px " (color :body-text-color :opacity-med)]]
                                                          :width "1em"
                                                          :height "1em"
                                                          :cursor "pointer"
@@ -211,15 +214,16 @@
                                  :height "0.25em"
                                  :margin "auto"
                                  :position "absolute"
+                                 :flex " 0 0 auto"
                                  :left "0.125em"
                                  :top "0.45em"
                                  :border-style "solid"
                                  :border-width "0 0 1.5px 1.5px"
                                  :opacity 0
                                  :transform "rotate(-45deg)"}]
-                      [(selectors/& (selectors/attr :checked)) {:background (color :link-color)
-                                                                :box-shadow [["0 0 0 1px " (color :border-color)]]} [:&:after {:opacity 1
-                                                                                                                               :color "#fff"}]]
+                      [(selectors/& (selectors/attr :checked))
+                       [:&:after {:opacity 1
+                                  :color "#fff"}]]
                       [:&:hover {:background (color :background-plus-1)}]
                       [:&:active {:background (color :background-plus-2)}]]]})
 

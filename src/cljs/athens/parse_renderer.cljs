@@ -24,7 +24,7 @@
                                   [:&:after {:content "''"
                                              :display "inline-block"
                                              :position "absolute"
-                                             :top "-1px"
+                                             :top 0
                                              :right "-0.2em"
                                              :left "-0.2em"
                                              :bottom "-1px"
@@ -34,8 +34,7 @@
                                              :transition "all 0.05s ease"
                                              :background (color :link-color 0.1)}]
                                   [:&:hover:after {:opacity "1"}]
-                                  [:&:hover {
-                                             :z-index 1}]]})
+                                  [:&:hover {:z-index 1}]]})
 
 
 (def hashtag {::stylefy/mode [[:hover {:text-decoration "underline"}]]
