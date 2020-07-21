@@ -326,6 +326,24 @@
                (or title string)])]))])))
 
 
+(defn slash-menu-el
+  [state]
+  (let [{:keys [slash?]} @state]
+    (when slash?
+      [:div (merge (use-style dropdown-style)
+                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+       [:div (merge (use-style menu-style)
+                    {:style {:max-height "8em"}})
+        [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
+        [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
+        [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
+        [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
+        [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
+        [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
+        [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
+        [button [:<> [:> mui-icons/Today] [:span "Today"]]]]])))
+
+
 ;; Actual string contents - two elements, one for reading and one for writing
 ;; seems hacky, but so far no better way to click into the correct position with one conditional element
 (defn block-content-el
@@ -471,18 +489,9 @@
           [tooltip-el block state]
           [block-content-el block state is-editing]]
 
-         (when (:slash? @state)
-           [:div (merge (use-style dropdown-style)
-                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-            [:div (merge (use-style menu-style) {:style {:max-height "8em"}})
-             [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
-             [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
-             [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
-             [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
-             [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
-             [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
-             [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
-             [button [:<> [:> mui-icons/Today] [:span "Today"]]]]])
+         [slash-menu-el state]
+
+
 
          [page-search-el block state]
 
