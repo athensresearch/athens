@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules]]
+    [athens.db :as db :refer [rules get-children-recursively]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -282,6 +282,12 @@
           child {:db/id -2 :create/time now :edit/time now :block/uid child-uid :block/order 0 :block/open true :block/string ""}]
       {:transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now :block/children [child]}]
        :dispatch [:editing/uid child-uid]})))
+
+
+(reg-event-fx
+  :page/delete
+  (fn [_ [_ uid]]
+    {:transact! (vec (map (fn [uid] [:db/retract [:block/uid uid] :block/uid]) (get-children-recursively uid)))}))
 
 
 (reg-event-fx
