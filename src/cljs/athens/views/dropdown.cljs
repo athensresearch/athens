@@ -70,14 +70,14 @@
    :margin "0.25rem 0"})
 
 
-(def submenu-indicator-style
-  {:margin-left "auto"
-   :opacity "0.5"
-   :display "flex"
-   :order 10
-   :align-self "flex-end"
-   :font-family "inherit"
-   ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
+#_(def submenu-indicator-style
+    {:margin-left "auto"
+     :opacity "0.5"
+     :display "flex"
+     :order 10
+     :align-self "flex-end"
+     :font-family "inherit"
+     ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
 ;;; Components
