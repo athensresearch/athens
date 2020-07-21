@@ -302,7 +302,7 @@
        [:div [:b "last edit"] [:span (date-string edit-time)]]])))
 
 
-(defn page-search-el
+(defn inline-search-el
   [state]
   (let [{:search/keys [query results index type]} @state]
     [:div (merge (use-style dropdown-style)
@@ -479,7 +479,7 @@
           [block-content-el block state is-editing]]
 
          (cond
-           (or (= type :page) (= type :block)) [page-search-el state]
+           (or (= type :page) (= type :block)) [inline-search-el state]
            (= type :slash) [slash-menu-el state])
 
          ;; Children

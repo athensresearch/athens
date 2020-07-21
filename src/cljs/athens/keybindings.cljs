@@ -106,7 +106,7 @@
                                               (.. e preventDefault)
                                               (swap! state update :search/index inc)))
 
-      (or (= type :page) (= type :below))
+      (or (= type :page) (= type :block))
       (cond
         (= key-code KeyCodes.UP) (do
                                    (.. e preventDefault)
