@@ -230,10 +230,10 @@
 
           (when show
             [:div (merge (use-style dropdown-style)
-                    {:style {:font-size "14px"
-                             :position "fixed"
-                             :left (str x "px")
-                             :top (str y "px")}})
+                         {:style {:font-size "14px"
+                                  :position "fixed"
+                                  :left (str x "px")
+                                  :top (str y "px")}})
              [:div (use-style menu-style)
               (if is-shortcut?
                 [button {:on-click #(dispatch [:page/remove-shortcut uid])}

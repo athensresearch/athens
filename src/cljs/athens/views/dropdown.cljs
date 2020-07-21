@@ -50,10 +50,10 @@
                                          :margin-inline-start "0"
                                          :margin-inline-end "0.5rem"}]]]})
 
+
 (def menu-item-style
   (merge {}
          buttons-style))
-
 
 
 (def menu-heading-style

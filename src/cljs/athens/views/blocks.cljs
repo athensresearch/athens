@@ -309,10 +309,10 @@
   (let [{:search/keys [page block query results index]} @state]
     (when (or block page)
       [:div (merge (use-style dropdown-style)
-              {:style {:position "absolute"
-                       :top      "100%"
-                       :max-height "20rem"
-                       :left     "1.75em"}})
+                   {:style {:position "absolute"
+                            :top      "100%"
+                            :max-height "20rem"
+                            :left     "1.75em"}})
        (if (clojure.string/blank? query)
          [:div "Start Typing!"]
          (doall
@@ -490,7 +490,6 @@
           [block-content-el block state is-editing]]
 
          [slash-menu-el state]
-
 
 
          [page-search-el block state]
