@@ -77,7 +77,7 @@
         ;; TODO
         top-row?    true
         bottom-row? true
-        {:search/keys [query index results type]} @state
+        {:search/keys [index results type]} @state
         selected-items @(subscribe [:selected/items])
         direction (arrow-key-direction e)]
 

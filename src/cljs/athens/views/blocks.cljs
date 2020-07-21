@@ -325,7 +325,7 @@
 
 (defn slash-menu-el
   [state]
-  (let [{:keys [atom-string] index :search/index} @state]
+  (let [{index :search/index} @state]
     [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
      [:div (merge (use-style menu-style) {:style {:max-height "8em"}})
       (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
@@ -420,7 +420,7 @@
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
-            {:search/keys [type query index] :keys [dragging drag-target] state-edit-time :edit/time} @state
+            {:search/keys [type] :keys [dragging drag-target] state-edit-time :edit/time} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
