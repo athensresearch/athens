@@ -9,7 +9,7 @@
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [dropdown-style menu-item-style menu-style menu-separator-style]]
+    [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]

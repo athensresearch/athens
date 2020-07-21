@@ -1,15 +1,11 @@
 (ns athens.views.dropdown
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [athens.views.buttons :refer [button buttons-style]]
-    [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
-    [re-frame.core :refer [dispatch]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy]))
 
 
 ;;; Styles
@@ -51,23 +47,18 @@
                                          :margin-inline-end "0.5rem"}]]]})
 
 
-(def menu-item-style
-  (merge {}
-         buttons-style))
-
-
-(def menu-heading-style
-  {:min-height "2rem"
-   :text-align "center"
-   :padding "0.375rem 0.5rem"
-   :display "flex"
-   :align-content "flex-end"
-   :justify-content "center"
-   :align-items "center"
-   :font-size "12px"
-   :max-width "100%"
-   :overflow "hidden"
-   :text-overflow "ellipsis"})
+#_(def menu-heading-style
+    {:min-height "2rem"
+     :text-align "center"
+     :padding "0.375rem 0.5rem"
+     :display "flex"
+     :align-content "flex-end"
+     :justify-content "center"
+     :align-items "center"
+     :font-size "12px"
+     :max-width "100%"
+     :overflow "hidden"
+     :text-overflow "ellipsis"})
 
 
 (def menu-separator-style
