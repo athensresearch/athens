@@ -1,7 +1,8 @@
 (ns athens.keybindings
   (:require
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed]]
+    [athens.util :refer [scroll-if-needed get-day]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -76,11 +77,10 @@
         ;; TODO
         top-row?    true
         bottom-row? true
-        {:search/keys [query index results]} @state
+        {:search/keys [index results type]} @state
         selected-items @(subscribe [:selected/items])
         direction (arrow-key-direction e)]
 
-    (prn selected-items (and shift direction))
     (cond
 
       ;; items already selected, go up or down
@@ -98,22 +98,30 @@
                                                     (dispatch [:editing/uid nil])
                                                     (dispatch [:selected/add-item uid]))
 
-      ;; up and down should be handled by the dropdown menu if possible
-      query (cond
-              (= key-code KeyCodes.UP) (do
-                                         (.. e preventDefault)
-                                         (if (= index 0)
-                                           (swap! state assoc :search/index (dec (count results)))
-                                           (swap! state update :search/index dec))
-                                         (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
-                                                           (.getElementById js/document "dropdown-menu")))
-              (= key-code KeyCodes.DOWN) (do
-                                           (.. e preventDefault)
-                                           (if (= index (dec (count results)))
-                                             (swap! state assoc :search/index 0)
-                                             (swap! state update :search/index inc))
-                                           (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
-                                                             (.getElementById js/document "dropdown-menu"))))
+      (= type :slash) (cond
+                        (= :up direction) (do
+                                            (.. e preventDefault)
+                                            (swap! state update :search/index dec))
+                        (= :down direction) (do
+                                              (.. e preventDefault)
+                                              (swap! state update :search/index inc)))
+
+      (or (= type :page) (= type :block))
+      (cond
+        (= key-code KeyCodes.UP) (do
+                                   (.. e preventDefault)
+                                   (if (= index 0)
+                                     (swap! state assoc :search/index (dec (count results)))
+                                     (swap! state update :search/index dec))
+                                   (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                     (.getElementById js/document "dropdown-menu")))
+        (= key-code KeyCodes.DOWN) (do
+                                     (.. e preventDefault)
+                                     (if (= index (dec (count results)))
+                                       (swap! state assoc :search/index 0)
+                                       (swap! state update :search/index inc))
+                                     (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
+                                                       (.getElementById js/document "dropdown-menu"))))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
@@ -139,34 +147,63 @@
   (prn @state)
   (prn state)
   (cond
-    (:slash? @state) (swap! state assoc :slash? false)
-    (:search/page @state) (swap! state assoc :search/page false)
-    (:search/block @state) (swap! state assoc :search/block false)
+    (:search/type @state) (swap! state assoc :search/type nil)
     :else (dispatch [:editing/uid nil])))
 
 
-;;(defn cycle-todo
-;;  [])
+;; TODO: some expansions require caret placement after
+;; fixme: perhaps not the best place to put this, but need to access from both blocks and keybindings
+(def slash-options
+  [[mui-icons/Done           "Add Todo"      "{{[[TODO]]}} " "cmd-enter"]
+   [mui-icons/Timer          "Current Time"  #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))]
+   [mui-icons/Today          "Today"         #(str "[[" (:title (get-day 0)) "]] ")]
+   [mui-icons/Today          "Tomorrow"      #(str "[[" (:title (get-day -1)) "]]")]
+   [mui-icons/Today          "Yesterday"     #(str "[[" (:title (get-day 1)) "]]")]
+   [mui-icons/YouTube        "YouTube Embed" "{{[[youtube]]: }}"]
+   [mui-icons/DesktopWindows "iframe Embed"  "{{iframe: }}"]])
+
+;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;;[mui-icons/DateRange "Date Picker"]
+;;[mui-icons/Attachment "Upload Image or File"]
+;;[mui-icons/ExposurePlus1 "Word Count"]
+
+
+;; TODO: also replace typeahead characters that follow "/". may need event to find selectionStart
+(defn select-slash-cmd
+  [index state]
+  (let [{:keys [atom-string]} @state
+        [_ _ expansion _] (slash-options index)
+        expand (if (fn? expansion) (expansion) expansion)
+        replace-str (subs atom-string 0 (dec (count atom-string)))
+        new-str     (str replace-str expand)]
+    (swap! state merge {:search/index 0
+                        :search/type nil
+                        :atom-string  new-str})))
+
 
 (defn handle-enter
   [e uid state]
   (let [{:keys [shift meta start head tail value]} (destruct-event e)
-        {:search/keys [query index results page block]} @state]
+        {:search/keys [query index results type]} @state]
     (.. e preventDefault)
     (cond
+      (= type :slash) (select-slash-cmd index state)
+
+      ;; TODO: move caret beyond ]]
       ;; auto-complete link
-      page (let [{:keys [node/title]} (get results index)
-                 new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
-             (swap! state merge {:atom-string  new-str
-                                 :search/query nil
-                                 :search/page  false}))
+      (= type :page)
+      (let [{:keys [node/title]} (get results index)
+            new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
+        (swap! state merge {:atom-string  new-str
+                            :search/query nil
+                            :search/type  nil}))
       ;; auto-complete block ref
-      block (let [{:keys [block/uid]} (get results index)
-                  new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
-              (prn "NEW" new-str)
-              (swap! state merge {:atom-string  new-str
-                                  :search/query nil
-                                  :search/block false}))
+      (= type :block)
+      (let [{:keys [block/uid]} (get results index)
+            new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
+        (swap! state merge {:atom-string  new-str
+                            :search/query nil
+                            :search/type nil}))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :atom-string (str head "\n" tail))
@@ -258,8 +295,8 @@
           double-brackets? (= "[[]]" four-char)
           double-parens?   (= "(())" four-char)]
       (cond
-        double-brackets? (swap! state assoc :search/page true)
-        double-parens? (swap! state assoc :search/block true)))))
+        double-brackets? (swap! state assoc :search/type :page)
+        double-parens? (swap! state assoc :search/type :block)))))
 
     ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
@@ -290,13 +327,16 @@
             tail    (subs value (inc start))
             new-str (str head tail)]
         (swap! state assoc :atom-string new-str)
-        (swap! state assoc :search/page false)
+        (swap! state assoc :search/type nil)
         (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
       ;; default backspace: delete a character
       :else (let [head    (subs value 0 (dec start))
                   new-str (str head tail)
                   {:search/keys [query]} @state]
+              (when (= "/" (last value))
+                (swap! state merge {:search/type nil
+                                    :search/query nil}))
               (when query
                 (swap! state assoc :search/query (subs query 0 (dec (count query)))))
               (swap! state assoc :atom-string new-str)))))
@@ -314,21 +354,23 @@
   [e _ state]
   (let [{:keys [head tail key key-code]} (destruct-event e)
         new-str (str head key tail)
-        {:search/keys [page block query]} @state
+        {:search/keys [query type]} @state
         new-query (str query key)]
     (cond
-      ;; FIXME: must press slash twice to close
-      (= key-code KeyCodes.SLASH) (swap! state update :slash? not)
+      (= key-code KeyCodes.SLASH) (swap! state merge {:search/query ""
+                                                      :search/type :slash})
+
+      (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      block (let [results (db/search-in-block-content query)]
-              (swap! state assoc :search/query new-query)
-              (swap! state assoc :search/results results))
+      (= type :block) (let [results (db/search-in-block-content query)]
+                        (swap! state assoc :search/query new-query)
+                        (swap! state assoc :search/results results))
 
     ;; when in-line search dropdown is open
-      page (let [results (db/search-in-node-title query)]
-             (swap! state assoc :search/query new-query)
-             (swap! state assoc :search/results results)))
+      (= type :page) (let [results (db/search-in-node-title query)]
+                       (swap! state assoc :search/query new-query)
+                       (swap! state assoc :search/results results)))
 
     (swap! state merge {:atom-string new-str})))
 

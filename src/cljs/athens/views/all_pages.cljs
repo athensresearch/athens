@@ -3,14 +3,13 @@
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
+    [athens.util :refer [date-string]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
     [garden.selectors :as selectors]
     [posh.reagent :refer [pull-many q]]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]
-    [tick.alpha.api :as t]
-    [tick.locale-en-us]))
+    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
 ;;; Styles
@@ -65,21 +64,6 @@
 
 
 ;;; Components
-
-
-(def date-col-format (t/formatter "LLLL dd, yyyy h':'mma"))
-
-
-(defn date-string
-  [ts]
-  (if (not ts)
-    [:span "(unknown date)"]
-    (as->
-      (t/instant ts) x
-      (t/date-time x)
-      (t/format date-col-format x)
-      (str/replace x #"AM" "am")
-      (str/replace x #"PM" "pm"))))
 
 
 (defn table
