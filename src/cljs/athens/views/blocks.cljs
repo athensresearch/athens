@@ -254,17 +254,18 @@
   [value uid]
   ;; (prn "ONCHANGE" value)
   (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
-  ;; automatically add non-existent pages
   ;; TODO: delete pages that are no longer connected to anything else
   (parse/transform {:page-link (fn [& title]
                                  (let [inner-title (apply + title)]
-                                   (when (nil? (db/search-exact-node-title inner-title))
+                                   ;; `apply +` can return 0 if `title` is nil or empty string
+                                   (when (and (string? inner-title)
+                                              (nil? (db/search-exact-node-title inner-title)))
                                      (let [now (now-ts)
                                            uid (gen-block-uid)]
-                                       (dispatch [:transact [{:node/title     inner-title
-                                                              :block/uid      uid
-                                                              :edit/time      now
-                                                              :create/time    now}]])))
+                                       (dispatch [:transact [{:node/title  inner-title
+                                                              :block/uid   uid
+                                                              :edit/time   now
+                                                              :create/time now}]])))
                                    (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
 
 
