@@ -187,7 +187,41 @@
                                     :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
-                                 :z-index 2}]]]})
+                                 :z-index 2}]]
+                     [(selectors/attr= :type :checkbox) {:vertical-align "-0.325em"
+                                                         :background (color :background-minus-1)
+                                                         :border "none"
+                                                        ;;  :box-shadow [["0 0 0 1px " (color :link-color)]]
+                                                        ;;  :box-shadow [["0 0 0 1px " (color :border-color)]]
+                                                         :box-shadow [["0 0 0 1px " (color :body-text-color)]]
+                                                         :width "1em"
+                                                         :height "1em"
+                                                         :cursor "pointer"
+                                                         :color (color :link-color)
+                                                         :-webkit-appearance "none"
+                                                         :margin-right "0.125em"
+                                                         :transition "all 0.15s ease"
+                                                         :border-radius "0.25rem"
+                                                         :display "inline-flex"
+                                                         :place-items "center"}
+                      [:&:after {:content "''"
+                                 :transition "opacity 1s ease"
+                                 :display "block"
+                                 :width "0.85em"
+                                 :height "0.25em"
+                                 :margin "auto"
+                                 :position "absolute"
+                                 :left "0.125em"
+                                 :top "0.45em"
+                                 :border-style "solid"
+                                 :border-width "0 0 1.5px 1.5px"
+                                 :opacity 0
+                                 :transform "rotate(-45deg)"}]
+                      [(selectors/& (selectors/attr :checked)) {:background (color :link-color)
+                                                                :box-shadow [["0 0 0 1px " (color :border-color)]]} [:&:after {:opacity 1
+                                                                                                                               :color "#fff"}]]
+                      [:&:hover {:background (color :background-plus-1)}]
+                      [:&:active {:background (color :background-plus-2)}]]]})
 
 
 (stylefy/class "block-content" block-content-style)
