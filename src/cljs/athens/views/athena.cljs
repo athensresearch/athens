@@ -58,8 +58,8 @@
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
-                   "::-webkit-search-cancel-button" {:display "none"} ;; We replace the button elsewhere
-                   }})
+                   "::-webkit-search-cancel-button" {:display "none"}}}) ;; We replace the button elsewhere
+
 
 
 (def search-cancel-button-style

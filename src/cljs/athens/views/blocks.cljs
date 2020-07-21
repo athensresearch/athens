@@ -7,8 +7,7 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
-    [athens.views.all-pages :refer [date-string]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -303,46 +302,37 @@
        [:div [:b "last edit"] [:span (date-string edit-time)]]])))
 
 
-;; flipped around
-
 (defn page-search-el
-  [_block state]
-  (let [{:search/keys [page block query results index]} @state]
-    (when (or block page)
-      [:div (merge (use-style dropdown-style)
-                   {:style {:position "absolute"
-                            :top      "100%"
-                            :max-height "20rem"
-                            :left     "1.75em"}})
-       (if (clojure.string/blank? query)
-         [:div "Start Typing!"]
-         (doall
-           [:div (use-style menu-style {:id "dropdown-menu"})
-            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-              ^{:key (str "inline-search-item" uid)}
-              [button
-               {:on-click #(prn "expand")
-                :active (when (= index i) true)
-                :id (str "result-" i)}
-               (or title string)])]))])))
+  [state]
+  (let [{:search/keys [query results index type]} @state]
+    [:div (merge (use-style dropdown-style)
+                 {:style {:position   "absolute"
+                          :top        "100%"
+                          :max-height "20rem"
+                          :left       "1.75em"}})
+     (if (clojure.string/blank? query)
+       [:div (str "Search for a " (symbol type))]
+       (doall
+         [:div (use-style menu-style {:id "dropdown-menu"})
+          (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+            ^{:key (str "inline-search-item" uid)}
+            ;; todo: implement expand
+            [button {:on-click #(prn "expand")
+                     :active   (= index i)
+                     :id       (str "result-" i)}
+             (or title string)])]))]))
 
 
 (defn slash-menu-el
   [state]
-  (let [{:keys [slash?]} @state]
-    (when slash?
-      [:div (merge (use-style dropdown-style)
-                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-       [:div (merge (use-style menu-style)
-                    {:style {:max-height "8em"}})
-        [button [:<> [:> mui-icons/Done] [:span "Add Todo"] [:kbd "cmd-enter"]]]
-        [button [:<> [:> mui-icons/Description] [:span "Page Reference"] [:kbd "[["]]]
-        [button [:<> [:> mui-icons/Link] [:span "Block Reference"] [:kbd "(("]]]
-        [button [:<> [:> mui-icons/Timer] [:span "Current Time"]]]
-        [button [:<> [:> mui-icons/DateRange] [:span "Date Picker"]]]
-        [button [:<> [:> mui-icons/Attachment] [:span "Upload Image or File"]]]
-        [button [:<> [:> mui-icons/ExposurePlus1] [:span "Word Count"]]]
-        [button [:<> [:> mui-icons/Today] [:span "Today"]]]]])))
+  (let [{:keys [atom-string] index :search/index} @state]
+    [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+     [:div (merge (use-style menu-style) {:style {:max-height "8em"}})
+      (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
+        [button {:active   (= i index)
+                 :key      text
+                 :on-click #(athens.keybindings/select-slash-cmd i state)}
+         [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -416,10 +406,8 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
   (let [state (r/atom {:atom-string (:block/string block)
-                       :slash? false
-                       :search/page false
+                       :search/type nil ;; one of #{:page :block :slash}
                        :search/query nil
-                       :search/block false
                        :search/index 0
                        :dragging false
                        :drag-target nil
@@ -432,7 +420,7 @@
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
-            {dragging :dragging drag-target :drag-target state-edit-time :edit/time} @state
+            {:search/keys [type query index] :keys [dragging drag-target] state-edit-time :edit/time} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -490,10 +478,9 @@
           [tooltip-el block state]
           [block-content-el block state is-editing]]
 
-         [slash-menu-el state]
-
-
-         [page-search-el block state]
+         (cond
+           (or (= type :page) (= type :block)) [page-search-el state]
+           (= type :slash) [slash-menu-el state])
 
          ;; Children
          (when (and open (seq children))

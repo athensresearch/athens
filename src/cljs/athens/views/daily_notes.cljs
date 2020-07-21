@@ -2,15 +2,14 @@
   (:require
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
+    [athens.util :refer [get-day]]
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.functions :refer [debounce]]
     [posh.reagent :refer [q pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
-    [stylefy.core :refer [use-style]]
-    [tick.alpha.api :as t]
-    [tick.locale-en-us]))
+    [stylefy.core :refer [use-style]]))
 
 
 ;;; Styles
@@ -43,21 +42,6 @@
 
 ;;; Helpers
 
-
-
-(def US-format (t/formatter "MM-dd-yyyy"))
-(def title-format (t/formatter "LLLL dd, yyyy"))
-
-
-(defn get-day
-  "Returns today's date or a date OFFSET days before today"
-  ([] (get-day 0))
-  ([offset]
-   (let [day (t/-
-               (t/date-time)
-               (t/new-duration offset :days))]
-     {:uid   (t/format US-format day)
-      :title (t/format title-format day)})))
 
 
 (defn scroll-daily-notes
