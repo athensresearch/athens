@@ -2,11 +2,12 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer]
+    [athens.parse-renderer :as parse-renderer :refer [get-block-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.views.blocks :refer [block-el]]
+    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
@@ -188,7 +189,27 @@
       (catch js/Object _ false))))
 
 
+(defn handle-new-first-child-block-click
+  [parent-uid]
+  (let [new-uid   (gen-block-uid)
+        now       (now-ts)]
+    (dispatch [:transact [{:block/uid       parent-uid
+                           :edit/time       now
+                           :block/children  [{:block/order  0
+                                              :block/uid    new-uid
+                                              :block/open   true
+                                              :block/string ""}]}]])
+    (dispatch [:editing/uid new-uid])))
+
+
 ;;; Components
+
+(defn no-blocks-el
+  [parent-uid]
+  [:div {:class "block-container"}
+   [:div {:style {:display "flex"}}
+    [:span (use-style bullet-style)]
+    [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
 ;; TODO: where to put page-level link filters?
@@ -250,10 +271,13 @@
           (parse-renderer/parse-and-render title uid)]
 
          ;; Children
-         [:div
-          (for [{:block/keys [uid] :as child} children]
-            ^{:key uid}
-            [block-el child])]
+         (if (= (count children) 0)
+           [no-blocks-el uid]
+           [:div
+            (for [{:block/keys [uid] :as child} children]
+              ^{:key uid}
+              [block-el child])])
+
 
          ;; References
          (doall
@@ -269,7 +293,7 @@
                    (for [[group-title group] refs]
                      [:div (use-style references-group-style {:key (str "group-" group-title)})
                       [:h4 (use-style references-group-title-style)
-                       [:a {:on-click #(navigate-uid uid)} group-title]] ;; FIXME: use correct uid
+                       [:a {:on-click #(navigate-uid (:block/uid @(get-block-node-from-string group-title)))} group-title]]
                       (doall
                         (for [{:block/keys [uid parents] :as block} group]
                           [:div (use-style references-group-block-style {:key (str "ref-" uid)})
