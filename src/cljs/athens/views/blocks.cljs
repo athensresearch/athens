@@ -7,7 +7,7 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string get-linked-references]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -249,23 +249,49 @@
 
 ;; Helpers
 
-(defn on-change
-  [value uid]
-  ;; (prn "ONCHANGE" value)
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
-  ;; TODO: delete pages that are no longer connected to anything else
+
+(defn walk-parse-tree-for-links
+  [source-str link-fn db-fn]
   (parse/transform {:page-link (fn [& title]
                                  (let [inner-title (apply + title)]
                                    ;; `apply +` can return 0 if `title` is nil or empty string
                                    (when (and (string? inner-title)
-                                              (nil? (db/search-exact-node-title inner-title)))
+                                              (link-fn inner-title))
                                      (let [now (now-ts)
                                            uid (gen-block-uid)]
-                                       (dispatch [:transact [{:node/title  inner-title
-                                                              :block/uid   uid
-                                                              :edit/time   now
-                                                              :create/time now}]])))
-                                   (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
+                                       (db-fn inner-title now uid)))
+                                   (str "[[" inner-title "]]")))
+                    :hashtag   (fn [title]
+                                 (when (and (string? title) (link-fn title))
+                                   (let [now (now-ts)
+                                         uid (gen-block-uid)]
+                                     (db-fn title now uid)))
+                                 (str "#" title))} (parser/parse-to-ast source-str)))
+
+
+(defn on-change
+  [oldvalue value uid]
+  ;; (prn "ONCHANGE" value)
+  ;; TODO: move this to somewhere more comfortable using reframe dispatch
+  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
+  (walk-parse-tree-for-links
+    value
+    (fn [inner-title]              (nil? (db/search-exact-node-title inner-title)))
+    (fn [inner-title now-time uid]
+      (dispatch [:transact [{:node/title  inner-title
+                             :block/uid   uid
+                             :edit/time   now-time
+                             :create/time now-time}]])))
+  (walk-parse-tree-for-links
+    oldvalue
+    (fn [inner-title]
+      (let [block (db/search-exact-node-title inner-title)]
+        (.log js/console (count (get-linked-references inner-title)))
+        (and (not (nil? block))
+             (nil? (:block/children (db/get-block-document (:db/id block))))
+             (= (count (get-linked-references inner-title)) 1)))) ;; TODO: tackle race condition for references might be deleted
+    (fn [inner-title _ _] (.log js/console (str "We need to delete a page: " inner-title))))) ;; TODO: implement page deletion
+
 
 
 (def db-on-change (debounce on-change 1000))
@@ -406,6 +432,7 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
   (let [state (r/atom {:atom-string (:block/string block)
+                       :old-string (:block/string block) ;; this is for detecting what's deleted to process page deletion
                        :search/type nil ;; one of #{:page :block :slash}
                        :search/query nil
                        :search/index 0
@@ -416,7 +443,7 @@
                (fn [_context _atom old new]
                  (let [{:keys [atom-string]} new]
                    (when (not= (:atom-string old) atom-string)
-                     (db-on-change atom-string (:block/uid block))))))
+                     (db-on-change (:old-string old) atom-string (:block/uid block))))))
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
@@ -428,7 +455,7 @@
 
         ;; if block is updated in datascript, update local block state
         (when (< state-edit-time edit-time)
-          (let [new-state {:edit/time edit-time :atom-string string}]
+          (let [new-state {:edit/time edit-time :atom-string string :old-string string}]
             (swap! state merge new-state)))
 
         [:div
