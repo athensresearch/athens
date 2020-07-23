@@ -249,22 +249,11 @@
           (recur (get ch (dec n))))))))
 
 
-(defn get-id
-  [uid]
-  (-> (d/q '[:find ?id
-             :in $ ?uid
-             :where [?id :block/uid ?uid]]
-           @dsdb
-           uid)
-      ffirst))
-
-
 (defn get-children-recursively
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
-  (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (get-id uid)))]
-    (->> (tree-seq :block/children :block/children document)
-         (map :block/uid))))
+  (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid)))]
+    (map :block/uid (tree-seq :block/children :block/children document))))
 
 
 (defn re-case-insensitive

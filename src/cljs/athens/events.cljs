@@ -287,7 +287,7 @@
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:transact! (vec (map (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid)))}))
+    {:transact! (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid))}))
 
 
 (reg-event-fx
