@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules]]
+    [athens.db :as db :refer [rules get-children-recursively]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -287,7 +287,7 @@
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:transact! [[:db/retractEntity [:block/uid uid]]]}))
+    {:transact! (vec (map (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid)))}))
 
 
 (reg-event-fx
