@@ -92,3 +92,16 @@
       (string/replace x #"PM" "pm"))))
 
 
+;; -- Regex -----------------------------------------------------------
+
+;; https://stackoverflow.com/a/11672480
+(def regex-esc-char-map
+  (let [esc-chars "()*&^%$#![]"]
+    (zipmap esc-chars
+            (map #(str "\\" %) esc-chars))))
+
+
+(defn escape-str
+  "Take a string and escape all regex special characters in it"
+  [str]
+  (string/escape str regex-esc-char-map))
