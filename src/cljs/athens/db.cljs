@@ -171,6 +171,11 @@
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 
+(defn v-by-ea
+  [e a]
+  (-> (d/datoms @dsdb :eavt e a) first :v))
+
+
 (def rules
   '[[(after ?p ?at ?ch ?o)
      [?p :block/children ?ch]
