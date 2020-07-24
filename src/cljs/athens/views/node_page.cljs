@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer :refer [get-block-node-from-string]]
+    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
@@ -204,7 +204,7 @@
 
 ;;; Components
 
-(defn no-blocks-el
+(defn placeholder-block-el
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
@@ -271,8 +271,8 @@
           (parse-renderer/parse-and-render title uid)]
 
          ;; Children
-         (if (= (count children) 0)
-           [no-blocks-el uid]
+         (if (empty? children)
+           [placeholder-block-el uid]
            [:div
             (for [{:block/keys [uid] :as child} children]
               ^{:key uid}
@@ -293,7 +293,7 @@
                    (for [[group-title group] refs]
                      [:div (use-style references-group-style {:key (str "group-" group-title)})
                       [:h4 (use-style references-group-title-style)
-                       [:a {:on-click #(navigate-uid (:block/uid @(get-block-node-from-string group-title)))} group-title]]
+                       [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                       (doall
                         (for [{:block/keys [uid parents] :as block} group]
                           [:div (use-style references-group-block-style {:key (str "ref-" uid)})

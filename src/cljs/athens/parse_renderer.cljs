@@ -57,7 +57,7 @@
                                          :cursor "alias"}]]})
 
 ;;; Helper functions for recursive link rendering
-(defn get-block-node-from-string
+(defn pull-node-from-string
   "Gets a block's node from the display string name (or partially parsed string tree)"
   [string]
   (pull db/dsdb '[*] [:node/title (str "" (apply + (map (fn [el]
@@ -71,7 +71,7 @@
   [title]
   ;; This method feels a bit hacky: it extracts the DOM tree of its children components and re-wrap the content in double parentheses. Should we do something about it?
   ;; TODO: touch from inner content should navigate to the inner (children) page, but in this implementation doesn't work
-  (let [node (get-block-node-from-string title)]
+  (let [node (pull-node-from-string title)]
     [:span (use-style page-link {:class "page-link"})
      [:span {:class "formatting"} "[["]
      [:span {:on-click (fn [e] (.. e stopPropagation) (navigate-uid (:block/uid @node) e))} (concat title)]
