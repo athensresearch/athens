@@ -4,10 +4,10 @@
     [athens.db :as db]
     [athens.keybindings :refer [block-key-down]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
-    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string get-linked-references]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string count-linked-references-excl-uid]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -286,12 +286,12 @@
     oldvalue
     (fn [inner-title]
       (let [block (db/search-exact-node-title inner-title)]
-        (.log js/console (count (get-linked-references inner-title)))
         (and (not (nil? block))
              (nil? (:block/children (db/get-block-document (:db/id block))))
-             (= (count (get-linked-references inner-title)) 1)))) ;; TODO: tackle race condition for references might be deleted
-    (fn [inner-title _ _] (.log js/console (str "We need to delete a page: " inner-title))))) ;; TODO: implement page deletion
-
+             (= (count-linked-references-excl-uid inner-title uid) 0))))
+    (fn [inner-title _ _]
+      (let [uid (:block/uid @(pull-node-from-string inner-title))]
+        (when (some? uid) (dispatch [:page/delete uid]))))))
 
 
 (def db-on-change (debounce on-change 1000))

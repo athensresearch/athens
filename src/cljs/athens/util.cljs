@@ -135,11 +135,31 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
+(defn get-data-by-block
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block seq))
+
+
 (defn get-linked-references
   [title]
   (-> title patterns/linked get-data))
 
 
+(defn get-linked-references-by-block
+  [title]
+  (-> title patterns/linked get-data-by-block))
+
+
 (defn get-unlinked-references
   [title]
   (-> title patterns/unlinked get-data))
+
+
+(defn count-linked-references-excl-uid
+  [title uid]
+  (reduce (fn [current-count ref]
+            (if (= (:block/uid ref) uid)
+              current-count
+              (inc current-count)))
+          0
+          (get-linked-references-by-block title)))

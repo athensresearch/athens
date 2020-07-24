@@ -3,7 +3,6 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
-    [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid get-linked-references get-unlinked-references]]
