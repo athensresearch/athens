@@ -258,8 +258,9 @@
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
   (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
-    (tree-seq :block/children :block/children)
-    (map :block/uid)))
+       (tree-seq :block/children :block/children)
+       (map :block/uid)))
+
 
 (defn re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
