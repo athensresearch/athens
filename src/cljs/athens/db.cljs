@@ -171,6 +171,11 @@
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 
+(defn v-by-ea
+  [e a]
+  (-> (d/datoms @dsdb :eavt e a) first :v))
+
+
 (def rules
   '[[(after ?p ?at ?ch ?o)
      [?p :block/children ?ch]
@@ -247,6 +252,14 @@
         (let [ch (:block/children block)
               n  (count ch)]
           (recur (get ch (dec n))))))))
+
+
+(defn get-children-recursively
+  "Get list of children UIDs for given block ID (including the root block's UID)"
+  [uid]
+  (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
+       (tree-seq :block/children :block/children)
+       (map :block/uid)))
 
 
 (defn re-case-insensitive
