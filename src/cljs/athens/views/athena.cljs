@@ -324,6 +324,7 @@
                                                                                    :block/uid    uid
                                                                                    :block/string string
                                                                                    :query        query}]
+                                                                (dispatch [:athena/toggle])
                                                                 (dispatch [:athena/update-recent-items selected-page])
                                                                 (navigate-uid uid)))
                                                   :class    (when (= i index) "selected")})
