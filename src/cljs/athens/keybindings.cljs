@@ -106,9 +106,8 @@
                                             (let [cur-index (:search/index @state)
                                                   container-el (.. e -target -parentNode -parentNode -nextSibling -firstChild)
                                                   next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                              (when (is-beyond-rect? next-el container-el)
+                                              (when (is-beyond-rect? next-el (.. container-el -parentNode))
                                                 (.. next-el (scrollIntoView false {:behavior "auto"})))))
-
                         (= :down direction) (do
                                               (.. e preventDefault)
                                               (swap! state update :search/index #(if (= % (dec (count slash-options))) 0 (inc %)))
