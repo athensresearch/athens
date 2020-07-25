@@ -107,7 +107,7 @@
                                                   container-el (.. e -target -parentNode -parentNode -nextSibling -firstChild)
                                                   next-el (nth (array-seq (.. container-el -children)) cur-index)]
                                               (when (is-beyond-rect? next-el container-el)
-                                                (.. next-el (scrollIntoView (not= cur-index (dec (count slash-options))) {:behavior "auto"})))))
+                                                (.. next-el (scrollIntoView false {:behavior "auto"})))))
 
                         (= :down direction) (do
                                               (.. e preventDefault)
@@ -116,7 +116,7 @@
                                                     container-el (.. e -target -parentNode -parentNode -nextSibling -firstChild)
                                                     next-el (nth (array-seq (.. container-el -children)) cur-index)]
                                                 (when (is-beyond-rect? next-el container-el)
-                                                  (.. next-el (scrollIntoView (zero? cur-index) {:behavior "auto"}))))))
+                                                  (.. next-el (scrollIntoView false {:behavior "auto"}))))))
 
       (or (= type :page) (= type :block))
       (cond
