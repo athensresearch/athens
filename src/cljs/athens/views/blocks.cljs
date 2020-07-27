@@ -187,7 +187,15 @@
                                     :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
-                                 :z-index 2}]]]})
+                                 :z-index 2}]]
+                     ;; May want to refactor specific component styles to somewhere else
+                     ;; iframes (YouTube embeds, map embeds, etc.)
+                     [:iframe {:border 0
+                               :border-radius "0.25rem"}]
+                     ;; Images
+                     [:img {:border-radius "0.25rem"}]
+                     ;; Checkboxes
+                     ]})
 
 
 (stylefy/class "block-content" block-content-style)
