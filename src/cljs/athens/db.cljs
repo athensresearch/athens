@@ -1,5 +1,6 @@
 (ns athens.db
   (:require
+    [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull]]))
@@ -265,7 +266,7 @@
 (defn re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
   [query]
-  (re-pattern (str "(?i)" query)))
+  (re-pattern (str "(?i)" (escape-str query))))
 
 
 (defn search-exact-node-title

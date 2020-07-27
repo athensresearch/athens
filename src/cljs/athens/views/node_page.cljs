@@ -6,7 +6,7 @@
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.util :refer [now-ts gen-block-uid escape-str]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -318,6 +318,6 @@
         timeline-page? (is-timeline-page uid)]
     (when-not (string/blank? title)
       ;; TODO: let users toggle open/close references
-      (let [ref-groups [["Linked References" (-> title patterns/linked get-data)]
-                        ["Unlinked References" (-> title patterns/unlinked get-data)]]]
+      (let [ref-groups [["Linked References" (-> (escape-str title) patterns/linked get-data)]
+                        ["Unlinked References" (-> (escape-str title) patterns/unlinked get-data)]]]
         [node-page-el node editing-uid ref-groups timeline-page?]))))
