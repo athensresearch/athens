@@ -288,7 +288,7 @@
       (let [block (db/search-exact-node-title inner-title)]
         (and (not (nil? block))
              (nil? (:block/children (db/get-block-document (:db/id block))))
-             (= (count-linked-references-excl-uid inner-title uid) 0))))
+             (zero? (count-linked-references-excl-uid inner-title uid)))))
     (fn [inner-title _ _]
       (let [uid (:block/uid @(pull-node-from-string inner-title))]
         (when (some? uid) (dispatch [:page/delete uid]))))))
