@@ -5,7 +5,7 @@
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid get-linked-references get-unlinked-references]]
+    [athens.util :refer [now-ts gen-block-uid get-linked-references get-unlinked-references escape-str]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -278,6 +278,6 @@
         timeline-page? (is-timeline-page uid)]
     (when-not (string/blank? title)
       ;; TODO: let users toggle open/close references
-      (let [ref-groups [["Linked References" (get-linked-references title)]
-                        ["Unlinked References" (get-unlinked-references title)]]]
+      (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
+                        ["Unlinked References" (get-unlinked-references (escape-str title))]]]
         [node-page-el node editing-uid ref-groups timeline-page?]))))

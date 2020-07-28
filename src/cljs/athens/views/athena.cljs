@@ -39,7 +39,7 @@
    :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
    ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
-   ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
+                     ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
                      [(selectors/+ :input:valid :button) {:opacity 1}]]})
 
 
