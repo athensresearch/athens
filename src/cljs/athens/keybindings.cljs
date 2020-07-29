@@ -72,17 +72,21 @@
   (let [{:keys [value end]} (destruct-event e)]
     (= end (count value))))
 
+
 (defn dec-cycle
   [min max v]
   (if (<= v min) max (dec v)))
+
 
 (defn inc-cycle
   [min max v]
   (if (>= v max) min (inc v)))
 
+
 (defn max-idx
   [coll]
   (-> coll count dec))
+
 
 (defn handle-arrow-key
   "May want to flatten this into multiple handlers."
