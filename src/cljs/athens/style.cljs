@@ -19,7 +19,7 @@
 ;;    (str "var(--" variable "-" alpha ")")))
 
 
-(def COLORS
+(def THEME-DARK
   {:link-color         "#2399E7"
    :highlight-color    "#FBBE63"
    :warning-color      "#DE3C21"
@@ -49,8 +49,7 @@
    :background-minus-2 "#EFEDEB"})
 
 
-(def THEME-DARK COLORS)
-
+(def COLORS THEME-LIGHT)
 
 (def HSL-COLORS
   (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
