@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day]]
+    [athens.util :refer [scroll-if-needed get-day is-beyond-rect?]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -11,6 +11,9 @@
   (:import
     (goog.events
       KeyCodes)))
+
+
+(declare slash-options)
 
 
 (defn modifier-keys
@@ -101,10 +104,20 @@
       (= type :slash) (cond
                         (= :up direction) (do
                                             (.. e preventDefault)
-                                            (swap! state update :search/index dec))
+                                            (swap! state update :search/index #(dec (if (zero? %) (count slash-options) %)))
+                                            (let [cur-index (:search/index @state)
+                                                  container-el (. js/document getElementById "slash-menu-container")
+                                                  next-el (nth (array-seq (.. container-el -children)) cur-index)]
+                                              (when (is-beyond-rect? next-el (.. container-el -parentNode))
+                                                (.. next-el (scrollIntoView false {:behavior "auto"})))))
                         (= :down direction) (do
                                               (.. e preventDefault)
-                                              (swap! state update :search/index inc)))
+                                              (swap! state update :search/index #(if (= % (dec (count slash-options))) 0 (inc %)))
+                                              (let [cur-index (:search/index @state)
+                                                    container-el (. js/document getElementById "slash-menu-container")
+                                                    next-el (nth (array-seq (.. container-el -children)) cur-index)]
+                                                (when (is-beyond-rect? next-el container-el)
+                                                  (.. next-el (scrollIntoView false {:behavior "auto"}))))))
 
       (or (= type :page) (= type :block))
       (cond

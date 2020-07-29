@@ -353,7 +353,7 @@
   [state]
   (let [{index :search/index} @state]
     [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-     [:div (merge (use-style menu-style) {:style {:max-height "8em"}})
+     [:div#slash-menu-container (merge (use-style menu-style) {:style {:max-height "8em"}})
       (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
         [button {:active   (= i index)
                  :key      text
