@@ -72,6 +72,14 @@
   (let [{:keys [value end]} (destruct-event e)]
     (= end (count value))))
 
+(defn dec-cycle [min max v]
+  (if (<= v min) max (dec v)))
+
+(defn inc-cycle [min max v]
+  (if (>= v max) min (inc v)))
+
+(defn max-idx [coll]
+  (-> coll count dec))
 
 (defn handle-arrow-key
   "May want to flatten this into multiple handlers."
@@ -104,7 +112,7 @@
       (= type :slash) (cond
                         (= :up direction) (do
                                             (.. e preventDefault)
-                                            (swap! state update :search/index #(dec (if (zero? %) (count slash-options) %)))
+                                            (swap! state update :search/index (partial dec-cycle 0 (max-idx slash-options)))
                                             (let [cur-index (:search/index @state)
                                                   container-el (. js/document getElementById "slash-menu-container")
                                                   next-el (nth (array-seq (.. container-el -children)) cur-index)]
@@ -112,7 +120,7 @@
                                                 (.. next-el (scrollIntoView false {:behavior "auto"})))))
                         (= :down direction) (do
                                               (.. e preventDefault)
-                                              (swap! state update :search/index #(if (= % (dec (count slash-options))) 0 (inc %)))
+                                              (swap! state update :search/index (partial inc-cycle 0 (max-idx slash-options)))
                                               (let [cur-index (:search/index @state)
                                                     container-el (. js/document getElementById "slash-menu-container")
                                                     next-el (nth (array-seq (.. container-el -children)) cur-index)]
@@ -123,16 +131,12 @@
       (cond
         (= key-code KeyCodes.UP) (do
                                    (.. e preventDefault)
-                                   (if (= index 0)
-                                     (swap! state assoc :search/index (dec (count results)))
-                                     (swap! state update :search/index dec))
+                                   (swap! state update :search/index (partial dec-cycle 0 (max-idx results)))
                                    (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
                                                      (.getElementById js/document "dropdown-menu")))
         (= key-code KeyCodes.DOWN) (do
                                      (.. e preventDefault)
-                                     (if (= index (dec (count results)))
-                                       (swap! state assoc :search/index 0)
-                                       (swap! state update :search/index inc))
+                                     (swap! state update :search/index (partial inc-cycle 0 (max-idx results)))
                                      (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
                                                        (.getElementById js/document "dropdown-menu"))))
       :else (cond
