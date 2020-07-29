@@ -212,7 +212,8 @@
                      [:span [:span
                              :a {:position "relative"
                                  :z-index 2}]]
-                     ;; May want to refactor specific component styles to somewhere else
+                     ;; May want to refactor specific component styles to somewhere else.
+                     ;; Closer to the component perhaps?
                      ;; Code
                      [:code :pre {:font-family "IBM Plex Mono"}]
                      ;; Media Containers
@@ -220,12 +221,13 @@
                      ;; of a specific aspect ratio.
                      ;; TODO: Replace this with the CSS aspect-ratio property once available.
                      [:.media-16-9 {:height 0
-                                    :width "100%"
+                                    :width "calc(100% - 0.25rem)"
                                     :z-index 1
                                     :transform-origin "right center"
                                     :transition "all 0.2s ease"
                                     :padding-bottom (str (* (/ 9 16) 100) "%")
                                     :margin-block "0.25rem"
+                                    :margin-inline-end "0.25rem"
                                     :position "relative"}]
                      ;; Media (YouTube embeds, map embeds, etc.)
                      [:iframe {:border 0
@@ -240,15 +242,38 @@
                                :bottom 0
                                :border-radius "0.25rem"}]
                      ;; Images
-                     [:img {:border-radius "0.25rem"}]
+                     [:img {:border-radius "0.25rem"
+                            :max-width "calc(100% - 0.25rem)"}]
                      ;; Checkboxes
-                     [:input (selectors/attr= :type :checkbox) {:appearance "none"
-                                                                :border-radius "0.25rem"
-                                                                :margin-inline-end "0.25rem"
-                                                                :width "1rem"
-                                                                :height "1rem"
-                                                                :border [["1px solid" (color :border-color)]]}
-                      [:& (selectors/attr= :checked :true) {:border "1px solid blue"}]]]})
+                     ;; TODO: Refactor these complicated styles into clip paths or SVGs
+                     ;; or something nicer than this
+                     [:input [:& (selectors/attr= :type :checkbox) {:appearance "none"
+                                                                    :border-radius "0.25rem"
+                                                                    :cursor "pointer"
+                                                                    :color (color :link-color)
+                                                                    :margin-inline-end "0.25rem"
+                                                                    :position "relative"
+                                                                    :top "0.13em"
+                                                                    :width "1rem"
+                                                                    :height "1rem"
+                                                                    :transition "all 0.05s ease"
+                                                                    :transform "scale(1)"
+                                                                    :box-shadow "inset 0 0 0 1px"}
+                              [:&:after {:content "''"
+                                         :position "absolute"
+                                         :top "45%" ;; How are the top and left values calculated?
+                                         :left "20%" ;;
+                                         :width "30%"
+                                         :height "60%"
+                                         :border-width "0 1.5px 1.5px 0"
+                                         :border-style "solid"
+                                         :opacity 0
+                                         :transform "rotate(45deg) translate(-40%, -50%)"}]
+                              [:&:checked {:background (color :link-color)}
+                               [:&:after {:opacity 1
+                                          :color (color :background-color)}]]
+                              [:&:active {:transform "scale(0.9)"}]
+                              ]]]})
 
 
 (stylefy/class "block-content" block-content-style)
