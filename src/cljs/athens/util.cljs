@@ -1,6 +1,9 @@
 (ns athens.util
   (:require
+    [athens.db :as db]
+    [athens.patterns :as patterns]
     [clojure.string :as string]
+    [posh.reagent :refer [#_pull q]]
     [tick.alpha.api :as t]
     [tick.locale-en-us]))
 
@@ -91,6 +94,75 @@
       (string/replace x #"AM" "am")
       (string/replace x #"PM" "pm"))))
 
+
+;; -- Linked & Unlinked References ----------
+
+(defn get-ref-ids
+  [pattern]
+  @(q '[:find [?e ...]
+        :in $ ?regex
+        :where
+        [?e :block/string ?s]
+        [(re-find ?regex ?s)]]
+      db/dsdb
+      pattern))
+
+
+(defn merge-parents-and-block
+  [ref-ids]
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parents-recursively v)))
+                           {}
+                           ref-ids)
+        blocks (map (fn [id] (db/get-block-document id)) ref-ids)]
+    (mapv
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
+
+
+(defn group-by-parent
+  [blocks]
+  (group-by (fn [x]
+              (-> x
+                  :block/parents
+                  first
+                  :node/title))
+            blocks))
+
+
+(defn get-data
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+
+
+(defn get-data-by-block
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block seq))
+
+
+(defn get-linked-references
+  [title]
+  (-> title patterns/linked get-data))
+
+
+(defn get-linked-references-by-block
+  [title]
+  (-> title patterns/linked get-data-by-block))
+
+
+(defn get-unlinked-references
+  [title]
+  (-> title patterns/unlinked get-data))
+
+
+(defn count-linked-references-excl-uid
+  [title uid]
+  (reduce (fn [current-count ref]
+            (if (= (:block/uid ref) uid)
+              current-count
+              (inc current-count)))
+          0
+          (get-linked-references-by-block title)))
 
 ;; -- Regex -----------------------------------------------------------
 
