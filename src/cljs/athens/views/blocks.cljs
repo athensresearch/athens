@@ -369,9 +369,7 @@
   (if (seq children)
     [:button (use-style block-disclosure-toggle-style
                         {:class    (if open "open" "closed")
-                         :on-click (fn [e] (doall
-                                            (.. e stopPropagation)
-                                            (toggle [:block/uid uid] open)))})
+                         :on-click (fn [e] (toggle [:block/uid uid] open))})
      [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
@@ -408,9 +406,7 @@
                                (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                  ^{:key (str "inline-search-item" uid)}
                                  [button
-                                  {:on-click (fn [e] (doall
-                                                      (.. e stopPropagation)
-                                                      (prn "expand")))
+                                  {:on-click (fn [e] (prn "expand"))
                                    :active (when (= index i) true)
                                    :id (str "result-" i)}
                                   (or title string)])]))}])))
