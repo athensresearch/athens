@@ -1,13 +1,13 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
+    [athens.db :as db :refer [count-linked-references-excl-uid]]
     [athens.keybindings :refer [block-key-down]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string count-linked-references-excl-uid]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]

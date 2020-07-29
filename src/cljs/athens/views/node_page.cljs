@@ -1,11 +1,11 @@
 (ns athens.views.node-page
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
+    [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid get-linked-references get-unlinked-references escape-str]]
+    [athens.util :refer [now-ts gen-block-uid escape-str]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
