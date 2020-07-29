@@ -3,10 +3,9 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
-    [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str]]
+    [athens.util :refer [now-ts gen-block-uid get-linked-references get-unlinked-references escape-str]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -17,7 +16,6 @@
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
-    [posh.reagent :refer [#_pull q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]
@@ -140,44 +138,6 @@
 
 
 (def db-handler (debounce handler 500))
-
-
-(defn get-ref-ids
-  [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      db/dsdb
-      pattern))
-
-
-(defn merge-parents-and-block
-  [ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (db/get-parents-recursively v)))
-                           {}
-                           ref-ids)
-        blocks (map (fn [id] (db/get-block-document id)) ref-ids)]
-    (mapv
-      (fn [block]
-        (merge block {:block/parents (get parents (:db/id block))}))
-      blocks)))
-
-
-(defn group-by-parent
-  [blocks]
-  (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
-            blocks))
-
-
-(defn get-data
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
 (defn is-timeline-page
@@ -318,6 +278,6 @@
         timeline-page? (is-timeline-page uid)]
     (when-not (string/blank? title)
       ;; TODO: let users toggle open/close references
-      (let [ref-groups [["Linked References" (-> (escape-str title) patterns/linked get-data)]
-                        ["Unlinked References" (-> (escape-str title) patterns/unlinked get-data)]]]
+      (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
+                        ["Unlinked References" (get-unlinked-references (escape-str title))]]]
         [node-page-el node editing-uid ref-groups timeline-page?]))))
