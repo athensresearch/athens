@@ -72,13 +72,16 @@
   (let [{:keys [value end]} (destruct-event e)]
     (= end (count value))))
 
-(defn dec-cycle [min max v]
+(defn dec-cycle
+  [min max v]
   (if (<= v min) max (dec v)))
 
-(defn inc-cycle [min max v]
+(defn inc-cycle
+  [min max v]
   (if (>= v max) min (inc v)))
 
-(defn max-idx [coll]
+(defn max-idx
+  [coll]
   (-> coll count dec))
 
 (defn handle-arrow-key
@@ -88,7 +91,7 @@
         ;; TODO
         top-row?    true
         bottom-row? true
-        {:search/keys [index results type]} @state
+        {:search/keys [results type]} @state
         selected-items @(subscribe [:selected/items])
         direction (arrow-key-direction e)]
 
