@@ -4,6 +4,7 @@
     [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [goog.dom :refer [getElement]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -97,4 +98,4 @@
   []
   (stylefy/init)
   (r/render [initial-spinner-component]
-            (.getElementById js/document "app")))
+            (getElement "app")))
