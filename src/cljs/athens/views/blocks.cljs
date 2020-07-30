@@ -61,6 +61,26 @@
                                 :background (color :link-color :opacity-lower)
                                 :box-shadow [["0 0.25rem 0.5rem -0.25rem" (color :background-color :opacity-med)]]}]
                      [:&.is-selected:after {:opacity 1}]
+                     [:.block-body {:display "flex"
+                                    :border-radius "0.5rem"
+                                    :transition "all 0.1s ease"
+                                    :position "relative"}
+                      [:button.block-edit-toggle {:position "absolute"
+                                                  :appearance "none"
+                                                  :width "100%"
+                                                  :background "none"
+                                                  :border 0
+                                                  :cursor "text"
+                                                  :display "block"
+                                                  :z-index 1
+                                                  :top 0
+                                                  :right 0
+                                                  :bottom 0
+                                                  :left 0}]
+                      [:&:hover {:background (color :background-minus-1)}]]
+                     ;; Darken block body when block editing, 
+                     [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
+                     ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"}]]})
 
 
@@ -70,11 +90,12 @@
 (def block-disclosure-toggle-style
   {:width "1em"
    :height "2em"
+   :position "relative"
+   :z-index 2
    :flex-shrink "0"
    :display "flex"
    :background "none"
    :border "none"
-   :border-radius "100px"
    :transition "all 0.05s ease"
    :align-items "center"
    :justify-content "center"
@@ -83,11 +104,14 @@
    :color (color :body-text-color 0.4)
    ::stylefy/mode [[:hover {:color (color :link-color)}]
                    [":is(button)" {:cursor "pointer"}]]
-   ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]]})
+   ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]
+                     [:&:empty {:pointer-events "none"}]]})
 
 
 (def bullet-style
   {:flex-shrink "0"
+   :position "relative"
+   :z-index 2
    :cursor "pointer"
    :width "0.75em"
    :margin-right "0.25em"
@@ -105,7 +129,6 @@
                             :height "0.3125em"
                             :width "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
-
    ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 0.125rem " (color :body-text-color))
                                                                                 :opacity (:opacity-med OPACITIES)}]]
                      [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
@@ -152,6 +175,7 @@
 (def block-content-style
   {:position "relative"
    :overflow "visible"
+   :z-index 2
    :flex-grow "1"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
@@ -186,7 +210,68 @@
                                     :opacity "1"}]
                      [:span [:span
                              :a {:position "relative"
-                                 :z-index 2}]]]})
+                                 :z-index 2}]]
+                     ;; May want to refactor specific component styles to somewhere else.
+                     ;; Closer to the component perhaps?
+                     ;; Code
+                     [:code :pre {:font-family "IBM Plex Mono"}]
+                     ;; Media Containers
+                     ;; Using a CSS hack/convention here to create a responsive container
+                     ;; of a specific aspect ratio.
+                     ;; TODO: Replace this with the CSS aspect-ratio property once available.
+                     [:.media-16-9 {:height 0
+                                    :width "calc(100% - 0.25rem)"
+                                    :z-index 1
+                                    :transform-origin "right center"
+                                    :transition "all 0.2s ease"
+                                    :padding-bottom (str (* (/ 9 16) 100) "%")
+                                    :margin-block "0.25rem"
+                                    :margin-inline-end "0.25rem"
+                                    :position "relative"}]
+                     ;; Media (YouTube embeds, map embeds, etc.)
+                     [:iframe {:border 0
+                               :box-shadow [["inset 0 0 0 0.125rem" (color :background-minus-1)]]
+                               :position "absolute"
+                               :height "100%"
+                               :width "100%"
+                               :cursor "default"
+                               :top 0
+                               :right 0
+                               :left 0
+                               :bottom 0
+                               :border-radius "0.25rem"}]
+                     ;; Images
+                     [:img {:border-radius "0.25rem"
+                            :max-width "calc(100% - 0.25rem)"}]
+                     ;; Checkboxes
+                     ;; TODO: Refactor these complicated styles into clip paths or SVGs
+                     ;; or something nicer than this
+                     [:input [:& (selectors/attr= :type :checkbox) {:appearance "none"
+                                                                    :border-radius "0.25rem"
+                                                                    :cursor "pointer"
+                                                                    :color (color :link-color)
+                                                                    :margin-inline-end "0.25rem"
+                                                                    :position "relative"
+                                                                    :top "0.13em"
+                                                                    :width "1rem"
+                                                                    :height "1rem"
+                                                                    :transition "all 0.05s ease"
+                                                                    :transform "scale(1)"
+                                                                    :box-shadow "inset 0 0 0 1px"}
+                              [:&:after {:content "''"
+                                         :position "absolute"
+                                         :top "45%" ;; How are the top and left values calculated?
+                                         :left "20%" ;;
+                                         :width "30%"
+                                         :height "60%"
+                                         :border-width "0 1.5px 1.5px 0"
+                                         :border-style "solid"
+                                         :opacity 0
+                                         :transform "rotate(45deg) translate(-40%, -50%)"}]
+                              [:&:checked {:background (color :link-color)}
+                               [:&:after {:opacity 1
+                                          :color (color :background-color)}]]
+                              [:&:active {:transform "scale(0.9)"}]]]]})
 
 
 (stylefy/class "block-content" block-content-style)
@@ -321,6 +406,7 @@
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
+                        :on-click (fn [e] (.. e stopPropagation))
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
@@ -461,6 +547,7 @@
         [:div
          {:class         ["block-container"
                           (when dragging "dragging")
+                          (when is-editing "is-editing")
                           (when is-selected "is-selected")
                           ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
                           (when (and (seq children) open) "show-tree-indicator")]
@@ -499,7 +586,12 @@
                              (swap! state assoc :drag-target nil)))}
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
-         [:div {:style {:display "flex"}}
+         [:div.block-body
+          [:button.block-edit-toggle
+           {:on-click (fn [e]
+                        (when (false? (.. e -shiftKey))
+                          (dispatch [:editing/uid uid])))}]
+
           [toggle-el block]
           [bullet-el block state]
           [tooltip-el block state]
