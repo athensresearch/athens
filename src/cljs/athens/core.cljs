@@ -9,6 +9,7 @@
     [athens.style :refer [app-styles]]
     [athens.subs]
     [athens.views :as views]
+    [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.core :as reagent]
     [stylefy.core :as stylefy]))
@@ -25,7 +26,7 @@
   (rf/clear-subscription-cache!)
   (router/init-routes!)
   (reagent/render [views/main-panel]
-                  (.getElementById js/document "app")))
+                  (getElement "app")))
 
 
 (defn init
