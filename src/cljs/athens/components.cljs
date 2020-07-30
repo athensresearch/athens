@@ -43,18 +43,16 @@
 (def component-youtube-embed
   {:match  #"\[\[youtube\]\]\:.*"
    :render (fn [content _]
-             [:iframe {:width       640
-                       :height      360
-                       :src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
-                       :allow       "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}])})
+             [:div.media-16-9
+              [:iframe {:src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
+                        :allow       "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]])})
 
 
 (def component-generic-embed
   {:match  #"iframe\:.*"
    :render (fn [content _]
-             [:iframe {:width       640
-                       :height      360
-                       :src         (find-weblink content)}])})
+             [:div.media-16-9
+              [:iframe {:src         (find-weblink content)}]])})
 
 
 ;; Components
