@@ -39,7 +39,7 @@
    :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
    ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
-   ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
+                     ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
                      [(selectors/+ :input:valid :button) {:opacity 1}]]})
 
 
@@ -58,8 +58,8 @@
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
-                   "::-webkit-search-cancel-button" {:display "none"} ;; We replace the button elsewhere
-                   }})
+                   "::-webkit-search-cancel-button" {:display "none"}}}) ;; We replace the button elsewhere
+
 
 
 (def search-cancel-button-style
@@ -324,6 +324,7 @@
                                                                                    :block/uid    uid
                                                                                    :block/string string
                                                                                    :query        query}]
+                                                                (dispatch [:athena/toggle])
                                                                 (dispatch [:athena/update-recent-items selected-page])
                                                                 (navigate-uid uid)))
                                                   :class    (when (= i index) "selected")})

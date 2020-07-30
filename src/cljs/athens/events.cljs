@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules]]
+    [athens.db :as db :refer [rules get-children-recursively]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -110,14 +110,14 @@
     (let [first-item (first selected-items)
           prev-block-uid- (db/prev-block-uid first-item)
           prev-block (db/get-block [:block/uid prev-block-uid-])
-          ;;parent (db/get-parent [:block/uid first-item])
+         ;;parent (db/get-parent [:block/uid first-item])
           new-vec (cond
-                    ;; if prev-block is root node TODO: (OR context root), don't do anything
+                   ;; if prev-block is root node TODO: (OR context root), don't do anything
                     (:node/title prev-block) nil
-                    ;; if prev block is parent, replace head of vector with parent
-                    ;; TODO needs to replace all children blocks of the parent
-                    ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
-                    ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
+                   ;; if prev block is parent, replace head of vector with parent
+                   ;; TODO needs to replace all children blocks of the parent
+                   ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
+                   ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
                     :else (into [prev-block-uid-] selected-items))]
       (assoc db :selected/items new-vec))))
 
@@ -285,6 +285,29 @@
 
 
 (reg-event-fx
+  :page/delete
+  (fn [_ [_ uid]]
+    {:transact! (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid))}))
+
+
+(reg-event-fx
+  :page/add-shortcut
+  (fn [_ [_ uid]]
+    (let [sidebar-ents (d/q '[:find ?e
+                              :where
+                              [?e :page/sidebar _]]
+                            @db/dsdb)]
+      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
+
+
+;; TODO: reindex
+(reg-event-fx
+  :page/remove-shortcut
+  (fn [_ [_ uid]]
+    {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
+
+
+(reg-event-fx
   :undo
   (fn [_ _]
     (when-let [prev (db/find-prev @db/history #(identical? @db/dsdb %))]
@@ -319,7 +342,7 @@
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
-    ;; FIXME: specify behavior when going up would go to title or context-root
+   ;; FIXME: specify behavior when going up would go to title or context-root
     {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
 
 

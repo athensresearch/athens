@@ -1,8 +1,10 @@
 (ns athens.db
   (:require
+    [athens.patterns :as patterns]
+    [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull]]))
+    [posh.reagent :refer [posh! pull q]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -171,6 +173,11 @@
   (-> (d/datoms @dsdb :avet a v) first :e))
 
 
+(defn v-by-ea
+  [e a]
+  (-> (d/datoms @dsdb :eavt e a) first :v))
+
+
 (def rules
   '[[(after ?p ?at ?ch ?o)
      [?p :block/children ?ch]
@@ -200,7 +207,7 @@
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order :page/sidebar {:block/children ...} :edit/time] id)
        sort-block-children))
 
 
@@ -249,10 +256,18 @@
           (recur (get ch (dec n))))))))
 
 
+(defn get-children-recursively
+  "Get list of children UIDs for given block ID (including the root block's UID)"
+  [uid]
+  (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
+       (tree-seq :block/children :block/children)
+       (map :block/uid)))
+
+
 (defn re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
   [query]
-  (re-pattern (str "(?i)" query)))
+  (re-pattern (str "(?i)" (escape-str query))))
 
 
 (defn search-exact-node-title
@@ -412,3 +427,71 @@
                                       (conj db-after)
                                       (trim-head history-limit))))))))
 
+;; -- Linked & Unlinked References ----------
+
+(defn get-ref-ids
+  [pattern]
+  @(q '[:find [?e ...]
+        :in $ ?regex
+        :where
+        [?e :block/string ?s]
+        [(re-find ?regex ?s)]]
+      dsdb
+      pattern))
+
+
+(defn merge-parents-and-block
+  [ref-ids]
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
+                           {}
+                           ref-ids)
+        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+    (mapv
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
+
+
+(defn group-by-parent
+  [blocks]
+  (group-by (fn [x]
+              (-> x
+                  :block/parents
+                  first
+                  :node/title))
+            blocks))
+
+
+(defn get-data
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+
+
+(defn get-data-by-block
+  [pattern]
+  (-> pattern get-ref-ids merge-parents-and-block seq))
+
+
+(defn get-linked-references
+  [title]
+  (-> title patterns/linked get-data))
+
+
+(defn get-linked-references-by-block
+  [title]
+  (-> title patterns/linked get-data-by-block))
+
+
+(defn get-unlinked-references
+  [title]
+  (-> title patterns/unlinked get-data))
+
+
+(defn count-linked-references-excl-uid
+  [title uid]
+  (reduce (fn [current-count ref]
+            (if (= (:block/uid ref) uid)
+              current-count
+              (inc current-count)))
+          0
+          (get-linked-references-by-block title)))

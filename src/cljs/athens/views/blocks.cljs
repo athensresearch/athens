@@ -1,16 +1,15 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
+    [athens.db :as db :refer [count-linked-references-excl-uid]]
     [athens.keybindings :refer [block-key-down]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
-    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
-    [athens.views.all-pages :refer [date-string]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
     [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [slash-menu-component menu-style dropdown]]
+    [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -336,22 +335,49 @@
 
 ;; Helpers
 
-(defn on-change
-  [value uid]
-  ;; (prn "ONCHANGE" value)
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
-  ;; automatically add non-existent pages
-  ;; TODO: delete pages that are no longer connected to anything else
+
+(defn walk-parse-tree-for-links
+  [source-str link-fn db-fn]
   (parse/transform {:page-link (fn [& title]
                                  (let [inner-title (apply + title)]
-                                   (when (nil? (db/search-exact-node-title inner-title))
+                                   ;; `apply +` can return 0 if `title` is nil or empty string
+                                   (when (and (string? inner-title)
+                                              (link-fn inner-title))
                                      (let [now (now-ts)
                                            uid (gen-block-uid)]
-                                       (dispatch [:transact [{:node/title     inner-title
-                                                              :block/uid      uid
-                                                              :edit/time      now
-                                                              :create/time    now}]])))
-                                   (str "[[" inner-title "]]")))} (parser/parse-to-ast value)))
+                                       (db-fn inner-title now uid)))
+                                   (str "[[" inner-title "]]")))
+                    :hashtag   (fn [title]
+                                 (when (and (string? title) (link-fn title))
+                                   (let [now (now-ts)
+                                         uid (gen-block-uid)]
+                                     (db-fn title now uid)))
+                                 (str "#" title))} (parser/parse-to-ast source-str)))
+
+
+(defn on-change
+  [oldvalue value uid]
+  ;; (prn "ONCHANGE" value)
+  ;; TODO: move this to somewhere more comfortable using reframe dispatch
+  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
+  (walk-parse-tree-for-links
+    value
+    (fn [inner-title]              (nil? (db/search-exact-node-title inner-title)))
+    (fn [inner-title now-time uid]
+      (dispatch [:transact [{:node/title  inner-title
+                             :block/uid   uid
+                             :edit/time   now-time
+                             :create/time now-time}]])))
+  (walk-parse-tree-for-links
+    oldvalue
+    (fn [inner-title]
+      (let [block (db/search-exact-node-title inner-title)]
+        (and (not (nil? block))
+             (nil? (:block/children (db/get-block-document (:db/id block))))
+             (zero? (count-linked-references-excl-uid inner-title uid)))))
+    (fn [inner-title _ _]
+      (let [uid (:block/uid @(pull-node-from-string inner-title))]
+        (when (some? uid) (dispatch [:page/delete uid]))))))
 
 
 (def db-on-change (debounce on-change 1000))
@@ -389,27 +415,37 @@
        [:div [:b "last edit"] [:span (date-string edit-time)]]])))
 
 
-;; flipped around
+(defn inline-search-el
+  [state]
+  (let [{:search/keys [query results index type]} @state]
+    [:div (merge (use-style dropdown-style)
+                 {:style {:position   "absolute"
+                          :top        "100%"
+                          :max-height "20rem"
+                          :left       "1.75em"}})
+     (if (clojure.string/blank? query)
+       [:div (str "Search for a " (symbol type))]
+       (doall
+         [:div (use-style menu-style {:id "dropdown-menu"})
+          (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+            ^{:key (str "inline-search-item" uid)}
+            ;; todo: implement expand
+            [button {:on-click #(prn "expand")
+                     :active   (= index i)
+                     :id       (str "result-" i)}
+             (or title string)])]))]))
 
-(defn page-search-el
-  [_block state]
-  (let [{:search/keys [page block query results index]} @state]
-    (when (or block page)
-      [dropdown {:style   {:position "absolute"
-                           :top      "100%"
-                           :max-height "20rem"
-                           :left     "1.75em"}
-                 :content (if (clojure.string/blank? query)
-                            [:div "Start Typing!"]
-                            (doall
-                              [:div (use-style menu-style {:id "dropdown-menu"})
-                               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                 ^{:key (str "inline-search-item" uid)}
-                                 [button
-                                  {:on-click (fn [e] (prn "expand"))
-                                   :active (when (= index i) true)
-                                   :id (str "result-" i)}
-                                  (or title string)])]))}])))
+
+(defn slash-menu-el
+  [state]
+  (let [{index :search/index} @state]
+    [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+     [:div#slash-menu-container (merge (use-style menu-style) {:style {:max-height "8em"}})
+      (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
+        [button {:active   (= i index)
+                 :key      text
+                 :on-click #(athens.keybindings/select-slash-cmd i state)}
+         [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -483,10 +519,9 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
   (let [state (r/atom {:atom-string (:block/string block)
-                       :slash? false
-                       :search/page false
+                       :old-string (:block/string block) ;; this is for detecting what's deleted to process page deletion
+                       :search/type nil ;; one of #{:page :block :slash}
                        :search/query nil
-                       :search/block false
                        :search/index 0
                        :dragging false
                        :drag-target nil
@@ -495,11 +530,11 @@
                (fn [_context _atom old new]
                  (let [{:keys [atom-string]} new]
                    (when (not= (:atom-string old) atom-string)
-                     (db-on-change atom-string (:block/uid block))))))
+                     (db-on-change (:old-string old) atom-string (:block/uid block))))))
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
-            {dragging :dragging drag-target :drag-target state-edit-time :edit/time} @state
+            {:search/keys [type] :keys [dragging drag-target] state-edit-time :edit/time} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -507,7 +542,7 @@
 
         ;; if block is updated in datascript, update local block state
         (when (< state-edit-time edit-time)
-          (let [new-state {:edit/time edit-time :atom-string string}]
+          (let [new-state {:edit/time edit-time :atom-string string :old-string string}]
             (swap! state merge new-state)))
 
         [:div
@@ -563,9 +598,9 @@
           [tooltip-el block state]
           [block-content-el block state is-editing]]
 
-         (when (:slash? @state)
-           [slash-menu-component {:style {:position "absolute" :top "100%" :left "-0.125em"}}])
-         [page-search-el block state]
+         (cond
+           (or (= type :page) (= type :block)) [inline-search-el state]
+           (= type :slash) [slash-menu-el state])
 
          ;; Children
          (when (and open (seq children))
