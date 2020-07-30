@@ -489,9 +489,6 @@
 
 (defn count-linked-references-excl-uid
   [title uid]
-  (reduce (fn [current-count ref]
-            (if (= (:block/uid ref) uid)
-              current-count
-              (inc current-count)))
-          0
-          (get-linked-references-by-block title)))
+  (->> (get-linked-references-by-block title)
+       (remove #(= (:block/uid %) uid))
+       count))
