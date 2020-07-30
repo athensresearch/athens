@@ -5,6 +5,7 @@
     [athens.util :refer [scroll-if-needed get-day is-beyond-rect?]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [re-frame.core :refer [dispatch subscribe]])
@@ -121,7 +122,7 @@
                                             (.. e preventDefault)
                                             (swap! state update :search/index (partial dec-cycle 0 (max-idx slash-options)))
                                             (let [cur-index (:search/index @state)
-                                                  container-el (. js/document getElementById "slash-menu-container")
+                                                  container-el (getElement "slash-menu-container")
                                                   next-el (nth (array-seq (.. container-el -children)) cur-index)]
                                               (when (is-beyond-rect? next-el (.. container-el -parentNode))
                                                 (.. next-el (scrollIntoView false {:behavior "auto"})))))
@@ -129,7 +130,7 @@
                                               (.. e preventDefault)
                                               (swap! state update :search/index (partial inc-cycle 0 (max-idx slash-options)))
                                               (let [cur-index (:search/index @state)
-                                                    container-el (. js/document getElementById "slash-menu-container")
+                                                    container-el (getElement "slash-menu-container")
                                                     next-el (nth (array-seq (.. container-el -children)) cur-index)]
                                                 (when (is-beyond-rect? next-el container-el)
                                                   (.. next-el (scrollIntoView false {:behavior "auto"}))))))
@@ -139,13 +140,13 @@
         (= key-code KeyCodes.UP) (do
                                    (.. e preventDefault)
                                    (swap! state update :search/index (partial dec-cycle 0 (max-idx results)))
-                                   (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
-                                                     (.getElementById js/document "dropdown-menu")))
+                                   (scroll-if-needed (getElement (str "result-" (:search/index @state)))
+                                                     (getElement "dropdown-menu")))
         (= key-code KeyCodes.DOWN) (do
                                      (.. e preventDefault)
                                      (swap! state update :search/index (partial inc-cycle 0 (max-idx results)))
-                                     (scroll-if-needed (.getElementById js/document (str "result-" (:search/index @state)))
-                                                       (.getElementById js/document "dropdown-menu"))))
+                                     (scroll-if-needed (getElement (str "result-" (:search/index @state)))
+                                                       (getElement "dropdown-menu"))))
       :else (cond
               (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
               (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
