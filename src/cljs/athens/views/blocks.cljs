@@ -271,8 +271,7 @@
                               [:&:checked {:background (color :link-color)}
                                [:&:after {:opacity 1
                                           :color (color :background-color)}]]
-                              [:&:active {:transform "scale(0.9)"}]
-                              ]]]})
+                              [:&:active {:transform "scale(0.9)"}]]]]})
 
 
 (stylefy/class "block-content" block-content-style)
@@ -395,7 +394,7 @@
   (if (seq children)
     [:button (use-style block-disclosure-toggle-style
                         {:class    (if open "open" "closed")
-                         :on-click (fn [e] (toggle [:block/uid uid] open))})
+                         :on-click #(toggle [:block/uid uid] open)})
      [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
@@ -587,7 +586,7 @@
                              (swap! state assoc :drag-target nil)))}
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
-         [:div.block-body 
+         [:div.block-body
           [:button.block-edit-toggle
            {:on-click (fn [e]
                         (when (false? (.. e -shiftKey))
