@@ -96,12 +96,13 @@
                       (let [block (pull db/dsdb '[*] [:block/uid uid])]
                         [:span (use-style block-ref {:class "block-ref"})
                          [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block) uid)]]))
-     :hashtag       (fn [tag-name]
-                      (let [node (pull db/dsdb '[*] [:node/title tag-name])]
+     :hashtag       (fn [& tag-name]
+                      (let [parsed-name (concat tag-name)
+                            node        (pull db/dsdb '[*] [:node/title parsed-name])]
                         [:span (use-style hashtag {:class    "hashtag"
                                                    :on-click #(navigate-uid (:block/uid @node))})
                          [:span {:class "formatting"} "#"]
-                         [:span {:class "contents"} tag-name]]))
+                         [:span {:class "contents"} parsed-name]]))
      :url-image     (fn [{url :url alt :alt}]
                       [:img (use-style image {:class "url-image"
                                               :alt   alt

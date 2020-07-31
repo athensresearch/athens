@@ -44,7 +44,7 @@
    
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
-   <hashtag-delimited> = <'#'> <'[['> #'[^\\]]+' <']]'>
+   <hashtag-delimited> = <'#'> <'[['> page-link-content <']]'>
 
    url-image = <'!'> url-link-text url-link-url
    
