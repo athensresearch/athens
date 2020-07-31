@@ -3,13 +3,11 @@
 [![twitter](https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social)](https://twitter.com/athensresearch)
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
-[![sponsor](https://opencollective.com/athens/tiers/sponsor/badge.svg?label=sponsors)](https://opencollective.com/athens)
-[![backers](https://opencollective.com/athens/tiers/backer/badge.svg?label=backers)](https://opencollective.com/athens)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens)
 
-[![Sponsors](https://opencollective.com/athens/tiers/sponsor.svg?avatarHeight=36)](https://opencollective.com/athens)
 
-[![Backers](https://opencollective.com/athens/tiers/backer.svg?avatarHeight=36)](https://opencollective.com/athens)
+[![Contributors](https://opencollective.com/athens/tiers/contributors.svg?avatarHeight=36)](https://opencollective.com/athens)
+[![Believers](https://opencollective.com/athens/tiers/backer.svg?avatarHeight=36)](https://opencollective.com/athens)
 
 > I am the wisest man alive, for I know one thing, and that is that I know nothing.
 
