@@ -388,12 +388,12 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (= type :block) (let [results (db/search-in-block-content query)]
+      (= type :block) (let [results (db/search-in-block-content new-query)]
                         (swap! state assoc :search/query new-query)
                         (swap! state assoc :search/results results))
 
     ;; when in-line search dropdown is open
-      (= type :page) (let [results (db/search-in-node-title query)]
+      (= type :page) (let [results (db/search-in-node-title new-query)]
                        (swap! state assoc :search/query new-query)
                        (swap! state assoc :search/results results)))
 
