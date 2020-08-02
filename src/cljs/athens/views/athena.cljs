@@ -165,8 +165,8 @@
       (reset! state {:index   0
                      :query   query
                      :results (->> (concat [(search-exact-node-title query)]
-                                           (take 20 (search-in-node-title query))
-                                           (take 20 (search-in-block-content query)))
+                                           (search-in-node-title query)
+                                           (search-in-block-content query))
                                    vec)}))))
 
 
