@@ -367,12 +367,15 @@
       ;; default backspace: delete a character
       :else (let [head    (subs value 0 (dec start))
                   new-str (str head tail)
-                  {:search/keys [query]} @state]
+                  {:search/keys [query type]} @state
+                  query-fun (cond
+                              (= type :page) db/search-in-node-title
+                              (= type :block) db/search-in-block-content)]
               (when (= "/" (last value))
                 (swap! state merge {:search/type nil
                                     :search/query nil}))
               (when query
-                (swap! state assoc :search/query (subs query 0 (dec (count query)))))
+                (update-query state (subs query 0 (dec (count query))) query-fun))
               (swap! state assoc :atom-string new-str)))))
 
 
