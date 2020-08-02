@@ -376,7 +376,7 @@
         (and (not (nil? block))                                                     ;; makes sure the page link is valid
              (nil? (:block/children (db/get-block-document (:db/id block))))        ;; makes sure the page link has no children
              (zero? (count-linked-references-excl-uid inner-title uid))             ;; makes sure the page link is not present in other pages
-             (not (clojure.string/includes? value (str "[[" inner-title "]]"))))))  ;; makes sure the page link is deleted in this node as well
+             (not (clojure.string/includes? value inner-title)))))  ;; makes sure the page link is deleted in this node as well
     (fn [inner-title _ _]
       (let [uid (:block/uid @(pull-node-from-string inner-title))]
         (when (some? uid) (dispatch [:page/delete uid]))))))
