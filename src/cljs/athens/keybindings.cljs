@@ -208,27 +208,28 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift meta start head tail value]} (destruct-event e)
+  (let [{:keys [shift meta start head tail value target]} (destruct-event e)
         {:search/keys [query index results type]} @state]
     (.. e preventDefault)
     (cond
       (= type :slash) (select-slash-cmd index state)
 
-      ;; TODO: move caret beyond ]]
       ;; auto-complete link
       (= type :page)
       (let [{:keys [node/title]} (get results index)
             new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
         (swap! state merge {:atom-string  new-str
                             :search/query nil
-                            :search/type  nil}))
+                            :search/type  nil})
+        (set! (. target -selectionStart) (+ 2 start)))
       ;; auto-complete block ref
       (= type :block)
       (let [{:keys [block/uid]} (get results index)
             new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
         (swap! state merge {:atom-string  new-str
                             :search/query nil
-                            :search/type nil}))
+                            :search/type nil})
+        (set! (. target -selectionStart) (+ 2 start)))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :atom-string (str head "\n" tail))
