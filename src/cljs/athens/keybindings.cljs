@@ -332,7 +332,6 @@
 ;; with keybindings
 (defn update-query
   [state new-query query-fun]
-  (prn new-query)
   (let [results (query-fun new-query)]
     (swap! state assoc :search/query new-query)
     (swap! state assoc :search/results results)))
