@@ -327,6 +327,15 @@
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
+;; This should probably reside in another file as it has nothing to do
+;; with keybindings
+(defn update-query
+  [state new-query query-fun]
+  (prn new-query)
+  (let [results (query-fun new-query)]
+    (swap! state assoc :search/query new-query)
+    (swap! state assoc :search/results results)))
+
 
 (defn handle-backspace
   [e uid state]
@@ -388,14 +397,10 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (= type :block) (let [results (db/search-in-block-content new-query)]
-                        (swap! state assoc :search/query new-query)
-                        (swap! state assoc :search/results results))
+      (= type :block) (update-query state new-query db/search-in-block-content)
 
     ;; when in-line search dropdown is open
-      (= type :page) (let [results (db/search-in-node-title new-query)]
-                       (swap! state assoc :search/query new-query)
-                       (swap! state assoc :search/results results)))
+      (= type :page) (update-query state new-query db/search-in-node-title))
 
     (swap! state merge {:atom-string new-str})))
 
