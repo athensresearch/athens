@@ -10,7 +10,7 @@
     [athens.subs]
     [athens.views :as views]
     [re-frame.core :as rf]
-    [reagent.core :as reagent]
+    [reagent.dom :as r-dom]
     [stylefy.core :as stylefy]))
 
 
@@ -24,8 +24,8 @@
   []
   (rf/clear-subscription-cache!)
   (router/init-routes!)
-  (reagent/render [views/main-panel]
-                  (.getElementById js/document "app")))
+  (r-dom/render [views/main-panel]
+                (.getElementById js/document "app")))
 
 
 (defn init
