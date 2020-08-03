@@ -26,7 +26,7 @@
   (rf/clear-subscription-cache!)
   (router/init-routes!)
   (r-dom/render [views/main-panel]
-                  (getElement "app")))
+                (getElement "app")))
 
 
 (defn init
