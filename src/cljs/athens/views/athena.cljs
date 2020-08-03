@@ -292,7 +292,6 @@
                             :on-change   (fn [e] (search-handler (.. e -target -value)))
                             :on-key-down (fn [e] (key-down-handler e s))})]
         [:button (use-style search-cancel-button-style
-                            ;; param missing? (set! var-symbol expr)
                             {:on-click #(set! (.-value (getElement "athena-input")))})
          [:> mui-icons/Close]]]
        [results-el s]
