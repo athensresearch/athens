@@ -1,11 +1,15 @@
 # Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [Roles and Responsibilities](#roles-and-responsibilities)
   * [Benevolent Dictator](#benevolent-dictator)
   * [Core Team](#core-team)
-  * [Moderators (Guardians)](#moderators--guardians-)
-  * [Contributors (Athenians)](#contributors--athenians-)
+  * [Contributors](#contributors)
+    + [Work](#work)
+    + [Financial](#financial)
+    + [Other](#other)
+  * [Members](#members)
   * [Other Roles](#other-roles)
 - [Attribution](#attribution)
 
@@ -43,23 +47,33 @@ Significant commitment means being an exemplary member of the Athens community. 
 
 Significant commitment also means being dedicated oneself long-term to the actualization of the [Athens Vision](https://github.com/athensresearch/athens/blob/master/VISION.md).
 
-## Moderators (Guardians)
+## Contributors
 
-Moderators, or Guardians, are also exemplary members of the Athens community. Specifically, Guardians are responsible for ensuring that members are [being excellent](https://www.noisebridge.net/wiki/Noisebridge_Vision#Excellence) to one another, in accordance with Athens's values. Guardians are responsible for de-escalating and resolving conflicts should they arise, in the event that Athenians are unable to do so themselves.
+Contributors will receive the beta application first as well as the newest updates as the product matures, as explained in [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4).
 
-Guardians have high degrees of emotional intelligence, leadership, and compassion. They are invested in creating an atmosphere of psychological safety. You are always free to DM the Guardians if you are feeling unwell. In order to become a Guardian, you will need to practice setting up your own Discord server with bots. Ideally, you will also have experience doing conflict resolution and emotional labor.
+### Work
 
-## Contributors (Athenians)
+The main opportunities to contribute currently are through design, engineering, and product. By contributing non-trivial designs (Figma) and code (Clojure) to the project, you will gain write-access to three channels: `#engineers`, `#designers`, and `#product`. Read more at [Open Source Conversations](https://www.notion.so/athensresearch/Open-Source-Conversations-Discord-a8c959de3b194cefadd48b497fc12079).
 
-Anyone who has agreed to the Athens guidelines and introduced themselves on the Athens Discord server is a Contributor, otherwise known as an Athenian.
+### Financial
 
-Athenians engage with the project by contributing expertise in the aforementioned domains (engineering, design, etc.). They also contribute by sharing constructive, hopefully actionable feedback on Athens the product, Athens the community, and [related topics of interest](https://github.com/athensresearch/athens#join-us).
+Financial Contributors are those that sponsor the project for $16/month or more through [OpenCollective](https://opencollective.com/athens). They will provide feedback on the product, which will be especially crucial in its early stages.
+
+### Other
+
+As the product matures, it's likely we will need specific guidance in areas such as finance, legal, operations, etc. If you have these or other skills not mentioned already, and see an opportunity to apply them, join our Discord!
+
+If you contribute interesting conversations, ideas, and feedback, and generally make our community a better place to be, that could also make you a Contibutor!
+
+
+## Members
+
 
 ## Other Roles
 
 Roles may be created, removed, and refactored in the future.
 
-Note that the roles in this document are also represented in the Discord with varying levels of permissions. However, not all roles on Discord pertain to governance and are therefore not mentioned here.
+Note that the roles in this document are also represented in the Discord with varying levels of permissions. However, not all roles on Discord pertain to governance and are therefore not mentioned here, e.g. learners, mentors, intro-only
 
 # Attribution
 
