@@ -5,7 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
-    [reagent.core :as r]
+    [reagent.dom :as r-dom]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -97,5 +97,5 @@
 (defn ^:export init-spinner
   []
   (stylefy/init)
-  (r/render [initial-spinner-component]
-            (getElement "app")))
+  (r-dom/render [initial-spinner-component]
+                (getElement "app")))

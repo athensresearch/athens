@@ -10,13 +10,13 @@
             :comments "same as Clojure"}
 
   :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.597"
+                 [org.clojure/clojurescript "1.10.764"
                   :exclusions [com.google.javascript/closure-compiler-unshaded
                                org.clojure/google-closure-library
                                org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.8.83"]
-                 [reagent "0.9.1"]
-                 [re-frame "0.11.0"]
+                 [thheller/shadow-cljs "2.8.110"]
+                 [reagent "0.10.0"]
+                 [re-frame "1.0.0"]
                  [datascript "1.0.0"]
                  [datascript-transit "0.3.0"]
                  [denistakeda/posh "0.5.8"]
@@ -66,7 +66,7 @@
   :profiles
   {:dev
    {:dependencies [[binaryage/devtools "1.0.0"]
-                   [day8.re-frame/re-frame-10x "0.5.1"]
+                   [day8.re-frame/re-frame-10x "0.6.0"]
                    [day8.re-frame/tracing "0.5.3"]]
     :source-paths ["dev"]}
    :prod

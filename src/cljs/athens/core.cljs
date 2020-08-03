@@ -11,7 +11,7 @@
     [athens.views :as views]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
-    [reagent.core :as reagent]
+    [reagent.dom :as r-dom]
     [stylefy.core :as stylefy]))
 
 
@@ -25,7 +25,7 @@
   []
   (rf/clear-subscription-cache!)
   (router/init-routes!)
-  (reagent/render [views/main-panel]
+  (r-dom/render [views/main-panel]
                   (getElement "app")))
 
 
