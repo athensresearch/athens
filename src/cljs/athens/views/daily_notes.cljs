@@ -6,6 +6,7 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
     [posh.reagent :refer [q pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
@@ -48,7 +49,7 @@
   [_]
   (let
     [daily-notes @(subscribe [:daily-notes/items])
-     from-bottom (.. js/document (getElementById "daily-notes") getBoundingClientRect -bottom)
+     from-bottom (.. (getElement "daily-notes") getBoundingClientRect -bottom)
      doc-height (.. js/document -documentElement -scrollHeight)
      delta (- from-bottom doc-height)]
     (when (< delta 1)

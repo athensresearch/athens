@@ -6,6 +6,7 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
+    [goog.dom :refer [getElement]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]))
 
 
@@ -173,7 +174,7 @@
 (defn focus-el
   [id]
   (fn []
-    (if-let [el (.. js/document (getElementById id))]
+    (if-let [el (getElement id)]
       (.focus el))))
 
 

@@ -11,6 +11,7 @@
     [cljsjs.react.dom]
     [clojure.string :as str]
     [garden.selectors :as selectors]
+    [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -291,7 +292,7 @@
                             :on-change   (fn [e] (search-handler (.. e -target -value)))
                             :on-key-down (fn [e] (key-down-handler e s))})]
         [:button (use-style search-cancel-button-style
-                            {:on-click #(set! (.-value (.getElementById js/document "athena-input")))})
+                            {:on-click #(set! (.-value (getElement "athena-input")))})
          [:> mui-icons/Close]]]
        [results-el s]
        [(fn []
