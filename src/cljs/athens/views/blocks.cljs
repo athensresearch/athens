@@ -346,12 +346,14 @@
                                            uid (gen-block-uid)]
                                        (db-fn inner-title now uid)))
                                    (str "[[" inner-title "]]")))
-                    :hashtag   (fn [title]
-                                 (when (and (string? title) (link-fn title))
-                                   (let [now (now-ts)
-                                         uid (gen-block-uid)]
-                                     (db-fn title now uid)))
-                                 (str "#" title))} (parser/parse-to-ast source-str)))
+                    :hashtag   (fn [& title]
+                                 (let [inner-title (apply + title)]
+                                   (when (and (string? inner-title)
+                                              (link-fn inner-title))
+                                     (let [now (now-ts)
+                                           uid (gen-block-uid)]
+                                       (db-fn inner-title now uid)))
+                                   (str "#" inner-title)))} (parser/parse-to-ast source-str)))
 
 
 (defn on-change

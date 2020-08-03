@@ -54,6 +54,9 @@
     [:block "that’s " [:hashtag "very cool"] ", yeah"]
     "that’s #[[very cool]], yeah"
 
+    [:block "also here's " [:hashtag "nested " [:page-link "links"]] " in hashtags!"]
+    "also here's #[[nested [[links]]]] in hashtags!"
+
     [:block "Ends after " [:hashtag "words_are_over"] "!"]
     "Ends after #words_are_over!"
 
