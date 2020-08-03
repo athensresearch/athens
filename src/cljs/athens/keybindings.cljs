@@ -328,15 +328,6 @@
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
-;; This should probably reside in another file as it has nothing to do
-;; with keybindings
-(defn update-query
-  [state new-query query-fun]
-  (let [results (query-fun new-query)]
-    (swap! state assoc :search/query new-query)
-    (swap! state assoc :search/results results)))
-
-
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start end value head tail target meta]} (destruct-event e)
@@ -368,14 +359,14 @@
       :else (let [head    (subs value 0 (dec start))
                   new-str (str head tail)
                   {:search/keys [query type]} @state
-                  query-fun (cond
-                              (= type :page) db/search-in-node-title
-                              (= type :block) db/search-in-block-content)]
+                  query-fn (cond
+                             (= type :page) db/search-in-node-title
+                             (= type :block) db/search-in-block-content)]
               (when (= "/" (last value))
                 (swap! state merge {:search/type nil
                                     :search/query nil}))
               (when query
-                (update-query state (subs query 0 (dec (count query))) query-fun))
+                (db/update-query state (subs query 0 (dec (count query))) query-fn))
               (swap! state assoc :atom-string new-str)))))
 
 
@@ -400,10 +391,10 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (= type :block) (update-query state new-query db/search-in-block-content)
+      (= type :block) (db/update-query state new-query db/search-in-block-content)
 
-    ;; when in-line search dropdown is open
-      (= type :page) (update-query state new-query db/search-in-node-title))
+      ;; when in-line search dropdown is open
+      (= type :page) (db/update-query state new-query db/search-in-node-title))
 
     (swap! state merge {:atom-string new-str})))
 

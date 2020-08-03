@@ -496,3 +496,12 @@
   (->> (get-linked-references-by-block title)
        (remove #(= (:block/uid %) uid))
        count))
+
+
+;; Block state atom helpers
+
+(defn update-query
+  [state new-query query-fn]
+  (let [results (query-fn new-query)]
+    (swap! state assoc :search/query new-query)
+    (swap! state assoc :search/results results)))
