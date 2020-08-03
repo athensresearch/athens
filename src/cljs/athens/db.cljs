@@ -280,16 +280,18 @@
 
 
 (defn search-in-node-title
-  [query]
-  (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
-         :in $ ?query-pattern ?query
-         :where
-         [?node :node/title ?title]
-         [(re-find ?query-pattern ?title)]
-         [(not= ?title ?query)]] ;; ignore exact match to avoid duplicate
-       @dsdb
-       (re-case-insensitive query)
-       query))
+  ([query] (search-in-node-title query 20))
+  ([query n]
+   (->> (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
+               :in $ ?query-pattern ?query
+               :where
+               [?node :node/title ?title]
+               [(re-find ?query-pattern ?title)]
+               [(not= ?title ?query)]] ;; ignore exact match to avoid duplicate
+             @dsdb
+             (re-case-insensitive query)
+             query)
+        (take n))))
 
 
 (defn get-root-parent-node
@@ -301,17 +303,19 @@
 
 
 (defn search-in-block-content
-  [query]
-  (->>
-    (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-           :in $ ?query-pattern
-           :where
-           [?block :block/string ?txt]
-           [(re-find ?query-pattern ?txt)]]
-         @dsdb
-         (re-case-insensitive query))
-    (map get-root-parent-node)
-    (mapv #(dissoc % :block/_children))))
+  ([query] (search-in-block-content query 20))
+  ([query n]
+   (->>
+     (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
+            :in $ ?query-pattern
+            :where
+            [?block :block/string ?txt]
+            [(re-find ?query-pattern ?txt)]]
+          @dsdb
+          (re-case-insensitive query))
+     (take n)
+     (map get-root-parent-node)
+     (mapv #(dissoc % :block/_children)))))
 
 
 ;; xxx 2 kinds of operations
