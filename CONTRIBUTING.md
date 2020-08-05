@@ -83,6 +83,16 @@ lein dev
 
 When these scripts are done, your terminal will read `build complete`. Athens can then be accessed by pointing a browser to http://localhost:3000/ on UNIX or http://127.0.0.1:3000/ on Windows.
 
+## Running in Docker
+
+For a quick way to get up and started with a local development environment you can also use [Docker](https://www.docker.com/) via the corresponding [Dockerfile](./Dockerfile).
+In order to do so, build a Docker image and run it like this:
+
+```
+docker build -t athens .
+docker run -it -p 3000:3000 -p 8777:8777 -p 9630:9630 athens
+```
+
 # Deploying Athens and Devcards
 
 You should deploy your version of Athens and [Devcards](https://github.com/bhauman/devcards) if you are making UI-releated pull requests to Athens. This will allow developers and designers to interact with your code, which is essential for reviewing UI changes.
