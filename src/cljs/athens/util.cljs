@@ -14,21 +14,24 @@
 ;; -- DOM ----------------------------------------------------------------
 
 ;; TODO: move all these DOM utilities to a .cljs file instead of cljc
+(defn scroll-top! [element pos]
+  (when pos
+    (set! (.. element -scrollTop) pos)))
+
+
 (defn scroll-if-needed
   ;; https://stackoverflow.com/a/45851497
   [element container]
-  (if (< (.. element -offsetTop) (.. container -scrollTop))
-    ;; If the element is higher than its container's top...
-    (set! (.. container -scrollTop) (.. element -offsetTop))
-    ;; Otherwise, find the bottom of the element and the container...
-    (let [offsetBottom (+ (.. element -offsetTop) (.. element -offsetHeight))
-          scrollBottom (+ (.. container -scrollTop) (.. container -offsetHeight))]
-      ;; ..and if it's lower than the container's bottom
-      (when (< scrollBottom offsetBottom)
-        ;; Scroll the container so the element is in view
-        (set!
-          (.. container -scrollTop)
-          (- offsetBottom (.. container -offsetHeight)))))))
+  (let [e-top (.. element -offsetTop)
+        e-height (.. element -offsetHeight)
+        e-bottom (+ e-top e-height)
+        cs-top (.. container -scrollTop)
+        c-height (.. container -offsetHeight)
+        cs-bottom (+ cs-top c-height)]
+    (->> (cond
+           (< e-top cs-top)       e-top
+           (< cs-bottom e-bottom) (- e-bottom c-height))
+         (scroll-top! container))))
 
 
 (defn mouse-offset
