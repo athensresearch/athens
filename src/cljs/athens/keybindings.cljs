@@ -131,7 +131,7 @@
                                               (let [cur-index (:search/index @state)
                                                     container-el (getElement "slash-menu-container")
                                                     next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                                (scroll-into-view next-el container-el false ))))
+                                                (scroll-into-view next-el container-el false))))
 
       (or (= type :page) (= type :block))
       (cond
