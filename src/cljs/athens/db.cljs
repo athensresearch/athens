@@ -501,7 +501,8 @@
 ;; Block state atom helpers
 
 (defn update-query
-  [state head key type]
+  ([state head type] (update-query state head "" type))
+  ([state head key type]
   (let [query-fn (cond
                    (= type :block) search-in-block-content
                    (= type :page)  search-in-node-title)
@@ -511,4 +512,4 @@
         new-query (str (subs head link-start) key)
         results (query-fn new-query)]
     (swap! state assoc :search/query new-query)
-    (swap! state assoc :search/results results)))
+    (swap! state assoc :search/results results))))

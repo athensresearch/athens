@@ -219,12 +219,12 @@
         new-head (cond
                    (= type :block) "$1(("
                    (= type :page)  "$1[[")
-        new-tail (cond
+        closing-str (cond
                    (= type :block) "))"
                    (= type :page)  "]]")
-        new-str (clojure.string/replace-first head head-pattern (str new-head completed-str new-tail))
-        [_ closing-delimiter new-tail] (re-matches tail-pattern tail)]
-    (swap! state merge {:atom-string (str new-str new-tail)
+        new-str (clojure.string/replace-first head head-pattern (str new-head completed-str closing-str))
+        [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
+    (swap! state merge {:atom-string (str new-str after-closing-str)
                         :search/query nil
                         :search/type nil})
     (when closing-delimiter (set! (. target -selectionStart) (+ 2 start)))))
@@ -380,7 +380,7 @@
                 (swap! state merge {:search/type nil
                                     :search/query nil}))
               (when query
-                (db/update-query state head "" type))
+                (db/update-query state head type))
               (swap! state assoc :atom-string new-str)))))
 
 
@@ -397,7 +397,6 @@
   (let [{:keys [head tail key key-code]} (destruct-event e)
         new-str (str head key tail)
         {:search/keys [type]} @state]
-    (prn @state)
     (cond
       (= key-code KeyCodes.SLASH) (swap! state merge {:search/query ""
                                                       :search/type :slash})
@@ -405,10 +404,7 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (= type :block) (db/update-query state head key type)
-
-      ;; when in-line search dropdown is open
-      (= type :page) (db/update-query state head key type))
+      (or (= type :block) (= type :page)) (db/update-query state head key type))
 
     (swap! state merge {:atom-string new-str})))
 
