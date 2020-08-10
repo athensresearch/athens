@@ -60,6 +60,11 @@
       (< (.. el-box -top) (.. cont-box -top)))))
 
 
+(defn scroll-into-view [element container align-top?]
+  (when (is-beyond-rect? element container)
+    (.. element (scrollIntoView align-top? {:behavior "auto"}))))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 

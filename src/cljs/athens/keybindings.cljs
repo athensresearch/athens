@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day is-beyond-rect?]]
+    [athens.util :refer [scroll-if-needed get-day scroll-into-view]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
@@ -124,16 +124,14 @@
                                             (let [cur-index (:search/index @state)
                                                   container-el (getElement "slash-menu-container")
                                                   next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                              (when (is-beyond-rect? next-el (.. container-el -parentNode))
-                                                (.. next-el (scrollIntoView false {:behavior "auto"})))))
+                                              (scroll-into-view next-el (.. container-el -parentNode) false)))
                         (= :down direction) (do
                                               (.. e preventDefault)
                                               (swap! state update :search/index (partial inc-cycle 0 (max-idx slash-options)))
                                               (let [cur-index (:search/index @state)
                                                     container-el (getElement "slash-menu-container")
                                                     next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                                (when (is-beyond-rect? next-el container-el)
-                                                  (.. next-el (scrollIntoView false {:behavior "auto"}))))))
+                                                (scroll-into-view next-el container-el false))))
 
       (or (= type :page) (= type :block))
       (cond
