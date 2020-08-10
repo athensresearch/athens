@@ -216,7 +216,7 @@
 
       ;; auto-complete link
       (= type :page)
-      (let [{:keys [node/title]} (get results index)
+      (let [{:keys [node/title]} (nth results index)
             new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
         (swap! state merge {:atom-string  new-str
                             :search/query nil
@@ -224,7 +224,7 @@
         (set! (. target -selectionStart) (+ 2 start)))
       ;; auto-complete block ref
       (= type :block)
-      (let [{:keys [block/uid]} (get results index)
+      (let [{:keys [block/uid]} (nth results index)
             new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
         (swap! state merge {:atom-string  new-str
                             :search/query nil
