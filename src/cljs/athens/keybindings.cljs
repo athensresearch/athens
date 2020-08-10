@@ -220,8 +220,8 @@
                    (= type :block) "$1(("
                    (= type :page)  "$1[[")
         closing-str (cond
-                   (= type :block) "))"
-                   (= type :page)  "]]")
+                      (= type :block) "))"
+                      (= type :page)  "]]")
         new-str (clojure.string/replace-first head head-pattern (str new-head completed-str closing-str))
         [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
     (swap! state merge {:atom-string (str new-str after-closing-str)
