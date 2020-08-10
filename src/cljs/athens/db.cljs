@@ -502,11 +502,13 @@
 
 (defn update-query
   [state head key type]
-  (let [link-start (count (re-find #".*\[\[" head))
-        new-query (str (subs head link-start) key)
-        query-fn (cond
+  (let [query-fn (cond
                    (= type :block) search-in-block-content
-                   (= type :page) search-in-node-title)
+                   (= type :page)  search-in-node-title)
+        link-start (cond
+                     (= type :block) (count (re-find #".*\(\(" head))
+                     (= type :page)  (count (re-find #".*\[\[" head)))
+        new-query (str (subs head link-start) key)
         results (query-fn new-query)]
     (swap! state assoc :search/query new-query)
     (swap! state assoc :search/results results)))

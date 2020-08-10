@@ -205,20 +205,34 @@
                         :search/type nil
                         :atom-string  new-str})))
 
+
 (defn auto-complete
   [state e completed-str]
   (let [{:keys [start head tail target]} (destruct-event e)
-        {:search/keys [query]} @state
-        new-str (clojure.string/replace-first head (re-pattern (str "(.*)\\[\\[" query)) (str "$1[[" completed-str "]]"))
-        [_ closing-brackets new-tail] (re-matches #"(\]\])?(.*)" tail)]
+        {:search/keys [query type]} @state
+        head-pattern (cond
+                       (= type :block) (re-pattern (str "(.*)\\(\\(" query))
+                       (= type :page)  (re-pattern (str "(.*)\\[\\[" query)))
+        tail-pattern (cond
+                       (= type :block) #"(\)\))?(.*)"
+                       (= type :page)  #"(\]\])?(.*)")
+        new-head (cond
+                   (= type :block) "$1(("
+                   (= type :page)  "$1[[")
+        new-tail (cond
+                   (= type :block) "))"
+                   (= type :page)  "]]")
+        new-str (clojure.string/replace-first head head-pattern (str new-head completed-str new-tail))
+        [_ closing-delimiter new-tail] (re-matches tail-pattern tail)]
     (swap! state merge {:atom-string (str new-str new-tail)
                         :search/query nil
                         :search/type nil})
-    (when closing-brackets (set! (. target -selectionStart) (+ 2 start)))))
+    (when closing-delimiter (set! (. target -selectionStart) (+ 2 start)))))
+
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift meta start head tail value target]} (destruct-event e)
+  (let [{:keys [shift meta start head tail value]} (destruct-event e)
         {:search/keys [index results type]} @state]
     (.. e preventDefault)
     (cond
@@ -228,7 +242,7 @@
       (= type :page)
       (let [{:keys [node/title]} (nth results index)]
         (auto-complete state e title))
-      
+
       ;; auto-complete block ref
       (= type :block)
       (let [{:keys [block/uid]} (nth results index)]
