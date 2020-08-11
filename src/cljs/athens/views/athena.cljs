@@ -5,7 +5,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
-    [athens.util :refer [gen-block-uid is-beyond-rect?]]
+    [athens.util :refer [gen-block-uid scroll-into-view]]
     [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -219,8 +219,7 @@
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
 
           ;; Check if next el is beyond the bounds of the result list and scroll if so
-          (when (is-beyond-rect? next-el result-el)
-            (.. next-el (scrollIntoView (not= cur-index (dec (count results))) {:behavior "auto"})))))
+          (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
 
       (= key KeyCodes.DOWN)
       (do
@@ -230,8 +229,7 @@
               input-el (.. e -target)
               result-el (.. input-el (closest "div.athena") -lastElementChild)
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
-          (when (is-beyond-rect? next-el result-el)
-            (.. next-el (scrollIntoView (zero? cur-index) {:behavior "auto"})))))
+          (scroll-into-view next-el result-el (zero? cur-index))))
 
       :else nil)))
 
