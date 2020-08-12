@@ -5,6 +5,7 @@
     [athens.util :refer [scroll-if-needed get-day scroll-into-view]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :refer [replace-first]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
@@ -235,7 +236,7 @@
         closing-str (cond
                       (= type :block) "))"
                       (= type :page)  "]]")
-        new-str (clojure.string/replace-first head head-pattern (str new-head completed-str closing-str))
+        new-str (replace-first head head-pattern (str new-head completed-str closing-str))
         [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
     (swap! state merge {:atom-string (str new-str after-closing-str)
                         :search/query nil
