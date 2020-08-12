@@ -496,20 +496,3 @@
   (->> (get-linked-references-by-block title)
        (remove #(= (:block/uid %) uid))
        count))
-
-
-;; Block state atom helpers
-
-(defn update-query
-  ([state head type] (update-query state head "" type))
-  ([state head key type]
-   (let [query-fn (cond
-                    (= type :block) search-in-block-content
-                    (= type :page)  search-in-node-title)
-         link-start (cond
-                      (= type :block) (count (re-find #".*\(\(" head))
-                      (= type :page)  (count (re-find #".*\[\[" head)))
-         new-query (str (subs head link-start) key)
-         results (query-fn new-query)]
-     (swap! state assoc :search/query new-query)
-     (swap! state assoc :search/results results))))

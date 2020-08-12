@@ -49,6 +49,21 @@
            {:selection selection})))
 
 
+(defn update-query
+  ([state head type] (update-query state head "" type))
+  ([state head key type]
+   (let [query-fn (cond
+                    (= type :block) db/search-in-block-content
+                    (= type :page)  db/search-in-node-title)
+         link-start (cond
+                      (= type :block) (count (re-find #".*\(\(" head))
+                      (= type :page)  (count (re-find #".*\[\[" head)))
+         new-query (str (subs head link-start) key)
+         results (query-fn new-query)]
+     (swap! state assoc :search/query new-query)
+     (swap! state assoc :search/results results))))
+
+
 (def ARROW-KEYS
   {KeyCodes.UP    :up
    KeyCodes.LEFT  :left
@@ -378,7 +393,7 @@
                 (swap! state merge {:search/type nil
                                     :search/query nil}))
               (when query
-                (db/update-query state head type))
+                (update-query state head type))
               (swap! state assoc :atom-string new-str)))))
 
 
@@ -402,7 +417,7 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (or (= type :block) (= type :page)) (db/update-query state head key type))
+      (or (= type :block) (= type :page)) (update-query state head key type))
 
     (swap! state merge {:atom-string new-str})))
 
