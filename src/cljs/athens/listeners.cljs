@@ -1,9 +1,11 @@
 (ns athens.listeners
   (:require
-    ;;[athens.util :refer [get-day]]
+    [athens.db :refer [dsdb]]
     [athens.keybindings :refer [arrow-key-direction]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as string]
+    [datascript.core :as d]
     [goog.events :as events]
     [re-frame.core :refer [dispatch subscribe]])
   (:import
@@ -138,6 +140,38 @@
       (dispatch [:left-sidebar/toggle]))))
 
 
+;; -- Clipboard ----------------------------------------------------------
+
+;; TODO: once :selected/items is a nested tree instead of flat list, walk tree and add hyphens instead of mapping
+(defn to-markdown-list
+  [blocks]
+  (->> blocks
+    (map (fn [x] [:block/uid x]))
+    (d/pull-many @dsdb '[:block/string])
+    (map #(str "- " (:block/string %)))
+    (clojure.string/join "\r\n")))
+
+
+(defn copy
+  "If blocks are selected, copy blocks as markdown list."
+  [e]
+  (let [blocks @(subscribe [:selected/items])]
+    (when (not-empty blocks)
+      (.. e preventDefault)
+      ;; Use -event_ because goog events quirk
+      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks))))))
+
+
+;; do same as copy AND delete selected blocks
+(defn cut
+  [e]
+  (let [blocks @(subscribe [:selected/items])]
+    (when (not-empty blocks)
+      (.. e preventDefault)
+      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks)))
+      (dispatch [:selected/delete blocks]))))
+
+
 (defn init
   []
   ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
@@ -145,4 +179,6 @@
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down))
+  ;;(events/listen js/window EventType.COPY copy)
+  ;;(events/listen js/window EventType.CUT cut))
 

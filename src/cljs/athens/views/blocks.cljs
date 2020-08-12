@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [block-key-down]]
+    [athens.keybindings :refer [block-key-down destruct-event]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -12,6 +12,7 @@
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -449,6 +450,31 @@
                  :on-click #(athens.keybindings/select-slash-cmd i state)}
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
+;; TODO: Count whitespace chars at the front of each line. Each char is one indentation level.
+(defn paste
+  [e uid state]
+  (let [data (.. e -clipboardData (getData "text"))
+        lines (str/split-lines data)]
+
+    (if (= 1 (count lines))
+      (let [{:keys [head tail]} (destruct-event e)
+            new-str (str head data tail)]
+        (swap! state assoc :atom-string new-str))
+      (let [now (now-ts)
+            datoms (map (fn [x]
+                          [:db/id [:block/uid (gen-block-uid)]
+                           :create/time now
+                           :edit/time now
+                           :block/order 0 ;; must reindex as well
+                           :block/string x])
+                     lines)]
+        (dispatch [:transact [datoms]])))))
+
+(defn block-on-change
+  [e uid state]
+  (let [{:keys [value]} (destruct-event e)]
+    (prn "CHANGE" value)
+    (swap! state assoc :atom-string value)))
 
 ;; Actual string contents - two elements, one for reading and one for writing
 ;; seems hacky, but so far no better way to click into the correct position with one conditional element
@@ -464,8 +490,9 @@
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
-                           ;; never actually use on-change. rather, use :string-listener to update datascript. necessary to make react happy
-                           :on-change     (fn [_])
+                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybindings
+                           :on-change     (fn [e] (block-on-change e uid state))
+                           :on-paste      (fn [e] (paste e uid state))
                            :on-key-down   (fn [e] (block-key-down e uid state))
                            :on-mouse-down (fn [e]
                                             (if (.. e -shiftKey)
