@@ -5,6 +5,7 @@
     [athens.util :refer [scroll-if-needed get-day scroll-into-view]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :refer [replace-first]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
@@ -47,6 +48,21 @@
            {:start start :end end}
            {:head head :tail tail}
            {:selection selection})))
+
+
+(defn update-query
+  ([state head type] (update-query state head "" type))
+  ([state head key type]
+   (let [query-fn (cond
+                    (= type :block) db/search-in-block-content
+                    (= type :page)  db/search-in-node-title)
+         link-start (cond
+                      (= type :block) (count (re-find #".*\(\(" head))
+                      (= type :page)  (count (re-find #".*\[\[" head)))
+         new-query (str (subs head link-start) key)
+         results (query-fn new-query)]
+     (swap! state assoc :search/query new-query)
+     (swap! state assoc :search/results results))))
 
 
 (def ARROW-KEYS
@@ -204,29 +220,47 @@
                         :atom-string  new-str})))
 
 
+(defn auto-complete
+  [state e completed-str]
+  (let [{:keys [start head tail target]} (destruct-event e)
+        {:search/keys [query type]} @state
+        head-pattern (cond
+                       (= type :block) (re-pattern (str "(.*)\\(\\(" query))
+                       (= type :page)  (re-pattern (str "(.*)\\[\\[" query)))
+        tail-pattern (cond
+                       (= type :block) #"(\)\))?(.*)"
+                       (= type :page)  #"(\]\])?(.*)")
+        new-head (cond
+                   (= type :block) "$1(("
+                   (= type :page)  "$1[[")
+        closing-str (cond
+                      (= type :block) "))"
+                      (= type :page)  "]]")
+        new-str (replace-first head head-pattern (str new-head completed-str closing-str))
+        [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
+    (swap! state merge {:atom-string (str new-str after-closing-str)
+                        :search/query nil
+                        :search/type nil})
+    (when closing-delimiter (set! (. target -selectionStart) (+ 2 start)))))
+
+
 (defn handle-enter
   [e uid state]
   (let [{:keys [shift meta start head tail value]} (destruct-event e)
-        {:search/keys [query index results type]} @state]
+        {:search/keys [index results type]} @state]
     (.. e preventDefault)
     (cond
       (= type :slash) (select-slash-cmd index state)
 
-      ;; TODO: move caret beyond ]]
       ;; auto-complete link
       (= type :page)
-      (let [{:keys [node/title]} (get results index)
-            new-str (clojure.string/replace-first value (str query "]]") (str title "]]"))]
-        (swap! state merge {:atom-string  new-str
-                            :search/query nil
-                            :search/type  nil}))
+      (let [{:keys [node/title]} (nth results index)]
+        (auto-complete state e title))
+
       ;; auto-complete block ref
       (= type :block)
-      (let [{:keys [block/uid]} (get results index)
-            new-str (clojure.string/replace-first value (str query "))") (str uid "))"))]
-        (swap! state merge {:atom-string  new-str
-                            :search/query nil
-                            :search/type nil}))
+      (let [{:keys [block/uid]} (nth results index)]
+        (auto-complete state e uid))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :atom-string (str head "\n" tail))
@@ -309,7 +343,6 @@
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
-
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start end value head tail target meta]} (destruct-event e)
@@ -340,12 +373,12 @@
       ;; default backspace: delete a character
       :else (let [head    (subs value 0 (dec start))
                   new-str (str head tail)
-                  {:search/keys [query]} @state]
+                  {:search/keys [query type]} @state]
               (when (= "/" (last value))
                 (swap! state merge {:search/type nil
                                     :search/query nil}))
               (when query
-                (swap! state assoc :search/query (subs query 0 (dec (count query)))))
+                (update-query state head type))
               (swap! state assoc :atom-string new-str)))))
 
 
@@ -361,8 +394,7 @@
   [e _ state]
   (let [{:keys [head tail key key-code]} (destruct-event e)
         new-str (str head key tail)
-        {:search/keys [query type]} @state
-        new-query (str query key)]
+        {:search/keys [type]} @state]
     (cond
       (= key-code KeyCodes.SLASH) (swap! state merge {:search/query ""
                                                       :search/type :slash})
@@ -370,14 +402,7 @@
       (= type :slash) (swap! state assoc :search/query new-str)
 
       ;; when in-line search dropdown is open
-      (= type :block) (let [results (db/search-in-block-content query)]
-                        (swap! state assoc :search/query new-query)
-                        (swap! state assoc :search/results results))
-
-    ;; when in-line search dropdown is open
-      (= type :page) (let [results (db/search-in-node-title query)]
-                       (swap! state assoc :search/query new-query)
-                       (swap! state assoc :search/results results)))
+      (or (= type :block) (= type :page)) (update-query state head key type))
 
     (swap! state merge {:atom-string new-str})))
 
