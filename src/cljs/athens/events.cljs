@@ -340,6 +340,15 @@
             @db/dsdb rules eid order)))
 
 
+(defn plus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            @db/dsdb rules eid order x)))
+
+
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
@@ -598,6 +607,33 @@
   :drop-bullet
   (fn-traced [_ [_ source-uid target-uid kind]]
              (drop-bullet source-uid target-uid kind)))
+
+
+;; TODO: convert to tree instead of flat map (handling indentation), write tests for markdown list parsing
+(reg-event-fx
+  :paste
+  (fn [_ [_ uid text]]
+    (let [lines (clojure.string/split-lines text)
+          block (db/get-block [:block/uid uid])
+          {b-order :block/order} block
+          parent (db/get-parent [:block/uid uid])
+          {p-id :db/id} parent
+          now (now-ts)
+          new-datoms (map-indexed (fn [i x]
+                                    (let [start (subs x 0 2)
+                                          s (if (or (= start "- ")
+                                                    (= start "* "))
+                                              (subs x 2)
+                                              x)]
+                                      {:block/uid    (gen-block-uid)
+                                       :create/time  now
+                                       :edit/time    now
+                                       :block/order  (+ 1 i b-order)
+                                       :block/string s}))
+                                  lines)
+          reindex (plus-after p-id b-order (count lines))
+          children (concat new-datoms reindex)]
+      {:dispatch [:transact [{:db/id p-id :block/children children}]]})))
 
 
 (defn left-sidebar-drop-above

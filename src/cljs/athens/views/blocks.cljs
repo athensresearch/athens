@@ -21,7 +21,8 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+    [stylefy.core :as stylefy :refer [use-style]]
+    [clojure.string :as string])
   (:import
     (goog.events
       EventType)))
@@ -450,31 +451,25 @@
                  :on-click #(athens.keybindings/select-slash-cmd i state)}
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
-;; TODO: Count whitespace chars at the front of each line. Each char is one indentation level.
+
 (defn paste
+  "if user does typical copy and paste, meta+v, and "
   [e uid state]
   (let [data (.. e -clipboardData (getData "text"))
-        lines (str/split-lines data)]
+        is-block (re-find #"\r?\n" data)
+        last-keydown (:last-keydown @state)
+        {:keys [shift]} last-keydown]
+    ;; if `not shift`, do normal plain-text paste
+    (when (and is-block (not shift))
+      (.. e preventDefault)
+      (dispatch [:paste uid data]))))
 
-    (if (= 1 (count lines))
-      (let [{:keys [head tail]} (destruct-event e)
-            new-str (str head data tail)]
-        (swap! state assoc :atom-string new-str))
-      (let [now (now-ts)
-            datoms (map (fn [x]
-                          [:db/id [:block/uid (gen-block-uid)]
-                           :create/time now
-                           :edit/time now
-                           :block/order 0 ;; must reindex as well
-                           :block/string x])
-                     lines)]
-        (dispatch [:transact [datoms]])))))
 
 (defn block-on-change
   [e uid state]
-  (let [{:keys [value]} (destruct-event e)]
-    (prn "CHANGE" value)
-    (swap! state assoc :atom-string value)))
+  (let []
+    (swap! state assoc :atom-string (.. e -target -value))))
+
 
 ;; Actual string contents - two elements, one for reading and one for writing
 ;; seems hacky, but so far no better way to click into the correct position with one conditional element
@@ -554,7 +549,8 @@
                        :search/index 0
                        :dragging false
                        :drag-target nil
-                       :edit/time (:edit/time block)})]
+                       :edit/time (:edit/time block)
+                       :last-keydown nil})]
     (add-watch state :string-listener
                (fn [_context _atom old new]
                  (let [{:keys [atom-string]} new]

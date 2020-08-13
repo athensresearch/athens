@@ -385,9 +385,9 @@
 ;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
 (defn block-key-down
   [e uid state]
-  (let [{:keys [meta ctrl key-code]} (destruct-event e)]
-    (prn "DOWN" (destruct-event e))
-    ;(swap! state)
+  (let [d-event (destruct-event e)
+        {:keys [meta ctrl key-code]} d-event]
+    (swap! state assoc :last-keydown d-event)
     (cond
       (arrow-key-direction e) (handle-arrow-key e uid state)
       (pair-char? e) (handle-pair-char e uid state)

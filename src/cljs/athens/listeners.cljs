@@ -148,8 +148,7 @@
   (->> blocks
     (map (fn [x] [:block/uid x]))
     (d/pull-many @dsdb '[:block/string])
-    (map #(str "- " (:block/string %)))
-    (clojure.string/join "\r\n")))
+    (map #(str "- " (:block/string %) "\n"))))
 
 
 (defn copy
