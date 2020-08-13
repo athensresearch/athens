@@ -12,6 +12,7 @@
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -450,6 +451,24 @@
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
+(defn paste
+  "if user does typical copy and paste, meta+v, and "
+  [e uid state]
+  (let [data (.. e -clipboardData (getData "text"))
+        is-block (re-find #"\r?\n" data)
+        last-keydown (:last-keydown @state)
+        {:keys [shift]} last-keydown]
+    ;; if `not shift`, do normal plain-text paste
+    (when (and is-block (not shift))
+      (.. e preventDefault)
+      (dispatch [:paste uid data]))))
+
+
+(defn block-on-change
+  [e _uid state]
+  (swap! state assoc :atom-string (.. e -target -value)))
+
+
 ;; Actual string contents - two elements, one for reading and one for writing
 ;; seems hacky, but so far no better way to click into the correct position with one conditional element
 (defn block-content-el
@@ -464,26 +483,28 @@
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
-                           ;; never actually use on-change. rather, use :string-listener to update datascript. necessary to make react happy
-                           :on-change     (fn [_])
+                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybindings
+                           :on-change     (fn [e] (block-on-change e uid state))
+                           :on-paste      (fn [e] (paste e uid state))
                            :on-key-down   (fn [e] (block-key-down e uid state))
                            :on-mouse-down (fn [e]
+                                            ;; TODO: allow user to select multiple times while holding shift
                                             (if (.. e -shiftKey)
-                                              (let [target          (.. e -target)
-                                                    ;; TODO: implement for block-page
-                                                    node-page       (.. target (closest ".node-page"))
-                                                    source-uid      @(subscribe [:editing/uid])
-                                                    target-block    (.. target (closest ".block-container"))
-                                                    blocks          (vec (array-seq (.. node-page (querySelectorAll ".block-container"))))
+                                              (let [target (.. e -target)
+                                                    page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+                                                    source-uid @(subscribe [:editing/uid])
+                                                    target-block (.. target (closest ".block-container"))
+                                                    blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
                                                     [start end] (-> (keep-indexed (fn [i el]
                                                                                     (when (or (= el target-block)
                                                                                               (= source-uid (.. el -dataset -uid)))
                                                                                       i))
-                                                                                  blocks)
-                                                                    sort)
-                                                    selected-blocks (subvec blocks start (inc end))
-                                                    selected-uids   (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                (dispatch [:selected/add-items selected-uids]))
+                                                                                  blocks))]
+                                                (when (and start end)
+                                                  (let [selected-blocks (subvec blocks start (inc end))
+                                                        selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+                                                    (dispatch [:editing/uid nil])
+                                                    (dispatch [:selected/add-items selected-uids]))))
                                               (do
                                                 (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
                                                 (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]
@@ -527,7 +548,8 @@
                        :search/index 0
                        :dragging false
                        :drag-target nil
-                       :edit/time (:edit/time block)})]
+                       :edit/time (:edit/time block)
+                       :last-keydown nil})]
     (add-watch state :string-listener
                (fn [_context _atom old new]
                  (let [{:keys [atom-string]} new]

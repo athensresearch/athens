@@ -16,3 +16,5 @@ athens.views.right-sidebar/sidebar-section-heading-style
 
 ;; for future use
 athens.db/v-by-ea
+athens.keybindings/is-character-key?
+athens.keybindings/write-char

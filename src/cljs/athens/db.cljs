@@ -188,7 +188,13 @@
      [(inc ?o) ?new-o]]
     [(dec-after ?p ?at ?ch ?new-o)
      (after ?p ?at ?ch ?o)
-     [(dec ?o) ?new-o]]])
+     [(dec ?o) ?new-o]]
+    [(plus-after ?p ?at ?ch ?new-o ?x)
+     (after ?p ?at ?ch ?o)
+     [(+ ?o ?x) ?new-o]]
+    [(minus-after ?p ?at ?ch ?new-o ?x)
+     (after ?p ?at ?ch ?o)
+     [(- ?o ?x) ?new-o]]])
 
 
 (defn sort-block-children
