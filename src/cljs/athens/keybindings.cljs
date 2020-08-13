@@ -295,29 +295,13 @@
 
 
 ;; TODO: it's ctrl for windows and linux right?
-(defn handle-system-shortcuts
-  "Assumes meta is selected"
+(defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code target end selection]} (destruct-event e)]
+  (let [{:keys [key-code head tail selection]} (destruct-event e)]
     (cond
-      (= key-code KeyCodes.A) (do (setStart target 0)
-                                  (setEnd target end))
-
-      ;; TODO: undo. conflicts with datascript undo
-      (= key-code KeyCodes.Z) (prn "undo")
-
-      ;; TODO: cut
-      (= key-code KeyCodes.X) (prn "cut")
-
-      ;; TODO: paste. magical
-      (= key-code KeyCodes.V) (prn "paste")
-
-      ;; TODO: bold
-      (= key-code KeyCodes.B) (let [new-str (surround selection "**")]
+      (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :atom-string new-str))
-
-      ;; TODO: italicize
-      (= key-code KeyCodes.I) (let [new-str (surround selection "__")]
+      (= key-code KeyCodes.I) (let [new-str (str head (surround selection "__") tail)]
                                 (swap! state assoc :atom-string new-str)))))
 
 
@@ -426,7 +410,9 @@
 ;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
 (defn block-key-down
   [e uid state]
-  (let [{:keys [meta key-code]} (destruct-event e)]
+  (let [d-event (destruct-event e)
+        {:keys [meta ctrl key-code]} d-event]
+    (swap! state assoc :last-keydown d-event)
     (cond
       (arrow-key-direction e) (handle-arrow-key e uid state)
       (pair-char? e) (handle-pair-char e uid state)
@@ -434,10 +420,10 @@
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
       (= key-code KeyCodes.ESC) (handle-escape e state)
-      meta (handle-system-shortcuts e uid state)
+      (or meta ctrl) (handle-shortcuts e uid state))))
 
-      ;; -- Default: Add new character -----------------------------------------
-      (is-character-key? e) (write-char e uid state))))
+;; -- Default: Add new character -----------------------------------------
+;(is-character-key? e) (write-char e uid state))))
 
 
 ;;:else (prn "non-event" key key-code))))
