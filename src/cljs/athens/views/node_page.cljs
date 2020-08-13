@@ -191,7 +191,10 @@
          ;;               [:span "Timeline"]]}])
 
          ;; Header
-         [:h1 (use-style title-style {:data-uid uid :class "page-header"})
+         [:h1 (use-style title-style
+                         {:data-uid uid
+                          :class    "page-header"
+                          :on-click (fn [e] (navigate-uid uid e))})
           (when-not timeline-page?
             [autosize/textarea
              {:default-value title
