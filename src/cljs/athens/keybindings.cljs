@@ -263,11 +263,11 @@
 ;; TODO: it's ctrl for windows and linux right?
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code selection]} (destruct-event e)]
+  (let [{:keys [key-code head tail selection]} (destruct-event e)]
     (cond
-      (= key-code KeyCodes.B) (let [new-str (surround selection "**")]
+      (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :atom-string new-str))
-      (= key-code KeyCodes.I) (let [new-str (surround selection "__")]
+      (= key-code KeyCodes.I) (let [new-str (str head (surround selection "__") tail)]
                                 (swap! state assoc :atom-string new-str)))))
 
 
