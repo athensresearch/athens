@@ -132,6 +132,7 @@
       (assoc db :selected/items new-vec))))
 
 
+;; TODO: minus-after to reindex but what about nested blocks?
 (reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]

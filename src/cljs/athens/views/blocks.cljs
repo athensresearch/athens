@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [block-key-down destruct-event]]
+    [athens.keybindings :refer [block-key-down]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -13,6 +13,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [clojure.string :as string]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -21,8 +22,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [clojure.string :as string])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       EventType)))
@@ -466,9 +466,8 @@
 
 
 (defn block-on-change
-  [e uid state]
-  (let []
-    (swap! state assoc :atom-string (.. e -target -value))))
+  [e _uid state]
+  (swap! state assoc :atom-string (.. e -target -value)))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -490,22 +489,23 @@
                            :on-paste      (fn [e] (paste e uid state))
                            :on-key-down   (fn [e] (block-key-down e uid state))
                            :on-mouse-down (fn [e]
+                                            ;; TODO: allow user to select multiple times while holding shift
                                             (if (.. e -shiftKey)
-                                              (let [target          (.. e -target)
-                                                    ;; TODO: implement for block-page
-                                                    node-page       (.. target (closest ".node-page"))
-                                                    source-uid      @(subscribe [:editing/uid])
-                                                    target-block    (.. target (closest ".block-container"))
-                                                    blocks          (vec (array-seq (.. node-page (querySelectorAll ".block-container"))))
+                                              (let [target (.. e -target)
+                                                    page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+                                                    source-uid @(subscribe [:editing/uid])
+                                                    target-block (.. target (closest ".block-container"))
+                                                    blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
                                                     [start end] (-> (keep-indexed (fn [i el]
                                                                                     (when (or (= el target-block)
                                                                                               (= source-uid (.. el -dataset -uid)))
                                                                                       i))
-                                                                                  blocks)
-                                                                    sort)
-                                                    selected-blocks (subvec blocks start (inc end))
-                                                    selected-uids   (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                (dispatch [:selected/add-items selected-uids]))
+                                                                                  blocks))]
+                                                (when (and start end)
+                                                  (let [selected-blocks (subvec blocks start (inc end))
+                                                        selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+                                                    (dispatch [:editing/uid nil])
+                                                    (dispatch [:selected/add-items selected-uids]))))
                                               (do
                                                 (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
                                                 (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]

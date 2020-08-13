@@ -146,9 +146,10 @@
 (defn to-markdown-list
   [blocks]
   (->> blocks
-    (map (fn [x] [:block/uid x]))
-    (d/pull-many @dsdb '[:block/string])
-    (map #(str "- " (:block/string %) "\n"))))
+       (map (fn [x] [:block/uid x]))
+       (d/pull-many @dsdb '[:block/string])
+       (map #(str "- " (:block/string %) "\n"))
+       (string/join "")))
 
 
 (defn copy
@@ -177,7 +178,7 @@
   (events/listen js/window EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
-  (events/listen js/window EventType.KEYDOWN key-down))
-  ;;(events/listen js/window EventType.COPY copy)
-  ;;(events/listen js/window EventType.CUT cut))
+  (events/listen js/window EventType.KEYDOWN key-down)
+  (events/listen js/window EventType.COPY copy)
+  (events/listen js/window EventType.CUT cut))
 

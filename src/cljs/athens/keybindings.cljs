@@ -397,8 +397,8 @@
       (= key-code KeyCodes.ESC) (handle-escape e state)
       (or meta ctrl) (handle-shortcuts e uid state))))
 
-      ;; -- Default: Add new character -----------------------------------------
-      ;(is-character-key? e) (write-char e uid state))))
+;; -- Default: Add new character -----------------------------------------
+;(is-character-key? e) (write-char e uid state))))
 
 
 ;;:else (prn "non-event" key key-code))))
