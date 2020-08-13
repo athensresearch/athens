@@ -6,6 +6,7 @@
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
     [athens.views.buttons :refer [button]]
@@ -525,15 +526,15 @@
                                         (let [related (.. e -relatedTarget)]
                                           (when-not (and related (contains related "tooltip"))
                                             (swap! state assoc :tooltip false))))
+                       :on-click      (fn [e] (navigate-uid uid e))
                        :draggable     true
                        :on-drag-start (fn [e]
                                         (set! (.. e -dataTransfer -effectAllowed) "move")
                                         (.. e -dataTransfer (setData "text/plain" uid))
-                               ;;(dispatch [:dragging/uid uid])
                                         (swap! state assoc :dragging true))
                        :on-drag-end   (fn [_]
                                ;; FIXME: not always called
-                                        (prn "DRAG END BULLET")
+                               ;         (prn "DRAG END BULLET")
                                         (swap! state assoc :dragging false))})]))
 
 
