@@ -13,7 +13,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    [clojure.string :as string]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
