@@ -534,22 +534,26 @@
            ;; TODO: create listener that lets user exit context menu if click outside
            [button {:on-click (fn [e]
                                 (let [selected-items @(subscribe [:selected/items])
-                                      ids (map (fn [x] [:block/uid x]) selected-items)
-                                      block-refs (d/pull-many @db/dsdb '[*] ids)
-                                      dt-data (cond
-                                                (= show :one) (str "((" uid "))")
-                                                (= show :many) (dt/write-transit-str
-                                                                 {:db-id       nil ;; roam has a value for this
-                                                                  :type        :copy ;; or :cut
-                                                                  :copied-data block-refs}))]
-                                  (swap! state assoc :context-menu/show false)
-                                  (let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
-                                        item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
-                                    (js/console.log blob item)
-                                    (try
-                                      (.. js/navigator -clipboard (write [item]))
-                                      (catch js/Object e
-                                        (prn e))))))}
+                                      ;; use this when using datascript-transit
+                                      ;uids (map (fn [x] [:block/uid x]) selected-items)
+                                      ;blocks (d/pull-many @db/dsdb '[*] ids)
+                                      data (cond
+                                             (= show :one) (str "((" uid "))")
+                                             (= show :many) (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                                                                 (str/join "")))]
+                                  (.. js/navigator -clipboard (writeText data))
+                                  (swap! state assoc :context-menu/show false)))}
+                                  ; TODO: unable to copy with roam/data as data type. leaving this scrap here until return to this problem
+                                  ;(= show :many) (dt/write-transit-str
+                                  ;                 {:db-id       nil ;; roam has a value for this
+                                  ;                  :type        :copy ;; or :cut
+                                  ;                  :copied-data block-refs}))]
+                                  ;(let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
+                                  ;      item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
+                                  ;  (.then (.. js/navigator -clipboard (write [item]))
+                                  ;         #(js/console.log "suc" %)
+                                  ;         #(js/console.log "fail" %)))))}
+
 
 
             (cond
