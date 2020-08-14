@@ -22,6 +22,10 @@
                                   :http-root    "resources/public"
                                   :http-port    3000}}
 
+          :main {:target :node-script
+                 :output-to "resources/main.js"
+                 :main athens.main.core/main}
+
           :devcards         {:asset-path "js/devcards"
                              :modules {:main {:init-fn athens.devcards/main}}
                              :compiler-options {:devcards true}
