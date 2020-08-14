@@ -1,9 +1,13 @@
 (ns athens.main.core
-  (:require ["electron" :refer [app BrowserWindow crashReporter]]))
+  (:require
+    ["electron" :refer [app BrowserWindow crashReporter]]))
+
 
 (def main-window (atom nil))
 
-(defn init-browser []
+
+(defn init-browser
+  []
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600})))
@@ -11,7 +15,9 @@
   (.loadURL @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on @main-window "closed" #(reset! main-window nil)))
 
-(defn main []
+
+(defn main
+  []
   ; CrashReporter can just be omitted
   (.start crashReporter
           (clj->js
