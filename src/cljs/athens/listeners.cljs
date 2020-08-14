@@ -81,28 +81,16 @@
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
+    (prn e (.. e -type))
     (when (not-empty selected-items)
       (dispatch [:selected/clear-items]))
     (when (and (nil? closest) editing-uid)
       (dispatch [:editing/uid nil]))))
 
 
-;; -- Turn read block or header into editable on mouse down --------------
-
-;; (defn edit-block
-;;   [e]
-;;   ;; Consider refactor if we add more editable targets
-;;   (let [closest-block (.. e -target (closest ".block-content"))
-;;         closest-block-header (.. e -target (closest ".block-header"))
-;;         closest-page-header (.. e -target (closest ".page-header"))
-;;         closest (or closest-block closest-block-header closest-page-header)]
-;;     (when closest
-;;       (dispatch [:editing/uid (.. closest -dataset -uid)]))))
-
-
 ;; -- Close Athena -------------------------------------------------------
 
-(defn mouse-down-outside-athena
+(defn click-outside-athena
   [e]
   (let [athena? @(subscribe [:athena/open])
         closest (.. e -target (closest ".athena"))]
@@ -175,8 +163,8 @@
 (defn init
   []
   ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
-  (events/listen js/window EventType.MOUSEDOWN unfocus)
-  (events/listen js/window EventType.MOUSEDOWN mouse-down-outside-athena)
+  (events/listen js/window EventType.CLICK unfocus)
+  (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)
   (events/listen js/window EventType.COPY copy)

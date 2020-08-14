@@ -6,6 +6,7 @@
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
+    [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
     [athens.views.buttons :refer [button]]
@@ -13,6 +14,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    #_[datascript.transit :as dt]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -487,54 +489,104 @@
                            :on-change     (fn [e] (block-on-change e uid state))
                            :on-paste      (fn [e] (paste e uid state))
                            :on-key-down   (fn [e] (block-key-down e uid state))
-                           :on-mouse-down (fn [e]
-                                            ;; TODO: allow user to select multiple times while holding shift
-                                            (if (.. e -shiftKey)
-                                              (let [target (.. e -target)
-                                                    page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-                                                    source-uid @(subscribe [:editing/uid])
-                                                    target-block (.. target (closest ".block-container"))
-                                                    blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-                                                    [start end] (-> (keep-indexed (fn [i el]
-                                                                                    (when (or (= el target-block)
-                                                                                              (= source-uid (.. el -dataset -uid)))
-                                                                                      i))
-                                                                                  blocks))]
-                                                (when (and start end)
-                                                  (let [selected-blocks (subvec blocks start (inc end))
-                                                        selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                    (dispatch [:editing/uid nil])
-                                                    (dispatch [:selected/add-items selected-uids]))))
-                                              (do
-                                                (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
-                                                (events/listen js/window EventType.MOUSEUP multi-block-select-up))))}]
-
-;;(dispatch [:selected/add-item uid]))}]
+                           ;; TODO: allow user to select multiple times while holding shift
+                           ;; FIXME: always unselects on mouse up
+                           :on-mouse-down (fn [_]
+                                            (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
+                                            (events/listen js/window EventType.MOUSEUP multi-block-select-up))
+                           :on-click      (fn [e]
+                                            (let [source-uid @(subscribe [:editing/uid])]
+                                              ;; if shift key is held when user clicks across multiple blocks, select the blocks
+                                              (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
+                                                (let [target (.. e -target)
+                                                      page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+                                                      target-block (.. target (closest ".block-container"))
+                                                      blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
+                                                      [start end] (-> (keep-indexed (fn [i el]
+                                                                                      (when (or (= el target-block)
+                                                                                                (= source-uid (.. el -dataset -uid)))
+                                                                                        i))
+                                                                                    blocks))]
+                                                  (when (and start end)
+                                                    (let [selected-blocks (subvec blocks start (inc end))
+                                                          selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+                                                      (dispatch [:editing/uid nil])
+                                                      (dispatch [:selected/add-items selected-uids])))))))}]
        [parse-and-render string uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 
 (defn bullet-el
   [_ _]
-  (fn [{:block/keys [uid children open]} state]
-    [:span (use-style bullet-style
-                      {:class         [(when (and (seq children) (not open))
-                                         "closed-with-children")]
-                       :on-mouse-over #(swap! state assoc :tooltip true)
-                       :on-mouse-out  (fn [e]
-                                        (let [related (.. e -relatedTarget)]
-                                          (when-not (and related (contains related "tooltip"))
-                                            (swap! state assoc :tooltip false))))
-                       :draggable     true
-                       :on-drag-start (fn [e]
-                                        (set! (.. e -dataTransfer -effectAllowed) "move")
-                                        (.. e -dataTransfer (setData "text/plain" uid))
-                               ;;(dispatch [:dragging/uid uid])
-                                        (swap! state assoc :dragging true))
-                       :on-drag-end   (fn [_]
-                               ;; FIXME: not always called
-                                        (prn "DRAG END BULLET")
-                                        (swap! state assoc :dragging false))})]))
+  (fn [block state]
+    (let [{:block/keys [uid children open]} block
+          {:context-menu/keys [show x y]} @state]
+
+      [:<>
+       (when show
+         [:div (merge (use-style dropdown-style)
+                      {:style {:position "fixed"
+                               :x        (str x "px")
+                               :y        (str y "px")}})
+          [:div (use-style menu-style)
+           ;; TODO: create listener that lets user exit context menu if click outside
+           [button {:on-click (fn [_]
+                                (let [selected-items @(subscribe [:selected/items])
+                                      ;; use this when using datascript-transit
+                                      ;uids (map (fn [x] [:block/uid x]) selected-items)
+                                      ;blocks (d/pull-many @db/dsdb '[*] ids)
+                                      data (cond
+                                             (= show :one) (str "((" uid "))")
+                                             (= show :many) (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                                                                 (str/join "")))]
+                                  (.. js/navigator -clipboard (writeText data))
+                                  (swap! state assoc :context-menu/show false)))}
+                                  ; TODO: unable to copy with roam/data as data type. leaving this scrap here until return to this problem
+                                  ;(= show :many) (dt/write-transit-str
+                                  ;                 {:db-id       nil ;; roam has a value for this
+                                  ;                  :type        :copy ;; or :cut
+                                  ;                  :copied-data block-refs}))]
+                                  ;(let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
+                                  ;      item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
+                                  ;  (.then (.. js/navigator -clipboard (write [item]))
+                                  ;         #(js/console.log "suc" %)
+                                  ;         #(js/console.log "fail" %)))))}
+
+
+
+            (cond
+              (= show :one) "Copy block ref"
+              (= show :many) "Copy block refs")]]])
+       [:span (use-style bullet-style
+                         {:class           [(when (and (seq children) (not open))
+                                              "closed-with-children")]
+                          :on-mouse-over   #(swap! state assoc :tooltip true)
+                          :on-mouse-out    (fn [e]
+                                             (let [related (.. e -relatedTarget)]
+                                               (when-not (and related (contains related "tooltip"))
+                                                 (swap! state assoc :tooltip false))))
+                          :on-click        (fn [e] (navigate-uid uid e))
+                          :draggable       true
+                          :on-context-menu (fn [e]
+                                             (.. e preventDefault)
+                                             (let [selected-blocks @(subscribe [:selected/items])
+                                                   rect (.. e -target getBoundingClientRect)
+                                                   new-context-menu-state (merge {:context-menu/x    (.. rect -left)
+                                                                                  :context-menu/y    (.. rect -bottom)
+                                                                                  :context-menu/show (if (empty? selected-blocks)
+                                                                                                       :one
+                                                                                                       :many)})]
+                                               (if (empty? selected-blocks)
+                                                 (swap! state merge new-context-menu-state)
+                                                 (swap! state merge new-context-menu-state))))
+                          :on-drag-start   (fn [e]
+                                             (set! (.. e -dataTransfer -effectAllowed) "move")
+                                             (.. e -dataTransfer (setData "text/plain" uid))
+                                             (swap! state assoc :dragging true))
+                          :on-drag-end     (fn [_]
+                                             ;; FIXME: not always called
+                                             ;         (prn "DRAG END BULLET")
+                                             (swap! state assoc :dragging false))})]])))
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
@@ -549,7 +601,10 @@
                        :dragging false
                        :drag-target nil
                        :edit/time (:edit/time block)
-                       :last-keydown nil})]
+                       :last-keydown nil
+                       :context-menu/x nil
+                       :context-menu/y nil
+                       :context-menu/show false})]
     (add-watch state :string-listener
                (fn [_context _atom old new]
                  (let [{:keys [atom-string]} new]
