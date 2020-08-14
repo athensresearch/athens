@@ -14,7 +14,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    [datascript.transit :as dt]
+    #_[datascript.transit :as dt]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -23,8 +23,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [datascript.core :as d])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       EventType)))
@@ -482,38 +481,37 @@
              :on-click (fn [e]
                          (when (false? (.. e -shiftKey))
                            (dispatch [:editing/uid uid])))}
-       [autosize/textarea {:value       (:atom-string @state)
-                           :class       [(when is-editing "is-editing") "textarea"]
-                           :auto-focus  true
-                           :id          (str "editable-uid-" uid)
+       [autosize/textarea {:value         (:atom-string @state)
+                           :class         [(when is-editing "is-editing") "textarea"]
+                           :auto-focus    true
+                           :id            (str "editable-uid-" uid)
                            ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybindings
-                           :on-change   (fn [e] (block-on-change e uid state))
-                           :on-paste    (fn [e] (paste e uid state))
-                           :on-key-down (fn [e] (block-key-down e uid state))
+                           :on-change     (fn [e] (block-on-change e uid state))
+                           :on-paste      (fn [e] (paste e uid state))
+                           :on-key-down   (fn [e] (block-key-down e uid state))
                            ;; TODO: allow user to select multiple times while holding shift
                            ;; FIXME: always unselects on mouse up
-                           :on-mouse-down (fn [e]
-                                            (do
-                                              (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
-                                              (events/listen js/window EventType.MOUSEUP multi-block-select-up)))
-                           :on-click    (fn [e]
-                                          (let [source-uid @(subscribe [:editing/uid])]
-                                            ;; if shift key is held when user clicks across multiple blocks, select the blocks
-                                            (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
-                                              (let [target (.. e -target)
-                                                    page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-                                                    target-block (.. target (closest ".block-container"))
-                                                    blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-                                                    [start end] (-> (keep-indexed (fn [i el]
-                                                                                    (when (or (= el target-block)
-                                                                                              (= source-uid (.. el -dataset -uid)))
-                                                                                      i))
-                                                                                  blocks))]
-                                                (when (and start end)
-                                                  (let [selected-blocks (subvec blocks start (inc end))
-                                                        selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                    (dispatch [:editing/uid nil])
-                                                    (dispatch [:selected/add-items selected-uids])))))))}]
+                           :on-mouse-down (fn [_]
+                                            (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
+                                            (events/listen js/window EventType.MOUSEUP multi-block-select-up))
+                           :on-click      (fn [e]
+                                            (let [source-uid @(subscribe [:editing/uid])]
+                                              ;; if shift key is held when user clicks across multiple blocks, select the blocks
+                                              (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
+                                                (let [target (.. e -target)
+                                                      page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+                                                      target-block (.. target (closest ".block-container"))
+                                                      blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
+                                                      [start end] (-> (keep-indexed (fn [i el]
+                                                                                      (when (or (= el target-block)
+                                                                                                (= source-uid (.. el -dataset -uid)))
+                                                                                        i))
+                                                                                    blocks))]
+                                                  (when (and start end)
+                                                    (let [selected-blocks (subvec blocks start (inc end))
+                                                          selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+                                                      (dispatch [:editing/uid nil])
+                                                      (dispatch [:selected/add-items selected-uids])))))))}]
        [parse-and-render string uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
@@ -532,7 +530,7 @@
                                :y        (str y "px")}})
           [:div (use-style menu-style)
            ;; TODO: create listener that lets user exit context menu if click outside
-           [button {:on-click (fn [e]
+           [button {:on-click (fn [_]
                                 (let [selected-items @(subscribe [:selected/items])
                                       ;; use this when using datascript-transit
                                       ;uids (map (fn [x] [:block/uid x]) selected-items)
