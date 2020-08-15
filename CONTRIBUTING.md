@@ -172,6 +172,10 @@ OS - MacOS Catalina v10.15.5
 1. You should see a new buffer open within your current Emacs window with a ClojureScript REPL.
 ![shadow cljs REPL connected](doc/emacs-cider-connected-repl.png)
 
+You now have access to a REPL. If you want to load the file you are editing in it:
+1. <kbd>C-c C-k</kbd>, or `cider-load-buffer`
+1. Then, <kbd>C-c M-n n</kbd>, or `cider-repl-set-ns` and you should be able to have the file's namespace in your REPL (e.g. `athens.db>`) 
+
 ## Calva
 
 ```
