@@ -27,3 +27,6 @@
 # Emacs files
 .#*
 .calva
+
+# Placeholder for writing to db
+data/*.transit

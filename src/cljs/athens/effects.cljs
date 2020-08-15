@@ -15,7 +15,6 @@
 (def stream (js/require "stream"))
 
 
-
 ;;; Effects
 
 
@@ -28,7 +27,7 @@
     (let [outputs (:tx-data (transact! db/dsdb datoms))]
       (pprint outputs)
       (def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
-      (def w (.createWriteStream fs "./data/tmp.transit"))
+      (def w (.createWriteStream fs "./data/my-db.transit"))
       (.pipe r w))))
 
 
