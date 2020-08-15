@@ -1,12 +1,27 @@
 {
+  "name": "athens",
+  "author": "athensresearch",
+  "version": "1.0.0",
+  "description": "Open-Source Networked Thought",
   "main": "resources/main.js",
+  "scripts": {
+    "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
+    "build": "./node_modules/.bin/shadow-cljs compile main renderer",
+    "release": "./node_modules/.bin/shadow-cljs release main renderer",
+    "clean": "rm -rf resources/public/js/* && rm -rf target",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
   "devDependencies": {
+    "electron": "^9.2.0",
+    "electron-builder": "20.14.7",
     "gh-pages": "^2.2.0",
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
-    "shadow-cljs": "2.8.110"
+    "shadow-cljs": "^2.10.21",
+    "source-map-support": "^0.5.19"
   },
   "dependencies": {
     "@js-joda/core": "1.12.0",
@@ -15,9 +30,9 @@
     "@material-ui/core": "^4.10.1",
     "@material-ui/icons": "^4.9.1",
     "create-react-class": "^15.6.3",
-    "electron": "^9.2.0",
     "highlight.js": "9.15.10",
     "marked": "^1.0.0",
+    "nedb": "^1.8.0",
     "react": "16.9.0",
     "react-dom": "16.9.0",
     "react-highlight.js": "1.0.7"
