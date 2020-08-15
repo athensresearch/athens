@@ -1,7 +1,6 @@
 {
   "main": "resources/main.js",
   "devDependencies": {
-    "electron": "^9.2.0",
     "gh-pages": "^2.2.0",
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
@@ -16,6 +15,7 @@
     "@material-ui/core": "^4.10.1",
     "@material-ui/icons": "^4.9.1",
     "create-react-class": "^15.6.3",
+    "electron": "^9.2.0",
     "highlight.js": "9.15.10",
     "marked": "^1.0.0",
     "react": "16.9.0",
