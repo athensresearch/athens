@@ -109,19 +109,22 @@
         shift (.. e -shiftKey)]
 
     (cond
-      (and (= key KeyCodes.Z) meta shift)
+      (and (= key KeyCodes.S) ctrl)
+      (dispatch [:save])
+
+      (and (= key KeyCodes.Z) ctrl shift)
       (dispatch [:redo])
 
-      (and (= key KeyCodes.Z) meta)
+      (and (= key KeyCodes.Z) ctrl)
       (dispatch [:undo])
 
-      (and (= key KeyCodes.K) meta)
+      (and (= key KeyCodes.K) ctrl)
       (dispatch [:athena/toggle])
 
       (and (= key KeyCodes.G) ctrl)
       (dispatch [:devtool/toggle])
 
-      (and (= key KeyCodes.R) ctrl)
+      (and (= key KeyCodes.L) ctrl shift)
       (dispatch [:right-sidebar/toggle])
 
       (and (= key KeyCodes.L) ctrl)

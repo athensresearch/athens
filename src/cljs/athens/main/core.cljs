@@ -11,6 +11,7 @@
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600
+                                  :autoHideMenuBar true
                                   :webPreferences {:nodeIntegration true
                                                    :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)

@@ -1,9 +1,9 @@
 (ns athens.views
   (:require
     [athens.db :as db]
-    [athens.devcards.app-toolbar :refer [app-toolbar]]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
+    [athens.views.app-toolbar :refer [app-toolbar]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]

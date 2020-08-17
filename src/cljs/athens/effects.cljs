@@ -11,8 +11,8 @@
     [re-frame.core :refer [dispatch reg-fx]]))
 
 
-(def fs (js/require "fs"))
-(def stream (js/require "stream"))
+;(def fs (js/require "fs"))
+;(def stream (js/require "stream"))
 
 
 ;;; Effects
@@ -25,10 +25,11 @@
     (pprint datoms)
     (prn "TX OUTPUTS")
     (let [outputs (:tx-data (transact! db/dsdb datoms))]
-      (pprint outputs)
-      (def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
-      (def w (.createWriteStream fs "./data/my-db.transit"))
-      (.pipe r w))))
+      (pprint outputs))))
+
+      ;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
+      ;(def w (.createWriteStream fs "./data/my-db.transit"))
+      ;(.pipe r w))))
 
 
 (reg-fx
@@ -66,8 +67,3 @@
         :clear (do (js/clearTimeout (get @timers id))
                    (swap! timers dissoc id))))))
 
-;(reg-fx
-;  :fs/write-stream
-;  (fn [_]
-;    (createReadStream "./package.json")
-;    (createWriteStream "./package-copy.json")))

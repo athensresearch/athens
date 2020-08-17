@@ -162,8 +162,8 @@
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         current-route (subscribe [:current-route])
-        ;db-filepath (subscribe [:db/filepath])
-        ;db-synced (subscribe [:db/synced])
+        db-filepath (subscribe [:db/filepath])
+        db-synced (subscribe [:db/synced])
         import-modal-open? (r/atom false)
         route-name (-> @current-route :data :name)]
 
@@ -200,9 +200,10 @@
          ;[button {:on-click save-dialog!}
          ; [:> mui-icons/Save]]
 
-         ;[(r/adapt-react-class mui-icons/FiberManualRecord) {:style {:color (color (if @db-synced
-         ;                                                                            :confirmation-color
-         ;                                                                            :highlight-color))}}]
+         [(r/adapt-react-class mui-icons/FiberManualRecord)
+          {:style {:color (color (if @db-synced
+                                   :confirmation-color
+                                   :highlight-color))}}]
 
          [separator]
          [button {:on-click #(reset! import-modal-open? true)}

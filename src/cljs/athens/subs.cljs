@@ -11,6 +11,18 @@
 
 
 (re-frame/reg-sub
+  :db/filepath
+  (fn [db _]
+    (:db/filepath db)))
+
+
+(re-frame/reg-sub
+  :db/synced
+  (fn [db _]
+    (:db/synced db)))
+
+
+(re-frame/reg-sub
   :app-db
   (fn [db _]
     db))

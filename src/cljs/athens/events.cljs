@@ -7,7 +7,7 @@
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.dom :refer [getElement]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -16,6 +16,24 @@
   :init-rfdb
   (fn-traced [_ _]
              db/rfdb))
+
+
+(reg-event-db
+  :db/update-filepath
+  (fn [db [_ filepath]]
+    (assoc db :db/filepath filepath)))
+
+
+(reg-event-db
+  :db/sync
+  (fn [db [_]]
+    (assoc db :db/synced true)))
+
+
+(reg-event-db
+  :db/not-synced
+  (fn [db [_]]
+    (assoc db :db/synced false)))
 
 
 (reg-event-db
@@ -267,7 +285,8 @@
 (reg-event-fx
   :transact
   (fn [_ [_ datoms]]
-    {:transact! datoms}))
+    {:transact! datoms
+     :dispatch [:db/not-synced]}))
 
 
 (reg-event-fx
@@ -307,6 +326,14 @@
   :page/remove-shortcut
   (fn [_ [_ uid]]
     {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
+
+
+(reg-event-fx
+  :save
+  (fn [_ _]
+    (let [db-filepath (subscribe [:db/filepath])]
+      {:fs/write! [@db-filepath (dt/write-transit-str @db/dsdb)]
+       :dispatch  [:db/sync]})))
 
 
 (reg-event-fx

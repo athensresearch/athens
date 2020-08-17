@@ -3,6 +3,7 @@
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
+    [athens.electron]
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
@@ -29,13 +30,20 @@
                 (getElement "app")))
 
 
+;(let [agent (.. js/navigator -userAgent)
+;      idx (clojure.string/index-of agent "Electron/")]
+;  (when (< -1 idx)
+;    (require '[athens.electron])))
+
+
 (defn init
   []
   (stylefy/tag "body" app-styles)
   (stylefy/init)
   (listeners/init)
-  (rf/dispatch-sync [:init-rfdb])
-  (rf/dispatch-sync [:loading/unset])
+  (rf/dispatch-sync [:desktop/boot])
+  ;(rf/dispatch-sync [:init-rfdb])
+  ;(rf/dispatch-sync [:loading/unset])
   ;;(rf/dispatch-sync [:boot])
   (dev-setup)
   (mount-root))
