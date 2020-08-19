@@ -57,7 +57,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build and publish app
-        run: yarn dist
+        run: yarn build && yarn dist
 
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
