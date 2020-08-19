@@ -20,9 +20,8 @@
   "scripts": {
     "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
     "build": "./node_modules/.bin/shadow-cljs compile main renderer",
-    "release": "./node_modules/.bin/shadow-cljs release main renderer",
     "clean": "rm -rf resources/public/js/* && rm -rf target && rm -rf .shadow-cljs",
-    "dist": "rm -rf .shadow-cljs && yarn build && electron-builder -p always"
+    "dist": "electron-builder -p always"
   },
   "devDependencies": {
     "electron": "^9.2.0",

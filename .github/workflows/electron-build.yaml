@@ -1,6 +1,15 @@
-name: Build/release
+name: build/electron
 
-on: push
+on:
+  push:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+
 
 jobs:
   release:
@@ -14,10 +23,37 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v1
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Restore maven
+        uses: actions/cache@v1
+        id: restore-maven
         with:
-          node-version: 10
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Fetch maven
+        if: steps.restore-maven.outputs.cache-hit != 'true'
+        run: lein deps
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Restore yarn
+        uses: actions/cache@v1
+        id: restore-yarn
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Fetch yarn
+        run: yarn install --frozen-lockfile
+
+      - name: Build and publish app
+        run: yarn dist
 
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
