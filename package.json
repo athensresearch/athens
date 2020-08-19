@@ -1,21 +1,32 @@
 {
   "name": "athens",
   "author": "athensresearch",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Open-Source Networked Thought",
   "main": "resources/main.js",
+  "build": {
+    "generateUpdatesFilesForAllChannels": true,
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    },
+    "publish": {
+      "provider": "s3",
+      "bucket": "test-update",
+      "endpoint": "http://127.0.0.1:9000"
+    }
+  },
   "scripts": {
     "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
     "build": "./node_modules/.bin/shadow-cljs compile main renderer",
     "release": "./node_modules/.bin/shadow-cljs release main renderer",
-    "clean": "rm -rf resources/public/js/* && rm -rf target",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "clean": "rm -rf resources/public/js/* && rm -rf target && rm -rf .shadow-cljs",
+    "dist": "rm -rf .shadow-cljs && yarn build && electron-builder -p always"
   },
   "devDependencies": {
     "electron": "^9.2.0",
     "electron-builder": "22.8.1",
-    "electron-updater": "^4.3.4",
     "gh-pages": "^2.2.0",
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
@@ -32,6 +43,7 @@
     "@material-ui/icons": "^4.9.1",
     "create-react-class": "^15.6.3",
     "electron-log": "^4.2.4",
+    "electron-updater": "^4.3.4",
     "highlight.js": "9.15.10",
     "marked": "^1.0.0",
     "nedb": "^1.8.0",

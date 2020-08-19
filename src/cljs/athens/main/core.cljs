@@ -7,7 +7,10 @@
 
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
-(.. log (info "App starting..."))
+(set! (.. autoUpdater -channel) "beta")
+
+;(.. log (info "AHHHHHHHHHHh"))
+(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
 
 
 
