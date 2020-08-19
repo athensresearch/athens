@@ -36,37 +36,50 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Fetch maven
-        if: steps.restore-maven.outputs.cache-hit != 'true'
-        run: lein deps
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Restore yarn
-        uses: actions/cache@v1
-        id: restore-yarn
+      - name: Prepare java
+        uses: actions/setup-java@v1
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          java-version: "11.0.8"
 
-      - name: Fetch yarn
-        run: yarn install --frozen-lockfile
-
-      - name: Build and publish app
-        run: yarn build && yarn dist
-
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
+      - name: Install leiningen
+        uses: DeLaGuardo/setup-clojure@master
         with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+          lein: 2.9.4
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Check leiningen version
+        run: lein -v
 
+#      - name: Fetch maven
+#        if: steps.restore-maven.outputs.cache-hit != 'true'
+#        run: lein deps
+#
+#      - name: Get yarn cache directory path
+#        id: yarn-cache-dir-path
+#        run: echo "::set-output name=dir::$(yarn cache dir)"
+#
+#      - name: Restore yarn
+#        uses: actions/cache@v1
+#        id: restore-yarn
+#        with:
+#          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+#          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+#          restore-keys: |
+#            ${{ runner.os }}-yarn-
+#
+#      - name: Fetch yarn
+#        run: yarn install --frozen-lockfile
+#
+#      - name: Build and publish app
+#        run: yarn build && yarn dist
+#
+#      - name: Build/release Electron app
+#        uses: samuelmeuli/action-electron-builder@v1
+#        with:
+#          # GitHub token, automatically provided to the action
+#          # (No need to define this secret in the repo settings)
+#          github_token: ${{ secrets.github_token }}
+#
+#          # If the commit is tagged with a version (e.g. "v1.0.0"),
+#          # release the app after building
+#          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+#
