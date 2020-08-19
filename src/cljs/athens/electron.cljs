@@ -2,8 +2,9 @@
   (:require
     [athens.db :as db :refer [dsdb]]
     [datascript.transit :as dt :refer [write-transit-str]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]
-    [day8.re-frame.async-flow-fx]))
+    [day8.re-frame.async-flow-fx]
+    [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
+
 
 (def electron (js/require "electron"))
 (def remote (.. electron -remote))
@@ -65,13 +66,14 @@
                                    {:when :seen? :events :loading/unset :halt? true}]}}))
 
 
-
 (reg-fx
   :fs/write!
   (fn [[filepath data]]
     (.writeFileSync fs filepath data)))
 
-(defn open-dialog! []
+
+(defn open-dialog!
+  []
   (let [res (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
                                                   :filters [{:name "Transit" :extensions ["transit"]}]}))
         filepath (first res)]
@@ -79,7 +81,8 @@
       (dispatch [:db/update-filepath filepath]))))
 
 
-(defn save-dialog! []
+(defn save-dialog!
+  []
   (let [filepath (.showSaveDialogSync dialog (clj->js {:title "my-db"
                                                        :filters [{:name "Transit" :extensions ["transit"]}]}))]
     (dispatch [:db/update-filepath filepath])))

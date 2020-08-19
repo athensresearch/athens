@@ -19,3 +19,5 @@ athens.db/v-by-ea
 athens.keybindings/is-character-key?
 athens.keybindings/write-char
 athens.main.core/main
+athens.electron/open-dialog!
+athens.electron/save-dialog!

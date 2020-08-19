@@ -1,7 +1,8 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow crashReporter]]
+    ["electron" :refer [app BrowserWindow #_crashReporter]]
     ["electron-updater" :refer [autoUpdater]]))
+
 
 (def log (js/require "electron-log"))
 
@@ -11,7 +12,6 @@
 
 ;(.. log (info "AHHHHHHHHHHh"))
 (.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
-
 
 
 (def main-window (atom nil))

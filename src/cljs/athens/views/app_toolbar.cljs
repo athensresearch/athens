@@ -115,7 +115,6 @@
                                                   :color (color :warning-color)}}])
 
 
-
 (defn features-table
   []
   [:table (use-style features-table-style)
@@ -162,7 +161,7 @@
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         current-route (subscribe [:current-route])
-        db-filepath (subscribe [:db/filepath])
+        ;db-filepath (subscribe [:db/filepath])
         db-synced (subscribe [:db/synced])
         import-modal-open? (r/atom false)
         route-name (-> @current-route :data :name)]

@@ -105,7 +105,7 @@
   [e]
   (let [key (.. e -keyCode)
         ctrl (.. e -ctrlKey)
-        meta (.. e -metaKey)
+        ;meta (.. e -metaKey)
         shift (.. e -shiftKey)]
 
     (cond
