@@ -31,6 +31,7 @@
     "@material-ui/core": "^4.10.1",
     "@material-ui/icons": "^4.9.1",
     "create-react-class": "^15.6.3",
+    "electron-log": "^4.2.4",
     "highlight.js": "9.15.10",
     "marked": "^1.0.0",
     "nedb": "^1.8.0",

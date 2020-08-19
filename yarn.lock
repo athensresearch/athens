@@ -1158,6 +1158,11 @@ electron-builder@22.8.1:
     update-notifier "^4.1.0"
     yargs "^15.4.1"
 
+electron-log@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-4.2.4.tgz#a13e42a9fc42ca2cc7d2603c3746352efa82112e"
+  integrity sha512-CXbDU+Iwi+TjKzugKZmTRIORIPe3uQRqgChUl19fkW/reFUn5WP7dt+cNGT3bkLV8xfPilpkPFv33HgtmLLewQ==
+
 electron-publish@22.8.1:
   version "22.8.1"
   resolved "https://registry.yarnpkg.com/electron-publish/-/electron-publish-22.8.1.tgz#747e0d7f921cd1808f999713d29f599dbb390c4f"
