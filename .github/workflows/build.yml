@@ -12,85 +12,85 @@ on:
 
 jobs:
 
-#   test:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - name: Cache deps
-#         uses: actions/cache@v1
-#         id: cache-deps
-#         with:
-#           path: ~/.m2/repository
-#           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
-#           restore-keys: ${{ runner.os }}-maven-
-#
-#       - name: Fetch deps
-#         if: steps.cache-deps.outputs.cache-hit != 'true'
-#         run: lein deps
-#
-#       - name: Run tests
-#         run: script/test/jvm
-#
-#   lint:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - uses: DeLaGuardo/setup-clj-kondo@v1
-#         with:
-#           version: '2020.05.09'
-#
-#       - name: Lint
-#         run: script/lint
-#
-#   style:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - name: Style
-#         run: script/style
-#
-#   carve:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - uses: DeLaGuardo/setup-clojure@2.0
-#         with:
-#           tools-deps: '1.10.1.469'
-#
-#       - name: Cache deps
-#         uses: actions/cache@v1
-#         id: cache-deps
-#         with:
-#           path: ~/.m2/repository
-#           key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
-#           restore-keys: ${{ runner.os }}-maven-
-#
-#       - name: Fetch deps
-#         if: steps.cache-deps.outputs.cache-hit != 'true'
-#         run: clojure -A:carve -Stree
-#
-#       - name: Carve unused vars
-#         run: script/carve
+   test:
+     runs-on: ubuntu-18.04
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
+
+       - name: Cache deps
+         uses: actions/cache@v1
+         id: cache-deps
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+           restore-keys: ${{ runner.os }}-maven-
+
+       - name: Fetch deps
+         if: steps.cache-deps.outputs.cache-hit != 'true'
+         run: lein deps
+
+       - name: Run tests
+         run: script/test/jvm
+
+   lint:
+     runs-on: ubuntu-18.04
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
+
+       - uses: DeLaGuardo/setup-clj-kondo@v1
+         with:
+           version: '2020.05.09'
+
+       - name: Lint
+         run: script/lint
+
+   style:
+     runs-on: ubuntu-18.04
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
+
+       - name: Style
+         run: script/style
+
+   carve:
+     runs-on: ubuntu-18.04
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
+
+       - uses: DeLaGuardo/setup-clojure@2.0
+         with:
+           tools-deps: '1.10.1.469'
+
+       - name: Cache deps
+         uses: actions/cache@v1
+         id: cache-deps
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
+           restore-keys: ${{ runner.os }}-maven-
+
+       - name: Fetch deps
+         if: steps.cache-deps.outputs.cache-hit != 'true'
+         run: clojure -A:carve -Stree
+
+       - name: Carve unused vars
+         run: script/carve
 
 
    # Only deploy if a commit is pushed. This lets the previous jobs run on PRs. This also runs when a PR is merged, because a merge is a push.
@@ -154,7 +154,6 @@ jobs:
          os: [ubuntu-latest, macos-latest] # windows-latest doesn't work yet. see https://github.com/DeLaGuardo/setup-clojure/issues/1
 
      steps:
-       - run: env
        - name: Check out Git repository
          uses: actions/checkout@v1
 
