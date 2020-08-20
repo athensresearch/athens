@@ -66,6 +66,10 @@
                                    {:when :seen? :events :loading/unset :halt? true}]}}))
 
 
+;; TODO: implement with streams
+;;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
+;;(def w (.createWriteStream fs "./data/my-db.transit"))
+;;(.pipe r w)
 (reg-fx
   :fs/write!
   (fn [[filepath data]]

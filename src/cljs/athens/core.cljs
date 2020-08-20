@@ -30,12 +30,6 @@
                 (getElement "app")))
 
 
-;(let [agent (.. js/navigator -userAgent)
-;      idx (clojure.string/index-of agent "Electron/")]
-;  (when (< -1 idx)
-;    (require '[athens.electron])))
-
-
 (defn init
   []
   (stylefy/tag "body" app-styles)

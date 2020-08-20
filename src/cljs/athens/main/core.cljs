@@ -1,6 +1,6 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow #_crashReporter]]
+    ["electron" :refer [app BrowserWindow]]
     ["electron-updater" :refer [autoUpdater]]))
 
 
@@ -10,7 +10,6 @@
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -channel) "beta")
 
-;(.. log (info "AHHHHHHHHHHh"))
 (.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
 
 
@@ -70,14 +69,6 @@
 
 (defn main
   []
-  ; CrashReporter can just be omitted
-  ;(.start crashReporter
-  ;        (clj->js
-  ;          {:companyName "MyAwesomeCompany"
-  ;           :productName "MyAwesomeApp"
-  ;           :submitURL "https://example.com/submit-url"
-  ;           :autoSubmit false}))
-
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
                                   (.quit app)))
   (.on app "ready" init-browser)

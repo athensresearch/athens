@@ -11,10 +11,6 @@
     [re-frame.core :refer [dispatch reg-fx]]))
 
 
-;(def fs (js/require "fs"))
-;(def stream (js/require "stream"))
-
-
 ;;; Effects
 
 
@@ -26,10 +22,6 @@
     (prn "TX OUTPUTS")
     (let [outputs (:tx-data (transact! db/dsdb datoms))]
       (pprint outputs))))
-
-      ;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
-      ;(def w (.createWriteStream fs "./data/my-db.transit"))
-      ;(.pipe r w))))
 
 
 (reg-fx

@@ -144,24 +144,12 @@
      [:td [feature-no]]
      [:td [feature-yes]]]]])
 
-;(defn open-dialog! []
-;  (let [res (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
-;                                                  :filters [{:name "Transit" :extensions ["transit"]}]}))
-;        filepath (first res)]
-;    (when filepath
-;      (dispatch [:db/update-filepath filepath]))))
-;
-;(defn save-dialog! []
-;  (let [filepath (.showSaveDialogSync dialog (clj->js {:title "my-db"
-;                                                       :filters [{:name "Transit" :extensions ["transit"]}]}))]
-;    (dispatch [:db/update-filepath filepath])))
 
 (defn app-toolbar
   []
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         current-route (subscribe [:current-route])
-        ;db-filepath (subscribe [:db/filepath])
         db-synced (subscribe [:db/synced])
         import-modal-open? (r/atom false)
         route-name (-> @current-route :data :name)]
@@ -173,11 +161,10 @@
          [button {:active @left-open?
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> mui-icons/Menu]]
-      ;; [separator] // for Electron implementation
-      ;; [button {:on-click-fn #(navigate :home)
-      ;;          :label [:> mui-icons/ChevronLeft]}]
-      ;; [button {:on-click-fn #(navigate :home)
-      ;;          :label [:> mui-icons/ChevronRight]}]
+         [separator]
+         ;; TODO: refactor to effects
+         [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
+         [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
          [separator]
          [button {:on-click #(navigate :home)
                   :active (when (= route-name :home) true)} [:> mui-icons/Today]]
@@ -190,23 +177,14 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
-
-         ;(if @db-filepath
-         ;  [:h6 @db-filepath]
-         ;  [:h6 "Open a" [:code " .transit "] "DB or create a new one."])
-         ;[button {:on-click open-dialog!}
-         ; [:> mui-icons/FolderOpen]]
-         ;[button {:on-click save-dialog!}
-         ; [:> mui-icons/Save]]
-
          [(r/adapt-react-class mui-icons/FiberManualRecord)
           {:style {:color (color (if @db-synced
                                    :confirmation-color
                                    :highlight-color))}}]
 
          [separator]
-         [button {:on-click #(reset! import-modal-open? true)}
-          [:> mui-icons/Publish]]
+         ;;[button {:on-click #(reset! import-modal-open? true)}
+         ;; [:> mui-icons/Publish]]
          [separator]
          [button {:active @right-open?
                   :on-click #(dispatch [:right-sidebar/toggle])}

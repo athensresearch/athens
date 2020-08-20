@@ -18,9 +18,9 @@
     }
   },
   "scripts": {
-    "dev": "./node_modules/.bin/shadow-cljs watch main renderer",
-    "build": "./node_modules/.bin/shadow-cljs compile main renderer",
-    "clean": "rm -rf resources/public/js/* && rm -rf target && rm -rf .shadow-cljs",
+    "dev": "shadow-cljs watch main renderer",
+    "build": "shadow-cljs compile main renderer",
+    "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs",
     "dist": "electron-builder -p always"
   },
   "devDependencies": {

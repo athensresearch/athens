@@ -28,8 +28,5 @@
 .#*
 .calva
 
-# Placeholder for writing to db
-data/*.transit
-
 # electron build
 dist
