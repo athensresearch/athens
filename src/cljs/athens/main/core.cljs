@@ -19,7 +19,7 @@
 (defn send-status-to-window
   [text]
   (.. log (info text))
-  (.. @main-window -webContents (send text)))
+  (.. ^js @main-window -webContents (send text)))
 
 
 (defn init-browser
@@ -28,11 +28,14 @@
                         (clj->js {:width 800
                                   :height 600
                                   :autoHideMenuBar true
+                                  :enableRemoteModule true
                                   :webPreferences {:nodeIntegration true
+                                                   :worldSafeExecuteJavaScript true
+                                                   :enableRemoteModule true
                                                    :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
-  (.loadURL @main-window (str "file://" js/__dirname "/public/index.html"))
-  (.on @main-window "closed" #(reset! main-window nil)))
+  (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
+  (.on ^js @main-window "closed" #(reset! main-window nil)))
 
 
 (defn init-updater
