@@ -81,7 +81,13 @@ Pull Java dependencies and build, then start a local HTTP server for Athens:
 lein dev
 ```
 
-When these scripts are done, your terminal will read `build complete`. Athens can then be accessed by pointing a browser to http://localhost:3000/ on UNIX or http://127.0.0.1:3000/ on Windows.
+In another terminal, run:
+
+```
+npx electron .
+```
+
+Another window should open automatically. That's your Athens!
 
 ## Running in Docker
 
