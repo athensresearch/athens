@@ -14,7 +14,7 @@
                   :exclusions [com.google.javascript/closure-compiler-unshaded
                                org.clojure/google-closure-library
                                org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.8.110"]
+                 [thheller/shadow-cljs "2.10.22"]
                  [reagent "0.10.0"]
                  [re-frame "1.0.0"]
                  [datascript "1.0.0"]
@@ -45,7 +45,9 @@
                              :linux   "xdg-open"}}}
 
   :aliases {"dev"          ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "app"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer"]]
+            "build"        ["with-profile" "dev" "do"
+                            ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "compile"      ["with-profile" "dev" "do"

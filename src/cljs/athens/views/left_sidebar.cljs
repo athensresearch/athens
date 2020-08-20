@@ -4,7 +4,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    [athens.views.buttons :refer [button]]
+    ;[athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -86,7 +86,6 @@
    :font-weight "bold"
    :text-decoration "none"
    :justify-self "flex-start"
-   :align-self "center"
    :color (color :header-text-color)
    :transition "all 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
@@ -163,4 +162,6 @@
        ;; LOGO + BOTTOM BUTTONS
       [:footer (use-sub-style left-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-       [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))
+       [:h5 (use-style {:opacity 0.5 :align-self "center"})
+        (.. (js/require "electron") -remote -app getVersion)]]]]))
+;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))

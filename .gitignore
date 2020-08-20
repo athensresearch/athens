@@ -1,5 +1,6 @@
 /out/
 /resources/public/js/
+/resources/*.js
 /target/
 /*-init.clj
 /*.log
@@ -26,3 +27,6 @@
 # Emacs files
 .#*
 .calva
+
+# electron build
+dist

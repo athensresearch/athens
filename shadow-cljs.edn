@@ -2,16 +2,14 @@
  :nrepl {:port 8777}
  :builds {:app {:target          :browser
                 :output-dir      "resources/public/js/compiled"
-                :asset-path      "/js/compiled"
+                :asset-path      "js/compiled"
                 :modules         {:shared {:entries [athens.style
                                                      athens.views.spinner]}
                                   :app {:init-fn athens.core/init
                                         :depends-on #{:shared}}}
 
-                :compiler-options {:source-map true
-                                   :source-map-detail-level :all
-                                   :source-map-include-sources-content true
-                                   :optimizations :simple}
+                :compiler-options {:closure-warnings {:global-this :off}
+                                   :closure-defines {re-frame.trace.trace-enabled? true}}
 
 
                 :dev             {:compiler-options
@@ -21,6 +19,22 @@
                                              day8.re-frame-10x.preload]
                                   :http-root    "resources/public"
                                   :http-port    3000}}
+
+          :renderer {:target :browser
+                     :output-dir "resources/public/js/compiled"
+                     :asset-path "js/compiled"
+
+                     :modules {:renderer {:init-fn athens.core/init}}
+
+                     :compiler-options {:closure-warnings {:global-this :off}
+                                        :closure-defines {re-frame.trace.trace-enabled? true}}
+
+                     :devtools {:preloads [devtools.preload
+                                           day8.re-frame.trace.preload]}}
+
+          :main {:target :node-script
+                 :output-to "resources/main.js"
+                 :main athens.main.core/main}
 
           :devcards         {:asset-path "js/devcards"
                              :modules {:main {:init-fn athens.devcards/main}}

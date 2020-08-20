@@ -17,6 +17,8 @@
 ;; -- re-frame -----------------------------------------------------------
 
 (defonce rfdb {:user                "Socrates"
+               :db/filepath         nil
+               :db/synced           true
                :current-route       nil
                :loading?            true
                :alert               nil
