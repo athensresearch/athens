@@ -27,10 +27,11 @@
                      :modules {:renderer {:init-fn athens.core/init}}
 
                      :compiler-options {:closure-warnings {:global-this :off}
+                                        :infer-externs :auto
                                         :closure-defines {re-frame.trace.trace-enabled? true}}
 
                      :devtools {:preloads [devtools.preload
-                                           day8.re-frame.trace.preload]}}
+                                           day8.re-frame-10x.preload]}}
 
           :main {:target :node-script
                  :output-to "resources/main.js"

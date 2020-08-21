@@ -145,7 +145,7 @@
 
 (defn copy
   "If blocks are selected, copy blocks as markdown list."
-  [e]
+  [^js e]
   (let [blocks @(subscribe [:selected/items])]
     (when (not-empty blocks)
       (.. e preventDefault)
@@ -155,7 +155,7 @@
 
 ;; do same as copy AND delete selected blocks
 (defn cut
-  [e]
+  [^js e]
   (let [blocks @(subscribe [:selected/items])]
     (when (not-empty blocks)
       (.. e preventDefault)
