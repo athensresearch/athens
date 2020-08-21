@@ -3,6 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
+    [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid escape-str]]
@@ -12,7 +13,7 @@
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as string]
+    [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
@@ -133,8 +134,24 @@
 
 
 (defn handler
-  [val uid]
-  (dispatch [:transact [[:db/add [:block/uid uid] :node/title val]]]))
+  [new-title uid ref-groups state]
+  (let [linked-refs (->> ref-groups
+                         first
+                         second
+                         first
+                         second)
+        old-title (:old-title @state)
+        new-refs (map (fn [{:block/keys [uid string]}]
+                        (let [new-str (str/replace string
+                                                   (patterns/linked old-title)
+                                                   (str "$1$3$4" new-title "$2$5"))]
+                          {:db/id [:block/uid uid]
+                           :block/string new-str}))
+                      linked-refs)
+        new-page {:db/id [:block/uid uid] :node/title new-title}
+        new-datoms (conj new-refs new-page)]
+    (dispatch [:transact new-datoms])
+    (swap! state assoc :old-title new-title)))
 
 
 (def db-handler (debounce handler 500))
@@ -144,8 +161,8 @@
   [uid]
   (boolean
     (try
-      (let [[m d y] (string/split uid "-")]
-        (t/date (string/join "-" [y m d])))
+      (let [[m d y] (str/split uid "-")]
+        (t/date (str/join "-" [y m d])))
       (catch js/Object _ false))))
 
 
@@ -177,10 +194,14 @@
   [_ _ _ _]
   (let [state (r/atom {:menu/show false
                        :menu/x nil
-                       :menu/y nil})]
+                       :menu/y nil
+                       :old-title nil})]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
             {:menu/keys [show x y]} @state]
+
+        (when (nil? (:old-title @state))
+          (swap! state assoc :old-title title))
 
         [:div (use-style page-style {:class ["node-page"]})
          ;; TODO: implement timeline
@@ -200,7 +221,7 @@
              {:default-value title
               :class         (when (= editing-uid uid) "is-editing")
               :auto-focus    true
-              :on-change     (fn [e] (db-handler (.. e -target -value) uid))}])
+              :on-change     (fn [e] (db-handler (.. e -target -value) uid ref-groups state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (if show
@@ -279,7 +300,7 @@
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])
         timeline-page? (is-timeline-page uid)]
-    (when-not (string/blank? title)
+    (when-not (str/blank? title)
       ;; TODO: let users toggle open/close references
       (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
                         ["Unlinked References" (get-unlinked-references (escape-str title))]]]

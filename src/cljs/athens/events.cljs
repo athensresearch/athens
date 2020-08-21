@@ -721,41 +721,6 @@
 
 
 ;;;; TODO: delete the following logic when re-implementing title merge
-
-;;(defn node-with-title
-;;  [ds title]
-;;  (d/q '[:find ?e .
-;;         :in $ ?title
-;;         :where [?e :node/title ?title]]
-;;       ds title))
-;;
-;;
-;;(defn referencing-blocks
-;;  [ds title]
-;;  (d/q '[:find ?e ?s
-;;         :in $ ?regex
-;;         :where
-;;         [?e :block/string ?s]
-;;         [(re-find ?regex ?s)]]
-;;       ds (patterns/linked title)))
-;;
-;;
-;;(defn rename-refs-tx
-;;  [old-title new-title [eid s]]
-;;  (let [new-s (str/replace
-;;                s
-;;                (patterns/linked old-title)
-;;                (str "$1$3$4" new-title "$2$5"))]
-;;    [:db/add eid :block/string new-s]))
-;;
-;;
-;;(defn rename-tx
-;;  [ds old-title new-title]
-;;  (let [eid (node-with-title ds old-title)
-;;        blocks (referencing-blocks ds old-title)]
-;;    (->> blocks
-;;         (map (partial rename-refs-tx old-title new-title))
-;;         (into [[:db/add eid :node/title new-title]]))))
 ;;
 ;;
 ;;(reg-event-fx
