@@ -14,6 +14,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
@@ -149,9 +150,11 @@
                            :block/string new-str}))
                       linked-refs)
         new-page {:db/id [:block/uid uid] :node/title new-title}
-        new-datoms (conj new-refs new-page)]
-    (dispatch [:transact new-datoms])
-    (swap! state assoc :old-title new-title)))
+        new-datoms (conj new-refs new-page)
+        prev-title (d/pull @db/dsdb '[*] [:node/title new-title])]
+    (prn new-page prev-title)))
+    ;;(dispatch [:transact new-datoms])
+    ;;(swap! state assoc :old-title new-title)))
 
 
 (def db-handler (debounce handler 500))
@@ -232,29 +235,30 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/ExpandMore]]
-
-          (when show
-            [:div (merge (use-style dropdown-style)
-                         {:style {:font-size "14px"
-                                  :position "fixed"
-                                  :left (str x "px")
-                                  :top (str y "px")}})
-             [:div (use-style menu-style)
-              (if is-shortcut?
-                [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                 [:<>
-                  [:> mui-icons/BookmarkBorder]
-                  [:span "Remove Shortcut"]]]
-                [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                 [:<>
-                  [:> mui-icons/Bookmark]
-                  [:span "Add Shortcut"]]])
-              [:hr (use-style menu-separator-style)]
-              [button {:on-click #(do
-                                    (navigate :pages)
-                                    (dispatch [:page/delete uid]))}
-               [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
           (parse-renderer/parse-and-render title uid)]
+
+         ;; Dropdown
+         (when show
+           [:div (merge (use-style dropdown-style)
+                        {:style {:font-size "14px"
+                                 :position "fixed"
+                                 :left (str x "px")
+                                 :top (str y "px")}})
+            [:div (use-style menu-style)
+             (if is-shortcut?
+               [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                [:<>
+                 [:> mui-icons/BookmarkBorder]
+                 [:span "Remove Shortcut"]]]
+               [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                [:<>
+                 [:> mui-icons/Bookmark]
+                 [:span "Add Shortcut"]]])
+             [:hr (use-style menu-separator-style)]
+             [button {:on-click #(do
+                                   (navigate :pages)
+                                   (dispatch [:page/delete uid]))}
+              [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
 
          ;; Children
          (if (empty? children)
@@ -294,8 +298,6 @@
 
 
 (defn node-page-component
-  "One diff between datascript and posh: we don't have pull in q for posh
-  https://github.com/mpdairy/posh/issues/21"
   [ident]
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])
