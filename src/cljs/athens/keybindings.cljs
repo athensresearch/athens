@@ -217,7 +217,7 @@
         new-str     (str replace-str expand)]
     (swap! state merge {:search/index 0
                         :search/type nil
-                        :atom-string  new-str})))
+                        :generated-str  new-str})))
 
 
 (defn auto-complete
@@ -263,14 +263,14 @@
         (auto-complete state e uid))
 
       ;; shift-enter: add line break to textarea
-      shift (swap! state assoc :atom-string (str head "\n" tail))
+      shift (swap! state assoc :generated-str (str head "\n" tail))
       ;; cmd-enter: toggle todo/done
       meta (let [first    (subs value 0 13)
                  new-tail (subs value 13)
                  new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
                                (= first "{{[[DONE]]}} ") new-tail
                                :else (str "{{[[TODO]]}} " value))]
-             (swap! state assoc :atom-string new-str))
+             (swap! state assoc :generated-str new-str))
       ;; default: may mutate blocks
       :else (dispatch [:enter uid value start]))))
 
@@ -300,9 +300,9 @@
   (let [{:keys [key-code head tail selection]} (destruct-event e)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :atom-string new-str))
+                                (swap! state assoc :generated-str new-str))
       (= key-code KeyCodes.I) (let [new-str (str head (surround selection "__") tail)]
-                                (swap! state assoc :atom-string new-str)))))
+                                (swap! state assoc :generated-str new-str)))))
 
 
 (defn pair-char?
@@ -322,17 +322,17 @@
     (cond
       (= start end) (let [new-str (str head key close-pair tail)]
                       (js/setTimeout #(setCursorPosition target (inc start)) 10)
-                      (swap! state assoc :atom-string new-str))
+                      (swap! state assoc :generated-str new-str))
       (not= start end) (let [surround-selection (surround selection key)
                              new-str (str head surround-selection tail)]
-                         (swap! state assoc :atom-string new-str)
+                         (swap! state assoc :generated-str new-str)
                          (js/setTimeout (fn []
                                           (setStart target (inc start))
                                           (setEnd target (inc end)))
                                         10)))
 
     ;; this is naive way to begin doing inline search. how to begin search with non-empty parens?
-    (let [four-char (subs (:atom-string @state) (dec start) (+ start 3))
+    (let [four-char (subs (:generated-str @state) (dec start) (+ start 3))
           double-brackets? (= "[[]]" four-char)
           double-parens?   (= "(())" four-char)]
       (cond
@@ -352,10 +352,10 @@
       ;; if selection, delete selected text
       (not= start end) (let [new-tail (subs value end)
                              new-str (str head new-tail)]
-                         (swap! state assoc :atom-string new-str))
+                         (swap! state assoc :generated-str new-str))
 
       ;; if meta, delete to start of line
-      meta (swap! state assoc :atom-string tail)
+      meta (swap! state assoc :generated-str tail)
 
       ;; if at block start, dispatch (requires context)
       (block-start? e) (dispatch [:backspace uid value])
@@ -366,7 +366,7 @@
       (let [head    (subs value 0 (dec start))
             tail    (subs value (inc start))
             new-str (str head tail)]
-        (swap! state assoc :atom-string new-str)
+        (swap! state assoc :generated-str new-str)
         (swap! state assoc :search/type nil)
         (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
@@ -379,7 +379,7 @@
                                     :search/query nil}))
               (when query
                 (update-query state head type))
-              (swap! state assoc :atom-string new-str)))))
+              (swap! state assoc :generated-str new-str)))))
 
 
 (defn is-character-key?
@@ -404,7 +404,7 @@
       ;; when in-line search dropdown is open
       (or (= type :block) (= type :page)) (update-query state head key type))
 
-    (swap! state merge {:atom-string new-str})))
+    (swap! state merge {:generated-str new-str})))
 
 
 ;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
@@ -420,10 +420,10 @@
       (= key-code KeyCodes.ENTER) (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
       (= key-code KeyCodes.ESC) (handle-escape e state)
-      (or meta ctrl) (handle-shortcuts e uid state))))
+      (or meta ctrl) (handle-shortcuts e uid state)
 
 ;; -- Default: Add new character -----------------------------------------
-;(is-character-key? e) (write-char e uid state))))
+      (is-character-key? e) (write-char e uid state))))
 
 
 ;;:else (prn "non-event" key key-code))))
