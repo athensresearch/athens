@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+    [athens.keybindings :refer [destruct-event]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
@@ -21,8 +22,10 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]
-    [tick.alpha.api :as t]))
-
+    [tick.alpha.api :as t])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 ;;; Styles
 
@@ -40,6 +43,7 @@
    :flex-grow "1"
    :margin "0.2em 0 0.2em 1rem"
    :letter-spacing "-0.03em"
+   :white-space "pre-line"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
@@ -136,23 +140,24 @@
 
 (defn handler
   [new-title uid ref-groups state]
-  (let [linked-refs (->> ref-groups
-                         first
-                         second
-                         first
-                         second)
-        old-title (:old-title @state)
-        new-refs (map (fn [{:block/keys [uid string]}]
-                        (let [new-str (str/replace string
-                                                   (patterns/linked old-title)
-                                                   (str "$1$3$4" new-title "$2$5"))]
-                          {:db/id [:block/uid uid]
-                           :block/string new-str}))
-                      linked-refs)
-        new-page {:db/id [:block/uid uid] :node/title new-title}
-        new-datoms (conj new-refs new-page)
-        prev-title (d/pull @db/dsdb '[*] [:node/title new-title])]
-    (prn new-page prev-title)))
+  (let [old-title (:old-title @state)
+        prev-node (d/pull @db/dsdb '[*] [:node/title old-title])]
+    (prn prev-node)
+    (let [linked-refs (->> ref-groups
+                           first
+                           second
+                           first
+                           second)
+          new-refs (map (fn [{:block/keys [uid string]}]
+                          (let [new-str (str/replace string
+                                                     (patterns/linked old-title)
+                                                     (str "$1$3$4" new-title "$2$5"))]
+                            {:db/id [:block/uid uid]
+                             :block/string new-str}))
+                        linked-refs)
+          new-page {:db/id [:block/uid uid] :node/title new-title}
+          new-datoms (conj new-refs new-page)])))
+      ;;(prn new-page prev-node))))
     ;;(dispatch [:transact new-datoms])
     ;;(swap! state assoc :old-title new-title)))
 
@@ -181,6 +186,21 @@
                                               :block/string ""}]}]])
     (dispatch [:editing/uid new-uid])))
 
+(defn handle-key-down
+  "When user presses shift-enter, normal behavior: create a linebreak.
+  When user presses enter and current-title == datascript-title, do nothing. Or do Notion behavior?
+  When user presses enter (or if clicks out), and current-title != datascript title
+    if there are block refs, update them
+    if existing node/title, prompt to merge"
+  [e state]
+  (let [{:keys [key-code shift]} (destruct-event e)]
+    (when (and (not shift) (= key-code KeyCodes.ENTER))
+      (.. e preventDefault))))
+
+(defn handle-change
+  [e state ref-groups]
+  (let [value (.. e -target -value)]
+    (swap! state assoc :current-title value)))
 
 ;;; Components
 
@@ -191,6 +211,11 @@
     [:span (use-style bullet-style)]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
+;; need to have local state of title. when user presses enter or clicks out of it
+;; that's when it requests to change it. don't debounce like blocks
+;; in fact, blocks might not need to debounce at all. just update when user clicks out
+;; or makes a new block
+;; todo: fix keybindings for REPL
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
@@ -198,13 +223,14 @@
   (let [state (r/atom {:menu/show false
                        :menu/x nil
                        :menu/y nil
-                       :old-title nil})]
+                       :old-title nil
+                       :current-title nil})]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
             {:menu/keys [show x y]} @state]
 
         (when (nil? (:old-title @state))
-          (swap! state assoc :old-title title))
+          (swap! state assoc :old-title title :current-title title))
 
         [:div (use-style page-style {:class ["node-page"]})
          ;; TODO: implement timeline
@@ -224,7 +250,9 @@
              {:default-value title
               :class         (when (= editing-uid uid) "is-editing")
               :auto-focus    true
-              :on-change     (fn [e] (db-handler (.. e -target -value) uid ref-groups state))}])
+              :on-key-down     (fn [e] (handle-key-down e state))
+              :on-change     (fn [e] (handle-change e state ref-groups))}])
+              ;;:on-change     (fn [e] (db-handler (.. e -target -value) uid ref-groups state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (if show
@@ -235,7 +263,8 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/ExpandMore]]
-          (parse-renderer/parse-and-render title uid)]
+          (:current-title @state)]
+          ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
          (when show
