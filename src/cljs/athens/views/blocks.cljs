@@ -468,7 +468,10 @@
 
 (defn block-on-change
   [e _uid state]
-  (swap! state assoc :atom-string (.. e -target -value)))
+  (let [{:keys [generated-str]} @state]
+    (if generated-str
+      (swap! state assoc :atom-string generated-str :generated-str nil)
+      (swap! state assoc :atom-string (.. e -target -value)))))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -594,6 +597,7 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
   (let [state (r/atom {:atom-string (:block/string block)
+                       :generated-str nil
                        :old-string (:block/string block) ;; this is for detecting what's deleted to process page deletion
                        :search/type nil ;; one of #{:page :block :slash}
                        :search/query nil
