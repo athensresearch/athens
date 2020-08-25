@@ -263,8 +263,8 @@
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
-      {:dispatch-n [[:reset-conn new-db]
-                    [:local-storage/set-db new-db]]})))
+      {:fx [[:dispatch [:reset-conn new-db]
+             :dispatch [:local-storage/set-db new-db]]]})))
 
 
 (reg-event-fx
@@ -474,9 +474,9 @@
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
-    {:dispatch-n [[:transact [{:db/id          [:block/uid (:block/uid parent)]
-                               :block/children reindex}]]
-                  [:editing/uid new-uid]]}))
+    {:fx [[:dispatch [:transact [{:db/id          [:block/uid (:block/uid parent)]
+                                  :block/children reindex}]]]
+          [:dispatch [:editing/uid new-uid]]]}))
 
 
 (defn enter
