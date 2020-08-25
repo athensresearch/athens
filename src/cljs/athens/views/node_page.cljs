@@ -2,11 +2,13 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+    [athens.keybindings :refer [destruct-event]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid escape-str]]
+    [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -14,14 +16,16 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]
-    [tick.alpha.api :as t]))
-
+    [tick.alpha.api :as t])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 ;;; Styles
 
@@ -39,6 +43,7 @@
    :flex-grow "1"
    :margin "0.2em 0 0.2em 1rem"
    :letter-spacing "-0.03em"
+   :white-space "pre-line"
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
@@ -133,30 +138,6 @@
 ;;; Helpers
 
 
-(defn handler
-  [new-title uid ref-groups state]
-  (let [linked-refs (->> ref-groups
-                         first
-                         second
-                         first
-                         second)
-        old-title (:old-title @state)
-        new-refs (map (fn [{:block/keys [uid string]}]
-                        (let [new-str (str/replace string
-                                                   (patterns/linked old-title)
-                                                   (str "$1$3$4" new-title "$2$5"))]
-                          {:db/id [:block/uid uid]
-                           :block/string new-str}))
-                      linked-refs)
-        new-page {:db/id [:block/uid uid] :node/title new-title}
-        new-datoms (conj new-refs new-page)]
-    (dispatch [:transact new-datoms])
-    (swap! state assoc :old-title new-title)))
-
-
-(def db-handler (debounce handler 500))
-
-
 (defn is-timeline-page
   [uid]
   (boolean
@@ -179,6 +160,102 @@
     (dispatch [:editing/uid new-uid])))
 
 
+(defn handle-key-down
+  "When user presses shift-enter, normal behavior: create a linebreak.
+  When user presses enter, blur."
+  [e _state]
+  (let [{:keys [key-code shift]} (destruct-event e)]
+    (when
+      (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
+
+
+(defn handle-change
+  [e state]
+  (let [value (.. e -target -value)]
+    (swap! state assoc :title/local value)))
+
+
+(defn get-linked-refs
+  [ref-groups]
+  (->> ref-groups
+       first
+       second
+       first
+       second))
+
+
+(defn map-new-refs
+  "Find and replace linked ref with new linked ref, based on title change."
+  [linked-refs old-title new-title]
+  (map (fn [{:block/keys [uid string]}]
+         (let [new-str (str/replace string
+                                    (patterns/linked old-title)
+                                    (str "$1$3$4" new-title "$2$5"))]
+           {:db/id [:block/uid uid]
+            :block/string new-str}))
+       linked-refs))
+
+
+(defn get-existing-page
+  "?uid used for navigate-uid, go to existing page following the merge
+  ?b is used for finding the count of blocks on existing page. Add this count value to current blocks to reindex.
+   - This means that the current blocks will be at the end of the existing page.
+  FROM page is current page.
+  TO page is existing page."
+  [local-title]
+  (d/q '[:find ?uid ?b
+         :in $ ?t
+         :where
+         [?e :node/title ?t]
+         [?e :block/uid ?uid]
+         [?e :block/children ?b]]
+       @db/dsdb local-title))
+
+
+(declare init-state)
+
+
+(defn handle-blur
+  "When textarea blurs and its value is different from initial page title:
+   - if no other page exists, rewrite page title and linked refs
+   - else page with same title does exists: prompt to merge
+     - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
+     - cancel-fn: reset state"
+  [block state ref-groups]
+  (let [{dbid :db/id children :block/children} block
+        {:keys [title/initial title/local]} @state]
+    (when (not= initial local)
+      (let [existing-page   (get-existing-page local)
+            linked-refs     (get-linked-refs ref-groups)
+            new-linked-refs (map-new-refs linked-refs initial local)]
+        (if (empty? existing-page)
+          (let [new-page {:db/id dbid :node/title local}
+                new-datoms (concat [new-page] new-linked-refs)]
+            (swap! state assoc :title/initial local)
+            (dispatch [:transact new-datoms]))
+          (let [new-parent-uid (ffirst existing-page)
+                existing-page-block-count (count existing-page)
+                reindex (map (fn [{:block/keys [order uid]}]
+                               {:db/id [:block/uid uid]
+                                :block/order (+ order existing-page-block-count)
+                                :block/_children [:block/uid new-parent-uid]})
+                             children)
+                delete-page [:db/retractEntity dbid]
+                new-datoms (concat [delete-page]
+                                   new-linked-refs
+                                   reindex)
+                cancel-fn #(swap! state merge init-state)
+                confirm-fn (fn []
+                             (navigate-uid new-parent-uid)
+                             (dispatch [:transact new-datoms])
+                             (cancel-fn))]
+            (swap! state assoc
+                   :alert/show true
+                   :alert/message (str "\"" local "\"" " already exists, merge pages?")
+                   :alert/confirm-fn confirm-fn
+                   :alert/cancel-fn cancel-fn)))))))
+
+
 ;;; Components
 
 (defn placeholder-block-el
@@ -189,21 +266,40 @@
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
+(def init-state
+  {:menu/show        false
+   :menu/x           nil
+   :menu/y           nil
+   :title/initial    nil
+   :title/local      nil
+   :alert/show       nil
+   :alert/message    nil
+   :alert/confirm-fn nil
+   :alert/cancel-fn  nil})
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
+  "title/inital is the title when a page is first loaded.
+  title/local is the value of the textarea.
+  We have both, because we want to be able to change the local title without transacting to the db until user confirms.
+  Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
-  (let [state (r/atom {:menu/show false
-                       :menu/x nil
-                       :menu/y nil
-                       :old-title nil})]
+  (let [state (r/atom init-state)]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
-            {:menu/keys [show x y]} @state]
+            {:menu/keys [show x y] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
-        (when (nil? (:old-title @state))
-          (swap! state assoc :old-title title))
+        (when (not= title (:title/initial @state))
+          (swap! state assoc :title/initial title :title/local title))
 
         [:div (use-style page-style {:class ["node-page"]})
+
+         (when alert-show
+           [:div (use-style {:position "absolute"
+                             :top "50px"
+                             :left "35%"})
+            [alert-component message confirm-fn cancel-fn]])
+
          ;; TODO: implement timeline
          ;;(when timeline-page?
          ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
@@ -218,10 +314,11 @@
                           :on-click (fn [e] (navigate-uid uid e))})
           (when-not timeline-page?
             [autosize/textarea
-             {:default-value title
+             {:value         (:title/local @state)
               :class         (when (= editing-uid uid) "is-editing")
-              :auto-focus    true
-              :on-change     (fn [e] (db-handler (.. e -target -value) uid ref-groups state))}])
+              :on-blur       (fn [_] (handle-blur block state ref-groups))
+              :on-key-down   (fn [e] (handle-key-down e state))
+              :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (if show
@@ -232,29 +329,31 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/ExpandMore]]
+          (:title/local @state)]
+          ;;(parse-renderer/parse-and-render title uid)]
 
-          (when show
-            [:div (merge (use-style dropdown-style)
-                         {:style {:font-size "14px"
-                                  :position "fixed"
-                                  :left (str x "px")
-                                  :top (str y "px")}})
-             [:div (use-style menu-style)
-              (if is-shortcut?
-                [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                 [:<>
-                  [:> mui-icons/BookmarkBorder]
-                  [:span "Remove Shortcut"]]]
-                [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                 [:<>
-                  [:> mui-icons/Bookmark]
-                  [:span "Add Shortcut"]]])
-              [:hr (use-style menu-separator-style)]
-              [button {:on-click #(do
-                                    (navigate :pages)
-                                    (dispatch [:page/delete uid]))}
-               [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
-          (parse-renderer/parse-and-render title uid)]
+         ;; Dropdown
+         (when show
+           [:div (merge (use-style dropdown-style)
+                        {:style {:font-size "14px"
+                                 :position "fixed"
+                                 :left (str x "px")
+                                 :top (str y "px")}})
+            [:div (use-style menu-style)
+             (if is-shortcut?
+               [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                [:<>
+                 [:> mui-icons/BookmarkBorder]
+                 [:span "Remove Shortcut"]]]
+               [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                [:<>
+                 [:> mui-icons/Bookmark]
+                 [:span "Add Shortcut"]]])
+             [:hr (use-style menu-separator-style)]
+             [button {:on-click #(do
+                                   (navigate :pages)
+                                   (dispatch [:page/delete uid]))}
+              [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])
 
          ;; Children
          (if (empty? children)
@@ -294,8 +393,6 @@
 
 
 (defn node-page-component
-  "One diff between datascript and posh: we don't have pull in q for posh
-  https://github.com/mpdairy/posh/issues/21"
   [ident]
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])

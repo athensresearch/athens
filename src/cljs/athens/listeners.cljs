@@ -81,7 +81,7 @@
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
-    (prn e (.. e -type))
+    ;;(prn e (.. e -type))
     (when (not-empty selected-items)
       (dispatch [:selected/clear-items]))
     (when (and (nil? closest) editing-uid)
