@@ -162,20 +162,17 @@
 
 (defn handle-key-down
   "When user presses shift-enter, normal behavior: create a linebreak.
-  TODO: When user presses enter and current-title == datascript-title, do Notion behavior
-  TODO: When user presses enter, blur
-    if there are block refs, update them
-    if existing node/title, prompt to merge"
+  When user presses enter, blur."
   [e _state]
   (let [{:keys [key-code shift]} (destruct-event e)]
-    (when (and (not shift) (= key-code KeyCodes.ENTER))
-      (.. e preventDefault))))
+    (when
+      (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
 
 
 (defn handle-change
   [e state]
   (let [value (.. e -target -value)]
-    (swap! state assoc :current-title value)))
+    (swap! state assoc :title/local value)))
 
 
 (defn get-linked-refs
@@ -188,65 +185,73 @@
 
 
 (defn map-new-refs
+  "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
-  (map (fn [{:block/keys [uid string order]}]
+  (map (fn [{:block/keys [uid string]}]
          (let [new-str (str/replace string
                                     (patterns/linked old-title)
                                     (str "$1$3$4" new-title "$2$5"))]
            {:db/id [:block/uid uid]
-            :block/string new-str
-            :block/order order}))
+            :block/string new-str}))
        linked-refs))
+
+
+(defn get-existing-page
+  "?uid used for navigate-uid, go to existing page following the merge
+  ?b is used for finding the count of blocks on existing page. Add this count value to current blocks to reindex.
+   - This means that the current blocks will be at the end of the existing page.
+  FROM page is current page.
+  TO page is existing page."
+  [local-title]
+  (d/q '[:find ?uid ?b
+         :in $ ?t
+         :where
+         [?e :node/title ?t]
+         [?e :block/uid ?uid]
+         [?e :block/children ?b]]
+       @db/dsdb local-title))
+
+
+(declare init-state)
 
 
 (defn handle-blur
   "When textarea blurs and its value is different from initial page title:
-   - if no other page exists, rewrite page title and all linked refs
+   - if no other page exists, rewrite page title and linked refs
    - else page with same title does exists: prompt to merge
-     - confirm-fn: rewrite page title, linked refs, AND merge
+     - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state"
   [block state ref-groups]
   (let [{dbid :db/id children :block/children} block
-        {:keys [old-title current-title]} @state]
-    (when (not= old-title current-title)
-      (let [existing-page (d/q '[:find ?e ?uid ?b
-                                 :in $ ?t
-                                 :where
-                                 [?e :node/title ?t]
-                                 [?e :block/uid ?uid]
-                                 [?e :block/children ?b]]
-                               @db/dsdb current-title)
-            linked-refs (get-linked-refs ref-groups)
-            new-linked-refs (map-new-refs linked-refs old-title current-title)]
+        {:keys [title/initial title/local]} @state]
+    (when (not= initial local)
+      (let [existing-page   (get-existing-page local)
+            linked-refs     (get-linked-refs ref-groups)
+            new-linked-refs (map-new-refs linked-refs initial local)]
         (if (empty? existing-page)
-          (let [new-page {:db/id dbid :node/title current-title}]
-            (swap! state assoc :old-title current-title)
-            (dispatch [:transact (concat [new-page] new-linked-refs)]))
-          (let [new-parent (ffirst existing-page)
-                new-parent-uid (-> existing-page first second)
+          (let [new-page {:db/id dbid :node/title local}
+                new-datoms (concat [new-page] new-linked-refs)]
+            (swap! state assoc :title/initial local)
+            (dispatch [:transact new-datoms]))
+          (let [new-parent-uid (ffirst existing-page)
                 existing-page-block-count (count existing-page)
                 reindex (map (fn [{:block/keys [order uid]}]
                                {:db/id [:block/uid uid]
                                 :block/order (+ order existing-page-block-count)
-                                :block/_children new-parent})
+                                :block/_children [:block/uid new-parent-uid]})
                              children)
                 delete-page [:db/retractEntity dbid]
                 new-datoms (concat [delete-page]
                                    new-linked-refs
                                    reindex)
-                cancel-fn #(swap! state assoc
-                                  :current-title old-title
-                                  :alert/show nil
-                                  :alert/message nil
-                                  :alert/confirm-fn nil
-                                  :alert/cancel-fn nil)
+                cancel-fn #(swap! state merge init-state)
                 confirm-fn (fn []
-                             (dispatch [:transact new-datoms])
                              (navigate-uid new-parent-uid)
+                             (dispatch [:transact new-datoms])
                              (cancel-fn))]
             (swap! state assoc
                    :alert/show true
-                   :alert/message (str "\"" current-title "\"" " already exists, merge pages?")
+                   :alert/message (str "\"" local "\"" " already exists, merge pages?")
                    :alert/confirm-fn confirm-fn
                    :alert/cancel-fn cancel-fn)))))))
 
@@ -261,24 +266,31 @@
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
+(def init-state
+  {:menu/show        false
+   :menu/x           nil
+   :menu/y           nil
+   :title/initial    nil
+   :title/local      nil
+   :alert/show       nil
+   :alert/message    nil
+   :alert/confirm-fn nil
+   :alert/cancel-fn  nil})
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
+  "title/inital is the title when a page is first loaded.
+  title/local is the value of the textarea.
+  We have both, because we want to be able to change the local title without transacting to the db until user confirms.
+  Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
-  (let [state (r/atom {:menu/show false
-                       :menu/x nil
-                       :menu/y nil
-                       :old-title nil
-                       :current-title nil
-                       :alert/show nil
-                       :alert/message nil
-                       :alert/confirm-fn nil
-                       :alert/cancel-fn nil})]
+  (let [state (r/atom init-state)]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
             {:menu/keys [show x y] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
-        (when (nil? (:old-title @state))
-          (swap! state assoc :old-title title :current-title title))
+        (when (not= title (:title/initial @state))
+          (swap! state assoc :title/initial title :title/local title))
 
         [:div (use-style page-style {:class ["node-page"]})
 
@@ -302,7 +314,7 @@
                           :on-click (fn [e] (navigate-uid uid e))})
           (when-not timeline-page?
             [autosize/textarea
-             {:value         (:current-title @state)
+             {:value         (:title/local @state)
               :class         (when (= editing-uid uid) "is-editing")
               :on-blur       (fn [_] (handle-blur block state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
@@ -317,7 +329,7 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/ExpandMore]]
-          (:current-title @state)]
+          (:title/local @state)]
           ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
