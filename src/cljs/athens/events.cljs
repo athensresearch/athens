@@ -285,8 +285,8 @@
 (reg-event-fx
   :transact
   (fn [_ [_ datoms]]
-    {:transact! datoms
-     :dispatch [:db/not-synced]}))
+    {:fx [[:dispatch [:db/not-synced]]
+          [:transact! datoms]]}))
 
 
 (reg-event-fx
@@ -301,14 +301,14 @@
     (let [now (now-ts)
           child-uid (gen-block-uid)
           child {:db/id -2 :create/time now :edit/time now :block/uid child-uid :block/order 0 :block/open true :block/string ""}]
-      {:transact! [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now :block/children [child]}]
-       :dispatch [:editing/uid child-uid]})))
+      {:fx [[:dispatch [:transact [{:db/id -1 :node/title title :block/uid uid :create/time now :edit/time now :block/children [child]}]]]
+            [:dispatch [:editing/uid child-uid]]]})))
 
 
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:transact! (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid))}))
+    {:fx [[:dispatch [:transact (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid))]]]}))
 
 
 (reg-event-fx
@@ -318,14 +318,14 @@
                               :where
                               [?e :page/sidebar _]]
                             @db/dsdb)]
-      {:transact! [{:block/uid uid :page/sidebar (count sidebar-ents)}]})))
+      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar (count sidebar-ents)}]]]]})))
 
 
 ;; TODO: reindex
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
-    {:transact! [[:db/retract [:block/uid uid] :page/sidebar]]}))
+    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]}))
 
 
 (reg-event-fx
@@ -440,10 +440,10 @@
                    :block/string tail}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
-    {:transact! [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
-                 {:db/id (:db/id parent)
-                  :block/children reindex}]
-     :dispatch  [:editing/uid new-uid]}))
+    {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
+                                 {:db/id (:db/id parent)
+                                  :block/children reindex}]]]
+          [:dispatch [:editing/uid new-uid]]]}))
 
 
 (defn bump-up
@@ -460,8 +460,8 @@
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:transact! [{:db/id (:db/id parent) :block/children reindex :block/string ""}]
-     :dispatch [:editing/uid new-uid]}))
+    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex :block/string ""}]]]
+          [:dispatch [:editing/uid new-uid]]]}))
 
 
 (defn new-block
@@ -509,9 +509,9 @@
                        db/get-block)
         new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
         reindex (dec-after (:db/id parent) (:block/order block))]
-    {:transact! [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                 {:db/id (:db/id parent) :block/children reindex}]}))
+    {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
+                                 {:db/id (:db/id parent) :block/children reindex}]]]]}))
 
 
 (reg-event-fx
@@ -529,8 +529,8 @@
                              (concat [new-block]))]
     ;; if parent is context-root or has node/title, no-op
     (when-not (or (:node/title parent) (= (:block/uid parent) context-root-uid))
-      {:transact! [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
-                   {:db/id (:db/id grandpa) :block/children reindex-grandpa}]})))
+      {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                                   {:db/id (:db/id grandpa) :block/children reindex-grandpa}]]]]})))
 
 
 (reg-event-fx
@@ -622,13 +622,14 @@
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
         same-parent? (= source-parent target-parent)]
-    {:transact!
-     (cond
-       (= kind :child)                          (drop-child             source source-parent target)
-       (and (= kind :below) same-parent?)       (drop-below-same-parent source source-parent target)
-       (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
-       (and (= kind :above) same-parent?)       (drop-above-same-parent source target source-parent)
-       (and (= kind :above) (not same-parent?)) (drop-above-diff-parent source target source-parent target-parent))}))
+    {:fx [[:dispatch
+           [:transact
+            (cond
+              (= kind :child) (drop-child source source-parent target)
+              (and (= kind :below) same-parent?) (drop-below-same-parent source source-parent target)
+              (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
+              (and (= kind :above) same-parent?) (drop-above-same-parent source target source-parent)
+              (and (= kind :above) (not same-parent?)) (drop-above-diff-parent source target source-parent target-parent))]]]}))
 
 
 (reg-event-fx
