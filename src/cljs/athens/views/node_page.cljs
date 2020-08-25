@@ -8,6 +8,7 @@
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid escape-str]]
+    [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
@@ -17,7 +18,6 @@
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.functions :refer [debounce]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -138,33 +138,6 @@
 ;;; Helpers
 
 
-(defn handler
-  [new-title uid ref-groups state]
-  (let [old-title (:old-title @state)
-        prev-node (d/pull @db/dsdb '[*] [:node/title old-title])]
-    (prn prev-node)
-    (let [linked-refs (->> ref-groups
-                           first
-                           second
-                           first
-                           second)
-          new-refs (map (fn [{:block/keys [uid string]}]
-                          (let [new-str (str/replace string
-                                                     (patterns/linked old-title)
-                                                     (str "$1$3$4" new-title "$2$5"))]
-                            {:db/id [:block/uid uid]
-                             :block/string new-str}))
-                        linked-refs)
-          new-page {:db/id [:block/uid uid] :node/title new-title}
-          new-datoms (conj new-refs new-page)])))
-      ;;(prn new-page prev-node))))
-    ;;(dispatch [:transact new-datoms])
-    ;;(swap! state assoc :old-title new-title)))
-
-
-(def db-handler (debounce handler 500))
-
-
 (defn is-timeline-page
   [uid]
   (boolean
@@ -186,21 +159,97 @@
                                               :block/string ""}]}]])
     (dispatch [:editing/uid new-uid])))
 
+
 (defn handle-key-down
   "When user presses shift-enter, normal behavior: create a linebreak.
-  When user presses enter and current-title == datascript-title, do nothing. Or do Notion behavior?
-  When user presses enter (or if clicks out), and current-title != datascript title
+  TODO: When user presses enter and current-title == datascript-title, do Notion behavior
+  TODO: When user presses enter, blur
     if there are block refs, update them
     if existing node/title, prompt to merge"
-  [e state]
+  [e _state]
   (let [{:keys [key-code shift]} (destruct-event e)]
     (when (and (not shift) (= key-code KeyCodes.ENTER))
       (.. e preventDefault))))
 
+
 (defn handle-change
-  [e state ref-groups]
+  [e state]
   (let [value (.. e -target -value)]
     (swap! state assoc :current-title value)))
+
+
+(defn get-linked-refs
+  [ref-groups]
+  (->> ref-groups
+       first
+       second
+       first
+       second))
+
+
+(defn map-new-refs
+  [linked-refs old-title new-title]
+  (map (fn [{:block/keys [uid string order]}]
+         (let [new-str (str/replace string
+                                    (patterns/linked old-title)
+                                    (str "$1$3$4" new-title "$2$5"))]
+           {:db/id [:block/uid uid]
+            :block/string new-str
+            :block/order order}))
+       linked-refs))
+
+
+(defn handle-blur
+  "When textarea blurs and its value is different from initial page title:
+   - if no other page exists, rewrite page title and all linked refs
+   - else page with same title does exists: prompt to merge
+     - confirm-fn: rewrite page title, linked refs, AND merge
+     - cancel-fn: reset state"
+  [block state ref-groups]
+  (let [{dbid :db/id children :block/children} block
+        {:keys [old-title current-title]} @state]
+    (when (not= old-title current-title)
+      (let [existing-page (d/q '[:find ?e ?uid ?b
+                                 :in $ ?t
+                                 :where
+                                 [?e :node/title ?t]
+                                 [?e :block/uid ?uid]
+                                 [?e :block/children ?b]]
+                               @db/dsdb current-title)
+            linked-refs (get-linked-refs ref-groups)
+            new-linked-refs (map-new-refs linked-refs old-title current-title)]
+        (if (empty? existing-page)
+          (let [new-page {:db/id dbid :node/title current-title}]
+            (swap! state assoc :old-title current-title)
+            (dispatch [:transact (concat [new-page] new-linked-refs)]))
+          (let [new-parent (ffirst existing-page)
+                new-parent-uid (-> existing-page first second)
+                existing-page-block-count (count existing-page)
+                reindex (map (fn [{:block/keys [order uid]}]
+                               {:db/id [:block/uid uid]
+                                :block/order (+ order existing-page-block-count)
+                                :block/_children new-parent})
+                             children)
+                delete-page [:db/retractEntity dbid]
+                new-datoms (concat [delete-page]
+                                   new-linked-refs
+                                   reindex)
+                cancel-fn #(swap! state assoc
+                                  :current-title old-title
+                                  :alert/show nil
+                                  :alert/message nil
+                                  :alert/confirm-fn nil
+                                  :alert/cancel-fn nil)
+                confirm-fn (fn []
+                             (dispatch [:transact new-datoms])
+                             (navigate-uid new-parent-uid)
+                             (cancel-fn))]
+            (swap! state assoc
+                   :alert/show true
+                   :alert/message (str "\"" current-title "\"" " already exists, merge pages?")
+                   :alert/confirm-fn confirm-fn
+                   :alert/cancel-fn cancel-fn)))))))
+
 
 ;;; Components
 
@@ -211,11 +260,6 @@
     [:span (use-style bullet-style)]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
-;; need to have local state of title. when user presses enter or clicks out of it
-;; that's when it requests to change it. don't debounce like blocks
-;; in fact, blocks might not need to debounce at all. just update when user clicks out
-;; or makes a new block
-;; todo: fix keybindings for REPL
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
@@ -224,15 +268,26 @@
                        :menu/x nil
                        :menu/y nil
                        :old-title nil
-                       :current-title nil})]
+                       :current-title nil
+                       :alert/show nil
+                       :alert/message nil
+                       :alert/confirm-fn nil
+                       :alert/cancel-fn nil})]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
-            {:menu/keys [show x y]} @state]
+            {:menu/keys [show x y] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
         (when (nil? (:old-title @state))
           (swap! state assoc :old-title title :current-title title))
 
         [:div (use-style page-style {:class ["node-page"]})
+
+         (when alert-show
+           [:div (use-style {:position "absolute"
+                             :top "50px"
+                             :left "35%"})
+            [alert-component message confirm-fn cancel-fn]])
+
          ;; TODO: implement timeline
          ;;(when timeline-page?
          ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
@@ -247,12 +302,11 @@
                           :on-click (fn [e] (navigate-uid uid e))})
           (when-not timeline-page?
             [autosize/textarea
-             {:default-value title
+             {:value         (:current-title @state)
               :class         (when (= editing-uid uid) "is-editing")
-              :auto-focus    true
-              :on-key-down     (fn [e] (handle-key-down e state))
-              :on-change     (fn [e] (handle-change e state ref-groups))}])
-              ;;:on-change     (fn [e] (db-handler (.. e -target -value) uid ref-groups state))}])
+              :on-blur       (fn [_] (handle-blur block state ref-groups))
+              :on-key-down   (fn [e] (handle-key-down e state))
+              :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (if show

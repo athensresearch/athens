@@ -1,13 +1,13 @@
 (ns athens.views.alerts
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
+    [athens.style :refer [color]]
     [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [garden.selectors :as selectors]
+    ;;[garden.selectors :as selectors]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles

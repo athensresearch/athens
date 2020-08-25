@@ -1,8 +1,8 @@
 (ns athens.devcards
   (:require
     [athens.db :refer [dsdb]]
-    [athens.devcards.all-pages]
     [athens.devcards.alerts]
+    [athens.devcards.all-pages]
     [athens.devcards.athena]
     [athens.devcards.block-page]
     [athens.devcards.blocks]
