@@ -13,7 +13,7 @@
 
 — Alexander the Great
 
-This document can be read alongside [Athens Vision Mindmap v2](https://www.notion.so/athensresearch/Athens-Roadmap-Mindmap-v2-096427f189b648729ae0acbdcefd4c6f?showMoveTo=true).
+This document can be read alongside [Athens Vision Mindmap v2](https://whimsical.com/TCeXP1dpRkdT8rpMvYci2P).
 
 # A Self-Hosted Athens
 
