@@ -266,6 +266,17 @@
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
+(defn sync-title
+  "Ensures :title/initial is synced to node/title.
+  Cases:
+  - User opens a page for the first time.
+  - User navigates from a page to another page.
+  - User merges current page with existing page, navigating to existing page."
+  [title state]
+  (when (not= title (:title/initial @state))
+    (swap! state assoc :title/initial title :title/local title)))
+
+
 (def init-state
   {:menu/show        false
    :menu/x           nil
@@ -277,9 +288,10 @@
    :alert/confirm-fn nil
    :alert/cancel-fn  nil})
 
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
-  "title/inital is the title when a page is first loaded.
+  "title/initial is the title when a page is first loaded.
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
@@ -289,8 +301,7 @@
       (let [{:block/keys [children uid] title :node/title is-shortcut? :page/sidebar} block
             {:menu/keys [show x y] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
-        (when (not= title (:title/initial @state))
-          (swap! state assoc :title/initial title :title/local title))
+        (sync-title title state)
 
         [:div (use-style page-style {:class ["node-page"]})
 

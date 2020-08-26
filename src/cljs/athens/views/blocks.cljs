@@ -454,14 +454,19 @@
 
 
 (defn paste
-  "if user does typical copy and paste, meta+v, and "
+  "Clipboard data can only be accessed if user triggers JavaScript paste event.
+  Cases:
+  - User pastes and last keydown has shift -> default
+  - User pastes and clipboard data doesn't have new lines -> default
+  - User pastes without shift and clipboard data has new lines -> convert to blocks and prevent default
+  The clipboard data has blocks if it has new line characters.
+  Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key."
   [e uid state]
   (let [data (.. e -clipboardData (getData "text"))
-        is-block (re-find #"\r?\n" data)
+        lines-breaks? (re-find #"\r?\n" data)
         last-keydown (:last-keydown @state)
         {:keys [shift]} last-keydown]
-    ;; if `not shift`, do normal plain-text paste
-    (when (and is-block (not shift))
+    (when (and lines-breaks? (not shift))
       (.. e preventDefault)
       (dispatch [:paste uid data]))))
 

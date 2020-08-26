@@ -25,7 +25,7 @@
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false
-               :left-sidebar/open   true
+               :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}
                ;;:dragging-global     false
