@@ -443,13 +443,13 @@
 
 (defn slash-menu-el
   [state]
-  (let [{index :search/index} @state]
+  (let [{:search/keys [index results]} @state]
     [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
      [:div#slash-menu-container (merge (use-style menu-style) {:style {:max-height "8em"}})
-      (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
+      (for [[i [text icon _expansion kbd]] (map-indexed list results)]
         [button {:active   (= i index)
                  :key      text
-                 :on-click #(athens.keybindings/select-slash-cmd i state)}
+                 :on-click #(athens.keybindings/auto-complete-slash i state)}
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
@@ -603,6 +603,7 @@
                        :generated-str nil
                        :old-string (:block/string block) ;; this is for detecting what's deleted to process page deletion
                        :search/type nil ;; one of #{:page :block :slash}
+                       :search/results nil
                        :search/query nil
                        :search/index 0
                        :dragging false

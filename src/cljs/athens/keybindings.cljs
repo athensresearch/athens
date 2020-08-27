@@ -5,7 +5,7 @@
     [athens.util :refer [scroll-if-needed get-day scroll-into-view]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [replace-first]]
+    [clojure.string :refer [replace-first blank?]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
@@ -50,20 +50,34 @@
            {:selection selection})))
 
 
+(defn filter-slash-options
+  [query]
+  (if (blank? query)
+    slash-options
+    (filter (fn [[text]]
+              (re-find (re-pattern (str "(?i)" query)) text))
+            slash-options)))
+
+
 (defn update-query
+  "3-arity is used during backspace.
+  4-arity is used in write-char to append key to query-start.
+  query-start is determined by doing a greedy regex find up to head.
+  Head goes up to the text caret position."
   ([state head type] (update-query state head "" type))
   ([state head key type]
-   (let [query-fn (cond
-                    (= type :block) db/search-in-block-content
-                    (= type :page)  db/search-in-node-title
-                    (= type :slash) nil) ;; TODO update filter
-         link-start (cond
-                      (= type :block) (count (re-find #".*\(\(" head))
-                      (= type :page)  (count (re-find #".*\[\[" head)))
-         new-query (str (subs head link-start) key)
-         results (when query-fn
-                   (query-fn new-query))]
+   (let [query-fn (case type
+                    :block db/search-in-block-content
+                    :page  db/search-in-node-title
+                    :slash filter-slash-options)
+         query-start (case type
+                       :block (count (re-find #".*\(\(" head))
+                       :page  (count (re-find #".*\[\[" head))
+                       :slash (count (re-find #".*/"   head)))
+         new-query (str (subs head query-start) key)
+         results (query-fn new-query)]
      (swap! state assoc
+            :search/index 0
             :search/query new-query
             :search/results results))))
 
@@ -142,9 +156,9 @@
               right? nil
               (or (and up? top-row?)
                   (and down? bottom-row?)) (do
-                                              (.. target blur)
-                                              (dispatch [:editing/uid nil])
-                                              (dispatch [:selected/add-item uid])))
+                                             (.. target blur)
+                                             (dispatch [:editing/uid nil])
+                                             (dispatch [:selected/add-item uid])))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
@@ -188,89 +202,81 @@
 (defn handle-escape
   [e state]
   (.. e preventDefault)
-  (prn @state)
-  (prn state)
-  (cond
-    (:search/type @state) (swap! state assoc :search/type nil)
-    :else (dispatch [:editing/uid nil])))
+  (swap! state assoc :search/type nil)
+  (dispatch [:editing/uid nil]))
 
 
 ;; TODO: some expansions require caret placement after
 ;; fixme: perhaps not the best place to put this, but need to access from both blocks and keybindings
 (def slash-options
-  [[mui-icons/Done           "Add Todo"      "{{[[TODO]]}} " "cmd-enter"]
-   [mui-icons/Timer          "Current Time"  #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))]
-   [mui-icons/Today          "Today"         #(str "[[" (:title (get-day 0)) "]] ")]
-   [mui-icons/Today          "Tomorrow"      #(str "[[" (:title (get-day -1)) "]]")]
-   [mui-icons/Today          "Yesterday"     #(str "[[" (:title (get-day 1)) "]]")]
-   [mui-icons/YouTube        "YouTube Embed" "{{[[youtube]]: }}"]
-   [mui-icons/DesktopWindows "iframe Embed"  "{{iframe: }}"]])
+  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
+   ["Current Time"  mui-icons/Timer #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"}))) nil]
+   ["Today"         mui-icons/Today #(str "[[" (:title (get-day 0)) "]] ") nil]
+   ["Tomorrow"      mui-icons/Today #(str "[[" (:title (get-day -1)) "]]") nil]
+   ["Yesterday"     mui-icons/Today #(str "[[" (:title (get-day 1)) "]]") nil]
+   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
+   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
 
 ;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
 ;;[mui-icons/DateRange "Date Picker"]
 ;;[mui-icons/Attachment "Upload Image or File"]
 ;;[mui-icons/ExposurePlus1 "Word Count"]
 
-
-;; TODO: also replace typeahead characters that follow "/". may need event to find selectionStart
-(defn select-slash-cmd
+(defn auto-complete-slash
   [index state]
   (let [{:keys [atom-string]} @state
-        [_ _ expansion _] (slash-options index)
+        [_ _ expansion _] (get slash-options index)
         expand (if (fn? expansion) (expansion) expansion)
         replace-str (subs atom-string 0 (dec (count atom-string)))
         new-str     (str replace-str expand)]
-    (swap! state merge {:search/index 0
-                        :search/type nil
-                        :generated-str  new-str})))
+    (swap! state assoc
+           :search/index 0
+           :search/type nil
+           :generated-str new-str)))
 
 
-(defn auto-complete
+(defn auto-complete-inline
   [state e completed-str]
   (let [{:keys [start head tail target]} (destruct-event e)
         {:search/keys [query type]} @state
-        head-pattern (cond
-                       (= type :block) (re-pattern (str "(.*)\\(\\(" query))
-                       (= type :page)  (re-pattern (str "(.*)\\[\\[" query)))
-        tail-pattern (cond
-                       (= type :block) #"(\)\))?(.*)"
-                       (= type :page)  #"(\]\])?(.*)")
-        new-head (cond
-                   (= type :block) "$1(("
-                   (= type :page)  "$1[[")
-        closing-str (cond
-                      (= type :block) "))"
-                      (= type :page)  "]]")
+        block? (= type :block)
+        page? (= type :page)
+        head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
+                           page?  (re-pattern (str "(.*)\\[\\[" query)))
+        tail-pattern (cond block? #"(\)\))?(.*)"
+                           page?  #"(\]\])?(.*)")
+        new-head (cond block? "$1(("
+                       page?  "$1[[")
+        closing-str (cond block? "))"
+                          page?  "]]")
         new-str (replace-first head head-pattern (str new-head completed-str closing-str))
         [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
-    (swap! state merge {:atom-string (str new-str after-closing-str)
-                        :search/query nil
-                        :search/type nil})
-    (when closing-delimiter (set! (. target -selectionStart) (+ 2 start)))))
+    (swap! state assoc
+           :generated-str (str new-str after-closing-str)
+           :search/index 0
+           :search/results nil
+           :search/query nil
+           :search/type nil)
+    (when closing-delimiter
+      (setStart target (+ 2 start)))))
 
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift meta start head tail value]} (destruct-event e)
+  (let [{:keys [shift ctrl start head tail value]} (destruct-event e)
         {:search/keys [index results type]} @state]
     (.. e preventDefault)
     (cond
-      (= type :slash) (select-slash-cmd index state)
-
-      ;; auto-complete link
-      (= type :page)
-      (let [{:keys [node/title]} (nth results index)]
-        (auto-complete state e title))
-
-      ;; auto-complete block ref
-      (= type :block)
-      (let [{:keys [block/uid]} (nth results index)]
-        (auto-complete state e uid))
+      (= type :slash) (auto-complete-slash index state)
+      (= type :page) (let [{:keys [node/title]} (nth results index)]
+                       (auto-complete-inline state e title))
+      (= type :block) (let [{:keys [block/uid]} (nth results index)]
+                        (auto-complete-inline state e uid))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :generated-str (str head "\n" tail))
       ;; cmd-enter: toggle todo/done
-      meta (let [first    (subs value 0 13)
+      ctrl (let [first    (subs value 0 13)
                  new-tail (subs value 13)
                  new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
                                (= first "{{[[DONE]]}} ") new-tail
@@ -299,7 +305,7 @@
     (str around selection around)))
 
 
-;; TODO: it's ctrl for windows and linux right?
+;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
   (let [{:keys [key-code head tail selection]} (destruct-event e)]
@@ -336,47 +342,46 @@
                                           (setEnd target (inc end)))
                                         10)))
 
-    ;; this is naive way to begin doing inline search. how to begin search with non-empty parens?
     (let [four-char (subs (:generated-str @state) (dec start) (+ start 3))
           double-brackets? (= "[[]]" four-char)
-          double-parens?   (= "(())" four-char)]
-      (cond
-        double-brackets? (swap! state assoc :search/type :page)
-        double-parens? (swap! state assoc :search/type :block)))))
+          double-parens?   (= "(())" four-char)
+          type (cond double-brackets? :page
+                     double-parens? :block)]
+      (swap! state assoc :search/type type))))
 
     ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
-;; TODO: use defaults where it makes sense, like ctrl backspace
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start value target]} (destruct-event e)
         possible-pair (subs value (dec start) (inc start))]
-
     (cond
-      ;; if at block start, dispatch (requires context)
+      ;; block start: dispatch
       (block-start? e) (dispatch [:backspace uid value])
+      ;; pair char: hide inline search and auto-balance
       (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
                                                          tail    (subs value (inc start))
                                                          new-str (str head tail)]
                                                      (swap! state assoc
                                                             :search/index 0
                                                             :search/type nil
+                                                            :search/results nil
+                                                            :search/query nil
                                                             :generated-str new-str)
                                                      (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
-      ;; allow default behavior, but close out of search dropdowns
+      ;; allow default backspace, but check to close slash menu or update query
       :else (let [head    (subs value 0 (dec start))
-                  {:search/keys [query type]} @state]
-              (when (= "/" (last value))
-                (swap! state assoc
-                       :search/index 0
-                       :search/type nil
-                       :search/query nil))
-              (when query
-                (update-query state head type))
-              (swap! state assoc :generated-str new-str)))))
+                  {:search/keys [type]} @state]
+              (cond
+                (= "/" (last value)) (swap! state assoc
+                                            :search/index 0
+                                            :search/results nil
+                                            :search/type nil
+                                            :search/query nil)
+                type (update-query state head type))))))
 
 
 (defn is-character-key?
@@ -388,20 +393,19 @@
 
 
 (defn write-char
+  "When user types /, trigger slash menu.
+  If user writes a character while there is a slash/type, update query and results."
   [e _ state]
-  (let [{:keys [head tail key key-code]} (destruct-event e)
-        new-str (str head key tail)
+  (let [{:keys [head key]} (destruct-event e)
+        slash-key? (= key "/")
         {:search/keys [type]} @state]
     (cond
-      (= key-code KeyCodes.SLASH) (swap! state merge {:search/query ""
-                                                      :search/type :slash})
-
-      (= type :slash) (swap! state assoc :search/query new-str)
-
-      ;; when in-line search dropdown is open
-      (or (= type :block) (= type :page)) (update-query state head key type))
-
-    (swap! state merge {:generated-str new-str})))
+      slash-key? (swap! state assoc
+                        :search/index 0
+                        :search/query ""
+                        :search/type :slash
+                        :search/results slash-options)
+      type (update-query state head key type))))
 
 
 (defn block-key-down
