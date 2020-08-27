@@ -412,6 +412,7 @@
   [e uid state]
   (let [d-event (destruct-event e)
         {:keys [meta ctrl key-code]} d-event]
+    ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
     (cond
       (arrow-key-direction e) (handle-arrow-key e uid state)
