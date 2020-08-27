@@ -612,11 +612,22 @@
                        :context-menu/x nil
                        :context-menu/y nil
                        :context-menu/show false})]
+
+    ;; If :generated-str is updated, automatically update atom-string
+    ;; Necessary because modifying generated-str itself won't trigger the on-change event of the textarea
+    ;; atom-string must be modified to trigger generated-str change
+    (add-watch state :generated-str-listener
+               (fn [_context _atom old new]
+                 (when (and (not= (:generated-str old) (:generated-str new))
+                            (not (nil? (:generated-str new))))
+                   (swap! state assoc :atom-string (:generated-str new)))))
+
     (add-watch state :string-listener
                (fn [_context _atom old new]
-                 (let [{:keys [atom-string]} new]
-                   (when (not= (:atom-string old) atom-string)
-                     (db-on-change (:old-string old) atom-string (:block/uid block))))))
+                 (let [{:block/keys [uid]} block]
+                   (when
+                     (not= (:atom-string old) (:atom-string new))
+                     (db-on-change (:old-string old) (:atom-string new) uid)))))
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block

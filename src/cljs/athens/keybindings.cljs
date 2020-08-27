@@ -351,36 +351,23 @@
 ;; TODO: use defaults where it makes sense, like ctrl backspace
 (defn handle-backspace
   [e uid state]
-  (let [{:keys [start end value head tail target meta]} (destruct-event e)
+  (let [{:keys [start value target]} (destruct-event e)
         possible-pair (subs value (dec start) (inc start))]
 
     (cond
-      ;; if selection, delete selected text
-      (not= start end) (let [new-tail (subs value end)
-                             new-str (str head new-tail)]
-                         (swap! state assoc :generated-str new-str))
-
-      ;; if meta, delete to start of line
-      meta (swap! state assoc :generated-str tail)
-
       ;; if at block start, dispatch (requires context)
       (block-start? e) (dispatch [:backspace uid value])
+      (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
+                                                         tail    (subs value (inc start))
+                                                         new-str (str head tail)]
+                                                     (swap! state assoc
+                                                            :search/index 0
+                                                            :search/type nil
+                                                            :generated-str new-str)
+                                                     (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
-      ;; if within brackets, delete close bracket as well
-      ;; todo: parameterize, use PAIR-CHARS
-      (some #(= possible-pair %) ["[]" "{}" "()"])
-      (let [head    (subs value 0 (dec start))
-            tail    (subs value (inc start))
-            new-str (str head tail)]
-        (swap! state assoc
-               :search/index 0
-               :search/type nil
-               :generated-str new-str)
-        (js/setTimeout #(setCursorPosition target (dec start)) 10))
-
-      ;; default backspace: delete a character
+      ;; allow default behavior, but close out of search dropdowns
       :else (let [head    (subs value 0 (dec start))
-                  new-str (str head tail)
                   {:search/keys [query type]} @state]
               (when (= "/" (last value))
                 (swap! state assoc
