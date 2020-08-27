@@ -55,14 +55,17 @@
   ([state head key type]
    (let [query-fn (cond
                     (= type :block) db/search-in-block-content
-                    (= type :page)  db/search-in-node-title)
+                    (= type :page)  db/search-in-node-title
+                    (= type :slash) nil) ;; TODO update filter
          link-start (cond
                       (= type :block) (count (re-find #".*\(\(" head))
                       (= type :page)  (count (re-find #".*\[\[" head)))
          new-query (str (subs head link-start) key)
-         results (query-fn new-query)]
-     (swap! state assoc :search/query new-query)
-     (swap! state assoc :search/results results))))
+         results (when query-fn
+                   (query-fn new-query))]
+     (swap! state assoc
+            :search/query new-query
+            :search/results results))))
 
 
 (def ARROW-KEYS
@@ -91,13 +94,29 @@
 
 
 (defn dec-cycle
-  [min max v]
-  (if (<= v min) max (dec v)))
+  [min max idx]
+  (if (<= idx min)
+    max
+    (dec idx)))
 
 
 (defn inc-cycle
-  [min max v]
-  (if (>= v max) min (inc v)))
+  [min max idx]
+  (if (>= idx max)
+    min
+    (inc idx)))
+
+
+(defn cycle-list
+  "If user has slash menu or inline search dropdown open:
+  - pressing down increments index
+  - pressing up decrements index
+  0 is typically min index
+  max index is collection length minus 1"
+  [min max idx up? down?]
+  (let [f (cond up? dec-cycle
+                down? inc-cycle)]
+    (f min max idx)))
 
 
 (defn max-idx
@@ -106,66 +125,52 @@
 
 
 (defn handle-arrow-key
-  "May want to flatten this into multiple handlers."
   [e uid state]
   (let [{:keys [key-code shift target]} (destruct-event e)
-        ;; TODO
-        top-row?    true
-        bottom-row? true
-        {:search/keys [results type]} @state
-        selected-items @(subscribe [:selected/items])
-        direction (arrow-key-direction e)]
+        top-row?    (block-start? e)
+        bottom-row? (block-end? e)
+        {:search/keys [results type index]} @state
+        up? (= key-code KeyCodes.UP)
+        down? (= key-code KeyCodes.DOWN)
+        left? (= key-code KeyCodes.LEFT)
+        right? (= key-code KeyCodes.RIGHT)]
 
     (cond
+      ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
+      shift (cond
+              left? nil
+              right? nil
+              (or (and up? top-row?)
+                  (and down? bottom-row?)) (do
+                                              (.. target blur)
+                                              (dispatch [:editing/uid nil])
+                                              (dispatch [:selected/add-item uid])))
 
-      ;; items already selected, go up or down
-      (and shift (seq selected-items) (= :up direction) (dispatch [:selected/up]))
-      (and shift (seq selected-items) (= :down direction) (dispatch [:selected/down]))
+      ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
+      type (cond
+             (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
+             (or up? down?) (let [cur-index index
+                                  min-index 0
+                                  max-index (if (= type :slash)
+                                              (max-idx slash-options)
+                                              (max-idx results))
+                                  next-index (cycle-list min-index max-index cur-index up? down?)
+                                  container-el (if (= type :slash)
+                                                 (getElement "slash-menu-container")
+                                                 (getElement "dropdown-menu"))
+                                  target-el (if (= type :slash)
+                                              (nth (array-seq (.. container-el -children)) next-index)
+                                              (getElement (str "result-" next-index)))]
+                              (.. e preventDefault)
+                              (swap! state assoc :search/index next-index)
+                              (scroll-into-view target-el container-el false)))
 
-      ;; Only select block if leaving block content (up on top row or down on bottom row). Otherwise select text
-      (and shift (= :up direction) top-row?) (do
-                                               (.. target blur)
-                                               (dispatch [:editing/uid nil])
-                                               (dispatch [:selected/add-item uid]))
-
-      (and shift (= :down direction) bottom-row?) (do
-                                                    (.. target blur)
-                                                    (dispatch [:editing/uid nil])
-                                                    (dispatch [:selected/add-item uid]))
-
-      (= type :slash) (cond
-                        (= :up direction) (do
-                                            (.. e preventDefault)
-                                            (swap! state update :search/index (partial dec-cycle 0 (max-idx slash-options)))
-                                            (let [cur-index (:search/index @state)
-                                                  container-el (getElement "slash-menu-container")
-                                                  next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                              (scroll-into-view next-el (.. container-el -parentNode) false)))
-                        (= :down direction) (do
-                                              (.. e preventDefault)
-                                              (swap! state update :search/index (partial inc-cycle 0 (max-idx slash-options)))
-                                              (let [cur-index (:search/index @state)
-                                                    container-el (getElement "slash-menu-container")
-                                                    next-el (nth (array-seq (.. container-el -children)) cur-index)]
-                                                (scroll-into-view next-el container-el false))))
-
-      (or (= type :page) (= type :block))
-      (cond
-        (= key-code KeyCodes.UP) (do
-                                   (.. e preventDefault)
-                                   (swap! state update :search/index (partial dec-cycle 0 (max-idx results)))
-                                   (scroll-if-needed (getElement (str "result-" (:search/index @state)))
-                                                     (getElement "dropdown-menu")))
-        (= key-code KeyCodes.DOWN) (do
-                                     (.. e preventDefault)
-                                     (swap! state update :search/index (partial inc-cycle 0 (max-idx results)))
-                                     (scroll-if-needed (getElement (str "result-" (:search/index @state)))
-                                                       (getElement "dropdown-menu"))))
+      ;; Else: navigate across blocks
       :else (cond
-              (and (= key-code KeyCodes.UP) top-row?) (dispatch [:up uid])
-              (and (= key-code KeyCodes.LEFT) (block-start? e)) (dispatch [:left uid])
-              (and (= key-code KeyCodes.DOWN) bottom-row?) (dispatch [:down uid])
-              (and (= key-code KeyCodes.RIGHT) (block-end? e)) (dispatch [:right uid])))))
+              (and up? top-row?)       (dispatch [:up uid])
+              (and left? top-row?)     (dispatch [:left uid])
+              (and down? bottom-row?)  (dispatch [:down uid])
+              (and right? bottom-row?) (dispatch [:right uid])))))
 
 
 (defn handle-tab
@@ -343,6 +348,7 @@
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
+;; TODO: use defaults where it makes sense, like ctrl backspace
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start end value head tail target meta]} (destruct-event e)
@@ -366,8 +372,10 @@
       (let [head    (subs value 0 (dec start))
             tail    (subs value (inc start))
             new-str (str head tail)]
-        (swap! state assoc :generated-str new-str)
-        (swap! state assoc :search/type nil)
+        (swap! state assoc
+               :search/index 0
+               :search/type nil
+               :generated-str new-str)
         (js/setTimeout #(setCursorPosition target (dec start)) 10))
 
       ;; default backspace: delete a character
@@ -375,8 +383,10 @@
                   new-str (str head tail)
                   {:search/keys [query type]} @state]
               (when (= "/" (last value))
-                (swap! state merge {:search/type nil
-                                    :search/query nil}))
+                (swap! state assoc
+                       :search/index 0
+                       :search/type nil
+                       :search/query nil))
               (when query
                 (update-query state head type))
               (swap! state assoc :generated-str new-str)))))
@@ -407,7 +417,6 @@
     (swap! state merge {:generated-str new-str})))
 
 
-;; XXX: what happens here when we have multi-block selection? In this case we pass in `uids` instead of `uid`
 (defn block-key-down
   [e uid state]
   (let [d-event (destruct-event e)
