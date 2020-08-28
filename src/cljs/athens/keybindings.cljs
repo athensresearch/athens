@@ -15,7 +15,7 @@
       KeyCodes)))
 
 
-(declare slash-options)
+;;; Event Helpers
 
 
 (defn modifier-keys
@@ -50,6 +50,37 @@
            {:selection selection})))
 
 
+(def ARROW-KEYS
+  {KeyCodes.UP    :up
+   KeyCodes.LEFT  :left
+   KeyCodes.DOWN  :down
+   KeyCodes.RIGHT :right})
+
+
+(defn arrow-key-direction
+  [e]
+  (let [key-code (.. e -keyCode)]
+    (ARROW-KEYS key-code)))
+
+
+;;; Dropdown: inline-search and slash commands
+
+;; TODO: some expansions require caret placement after
+(def slash-options
+  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
+   ["Current Time"  mui-icons/Timer #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"}))) nil]
+   ["Today"         mui-icons/Today #(str "[[" (:title (get-day 0)) "]] ") nil]
+   ["Tomorrow"      mui-icons/Today #(str "[[" (:title (get-day -1)) "]]") nil]
+   ["Yesterday"     mui-icons/Today #(str "[[" (:title (get-day 1)) "]]") nil]
+   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
+   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
+
+;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;;[mui-icons/DateRange "Date Picker"]
+;;[mui-icons/Attachment "Upload Image or File"]
+;;[mui-icons/ExposurePlus1 "Word Count"]
+
+
 (defn filter-slash-options
   [query]
   (if (blank? query)
@@ -81,17 +112,41 @@
             :search/results results))))
 
 
-(def ARROW-KEYS
-  {KeyCodes.UP    :up
-   KeyCodes.LEFT  :left
-   KeyCodes.DOWN  :down
-   KeyCodes.RIGHT :right})
+(defn auto-complete-slash
+  [index state]
+  (let [{:keys [string/local]} @state
+        [_ _ expansion _] (nth slash-options index)
+        expand (if (fn? expansion) (expansion) expansion)
+        replace-str (subs local 0 (dec (count local)))
+        new-str     (str replace-str expand)]
+    (swap! state assoc
+           :search/index 0
+           :search/type nil
+           :string/generated new-str)))
 
 
-(defn arrow-key-direction
-  [e]
-  (let [key-code (.. e -keyCode)]
-    (ARROW-KEYS key-code)))
+(defn auto-complete-inline
+  [state e completed-str]
+  (let [{:keys [start head tail target]} (destruct-event e)
+        {:search/keys [query type]} @state
+        block? (= type :block)
+        page? (= type :page)
+        head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
+                           page?  (re-pattern (str "(.*)\\[\\[" query)))
+        tail-pattern (cond block? #"(\)\))?(.*)"
+                           page?  #"(\]\])?(.*)")
+        new-head (cond block? "$1(("
+                       page?  "$1[[")
+        closing-str (cond block? "))"
+                          page?  "]]")
+        new-str (replace-first head head-pattern (str new-head completed-str closing-str))
+        [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
+    (swap! state assoc :string/generated (str new-str after-closing-str) :search/type nil)
+    (when closing-delimiter
+      (setStart target (+ 2 start)))))
+
+
+;;; Arrow Keys
 
 
 (defn block-start?
@@ -180,6 +235,8 @@
               (and right? bottom-row?) (dispatch [:right uid])))))
 
 
+;;; Tab
+
 (defn handle-tab
   [e uid]
   (.. e preventDefault)
@@ -198,56 +255,7 @@
   (swap! state assoc :search/type nil)
   (dispatch [:editing/uid nil]))
 
-
-;; TODO: some expansions require caret placement after
-;; fixme: perhaps not the best place to put this, but need to access from both blocks and keybindings
-(def slash-options
-  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
-   ["Current Time"  mui-icons/Timer #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"}))) nil]
-   ["Today"         mui-icons/Today #(str "[[" (:title (get-day 0)) "]] ") nil]
-   ["Tomorrow"      mui-icons/Today #(str "[[" (:title (get-day -1)) "]]") nil]
-   ["Yesterday"     mui-icons/Today #(str "[[" (:title (get-day 1)) "]]") nil]
-   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
-
-;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[mui-icons/DateRange "Date Picker"]
-;;[mui-icons/Attachment "Upload Image or File"]
-;;[mui-icons/ExposurePlus1 "Word Count"]
-
-(defn auto-complete-slash
-  [index state]
-  (let [{:keys [string/local]} @state
-        [_ _ expansion _] (nth slash-options index)
-        expand (if (fn? expansion) (expansion) expansion)
-        replace-str (subs local 0 (dec (count local)))
-        new-str     (str replace-str expand)]
-    (swap! state assoc
-           :search/index 0
-           :search/type nil
-           :string/generated new-str)))
-
-
-(defn auto-complete-inline
-  [state e completed-str]
-  (let [{:keys [start head tail target]} (destruct-event e)
-        {:search/keys [query type]} @state
-        block? (= type :block)
-        page? (= type :page)
-        head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                           page?  (re-pattern (str "(.*)\\[\\[" query)))
-        tail-pattern (cond block? #"(\)\))?(.*)"
-                           page?  #"(\]\])?(.*)")
-        new-head (cond block? "$1(("
-                       page?  "$1[[")
-        closing-str (cond block? "))"
-                          page?  "]]")
-        new-str (replace-first head head-pattern (str new-head completed-str closing-str))
-        [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
-    (swap! state assoc :string/generated (str new-str after-closing-str) :search/type nil)
-    (when closing-delimiter
-      (setStart target (+ 2 start)))))
-
+;;; Enter
 
 (defn handle-enter
   [e uid state]
@@ -274,7 +282,8 @@
       :else (dispatch [:enter uid value start]))))
 
 
-;; todo: do this for ** and __
+;;; Pair Chars: auto-balance for backspace and writing chars
+
 (def PAIR-CHARS
   {"(" ")"
    "[" "]"
@@ -341,6 +350,8 @@
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
+;; Backspace
+
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start value target]} (destruct-event e)
@@ -362,6 +373,8 @@
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
+
+;; Character: for queries
 
 (defn is-character-key?
   "Closure returns true even when using modifier keys. We do not make that assumption."
@@ -394,17 +407,14 @@
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
     (cond
-      (arrow-key-direction e) (handle-arrow-key e uid state)
-      (pair-char? e) (handle-pair-char e uid state)
-      (= key-code KeyCodes.TAB) (handle-tab e uid)
-      (= key-code KeyCodes.ENTER) (handle-enter e uid state)
+      (arrow-key-direction e)         (handle-arrow-key e uid state)
+      (pair-char? e)                  (handle-pair-char e uid state)
+      (= key-code KeyCodes.TAB)       (handle-tab e uid)
+      (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-      (= key-code KeyCodes.ESC) (handle-escape e state)
-      (or meta ctrl) (handle-shortcuts e uid state)
-
-;; -- Default: Add new character -----------------------------------------
-      (is-character-key? e) (write-char e uid state))))
-
+      (= key-code KeyCodes.ESC)       (handle-escape e state)
+      (or meta ctrl)                  (handle-shortcuts e uid state)
+      (is-character-key? e)           (write-char e uid state))))
 
 ;;:else (prn "non-event" key key-code))))
 
