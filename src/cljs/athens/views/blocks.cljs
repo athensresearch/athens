@@ -338,56 +338,6 @@
 ;; Helpers
 
 
-(defn walk-parse-tree-for-links
-  [source-str link-fn db-fn]
-  (parse/transform {:page-link (fn [& title]
-                                 (let [inner-title (apply + title)]
-                                   ;; `apply +` can return 0 if `title` is nil or empty string
-                                   (when (and (string? inner-title)
-                                              (link-fn inner-title))
-                                     (let [now (now-ts)
-                                           uid (gen-block-uid)]
-                                       (db-fn inner-title now uid)))
-                                   (str "[[" inner-title "]]")))
-                    :hashtag   (fn [& title]
-                                 (let [inner-title (apply + title)]
-                                   (when (and (string? inner-title)
-                                              (link-fn inner-title))
-                                     (let [now (now-ts)
-                                           uid (gen-block-uid)]
-                                       (db-fn inner-title now uid)))
-                                   (str "#" inner-title)))} (parser/parse-to-ast source-str)))
-
-
-(defn on-change
-  [oldvalue value uid]
-  ;; (prn "ONCHANGE" value)
-  ;; TODO: move this to somewhere more comfortable using reframe dispatch
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
-  (walk-parse-tree-for-links
-    value
-    (fn [inner-title]              (nil? (db/search-exact-node-title inner-title)))
-    (fn [inner-title now-time uid]
-      (dispatch [:transact [{:node/title  inner-title
-                             :block/uid   uid
-                             :edit/time   now-time
-                             :create/time now-time}]])))
-  (walk-parse-tree-for-links
-    oldvalue
-    (fn [inner-title]
-      (let [block (db/search-exact-node-title inner-title)]
-        (and (not (nil? block))                                                     ;; makes sure the page link is valid
-             (nil? (:block/children (db/get-block-document (:db/id block))))        ;; makes sure the page link has no children
-             (zero? (count-linked-references-excl-uid inner-title uid))             ;; makes sure the page link is not present in other pages
-             (not (clojure.string/includes? value inner-title)))))  ;; makes sure the page link is deleted in this node as well
-    (fn [inner-title _ _]
-      (let [uid (:block/uid @(pull-node-from-string inner-title))]
-        (when (some? uid) (dispatch [:page/delete uid]))))))
-
-
-(def db-on-change (debounce on-change 1000))
-
-
 (defn toggle
   [id open]
   (dispatch [:transact [[:db/add id :block/open (not open)]]]))
@@ -480,12 +430,80 @@
       (swap! state assoc :string/local (.. e -target -value)))))
 
 
+(defn walk-parse-tree-for-links
+  [source-str link-fn db-fn]
+  (parse/transform
+    {:page-link (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    ;; `apply +` can return 0 if `title` is nil or empty string
+                    (when (and (string? inner-title)
+                               (link-fn inner-title))
+                      (let [now (now-ts)
+                            uid (gen-block-uid)]
+                        (db-fn inner-title now uid)))
+                    (str "[[" inner-title "]]")))
+     :hashtag   (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    (when (and (string? inner-title)
+                               (link-fn inner-title))
+                      (let [now (now-ts)
+                            uid (gen-block-uid)]
+                        (db-fn inner-title now uid)))
+                    (str "#" inner-title)))}
+    (parser/parse-to-ast source-str)))
+
+
+;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
+(defn walk-string!
+  "Walk previous and new strings to delete or add links, block references, etc. to datascript."
+  [data string]
+  (parse/transform
+    {:page-link (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    (swap! data update :titles #(conj % inner-title))
+                    (str "[[" inner-title "]]")))
+     :hashtag   (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    (swap! data update :titles #(conj % inner-title))
+                    ;; what about #[[]]? not sure if it even matters since just looking for inner-title
+                    (str "#" inner-title)))}
+    ;; TODO: block refs
+    (parser/parse-to-ast string)))
+
+
 (defn textarea-blur
+  "When textarea loses focus, transact to datascript.
+  Compare previous string with current string.
+  - If links were added, transact pages to database.
+  - If links were removed, add page is an orphan page, retract pages from database.
+  An orphan page has no linked references and no child blocks."
   [_e uid state]
   (let [{:string/keys [local previous]} @state]
     (when (not= local previous)
       (swap! state assoc :string/previous local)
-      (dispatch [:transact [{:db/id [:block/uid uid] :block/string local :edit/time (now-ts)}]]))))
+      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
+            old-data (atom {})
+            new-data (atom {})]
+        (walk-string! old-data previous)
+        (walk-string! new-data local)
+        (let [new-titles (->> (:titles @new-data)
+                             (filter (fn [x] (nil? (db/search-exact-node-title x))))
+                             (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
+              old-titles (->> (:titles @old-data)
+                              (filter (fn [x]
+                                        (let [block (db/search-exact-node-title x)]
+                                          (and (not (nil? block));; makes sure the page link is valid
+                                               (nil? (:block/children (db/get-block-document (:db/id block)))) ;; makes sure the page link has no children
+                                               (zero? (count-linked-references-excl-uid x uid)) ;; makes sure the page link is not present in other pages
+                                               ;; makes sure the page link is deleted in this node as well
+                                               (not (clojure.string/includes? local x))))))
+                              (map (fn [x]
+                                     (let [uid (:block/uid @(pull-node-from-string x))]
+                                       (when (some? uid) (dispatch [:page/delete uid]))))))
+              new-datoms (concat [new-block-string]
+                                 new-titles
+                                 old-titles)]
+          (dispatch [:transact new-datoms]))))))
 
 
 (defn textarea-click
@@ -509,9 +527,8 @@
             (dispatch [:selected/add-items selected-uids])))))))
 
 
-;; Actual string contents - two elements, one for reading and one for writing
-;; seems hacky, but so far no better way to click into the correct position with one conditional element
 (defn block-content-el
+  "Actual string contents. Two elements, one for reading and one for writing."
   [_ _ _]
   (fn [block state is-editing]
     (let [{:block/keys [uid]} block
@@ -613,9 +630,9 @@
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:string/local      (:block/string block)
+  (let [state (r/atom {:string/local      nil
                        :string/generated  nil
-                       :string/previous   (:block/string block) ;; this is for detecting what's deleted to process page deletion
+                       :string/previous   nil
                        :search/type       nil ;; one of #{:page :block :slash}
                        :search/results    nil
                        :search/query      nil
@@ -637,12 +654,6 @@
                             (not (nil? (:string/generated new))))
                    (swap! state assoc :string/local (:string/generated new)))))
 
-    (add-watch state :local-string-listener
-               (fn [_context _atom old new]
-                 (let [{:block/keys [uid]} block]
-                   (when (not= (:string/local old) (:string/local new))
-                     (db-on-change (:string/previous old) (:string/local new) uid)))))
-
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
             {:search/keys [type] :keys [dragging drag-target] state-edit-time :edit/time} @state
@@ -651,10 +662,11 @@
 
         ;;(prn uid is-selected)
 
-        ;; if block is updated in datascript, update local block state
-        (when (< state-edit-time edit-time)
-          (let [new-state {:edit/time edit-time :string/local string :string/previous string}]
-            (swap! state merge new-state)))
+        ;; If datascript string value does not equal local value, overwrite local value.
+        ;; Write on initialization
+        ;; Write also from backspace, which can join bottom block's contents to top the block.
+        (when (not= string (:string/previous @state))
+          (swap! state assoc :string/previous string :string/local string))
 
         [:div
          {:class         ["block-container"

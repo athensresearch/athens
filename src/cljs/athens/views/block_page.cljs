@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.views.blocks :refer [block-el db-on-change]]
+    [athens.views.blocks :refer [block-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -88,10 +88,11 @@
 ;; Header
    [:h1 (use-style title-style {:data-uid uid :class "block-header"})
     [autosize/textarea
-     {:default-value string
+     {:value string
       :class (when (= editing-uid uid) "is-editing")
       :auto-focus true
-      :on-change  (fn [e] (db-on-change (.. e -target -value) uid))}]
+      ;; TODO:
+      :on-change  (fn [e] (prn "TODO block page"))}]
     [:span string]]
 
 
