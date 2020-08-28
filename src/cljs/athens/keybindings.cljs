@@ -2,14 +2,14 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day scroll-into-view]]
+    [athens.util :refer [scroll-if-needed get-day]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch]])
   (:import
     (goog.events
       KeyCodes)))
@@ -60,21 +60,20 @@
 
 
 (defn update-query
-  "3-arity is used during backspace.
-  4-arity is used in write-char to append key to query-start.
+  "Used by backspace and write-char.
+  write-char appends key character. Pass empty string during backspace.
   query-start is determined by doing a greedy regex find up to head.
   Head goes up to the text caret position."
-  ([state head type] (update-query state head "" type))
   ([state head key type]
    (let [query-fn (case type
                     :block db/search-in-block-content
                     :page  db/search-in-node-title
                     :slash filter-slash-options)
-         query-start (case type
-                       :block (count (re-find #".*\(\(" head))
-                       :page  (count (re-find #".*\[\[" head))
-                       :slash (count (re-find #".*/"   head)))
-         new-query (str (subs head query-start) key)
+         query-start-idx (case type
+                           :block (count (re-find #".*\(\(" head))
+                           :page  (count (re-find #".*\[\[" head))
+                           :slash (count (re-find #".*/"    head)))
+         new-query (str (subs head query-start-idx) key)
          results (query-fn new-query)]
      (swap! state assoc
             :search/index 0
@@ -165,19 +164,13 @@
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
              (or up? down?) (let [cur-index index
                                   min-index 0
-                                  max-index (if (= type :slash)
-                                              (max-idx slash-options)
-                                              (max-idx results))
+                                  max-index (max-idx results)
                                   next-index (cycle-list min-index max-index cur-index up? down?)
-                                  container-el (if (= type :slash)
-                                                 (getElement "slash-menu-container")
-                                                 (getElement "dropdown-menu"))
-                                  target-el (if (= type :slash)
-                                              (nth (array-seq (.. container-el -children)) next-index)
-                                              (getElement (str "result-" next-index)))]
+                                  container-el (getElement "dropdown-menu")
+                                  target-el (getElement (str "dropdown-item-" next-index))]
                               (.. e preventDefault)
                               (swap! state assoc :search/index next-index)
-                              (scroll-into-view target-el container-el false)))
+                              (scroll-if-needed target-el container-el)))
 
       ;; Else: navigate across blocks
       :else (cond
@@ -224,15 +217,15 @@
 
 (defn auto-complete-slash
   [index state]
-  (let [{:keys [atom-string]} @state
-        [_ _ expansion _] (get slash-options index)
+  (let [{:keys [string/local]} @state
+        [_ _ expansion _] (nth slash-options index)
         expand (if (fn? expansion) (expansion) expansion)
-        replace-str (subs atom-string 0 (dec (count atom-string)))
+        replace-str (subs local 0 (dec (count local)))
         new-str     (str replace-str expand)]
     (swap! state assoc
            :search/index 0
            :search/type nil
-           :generated-str new-str)))
+           :string/generated new-str)))
 
 
 (defn auto-complete-inline
@@ -251,12 +244,7 @@
                           page?  "]]")
         new-str (replace-first head head-pattern (str new-head completed-str closing-str))
         [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
-    (swap! state assoc
-           :generated-str (str new-str after-closing-str)
-           :search/index 0
-           :search/results nil
-           :search/query nil
-           :search/type nil)
+    (swap! state assoc :string/generated (str new-str after-closing-str) :search/type nil)
     (when closing-delimiter
       (setStart target (+ 2 start)))))
 
@@ -274,14 +262,14 @@
                         (auto-complete-inline state e uid))
 
       ;; shift-enter: add line break to textarea
-      shift (swap! state assoc :generated-str (str head "\n" tail))
-      ;; cmd-enter: toggle todo/done
+      shift (swap! state assoc :string/generated (str head "\n" tail))
+      ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
       ctrl (let [first    (subs value 0 13)
                  new-tail (subs value 13)
                  new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
                                (= first "{{[[DONE]]}} ") new-tail
                                :else (str "{{[[TODO]]}} " value))]
-             (swap! state assoc :generated-str new-str))
+             (swap! state assoc :string/generated new-str))
       ;; default: may mutate blocks
       :else (dispatch [:enter uid value start]))))
 
@@ -311,9 +299,9 @@
   (let [{:keys [key-code head tail selection]} (destruct-event e)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :generated-str new-str))
+                                (swap! state assoc :string/generated new-str))
       (= key-code KeyCodes.I) (let [new-str (str head (surround selection "__") tail)]
-                                (swap! state assoc :generated-str new-str)))))
+                                (swap! state assoc :string/generated new-str)))))
 
 
 (defn pair-char?
@@ -333,16 +321,16 @@
     (cond
       (= start end) (let [new-str (str head key close-pair tail)]
                       (js/setTimeout #(setCursorPosition target (inc start)) 10)
-                      (swap! state assoc :generated-str new-str))
+                      (swap! state assoc :string/generated new-str))
       (not= start end) (let [surround-selection (surround selection key)
                              new-str (str head surround-selection tail)]
-                         (swap! state assoc :generated-str new-str)
+                         (swap! state assoc :string/generated new-str)
                          (js/setTimeout (fn []
                                           (setStart target (inc start))
                                           (setEnd target (inc end)))
                                         10)))
 
-    (let [four-char (subs (:generated-str @state) (dec start) (+ start 3))
+    (let [four-char (subs (:string/generated @state) (dec start) (+ start 3))
           double-brackets? (= "[[]]" four-char)
           double-parens?   (= "(())" four-char)
           type (cond double-brackets? :page
@@ -356,32 +344,23 @@
 (defn handle-backspace
   [e uid state]
   (let [{:keys [start value target]} (destruct-event e)
-        possible-pair (subs value (dec start) (inc start))]
+        possible-pair (subs value (dec start) (inc start))
+        head    (subs value 0 (dec start))
+        {:search/keys [type]} @state]
     (cond
-      ;; block start: dispatch
       (block-start? e) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
       (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
                                                          tail    (subs value (inc start))
                                                          new-str (str head tail)]
                                                      (swap! state assoc
-                                                            :search/index 0
                                                             :search/type nil
-                                                            :search/results nil
-                                                            :search/query nil
-                                                            :generated-str new-str)
+                                                            :string/generated new-str)
                                                      (js/setTimeout #(setCursorPosition target (dec start)) 10))
-
-      ;; allow default backspace, but check to close slash menu or update query
-      :else (let [head    (subs value 0 (dec start))
-                  {:search/keys [type]} @state]
-              (cond
-                (= "/" (last value)) (swap! state assoc
-                                            :search/index 0
-                                            :search/results nil
-                                            :search/type nil
-                                            :search/query nil)
-                type (update-query state head type))))))
+      ;; slash: close dropdown
+      (= "/" (last value)) (swap! state assoc :search/type nil)
+      ;; dropdown is open: update query
+      type (update-query state head "" type))))
 
 
 (defn is-character-key?
