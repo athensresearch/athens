@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [block-key-down]]
+    [athens.keybindings :refer [block-key-down auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -431,47 +431,53 @@
      (if (clojure.string/blank? query)
        [:div (str "Search for a " (symbol type))]
        (doall
-         [:div (use-style menu-style {:id "dropdown-menu"})
+         [:div#dropdown-menu (use-style menu-style)
           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-            ^{:key (str "inline-search-item" uid)}
-            ;; todo: implement expand
-            [button {:on-click #(prn "expand")
+            [button {:key      (str "inline-search-item" uid)
+                     :id       (str "dropdown-item-" i)
                      :active   (= index i)
-                     :id       (str "result-" i)}
+                     ;; TODO: pass relevant textarea values to auto-complete-inline
+                     ;;#(auto-complete-inline state % (or title string))}
+                     :on-click #(prn "TODO")}
              (or title string)])]))]))
 
 
 (defn slash-menu-el
   [state]
-  (let [{index :search/index} @state]
+  (let [{:search/keys [index results]} @state]
     [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-     [:div#slash-menu-container (merge (use-style menu-style) {:style {:max-height "8em"}})
-      (for [[i [icon text _expansion kbd]] (map-indexed list athens.keybindings/slash-options)]
-        [button {:active   (= i index)
-                 :key      text
-                 :on-click #(athens.keybindings/select-slash-cmd i state)}
+     [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
+      (for [[i [text icon _expansion kbd]] (map-indexed list results)]
+        [button {:key      text
+                 :id       (str "dropdown-item-" i)
+                 :active   (= i index)
+                 ;; TODO: do not unfocus textarea
+                 :on-click #(auto-complete-slash i state)}
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
 (defn paste
-  "if user does typical copy and paste, meta+v, and "
+  "Clipboard data can only be accessed if user triggers JavaScript paste event.
+  Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
+  Cases:
+  - User pastes and last keydown has shift -> default
+  - User pastes and clipboard data doesn't have new lines -> default
+  - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
   (let [data (.. e -clipboardData (getData "text"))
-        is-block (re-find #"\r?\n" data)
-        last-keydown (:last-keydown @state)
-        {:keys [shift]} last-keydown]
-    ;; if `not shift`, do normal plain-text paste
-    (when (and is-block (not shift))
+        line-breaks (re-find #"\r?\n" data)
+        no-shift (-> @state :last-keydown :shift not)]
+    (when (and line-breaks no-shift)
       (.. e preventDefault)
       (dispatch [:paste uid data]))))
 
 
 (defn block-on-change
   [e _uid state]
-  (let [{:keys [generated-str]} @state]
-    (if generated-str
-      (swap! state assoc :atom-string generated-str :generated-str nil)
-      (swap! state assoc :atom-string (.. e -target -value)))))
+  (let [{:keys [string/generated]} @state]
+    (if generated
+      (swap! state assoc :string/local generated :string/generated nil)
+      (swap! state assoc :string/local (.. e -target -value)))))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -484,7 +490,7 @@
              :on-click (fn [e]
                          (when (false? (.. e -shiftKey))
                            (dispatch [:editing/uid uid])))}
-       [autosize/textarea {:value         (:atom-string @state)
+       [autosize/textarea {:value         (:string/local @state)
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
@@ -596,24 +602,35 @@
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [block]
-  (let [state (r/atom {:atom-string (:block/string block)
-                       :generated-str nil
-                       :old-string (:block/string block) ;; this is for detecting what's deleted to process page deletion
-                       :search/type nil ;; one of #{:page :block :slash}
-                       :search/query nil
-                       :search/index 0
-                       :dragging false
-                       :drag-target nil
-                       :edit/time (:edit/time block)
-                       :last-keydown nil
-                       :context-menu/x nil
-                       :context-menu/y nil
+  (let [state (r/atom {:string/local      (:block/string block)
+                       :string/generated  nil
+                       :string/previous   (:block/string block) ;; this is for detecting what's deleted to process page deletion
+                       :search/type       nil ;; one of #{:page :block :slash}
+                       :search/results    nil
+                       :search/query      nil
+                       :search/index      nil
+                       :dragging          false
+                       :drag-target       nil
+                       :edit/time         (:edit/time block)
+                       :last-keydown      nil
+                       :context-menu/x    nil
+                       :context-menu/y    nil
                        :context-menu/show false})]
-    (add-watch state :string-listener
+
+    ;; If generated string is updated, automatically update local string
+    ;; Necessary because modifying generated string itself won't trigger the on-change event of the textarea
+    ;; local string must be modified to trigger new value of generated string
+    (add-watch state :generated-string-listener
                (fn [_context _atom old new]
-                 (let [{:keys [atom-string]} new]
-                   (when (not= (:atom-string old) atom-string)
-                     (db-on-change (:old-string old) atom-string (:block/uid block))))))
+                 (when (and (not= (:string/generated old) (:string/generated new))
+                            (not (nil? (:string/generated new))))
+                   (swap! state assoc :string/local (:string/generated new)))))
+
+    (add-watch state :local-string-listener
+               (fn [_context _atom old new]
+                 (let [{:block/keys [uid]} block]
+                   (when (not= (:string/local old) (:string/local new))
+                     (db-on-change (:string/previous old) (:string/local new) uid)))))
 
     (fn [block]
       (let [{:block/keys [uid string open children] edit-time :edit/time} block
@@ -625,7 +642,7 @@
 
         ;; if block is updated in datascript, update local block state
         (when (< state-edit-time edit-time)
-          (let [new-state {:edit/time edit-time :atom-string string :old-string string}]
+          (let [new-state {:edit/time edit-time :string/local string :string/previous string}]
             (swap! state merge new-state)))
 
         [:div
