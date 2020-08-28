@@ -400,7 +400,7 @@
       type (update-query state head key type))))
 
 
-(defn block-key-down
+(defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-event e)
         {:keys [meta ctrl key-code]} d-event]

@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [block-key-down auto-complete-slash #_auto-complete-inline]]
+    [athens.keybindings :refer [textarea-key-down auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -456,7 +456,7 @@
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
-(defn paste
+(defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
   Cases:
@@ -472,12 +472,20 @@
       (dispatch [:paste uid data]))))
 
 
-(defn block-on-change
+(defn textarea-change
   [e _uid state]
   (let [{:keys [string/generated]} @state]
     (if generated
       (swap! state assoc :string/local generated :string/generated nil)
       (swap! state assoc :string/local (.. e -target -value)))))
+
+
+(defn textarea-blur
+  [_e uid state]
+  (let [{:string/keys [local previous]} @state]
+    (when (not= local previous)
+      (swap! state assoc :string/previous local)
+      (dispatch [:transact [{:db/id [:block/uid uid] :block/string local :edit/time (now-ts)}]]))))
 
 
 ;; Actual string contents - two elements, one for reading and one for writing
@@ -494,10 +502,12 @@
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
-                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybindings
-                           :on-change     (fn [e] (block-on-change e uid state))
-                           :on-paste      (fn [e] (paste e uid state))
-                           :on-key-down   (fn [e] (block-key-down e uid state))
+                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybinding
+
+                           :on-change     (fn [e] (textarea-change   e uid state))
+                           :on-paste      (fn [e] (textarea-paste    e uid state))
+                           :on-key-down   (fn [e] (textarea-key-down e uid state))
+                           :on-blur       (fn [e] (textarea-blur     e uid state))
                            ;; TODO: allow user to select multiple times while holding shift
                            ;; FIXME: always unselects on mouse up
                            :on-mouse-down (fn [_]
