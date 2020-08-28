@@ -488,12 +488,34 @@
       (dispatch [:transact [{:db/id [:block/uid uid] :block/string local :edit/time (now-ts)}]]))))
 
 
+(defn textarea-click
+  [e uid _state]
+  (let [source-uid @(subscribe [:editing/uid])]
+    ;; if shift key is held when user clicks across multiple blocks, select the blocks
+    (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
+      (let [target (.. e -target)
+            page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+            target-block (.. target (closest ".block-container"))
+            blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
+            [start end] (-> (keep-indexed (fn [i el]
+                                            (when (or (= el target-block)
+                                                      (= source-uid (.. el -dataset -uid)))
+                                              i))
+                                          blocks))]
+        (when (and start end)
+          (let [selected-blocks (subvec blocks start (inc end))
+                selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+            (dispatch [:editing/uid nil])
+            (dispatch [:selected/add-items selected-uids])))))))
+
+
 ;; Actual string contents - two elements, one for reading and one for writing
 ;; seems hacky, but so far no better way to click into the correct position with one conditional element
 (defn block-content-el
   [_ _ _]
   (fn [block state is-editing]
-    (let [{:block/keys [string uid]} block]
+    (let [{:block/keys [uid]} block
+          {:string/keys [local]} @state]
       [:div {:class "block-content"
              :on-click (fn [e]
                          (when (false? (.. e -shiftKey))
@@ -502,36 +524,15 @@
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
-                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybinding
-
                            :on-change     (fn [e] (textarea-change   e uid state))
                            :on-paste      (fn [e] (textarea-paste    e uid state))
                            :on-key-down   (fn [e] (textarea-key-down e uid state))
                            :on-blur       (fn [e] (textarea-blur     e uid state))
-                           ;; TODO: allow user to select multiple times while holding shift
-                           ;; FIXME: always unselects on mouse up
                            :on-mouse-down (fn [_]
                                             (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
                                             (events/listen js/window EventType.MOUSEUP multi-block-select-up))
-                           :on-click      (fn [e]
-                                            (let [source-uid @(subscribe [:editing/uid])]
-                                              ;; if shift key is held when user clicks across multiple blocks, select the blocks
-                                              (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
-                                                (let [target (.. e -target)
-                                                      page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-                                                      target-block (.. target (closest ".block-container"))
-                                                      blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-                                                      [start end] (-> (keep-indexed (fn [i el]
-                                                                                      (when (or (= el target-block)
-                                                                                                (= source-uid (.. el -dataset -uid)))
-                                                                                        i))
-                                                                                    blocks))]
-                                                  (when (and start end)
-                                                    (let [selected-blocks (subvec blocks start (inc end))
-                                                          selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                      (dispatch [:editing/uid nil])
-                                                      (dispatch [:selected/add-items selected-uids])))))))}]
-       [parse-and-render string uid]
+                           :on-click      (fn [e] (textarea-click    e uid state))}]
+       [parse-and-render local uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 
