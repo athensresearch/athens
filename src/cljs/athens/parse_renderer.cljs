@@ -5,6 +5,7 @@
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
+    [clojure.string :as str]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -69,12 +70,13 @@
 (defn render-page-link
   "Renders a page link given the title of the page."
   [title]
-  ;; This method feels a bit hacky: it extracts the DOM tree of its children components and re-wrap the content in double parentheses. Should we do something about it?
-  ;; TODO: touch from inner content should navigate to the inner (children) page, but in this implementation doesn't work
   (let [node (pull-node-from-string title)]
     [:span (use-style page-link {:class "page-link"})
      [:span {:class "formatting"} "[["]
-     [:span {:on-click (fn [e] (.. e stopPropagation) (navigate-uid (:block/uid @node) e))} (concat title)]
+     (into [:span {:on-click (fn [e]
+                               (.. e stopPropagation) ;; prevent bubbling up click handler for nested links
+                               (navigate-uid (:block/uid @node) e))}]
+           title)
      [:span {:class "formatting"} "]]"]]))
 
 
