@@ -28,15 +28,16 @@
   {:match #"\[\[TODO\]\]"
    :render (fn [_ uid]
              [:input {:type     "checkbox"
-                      :on-click #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
+                      :checked  false
+                      :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
 
 
 (def component-done
   {:match #"\[\[DONE\]\]"
    :render (fn [_ uid]
              [:input {:type     "checkbox"
-                      :checked  "true"
-                      :on-click #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
+                      :checked  true
+                      :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
 
 
 ;; ---- Website embed component declaration ----
