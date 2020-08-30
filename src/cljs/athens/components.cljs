@@ -56,8 +56,17 @@
               [:iframe {:src         (find-weblink content)}]])})
 
 
+;; SELF: when blocks try to transclude themselves
+(def component-self
+  {:match  #"SELF"
+   :render (fn [content _]
+             [:button {:style {:color "red"
+                               :font-family "IBM Plex Mono"}}
+              content])})
+
+
 ;; Components
-(def components [component-todo component-done component-youtube-embed component-generic-embed])
+(def components [component-todo component-done component-youtube-embed component-generic-embed component-self])
 
 
 ;; ---- Render function for custom components
