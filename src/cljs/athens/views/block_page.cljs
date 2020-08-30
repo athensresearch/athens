@@ -104,7 +104,6 @@
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
-          (prn "LOCAL" (:string/local @state))
           [autosize/textarea
            {:value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")

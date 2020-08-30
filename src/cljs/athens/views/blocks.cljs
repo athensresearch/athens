@@ -8,7 +8,7 @@
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
+    [athens.util :refer [gen-block-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -426,29 +426,6 @@
     (if generated
       (swap! state assoc :string/local generated :string/generated nil)
       (swap! state assoc :string/local (.. e -target -value)))))
-
-
-(defn walk-parse-tree-for-links
-  [source-str link-fn db-fn]
-  (parse/transform
-    {:page-link (fn [& title]
-                  (let [inner-title (str/join "" title)]
-                    ;; `apply +` can return 0 if `title` is nil or empty string
-                    (when (and (string? inner-title)
-                               (link-fn inner-title))
-                      (let [now (now-ts)
-                            uid (gen-block-uid)]
-                        (db-fn inner-title now uid)))
-                    (str "[[" inner-title "]]")))
-     :hashtag   (fn [& title]
-                  (let [inner-title (str/join "" title)]
-                    (when (and (string? inner-title)
-                               (link-fn inner-title))
-                      (let [now (now-ts)
-                            uid (gen-block-uid)]
-                        (db-fn inner-title now uid)))
-                    (str "#" inner-title)))}
-    (parser/parse-to-ast source-str)))
 
 
 ;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
