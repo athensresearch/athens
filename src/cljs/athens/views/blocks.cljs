@@ -2,13 +2,13 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [block-key-down auto-complete-slash #_auto-complete-inline]]
+    [athens.keybindings :refer [textarea-key-down auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
+    [athens.util :refer [gen-block-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -18,7 +18,6 @@
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
     [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
@@ -338,56 +337,6 @@
 ;; Helpers
 
 
-(defn walk-parse-tree-for-links
-  [source-str link-fn db-fn]
-  (parse/transform {:page-link (fn [& title]
-                                 (let [inner-title (apply + title)]
-                                   ;; `apply +` can return 0 if `title` is nil or empty string
-                                   (when (and (string? inner-title)
-                                              (link-fn inner-title))
-                                     (let [now (now-ts)
-                                           uid (gen-block-uid)]
-                                       (db-fn inner-title now uid)))
-                                   (str "[[" inner-title "]]")))
-                    :hashtag   (fn [& title]
-                                 (let [inner-title (apply + title)]
-                                   (when (and (string? inner-title)
-                                              (link-fn inner-title))
-                                     (let [now (now-ts)
-                                           uid (gen-block-uid)]
-                                       (db-fn inner-title now uid)))
-                                   (str "#" inner-title)))} (parser/parse-to-ast source-str)))
-
-
-(defn on-change
-  [oldvalue value uid]
-  ;; (prn "ONCHANGE" value)
-  ;; TODO: move this to somewhere more comfortable using reframe dispatch
-  (dispatch [:transact [{:db/id [:block/uid uid] :block/string value :edit/time (now-ts)}]])
-  (walk-parse-tree-for-links
-    value
-    (fn [inner-title]              (nil? (db/search-exact-node-title inner-title)))
-    (fn [inner-title now-time uid]
-      (dispatch [:transact [{:node/title  inner-title
-                             :block/uid   uid
-                             :edit/time   now-time
-                             :create/time now-time}]])))
-  (walk-parse-tree-for-links
-    oldvalue
-    (fn [inner-title]
-      (let [block (db/search-exact-node-title inner-title)]
-        (and (not (nil? block))                                                     ;; makes sure the page link is valid
-             (nil? (:block/children (db/get-block-document (:db/id block))))        ;; makes sure the page link has no children
-             (zero? (count-linked-references-excl-uid inner-title uid))             ;; makes sure the page link is not present in other pages
-             (not (clojure.string/includes? value inner-title)))))  ;; makes sure the page link is deleted in this node as well
-    (fn [inner-title _ _]
-      (let [uid (:block/uid @(pull-node-from-string inner-title))]
-        (when (some? uid) (dispatch [:page/delete uid]))))))
-
-
-(def db-on-change (debounce on-change 1000))
-
-
 (defn toggle
   [id open]
   (dispatch [:transact [[:db/add id :block/open (not open)]]]))
@@ -407,7 +356,7 @@
 
 ;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
-  [{:block/keys [uid order] dbid :db/id edit-time :edit/time} state]
+  [{:block/keys [uid order] dbid :db/id} state]
   (let [{:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
@@ -416,8 +365,7 @@
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]
-       [:div [:b "last edit"] [:span (date-string edit-time)]]])))
+       [:div [:b "order"] [:span order]]])))
 
 
 (defn inline-search-el
@@ -456,7 +404,7 @@
          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
 
 
-(defn paste
+(defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
   Cases:
@@ -472,7 +420,7 @@
       (dispatch [:paste uid data]))))
 
 
-(defn block-on-change
+(defn textarea-change
   [e _uid state]
   (let [{:keys [string/generated]} @state]
     (if generated
@@ -480,12 +428,87 @@
       (swap! state assoc :string/local (.. e -target -value)))))
 
 
-;; Actual string contents - two elements, one for reading and one for writing
-;; seems hacky, but so far no better way to click into the correct position with one conditional element
+;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
+(defn walk-string!
+  "Walk previous and new strings to delete or add links, block references, etc. to datascript."
+  [data string]
+  (parse/transform
+    {:page-link (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    (swap! data update :titles #(conj % inner-title))
+                    (str "[[" inner-title "]]")))
+     :hashtag   (fn [& title]
+                  (let [inner-title (str/join "" title)]
+                    (swap! data update :titles #(conj % inner-title))
+                    ;; what about #[[]]? not sure if it even matters since just looking for inner-title
+                    (str "#" inner-title)))}
+    ;; TODO: block refs
+    (parser/parse-to-ast string)))
+
+
+;; TODO: refactor, write better docs
+(defn textarea-blur
+  "When textarea loses focus, transact to datascript.
+  Compare previous string with current string.
+  - If links were added, transact pages to database.
+  - If links were removed, add page is an orphan page, retract pages from database.
+  An orphan page has no linked references and no child blocks."
+  [_e uid state]
+  (let [{:string/keys [local previous]} @state]
+    (when (not= local previous)
+      (swap! state assoc :string/previous local)
+      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
+            old-data (atom {})
+            new-data (atom {})]
+        (walk-string! old-data previous)
+        (walk-string! new-data local)
+        (let [new-titles (->> (:titles @new-data)
+                             (filter (fn [x] (nil? (db/search-exact-node-title x))))
+                             (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
+              old-titles (->> (:titles @old-data)
+                              (filter (fn [x]
+                                        (let [block (db/search-exact-node-title x)]
+                                          (and (not (nil? block));; makes sure the page link is valid
+                                               (nil? (:block/children (db/get-block-document (:db/id block)))) ;; makes sure the page link has no children
+                                               (zero? (count-linked-references-excl-uid x uid)) ;; makes sure the page link is not present in other pages
+                                               ;; makes sure the page link is deleted in this node as well
+                                               (not (clojure.string/includes? local x))))))
+                              (map (fn [x]
+                                     (let [uid (:block/uid @(pull-node-from-string x))]
+                                       (when (some? uid) (dispatch [:page/delete uid]))))))
+              new-datoms (concat [new-block-string]
+                                 new-titles
+                                 old-titles)]
+          (dispatch [:transact new-datoms]))))))
+
+
+(defn textarea-click
+  [e uid _state]
+  (let [source-uid @(subscribe [:editing/uid])]
+    ;; if shift key is held when user clicks across multiple blocks, select the blocks
+    (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
+      (let [target (.. e -target)
+            page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+            target-block (.. target (closest ".block-container"))
+            blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
+            [start end] (-> (keep-indexed (fn [i el]
+                                            (when (or (= el target-block)
+                                                      (= source-uid (.. el -dataset -uid)))
+                                              i))
+                                          blocks))]
+        (when (and start end)
+          (let [selected-blocks (subvec blocks start (inc end))
+                selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
+            (dispatch [:editing/uid nil])
+            (dispatch [:selected/add-items selected-uids])))))))
+
+
 (defn block-content-el
+  "Actual string contents. Two elements, one for reading and one for writing."
   [_ _ _]
   (fn [block state is-editing]
-    (let [{:block/keys [string uid]} block]
+    (let [{:block/keys [uid]} block
+          {:string/keys [local]} @state]
       [:div {:class "block-content"
              :on-click (fn [e]
                          (when (false? (.. e -shiftKey))
@@ -494,34 +517,15 @@
                            :class         [(when is-editing "is-editing") "textarea"]
                            :auto-focus    true
                            :id            (str "editable-uid-" uid)
-                           ;; use a combination of on-change and on-key-down. imperfect, but good enough until we rewrite keybindings
-                           :on-change     (fn [e] (block-on-change e uid state))
-                           :on-paste      (fn [e] (paste e uid state))
-                           :on-key-down   (fn [e] (block-key-down e uid state))
-                           ;; TODO: allow user to select multiple times while holding shift
-                           ;; FIXME: always unselects on mouse up
+                           :on-change     (fn [e] (textarea-change   e uid state))
+                           :on-paste      (fn [e] (textarea-paste    e uid state))
+                           :on-key-down   (fn [e] (textarea-key-down e uid state))
+                           :on-blur       (fn [e] (textarea-blur     e uid state))
                            :on-mouse-down (fn [_]
                                             (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
                                             (events/listen js/window EventType.MOUSEUP multi-block-select-up))
-                           :on-click      (fn [e]
-                                            (let [source-uid @(subscribe [:editing/uid])]
-                                              ;; if shift key is held when user clicks across multiple blocks, select the blocks
-                                              (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
-                                                (let [target (.. e -target)
-                                                      page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-                                                      target-block (.. target (closest ".block-container"))
-                                                      blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-                                                      [start end] (-> (keep-indexed (fn [i el]
-                                                                                      (when (or (= el target-block)
-                                                                                                (= source-uid (.. el -dataset -uid)))
-                                                                                        i))
-                                                                                    blocks))]
-                                                  (when (and start end)
-                                                    (let [selected-blocks (subvec blocks start (inc end))
-                                                          selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-                                                      (dispatch [:editing/uid nil])
-                                                      (dispatch [:selected/add-items selected-uids])))))))}]
-       [parse-and-render string uid]
+                           :on-click      (fn [e] (textarea-click    e uid state))}]
+       [parse-and-render local uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 
@@ -601,17 +605,16 @@
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [block]
-  (let [state (r/atom {:string/local      (:block/string block)
+  [_]
+  (let [state (r/atom {:string/local      nil
                        :string/generated  nil
-                       :string/previous   (:block/string block) ;; this is for detecting what's deleted to process page deletion
+                       :string/previous   nil
                        :search/type       nil ;; one of #{:page :block :slash}
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
                        :dragging          false
                        :drag-target       nil
-                       :edit/time         (:edit/time block)
                        :last-keydown      nil
                        :context-menu/x    nil
                        :context-menu/y    nil
@@ -626,24 +629,19 @@
                             (not (nil? (:string/generated new))))
                    (swap! state assoc :string/local (:string/generated new)))))
 
-    (add-watch state :local-string-listener
-               (fn [_context _atom old new]
-                 (let [{:block/keys [uid]} block]
-                   (when (not= (:string/local old) (:string/local new))
-                     (db-on-change (:string/previous old) (:string/local new) uid)))))
-
     (fn [block]
-      (let [{:block/keys [uid string open children] edit-time :edit/time} block
-            {:search/keys [type] :keys [dragging drag-target] state-edit-time :edit/time} @state
+      (let [{:block/keys [uid string open children]} block
+            {:search/keys [type] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
         ;;(prn uid is-selected)
 
-        ;; if block is updated in datascript, update local block state
-        (when (< state-edit-time edit-time)
-          (let [new-state {:edit/time edit-time :string/local string :string/previous string}]
-            (swap! state merge new-state)))
+        ;; If datascript string value does not equal local value, overwrite local value.
+        ;; Write on initialization
+        ;; Write also from backspace, which can join bottom block's contents to top the block.
+        (when (not= string (:string/previous @state))
+          (swap! state assoc :string/previous string :string/local string))
 
         [:div
          {:class         ["block-container"

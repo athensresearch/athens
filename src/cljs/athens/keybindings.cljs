@@ -305,12 +305,12 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code head tail selection]} (destruct-event e)]
+  (let [{:keys [key-code head tail selection shift]} (destruct-event e)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :string/generated new-str))
-      (= key-code KeyCodes.I) (let [new-str (str head (surround selection "__") tail)]
-                                (swap! state assoc :string/generated new-str)))))
+      (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
+                                                  (swap! state assoc :string/generated new-str)))))
 
 
 (defn pair-char?
@@ -400,7 +400,7 @@
       type (update-query state head key type))))
 
 
-(defn block-key-down
+(defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-event e)
         {:keys [meta ctrl key-code]} d-event]
