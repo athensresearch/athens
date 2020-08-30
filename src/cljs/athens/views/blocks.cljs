@@ -8,7 +8,7 @@
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center date-string]]
+    [athens.util :refer [now-ts gen-block-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -18,7 +18,6 @@
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
     [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
@@ -357,7 +356,7 @@
 
 ;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
-  [{:block/keys [uid order] dbid :db/id edit-time :edit/time} state]
+  [{:block/keys [uid order] dbid :db/id} state]
   (let [{:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
@@ -366,8 +365,7 @@
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]
-       [:div [:b "last edit"] [:span (date-string edit-time)]]])))
+       [:div [:b "order"] [:span order]]])))
 
 
 (defn inline-search-el
@@ -471,6 +469,7 @@
     (parser/parse-to-ast string)))
 
 
+;; TODO: refactor, write better docs
 (defn textarea-blur
   "When textarea loses focus, transact to datascript.
   Compare previous string with current string.
@@ -629,7 +628,7 @@
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
-  [block]
+  [_]
   (let [state (r/atom {:string/local      nil
                        :string/generated  nil
                        :string/previous   nil
@@ -639,7 +638,6 @@
                        :search/index      nil
                        :dragging          false
                        :drag-target       nil
-                       :edit/time         (:edit/time block)
                        :last-keydown      nil
                        :context-menu/x    nil
                        :context-menu/y    nil
@@ -655,8 +653,8 @@
                    (swap! state assoc :string/local (:string/generated new)))))
 
     (fn [block]
-      (let [{:block/keys [uid string open children] edit-time :edit/time} block
-            {:search/keys [type] :keys [dragging drag-target] state-edit-time :edit/time} @state
+      (let [{:block/keys [uid string open children]} block
+            {:search/keys [type] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 

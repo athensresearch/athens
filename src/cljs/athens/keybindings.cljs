@@ -310,7 +310,7 @@
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :string/generated new-str))
       (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
-                                                   (swap! state assoc :string/generated new-str)))))
+                                                  (swap! state assoc :string/generated new-str)))))
 
 
 (defn pair-char?
