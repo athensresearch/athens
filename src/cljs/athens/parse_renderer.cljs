@@ -5,6 +5,7 @@
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
+    [clojure.string :as str]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -69,12 +70,13 @@
 (defn render-page-link
   "Renders a page link given the title of the page."
   [title]
-  ;; This method feels a bit hacky: it extracts the DOM tree of its children components and re-wrap the content in double parentheses. Should we do something about it?
-  ;; TODO: touch from inner content should navigate to the inner (children) page, but in this implementation doesn't work
   (let [node (pull-node-from-string title)]
     [:span (use-style page-link {:class "page-link"})
      [:span {:class "formatting"} "[["]
-     [:span {:on-click (fn [e] (.. e stopPropagation) (navigate-uid (:block/uid @node) e))} (concat title)]
+     (into [:span {:on-click (fn [e]
+                               (.. e stopPropagation) ;; prevent bubbling up click handler for nested links
+                               (navigate-uid (:block/uid @node) e))}]
+           title)
      [:span {:class "formatting"} "]]"]]))
 
 
@@ -88,14 +90,17 @@
   (insta/transform
     {:block         (fn [& contents]
                       (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
-      ;; for more information regarding how custom components are parsed, see `doc/components.md`
+     ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
                       (components/render-component (first contents) uid))
      :page-link     (fn [& title] (render-page-link title))
      :block-ref     (fn [uid]
                       (let [block (pull db/dsdb '[*] [:block/uid uid])]
                         [:span (use-style block-ref {:class "block-ref"})
-                         [:span {:class "contents" :on-click #(navigate-uid uid)} (parse-and-render (:block/string @block) uid)]]))
+                         [:span {:class "contents" :on-click #(navigate-uid uid)}
+                          (if (= uid (:block/uid @block))
+                            [parse-and-render "{{SELF}}"]
+                            [parse-and-render (:block/string @block) uid])]]))
      :hashtag       (fn [& tag-name]
                       (let [parsed-name (concat tag-name)
                             node        (pull db/dsdb '[*] [:node/title parsed-name])]
