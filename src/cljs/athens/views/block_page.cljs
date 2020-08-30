@@ -69,37 +69,56 @@
 ;;; Components
 
 
+(defn block-page-key-down
+  [_ _ _]
+  (prn "TODO: block-page-key-down"))
+
+
+(defn block-page-change
+  [e _uid state]
+  (let [value (.. e -target -value)]
+    (swap! state assoc :string/local value)))
+
+
 (defn block-page-el
-  [{:block/keys [string children uid]} parents editing-uid]
+  [_ _ _]
+  (let [state (r/atom {:string/local nil
+                       :string/previous nil})]
+    (fn [block parents editing-uid]
+      (let [{:block/keys [string children uid]} block]
 
-  [:div (use-style page-style)
-   ;; Parent Context
-   [:span {:style {:color "gray"}}
+        (when (not= string (:string/previous @state))
+          (swap! state assoc :string/previous string :string/local string))
 
-    (->> (for [{:keys [node/title block/uid block/string]} parents]
-           [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
-         (interpose ">")
-         (map (fn [x]
-                (if (= x ">")
-                  [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                  x))))]
+        [:div (use-style page-style)
+         ;; Parent Context
+         [:span {:style {:color "gray"}}
+
+          (->> (for [{:keys [node/title block/uid block/string]} parents]
+                 [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
+               (interpose ">")
+               (map (fn [x]
+                      (if (= x ">")
+                        [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
+                        x))))]
+
+         ;; Header
+         [:h1 (use-style title-style {:data-uid uid :class "block-header"})
+          (prn "LOCAL" (:string/local @state))
+          [autosize/textarea
+           {:value       (:string/local @state)
+            :class       (when (= editing-uid uid) "is-editing")
+            :auto-focus  true
+            :on-key-down (fn [e] (block-page-key-down e uid state))
+            :on-change   (fn [e] (block-page-change   e uid state))
+            :on-blur     (fn [e] (athens.views.blocks/textarea-blur e uid state))}]
+          [:span (:string/local @state)]]
 
 
-;; Header
-   [:h1 (use-style title-style {:data-uid uid :class "block-header"})
-    [autosize/textarea
-     {:value string
-      :class (when (= editing-uid uid) "is-editing")
-      :auto-focus true
-      ;; TODO:
-      :on-change  (fn [e] (prn "TODO block page"))}]
-    [:span string]]
-
-
-   ;; Children
-   [:div (for [child children]
-           (let [{:keys [db/id]} child]
-             ^{:key id} [block-el child]))]])
+         ;; Children
+         [:div (for [child children]
+                 (let [{:keys [db/id]} child]
+                   ^{:key id} [block-el child]))]]))))
 
 
 (defn block-page-component
