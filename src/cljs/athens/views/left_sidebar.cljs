@@ -4,7 +4,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    [athens.views.buttons :refer [button]]
+    ;;[athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -164,4 +164,4 @@
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
        [:h5 (use-style {:opacity 0.5 :align-self "center"})
         (.. (js/require "electron") -remote -app getVersion)]]]]))
-       ;;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))
+;;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))

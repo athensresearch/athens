@@ -15,7 +15,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    [datascript.core :as d]
+    #_[datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -23,7 +23,6 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    ;;[posh.reagent :as p]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
