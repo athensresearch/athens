@@ -1,8 +1,9 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [count-linked-references-excl-uid]]
-    [athens.keybindings :refer [textarea-key-down auto-complete-slash #_auto-complete-inline]]
+    [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
+    [athens.events :refer [delete-page]]
+    [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -376,10 +377,12 @@
                           :top        "100%"
                           :max-height "20rem"
                           :left       "1.75em"}})
-     (if (clojure.string/blank? query)
-       [:div (str "Search for a " (symbol type))]
-       (doall
-         [:div#dropdown-menu (use-style menu-style)
+     [:div#dropdown-menu (use-style menu-style)
+      (if (or (str/blank? query)
+              (empty? results))
+        ;; Just using button for styling
+        [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
+        (doall
           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
             [button {:key      (str "inline-search-item" uid)
                      :id       (str "dropdown-item-" i)
@@ -387,7 +390,7 @@
                      ;; TODO: pass relevant textarea values to auto-complete-inline
                      ;;#(auto-complete-inline state % (or title string))}
                      :on-click #(prn "TODO")}
-             (or title string)])]))]))
+             (or title string)])))]]))
 
 
 (defn slash-menu-el
@@ -395,13 +398,14 @@
   (let [{:search/keys [index results]} @state]
     [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
      [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
-      (for [[i [text icon _expansion kbd]] (map-indexed list results)]
-        [button {:key      text
-                 :id       (str "dropdown-item-" i)
-                 :active   (= i index)
-                 ;; TODO: do not unfocus textarea
-                 :on-click #(auto-complete-slash i state)}
-         [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]])]]))
+      (doall
+        (for [[i [text icon _expansion kbd]] (map-indexed list results)]
+          [button {:key    text
+                   :id     (str "dropdown-item-" i)
+                   :active (= i index)}
+                   ;; TODO: do not unfocus textarea
+                   ;;:on-click #(auto-complete-slash i state)}
+           [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]]))
 
 
 (defn textarea-paste

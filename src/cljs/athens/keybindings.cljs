@@ -68,10 +68,10 @@
 ;; TODO: some expansions require caret placement after
 (def slash-options
   [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
-   ["Current Time"  mui-icons/Timer #(.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"}))) nil]
-   ["Today"         mui-icons/Today #(str "[[" (:title (get-day 0)) "]] ") nil]
-   ["Tomorrow"      mui-icons/Today #(str "[[" (:title (get-day -1)) "]]") nil]
-   ["Yesterday"     mui-icons/Today #(str "[[" (:title (get-day 1)) "]]") nil]
+   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil]
+   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil]
+   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil]
+   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil]
    ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
    ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
 
@@ -85,9 +85,9 @@
   [query]
   (if (blank? query)
     slash-options
-    (filter (fn [[text]]
-              (re-find (re-pattern (str "(?i)" query)) text))
-            slash-options)))
+    (filterv (fn [[text]]
+               (re-find (re-pattern (str "(?i)" query)) text))
+             slash-options)))
 
 
 (defn update-query
@@ -106,31 +106,39 @@
                            :slash (count (re-find #".*/"    head)))
          new-query (str (subs head query-start-idx) key)
          results (query-fn new-query)]
-     (swap! state assoc
-            :search/index 0
-            :search/query new-query
-            :search/results results))))
+     (if (and (= type :slash) (empty? results))
+       (swap! state assoc :search/type nil)
+       (swap! state assoc
+              :search/index 0
+              :search/query new-query
+              :search/results results)))))
 
 
+;; 1- if no results, just hide slash commands so this doesnt get triggered
+;; 2- if results, do find and replace properly
 (defn auto-complete-slash
-  [index state]
-  (let [{:keys [string/local]} @state
-        [_ _ expansion _] (nth slash-options index)
+  [state e]
+  (let [{:keys [string/local] :search/keys [index results]} @state
+        {:keys [head]} (destruct-event e)
+        [_ _ expansion _] (nth results index)
         expand (if (fn? expansion) (expansion) expansion)
-        replace-str (subs local 0 (dec (count local)))
-        new-str     (str replace-str expand)]
+        start-idx (dec (count (re-find #".*/" head)))
+        new-head (subs local 0 start-idx)
+        new-str     (str new-head expand)]
     (swap! state assoc
-           :search/index 0
            :search/type nil
            :string/generated new-str)))
 
 
 (defn auto-complete-inline
-  [state e completed-str]
-  (let [{:keys [start head tail target]} (destruct-event e)
-        {:search/keys [query type]} @state
+  [state e]
+  (let [{:search/keys [query type index results]} @state
+        {:keys [node/title block/uid]} (nth results index)
+        {:keys [start head tail target]} (destruct-event e)
+        completed-str (or title uid)
         block? (= type :block)
         page? (= type :page)
+        ;; rewrite this more cleanly
         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
                            page?  (re-pattern (str "(.*)\\[\\[" query)))
         tail-pattern (cond block? #"(\)\))?(.*)"
@@ -141,7 +149,10 @@
                           page?  "]]")
         new-str (replace-first head head-pattern (str new-head completed-str closing-str))
         [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
-    (swap! state assoc :string/generated (str new-str after-closing-str) :search/type nil)
+    ;; completed-str is nil if there are no results, but user presses enter to auto-complete
+    (if (nil? completed-str)
+      (swap! state assoc :search/type nil)
+      (swap! state assoc :search/type nil :string/generated (str new-str after-closing-str)))
     (when closing-delimiter
       (setStart target (+ 2 start)))))
 
@@ -260,14 +271,13 @@
 (defn handle-enter
   [e uid state]
   (let [{:keys [shift ctrl start head tail value]} (destruct-event e)
-        {:search/keys [index results type]} @state]
+        {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
-      (= type :slash) (auto-complete-slash index state)
-      (= type :page) (let [{:keys [node/title]} (nth results index)]
-                       (auto-complete-inline state e title))
-      (= type :block) (let [{:keys [block/uid]} (nth results index)]
-                        (auto-complete-inline state e uid))
+
+      type (if (= type :slash)
+             (auto-complete-slash state e)
+             (auto-complete-inline state e))
 
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :string/generated (str head "\n" tail))
@@ -354,12 +364,13 @@
 
 (defn handle-backspace
   [e uid state]
-  (let [{:keys [start value target]} (destruct-event e)
+  (let [{:keys [start value target end]} (destruct-event e)
+        no-selection? (= start end)
         possible-pair (subs value (dec start) (inc start))
         head    (subs value 0 (dec start))
         {:search/keys [type]} @state]
     (cond
-      (block-start? e) (dispatch [:backspace uid value])
+      (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
       (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
                                                          tail    (subs value (inc start))
