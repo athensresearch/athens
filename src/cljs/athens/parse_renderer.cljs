@@ -94,13 +94,16 @@
      :component     (fn [& contents]
                       (components/render-component (first contents) uid))
      :page-link     (fn [& title] (render-page-link title))
-     :block-ref     (fn [uid]
-                      (let [block (pull db/dsdb '[*] [:block/uid uid])]
-                        [:span (use-style block-ref {:class "block-ref"})
-                         [:span {:class "contents" :on-click #(navigate-uid uid)}
-                          (if (= uid (:block/uid @block))
-                            [parse-and-render "{{SELF}}"]
-                            [parse-and-render (:block/string @block) uid])]]))
+     :block-ref     (fn [ref-uid]
+                      (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+                        (if @block
+                          [:span (use-style block-ref {:class "block-ref"})
+                           [:span {:class "contents" :on-click #(navigate-uid ref-uid)}
+                            (if (= uid ref-uid)
+                              [parse-and-render "{{SELF}}"]
+                              [parse-and-render (:block/string @block) ref-uid])]]
+                          (str "((" ref-uid "))"))))
+
      :hashtag       (fn [& tag-name]
                       (let [parsed-name (concat tag-name)
                             node        (pull db/dsdb '[*] [:node/title parsed-name])]

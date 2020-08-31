@@ -305,10 +305,17 @@
             [:dispatch [:editing/uid child-uid]]]})))
 
 
+(defn delete-page
+  "Retract all blocks of a page, including the page."
+  [uid]
+  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
+        (get-children-recursively uid)))
+
+
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]) (get-children-recursively uid))]]]}))
+    {:fx [[:dispatch [:transact (delete-page uid)]]]}))
 
 
 (reg-event-fx

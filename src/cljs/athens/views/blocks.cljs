@@ -1,8 +1,8 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [count-linked-references-excl-uid #_e-by-av]]
-    #_[athens.events :refer [delete-page]]
+    [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
+    [athens.events :refer [delete-page]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
@@ -15,7 +15,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    #_[datascript.transit :as dt]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -23,6 +23,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    ;;[posh.reagent :as p]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
@@ -432,7 +433,22 @@
       (swap! state assoc :string/local (.. e -target -value)))))
 
 
+(defn get-block-refs
+  [uid]
+  (d/q '[:find [?refs ...]
+         :in $ ?uid
+         :where
+         [?e :block/uid ?uid]
+         [?e :block/refs ?refs]]
+       @db/dsdb
+       uid))
+
 ;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
+;; Algorithm:
+;; - look at string (old or new)
+;; - parse for database values: links, block refs, attributes (not yet supported), etc.
+;; - filter based on remove or add conditions
+;; - map to datoms
 (defn walk-string!
   "Walk previous and new strings to delete or add links, block references, etc. to datascript."
   [data string]
@@ -444,19 +460,21 @@
      :hashtag   (fn [& title]
                   (let [inner-title (str/join "" title)]
                     (swap! data update :titles #(conj % inner-title))
-                    ;; what about #[[]]? not sure if it even matters since just looking for inner-title
-                    (str "#" inner-title)))}
-    ;; TODO: block refs
+                    (str "#" inner-title)))
+     :block-ref (fn [uid] (swap! data update :block-refs #(conj % uid)))}
     (parser/parse-to-ast string)))
 
 
 ;; TODO: refactor, write better docs
 (defn textarea-blur
   "When textarea loses focus, transact to datascript.
-  Compare previous string with current string.
+  Compare previous string with current string (:string/local).
   - If links were added, transact pages to database.
   - If links were removed, add page is an orphan page, retract pages from database.
-  An orphan page has no linked references and no child blocks."
+  An orphan page has no linked references and no child blocks.
+
+  - If block refs were added, transact to datascript.
+  - If block refs were removed, retract."
   [_e uid state]
   (let [{:string/keys [local previous]} @state]
     (when (not= local previous)
@@ -467,22 +485,44 @@
         (walk-string! old-data previous)
         (walk-string! new-data local)
         (let [new-titles (->> (:titles @new-data)
-                             (filter (fn [x] (nil? (db/search-exact-node-title x))))
-                             (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
+                              (filter (fn [x] (nil? (db/search-exact-node-title x))))
+                              (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
               old-titles (->> (:titles @old-data)
-                              (filter (fn [x]
-                                        (let [block (db/search-exact-node-title x)]
+                              (filter (fn [t]
+                                        (let [block (db/search-exact-node-title t)]
                                           (and (not (nil? block));; makes sure the page link is valid
                                                (nil? (:block/children (db/get-block-document (:db/id block)))) ;; makes sure the page link has no children
-                                               (zero? (count-linked-references-excl-uid x uid)) ;; makes sure the page link is not present in other pages
+                                               (zero? (count-linked-references-excl-uid t uid)) ;; makes sure the page link is not present in other pages
                                                ;; makes sure the page link is deleted in this node as well
-                                               (not (clojure.string/includes? local x))))))
-                              (map (fn [x]
-                                     (let [uid (:block/uid @(pull-node-from-string x))]
-                                       (when (some? uid) (dispatch [:page/delete uid]))))))
+                                               (not (clojure.string/includes? local t))))))
+                              (mapcat (fn [t]
+                                        (let [uid (:block/uid @(pull-node-from-string t))]
+                                          (when (some? uid)
+                                            (delete-page uid))))))
+              new-block-refs (->> (:block-refs @new-data)
+                                  (filter (fn [ref-uid]
+                                            ;; check that ((ref-uid)) points to an actual entity
+                                            ;; find refs of uid
+                                            ;; if ((ref-uid)) is not yet a reference, then map datoms
+                                            (let [eid (e-by-av :block/uid ref-uid)
+                                                  refs (-> (get-block-refs uid) set)]
+                                              (nil? (refs eid)))))
+                                  (map (fn [ref-uid] [:db/add [:block/uid uid] :block/refs [:block/uid ref-uid]])))
+              old-block-refs (->> (:block-refs @old-data)
+                                  (filter (fn [ref-uid]
+                                            ;; check that ((ref-uid)) points to an actual entity
+                                            ;; find refs of uid
+                                            ;; if ((ref-uid)) is no longer in the current string and IS a valid reference, retract
+                                            (when (not (str/includes? local (str "((" ref-uid "))")))
+                                              (let [eid (e-by-av :block/uid ref-uid)
+                                                    refs (-> (get-block-refs uid) set)]
+                                                (refs eid)))))
+                                  (map (fn [ref-uid] [:db/retract [:block/uid uid] :block/refs [:block/uid ref-uid]])))
               new-datoms (concat [new-block-string]
                                  new-titles
-                                 old-titles)]
+                                 old-titles
+                                 new-block-refs
+                                 old-block-refs)]
           (dispatch [:transact new-datoms]))))))
 
 
@@ -606,6 +646,15 @@
                                              (swap! state assoc :dragging false))})]])))
 
 
+(defn block-refs-count-el
+  [count]
+  (when (pos? count)
+    [:div (use-style {:position "absolute"
+                      :right "0px"
+                      :z-index (:zindex-tooltip ZINDICES)})
+     [button {:on-click #(prn "IMPLEMENT")} count]]))
+
+
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks to make sure block is open or not: children exist and :block/open bool"
@@ -634,7 +683,7 @@
                    (swap! state assoc :string/local (:string/generated new)))))
 
     (fn [block]
-      (let [{:block/keys [uid string open children]} block
+      (let [{:block/keys [uid string open children _refs]} block
             {:search/keys [type] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
@@ -698,7 +747,8 @@
           [toggle-el block]
           [bullet-el block state]
           [tooltip-el block state]
-          [block-content-el block state is-editing]]
+          [block-content-el block state is-editing]
+          [block-refs-count-el (count _refs)]]
 
          (cond
            (or (= type :page) (= type :block)) [inline-search-el state]

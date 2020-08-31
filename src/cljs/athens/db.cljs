@@ -106,6 +106,8 @@
    :node/title     {:db/unique :db.unique/identity}
    :attrs/lookup   {:db/cardinality :db.cardinality/many}
    :block/children {:db/cardinality :db.cardinality/many
+                    :db/valueType :db.type/ref}
+   :block/refs     {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}})
 
 
@@ -140,7 +142,8 @@
                                         :block/string "can use `#[[]]` for multi-word tags: #[[Hello Athens]]"}
                                        {:block/uid "block-refs"
                                         :block/order 5
-                                        :block/string "Can reference other blocks with `(())`: ((features))"}
+                                        :block/string "Can reference other blocks with `(())`: ((features))"
+                                        :block/refs [:block/uid "features"]}
                                        {:block/uid "todo"
                                         :block/order 6
                                         :block/string "{{[[TODO]]}} `cmd-enter` for a TODO checkbox"}
@@ -207,15 +210,22 @@
     block))
 
 
+(def document-pull-vector
+  '[:db/id :edit/time
+    :block/refs
+    :block/_refs
+    :block/uid :block/string :block/open :block/order {:block/children ...}])
+
+
 (defn get-block-document
   [id]
-  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb document-pull-vector id)
        sort-block-children))
 
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order :page/sidebar {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb (conj document-pull-vector :node/title :page/sidebar) id)
        sort-block-children))
 
 
