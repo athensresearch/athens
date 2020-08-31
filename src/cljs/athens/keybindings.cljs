@@ -119,12 +119,12 @@
 (defn auto-complete-slash
   [state e]
   (let [{:keys [string/local] :search/keys [index results]} @state
-        {:keys [head]} (destruct-event e)
+        {:keys [head tail]} (destruct-event e)
         [_ _ expansion _] (nth results index)
         expand (if (fn? expansion) (expansion) expansion)
         start-idx (dec (count (re-find #".*/" head)))
         new-head (subs local 0 start-idx)
-        new-str     (str new-head expand)]
+        new-str (str new-head expand tail)]
     (swap! state assoc
            :search/type nil
            :string/generated new-str)))
