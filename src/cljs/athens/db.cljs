@@ -210,22 +210,24 @@
     block))
 
 
-(def document-pull-vector
-  '[:db/id :edit/time
-    :block/refs
-    :block/_refs
-    :block/uid :block/string :block/open :block/order {:block/children ...}])
+(def block-document-pull-vector
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/_refs])
+
+
+(def node-document-pull-vector
+  (-> block-document-pull-vector
+      (conj :node/title :page/sidebar)))
 
 
 (defn get-block-document
   [id]
-  (->> @(pull dsdb document-pull-vector id)
+  (->> @(pull dsdb block-document-pull-vector id)
        sort-block-children))
 
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb (conj document-pull-vector :node/title :page/sidebar) id)
+  (->> @(pull dsdb node-document-pull-vector id)
        sort-block-children))
 
 
@@ -335,6 +337,16 @@
      (map get-root-parent-node)
      (mapv #(dissoc % :block/_children)))))
 
+
+(defn get-block-refs
+  [uid]
+  (d/q '[:find [?refs ...]
+         :in $ ?uid
+         :where
+         [?e :block/uid ?uid]
+         [?e :block/refs ?refs]]
+       @dsdb
+       uid))
 
 ;; xxx 2 kinds of operations
 ;; write operations, it's nice to have entire block and entire parent block to make TXes

@@ -163,5 +163,5 @@
       [:footer (use-sub-style left-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
        [:h5 (use-style {:opacity 0.5 :align-self "center"})
-        (.. (js/require "electron") -remote -app getVersion)]
-       [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))
+        (.. (js/require "electron") -remote -app getVersion)]]]]))
+       ;;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))

@@ -433,16 +433,6 @@
       (swap! state assoc :string/local (.. e -target -value)))))
 
 
-(defn get-block-refs
-  [uid]
-  (d/q '[:find [?refs ...]
-         :in $ ?uid
-         :where
-         [?e :block/uid ?uid]
-         [?e :block/refs ?refs]]
-       @db/dsdb
-       uid))
-
 ;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
 ;; Algorithm:
 ;; - look at string (old or new)
@@ -505,7 +495,7 @@
                                             ;; find refs of uid
                                             ;; if ((ref-uid)) is not yet a reference, then map datoms
                                             (let [eid (e-by-av :block/uid ref-uid)
-                                                  refs (-> (get-block-refs uid) set)]
+                                                  refs (-> (db/get-block-refs uid) set)]
                                               (nil? (refs eid)))))
                                   (map (fn [ref-uid] [:db/add [:block/uid uid] :block/refs [:block/uid ref-uid]])))
               old-block-refs (->> (:block-refs @old-data)
@@ -515,7 +505,7 @@
                                             ;; if ((ref-uid)) is no longer in the current string and IS a valid reference, retract
                                             (when (not (str/includes? local (str "((" ref-uid "))")))
                                               (let [eid (e-by-av :block/uid ref-uid)
-                                                    refs (-> (get-block-refs uid) set)]
+                                                    refs (-> (db/get-block-refs uid) set)]
                                                 (refs eid)))))
                                   (map (fn [ref-uid] [:db/retract [:block/uid uid] :block/refs [:block/uid ref-uid]])))
               new-datoms (concat [new-block-string]
@@ -647,12 +637,12 @@
 
 
 (defn block-refs-count-el
-  [count]
+  [count uid]
   (when (pos? count)
     [:div (use-style {:position "absolute"
                       :right "0px"
                       :z-index (:zindex-tooltip ZINDICES)})
-     [button {:on-click #(prn "IMPLEMENT")} count]]))
+     [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
@@ -748,7 +738,7 @@
           [bullet-el block state]
           [tooltip-el block state]
           [block-content-el block state is-editing]
-          [block-refs-count-el (count _refs)]]
+          [block-refs-count-el (count _refs) uid]]
 
          (cond
            (or (= type :page) (= type :block)) [inline-search-el state]
