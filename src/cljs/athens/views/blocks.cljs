@@ -1,8 +1,8 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
-    [athens.events :refer [delete-page]]
+    [athens.db :as db :refer [count-linked-references-excl-uid #_e-by-av]]
+    #_[athens.events :refer [delete-page]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
     [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
