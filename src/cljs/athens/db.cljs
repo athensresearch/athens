@@ -106,6 +106,8 @@
    :node/title     {:db/unique :db.unique/identity}
    :attrs/lookup   {:db/cardinality :db.cardinality/many}
    :block/children {:db/cardinality :db.cardinality/many
+                    :db/valueType :db.type/ref}
+   :block/refs     {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}})
 
 
@@ -140,7 +142,8 @@
                                         :block/string "can use `#[[]]` for multi-word tags: #[[Hello Athens]]"}
                                        {:block/uid "block-refs"
                                         :block/order 5
-                                        :block/string "Can reference other blocks with `(())`: ((features))"}
+                                        :block/string "Can reference other blocks with `(())`: ((features))"
+                                        :block/refs [:block/uid "features"]}
                                        {:block/uid "todo"
                                         :block/order 6
                                         :block/string "{{[[TODO]]}} `cmd-enter` for a TODO checkbox"}
@@ -207,15 +210,24 @@
     block))
 
 
+(def block-document-pull-vector
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/_refs])
+
+
+(def node-document-pull-vector
+  (-> block-document-pull-vector
+      (conj :node/title :page/sidebar)))
+
+
 (defn get-block-document
   [id]
-  (->> @(pull dsdb '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb block-document-pull-vector id)
        sort-block-children))
 
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :block/open :block/order :page/sidebar {:block/children ...} :edit/time] id)
+  (->> @(pull dsdb node-document-pull-vector id)
        sort-block-children))
 
 
@@ -325,6 +337,16 @@
      (map get-root-parent-node)
      (mapv #(dissoc % :block/_children)))))
 
+
+(defn get-block-refs
+  [uid]
+  (d/q '[:find [?refs ...]
+         :in $ ?uid
+         :where
+         [?e :block/uid ?uid]
+         [?e :block/refs ?refs]]
+       @dsdb
+       uid))
 
 ;; xxx 2 kinds of operations
 ;; write operations, it's nice to have entire block and entire parent block to make TXes
