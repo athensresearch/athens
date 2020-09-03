@@ -562,77 +562,90 @@
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 
+(defn bullet-mouse-out
+  "Hide tooltip."
+  [e _uid state]
+  (let [related (.. e -relatedTarget)]
+    (when-not (and related (contains related "tooltip"))
+      (swap! state assoc :tooltip false))))
+
+(defn bullet-mouse-over
+  "Show tooltip."
+  [_e _uid state]
+  (swap! state assoc :tooltip true))
+
+(defn bullet-context-menu
+  "Handle right click. If no blocks are selected, just give option for copying current block's uid."
+  [e _uid state]
+  (.. e preventDefault)
+  (let [selected-blocks @(subscribe [:selected/items])
+        rect (.. e -target getBoundingClientRect)
+        show-type (if (empty? selected-blocks) :one :many)]
+    (swap! state assoc
+           :context-menu/x    (.. rect -left)
+           :context-menu/y    (.. rect -bottom)
+           :context-menu/show show-type)))
+
+
+(defn bullet-drag-start
+  "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
+  [e uid state]
+  (set! (.. e -dataTransfer -effectAllowed) "move")
+  (.. e -dataTransfer (setData "text/plain" uid))
+  (swap! state assoc :dragging true))
+
+(defn bullet-drag-end
+  "End drag event."
+  [_e _uid state]
+  (swap! state assoc :dragging false))
+
+
 (defn bullet-el
   [_ _]
   (fn [block state]
-    (let [{:block/keys [uid children open]} block
-          {:context-menu/keys [show x y]} @state]
+    (let [{:block/keys [uid children open]} block]
+      [:span (use-style bullet-style
+                        {:class           [(when (and (seq children) (not open))
+                                             "closed-with-children")]
+                         :draggable       true
+                         :on-click        (fn [e] (navigate-uid uid e))
+                         :on-context-menu (fn [e] (bullet-context-menu e uid state))
+                         :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+                         :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+                         :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+                         :on-drag-end     (fn [e] (bullet-drag-end e uid state))})])))
 
-      [:<>
-       (when show
-         [:div (merge (use-style dropdown-style)
-                      {:style {:position "fixed"
-                               :x        (str x "px")
-                               :y        (str y "px")}})
-          [:div (use-style menu-style)
-           ;; TODO: create listener that lets user exit context menu if click outside
-           [button {:on-click (fn [_]
-                                (let [selected-items @(subscribe [:selected/items])
-                                      ;; use this when using datascript-transit
-                                      ;uids (map (fn [x] [:block/uid x]) selected-items)
-                                      ;blocks (d/pull-many @db/dsdb '[*] ids)
-                                      data (cond
-                                             (= show :one) (str "((" uid "))")
-                                             (= show :many) (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                                                                 (str/join "")))]
-                                  (.. js/navigator -clipboard (writeText data))
-                                  (swap! state assoc :context-menu/show false)))}
-                                  ; TODO: unable to copy with roam/data as data type. leaving this scrap here until return to this problem
-                                  ;(= show :many) (dt/write-transit-str
-                                  ;                 {:db-id       nil ;; roam has a value for this
-                                  ;                  :type        :copy ;; or :cut
-                                  ;                  :copied-data block-refs}))]
-                                  ;(let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
-                                  ;      item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
-                                  ;  (.then (.. js/navigator -clipboard (write [item]))
-                                  ;         #(js/console.log "suc" %)
-                                  ;         #(js/console.log "fail" %)))))}
+(defn copy-refs-click
+  [_ uid state]
+  (let [{:context-menu/keys [show]} @state
+        selected-items @(subscribe [:selected/items])
+        ;; use this when using datascript-transit
+        ;uids (map (fn [x] [:block/uid x]) selected-items)
+        ;blocks (d/pull-many @db/dsdb '[*] ids)
+        data (case show
+               :one (str "((" uid "))")
+               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                          (str/join "")))]
+    (.. js/navigator -clipboard (writeText data))
+    (swap! state assoc :context-menu/show false)))
 
 
-
-            (cond
-              (= show :one) "Copy block ref"
-              (= show :many) "Copy block refs")]]])
-       [:span (use-style bullet-style
-                         {:class           [(when (and (seq children) (not open))
-                                              "closed-with-children")]
-                          :on-mouse-over   #(swap! state assoc :tooltip true)
-                          :on-mouse-out    (fn [e]
-                                             (let [related (.. e -relatedTarget)]
-                                               (when-not (and related (contains related "tooltip"))
-                                                 (swap! state assoc :tooltip false))))
-                          :on-click        (fn [e] (navigate-uid uid e))
-                          :draggable       true
-                          :on-context-menu (fn [e]
-                                             (.. e preventDefault)
-                                             (let [selected-blocks @(subscribe [:selected/items])
-                                                   rect (.. e -target getBoundingClientRect)
-                                                   new-context-menu-state (merge {:context-menu/x    (.. rect -left)
-                                                                                  :context-menu/y    (.. rect -bottom)
-                                                                                  :context-menu/show (if (empty? selected-blocks)
-                                                                                                       :one
-                                                                                                       :many)})]
-                                               (if (empty? selected-blocks)
-                                                 (swap! state merge new-context-menu-state)
-                                                 (swap! state merge new-context-menu-state))))
-                          :on-drag-start   (fn [e]
-                                             (set! (.. e -dataTransfer -effectAllowed) "move")
-                                             (.. e -dataTransfer (setData "text/plain" uid))
-                                             (swap! state assoc :dragging true))
-                          :on-drag-end     (fn [_]
-                                             ;; FIXME: not always called
-                                             ;         (prn "DRAG END BULLET")
-                                             (swap! state assoc :dragging false))})]])))
+(defn context-menu-el
+  "Only option in context menu right now is copy block ref(s)."
+  [block state]
+  (let [{:block/keys [uid]} block
+        {:context-menu/keys [show x y]} @state]
+    (when show
+      [:div (merge (use-style dropdown-style)
+                   {:style {:position "fixed"
+                            :x        (str x "px")
+                            :y        (str y "px")}})
+       [:div (use-style menu-style)
+        ;; TODO: create listener that lets user exit context menu if click outside
+        [button {:on-click (fn [e] (copy-refs-click e uid state))}
+         (case show
+           :one "Copy block ref"
+           :many "Copy block refs")]]])))
 
 
 (defn block-refs-count-el
@@ -734,6 +747,7 @@
                           (dispatch [:editing/uid uid])))}]
 
           [toggle-el block]
+          [context-menu-el block state]
           [bullet-el block state]
           [tooltip-el block state]
           [block-content-el block state is-editing]
