@@ -656,6 +656,42 @@
                       :z-index (:zindex-tooltip ZINDICES)})
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
 
+(defn block-drag-over
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  ;; if last block-container (i.e. no siblings), allow drop below
+  ;; if block or ancestor has css dragging class, do not show drop indicator
+  (let [{:block/keys [children]} block
+        offset            (mouse-offset e)
+        middle-y          (vertical-center (.. e -target))
+        closest-container (.. e -target (closest ".block-container"))
+        next-sibling      (.. closest-container -nextElementSibling)
+        last-child?       (nil? next-sibling)
+        dragging-ancestor (.. e -target (closest ".dragging"))
+        not-dragging?     (nil? dragging-ancestor)
+        target            (when not-dragging?
+                            (cond
+                              ;; if above midpoint, show drop indicator above block
+                              (< (:y offset) middle-y) :above
+                              ;; if no children and over 50 pixels from the left, show child drop indicator
+                              (and (empty? children) (< 50 (:x offset))) :child
+                              ;; if below midpoint and last child, show drop indicator below
+                              (and last-child? (< middle-y (:y offset))) :below))]
+    (swap! state assoc :drag-target target)))
+
+
+(defn block-drop
+  "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+  [e target-uid state]
+  (.. e stopPropagation)
+  (let [{:keys [drag-target]} @state
+        source-uid (.. e -dataTransfer (getData "text/plain"))
+        valid-drop (and (not (nil? drag-target))
+                        (not= source-uid target-uid))]
+    (when valid-drop
+      (dispatch [:drop-bullet source-uid target-uid drag-target]))
+    (swap! state assoc :drag-target nil)))
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
@@ -706,38 +742,10 @@
                           ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
                           (when (and (seq children) open) "show-tree-indicator")]
           :data-uid      uid
-          :on-drag-over  (fn [e]
-                           (.. e preventDefault)
-                           (.. e stopPropagation)
-                           ;; if last block-container (i.e. no siblings), allow drop below
-                           ;; if block or ancestor has css dragging class, do not show drop indicator
-                           (let [offset            (mouse-offset e)
-                                 middle-y          (vertical-center (.. e -target))
-                                 closest-container (.. e -target (closest ".block-container"))
-                                 next-sibling      (.. closest-container -nextElementSibling)
-                                 last-child?       (nil? next-sibling)
-                                 dragging-ancestor (.. e -target (closest ".dragging"))
-                                 not-dragging?     (nil? dragging-ancestor)
-                                 target            (when not-dragging?
-                                                     (cond
-                                                       ;; if above midpoint, show drop indicator above block
-                                                       (< (:y offset) middle-y) :above
-                                                       ;; if no children and over 50 pixels from the left, show child drop indicator
-                                                       (and (empty? children) (< 50 (:x offset))) :child
-                                                       ;; if below midpoint and last child, show drop indicator below
-                                                       (and last-child? (< middle-y (:y offset))) :below))]
-                             (swap! state assoc :drag-target target)))
-          :on-drag-enter (fn [_])
-          :on-drag-leave (fn [_]
-                           (swap! state assoc :drag-target nil))
-          :on-drop       (fn [e]
-                           (.. e stopPropagation)
-                           (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
-                             (cond
-                               (nil? drag-target) nil
-                               (= source-uid uid) nil)
-                             (dispatch [:drop-bullet source-uid uid drag-target])
-                             (swap! state assoc :drag-target nil)))}
+          :on-drag-over  (fn [e] (block-drag-over e block state))
+          ;;:on-drag-enter (fn [_])
+          :on-drag-leave (fn [_] (swap! state assoc :drag-target nil))
+          :on-drop       (fn [e] (block-drop e uid state))}
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
          [:div.block-body
