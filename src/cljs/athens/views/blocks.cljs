@@ -64,6 +64,7 @@
                                 :background (color :link-color :opacity-lower)
                                 :box-shadow [["0 0.25rem 0.5rem -0.25rem" (color :background-color :opacity-med)]]}]
                      [:&.is-selected:after {:opacity 1}]
+                     [:&.is-over:after {:pointer-events "none"}]
                      [:.block-body {:display "flex"
                                     :border-radius "0.5rem"
                                     :transition "all 0.1s ease"
@@ -357,8 +358,9 @@
 
 ;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
-  [{:block/keys [uid order] dbid :db/id} state]
-  (let [{:keys [dragging tooltip]} @state]
+  [block state]
+  (let [{:block/keys [uid order] dbid :db/id} block
+        {:keys [dragging tooltip drag-target]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
@@ -366,7 +368,8 @@
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]])))
+       [:div [:b "order"] [:span order]]
+       [:div [:b "target"] [:span drag-target]]])))
 
 
 (defn inline-search-el
@@ -656,29 +659,46 @@
                       :z-index (:zindex-tooltip ZINDICES)})
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
 
+(defn mouse-offset-2
+  [e container]
+  (let [rect (.. container getBoundingClientRect)
+        offset-x (- (.. e -pageX) (.. rect -left))
+        offset-y (- (.. e -pageY) (.. rect -top))]
+    {:x offset-x :y offset-y}))
+
 (defn block-drag-over
+  "Closest block container. Ignore when target is not block-container.
+  When drag leave happens, on the block happens, i want to set drag-target to nil. the problem is that drag leave needs
+  to ignore child elements: https://stackoverflow.com/questions/7110353/html5-dragleave-fired-when-hovering-a-child-element"
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
   ;; if last block-container (i.e. no siblings), allow drop below
   ;; if block or ancestor has css dragging class, do not show drop indicator
-  (let [{:block/keys [children]} block
-        offset            (mouse-offset e)
-        middle-y          (vertical-center (.. e -target))
-        closest-container (.. e -target (closest ".block-container"))
-        next-sibling      (.. closest-container -nextElementSibling)
-        last-child?       (nil? next-sibling)
-        dragging-ancestor (.. e -target (closest ".dragging"))
-        not-dragging?     (nil? dragging-ancestor)
-        target            (when not-dragging?
-                            (cond
-                              ;; if above midpoint, show drop indicator above block
-                              (< (:y offset) middle-y) :above
-                              ;; if no children and over 50 pixels from the left, show child drop indicator
-                              (and (empty? children) (< 50 (:x offset))) :child
-                              ;; if below midpoint and last child, show drop indicator below
-                              (and last-child? (< middle-y (:y offset))) :below))]
-    (swap! state assoc :drag-target target)))
+  (let [closest-container (.. e -target (closest ".block-container"))
+        {:keys [x y]}     (mouse-offset-2 e closest-container)]
+    ;;(prn (.. e -target -className) (.. closest-container -className))
+
+    (let [{:block/keys [children]} block
+          middle-y (vertical-center closest-container)
+          next-sibling (.. closest-container -nextElementSibling)
+          last-child? (nil? next-sibling)
+          ;;dragging-ancestor (.. e -target (closest ".dragging"))
+          ;;not-dragging?     (nil? dragging-ancestor)
+          target
+          ;(when not-dragging?)
+          (cond
+            ;; if above midpoint, show drop indicator above block
+            ;;(or  (> y middle-y)) :below
+            (or (neg? y) (< y middle-y)) :above)]
+      ;;;; if no children and over 50 pixels from the left, show child drop indicator
+      ;;(and (empty? children) (< 50 (:x offset))) :child
+      ;;;; if below midpoint and last child, show drop indicator below
+      ;;(and last-child? (< middle-y y)) :below)]
+      (prn y middle-y target)
+      (when target
+        ;;(prn (:block/uid block) y middle-y target)
+        (swap! state assoc :drag-target target)))))
 
 
 (defn block-drop
@@ -704,6 +724,7 @@
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
+                       :is-over           false
                        :dragging          false
                        :drag-target       nil
                        :last-keydown      nil
@@ -722,7 +743,7 @@
 
     (fn [block]
       (let [{:block/keys [uid string open children _refs]} block
-            {:search/keys [type] :keys [dragging drag-target]} @state
+            {:search/keys [type] :keys [dragging drag-target is-over]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -739,14 +760,28 @@
                           (when dragging "dragging")
                           (when is-editing "is-editing")
                           (when is-selected "is-selected")
-                          ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
-                          (when (and (seq children) open) "show-tree-indicator")]
+                          (when (and (seq children) open) "show-tree-indicator")
+                          (when is-over "is-over")]
           :data-uid      uid
-          :on-drag-over  (fn [e] (block-drag-over e block state))
-          ;;:on-drag-enter (fn [_])
-          :on-drag-leave (fn [_] (swap! state assoc :drag-target nil))
+          :on-drag-over  (fn [e]
+                           (.. e stopPropagation)
+                           ;;(prn "OVER"))
+                           (block-drag-over e block state))
+          :on-drag-enter (fn [e]
+                           (swap! state assoc :is-over true)
+                           (prn (array-seq (.. e -target -classList)))
+                           (when-let [closest (.. e -target (closest ".block-container"))]))
+          ;;(prn (.. closest -className) (.. closest -innerText) "ENTER")))
+          :on-drag-leave (fn [e]
+                           (.. e preventDefault)
+                           (.. e stopPropagation)
+                           (swap! state assoc :is-over false)
+                           (let [closest (.. e -target (closest ".block-container"))]
+                             ;;(prn (.. closest -className) (.. closest -innerText) "LEAVE")
+                             (swap! state assoc :drag-target nil)))
           :on-drop       (fn [e] (block-drop e uid state))}
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
+
+         [:div (use-style (merge drop-area-indicator {:color "red"} (when (= drag-target :above) {:opacity "1"})))]
 
          [:div.block-body
           [:button.block-edit-toggle
