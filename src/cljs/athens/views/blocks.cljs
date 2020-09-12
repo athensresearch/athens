@@ -4,7 +4,7 @@
     [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
     [athens.events :refer [delete-page]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
-    [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
+    [athens.listeners :refer [multi-block-select-over multi-block-select-up get-dataset-uid]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -64,7 +64,6 @@
                                 :background (color :link-color :opacity-lower)
                                 :box-shadow [["0 0.25rem 0.5rem -0.25rem" (color :background-color :opacity-med)]]}]
                      [:&.is-selected:after {:opacity 1}]
-                     [:&.is-over:after {:pointer-events "none"}]
                      [:.block-body {:display "flex"
                                     :border-radius "0.5rem"
                                     :transition "all 0.1s ease"
@@ -667,51 +666,53 @@
     {:x offset-x :y offset-y}))
 
 (defn block-drag-over
-  "Closest block container. Ignore when target is not block-container.
-  When drag leave happens, on the block happens, i want to set drag-target to nil. the problem is that drag leave needs
-  to ignore child elements: https://stackoverflow.com/questions/7110353/html5-dragleave-fired-when-hovering-a-child-element"
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
   ;; if last block-container (i.e. no siblings), allow drop below
   ;; if block or ancestor has css dragging class, do not show drop indicator
   (let [closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]}     (mouse-offset-2 e closest-container)]
-    ;;(prn (.. e -target -className) (.. closest-container -className))
-
-    (let [{:block/keys [children]} block
-          middle-y (vertical-center closest-container)
-          next-sibling (.. closest-container -nextElementSibling)
-          last-child? (nil? next-sibling)
-          ;;dragging-ancestor (.. e -target (closest ".dragging"))
-          ;;not-dragging?     (nil? dragging-ancestor)
-          target
-          ;(when not-dragging?)
-          (cond
-            ;; if above midpoint, show drop indicator above block
-            ;;(or  (> y middle-y)) :below
-            (or (neg? y) (< y middle-y)) :above)]
-      ;;;; if no children and over 50 pixels from the left, show child drop indicator
-      ;;(and (empty? children) (< 50 (:x offset))) :child
-      ;;;; if below midpoint and last child, show drop indicator below
-      ;;(and last-child? (< middle-y y)) :below)]
-      (prn y middle-y target)
-      (when target
-        ;;(prn (:block/uid block) y middle-y target)
-        (swap! state assoc :drag-target target)))))
+        {:keys [x y]} (mouse-offset-2 e closest-container)
+        {:block/keys [children]} block
+        middle-y (vertical-center closest-container)
+        dragging-ancestor (.. e -target (closest ".dragging"))
+        not-dragging?     (nil? dragging-ancestor)
+        target (when not-dragging?
+                 (cond
+                   ;; if above midpoint, show drop indicator above block
+                   (or (neg? y) (< y middle-y)) :above
+                   ;; if no children and over 50 pixels from the left, show child drop indicator
+                   (and (empty? children) (< 50 x)) :child
+                   ;; if below midpoint and last child, show drop indicator below
+                   (< middle-y y) :below))]
+    (when target
+      (swap! state assoc :drag-target target))))
 
 
 (defn block-drop
   "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
-  [e target-uid state]
+  [e block state]
   (.. e stopPropagation)
-  (let [{:keys [drag-target]} @state
+  (let [{target-uid :block/uid} block
+        {:keys [drag-target]} @state
         source-uid (.. e -dataTransfer (getData "text/plain"))
         valid-drop (and (not (nil? drag-target))
                         (not= source-uid target-uid))]
     (when valid-drop
       (dispatch [:drop-bullet source-uid target-uid drag-target]))
     (swap! state assoc :drag-target nil)))
+
+
+(defn block-drag-leave
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  (let [{target-uid :block/uid} block
+        related-uid (get-dataset-uid (.. e -relatedTarget))]
+    (when-not (= related-uid target-uid)
+      ;;(prn target-uid related-uid  "LEAVE")
+      (swap! state assoc :drag-target nil))))
+
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
@@ -724,7 +725,6 @@
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
-                       :is-over           false
                        :dragging          false
                        :drag-target       nil
                        :last-keydown      nil
@@ -743,7 +743,7 @@
 
     (fn [block]
       (let [{:block/keys [uid string open children _refs]} block
-            {:search/keys [type] :keys [dragging drag-target is-over]} @state
+            {:search/keys [type] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -760,26 +760,11 @@
                           (when dragging "dragging")
                           (when is-editing "is-editing")
                           (when is-selected "is-selected")
-                          (when (and (seq children) open) "show-tree-indicator")
-                          (when is-over "is-over")]
+                          (when (and (seq children) open) "show-tree-indicator")]
           :data-uid      uid
-          :on-drag-over  (fn [e]
-                           (.. e stopPropagation)
-                           ;;(prn "OVER"))
-                           (block-drag-over e block state))
-          :on-drag-enter (fn [e]
-                           (swap! state assoc :is-over true)
-                           (prn (array-seq (.. e -target -classList)))
-                           (when-let [closest (.. e -target (closest ".block-container"))]))
-          ;;(prn (.. closest -className) (.. closest -innerText) "ENTER")))
-          :on-drag-leave (fn [e]
-                           (.. e preventDefault)
-                           (.. e stopPropagation)
-                           (swap! state assoc :is-over false)
-                           (let [closest (.. e -target (closest ".block-container"))]
-                             ;;(prn (.. closest -className) (.. closest -innerText) "LEAVE")
-                             (swap! state assoc :drag-target nil)))
-          :on-drop       (fn [e] (block-drop e uid state))}
+          :on-drag-over  (fn [e] (block-drag-over  e block state))
+          :on-drag-leave (fn [e] (block-drag-leave e block state))
+          :on-drop       (fn [e] (block-drop       e block state))}
 
          [:div (use-style (merge drop-area-indicator {:color "red"} (when (= drag-target :above) {:opacity "1"})))]
 
