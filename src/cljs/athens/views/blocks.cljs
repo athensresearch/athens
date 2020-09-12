@@ -658,22 +658,15 @@
                       :z-index (:zindex-tooltip ZINDICES)})
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
 
-(defn mouse-offset-2
-  [e container]
-  (let [rect (.. container getBoundingClientRect)
-        offset-x (- (.. e -pageX) (.. rect -left))
-        offset-y (- (.. e -pageY) (.. rect -top))]
-    {:x offset-x :y offset-y}))
-
 (defn block-drag-over
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
   ;; if last block-container (i.e. no siblings), allow drop below
   ;; if block or ancestor has css dragging class, do not show drop indicator
-  (let [closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]} (mouse-offset-2 e closest-container)
-        {:block/keys [children]} block
+  (let [{:block/keys [children]} block
+        closest-container (.. e -target (closest ".block-container"))
+        {:keys [x y]} (mouse-offset e closest-container)
         middle-y (vertical-center closest-container)
         dragging-ancestor (.. e -target (closest ".dragging"))
         not-dragging?     (nil? dragging-ancestor)
