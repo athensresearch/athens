@@ -571,10 +571,12 @@
     (when-not (and related (contains related "tooltip"))
       (swap! state assoc :tooltip false))))
 
+
 (defn bullet-mouse-over
   "Show tooltip."
   [_e _uid state]
   (swap! state assoc :tooltip true))
+
 
 (defn bullet-context-menu
   "Handle right click. If no blocks are selected, just give option for copying current block's uid."
@@ -596,6 +598,7 @@
   (.. e -dataTransfer (setData "text/plain" uid))
   (swap! state assoc :dragging true))
 
+
 (defn bullet-drag-end
   "End drag event."
   [_e _uid state]
@@ -616,6 +619,7 @@
                          :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
                          :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                          :on-drag-end     (fn [e] (bullet-drag-end e uid state))})])))
+
 
 (defn copy-refs-click
   [_ uid state]
@@ -657,6 +661,7 @@
                       :right "0px"
                       :z-index (:zindex-tooltip ZINDICES)})
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
+
 
 (defn block-drag-over
   [e block state]
