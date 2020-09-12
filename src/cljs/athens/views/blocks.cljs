@@ -355,11 +355,10 @@
     [:span (use-style block-disclosure-toggle-style)]))
 
 
-;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
   [block state]
   (let [{:block/keys [uid order] dbid :db/id} block
-        {:keys [dragging tooltip drag-target]} @state]
+        {:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
@@ -367,8 +366,7 @@
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]
-       [:div [:b "target"] [:span drag-target]]])))
+       [:div [:b "order"] [:span order]]])))
 
 
 (defn inline-search-el
@@ -664,25 +662,24 @@
 
 
 (defn block-drag-over
+  "If block or ancestor has CSS dragging class, do not show drop indicator; do not allow block to drop onto itself.
+  If above midpoint, show drop indicator above block.
+  If no children and over X pixels from the left, show child drop indicator.
+  If below midpoint, show drop indicator below."
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
-  ;; if last block-container (i.e. no siblings), allow drop below
-  ;; if block or ancestor has css dragging class, do not show drop indicator
   (let [{:block/keys [children]} block
         closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]} (mouse-offset e closest-container)
-        middle-y (vertical-center closest-container)
+        {:keys [x y]}     (mouse-offset e closest-container)
+        middle-y          (vertical-center closest-container)
         dragging-ancestor (.. e -target (closest ".dragging"))
         not-dragging?     (nil? dragging-ancestor)
-        target (when not-dragging?
-                 (cond
-                   ;; if above midpoint, show drop indicator above block
-                   (or (neg? y) (< y middle-y)) :above
-                   ;; if no children and over 50 pixels from the left, show child drop indicator
-                   (and (empty? children) (< 50 x)) :child
-                   ;; if below midpoint and last child, show drop indicator below
-                   (< middle-y y) :below))]
+        target            (when not-dragging?
+                            (cond
+                              (or (neg? y) (< y middle-y)) :above
+                              (and (empty? children) (< 50 x)) :child
+                              (< middle-y y) :below))]
     (when target
       (swap! state assoc :drag-target target))))
 
@@ -702,6 +699,8 @@
 
 
 (defn block-drag-leave
+  "When mouse leaves block, remove any drop area indicator.
+  Ignore if target-uid and related-uid are the same — user went over a child component and we don't want flicker."
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
@@ -764,7 +763,7 @@
           :on-drag-leave (fn [e] (block-drag-leave e block state))
           :on-drop       (fn [e] (block-drop       e block state))}
 
-         [:div (use-style (merge drop-area-indicator {:color "red"} (when (= drag-target :above) {:opacity "1"})))]
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
          [:div.block-body
           [:button.block-edit-toggle

@@ -35,12 +35,10 @@
 
 
 (defn mouse-offset
-  "Finds offset coordinates within a container. If container is not passed, assume target is container."
+  "Finds offset between mouse event and container. If container is not passed, use target as container."
   ([e]
-   (let [rect (.. e -target getBoundingClientRect)
-         offset-x (- (.. e -pageX) (.. rect -left))
-         offset-y (- (.. e -pageY) (.. rect -top))]
-     {:x offset-x :y offset-y}))
+   (let [container (.. e -target)]
+     (mouse-offset e container)))
   ([e container]
    (let [rect (.. container getBoundingClientRect)
          offset-x (- (.. e -pageX) (.. rect -left))
