@@ -4,7 +4,7 @@
     [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
     [athens.events :refer [delete-page]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
-    [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
+    [athens.listeners :refer [multi-block-select-over multi-block-select-up get-dataset-uid]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -355,10 +355,10 @@
     [:span (use-style block-disclosure-toggle-style)]))
 
 
-;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
-  [{:block/keys [uid order] dbid :db/id} state]
-  (let [{:keys [dragging tooltip]} @state]
+  [block state]
+  (let [{:block/keys [uid order] dbid :db/id} block
+        {:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
@@ -562,77 +562,94 @@
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
 
+(defn bullet-mouse-out
+  "Hide tooltip."
+  [e _uid state]
+  (let [related (.. e -relatedTarget)]
+    (when-not (and related (contains related "tooltip"))
+      (swap! state assoc :tooltip false))))
+
+
+(defn bullet-mouse-over
+  "Show tooltip."
+  [_e _uid state]
+  (swap! state assoc :tooltip true))
+
+
+(defn bullet-context-menu
+  "Handle right click. If no blocks are selected, just give option for copying current block's uid."
+  [e _uid state]
+  (.. e preventDefault)
+  (let [selected-blocks @(subscribe [:selected/items])
+        rect (.. e -target getBoundingClientRect)
+        show-type (if (empty? selected-blocks) :one :many)]
+    (swap! state assoc
+           :context-menu/x    (.. rect -left)
+           :context-menu/y    (.. rect -bottom)
+           :context-menu/show show-type)))
+
+
+(defn bullet-drag-start
+  "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
+  [e uid state]
+  (set! (.. e -dataTransfer -effectAllowed) "move")
+  (.. e -dataTransfer (setData "text/plain" uid))
+  (swap! state assoc :dragging true))
+
+
+(defn bullet-drag-end
+  "End drag event."
+  [_e _uid state]
+  (swap! state assoc :dragging false))
+
+
 (defn bullet-el
   [_ _]
   (fn [block state]
-    (let [{:block/keys [uid children open]} block
-          {:context-menu/keys [show x y]} @state]
-
-      [:<>
-       (when show
-         [:div (merge (use-style dropdown-style)
-                      {:style {:position "fixed"
-                               :x        (str x "px")
-                               :y        (str y "px")}})
-          [:div (use-style menu-style)
-           ;; TODO: create listener that lets user exit context menu if click outside
-           [button {:on-click (fn [_]
-                                (let [selected-items @(subscribe [:selected/items])
-                                      ;; use this when using datascript-transit
-                                      ;uids (map (fn [x] [:block/uid x]) selected-items)
-                                      ;blocks (d/pull-many @db/dsdb '[*] ids)
-                                      data (cond
-                                             (= show :one) (str "((" uid "))")
-                                             (= show :many) (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                                                                 (str/join "")))]
-                                  (.. js/navigator -clipboard (writeText data))
-                                  (swap! state assoc :context-menu/show false)))}
-                                  ; TODO: unable to copy with roam/data as data type. leaving this scrap here until return to this problem
-                                  ;(= show :many) (dt/write-transit-str
-                                  ;                 {:db-id       nil ;; roam has a value for this
-                                  ;                  :type        :copy ;; or :cut
-                                  ;                  :copied-data block-refs}))]
-                                  ;(let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
-                                  ;      item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
-                                  ;  (.then (.. js/navigator -clipboard (write [item]))
-                                  ;         #(js/console.log "suc" %)
-                                  ;         #(js/console.log "fail" %)))))}
+    (let [{:block/keys [uid children open]} block]
+      [:span (use-style bullet-style
+                        {:class           [(when (and (seq children) (not open))
+                                             "closed-with-children")]
+                         :draggable       true
+                         :on-click        (fn [e] (navigate-uid uid e))
+                         :on-context-menu (fn [e] (bullet-context-menu e uid state))
+                         :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+                         :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+                         :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+                         :on-drag-end     (fn [e] (bullet-drag-end e uid state))})])))
 
 
+(defn copy-refs-click
+  [_ uid state]
+  (let [{:context-menu/keys [show]} @state
+        selected-items @(subscribe [:selected/items])
+        ;; use this when using datascript-transit
+        ;uids (map (fn [x] [:block/uid x]) selected-items)
+        ;blocks (d/pull-many @db/dsdb '[*] ids)
+        data (case show
+               :one (str "((" uid "))")
+               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                          (str/join "")))]
+    (.. js/navigator -clipboard (writeText data))
+    (swap! state assoc :context-menu/show false)))
 
-            (cond
-              (= show :one) "Copy block ref"
-              (= show :many) "Copy block refs")]]])
-       [:span (use-style bullet-style
-                         {:class           [(when (and (seq children) (not open))
-                                              "closed-with-children")]
-                          :on-mouse-over   #(swap! state assoc :tooltip true)
-                          :on-mouse-out    (fn [e]
-                                             (let [related (.. e -relatedTarget)]
-                                               (when-not (and related (contains related "tooltip"))
-                                                 (swap! state assoc :tooltip false))))
-                          :on-click        (fn [e] (navigate-uid uid e))
-                          :draggable       true
-                          :on-context-menu (fn [e]
-                                             (.. e preventDefault)
-                                             (let [selected-blocks @(subscribe [:selected/items])
-                                                   rect (.. e -target getBoundingClientRect)
-                                                   new-context-menu-state (merge {:context-menu/x    (.. rect -left)
-                                                                                  :context-menu/y    (.. rect -bottom)
-                                                                                  :context-menu/show (if (empty? selected-blocks)
-                                                                                                       :one
-                                                                                                       :many)})]
-                                               (if (empty? selected-blocks)
-                                                 (swap! state merge new-context-menu-state)
-                                                 (swap! state merge new-context-menu-state))))
-                          :on-drag-start   (fn [e]
-                                             (set! (.. e -dataTransfer -effectAllowed) "move")
-                                             (.. e -dataTransfer (setData "text/plain" uid))
-                                             (swap! state assoc :dragging true))
-                          :on-drag-end     (fn [_]
-                                             ;; FIXME: not always called
-                                             ;         (prn "DRAG END BULLET")
-                                             (swap! state assoc :dragging false))})]])))
+
+(defn context-menu-el
+  "Only option in context menu right now is copy block ref(s)."
+  [block state]
+  (let [{:block/keys [uid]} block
+        {:context-menu/keys [show x y]} @state]
+    (when show
+      [:div (merge (use-style dropdown-style)
+                   {:style {:position "fixed"
+                            :x        (str x "px")
+                            :y        (str y "px")}})
+       [:div (use-style menu-style)
+        ;; TODO: create listener that lets user exit context menu if click outside
+        [button {:on-click (fn [e] (copy-refs-click e uid state))}
+         (case show
+           :one "Copy block ref"
+           :many "Copy block refs")]]])))
 
 
 (defn block-refs-count-el
@@ -642,6 +659,56 @@
                       :right "0px"
                       :z-index (:zindex-tooltip ZINDICES)})
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
+
+
+(defn block-drag-over
+  "If block or ancestor has CSS dragging class, do not show drop indicator; do not allow block to drop onto itself.
+  If above midpoint, show drop indicator above block.
+  If no children and over X pixels from the left, show child drop indicator.
+  If below midpoint, show drop indicator below."
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  (let [{:block/keys [children]} block
+        closest-container (.. e -target (closest ".block-container"))
+        {:keys [x y]}     (mouse-offset e closest-container)
+        middle-y          (vertical-center closest-container)
+        dragging-ancestor (.. e -target (closest ".dragging"))
+        not-dragging?     (nil? dragging-ancestor)
+        target            (when not-dragging?
+                            (cond
+                              (or (neg? y) (< y middle-y)) :above
+                              (and (empty? children) (< 50 x)) :child
+                              (< middle-y y) :below))]
+    (when target
+      (swap! state assoc :drag-target target))))
+
+
+(defn block-drop
+  "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+  [e block state]
+  (.. e stopPropagation)
+  (let [{target-uid :block/uid} block
+        {:keys [drag-target]} @state
+        source-uid (.. e -dataTransfer (getData "text/plain"))
+        valid-drop (and (not (nil? drag-target))
+                        (not= source-uid target-uid))]
+    (when valid-drop
+      (dispatch [:drop-bullet source-uid target-uid drag-target]))
+    (swap! state assoc :drag-target nil)))
+
+
+(defn block-drag-leave
+  "When mouse leaves block, remove any drop area indicator.
+  Ignore if target-uid and related-uid are the same — user went over a child component and we don't want flicker."
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  (let [{target-uid :block/uid} block
+        related-uid (get-dataset-uid (.. e -relatedTarget))]
+    (when-not (= related-uid target-uid)
+      ;;(prn target-uid related-uid  "LEAVE")
+      (swap! state assoc :drag-target nil))))
 
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
@@ -690,41 +757,12 @@
                           (when dragging "dragging")
                           (when is-editing "is-editing")
                           (when is-selected "is-selected")
-                          ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
                           (when (and (seq children) open) "show-tree-indicator")]
           :data-uid      uid
-          :on-drag-over  (fn [e]
-                           (.. e preventDefault)
-                           (.. e stopPropagation)
-                           ;; if last block-container (i.e. no siblings), allow drop below
-                           ;; if block or ancestor has css dragging class, do not show drop indicator
-                           (let [offset            (mouse-offset e)
-                                 middle-y          (vertical-center (.. e -target))
-                                 closest-container (.. e -target (closest ".block-container"))
-                                 next-sibling      (.. closest-container -nextElementSibling)
-                                 last-child?       (nil? next-sibling)
-                                 dragging-ancestor (.. e -target (closest ".dragging"))
-                                 not-dragging?     (nil? dragging-ancestor)
-                                 target            (when not-dragging?
-                                                     (cond
-                                                       ;; if above midpoint, show drop indicator above block
-                                                       (< (:y offset) middle-y) :above
-                                                       ;; if no children and over 50 pixels from the left, show child drop indicator
-                                                       (and (empty? children) (< 50 (:x offset))) :child
-                                                       ;; if below midpoint and last child, show drop indicator below
-                                                       (and last-child? (< middle-y (:y offset))) :below))]
-                             (swap! state assoc :drag-target target)))
-          :on-drag-enter (fn [_])
-          :on-drag-leave (fn [_]
-                           (swap! state assoc :drag-target nil))
-          :on-drop       (fn [e]
-                           (.. e stopPropagation)
-                           (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
-                             (cond
-                               (nil? drag-target) nil
-                               (= source-uid uid) nil)
-                             (dispatch [:drop-bullet source-uid uid drag-target])
-                             (swap! state assoc :drag-target nil)))}
+          :on-drag-over  (fn [e] (block-drag-over  e block state))
+          :on-drag-leave (fn [e] (block-drag-leave e block state))
+          :on-drop       (fn [e] (block-drop       e block state))}
+
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
          [:div.block-body
@@ -734,6 +772,7 @@
                           (dispatch [:editing/uid uid])))}]
 
           [toggle-el block]
+          [context-menu-el block state]
           [bullet-el block state]
           [tooltip-el block state]
           [block-content-el block state is-editing]

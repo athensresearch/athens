@@ -569,14 +569,14 @@
 
 (defn drop-above-same-parent
   "Give source block target block's order
-    When source is below target, increment block orders between source and target-1
-    When source is above target, decrement block order between...";; TODO
-
+  When source is below target, increment block orders between source and target-1
+  When source is above target, decrement block order between them.
+  No effect if block/orders wouldn't change: :above and s-order == t-order - 1"
   [source target parent]
   (let [s-order (:block/order source)
-        t-order (:block/order target)]
-    (if (= s-order (dec t-order))
-      nil
+        t-order (:block/order target)
+        no-effect? (= s-order (dec t-order))]
+    (when-not no-effect?
       (let [new-source-block {:db/id (:db/id source) :block/order t-order}
             inc-or-dec       (if (> s-order t-order) inc dec)
             reindex          (->> (d/q '[:find ?ch ?new-order
@@ -604,11 +604,16 @@
 
 
 (defn drop-below-same-parent
-  "source block's new order is target block's order"
-  [source source-parent target]
-  (let [new-source-block {:db/id (:db/id source) :block/order (:block/order target)}
-        reindex (dec-after (:db/id source-parent) (:block/order source))]
-    (concat [new-source-block] reindex)))
+  "Source block's new order is target block's order.
+  No effect if block/orders wouldn't change: :below and t-order == s-order - 1"
+  [source parent target]
+  (let [s-order (:block/order source)
+        t-order (:block/order target)
+        no-effect? (= (dec s-order) t-order)]
+    (when-not no-effect?
+      (let [new-source-block {:db/id (:db/id source) :block/order t-order}
+            reindex (dec-after (:db/id parent) s-order)]
+        (concat [new-source-block] reindex)))))
 
 
 (defn drop-below-diff-parent

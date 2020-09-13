@@ -35,11 +35,14 @@
 
 
 (defn mouse-offset
-  [e]
-  (let [rect (.. e -target getBoundingClientRect)
-        offset-x (- (.. e -pageX) (.. rect -left))
-        offset-y (- (.. e -pageY) (.. rect -top))]
-    {:x offset-x :y offset-y}))
+  "Finds offset between mouse event and container. If container is not passed, use target as container."
+  ([e]
+   (mouse-offset e (.. e -target)))
+  ([e container]
+   (let [rect (.. container getBoundingClientRect)
+         offset-x (- (.. e -pageX) (.. rect -left))
+         offset-y (- (.. e -pageY) (.. rect -top))]
+     {:x offset-x :y offset-y})))
 
 
 (defn vertical-center
