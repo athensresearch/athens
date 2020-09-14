@@ -101,7 +101,7 @@
   (fn [_]
     [(subscribe [:selected/items])])
   (fn [[selected-items] [_ uid]]
-    ((set selected-items) uid)))
+    (contains? (set selected-items) uid)))
 
 
 (re-frame/reg-sub

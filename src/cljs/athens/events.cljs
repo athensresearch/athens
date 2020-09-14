@@ -123,31 +123,51 @@
     (assoc db :selected/items [])))
 
 
-(reg-event-db
+(reg-event-fx
   :selected/up
-  (fn [db [_ selected-items]]
+  (fn [{:keys [db]} [_ selected-items]]
     (let [first-item (first selected-items)
           prev-block-uid- (db/prev-block-uid first-item)
           prev-block (db/get-block [:block/uid prev-block-uid-])
-         ;;parent (db/get-parent [:block/uid first-item])
-          new-vec (cond
-                   ;; if prev-block is root node TODO: (OR context root), don't do anything
-                    (:node/title prev-block) nil
-                   ;; if prev block is parent, replace head of vector with parent
-                   ;; TODO needs to replace all children blocks of the parent
-                   ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
-                   ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
-                    :else (into [prev-block-uid-] selected-items))]
-      (assoc db :selected/items new-vec))))
+          parent (db/get-parent [:block/uid first-item])]
+          ;;new-vec (cond
+          ;;         ;; if prev-block is root node TODO: (OR context root), don't do anything
+          ;;          (:node/title prev-block) selected-items
+          ;;         ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+          ;;         (= (:block/uid parent) prev-block-uid-) (do
+          ;;                                                   (prn "replace" selected-items (:block/children prev-block))
+          ;;                                                   {:dispatch [:editing/uid prev-block-uid-]}
+          ;;                                                   selected-items)
+          ;;         :else (into [prev-block-uid-] selected-items))]
+          ;;         ;;:else (into [prev-block-uid-] selected-items))]
+         (cond
+           (:node/title prev-block) {:db (assoc db :selected/items selected-items)}
+           ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+           (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                                                                             set)
+                                                         to-keep (filter (fn [x] (not (contains? parent-children x)))
+                                                                         selected-items)
+                                                         new-vec (into [prev-block-uid-] to-keep)]
+                                                     {:dispatch [:editing/uid prev-block-uid-]
+                                                      :db       (assoc db :selected/items new-vec)})
+           :else {:db (assoc db :selected/items (into [prev-block-uid-] selected-items))}))))
 
 
+;; if user presses down and they had previously pressed up, most recently selected block should become unselected
+;; on hand we have: editing/uid and a vector of uids. if editing/uid is not at the front of the vector, we should
+;; pop off the front of the vector.
+;; if pressing down but editing/uid is at the top of the vect, then just conj to vect
+;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
+;; this would let us know if the operation is additive or subtractive
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
     (let [last-item (last selected-items)
           next-block-uid- (db/next-block-uid last-item)
           new-vec (conj selected-items next-block-uid-)]
-      (assoc db :selected/items new-vec))))
+      ;; if next-block-uid- is nil, no op
+      (when next-block-uid-
+        (assoc db :selected/items new-vec)))))
 
 
 ;; TODO: minus-after to reindex but what about nested blocks?
