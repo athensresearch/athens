@@ -168,7 +168,6 @@
         next-block-uid-    (assoc db :selected/items (conj selected-items next-block-uid-))))))
 
 
-
 ;; TODO: minus-after to reindex but what about nested blocks?
 (reg-event-fx
   :selected/delete

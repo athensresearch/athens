@@ -407,6 +407,7 @@
         sib
         (recur (:block/uid parent))))))
 
+
 (defn next-block-uid
   "1-arity:
     if child, go to child 0
