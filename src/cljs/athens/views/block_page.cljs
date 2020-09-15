@@ -5,13 +5,17 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
+    [athens.keybindings :refer [destruct-event]]
+    [athens.util :refer [gen-block-uid now-ts]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy :refer [use-style]])
+  (:import
+    (goog.events KeyCodes)))
 
 
 ;;; Styles
@@ -68,10 +72,24 @@
 
 ;;; Components
 
+(defn handle-enter
+  [_ uid _]
+  (let [new-uid   (gen-block-uid)
+        now       (now-ts)]
+    (dispatch [:transact [{:block/uid       uid
+                           :edit/time       now
+                           :block/children  [{:block/order  0
+                                              :block/uid    new-uid
+                                              :block/open   true
+                                              :block/string ""}]}]])
+    (dispatch [:editing/uid new-uid])))
 
 (defn block-page-key-down
-  [_ _ _]
-  (prn "TODO: block-page-key-down"))
+  [e uid state]
+  (let [d-event (destruct-event e)
+        {:keys [key-code]} d-event]
+    (cond
+      (= key-code KeyCodes.ENTER) (handle-enter e uid state))))
 
 
 (defn block-page-change
