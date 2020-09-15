@@ -182,7 +182,8 @@
         next-block-uid- (db/next-block-uid last-item true)]
     (cond
       (pos? editing-idx) (subvec selected-items 1)
-      next-block-uid-    (conj selected-items next-block-uid-))))
+      next-block-uid-    (conj selected-items next-block-uid-)
+      :else selected-items)))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
