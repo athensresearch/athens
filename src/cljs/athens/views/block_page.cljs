@@ -94,7 +94,7 @@
 
 (defn block-page-change
   [e _uid state]
-  (let [value (.. e -target -value)]
+  (let [value (clojure.string/trim-newline (.. e -target -value))]
     (swap! state assoc :string/local value)))
 
 
