@@ -158,6 +158,7 @@
 (def drop-area-indicator
   {:display "block"
    :height "1px"
+   :pointer-events "none"
    :margin-bottom "-1px"
    :color (color :link-color :opacity-high)
    :position "relative"
@@ -545,8 +546,6 @@
 
 
 (defn textarea-mouse-down
-  "Have to do global because could be any block.
-  Can only use mouseover when mousedown. mouseenter and mouseleave don't work."
   [e uid state]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
@@ -558,32 +557,43 @@
 
 
 (defn textarea-mouse-enter
-  [e block state]
-  (let [{:block/keys [uid]} block
+  [e uid state]
+  (let [t (.. e -target)
+        closest-selected (.. t (closest ".is-selected"))
         mouse-down @(subscribe [:mouse-down])
         selected-items @(subscribe [:selected/items])
         items-set (set selected-items)]
     (when mouse-down
-      #_(prn "ENTER" (contains? items-set uid)uid)
-      (when-not (contains? items-set uid)
+      (prn "ENTER" closest-selected uid)
+      (when (and (not (contains? items-set uid))
+                 (nil? closest-selected))
         (dispatch [:selected/add-item uid])))))
 
 
 (defn textarea-mouse-leave
   "if entering for the first time, add
-  if present and relatedTarget is present, leave"
-  [e block state]
+  if present and relatedTarget is present, leave
+
+  the problem is that leave and enter happen at the same time
+  so fast, that ENTER doesn't know that LEAVE has added something already"
+  [e uid state]
+  (.. e stopPropagation)
   (let [mouse-down @(subscribe [:mouse-down])
-        selected-items @(subscribe [:selected/items])
+        t (.. e -target)
         rt (.. e -relatedTarget)
+        closest-container (.. rt (closest ".block-container"))
+        selected-items @(subscribe [:selected/items])
         rt-uid (get-dataset-uid rt)
-        {:block/keys [uid]} block
-        items-set (set selected-items)]
+        items-set (set selected-items)
+        is-editing @(subscribe [:editing/is-editing uid])]
     (when mouse-down
-      #_(prn "LEAVE" uid)
+      (js/console.log "LEAVE" closest-container uid)
       (when (empty? selected-items)
         (dispatch [:selected/add-item uid]))
-      (when (and (contains? items-set uid) (contains? items-set rt-uid))
+      (when (and (contains? items-set uid)
+                 (contains? items-set rt-uid)
+                 (not is-editing)
+                 (not (nil? closest-container)))
         (dispatch [:selected/remove-item uid])))))
 
 
@@ -608,7 +618,11 @@
                            :on-paste      (fn [e] (textarea-paste      e uid state))
                            :on-key-down   (fn [e] (textarea-key-down   e uid state))
                            :on-blur       (fn [e] (textarea-blur       e uid state))
-                           :on-click      (fn [e] (textarea-click      e uid state))}]
+                           :on-click      (fn [e] (textarea-click      e uid state))
+                           :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                           :on-mouse-leave (fn [e] (textarea-mouse-leave e uid state))
+                           :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+
        [parse-and-render local uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
@@ -812,10 +826,10 @@
           :data-uid       uid
           :on-drag-over   (fn [e] (block-drag-over e block state))
           :on-drag-leave  (fn [e] (block-drag-leave e block state))
-          :on-drop        (fn [e] (block-drop e block state))
-          :on-mouse-enter (fn [e] (textarea-mouse-enter e block state))
-          :on-mouse-leave (fn [e] (textarea-mouse-leave e block state))
-          :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}
+          :on-drop        (fn [e] (block-drop e block state))}
+          ;;:on-mouse-enter (fn [e] (textarea-mouse-enter e block state))
+          ;;:on-mouse-leave (fn [e] (textarea-mouse-leave e block state))
+          ;;:on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
