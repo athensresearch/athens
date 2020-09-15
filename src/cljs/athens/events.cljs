@@ -152,6 +152,7 @@
         n               (count selected-items)
         new-items (cond
                     ;; if prev-block is root node TODO: (OR context root), don't do anything
+                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
                     (:node/title prev-block) selected-items
                     ;; if prev block is parent, replace editing/uid and first item w parent; remove children
                     (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
@@ -160,7 +161,6 @@
                                                                                           selected-items)
                                                                   new-vec         (into [prev-block-uid-] to-keep)]
                                                               new-vec)
-                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
                     :else (into [prev-block-uid-] selected-items))]
     new-items))
 
