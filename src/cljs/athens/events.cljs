@@ -138,31 +138,51 @@
     (assoc db :selected/items [])))
 
 
-(reg-event-fx
+(defn select-up
+  [selected-items]
+  (let [first-item      (first selected-items)
+        prev-block-uid- (db/prev-block-uid first-item)
+        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        parent          (db/get-parent [:block/uid first-item])
+        editing-uid     @(subscribe [:editing/uid])
+        editing-idx     (first (keep-indexed (fn [idx x]
+                                               (when (= x editing-uid)
+                                                 idx))
+                                             selected-items))
+        n               (count selected-items)
+        new-items (cond
+                    ;; if prev-block is root node TODO: (OR context root), don't do anything
+                    (:node/title prev-block) selected-items
+                    ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+                    (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                                                                                      set)
+                                                                  to-keep         (filter (fn [x] (not (contains? parent-children x)))
+                                                                                          selected-items)
+                                                                  new-vec         (into [prev-block-uid-] to-keep)]
+                                                              new-vec)
+                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
+                    :else (into [prev-block-uid-] selected-items))]
+    new-items))
+
+
+(reg-event-db
   :selected/up
-  (fn [{:keys [db]} [_ selected-items]]
-    (let [first-item (first selected-items)
-          prev-block-uid- (db/prev-block-uid first-item)
-          prev-block (db/get-block [:block/uid prev-block-uid-])
-          parent (db/get-parent [:block/uid first-item])
-          editing-uid @(subscribe [:editing/uid])
-          editing-idx (first (keep-indexed (fn [idx x]
-                                             (when (= x editing-uid)
-                                               idx))
-                                           selected-items))
-          n (count selected-items)]
-      (cond
-        ;; if prev-block is root node TODO: (OR context root), don't do anything
-        (:node/title prev-block)          {:db (assoc db :selected/items selected-items)}
-        ;; if prev block is parent, replace editing/uid and first item w parent; remove children
-        (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
-                                                                          set)
-                                                      to-keep (filter (fn [x] (not (contains? parent-children x)))
-                                                                      selected-items)
-                                                      new-vec (into [prev-block-uid-] to-keep)]
-                                                  {:db       (assoc db :selected/items new-vec)})
-        (and (zero? editing-idx) (> n 1)) {:db (assoc db :selected/items (pop selected-items))}
-        :else                             {:db (assoc db :selected/items (into [prev-block-uid-] selected-items))}))))
+  (fn [db [_ selected-items]]
+    (assoc db :selected/items (select-up selected-items))))
+
+
+(defn select-down
+  [selected-items]
+  (let [editing-uid @(subscribe [:editing/uid])
+        editing-idx (first (keep-indexed (fn [idx x]
+                                           (when (= x editing-uid)
+                                             idx))
+                                         selected-items))
+        last-item (last selected-items)
+        next-block-uid- (db/next-block-uid last-item true)]
+    (cond
+      (pos? editing-idx) (subvec selected-items 1)
+      next-block-uid-    (conj selected-items next-block-uid-))))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
@@ -170,16 +190,7 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (let [editing-uid @(subscribe [:editing/uid])
-          editing-idx (first (keep-indexed (fn [idx x]
-                                             (when (= x editing-uid)
-                                               idx))
-                                           selected-items))
-          last-item (last selected-items)
-          next-block-uid- (db/next-block-uid last-item true)]
-      (cond
-        (pos? editing-idx) (assoc db :selected/items (subvec selected-items 1))
-        next-block-uid-    (assoc db :selected/items (conj selected-items next-block-uid-))))))
+    (assoc db :selected/items (select-down selected-items))))
 
 
 ;; TODO: minus-after to reindex but what about nested blocks?

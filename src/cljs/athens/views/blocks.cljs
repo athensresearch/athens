@@ -17,6 +17,7 @@
     [clojure.string :as str]
     #_[datascript.core :as d]
     [garden.selectors :as selectors]
+    [goog.dom :refer [findCommonAncestor]]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [instaparse.core :as parse]
@@ -517,24 +518,51 @@
 
 
 (defn textarea-click
-  [e uid _state]
+  "Determine if direction is up or down.
+  Call selected/up or selected/down until start and end of vector are source and target.
+  Edge case: target is a child of a source. In that case, highlight block.
+  TODO: Another case: target is a nested child of a sibling block:
+  • 1 source
+  • 2
+   • 3 target
+  This basically means there is no direct path from 1 to 3 using select/up or select/down, because the parent gets selected, not the block."
+  [e target-uid _state]
+  (prn "CLICK" target-uid)
   (let [source-uid @(subscribe [:editing/uid])]
     ;; if shift key is held when user clicks across multiple blocks, select the blocks
-    (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
+    (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
       (let [target (.. e -target)
             page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-            target-block (.. target (closest ".block-container"))
-            blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-            [start end] (-> (keep-indexed (fn [i el]
-                                            (when (or (= el target-block)
-                                                      (= source-uid (.. el -dataset -uid)))
-                                              i))
-                                          blocks))]
-        (when (and start end)
-          (let [selected-blocks (subvec blocks start (inc end))
-                selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-            (dispatch [:editing/uid nil])
-            (dispatch [:selected/add-items selected-uids])))))))
+            blocks (->> (.. page (querySelectorAll ".block-container"))
+                        (array-seq)
+                        (vec))
+            uids (map get-dataset-uid blocks)
+            start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
+            end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))
+            start-el (nth blocks start-idx)
+            end-el (nth blocks end-idx)
+            common (contains (findCommonAncestor start-el end-el) "block-container")
+            up?       (> start-idx end-idx)]
+        (cond
+          (true? common) (dispatch [:selected/add-item (if up? target-uid source-uid)])
+          (and start-idx end-idx) (let [
+                                        select-f     (if up? athens.events/select-up athens.events/select-down)
+                                        start-uid (nth uids start-idx)
+                                        end-uid   (nth uids end-idx)
+                                        new-items (loop [new-items [source-uid]
+                                                         i         0]
+                                                    (prn "LOOP" new-items)
+                                                    (if (or (> i 10)
+                                                            (nil? new-items)
+                                                            (and (= (first new-items) start-uid)
+                                                                 (= (last new-items) end-uid))
+                                                            (and (= (last new-items) start-uid)
+                                                                 (= (first new-items) end-uid)))
+                                                      new-items
+                                                      (recur (select-f new-items)
+                                                             (inc i))))]
+                                    (dispatch [:selected/add-items new-items])
+                                    (prn "SEL" start-uid end-uid new-items)))))))
 
 
 (defn up-fn
