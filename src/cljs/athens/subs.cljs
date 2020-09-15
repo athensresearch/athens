@@ -69,6 +69,12 @@
   (fn-traced [db _]
              (:right-sidebar/items db)))
 
+(re-frame/reg-sub
+  :mouse-down
+  (fn [db _]
+     (:mouse-down db)))
+
+
 
 (re-frame/reg-sub
   :merge-prompt

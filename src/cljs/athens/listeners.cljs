@@ -51,19 +51,49 @@
     uid))
 
 
+(defn recursive-child?
+  [e selected-items]
+  (let [parent-set (->> (mapcat (fn [x] (get-parents-recursively [:block/uid x]))
+                                selected-items)
+                        (map :block/uid)
+                        set)]
+    (contains? parent-set (get-dataset-uid (.. e -target)))))
+
 (defn multi-block-select-over
-  "If going over something, add it.
-  If leaving it, remove"
+  "If selected-items are empty, add editing-uid, which is used as source block for start of drag.
+  If the item is not already in the collection, and if the block is not a (nested) child, add it
+  If the block is a parent of a block, remove the children of those blocks, and add the parent
+  "
   [e]
   (let [target             (.. e -target)
         related-target     (.. e -relatedTarget)
         target-uid         (get-dataset-uid target)
-        _related-target-uid (get-dataset-uid related-target)
-        selected-items     @(subscribe [:selected/items])
-        _set-items (set selected-items)]
+        related-target-uid (get-dataset-uid related-target)
+        prev-block-uid (db/prev-block-uid related-target-uid)
+        next-block-uid (db/next-block-uid related-target-uid true)
+        selected-items     (subscribe [:selected/items])
+        editing-uid     @(subscribe [:editing/uid])]
+
+    ;; the problem is sometimes select-over doesn't start with the source block.
+    ;; if items is empty, then run everything with editing/uid. then rerun with target-uid
+
+    (when (and (empty? (set @selected-items)) (not (nil? editing-uid)))
+      (dispatch [:selected/add-item editing-uid]))
+
+    (prn "OVER" #_(and (empty? set-items) (not (nil? editing-uid)))
+         (= editing-uid target-uid)
+         (= target-uid prev-block-uid)
+         target-uid #_related-target-uid prev-block-uid)
+
+    (cond
+      (contains? (set @selected-items) target-uid) nil
+      (= editing-uid target-uid) nil
+      (= target-uid prev-block-uid) (dispatch [:selected/up @selected-items]))
+
+      ;;(dispatch [:selected/add-item target-uid]))
+
     (.. e stopPropagation)
-    (.. target blur)
-    (dispatch [:selected/add-item target-uid])))
+    (.. target blur)))
 
 
 (defn multi-block-select-up
@@ -75,16 +105,15 @@
 
 (defn unfocus
   [e]
-  (let [selected-items @(subscribe [:selected/items])
+  (let [selected-items? (boolean @(subscribe [:selected/items]))
         editing-uid    @(subscribe [:editing/uid])
         closest-block (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
-    ;;(prn e (.. e -type))
-    (when (not-empty selected-items)
+    (when selected-items?
       (dispatch [:selected/clear-items]))
-    (when (and (nil? closest) editing-uid)
+    (when (and (nil? closest) editing-uid selected-items?)
       (dispatch [:editing/uid nil]))))
 
 
@@ -166,7 +195,7 @@
 (defn init
   []
   ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
-  (events/listen js/window EventType.CLICK unfocus)
+  (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)

@@ -72,6 +72,15 @@
   (fn [db [_ item]]
     (update-in db [:right-sidebar/items item :open] not)))
 
+(reg-event-db
+  :mouse-down/set
+  (fn [db _]
+    (assoc db :mouse-down true)))
+
+(reg-event-db
+  :mouse-down/unset
+  (fn [db _]
+    (assoc db :mouse-down false)))
 
 ;; TODO: dec all indices > closed item
 (reg-event-db
@@ -110,6 +119,12 @@
   (fn [db [_ uid]]
     (update db :selected/items conj uid)))
 
+(reg-event-db
+  :selected/remove-item
+  (fn [db [_ uid]]
+    (let [items (:selected/items db)]
+      (assoc db :selected/items (filterv #(not= % uid) items)))))
+
 
 (reg-event-db
   :selected/add-items
@@ -145,8 +160,7 @@
                                                       to-keep (filter (fn [x] (not (contains? parent-children x)))
                                                                       selected-items)
                                                       new-vec (into [prev-block-uid-] to-keep)]
-                                                  {:dispatch [:editing/uid prev-block-uid-]
-                                                   :db       (assoc db :selected/items new-vec)})
+                                                  {:db       (assoc db :selected/items new-vec)})
         (and (zero? editing-idx) (> n 1)) {:db (assoc db :selected/items (pop selected-items))}
         :else                             {:db (assoc db :selected/items (into [prev-block-uid-] selected-items))}))))
 
