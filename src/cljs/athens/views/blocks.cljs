@@ -517,6 +517,41 @@
           (dispatch [:transact new-datoms]))))))
 
 
+(defn distance-f
+  [e source-uid target-uid]
+  (let [target (.. e -target)
+        page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+        blocks (->> (.. page (querySelectorAll ".block-container"))
+                    (array-seq)
+                    (vec))
+        uids (map get-dataset-uid blocks)
+        start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
+        end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))
+        start-el (nth blocks start-idx)
+        end-el (nth blocks end-idx)
+        common (contains (findCommonAncestor start-el end-el) "block-container")
+        up?       (> start-idx end-idx)]
+    (cond
+      (true? common) (dispatch [:selected/add-item (if up? target-uid source-uid)])
+      (and start-idx end-idx) (let [
+                                    select-f     (if up? athens.events/select-up athens.events/select-down)
+                                    start-uid (nth uids start-idx)
+                                    end-uid   (nth uids end-idx)
+                                    new-items (loop [new-items [source-uid]
+                                                     i         0]
+                                                (prn "LOOP" new-items)
+                                                (if (or (> i 10)
+                                                        (nil? new-items)
+                                                        (and (= (first new-items) start-uid)
+                                                             (= (last new-items) end-uid))
+                                                        (and (= (last new-items) start-uid)
+                                                             (= (first new-items) end-uid)))
+                                                  new-items
+                                                  (recur (select-f new-items)
+                                                         (inc i))))]
+                                (dispatch [:selected/add-items new-items])
+                                (prn "SEL" start-uid end-uid new-items)))))
+
 (defn textarea-click
   "Determine if direction is up or down.
   Call selected/up or selected/down until start and end of vector are source and target.
@@ -531,38 +566,8 @@
   (let [source-uid @(subscribe [:editing/uid])]
     ;; if shift key is held when user clicks across multiple blocks, select the blocks
     (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
-      (let [target (.. e -target)
-            page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-            blocks (->> (.. page (querySelectorAll ".block-container"))
-                        (array-seq)
-                        (vec))
-            uids (map get-dataset-uid blocks)
-            start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
-            end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))
-            start-el (nth blocks start-idx)
-            end-el (nth blocks end-idx)
-            common (contains (findCommonAncestor start-el end-el) "block-container")
-            up?       (> start-idx end-idx)]
-        (cond
-          (true? common) (dispatch [:selected/add-item (if up? target-uid source-uid)])
-          (and start-idx end-idx) (let [
-                                        select-f     (if up? athens.events/select-up athens.events/select-down)
-                                        start-uid (nth uids start-idx)
-                                        end-uid   (nth uids end-idx)
-                                        new-items (loop [new-items [source-uid]
-                                                         i         0]
-                                                    (prn "LOOP" new-items)
-                                                    (if (or (> i 10)
-                                                            (nil? new-items)
-                                                            (and (= (first new-items) start-uid)
-                                                                 (= (last new-items) end-uid))
-                                                            (and (= (last new-items) start-uid)
-                                                                 (= (first new-items) end-uid)))
-                                                      new-items
-                                                      (recur (select-f new-items)
-                                                             (inc i))))]
-                                    (dispatch [:selected/add-items new-items])
-                                    (prn "SEL" start-uid end-uid new-items)))))))
+      (distance-f e source-uid target-uid))))
+
 
 
 (defn up-fn
@@ -579,23 +584,29 @@
   (when (false? (.. e -shiftKey))
     (dispatch [:editing/uid uid])
     (let [mouse-down @(subscribe [:mouse-down])]
-      (when (false? mouse-down))
-      (dispatch [:mouse-down/set])
-      (events/listen js/document EventType.MOUSEUP up-fn))))
+      (when (false? mouse-down)
+        (dispatch [:mouse-down/set])
+        (events/listen js/document EventType.MOUSEUP up-fn)))))
 
 
 (defn textarea-mouse-enter
-  [e uid state]
-  (let [t (.. e -target)
-        closest-selected (.. t (closest ".is-selected"))
-        mouse-down @(subscribe [:mouse-down])
-        selected-items @(subscribe [:selected/items])
-        items-set (set selected-items)]
+  [e target-uid state]
+  (let [source-uid @(subscribe [:editing/uid])
+        mouse-down @(subscribe [:mouse-down])]
     (when mouse-down
-      (prn "ENTER" closest-selected uid)
-      (when (and (not (contains? items-set uid))
-                 (nil? closest-selected))
-        (dispatch [:selected/add-item uid])))))
+      (distance-f e source-uid target-uid)))
+  #_(let [t (.. e -target)
+          selected-items @(subscribe [:selected/items])
+          items-set (set selected-items)
+          timeout (if (empty? selected-items) 200 0)]
+      (when mouse-down
+        (js/setTimeout #(let [closest-selected (.. t (closest ".is-selected"))]
+                          (prn "ENTER" closest-selected uid)
+                          (when (and (not (contains? items-set uid))
+                                     (nil? closest-selected))
+                            (dispatch [:selected/add-item uid])))
+                       timeout))))
+
 
 
 (defn textarea-mouse-leave
