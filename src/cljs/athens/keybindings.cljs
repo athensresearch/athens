@@ -250,13 +250,10 @@
 (defn handle-tab
   [e uid]
   (.. e preventDefault)
-  (let [{:keys [shift]} (destruct-event e)
-        ;; xxx: probably makes more sense to pass block value to handler directly
-        block-zero? (zero? (:block/order (db/get-block [:block/uid uid])))]
-    (cond
-      shift (dispatch [:unindent uid])
-      :else (when-not block-zero?
-              (dispatch [:indent uid])))))
+  (let [{:keys [shift]} (destruct-event e)]
+    (if shift
+      (dispatch [:unindent uid])
+      (dispatch [:indent uid]))))
 
 
 (defn handle-escape

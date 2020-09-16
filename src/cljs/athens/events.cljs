@@ -198,6 +198,8 @@
 
 
 ;; TODO: minus-after to reindex but what about nested blocks?
+;; naive: assume all items are siblings of same parent. minus-after n where n is size of selected-items
+;; better:
 (reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
@@ -430,6 +432,15 @@
               :where (plus-after ?p ?at ?ch ?new-o ?x)]
             @db/dsdb rules eid order x)))
 
+(defn minus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+            @db/dsdb rules eid order x)))
+
+
 
 (reg-event-fx
   :up
@@ -552,20 +563,73 @@
 
 
 (defn indent
+  "When indenting a single block:
+  - retract block from parent
+  - make block the last child of older sibling
+  - reindex parent
+  Only indent a block if it is not the zeroth block (first child).
+
+  When indenting multiple blocks, differences
+  - indices are different
+  - multiple levels of indentation"
   [uid]
   (let [block (db/get-block [:block/uid uid])
-        parent (db/get-parent [:block/uid uid])
-        older-sib (->> parent
-                       :block/children
-                       (filter #(= (dec (:block/order block)) (:block/order %)))
-                       first
-                       :db/id
-                       db/get-block)
-        new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
-        reindex (dec-after (:db/id parent) (:block/order block))]
-    {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                                 {:db/id (:db/id parent) :block/children reindex}]]]]}))
+        block-zero? (zero? (:block/order block))]
+    (when-not block-zero?
+      (let [parent (db/get-parent [:block/uid uid])
+            older-sib (->> parent
+                           :block/children
+                           (filter #(= (dec (:block/order block)) (:block/order %)))
+                           first
+                           :db/id
+                           db/get-block)
+            new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
+            reindex (dec-after (:db/id parent) (:block/order block))]
+        {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
+                                     {:db/id (:db/id older-sib) :block/children [new-block]}
+                                     {:db/id (:db/id parent) :block/children reindex}]]]]}))))
+
+
+;;(defmulti my-multi (fn [x] (type x)))
+;;(defmethod my-multi js/String [x]
+;;  (prn "STIRNG" x))
+;;(defmethod my-multi PersistentVector [x]
+;;  (prn "VECT" x))
+
+(defn indent-multi
+  [uids]
+  (let [blocks      (map #(db/get-block [:block/uid %]) uids)
+        block (first blocks)
+        last-block (last blocks)
+        block-zero? (-> block :block/order zero?)]
+    (when-not block-zero?
+      (let [parent (db/get-parent [:block/uid (:block/uid block)])
+            older-sib (->> parent
+                           :block/children
+                           (filter #(= (dec (:block/order block)) (:block/order %)))
+                           first
+                           :db/id
+                           db/get-block)
+            n (count (:block/children older-sib))
+            new-blocks (map-indexed (fn [idx x]
+                                      {:db/id       (:db/id x)
+                                       :block/order (+ idx n)})
+                                    blocks)
+            reindex (minus-after (:db/id parent) (:block/order last-block) (count blocks))
+            retracts             (map (fn [x]
+                                        [:db/retract (:db/id parent) :block/children (:db/id x)])
+                                      blocks)
+            tx-data (concat new-blocks
+                            reindex
+                            retracts)]
+        ;;(prn tx-data)
+        {:fx [[:dispatch [:transact tx-data]]]}))))
+
+
+(reg-event-fx
+  :indent/multi
+  (fn [_ [_ uids]]
+    (indent-multi uids)))
 
 
 (reg-event-fx
