@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
-    [athens.events :refer [delete-page]]
+    [athens.events :refer [delete-page select-up select-down]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -515,22 +515,21 @@
           (dispatch [:transact new-datoms]))))))
 
 
-(defn distance-f
+(defn find-selected-items
   "Used by both shift-click and click-drag for multi-block-selection.
+  Given a mouse event, a source block, and a target block, highlight blocks.
+  Find all blocks on the page using the DOM.
   Determine if direction is up or down.
-  Call selected/up or selected/down until start and end of vector are source and target.
-  Edge case: target is a child of a source. In that case, highlight block.
-  TODO: Another case: target is a nested child of a sibling block:
-  • 1 source
+  Algorithm: call select-up or select-down until start and end of vector are source and target.
+
+  Bug: there isn't an algorithmic path for all pairs of source and target blocks, because sometimes the parent is
+  highlighted, meaning a child block might not be selected itself. Rather, it inherits selection from parent.
+  
+  e.g.: 1 and 3 as source and target, or vice versa.
+  • 1
   • 2
-   • 3 target
-  This basically means there is no direct path from 1 to 3 using select/up or select/down, because the parent gets selected, not the block.
-
-  This is really the same edge case: there isn't a direct path with select/up or select/down.
-
-  If n is a child of n-1"
-  ;; delta is maximum iterations. if end condition is not met within delta iterations, terminate
-  ;; if
+   • 3
+  Because of this bug, add additional exit cases to prevent stack overflow."
   [e source-uid target-uid]
   (let [target (.. e -target)
         page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
@@ -543,7 +542,7 @@
     (when (and start-idx end-idx)
       (let [up? (> start-idx end-idx)
             delta (js/Math.abs (- start-idx end-idx))
-            select-f  (if up? athens.events/select-up athens.events/select-down)
+            select-fn  (if up? select-up select-down)
             start-uid (nth uids start-idx)
             end-uid   (nth uids end-idx)
             new-items (loop [new-items [source-uid]
@@ -556,7 +555,7 @@
                                    (= (last new-items) end-uid))
                               (and (= (last new-items) start-uid)
                                    (= (first new-items) end-uid))) new-items
-                          :else (recur (select-f new-items)
+                          :else (recur (select-fn new-items)
                                        new-items)))]
         (dispatch [:selected/add-items new-items])))))
 
@@ -566,19 +565,21 @@
   [e target-uid _state]
   (let [source-uid @(subscribe [:editing/uid])]
     (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
-      (distance-f e source-uid target-uid))))
+      (find-selected-items e source-uid target-uid))))
 
 
-(defn up-fn
-  ""
+(defn global-mouseup
+  "Detach global mouseup listener (self)."
   [_]
-  (events/unlisten js/document EventType.MOUSEUP up-fn)
+  (events/unlisten js/document EventType.MOUSEUP global-mouseup)
   (let [mouse-down @(subscribe [:mouse-down])]
     (when (true? mouse-down)
       (dispatch [:mouse-down/unset]))))
 
 
 (defn textarea-mouse-down
+  "Attach global mouseup listener. Listener can't be local because user might let go of mousedown off of a block.
+  See https://javascript.info/mouse-events-basics#events-order"
   [e uid _]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
@@ -586,16 +587,18 @@
     (let [mouse-down @(subscribe [:mouse-down])]
       (when (false? mouse-down)
         (dispatch [:mouse-down/set])
-        (events/listen js/document EventType.MOUSEUP up-fn)))))
+        (events/listen js/document EventType.MOUSEUP global-mouseup)))))
 
 
 (defn textarea-mouse-enter
+  "When mouse-down, user is selecting multiple blocks with click+drag.
+  Use same algorithm as shift-enter, only updating the source and target."
   [e target-uid _]
   (let [source-uid @(subscribe [:editing/uid])
         mouse-down @(subscribe [:mouse-down])]
     (when mouse-down
       (dispatch [:selected/clear-items])
-      (distance-f e source-uid target-uid))))
+      (find-selected-items e source-uid target-uid))))
 
 
 (defn block-content-el
@@ -828,9 +831,6 @@
           :on-drag-over   (fn [e] (block-drag-over e block state))
           :on-drag-leave  (fn [e] (block-drag-leave e block state))
           :on-drop        (fn [e] (block-drop e block state))}
-          ;;:on-mouse-enter (fn [e] (textarea-mouse-enter e block state))
-          ;;:on-mouse-leave (fn [e] (textarea-mouse-leave e block state))
-          ;;:on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 

@@ -46,7 +46,7 @@
 
 (defn unfocus
   [e]
-  (let [selected-items? (boolean @(subscribe [:selected/items]))
+  (let [selected-items? (not-empty @(subscribe [:selected/items]))
         editing-uid    @(subscribe [:editing/uid])
         closest-block (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
@@ -135,7 +135,6 @@
 
 (defn init
   []
-  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
   (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
