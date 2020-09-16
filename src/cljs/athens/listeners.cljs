@@ -42,8 +42,6 @@
                                 (dispatch [:down (last selected-items)])))))))
 
 
-
-
 ;; -- When user clicks elsewhere -----------------------------------------
 
 (defn unfocus
