@@ -42,64 +42,7 @@
                                 (dispatch [:down (last selected-items)])))))))
 
 
-;; -- When dragging across multiple blocks to select ---------------------
 
-(defn get-dataset-uid
-  [el]
-  (let [block (when el (.. el (closest ".block-container")))
-        uid (when block (.. block -dataset -uid))]
-    uid))
-
-
-(defn recursive-child?
-  [e selected-items]
-  (let [parent-set (->> (mapcat (fn [x] (get-parents-recursively [:block/uid x]))
-                                selected-items)
-                        (map :block/uid)
-                        set)]
-    (contains? parent-set (get-dataset-uid (.. e -target)))))
-
-(defn multi-block-select-over
-  "If selected-items are empty, add editing-uid, which is used as source block for start of drag.
-  If the item is not already in the collection, and if the block is not a (nested) child, add it
-  If the block is a parent of a block, remove the children of those blocks, and add the parent
-  "
-  [e]
-  (let [target             (.. e -target)
-        related-target     (.. e -relatedTarget)
-        target-uid         (get-dataset-uid target)
-        related-target-uid (get-dataset-uid related-target)
-        prev-block-uid (db/prev-block-uid related-target-uid)
-        next-block-uid (db/next-block-uid related-target-uid true)
-        selected-items     (subscribe [:selected/items])
-        editing-uid     @(subscribe [:editing/uid])]
-
-    ;; the problem is sometimes select-over doesn't start with the source block.
-    ;; if items is empty, then run everything with editing/uid. then rerun with target-uid
-
-    (when (and (empty? (set @selected-items)) (not (nil? editing-uid)))
-      (dispatch [:selected/add-item editing-uid]))
-
-    (prn "OVER" #_(and (empty? set-items) (not (nil? editing-uid)))
-         (= editing-uid target-uid)
-         (= target-uid prev-block-uid)
-         target-uid #_related-target-uid prev-block-uid)
-
-    (cond
-      (contains? (set @selected-items) target-uid) nil
-      (= editing-uid target-uid) nil
-      (= target-uid prev-block-uid) (dispatch [:selected/up @selected-items]))
-
-      ;;(dispatch [:selected/add-item target-uid]))
-
-    (.. e stopPropagation)
-    (.. target blur)))
-
-
-(defn multi-block-select-up
-  [_]
-  (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
-  (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
 
 ;; -- When user clicks elsewhere -----------------------------------------
 

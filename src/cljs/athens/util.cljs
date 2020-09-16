@@ -68,6 +68,13 @@
     (.. element (scrollIntoView align-top? {:behavior "auto"}))))
 
 
+(defn get-dataset-uid
+  [el]
+  (let [block (when el (.. el (closest ".block-container")))
+        uid (when block (.. block -dataset -uid))]
+    uid))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 

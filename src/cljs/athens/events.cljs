@@ -72,10 +72,12 @@
   (fn [db [_ item]]
     (update-in db [:right-sidebar/items item :open] not)))
 
+
 (reg-event-db
   :mouse-down/set
   (fn [db _]
     (assoc db :mouse-down true)))
+
 
 (reg-event-db
   :mouse-down/unset
@@ -118,6 +120,7 @@
   :selected/add-item
   (fn [db [_ uid]]
     (update db :selected/items conj uid)))
+
 
 (reg-event-db
   :selected/remove-item

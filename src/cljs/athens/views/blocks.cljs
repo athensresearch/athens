@@ -4,12 +4,11 @@
     [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
     [athens.events :refer [delete-page]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
-    [athens.listeners :refer [multi-block-select-over multi-block-select-up get-dataset-uid]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [gen-block-uid mouse-offset vertical-center]]
+    [athens.util :refer [get-dataset-uid gen-block-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -17,7 +16,6 @@
     [clojure.string :as str]
     #_[datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.dom :refer [findCommonAncestor]]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [instaparse.core :as parse]
@@ -518,59 +516,60 @@
 
 
 (defn distance-f
-  [e source-uid target-uid]
-  (let [target (.. e -target)
-        page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-        blocks (->> (.. page (querySelectorAll ".block-container"))
-                    (array-seq)
-                    (vec))
-        uids (map get-dataset-uid blocks)
-        start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
-        end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))
-        start-el (nth blocks start-idx)
-        end-el (nth blocks end-idx)
-        common (contains (findCommonAncestor start-el end-el) "block-container")
-        up?       (> start-idx end-idx)]
-    (cond
-      (true? common) (dispatch [:selected/add-item (if up? target-uid source-uid)])
-      (and start-idx end-idx) (let [
-                                    select-f     (if up? athens.events/select-up athens.events/select-down)
-                                    start-uid (nth uids start-idx)
-                                    end-uid   (nth uids end-idx)
-                                    new-items (loop [new-items [source-uid]
-                                                     i         0]
-                                                (prn "LOOP" new-items)
-                                                (if (or (> i 10)
-                                                        (nil? new-items)
-                                                        (and (= (first new-items) start-uid)
-                                                             (= (last new-items) end-uid))
-                                                        (and (= (last new-items) start-uid)
-                                                             (= (first new-items) end-uid)))
-                                                  new-items
-                                                  (recur (select-f new-items)
-                                                         (inc i))))]
-                                (dispatch [:selected/add-items new-items])
-                                (prn "SEL" start-uid end-uid new-items)))))
-
-(defn textarea-click
-  "Determine if direction is up or down.
+  "Used by both shift-click and click-drag for multi-block-selection.
+  Determine if direction is up or down.
   Call selected/up or selected/down until start and end of vector are source and target.
   Edge case: target is a child of a source. In that case, highlight block.
   TODO: Another case: target is a nested child of a sibling block:
   • 1 source
   • 2
    • 3 target
-  This basically means there is no direct path from 1 to 3 using select/up or select/down, because the parent gets selected, not the block."
+  This basically means there is no direct path from 1 to 3 using select/up or select/down, because the parent gets selected, not the block.
+
+  This is really the same edge case: there isn't a direct path with select/up or select/down.
+
+  If n is a child of n-1"
+  ;; delta is maximum iterations. if end condition is not met within delta iterations, terminate
+  ;; what if we decreased the end-idx and looped again? the exit case would still not be met, but closer...
+  ;; how do we what the exit case is? without using is-selected already? which we can fortunately do with mouse-over.... unless...
+  ;; idea: continually update is-selected, and find class... but that's super not clean. requires setTimeout. DAMN
+  [e source-uid target-uid]
+  (let [target (.. e -target)
+        page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+        blocks (->> (.. page (querySelectorAll ".block-container"))
+                    array-seq
+                    vec)
+        uids (map get-dataset-uid blocks)
+        start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
+        end-idx   (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))]
+    (when (and start-idx end-idx)
+      (let [up? (> start-idx end-idx)
+            delta (js/Math.abs (- start-idx end-idx))
+            select-f  (if up? athens.events/select-up athens.events/select-down)
+            start-uid (nth uids start-idx)
+            end-uid   (nth uids end-idx)
+            new-items (loop [new-items [source-uid]]
+                        (cond
+                          (> (count new-items) delta) new-items
+                          (nil? new-items) []
+                          (or (and (= (first new-items) start-uid)
+                                   (= (last new-items) end-uid))
+                              (and (= (last new-items) start-uid)
+                                   (= (first new-items) end-uid))) new-items
+                          :else (recur (select-f new-items))))]
+        (dispatch [:selected/add-items new-items])))))
+
+
+(defn textarea-click
+  "If shift key is held when user clicks across multiple blocks, select the blocks."
   [e target-uid _state]
-  (prn "CLICK" target-uid)
   (let [source-uid @(subscribe [:editing/uid])]
-    ;; if shift key is held when user clicks across multiple blocks, select the blocks
     (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
       (distance-f e source-uid target-uid))))
 
 
-
 (defn up-fn
+  ""
   [_]
   (events/unlisten js/document EventType.MOUSEUP up-fn)
   (let [mouse-down @(subscribe [:mouse-down])]
@@ -579,7 +578,7 @@
 
 
 (defn textarea-mouse-down
-  [e uid state]
+  [e uid _]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
     (dispatch [:editing/uid uid])
@@ -590,50 +589,12 @@
 
 
 (defn textarea-mouse-enter
-  [e target-uid state]
+  [e target-uid _]
   (let [source-uid @(subscribe [:editing/uid])
         mouse-down @(subscribe [:mouse-down])]
     (when mouse-down
-      (distance-f e source-uid target-uid)))
-  #_(let [t (.. e -target)
-          selected-items @(subscribe [:selected/items])
-          items-set (set selected-items)
-          timeout (if (empty? selected-items) 200 0)]
-      (when mouse-down
-        (js/setTimeout #(let [closest-selected (.. t (closest ".is-selected"))]
-                          (prn "ENTER" closest-selected uid)
-                          (when (and (not (contains? items-set uid))
-                                     (nil? closest-selected))
-                            (dispatch [:selected/add-item uid])))
-                       timeout))))
-
-
-
-(defn textarea-mouse-leave
-  "if entering for the first time, add
-  if present and relatedTarget is present, leave
-
-  the problem is that leave and enter happen at the same time
-  so fast, that ENTER doesn't know that LEAVE has added something already"
-  [e uid state]
-  (.. e stopPropagation)
-  (let [mouse-down @(subscribe [:mouse-down])
-        t (.. e -target)
-        rt (.. e -relatedTarget)
-        closest-container (.. rt (closest ".block-container"))
-        selected-items @(subscribe [:selected/items])
-        rt-uid (get-dataset-uid rt)
-        items-set (set selected-items)
-        is-editing @(subscribe [:editing/is-editing uid])]
-    (when mouse-down
-      (js/console.log "LEAVE" closest-container uid)
-      (when (empty? selected-items)
-        (dispatch [:selected/add-item uid]))
-      (when (and (contains? items-set uid)
-                 (contains? items-set rt-uid)
-                 (not is-editing)
-                 (not (nil? closest-container)))
-        (dispatch [:selected/remove-item uid])))))
+      (dispatch [:selected/clear-items])
+      (distance-f e source-uid target-uid))))
 
 
 (defn block-content-el
@@ -648,20 +609,18 @@
           is-editing @(subscribe [:editing/is-editing uid])
           is-selected @(subscribe [:selected/is-selected uid])]
       [:div {:class "block-content"}
-       [autosize/textarea {:value         (:string/local @state)
-                           :class         ["textarea" (when is-editing "is-editing")]
-                           :style         {:opacity (when (and is-editing is-selected) 0)}
-                           :auto-focus    true
-                           :id            (str "editable-uid-" uid)
-                           :on-change     (fn [e] (textarea-change     e uid state))
-                           :on-paste      (fn [e] (textarea-paste      e uid state))
-                           :on-key-down   (fn [e] (textarea-key-down   e uid state))
-                           :on-blur       (fn [e] (textarea-blur       e uid state))
-                           :on-click      (fn [e] (textarea-click      e uid state))
+       [autosize/textarea {:value          (:string/local @state)
+                           :class          ["textarea" (when is-editing "is-editing")]
+                           :style          {:opacity (when (and is-editing is-selected) 0)}
+                           :auto-focus     true
+                           :id             (str "editable-uid-" uid)
+                           :on-change      (fn [e] (textarea-change e uid state))
+                           :on-paste       (fn [e] (textarea-paste e uid state))
+                           :on-key-down    (fn [e] (textarea-key-down e uid state))
+                           :on-blur        (fn [e] (textarea-blur e uid state))
+                           :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                           :on-mouse-leave (fn [e] (textarea-mouse-leave e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
-
        [parse-and-render local uid]
        [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
 
