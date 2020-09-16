@@ -78,10 +78,10 @@
                                                   :top 0
                                                   :right 0
                                                   :bottom 0
-                                                  :left 0}]
-                      [:&:hover {:background (color :background-minus-1)}]]
+                                                  :left 0}]]
+                      ;;[:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing, 
-                     [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
+                     ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"}]]})
 
@@ -530,9 +530,7 @@
 
   If n is a child of n-1"
   ;; delta is maximum iterations. if end condition is not met within delta iterations, terminate
-  ;; what if we decreased the end-idx and looped again? the exit case would still not be met, but closer...
-  ;; how do we what the exit case is? without using is-selected already? which we can fortunately do with mouse-over.... unless...
-  ;; idea: continually update is-selected, and find class... but that's super not clean. requires setTimeout. DAMN
+  ;; if
   [e source-uid target-uid]
   (let [target (.. e -target)
         page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
@@ -548,15 +546,18 @@
             select-f  (if up? athens.events/select-up athens.events/select-down)
             start-uid (nth uids start-idx)
             end-uid   (nth uids end-idx)
-            new-items (loop [new-items [source-uid]]
+            new-items (loop [new-items [source-uid]
+                             prev-items []]
                         (cond
+                          (= prev-items new-items) new-items
                           (> (count new-items) delta) new-items
                           (nil? new-items) []
                           (or (and (= (first new-items) start-uid)
                                    (= (last new-items) end-uid))
                               (and (= (last new-items) start-uid)
                                    (= (first new-items) end-uid))) new-items
-                          :else (recur (select-f new-items))))]
+                          :else (recur (select-f new-items)
+                                       new-items)))]
         (dispatch [:selected/add-items new-items])))))
 
 
@@ -607,11 +608,10 @@
     (let [{:block/keys [uid]} block
           {:string/keys [local]} @state
           is-editing @(subscribe [:editing/is-editing uid])
-          is-selected @(subscribe [:selected/is-selected uid])]
+          selected-items @(subscribe [:selected/items])]
       [:div {:class "block-content"}
        [autosize/textarea {:value          (:string/local @state)
-                           :class          ["textarea" (when is-editing "is-editing")]
-                           :style          {:opacity (when (and is-editing is-selected) 0)}
+                           :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            :auto-focus     true
                            :id             (str "editable-uid-" uid)
                            :on-change      (fn [e] (textarea-change e uid state))
