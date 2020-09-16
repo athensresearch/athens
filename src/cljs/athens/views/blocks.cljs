@@ -754,10 +754,13 @@
   (let [{target-uid :block/uid} block
         {:keys [drag-target]} @state
         source-uid (.. e -dataTransfer (getData "text/plain"))
+        effect-allowed (.. e -dataTransfer -effectAllowed)
         valid-drop (and (not (nil? drag-target))
-                        (not= source-uid target-uid))]
+                        (not= source-uid target-uid)
+                        (= effect-allowed "move"))]
     (when valid-drop
       (dispatch [:drop-bullet source-uid target-uid drag-target]))
+    (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 
 
