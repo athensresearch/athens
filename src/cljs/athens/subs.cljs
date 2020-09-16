@@ -71,6 +71,12 @@
 
 
 (re-frame/reg-sub
+  :mouse-down
+  (fn [db _]
+    (:mouse-down db)))
+
+
+(re-frame/reg-sub
   :merge-prompt
   (fn [db _]
     (:merge-prompt db)))
@@ -101,7 +107,7 @@
   (fn [_]
     [(subscribe [:selected/items])])
   (fn [[selected-items] [_ uid]]
-    ((set selected-items) uid)))
+    (contains? (set selected-items) uid)))
 
 
 (re-frame/reg-sub

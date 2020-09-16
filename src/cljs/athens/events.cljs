@@ -73,6 +73,17 @@
     (update-in db [:right-sidebar/items item :open] not)))
 
 
+(reg-event-db
+  :mouse-down/set
+  (fn [db _]
+    (assoc db :mouse-down true)))
+
+
+(reg-event-db
+  :mouse-down/unset
+  (fn [db _]
+    (assoc db :mouse-down false)))
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
@@ -112,6 +123,13 @@
 
 
 (reg-event-db
+  :selected/remove-item
+  (fn [db [_ uid]]
+    (let [items (:selected/items db)]
+      (assoc db :selected/items (filterv #(not= % uid) items)))))
+
+
+(reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
     (update db :selected/items concat uids)))
@@ -123,31 +141,60 @@
     (assoc db :selected/items [])))
 
 
+(defn select-up
+  [selected-items]
+  (let [first-item      (first selected-items)
+        prev-block-uid- (db/prev-block-uid first-item)
+        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        parent          (db/get-parent [:block/uid first-item])
+        editing-uid     @(subscribe [:editing/uid])
+        editing-idx     (first (keep-indexed (fn [idx x]
+                                               (when (= x editing-uid)
+                                                 idx))
+                                             selected-items))
+        n               (count selected-items)
+        new-items (cond
+                    ;; if prev-block is root node TODO: (OR context root), don't do anything
+                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
+                    (:node/title prev-block) selected-items
+                    ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+                    (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                                                                                      set)
+                                                                  to-keep         (filter (fn [x] (not (contains? parent-children x)))
+                                                                                          selected-items)
+                                                                  new-vec         (into [prev-block-uid-] to-keep)]
+                                                              new-vec)
+                    :else (into [prev-block-uid-] selected-items))]
+    new-items))
+
+
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (let [first-item (first selected-items)
-          prev-block-uid- (db/prev-block-uid first-item)
-          prev-block (db/get-block [:block/uid prev-block-uid-])
-         ;;parent (db/get-parent [:block/uid first-item])
-          new-vec (cond
-                   ;; if prev-block is root node TODO: (OR context root), don't do anything
-                    (:node/title prev-block) nil
-                   ;; if prev block is parent, replace head of vector with parent
-                   ;; TODO needs to replace all children blocks of the parent
-                   ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
-                   ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
-                    :else (into [prev-block-uid-] selected-items))]
-      (assoc db :selected/items new-vec))))
+    (assoc db :selected/items (select-up selected-items))))
 
 
+(defn select-down
+  [selected-items]
+  (let [editing-uid @(subscribe [:editing/uid])
+        editing-idx (first (keep-indexed (fn [idx x]
+                                           (when (= x editing-uid)
+                                             idx))
+                                         selected-items))
+        last-item (last selected-items)
+        next-block-uid- (db/next-block-uid last-item true)]
+    (cond
+      (pos? editing-idx) (subvec selected-items 1)
+      next-block-uid-    (conj selected-items next-block-uid-)
+      :else selected-items)))
+
+
+;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
+;; this would let us know if the operation is additive or subtractive
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (let [last-item (last selected-items)
-          next-block-uid- (db/next-block-uid last-item)
-          new-vec (conj selected-items next-block-uid-)]
-      (assoc db :selected/items new-vec))))
+    (assoc db :selected/items (select-down selected-items))))
 
 
 ;; TODO: minus-after to reindex but what about nested blocks?

@@ -222,7 +222,6 @@
               (or (and up? top-row?)
                   (and down? bottom-row?)) (do
                                              (.. target blur)
-                                             (dispatch [:editing/uid nil])
                                              (dispatch [:selected/add-item uid])))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options

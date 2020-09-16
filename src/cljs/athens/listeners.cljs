@@ -42,49 +42,19 @@
                                 (dispatch [:down (last selected-items)])))))))
 
 
-;; -- When dragging across multiple blocks to select ---------------------
-
-(defn get-dataset-uid
-  [el]
-  (let [block (when el (.. el (closest ".block-container")))
-        uid (when block (.. block -dataset -uid))]
-    uid))
-
-
-(defn multi-block-select-over
-  "If going over something, add it.
-  If leaving it, remove"
-  [e]
-  (let [target             (.. e -target)
-        related-target     (.. e -relatedTarget)
-        target-uid         (get-dataset-uid target)
-        _related-target-uid (get-dataset-uid related-target)
-        selected-items     @(subscribe [:selected/items])
-        _set-items (set selected-items)]
-    (.. e stopPropagation)
-    (.. target blur)
-    (dispatch [:selected/add-item target-uid])))
-
-
-(defn multi-block-select-up
-  [_]
-  (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
-  (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
-
 ;; -- When user clicks elsewhere -----------------------------------------
 
 (defn unfocus
   [e]
-  (let [selected-items @(subscribe [:selected/items])
+  (let [selected-items? (not-empty @(subscribe [:selected/items]))
         editing-uid    @(subscribe [:editing/uid])
         closest-block (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
         closest (or closest-block closest-block-header closest-page-header)]
-    ;;(prn e (.. e -type))
-    (when (not-empty selected-items)
+    (when selected-items?
       (dispatch [:selected/clear-items]))
-    (when (and (nil? closest) editing-uid)
+    (when (and (nil? closest) editing-uid selected-items?)
       (dispatch [:editing/uid nil]))))
 
 
@@ -165,8 +135,7 @@
 
 (defn init
   []
-  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
-  (events/listen js/window EventType.CLICK unfocus)
+  (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)

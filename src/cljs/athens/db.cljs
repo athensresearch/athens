@@ -29,6 +29,7 @@
                :right-sidebar/open  false
                :right-sidebar/items {}
                ;;:dragging-global     false
+               :mouse-down false
                :daily-notes/items   []
                :selected/items   []})
 
@@ -407,17 +408,26 @@
         sib
         (recur (:block/uid parent))))))
 
-;; if child, go to child 0
-;; else recursively find next sibling of parent
+
 (defn next-block-uid
-  [uid]
-  (let [block (->> (get-block [:block/uid uid])
-                   sort-block-children)
-        ch (:block/children block)
-        next-block-recursive (next-sibling-block-recursively uid)]
-    (cond
-      ch (:block/uid (first ch))
-      next-block-recursive (:block/uid next-block-recursive))))
+  "1-arity:
+    if child, go to child 0
+    else recursively find next sibling of parent
+  2-arity:
+    used for multi-block-selection; ignores child blocks"
+  ([uid]
+   (let [block                (->> (get-block [:block/uid uid])
+                                   sort-block-children)
+         ch                   (:block/children block)
+         next-block-recursive (next-sibling-block-recursively uid)]
+     (cond
+       ch (:block/uid (first ch))
+       next-block-recursive (:block/uid next-block-recursive))))
+  ([uid selection?]
+   (if selection?
+     (let [next-block-recursive (next-sibling-block-recursively uid)]
+       next-block-recursive (:block/uid next-block-recursive))
+     (next-block-uid uid))))
 
 ;; history
 
