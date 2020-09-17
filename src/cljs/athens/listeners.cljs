@@ -1,7 +1,6 @@
 (ns athens.listeners
   (:require
     [athens.db :refer [dsdb]]
-    [athens.keybindings :refer [arrow-key-direction]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -39,7 +38,9 @@
           bksp? (dispatch [:selected/delete selected-items])
           tab? (do
                  (.preventDefault e)
-                 (dispatch [:indent/multi selected-items]))
+                 (if shift
+                   (dispatch [:unindent/multi selected-items])
+                   (dispatch [:indent/multi selected-items])))
           (and shift up?) (dispatch [:selected/up selected-items])
           (and shift down?) (dispatch [:selected/down selected-items])
           (or up? down?) (do
