@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules get-children-recursively retract-uid-recursively inc-after dec-after plus-after minus-after]]
+    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -198,8 +198,9 @@
 
 
 (defn delete-selected
-  "We know that we only need to reindex after the last block! The former blocks are necessarily going to remove all children,
-  meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings."
+  "We know that we only need to dec indices after the last block. The former blocks are necessarily going to remove all
+  tail children, meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings, to
+  determine the minus-after value."
   [selected-items]
   (let [last-item (last selected-items)
         selected-sibs-of-last (->> (d/q '[:find ?sib-uid ?o
@@ -218,7 +219,6 @@
         [uid order] (last selected-sibs-of-last)
         parent (db/get-parent [:block/uid uid])
         n (count selected-sibs-of-last)]
-    ;; minus-after after last highlighted block a value of count highlight siblings
     (minus-after (:db/id parent) order n)))
 
 
@@ -226,8 +226,8 @@
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
     (let [retract-vecs (mapcat #(retract-uid-recursively %) selected-items)
-          reindex-selected-parents (delete-selected selected-items)
-          tx-data (concat retract-vecs reindex-selected-parents)]
+          reindex-last-selected-parent (delete-selected selected-items)
+          tx-data (concat retract-vecs reindex-last-selected-parent)]
       {:dispatch [:transact tx-data]
        :db       (assoc db :selected/items [])})))
 
