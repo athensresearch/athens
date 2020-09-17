@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules get-children-recursively]]
+    [athens.db :as db :refer [rules get-children-recursively retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -197,13 +197,38 @@
     (assoc db :selected/items (select-down selected-items))))
 
 
-;; TODO: minus-after to reindex but what about nested blocks?
+(defn delete-selected
+  "We know that we only need to reindex after the last block! The former blocks are necessarily going to remove all children,
+  meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings."
+  [selected-items]
+  (let [last-item (last selected-items)
+        selected-sibs-of-last (->> (d/q '[:find ?sib-uid ?o
+                                          :in $ ?uid [?selected ...]
+                                          :where
+                                          ;; get all siblings of the last block
+                                          [?e :block/uid ?uid]
+                                          [?p :block/children ?e]
+                                          [?p :block/children ?sib]
+                                          [?sib :block/uid ?sib-uid]
+                                          ;; filter selected
+                                          [(= ?sib-uid ?selected)]
+                                          [?sib :block/order ?o]]
+                                        @db/dsdb last-item selected-items)
+                                   (sort-by second))
+        [uid order] (last selected-sibs-of-last)
+        parent (db/get-parent [:block/uid uid])
+        n (count selected-sibs-of-last)]
+    ;; minus-after after last highlighted block a value of count highlight siblings
+    (minus-after (:db/id parent) order n)))
+
+
 (reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
-    (let [retract-vecs (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-                             selected-items)]
-      {:dispatch [:transact retract-vecs]
+    (let [retract-vecs (mapcat #(retract-uid-recursively %) selected-items)
+          reindex-selected-parents (delete-selected selected-items)
+          tx-data (concat retract-vecs reindex-selected-parents)]
+      {:dispatch [:transact tx-data]
        :db       (assoc db :selected/items [])})))
 
 
@@ -352,17 +377,10 @@
             [:dispatch [:editing/uid child-uid]]]})))
 
 
-(defn delete-page
-  "Retract all blocks of a page, including the page."
-  [uid]
-  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-        (get-children-recursively uid)))
-
-
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact (delete-page uid)]]]}))
+    {:fx [[:dispatch [:transact (retract-uid-recursively uid)]]]}))
 
 
 (reg-event-fx
@@ -402,42 +420,6 @@
   (fn [_ _]
     (when-let [next (db/find-next @db/history #(identical? @db/dsdb %))]
       {:reset-conn! next})))
-
-
-(defn inc-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (inc-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)))
-
-
-(defn dec-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (dec-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)))
-
-
-(defn plus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
-            @db/dsdb rules eid order x)))
-
-
-(defn minus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)]
-            @db/dsdb rules eid order x)))
 
 
 (reg-event-fx
