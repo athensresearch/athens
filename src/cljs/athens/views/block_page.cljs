@@ -6,7 +6,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
-    [athens.util :refer [gen-block-uid now-ts]]
+    [athens.util :refer [now-ts gen-block-uid]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
