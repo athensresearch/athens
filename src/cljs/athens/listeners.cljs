@@ -1,7 +1,6 @@
 (ns athens.listeners
   (:require
     [athens.db :refer [dsdb]]
-    [athens.keybindings :refer [arrow-key-direction]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -14,32 +13,42 @@
       KeyCodes)))
 
 
-;; -- shift-up/down when multi-block selection ---------------------------
-
-;; can no longer use on-key-down from keybindings.cljs. textarea is no longer focused, so events must be handled globally
 (defn multi-block-selection
+  "When blocks are selected, handle various keypresses:
+  - shift+up/down: increase/decrease selection.
+  - enter: deselect and begin editing textarea
+  - backspace: delete all blocks
+  - up/down: change editing textarea
+  - tab: indent/unindent blocks
+  Can't use textarea-key-down from keybindings.cljs because textarea is no longer focused."
   [e]
   (let [selected-items @(subscribe [:selected/items])]
     (when (not-empty selected-items)
       (let [shift     (.. e -shiftKey)
             key-code (.. e -keyCode)
-            direction (arrow-key-direction e)]
-        ;; what should tab/shift-tab do? roam and workflowy have slightly different behavior
+            enter? (= key-code KeyCodes.ENTER)
+            bksp? (= key-code KeyCodes.BACKSPACE)
+            up? (= key-code KeyCodes.UP)
+            down? (= key-code KeyCodes.DOWN)
+            tab? (= key-code KeyCodes.TAB)]
         (cond
-          (= key-code KeyCodes.ENTER) (do
-                                        (dispatch [:editing/uid (first selected-items)])
-                                        (dispatch [:selected/clear-items]))
-          (= key-code KeyCodes.BACKSPACE) (dispatch [:selected/delete selected-items])
-          (and shift (= direction :up)) (dispatch [:selected/up selected-items])
-          (and shift (= direction :down)) (dispatch [:selected/down selected-items])
-          (= direction :up) (do
-                              (.preventDefault e)
-                              (dispatch [:selected/clear-items])
-                              (dispatch [:up (first selected-items)]))
-          (= direction :down) (do
-                                (.preventDefault e)
-                                (dispatch [:selected/clear-items])
-                                (dispatch [:down (last selected-items)])))))))
+          enter? (do
+                   (dispatch [:editing/uid (first selected-items)])
+                   (dispatch [:selected/clear-items]))
+          bksp? (dispatch [:selected/delete selected-items])
+          tab? (do
+                 (.preventDefault e)
+                 (if shift
+                   (dispatch [:unindent/multi selected-items])
+                   (dispatch [:indent/multi selected-items])))
+          (and shift up?) (dispatch [:selected/up selected-items])
+          (and shift down?) (dispatch [:selected/down selected-items])
+          (or up? down?) (do
+                           (.preventDefault e)
+                           (dispatch [:selected/clear-items])
+                           (if up?
+                             (dispatch [:up (first selected-items)])
+                             (dispatch [:down (last selected-items)]))))))))
 
 
 ;; -- When user clicks elsewhere -----------------------------------------

@@ -51,16 +51,15 @@
 
 
 (def ARROW-KEYS
-  {KeyCodes.UP    :up
-   KeyCodes.LEFT  :left
-   KeyCodes.DOWN  :down
-   KeyCodes.RIGHT :right})
+  #{KeyCodes.UP
+    KeyCodes.LEFT
+    KeyCodes.DOWN
+    KeyCodes.RIGHT})
 
 
 (defn arrow-key-direction
   [e]
-  (let [key-code (.. e -keyCode)]
-    (ARROW-KEYS key-code)))
+  (contains? ARROW-KEYS (.. e -keyCode)))
 
 
 ;;; Dropdown: inline-search and slash commands
@@ -248,15 +247,19 @@
 ;;; Tab
 
 (defn handle-tab
-  [e uid]
+  "Bug: indenting sets the cursor position to 0, liekely because a new textarea element is created on the DOM. Set selection appropriately.
+  See :indent event for why value must be passed as well."
+  [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift]} (destruct-event e)
-        ;; xxx: probably makes more sense to pass block value to handler directly
-        block-zero? (zero? (:block/order (db/get-block [:block/uid uid])))]
-    (cond
-      shift (dispatch [:unindent uid])
-      :else (when-not block-zero?
-              (dispatch [:indent uid])))))
+  (let [{:keys [shift value start end]} (destruct-event e)]
+    (if shift
+      (dispatch [:unindent uid value])
+      (dispatch [:indent uid value]))
+    (js/setTimeout (fn []
+                     (when-let [el (getElement (str "editable-uid-" uid))]
+                       (setStart el start)
+                       (setEnd el end)))
+                   50)))
 
 
 (defn handle-escape
@@ -419,7 +422,7 @@
     (cond
       (arrow-key-direction e)         (handle-arrow-key e uid state)
       (pair-char? e)                  (handle-pair-char e uid state)
-      (= key-code KeyCodes.TAB)       (handle-tab e uid)
+      (= key-code KeyCodes.TAB)       (handle-tab e uid state)
       (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
       (= key-code KeyCodes.ESC)       (handle-escape e state)

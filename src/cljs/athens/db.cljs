@@ -266,6 +266,30 @@
       get-block))
 
 
+(defn get-older-sib
+  "Given a block and a parent, find the older sibling.
+  Rfct: can be rewritten with just `block` parameter, and could use a check if it is oldest sibling (block zero)."
+  [block parent]
+  (->> parent
+       :block/children
+       (filter #(= (dec (:block/order block)) (:block/order %)))
+       first
+       :db/id
+       get-block))
+
+
+(defn same-parent?
+  "Given a coll of uids, determine if uids are all direct children of the same parent."
+  [uids]
+  (let [parents (d/q '[:find ?parents
+                       :in $ [?uids ...]
+                       :where
+                       [?e :block/uid ?uids]
+                       [?parents :block/children ?e]]
+                     @dsdb uids)]
+    (= (count parents) 1)))
+
+
 (defn deepest-child-block
   [id]
   (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] id))]
