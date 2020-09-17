@@ -590,15 +590,9 @@
                                      {:db/id (:db/id parent) :block/children reindex}]]]]}))))
 
 
-;;(defmulti my-multi (fn [x] (type x)))
-;;(defmethod my-multi js/String [x]
-;;  (prn "STIRNG" x))
-;;(defmethod my-multi PersistentVector [x]
-;;  (prn "VECT" x))
-
 (defn indent-multi
   [uids]
-  (let [blocks      (map #(db/get-block [:block/uid %]) uids)
+  (let [blocks (map #(db/get-block [:block/uid %]) uids)
         block (first blocks)
         last-block (last blocks)
         block-zero? (-> block :block/order zero?)]
@@ -611,18 +605,16 @@
                            :db/id
                            db/get-block)
             n (count (:block/children older-sib))
-            new-blocks (map-indexed (fn [idx x]
-                                      {:db/id       (:db/id x)
-                                       :block/order (+ idx n)})
+            new-blocks (map-indexed (fn [idx x] {:db/id       (:db/id x)
+                                                 :block/order (+ idx n)})
                                     blocks)
+            new-older-sib {:db/id (:db/id older-sib)
+                           :block/children new-blocks}
             reindex (minus-after (:db/id parent) (:block/order last-block) (count blocks))
-            retracts             (map (fn [x]
-                                        [:db/retract (:db/id parent) :block/children (:db/id x)])
-                                      blocks)
-            tx-data (concat new-blocks
-                            reindex
-                            retracts)]
-        ;;(prn tx-data)
+            new-parent {:db/id (:db/id parent) :block/children reindex}
+            retracts (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
+                           blocks)
+            tx-data (conj retracts new-older-sib new-parent)]
         {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
