@@ -570,16 +570,16 @@
   Uses `value` to update block/string as well. Otherwise, if user changes block string and indents, the local string
   is reset to original value, since it has not been unfocused yet (which is currently the transaction that updates the string)."
   [uid value]
-  (let [block (db/get-block [:block/uid uid])
+  (let [block       (db/get-block [:block/uid uid])
         block-zero? (zero? (:block/order block))]
     (when-not block-zero?
-      (let [parent (db/get-parent [:block/uid uid])
-            older-sib (db/get-older-sib block parent)
-            new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
-            reindex (dec-after (:db/id parent) (:block/order block))
-            retract [:db/retract (:db/id parent) :block/children (:db/id block)]
+      (let [parent        (db/get-parent [:block/uid uid])
+            older-sib     (db/get-older-sib block parent)
+            new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
+            reindex       (dec-after (:db/id parent) (:block/order block))
+            retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
             new-older-sib {:db/id (:db/id older-sib) :block/children [new-block]}
-            new-parent {:db/id (:db/id parent) :block/children reindex}]
+            new-parent    {:db/id (:db/id parent) :block/children reindex}]
         {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
 
 
@@ -596,24 +596,24 @@
   new-parent is current parent, not older-sib. new-parent becomes grandparent.
   Reindex parent, add blocks to end of older-sib."
   [uids]
-  (let [blocks      (map #(db/get-block [:block/uid %]) uids)
+  (let [blocks       (map #(db/get-block [:block/uid %]) uids)
         same-parent? (db/same-parent? uids)
-        n-blocks    (count blocks)
-        first-block (first blocks)
-        last-block  (last blocks)
-        block-zero? (-> first-block :block/order zero?)]
+        n-blocks     (count blocks)
+        first-block  (first blocks)
+        last-block   (last blocks)
+        block-zero?  (-> first-block :block/order zero?)]
     (when (and same-parent? (not block-zero?))
-      (let [parent (db/get-parent [:block/uid (first uids)])
-            older-sib (db/get-older-sib first-block parent)
-            n-sib (count (:block/children older-sib))
-            new-blocks (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
-                                    blocks)
+      (let [parent        (db/get-parent [:block/uid (first uids)])
+            older-sib     (db/get-older-sib first-block parent)
+            n-sib         (count (:block/children older-sib))
+            new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
+                                       blocks)
             new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks}
-            reindex (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-            new-parent {:db/id (:db/id parent) :block/children reindex}
-            retracts (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
-                           blocks)
-            tx-data (conj retracts new-older-sib new-parent)]
+            reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+            new-parent    {:db/id (:db/id parent) :block/children reindex}
+            retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
+                                blocks)
+            tx-data       (conj retracts new-older-sib new-parent)]
         {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
@@ -667,9 +667,9 @@
                   blocks          (map #(db/get-block [:block/uid %]) uids)
                   o-parent        (:block/order parent)
                   n-blocks        (count blocks)
-                  last-block (last blocks)
-                  reindex-parent (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-                  new-parent {:db/id (:db/id parent) :block/children reindex-parent}
+                  last-block      (last blocks)
+                  reindex-parent  (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
                   new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
                                                uids)
                   reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
