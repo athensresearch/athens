@@ -144,7 +144,6 @@
 
 (defn init
   []
-  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
   (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)

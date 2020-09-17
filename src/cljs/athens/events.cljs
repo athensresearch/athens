@@ -198,8 +198,6 @@
 
 
 ;; TODO: minus-after to reindex but what about nested blocks?
-;; naive: assume all items are siblings of same parent. minus-after n where n is size of selected-items
-;; better:
 (reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
@@ -576,12 +574,7 @@
         block-zero? (zero? (:block/order block))]
     (when-not block-zero?
       (let [parent (db/get-parent [:block/uid uid])
-            older-sib (->> parent
-                           :block/children
-                           (filter #(= (dec (:block/order block)) (:block/order %)))
-                           first
-                           :db/id
-                           db/get-block)
+            older-sib (db/get-older-sib block parent)
             new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex (dec-after (:db/id parent) (:block/order block))]
         {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
@@ -599,29 +592,18 @@
   "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child)."
   [uids]
   (let [blocks      (map #(db/get-block [:block/uid %]) uids)
-        same-parents? (-> (map #(db/get-parent [:block/uid %]) uids)
-                          set
-                          count
-                          (= 1))
+        same-parent? (db/same-parent? uids)
         n-blocks    (count blocks)
         first-block (first blocks)
         last-block  (last blocks)
         block-zero? (-> first-block :block/order zero?)]
-    (when (and same-parents? (not block-zero?))
-      (let [parent (db/get-parent [:block/uid (:block/uid first-block)])
-            older-sib (->> parent
-                           :block/children
-                           (filter #(= (dec (:block/order first-block)) (:block/order %)))
-                           first
-                           :db/id
-                           db/get-block)
+    (when (and same-parent? (not block-zero?))
+      (let [parent (db/get-parent [:block/uid (first uids)])
+            older-sib (db/get-older-sib first-block parent)
             n-sib (count (:block/children older-sib))
-            new-blocks (map-indexed (fn [idx x]
-                                      {:db/id       (:db/id x)
-                                       :block/order (+ idx n-sib)})
+            new-blocks (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                     blocks)
-            new-older-sib {:db/id (:db/id older-sib)
-                           :block/children new-blocks}
+            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks}
             reindex (minus-after (:db/id parent) (:block/order last-block) n-blocks)
             new-parent {:db/id (:db/id parent) :block/children reindex}
             retracts (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
@@ -661,28 +643,30 @@
 
 
 (defn unindent-multi
+  "Do not do anything if root block child or if blocks are not siblings.
+  Otherwise, retract and assert new parent for each block, and reindex parent and grandparent."
   [uids context-root-uid]
   (let [parent (db/get-parent [:block/uid (first uids)])
-        same-parents? (-> (map #(db/get-parent [:block/uid %]) uids)
-                          set
-                          count
-                          (= 1))]
+        same-parent? (db/same-parent? uids)]
     (cond
       (:node/title parent) nil
       (= (:block/uid parent) context-root-uid) nil
-      (not same-parents?) nil
+      (not same-parent?) nil
       :else (let [grandpa         (db/get-parent (:db/id parent))
                   blocks          (map #(db/get-block [:block/uid %]) uids)
-                  n-parent        (:block/order parent)
+                  o-parent        (:block/order parent)
                   n-blocks        (count blocks)
-                  new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc n-parent))})
+                  last-block (last blocks)
+                  reindex-parent (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+                  new-parent {:db/id (:db/id parent) :block/children reindex-parent}
+                  new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
                                                uids)
                   reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
                                        (concat new-blocks))
                   retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
                                         blocks)
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         (conj retracts new-grandpa)]
+                  tx-data         (conj retracts new-grandpa new-parent)]
               {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
