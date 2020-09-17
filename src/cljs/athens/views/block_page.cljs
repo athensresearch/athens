@@ -73,9 +73,10 @@
 ;;; Components
 
 (defn handle-enter
-  [_ uid _]
+  [e uid _]
   (let [new-uid (gen-block-uid)
         now (now-ts)]
+    (.. e preventDefault)
     (dispatch [:transact [{:block/uid      uid
                            :edit/time      now
                            :block/children [{:block/order  0
