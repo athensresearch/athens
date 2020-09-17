@@ -576,10 +576,11 @@
       (let [parent (db/get-parent [:block/uid uid])
             older-sib (db/get-older-sib block parent)
             new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
-            reindex (dec-after (:db/id parent) (:block/order block))]
-        {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                                     {:db/id (:db/id older-sib) :block/children [new-block]}
-                                     {:db/id (:db/id parent) :block/children reindex}]]]]}))))
+            reindex (dec-after (:db/id parent) (:block/order block))
+            retract [:db/retract (:db/id parent) :block/children (:db/id block)]
+            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block]}
+            new-parent {:db/id (:db/id parent) :block/children reindex}]
+        {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
 
 
 (reg-event-fx
@@ -589,7 +590,11 @@
 
 
 (defn indent-multi
-  "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child)."
+  "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child).
+
+  older-sib is the current older-sib, before indent happens, AKA the new parent.
+  new-parent is current parent, not older-sib. new-parent becomes grandparent.
+  Reindex parent, add blocks to end of older-sib."
   [uids]
   (let [blocks      (map #(db/get-block [:block/uid %]) uids)
         same-parent? (db/same-parent? uids)
@@ -619,19 +624,25 @@
 
 
 (defn unindent
+  "If parent is context-root or has node/title (date page), no-op.
+  Otherwise, block becomes direct older sibling of parent (parent-order +1). reindex parent and grandparent.
+   - inc-after for grandparent
+   - dec-after for parent"
   [uid value context-root-uid]
   (let [parent (db/get-parent [:block/uid uid])]
-    ;; if parent is context-root or has node/title (date page), no-op
     (cond
       (:node/title parent) nil
       (= (:block/uid parent) context-root-uid) nil
-      :else (let [grandpa         (db/get-parent (:db/id parent))
+      :else (let [block           (db/get-block [:block/uid uid])
+                  grandpa         (db/get-parent (:db/id parent))
                   new-block       {:block/uid uid :block/order (inc (:block/order parent)) :block/string value}
                   reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
                                        (concat [new-block]))
-                  new-parent      [:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                  reindex-parent  (dec-after (:db/id parent) (:block/order block))
+                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
+                  retract         [:db/retract (:db/id parent) :block/children [:block/uid uid]]
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         [new-parent new-grandpa]]
+                  tx-data         [retract new-parent new-grandpa]]
               {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
@@ -666,7 +677,7 @@
                   retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
                                         blocks)
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         (conj retracts new-grandpa new-parent)]
+                  tx-data         (conj retracts new-parent new-grandpa)]
               {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
