@@ -132,8 +132,8 @@
       (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks))))))
 
 
-;; do same as copy AND delete selected blocks
 (defn cut
+  "Cut is essentially copy AND delete selected blocks"
   [^js e]
   (let [blocks @(subscribe [:selected/items])]
     (when (not-empty blocks)

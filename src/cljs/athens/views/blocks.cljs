@@ -1,8 +1,8 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
-    [athens.events :refer [delete-page select-up select-down]]
+    [athens.db :as db :refer [retract-uid-recursively count-linked-references-excl-uid e-by-av]]
+    [athens.events :refer [select-up select-down]]
     [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
@@ -487,7 +487,7 @@
                               (mapcat (fn [t]
                                         (let [uid (:block/uid @(pull-node-from-string t))]
                                           (when (some? uid)
-                                            (delete-page uid))))))
+                                            (retract-uid-recursively uid))))))
               new-block-refs (->> (:block-refs @new-data)
                                   (filter (fn [ref-uid]
                                             ;; check that ((ref-uid)) points to an actual entity

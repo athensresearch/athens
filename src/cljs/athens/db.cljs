@@ -203,6 +203,42 @@
      [(- ?o ?x) ?new-o]]])
 
 
+(defn inc-after
+  [eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at
+              :where (inc-after ?p ?at ?ch ?new-o)]
+            @dsdb rules eid order)))
+
+
+(defn dec-after
+  [eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at
+              :where (dec-after ?p ?at ?ch ?new-o)]
+            @dsdb rules eid order)))
+
+
+(defn plus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
+(defn minus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -304,9 +340,16 @@
 (defn get-children-recursively
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
-  (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
+  (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
        (tree-seq :block/children :block/children)
        (map :block/uid)))
+
+
+(defn retract-uid-recursively
+  "Retract all blocks of a page, including the page."
+  [uid]
+  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
+        (get-children-recursively uid)))
 
 
 (defn re-case-insensitive
