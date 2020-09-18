@@ -5,8 +5,8 @@
     [athens.keybindings :refer [destruct-event]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.views.blocks :refer [block-el]]
     [athens.util :refer [now-ts gen-block-uid]]
+    [athens.views.blocks :refer [block-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -15,7 +15,8 @@
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
-    (goog.events KeyCodes)))
+    (goog.events
+      KeyCodes)))
 
 
 ;;; Styles
@@ -84,6 +85,7 @@
                                              :block/open   true
                                              :block/string ""}]}]])
     (dispatch [:editing/uid new-uid])))
+
 
 (defn block-page-key-down
   [e uid state]
