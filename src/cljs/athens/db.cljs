@@ -29,6 +29,7 @@
                :right-sidebar/open  false
                :right-sidebar/items {}
                ;;:dragging-global     false
+               :mouse-down false
                :daily-notes/items   []
                :selected/items   []})
 
@@ -202,6 +203,42 @@
      [(- ?o ?x) ?new-o]]])
 
 
+(defn inc-after
+  [eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at
+              :where (inc-after ?p ?at ?ch ?new-o)]
+            @dsdb rules eid order)))
+
+
+(defn dec-after
+  [eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at
+              :where (dec-after ?p ?at ?ch ?new-o)]
+            @dsdb rules eid order)))
+
+
+(defn plus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
+(defn minus-after
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -265,6 +302,30 @@
       get-block))
 
 
+(defn get-older-sib
+  "Given a block and a parent, find the older sibling.
+  Rfct: can be rewritten with just `block` parameter, and could use a check if it is oldest sibling (block zero)."
+  [block parent]
+  (->> parent
+       :block/children
+       (filter #(= (dec (:block/order block)) (:block/order %)))
+       first
+       :db/id
+       get-block))
+
+
+(defn same-parent?
+  "Given a coll of uids, determine if uids are all direct children of the same parent."
+  [uids]
+  (let [parents (d/q '[:find ?parents
+                       :in $ [?uids ...]
+                       :where
+                       [?e :block/uid ?uids]
+                       [?parents :block/children ?e]]
+                     @dsdb uids)]
+    (= (count parents) 1)))
+
+
 (defn deepest-child-block
   [id]
   (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] id))]
@@ -279,9 +340,16 @@
 (defn get-children-recursively
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
-  (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
+  (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] (e-by-av :block/uid uid))
        (tree-seq :block/children :block/children)
        (map :block/uid)))
+
+
+(defn retract-uid-recursively
+  "Retract all blocks of a page, including the page."
+  [uid]
+  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
+        (get-children-recursively uid)))
 
 
 (defn re-case-insensitive
@@ -407,17 +475,26 @@
         sib
         (recur (:block/uid parent))))))
 
-;; if child, go to child 0
-;; else recursively find next sibling of parent
+
 (defn next-block-uid
-  [uid]
-  (let [block (->> (get-block [:block/uid uid])
-                   sort-block-children)
-        ch (:block/children block)
-        next-block-recursive (next-sibling-block-recursively uid)]
-    (cond
-      ch (:block/uid (first ch))
-      next-block-recursive (:block/uid next-block-recursive))))
+  "1-arity:
+    if child, go to child 0
+    else recursively find next sibling of parent
+  2-arity:
+    used for multi-block-selection; ignores child blocks"
+  ([uid]
+   (let [block                (->> (get-block [:block/uid uid])
+                                   sort-block-children)
+         ch                   (:block/children block)
+         next-block-recursive (next-sibling-block-recursively uid)]
+     (cond
+       ch (:block/uid (first ch))
+       next-block-recursive (:block/uid next-block-recursive))))
+  ([uid selection?]
+   (if selection?
+     (let [next-block-recursive (next-sibling-block-recursively uid)]
+       next-block-recursive (:block/uid next-block-recursive))
+     (next-block-uid uid))))
 
 ;; history
 
