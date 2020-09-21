@@ -505,7 +505,7 @@
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex :block/string ""}]]]
+    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
 
