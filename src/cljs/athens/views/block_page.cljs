@@ -90,7 +90,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div (use-style page-style)
+        [:div.block-page (use-style page-style)
          ;; Parent Context
          [:span {:style {:color "gray"}}
 
