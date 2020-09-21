@@ -490,6 +490,7 @@
                                   :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
+
 (defn split-block-to-children
   "Takes a block uid, its value, and the index to split the value string.
   It sets the value of the block to the head of (subs val 0 index)
@@ -511,10 +512,12 @@
                                   :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
+
 (reg-event-fx
- :split-block-to-children
- (fn [_ [_ uid val index]]
-   (split-block-to-children uid val index)))
+  :split-block-to-children
+  (fn [_ [_ uid val index]]
+    (split-block-to-children uid val index)))
+
 
 (defn bump-up
   "If user presses enter at the start of non-empty string, push that block down and
