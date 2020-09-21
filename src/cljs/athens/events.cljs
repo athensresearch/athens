@@ -490,6 +490,31 @@
                                   :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
+(defn split-block-to-children
+  "Takes a block uid, its value, and the index to split the value string.
+  It sets the value of the block to the head of (subs val 0 index)
+  It then creates a new child block with the tail of the string set as its value and sets editing to that block."
+  [uid val index]
+  (let [block (db/get-block [:block/uid uid])
+        head (subs val 0 index)
+        tail (subs val index)
+        new-uid (gen-block-uid)
+        new-block {:db/id        -1
+                   :block/order  (inc (:block/order block))
+                   :block/uid    new-uid
+                   :block/open   true
+                   :block/string tail}
+        reindex (->> (inc-after (:db/id block) (:block/order block))
+                     (concat [new-block]))]
+    {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
+                                 {:db/id (:db/id block)
+                                  :block/children reindex}]]]
+          [:dispatch [:editing/uid new-uid]]]}))
+
+(reg-event-fx
+ :split-block-to-children
+ (fn [_ [_ uid val index]]
+   (split-block-to-children uid val index)))
 
 (defn bump-up
   "If user presses enter at the start of non-empty string, push that block down and

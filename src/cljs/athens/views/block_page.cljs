@@ -73,18 +73,12 @@
 
 ;;; Components
 
+
 (defn handle-enter
-  [e uid _]
-  (let [new-uid (gen-block-uid)
-        now (now-ts)]
+  [e uid _state]
+  (let [{:keys [start value]} (destruct-event e)]
     (.. e preventDefault)
-    (dispatch [:transact [{:block/uid      uid
-                           :edit/time      now
-                           :block/children [{:block/order  0
-                                             :block/uid    new-uid
-                                             :block/open   true
-                                             :block/string ""}]}]])
-    (dispatch [:editing/uid new-uid])))
+    (dispatch [:split-block-to-children uid value start])))
 
 
 (defn block-page-key-down
