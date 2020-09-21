@@ -524,12 +524,34 @@
           [:dispatch [:editing/uid new-uid]]]}))
 
 
+(defn add-child
+  [block]
+  (let [{p-eid :db/id} block
+        new-uid (gen-block-uid)
+        new-child {:block/uid new-uid :block/string "" :block/order 0}
+        reindex (->> (inc-after p-eid -1)
+                     (concat [new-child]))
+        new-block {:db/id p-eid :block/children reindex}
+        tx-data [new-block]]
+    {:fx [[:dispatch [:transact tx-data]]
+          [:dispatch [:editing/uid new-uid]]]}))
+
+
 (defn enter
+  "- If block is open, has children, and caret at end, create new child
+  - If caret is at start, split block in half.
+  - If value is empty and a root block, create new block.
+  - If value is empty, unindent.
+  - If caret is at start and there is a value, create new block below."
   [uid val index]
   (let [block       (db/get-block [:block/uid uid])
         parent      (db/get-parent [:block/uid uid])
-        root-block? (boolean (:node/title parent))]
+        root-block? (boolean (:node/title parent))
+        children-open-and-end? (and (:block/open block)
+                                    (not-empty (:block/children block))
+                                    (= index (count val)))]
     (cond
+      children-open-and-end? (add-child block)
       (not (zero? index)) (split-block uid val index)
       (and (empty? val) root-block?) (new-block block parent)
       (empty? val) {:dispatch [:unindent uid]}
