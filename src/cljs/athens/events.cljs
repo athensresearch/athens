@@ -560,7 +560,7 @@
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       (dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
-            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block]}
+            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
             new-parent    {:db/id (:db/id parent) :block/children reindex}]
         {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
 
