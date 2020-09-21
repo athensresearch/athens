@@ -5,7 +5,6 @@
     [athens.keybindings :refer [destruct-event]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.blocks :refer [block-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
