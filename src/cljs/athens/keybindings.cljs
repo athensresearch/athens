@@ -337,12 +337,22 @@
 
 (defn handle-pair-char
   [e _ state]
-  (let [{:keys [key head tail target start end selection]} (destruct-event e)
+  (let [{:keys [key head tail target start end selection value]} (destruct-event e)
         close-pair (get PAIR-CHARS key)]
+
+    (.. e preventDefault)
     (cond
+      ;; when close char, increment caret index without writing more.
+      (and (< start (count value))
+           (or (= ")" key (nth value start))
+               (= "]" key (nth value start)))) (setStart target (inc start))
+
+      ;; when no selection
       (= start end) (let [new-str (str head key close-pair tail)]
                       (js/setTimeout #(setCursorPosition target (inc start)) 10)
                       (swap! state assoc :string/generated new-str))
+
+      ;; when selection
       (not= start end) (let [surround-selection (surround selection key)
                              new-str (str head surround-selection tail)]
                          (swap! state assoc :string/generated new-str)
@@ -351,12 +361,14 @@
                                           (setEnd target (inc end)))
                                         10)))
 
-    (let [four-char (subs (:string/generated @state) (dec start) (+ start 3))
-          double-brackets? (= "[[]]" four-char)
-          double-parens?   (= "(())" four-char)
-          type (cond double-brackets? :page
-                     double-parens? :block)]
-      (swap! state assoc :search/type type))))
+    ;; when double pair char, open inline-search
+    (when (>= (count (:string/generated @state)) 4)
+      (let [four-char (subs (:string/generated @state) (dec start) (+ start 3))
+            double-brackets? (= "[[]]" four-char)
+            double-parens?   (= "(())" four-char)
+            type (cond double-brackets? :page
+                       double-parens? :block)]
+        (swap! state assoc :search/type type)))))
 
     ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
