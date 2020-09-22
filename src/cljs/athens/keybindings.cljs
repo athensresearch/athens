@@ -339,12 +339,12 @@
   [e _ state]
   (let [{:keys [key head tail target start end selection value]} (destruct-event e)
         close-pair (get PAIR-CHARS key)]
-
     (.. e preventDefault)
     (cond
-      ;; when close char, increment caret index without writing more.
+      ;; when close char, increment caret index without writing more
       (and (< start (count value))
            (or (= ")" key (nth value start))
+               (= "}" key (nth value start))
                (= "]" key (nth value start)))) (setStart target (inc start))
 
       ;; when no selection
