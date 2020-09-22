@@ -505,7 +505,7 @@
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex :block/string ""}]]]
+    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
 
@@ -524,12 +524,34 @@
           [:dispatch [:editing/uid new-uid]]]}))
 
 
+(defn add-child
+  [block]
+  (let [{p-eid :db/id} block
+        new-uid (gen-block-uid)
+        new-child {:block/uid new-uid :block/string "" :block/order 0}
+        reindex (->> (inc-after p-eid -1)
+                     (concat [new-child]))
+        new-block {:db/id p-eid :block/children reindex}
+        tx-data [new-block]]
+    {:fx [[:dispatch [:transact tx-data]]
+          [:dispatch [:editing/uid new-uid]]]}))
+
+
 (defn enter
+  "- If block is open, has children, and caret at end, create new child
+  - If caret is at start, split block in half.
+  - If value is empty and a root block, create new block.
+  - If value is empty, unindent.
+  - If caret is at start and there is a value, create new block below."
   [uid val index]
   (let [block       (db/get-block [:block/uid uid])
         parent      (db/get-parent [:block/uid uid])
-        root-block? (boolean (:node/title parent))]
+        root-block? (boolean (:node/title parent))
+        children-open-and-end? (and (:block/open block)
+                                    (not-empty (:block/children block))
+                                    (= index (count val)))]
     (cond
+      children-open-and-end? (add-child block)
       (not (zero? index)) (split-block uid val index)
       (and (empty? val) root-block?) (new-block block parent)
       (empty? val) {:dispatch [:unindent uid]}
@@ -560,7 +582,7 @@
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       (dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
-            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block]}
+            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
             new-parent    {:db/id (:db/id parent) :block/children reindex}]
         {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
 
