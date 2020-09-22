@@ -345,7 +345,8 @@
       (and (< start (count value))
            (or (= ")" key (nth value start))
                (= "}" key (nth value start))
-               (= "]" key (nth value start)))) (setStart target (inc start))
+               (= "]" key (nth value start)))) (do (setStart target (inc start))
+                                                   (swap! state assoc :search/type nil))
 
       ;; when no selection
       (= start end) (let [new-str (str head key close-pair tail)]
