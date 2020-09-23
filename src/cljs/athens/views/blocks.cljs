@@ -728,7 +728,7 @@
 
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
-  [block state]
+  [_block state]
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (when (and (:context-menu/show @state)
@@ -846,7 +846,7 @@
 
     (fn [block]
       (let [{:block/keys [uid string open children _refs]} block
-            {:search/keys [type] :keys [dragging drag-target]} @state
+            {:search/keys [] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 

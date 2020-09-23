@@ -291,7 +291,7 @@
 
 
 (defn menu-dropdown
-  [block state]
+  [_block state]
   (let [ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (and (:menu/show @state)
