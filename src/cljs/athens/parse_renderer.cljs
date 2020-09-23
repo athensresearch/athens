@@ -57,14 +57,24 @@
                 ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                                          :cursor "alias"}]]})
 
+(defn parse-title
+  "Title coll is a sequence of plain strings or hiccup elements. If string, return string, otherwise parse the hiccup
+  for its plain-text representation."
+  [title-coll]
+  (->> (map (fn [el]
+              (if (string? el)
+                el
+                (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title-coll)
+       (str/join "")))
+
+
+
 ;;; Helper functions for recursive link rendering
 (defn pull-node-from-string
   "Gets a block's node from the display string name (or partially parsed string tree)"
-  [string]
-  (pull db/dsdb '[*] [:node/title (str "" (apply + (map (fn [el]
-                                                          (if (string? el)
-                                                            el
-                                                            (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) string)))]))
+  [title-coll]
+  (let [title (parse-title title-coll)]
+    (pull db/dsdb '[*] [:node/title title])))
 
 
 (defn render-page-link
@@ -93,7 +103,13 @@
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
                       (components/render-component (first contents) uid))
-     :page-link     (fn [& title] (render-page-link title))
+     :page-link     (fn [& title-coll] (render-page-link title-coll))
+     :hashtag       (fn [& title-coll]
+                      (let [node (pull-node-from-string title-coll)]
+                        [:span (use-style hashtag {:class    "hashtag"
+                                                   :on-click #(navigate-uid (:block/uid @node))})
+                         [:span {:class "formatting"} "#"]
+                         [:span {:class "contents"} title-coll]]))
      :block-ref     (fn [ref-uid]
                       (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
                         (if @block
@@ -103,14 +119,6 @@
                               [parse-and-render "{{SELF}}"]
                               [parse-and-render (:block/string @block) ref-uid])]]
                           (str "((" ref-uid "))"))))
-
-     :hashtag       (fn [& tag-name]
-                      (let [parsed-name (concat tag-name)
-                            node        (pull db/dsdb '[*] [:node/title parsed-name])]
-                        [:span (use-style hashtag {:class    "hashtag"
-                                                   :on-click #(navigate-uid (:block/uid @node))})
-                         [:span {:class "formatting"} "#"]
-                         [:span {:class "contents"} parsed-name]]))
      :url-image     (fn [{url :url alt :alt}]
                       [:img (use-style image {:class "url-image"
                                               :alt   alt
