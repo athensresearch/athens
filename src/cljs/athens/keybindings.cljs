@@ -276,7 +276,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl start head tail value target]} (destruct-event e)
+  (let [{:keys [shift ctrl start head tail value]} (destruct-event e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -400,8 +400,6 @@
                                                      (js/setTimeout #(setCursorPosition target (dec start)) 10))
       ;; slash: close dropdown
       (= "/" look-behind-char) (swap! state assoc :search/type nil)
-      ;; hashtag: close inline-search
-      (= "#" look-behind-char) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -422,7 +420,6 @@
   [e _ state]
   (let [{:keys [head key]} (destruct-event e)
         slash-key? (= key "/")
-        hashtag-key? (= key "#")
         {:search/keys [type]} @state]
     (cond
       slash-key? (swap! state assoc
@@ -430,9 +427,7 @@
                         :search/query ""
                         :search/type :slash
                         :search/results slash-options)
-      hashtag-key? (swap! state assoc :search/type :page :search/query "")
       type (update-query state head key type))))
-
 
 
 (defn textarea-key-down
