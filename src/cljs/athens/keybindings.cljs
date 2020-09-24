@@ -94,23 +94,24 @@
   write-char appends key character. Pass empty string during backspace.
   query-start is determined by doing a greedy regex find up to head.
   Head goes up to the text caret position."
-  ([state head key type]
-   (let [query-fn (case type
-                    :block db/search-in-block-content
-                    :page  db/search-in-node-title
-                    :slash filter-slash-options)
-         query-start-idx (case type
-                           :block (count (re-find #".*\(\(" head))
-                           :page  (count (re-find #".*\[\[" head))
-                           :slash (count (re-find #".*/"    head)))
-         new-query (str (subs head query-start-idx) key)
-         results (query-fn new-query)]
-     (if (and (= type :slash) (empty? results))
-       (swap! state assoc :search/type nil)
-       (swap! state assoc
-              :search/index 0
-              :search/query new-query
-              :search/results results)))))
+  [state head key type]
+  (let [query-fn        (case type
+                          :block db/search-in-block-content
+                          :page db/search-in-node-title
+                          :slash filter-slash-options)
+        query-start-idx (case type
+                          :block (count (re-find #".*\(\(" head))
+                          ;; use `first` for :page because regex uses a capture group, which turns return value into a vector
+                          :page  (count (first (re-find #".*(\[\[|#)" head)))
+                          :slash (count (re-find #".*/" head)))
+        new-query       (str (subs head query-start-idx) key)
+        results         (query-fn new-query)]
+    (if (and (= type :slash) (empty? results))
+      (swap! state assoc :search/type nil)
+      (swap! state assoc
+             :search/index 0
+             :search/query new-query
+             :search/results results))))
 
 
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
@@ -126,13 +127,13 @@
         new-str (str new-head expand tail)]
     (swap! state assoc
            :search/type nil
-           :string/generated new-str)))
+           :string/local new-str)))
 
 
 (defn auto-complete-inline
   [state e]
   (let [{:search/keys [query type index results]} @state
-        {:keys [node/title block/uid]} (nth results index)
+        {:keys [node/title block/uid]} (nth results index nil)
         {:keys [start head tail target]} (destruct-event e)
         completed-str (or title uid)
         block? (= type :block)
@@ -146,12 +147,15 @@
                        page?  "$1[[")
         closing-str (cond block? "))"
                           page?  "]]")
-        new-str (replace-first head head-pattern (str new-head completed-str closing-str))
-        [_ closing-delimiter after-closing-str] (re-matches tail-pattern tail)]
+        replacement (str new-head completed-str closing-str)
+        replace-str (replace-first head head-pattern replacement)
+        matches (re-matches tail-pattern tail)
+        [_ closing-delimiter after-closing-str] matches
+        new-str (str replace-str after-closing-str)]
     ;; completed-str is nil if there are no results, but user presses enter to auto-complete
     (if (nil? completed-str)
       (swap! state assoc :search/type nil)
-      (swap! state assoc :search/type nil :string/generated (str new-str after-closing-str)))
+      (swap! state assoc :search/type nil :string/local new-str))
     (when closing-delimiter
       (setStart target (+ 2 start)))))
 
@@ -276,20 +280,18 @@
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
-
       type (if (= type :slash)
              (auto-complete-slash state e)
              (auto-complete-inline state e))
-
       ;; shift-enter: add line break to textarea
-      shift (swap! state assoc :string/generated (str head "\n" tail))
+      shift (swap! state assoc :string/local (str head "\n" tail))
       ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
       ctrl (let [first    (subs value 0 13)
                  new-tail (subs value 13)
                  new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
                                (= first "{{[[DONE]]}} ") new-tail
                                :else (str "{{[[TODO]]}} " value))]
-             (swap! state assoc :string/generated new-str))
+             (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
       :else (dispatch [:enter uid value start]))))
 
@@ -320,9 +322,9 @@
   (let [{:keys [key-code head tail selection shift]} (destruct-event e)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :string/generated new-str))
+                                (swap! state assoc :string/local new-str))
       (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
-                                                  (swap! state assoc :string/generated new-str)))))
+                                                  (swap! state assoc :string/local new-str)))))
 
 
 (defn pair-char?
@@ -338,38 +340,39 @@
 (defn handle-pair-char
   [e _ state]
   (let [{:keys [key head tail target start end selection value]} (destruct-event e)
-        close-pair (get PAIR-CHARS key)]
+        close-pair (get PAIR-CHARS key)
+        lookbehind-char (nth value start nil)]
     (.. e preventDefault)
     (cond
       ;; when close char, increment caret index without writing more
-      (and (< start (count value))
-           (or (= ")" key (nth value start))
-               (= "}" key (nth value start))
-               (= "]" key (nth value start)))) (do (setStart target (inc start))
-                                                   (swap! state assoc :search/type nil))
+      (or (= ")" key lookbehind-char)
+          (= "}" key lookbehind-char)
+          (= "\"" key lookbehind-char)
+          (= "]" key lookbehind-char)) (do (setStart target (inc start))
+                                           (swap! state assoc :search/type nil))
 
       ;; when no selection
       (= start end) (let [new-str (str head key close-pair tail)]
-                      (js/setTimeout #(setCursorPosition target (inc start)) 10)
-                      (swap! state assoc :string/generated new-str))
+                      (js/setTimeout #(setCursorPosition target (inc start)) 25)
+                      (swap! state assoc :string/local new-str))
 
       ;; when selection
       (not= start end) (let [surround-selection (surround selection key)
                              new-str (str head surround-selection tail)]
-                         (swap! state assoc :string/generated new-str)
+                         (swap! state assoc :string/local new-str)
                          (js/setTimeout (fn []
                                           (setStart target (inc start))
                                           (setEnd target (inc end)))
                                         10)))
 
     ;; when double pair char, open inline-search
-    (when (>= (count (:string/generated @state)) 4)
-      (let [four-char (subs (:string/generated @state) (dec start) (+ start 3))
+    (when (>= (count (:string/local @state)) 4)
+      (let [four-char (subs (:string/local @state) (dec start) (+ start 3))
             double-brackets? (= "[[]]" four-char)
             double-parens?   (= "(())" four-char)
             type (cond double-brackets? :page
                        double-parens? :block)]
-        (swap! state assoc :search/type type)))))
+        (swap! state assoc :search/type type :search/query "" :search/results [])))))
 
     ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
@@ -383,7 +386,8 @@
         no-selection? (= start end)
         possible-pair (subs value (dec start) (inc start))
         head    (subs value 0 (dec start))
-        {:search/keys [type]} @state]
+        {:search/keys [type]} @state
+        look-behind-char (nth value (dec start) nil)]
     (cond
       (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
@@ -392,10 +396,10 @@
                                                          new-str (str head tail)]
                                                      (swap! state assoc
                                                             :search/type nil
-                                                            :string/generated new-str)
+                                                            :string/local new-str)
                                                      (js/setTimeout #(setCursorPosition target (dec start)) 10))
       ;; slash: close dropdown
-      (= "/" (last value)) (swap! state assoc :search/type nil)
+      (= "/" look-behind-char) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 

@@ -452,10 +452,7 @@
 
 (defn textarea-change
   [e _uid state]
-  (let [{:keys [string/generated]} @state]
-    (if generated
-      (swap! state assoc :string/local generated :string/generated nil)
-      (swap! state assoc :string/local (.. e -target -value)))))
+  (swap! state assoc :string/local (.. e -target -value)))
 
 
 ;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
@@ -822,7 +819,6 @@
   "Two checks to make sure block is open or not: children exist and :block/open bool"
   [_]
   (let [state (r/atom {:string/local      nil
-                       :string/generated  nil
                        :string/previous   nil
                        :search/type       nil ;; one of #{:page :block :slash}
                        :search/results    nil
@@ -835,14 +831,6 @@
                        :context-menu/y    nil
                        :context-menu/show false})]
 
-    ;; If generated string is updated, automatically update local string
-    ;; Necessary because modifying generated string itself won't trigger the on-change event of the textarea
-    ;; local string must be modified to trigger new value of generated string
-    (add-watch state :generated-string-listener
-               (fn [_context _atom old new]
-                 (when (and (not= (:string/generated old) (:string/generated new))
-                            (not (nil? (:string/generated new))))
-                   (swap! state assoc :string/local (:string/generated new)))))
 
     (fn [block]
       (let [{:block/keys [uid string open children _refs]} block
