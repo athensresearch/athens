@@ -374,7 +374,7 @@
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
-                                 (when (and (or (= type :page) (= type :block))
+                                 (when (and (or (= type :page) (= type :block) (= type :hashtag))
                                             (not (.. @ref (contains (.. e -target)))))
                                    (swap! state assoc :search/type false))))]
     (r/create-class
@@ -383,7 +383,9 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render (fn [state]
                          (let [{:search/keys [query results index type]} @state]
-                           (when (or (= type :page) (= type :block))
+                           (when (or (= type :page)
+                                     (= type :block)
+                                     (= type :hashtag))
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
                                             {:style {:position   "absolute"
@@ -595,9 +597,7 @@
   "Detach global mouseup listener (self)."
   [_]
   (events/unlisten js/document EventType.MOUSEUP global-mouseup)
-  (let [mouse-down @(subscribe [:mouse-down])]
-    (when (true? mouse-down)
-      (dispatch [:mouse-down/unset]))))
+  (dispatch [:mouse-down/unset]))
 
 
 (defn textarea-mouse-down
@@ -816,11 +816,11 @@
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   [_]
   (let [state (r/atom {:string/local      nil
                        :string/previous   nil
-                       :search/type       nil ;; one of #{:page :block :slash}
+                       :search/type       nil ;; one of #{:page :block :slash :hashtag}
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
