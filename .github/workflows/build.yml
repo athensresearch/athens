@@ -201,6 +201,14 @@ jobs:
        - name: Fetch yarn
          run: yarn install --frozen-lockfile
 
+       - name: Prepare for app notarization (macOS)
+         if: startsWith(matrix.os, 'macos')
+         # Import Apple API key for app notarization on macOS
+         run: |
+           mkdir -p ~/private_keys/
+           echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
+
+
       # runs: yarn build && electron-builder `args`
        - name: Build/release Electron app
          uses: samuelmeuli/action-electron-builder@v1
@@ -209,7 +217,15 @@ jobs:
            # (No need to define this secret in the repo settings)
            github_token: ${{ secrets.github_token }}
 
+           # macOS code signing certificate
+           mac_certs: ${{ secrets.mac_certs }}
+           mac_certs_password: ${{ secrets.mac_certs_password }}
+
            # If the commit is tagged with a version (e.g. "v1.0.0"),
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
+         env:
+           # macOS notarization API key
+           API_KEY_ID: ${{ secrets.api_key_id }}
+           API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
