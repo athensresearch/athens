@@ -98,11 +98,12 @@
   (let [query-fn        (case type
                           :block db/search-in-block-content
                           :page db/search-in-node-title
+                          :hashtag db/search-in-node-title
                           :slash filter-slash-options)
         query-start-idx (case type
                           :block (count (re-find #".*\(\(" head))
-                          ;; use `first` for :page because regex uses a capture group, which turns return value into a vector
-                          :page  (count (first (re-find #".*(\[\[|#)" head)))
+                          :page (count (re-find #".*\[\[" head))
+                          :hashtag (count (re-find #".*#" head))
                           :slash (count (re-find #".*/" head)))
         new-query       (str (subs head query-start-idx) key)
         results         (query-fn new-query)]
@@ -118,12 +119,26 @@
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
   [state e]
-  (let [{:keys [string/local] :search/keys [index results]} @state
-        {:keys [head tail]} (destruct-event e)
+  (let [{:search/keys [index results]} @state
+        {:keys [value head tail]} (destruct-event e)
         [_ _ expansion _] (nth results index)
         expand (if (fn? expansion) (expansion) expansion)
         start-idx (dec (count (re-find #".*/" head)))
-        new-head (subs local 0 start-idx)
+        new-head (subs value 0 start-idx)
+        new-str (str new-head expand tail)]
+    (swap! state assoc
+           :search/type nil
+           :string/local new-str)))
+
+
+(defn auto-complete-hashtag
+  [state e]
+  (let [{:search/keys [index results]} @state
+        {:keys [node/title block/uid]} (nth results index nil)
+        {:keys [value head tail]} (destruct-event e)
+        expand    (or title uid)
+        start-idx (count (re-find #".*#" head))
+        new-head (subs value 0 start-idx)
         new-str (str new-head expand tail)]
     (swap! state assoc
            :search/type nil
@@ -134,30 +149,31 @@
   [state e]
   (let [{:search/keys [query type index results]} @state
         {:keys [node/title block/uid]} (nth results index nil)
-        {:keys [start head tail target]} (destruct-event e)
-        completed-str (or title uid)
-        block? (= type :block)
-        page? (= type :page)
+        {:keys [start head tail target value]} (destruct-event e)
+        expansion    (or title uid)
+        block?       (= type :block)
+        page?        (= type :page)
         ;; rewrite this more cleanly
         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                           page?  (re-pattern (str "(.*)\\[\\[" query)))
+                           page? (re-pattern (str "(.*)\\[\\[" query)))
         tail-pattern (cond block? #"(\)\))?(.*)"
-                           page?  #"(\]\])?(.*)")
-        new-head (cond block? "$1(("
-                       page?  "$1[[")
-        closing-str (cond block? "))"
-                          page?  "]]")
-        replacement (str new-head completed-str closing-str)
-        replace-str (replace-first head head-pattern replacement)
-        matches (re-matches tail-pattern tail)
-        [_ closing-delimiter after-closing-str] matches
-        new-str (str replace-str after-closing-str)]
-    ;; completed-str is nil if there are no results, but user presses enter to auto-complete
-    (if (nil? completed-str)
-      (swap! state assoc :search/type nil)
-      (swap! state assoc :search/type nil :string/local new-str))
-    (when closing-delimiter
-      (setStart target (+ 2 start)))))
+                           page? #"(\]\])?(.*)")
+        new-head     (cond block? "$1(("
+                           page? "$1[[")
+        closing-str  (cond block? "))"
+                           page? "]]")
+        replacement  (str new-head expansion closing-str)
+        replace-str  (replace-first head head-pattern replacement)
+        matches      (re-matches tail-pattern tail)
+        [_ _ after-closing-str] matches
+        new-str      (str replace-str after-closing-str)]
+
+    (cond
+      (nil? expansion) (do (swap! state assoc :search/type nil)
+                           (setStart target (+ 2 start)))
+      :else (do (swap! state assoc :search/type nil :string/local new-str)
+               (setStart target (+ 2 start))))))
+
 
 
 ;;; Arrow Keys
@@ -280,9 +296,11 @@
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
-      type (if (= type :slash)
-             (auto-complete-slash state e)
-             (auto-complete-inline state e))
+      type (case type
+             :slash (auto-complete-slash state e)
+             :page (auto-complete-inline state e)
+             :block (auto-complete-inline state e)
+             :hashtag (auto-complete-hashtag state e))
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :string/local (str head "\n" tail))
       ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
@@ -394,12 +412,15 @@
       (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
                                                          tail    (subs value (inc start))
                                                          new-str (str head tail)]
+                                                     (.. e preventDefault)
                                                      (swap! state assoc
                                                             :search/type nil
                                                             :string/local new-str)
                                                      (js/setTimeout #(setCursorPosition target (dec start)) 10))
       ;; slash: close dropdown
       (= "/" look-behind-char) (swap! state assoc :search/type nil)
+      ;; hashtag: close dropdown
+      (= "#" look-behind-char) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -419,14 +440,21 @@
   If user writes a character while there is a slash/type, update query and results."
   [e _ state]
   (let [{:keys [head key]} (destruct-event e)
-        slash-key? (= key "/")
         {:search/keys [type]} @state]
     (cond
-      slash-key? (swap! state assoc
-                        :search/index 0
-                        :search/query ""
-                        :search/type :slash
-                        :search/results slash-options)
+      (and (= key " ") (= type :hashtag)) (swap! state assoc
+                                                 :search/type nil
+                                                 :search/results [])
+      (= key "/") (swap! state assoc
+                         :search/index 0
+                         :search/query ""
+                         :search/type :slash
+                         :search/results slash-options)
+      (= key "#") (swap! state assoc
+                          :search/index 0
+                          :search/query ""
+                          :search/type :hashtag
+                          :search/results [])
       type (update-query state head key type))))
 
 

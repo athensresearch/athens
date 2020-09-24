@@ -374,7 +374,7 @@
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
-                                 (when (and (or (= type :page) (= type :block))
+                                 (when (and (or (= type :page) (= type :block) (= type :hashtag))
                                             (not (.. @ref (contains (.. e -target)))))
                                    (swap! state assoc :search/type false))))]
     (r/create-class
@@ -383,7 +383,9 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render (fn [state]
                          (let [{:search/keys [query results index type]} @state]
-                           (when (or (= type :page) (= type :block))
+                           (when (or (= type :page)
+                                     (= type :block)
+                                     (= type :hashtag))
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
                                             {:style {:position   "absolute"
@@ -820,7 +822,7 @@
   [_]
   (let [state (r/atom {:string/local      nil
                        :string/previous   nil
-                       :search/type       nil ;; one of #{:page :block :slash}
+                       :search/type       nil ;; one of #{:page :block :slash :hashtag}
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
