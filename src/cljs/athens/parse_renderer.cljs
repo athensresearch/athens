@@ -57,6 +57,7 @@
                 ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                                          :cursor "alias"}]]})
 
+
 (defn parse-title
   "Title coll is a sequence of plain strings or hiccup elements. If string, return string, otherwise parse the hiccup
   for its plain-text representation."

@@ -597,9 +597,7 @@
   "Detach global mouseup listener (self)."
   [_]
   (events/unlisten js/document EventType.MOUSEUP global-mouseup)
-  (let [mouse-down @(subscribe [:mouse-down])]
-    (when (true? mouse-down)
-      (dispatch [:mouse-down/unset]))))
+  (dispatch [:mouse-down/unset]))
 
 
 (defn textarea-mouse-down
@@ -818,7 +816,7 @@
 
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   [_]
   (let [state (r/atom {:string/local      nil
                        :string/previous   nil

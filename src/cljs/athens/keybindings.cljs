@@ -122,10 +122,10 @@
   (let [{:search/keys [index results]} @state
         {:keys [value head tail]} (destruct-event e)
         [_ _ expansion _] (nth results index)
-        expand (if (fn? expansion) (expansion) expansion)
+        expand    (if (fn? expansion) (expansion) expansion)
         start-idx (dec (count (re-find #".*/" head)))
-        new-head (subs value 0 start-idx)
-        new-str (str new-head expand tail)]
+        new-head  (subs value 0 start-idx)
+        new-str   (str new-head expand tail)]
     (swap! state assoc
            :search/type nil
            :string/local new-str)))
@@ -136,10 +136,10 @@
   (let [{:search/keys [index results]} @state
         {:keys [node/title block/uid]} (nth results index nil)
         {:keys [value head tail]} (destruct-event e)
-        expand    (or title uid)
+        expansion   (or title uid)
         start-idx (count (re-find #".*#" head))
-        new-head (subs value 0 start-idx)
-        new-str (str new-head expand tail)]
+        new-head  (subs value 0 start-idx)
+        new-str   (str new-head expansion tail)]
     (swap! state assoc
            :search/type nil
            :string/local new-str)))
@@ -149,7 +149,7 @@
   [state e]
   (let [{:search/keys [query type index results]} @state
         {:keys [node/title block/uid]} (nth results index nil)
-        {:keys [start head tail target value]} (destruct-event e)
+        {:keys [start head tail target]} (destruct-event e)
         expansion    (or title uid)
         block?       (= type :block)
         page?        (= type :page)
@@ -167,13 +167,10 @@
         matches      (re-matches tail-pattern tail)
         [_ _ after-closing-str] matches
         new-str      (str replace-str after-closing-str)]
-
-    (cond
-      (nil? expansion) (do (swap! state assoc :search/type nil)
-                           (setStart target (+ 2 start)))
-      :else (do (swap! state assoc :search/type nil :string/local new-str)
-               (setStart target (+ 2 start))))))
-
+    (if (nil? expansion)
+      (swap! state assoc :search/type nil)
+      (swap! state assoc :search/type nil :string/local new-str))
+    (setStart target (+ 2 start))))
 
 
 ;;; Arrow Keys
@@ -451,12 +448,11 @@
                          :search/type :slash
                          :search/results slash-options)
       (= key "#") (swap! state assoc
-                          :search/index 0
-                          :search/query ""
-                          :search/type :hashtag
-                          :search/results [])
+                         :search/index 0
+                         :search/query ""
+                         :search/type :hashtag
+                         :search/results [])
       type (update-query state head key type))))
-
 
 
 (defn textarea-key-down
