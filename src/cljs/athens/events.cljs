@@ -501,16 +501,20 @@
         tail (subs val index)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
-                   :block/order  (inc (:block/order block))
+                   :block/order  0
                    :block/uid    new-uid
                    :block/open   true
                    :block/string tail}
-        reindex (->> (inc-after (:db/id block) (:block/order block))
+        reindex (->> ((inc-after (:db/id block) -1) (:block/order block))
                      (concat [new-block]))]
     {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
                                  {:db/id (:db/id block)
                                   :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
+
+
+(comment
+  (inc-after 21 0))
 
 
 (reg-event-fx
