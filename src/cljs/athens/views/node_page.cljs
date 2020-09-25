@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.keybindings :refer [destruct-event]]
+    [athens.keybindings :refer [destruct-key-down]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
@@ -165,7 +165,7 @@
   "When user presses shift-enter, normal behavior: create a linebreak.
   When user presses enter, blur."
   [e _state]
-  (let [{:keys [key-code shift]} (destruct-event e)]
+  (let [{:keys [key-code shift]} (destruct-key-down e)]
     (when
       (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
 
