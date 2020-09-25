@@ -32,7 +32,20 @@
   (js->clj (getEndPoints target)))
 
 
-(defn destruct-event
+(defn destruct-target
+  [target]
+  (let [value (.. target -value)
+        [start end] (get-end-points target)
+        selection (getText target)
+        head (subs value 0 start)
+        tail (subs value end)]
+    (merge {:value value}
+           {:start start :end end}
+           {:head head :tail tail}
+           {:selection selection})))
+
+
+(defn destruct-key-down
   [e]
   (let [key (.. e -key)
         key-code (.. e -keyCode)
@@ -40,14 +53,10 @@
         value (.. target -value)
         event {:key key :key-code key-code :target target :value value}
         modifiers (modifier-keys e)
-        [start end] (get-end-points target)
-        selection (getText target)
-        head (subs value 0 start)
-        tail (subs value end)]
-    (merge modifiers event
-           {:start start :end end}
-           {:head head :tail tail}
-           {:selection selection})))
+        target-data (destruct-target target)]
+    (merge modifiers
+           event
+           target-data)))
 
 
 (def ARROW-KEYS
@@ -120,20 +129,18 @@
 (defn auto-complete-slash
   ([state e]
    (let [{:search/keys [index results]} @state
-         {:keys [value head tail]} (destruct-event e)
+         {:keys [value head tail]} (destruct-key-down e)
          [_ _ expansion _] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
          start-idx (dec (count (re-find #".*/" head)))
          new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)]
-     (swap! state assoc
-            :search/type nil
-            :string/local new-str)))
+         new-str   (str new-head expand tail)
+         value1    (swap! state assoc
+                          :search/type nil
+                          :string/local new-str)]
+     value1))
   ([state target expansion]
-   (let [value     (.. target -value)
-         [start end] (get-end-points target)
-         head      (subs value 0 start)
-         tail      (subs value end)
+   (let [{:keys [value head tail]} (destruct-target target)
          expand    (if (fn? expansion) (expansion) expansion)
          start-idx (dec (count (re-find #".*/" head)))
          new-head  (subs value 0 start-idx)
@@ -147,7 +154,7 @@
   ([state e]
    (let [{:search/keys [index results]} @state
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [value head tail]} (destruct-event e)
+         {:keys [value head tail]} (destruct-key-down e)
          expansion (or title uid)
          start-idx (count (re-find #".*#" head))
          new-head  (subs value 0 start-idx)
@@ -156,10 +163,7 @@
             :search/type nil
             :string/local new-str)))
   ([state target expansion]
-   (let [value     (.. target -value)
-         [start end] (get-end-points target)
-         head      (subs value 0 start)
-         tail      (subs value end)
+   (let [{:keys [value head tail]} (destruct-target target)
          start-idx (count (re-find #".*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expansion tail)]
@@ -169,12 +173,11 @@
 
 
 (defn auto-complete-inline
-  ([state target expansion]
-   (let [{:search/keys [query type]} @state
-         value        (.. target -value)
-         [start end] (get-end-points target)
-         head         (subs value 0 start)
-         tail         (subs value end)
+  ([state e]
+   (let [{:search/keys [query type index results]} @state
+         {:keys [node/title block/uid]} (nth results index nil)
+         {:keys [start head tail target]} (destruct-key-down e)
+         expansion    (or title uid)
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
@@ -195,11 +198,12 @@
        (swap! state assoc :search/type nil)
        (swap! state assoc :search/type nil :string/local new-str))
      (setStart target (+ 2 start))))
-  ([state e]
-   (let [{:search/keys [query type index results]} @state
-         {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [start head tail target]} (destruct-event e)
-         expansion    (or title uid)
+  ([state target expansion]
+   (let [{:search/keys [query type]} @state
+         value        (.. target -value)
+         [start end] (get-end-points target)
+         head         (subs value 0 start)
+         tail         (subs value end)
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
@@ -233,7 +237,7 @@
 
 (defn block-end?
   [e]
-  (let [{:keys [value end]} (destruct-event e)]
+  (let [{:keys [value end]} (destruct-key-down e)]
     (= end (count value))))
 
 
@@ -270,7 +274,7 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift target]} (destruct-event e)
+  (let [{:keys [key-code shift target]} (destruct-key-down e)
         top-row?    (block-start? e)
         bottom-row? (block-end? e)
         {:search/keys [results type index]} @state
@@ -317,7 +321,7 @@
   See :indent event for why value must be passed as well."
   [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift value start end]} (destruct-event e)]
+  (let [{:keys [shift value start end]} (destruct-key-down e)]
     (if shift
       (dispatch [:unindent uid value])
       (dispatch [:indent uid value]))
@@ -338,7 +342,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl start head tail value]} (destruct-event e)
+  (let [{:keys [shift ctrl start head tail value]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -383,7 +387,7 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code head tail selection shift]} (destruct-event e)]
+  (let [{:keys [key-code head tail selection shift]} (destruct-key-down e)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :string/local new-str))
@@ -393,7 +397,7 @@
 
 (defn pair-char?
   [e]
-  (let [{:keys [key]} (destruct-event e)
+  (let [{:keys [key]} (destruct-key-down e)
         pair-char-set (-> PAIR-CHARS
                           seq
                           flatten
@@ -403,7 +407,7 @@
 
 (defn handle-pair-char
   [e _ state]
-  (let [{:keys [key head tail target start end selection value]} (destruct-event e)
+  (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
@@ -446,7 +450,7 @@
 
 (defn handle-backspace
   [e uid state]
-  (let [{:keys [start value target end]} (destruct-event e)
+  (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
         possible-pair (subs value (dec start) (inc start))
         head    (subs value 0 (dec start))
@@ -476,7 +480,7 @@
 (defn is-character-key?
   "Closure returns true even when using modifier keys. We do not make that assumption."
   [e]
-  (let [{:keys [meta ctrl alt key-code]} (destruct-event e)]
+  (let [{:keys [meta ctrl alt key-code]} (destruct-key-down e)]
     (and (not meta) (not ctrl) (not alt)
          (isCharacterKey key-code))))
 
@@ -485,7 +489,7 @@
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
   [e _ state]
-  (let [{:keys [head key]} (destruct-event e)
+  (let [{:keys [head key]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (cond
       (and (= key " ") (= type :hashtag)) (swap! state assoc
@@ -506,7 +510,7 @@
 
 (defn textarea-key-down
   [e uid state]
-  (let [d-event (destruct-event e)
+  (let [d-event (destruct-key-down e)
         {:keys [meta ctrl key-code]} d-event]
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)

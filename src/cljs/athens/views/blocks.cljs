@@ -444,8 +444,7 @@
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-                                      [:div#dropdown-menu (merge (use-style menu-style)
-                                                                 {:style {:max-height "8em"}})
+                                      [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
                                        (doall
                                          (for [[i [text icon expansion kbd]] (map-indexed list results)]
                                            [button {:key      text
