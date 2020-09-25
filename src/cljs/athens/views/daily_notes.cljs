@@ -66,21 +66,18 @@
   []
   (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
-      (when (empty? @note-refs)
-        (dispatch [:daily-note/next (get-day)]))
-      (let [eids (q '[:find [?e ...]
-                      :in $ [?uid ...]
-                      :where [?e :block/uid ?uid]]
-                    db/dsdb
-                    @note-refs)]
-        (when (not-empty @eids)
-          (let [notes (pull-many db/dsdb '[*] @eids)]
-            [:div#daily-notes (use-style daily-notes-scroll-area-style)
-             (doall
-               (for [{:keys [block/uid]} @notes]
-                 ^{:key uid}
-                 [:<>
-                  [:div (use-style daily-notes-page-style)
-                   [node-page-component [:block/uid uid]]]]))
-             [:div (use-style daily-notes-notional-page-style)
-              [:h1 "Earlier"]]]))))))
+      (if (empty? @note-refs)
+        (dispatch [:daily-note/next (get-day)])
+        (let [notes (some->> (map (fn [x] [:block/uid x]) @note-refs)
+                             not-empty
+                             (pull-many db/dsdb '[*])
+                             deref)]
+          [:div#daily-notes (use-style daily-notes-scroll-area-style)
+           (doall
+             (for [{:keys [block/uid]} notes]
+               ^{:key uid}
+               [:<>
+                [:div (use-style daily-notes-page-style)
+                 [node-page-component [:block/uid uid]]]]))
+           [:div (use-style daily-notes-notional-page-style)
+            [:h1 "Earlier"]]])))))
