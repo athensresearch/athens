@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [retract-uid-recursively count-linked-references-excl-uid e-by-av]]
     [athens.events :refer [select-up select-down]]
-    [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
+    [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -368,9 +368,17 @@
        [:div [:b "uid"] [:span uid]]
        [:div [:b "order"] [:span order]]])))
 
+(defn inline-item-click
+  [state block expansion]
+  (let [id        (str "#editable-uid-" (:block/uid block))
+        target    (.. js/document (querySelector id))]
+    (case (:search/type @state)
+      :hashtag (auto-complete-hashtag state target expansion)
+      (auto-complete-inline state target expansion))))
+
 
 (defn inline-search-el
-  [state]
+  [block state]
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
@@ -378,38 +386,45 @@
                                             (not (.. @ref (contains (.. e -target)))))
                                    (swap! state assoc :search/type false))))]
     (r/create-class
-      {:display-name "inline-search"
-       :component-did-mount (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+      {:display-name           "inline-search"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render (fn [state]
-                         (let [{:search/keys [query results index type]} @state]
-                           (when (or (= type :page)
-                                     (= type :block)
-                                     (= type :hashtag))
-                               [:div (merge (use-style dropdown-style
-                                                       {:ref #(reset! ref %)})
-                                            {:style {:position   "absolute"
-                                                     :top        "100%"
-                                                     :max-height "20rem"
-                                                     :left       "1.75em"}})
-                                [:div#dropdown-menu (use-style menu-style)
-                                 (if (or (str/blank? query)
-                                         (empty? results))
-                                   ;; Just using button for styling
-                                   [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
-                                   (doall
-                                     (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                       [button {:key      (str "inline-search-item" uid)
-                                                :id       (str "dropdown-item-" i)
-                                                :active   (= index i)
-                                                ;; TODO: pass relevant textarea values to auto-complete-inline
-                                                ;;#(auto-complete-inline state % (or title string))}
-                                                :on-click #(prn "TODO")}
-                                        (or title string)])))]])))})))
+       :reagent-render         (fn [block state]
+                                 (let [{:search/keys [query results index type]} @state]
+                                   (when (or (= type :page)
+                                             (= type :block)
+                                             (= type :hashtag))
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position   "absolute"
+                                                           :top        "100%"
+                                                           :max-height "20rem"
+                                                           :left       "1.75em"}})
+                                      [:div#dropdown-menu (use-style menu-style)
+                                       (if (or (str/blank? query)
+                                               (empty? results))
+                                         ;; Just using button for styling
+                                         [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
+                                         (doall
+                                           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                                             [button {:key      (str "inline-search-item" uid)
+                                                      :id       (str "dropdown-item-" i)
+                                                      :active   (= index i)
+                                                      :on-click (fn [_] (inline-item-click state block (or string title)))}
+                                              (or title string)])))]])))})))
+
+
+(defn slash-item-click
+  [state block expansion]
+  (let [id        (str "#editable-uid-" (:block/uid block))
+        target    (.. js/document (querySelector id))]
+    (auto-complete-slash state target expansion)))
 
 
 (defn slash-menu-el
-  [state]
+  [block state]
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
@@ -420,17 +435,22 @@
       {:display-name           "slash-menu"
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [state]
+       :reagent-render         (fn [block state]
                                  (let [{:search/keys [index results type]} @state]
                                    (when (= type :slash)
                                      [:div (merge (use-style dropdown-style
-                                                             {:ref #(reset! ref %)}) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-                                      [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+                                      [:div#dropdown-menu (merge (use-style menu-style)
+                                                                 {:style {:max-height "8em"}})
                                        (doall
-                                         (for [[i [text icon _expansion kbd]] (map-indexed list results)]
-                                           [button {:key    text
-                                                    :id     (str "dropdown-item-" i)
-                                                    :active (= i index)}
+                                         (for [[i [text icon expansion kbd]] (map-indexed list results)]
+                                           [button {:key      text
+                                                    :id       (str "dropdown-item-" i)
+                                                    :active   (= i index)
+                                                    :on-click (fn [_] (slash-item-click state block expansion))}
                                             ;; TODO: do not unfocus textarea
                                             ;;:on-click #(auto-complete-slash i state)}
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
@@ -872,8 +892,8 @@
           [block-content-el block state]
           [block-refs-count-el (count _refs) uid]]
 
-         [inline-search-el state]
-         [slash-menu-el state]
+         [inline-search-el block state]
+         [slash-menu-el block state]
 
 
          ;; Children

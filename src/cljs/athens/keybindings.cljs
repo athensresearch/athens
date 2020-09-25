@@ -28,8 +28,8 @@
 
 
 (defn get-end-points
-  [e]
-  (js->clj (getEndPoints (.. e -target))))
+  [target]
+  (js->clj (getEndPoints target)))
 
 
 (defn destruct-event
@@ -40,7 +40,7 @@
         value (.. target -value)
         event {:key key :key-code key-code :target target :value value}
         modifiers (modifier-keys e)
-        [start end] (get-end-points e)
+        [start end] (get-end-points target)
         selection (getText target)
         head (subs value 0 start)
         tail (subs value end)]
@@ -118,59 +118,108 @@
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
-  [state e]
-  (let [{:search/keys [index results]} @state
-        {:keys [value head tail]} (destruct-event e)
-        [_ _ expansion _] (nth results index)
-        expand    (if (fn? expansion) (expansion) expansion)
-        start-idx (dec (count (re-find #".*/" head)))
-        new-head  (subs value 0 start-idx)
-        new-str   (str new-head expand tail)]
-    (swap! state assoc
-           :search/type nil
-           :string/local new-str)))
+  ([state e]
+   (let [{:search/keys [index results]} @state
+         {:keys [value head tail]} (destruct-event e)
+         [_ _ expansion _] (nth results index)
+         expand    (if (fn? expansion) (expansion) expansion)
+         start-idx (dec (count (re-find #".*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str)))
+  ([state target expansion]
+   (let [value     (.. target -value)
+         [start end] (get-end-points target)
+         head      (subs value 0 start)
+         tail      (subs value end)
+         expand    (if (fn? expansion) (expansion) expansion)
+         start-idx (dec (count (re-find #".*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str))))
 
 
 (defn auto-complete-hashtag
-  [state e]
-  (let [{:search/keys [index results]} @state
-        {:keys [node/title block/uid]} (nth results index nil)
-        {:keys [value head tail]} (destruct-event e)
-        expansion   (or title uid)
-        start-idx (count (re-find #".*#" head))
-        new-head  (subs value 0 start-idx)
-        new-str   (str new-head expansion tail)]
-    (swap! state assoc
-           :search/type nil
-           :string/local new-str)))
+  ([state e]
+   (let [{:search/keys [index results]} @state
+         {:keys [node/title block/uid]} (nth results index nil)
+         {:keys [value head tail]} (destruct-event e)
+         expansion (or title uid)
+         start-idx (count (re-find #".*#" head))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expansion tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str)))
+  ([state target expansion]
+   (let [value     (.. target -value)
+         [start end] (get-end-points target)
+         head      (subs value 0 start)
+         tail      (subs value end)
+         start-idx (count (re-find #".*#" head))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expansion tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str))))
 
 
 (defn auto-complete-inline
-  [state e]
-  (let [{:search/keys [query type index results]} @state
-        {:keys [node/title block/uid]} (nth results index nil)
-        {:keys [start head tail target]} (destruct-event e)
-        expansion    (or title uid)
-        block?       (= type :block)
-        page?        (= type :page)
-        ;; rewrite this more cleanly
-        head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                           page? (re-pattern (str "(.*)\\[\\[" query)))
-        tail-pattern (cond block? #"(\)\))?(.*)"
-                           page? #"(\]\])?(.*)")
-        new-head     (cond block? "$1(("
-                           page? "$1[[")
-        closing-str  (cond block? "))"
-                           page? "]]")
-        replacement  (str new-head expansion closing-str)
-        replace-str  (replace-first head head-pattern replacement)
-        matches      (re-matches tail-pattern tail)
-        [_ _ after-closing-str] matches
-        new-str      (str replace-str after-closing-str)]
-    (if (nil? expansion)
-      (swap! state assoc :search/type nil)
-      (swap! state assoc :search/type nil :string/local new-str))
-    (setStart target (+ 2 start))))
+  ([state target expansion]
+   (let [{:search/keys [query type]} @state
+         value        (.. target -value)
+         [start end] (get-end-points target)
+         head         (subs value 0 start)
+         tail         (subs value end)
+         block?       (= type :block)
+         page?        (= type :page)
+         ;; rewrite this more cleanly
+         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
+                            page? (re-pattern (str "(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(\)\))?(.*)"
+                            page? #"(\]\])?(.*)")
+         new-head     (cond block? "$1(("
+                            page? "$1[[")
+         closing-str  (cond block? "))"
+                            page? "]]")
+         replacement  (str new-head expansion closing-str)
+         replace-str  (replace-first head head-pattern replacement)
+         matches      (re-matches tail-pattern tail)
+         [_ _ after-closing-str] matches
+         new-str      (str replace-str after-closing-str)]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc :search/type nil :string/local new-str))
+     (setStart target (+ 2 start))))
+  ([state e]
+   (let [{:search/keys [query type index results]} @state
+         {:keys [node/title block/uid]} (nth results index nil)
+         {:keys [start head tail target]} (destruct-event e)
+         expansion    (or title uid)
+         block?       (= type :block)
+         page?        (= type :page)
+         ;; rewrite this more cleanly
+         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
+                            page? (re-pattern (str "(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(\)\))?(.*)"
+                            page? #"(\]\])?(.*)")
+         new-head     (cond block? "$1(("
+                            page? "$1[[")
+         closing-str  (cond block? "))"
+                            page? "]]")
+         replacement  (str new-head expansion closing-str)
+         replace-str  (replace-first head head-pattern replacement)
+         matches      (re-matches tail-pattern tail)
+         [_ _ after-closing-str] matches
+         new-str      (str replace-str after-closing-str)]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc :search/type nil :string/local new-str))
+     (setStart target (+ 2 start)))))
 
 
 ;;; Arrow Keys
@@ -178,7 +227,7 @@
 
 (defn block-start?
   [e]
-  (let [[start _] (get-end-points e)]
+  (let [[start _] (get-end-points (.. e -target))]
     (zero? start)))
 
 
