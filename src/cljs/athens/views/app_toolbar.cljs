@@ -180,7 +180,8 @@
            [(r/adapt-react-class mui-icons/FiberManualRecord)
             {:style {:color (color (if @db-synced
                                      :confirmation-color
-                                     :highlight-color))}}]
+                                     :highlight-color))
+                     :align-self "center"}}]
 
            [separator]
            ;;[button {:on-click #(reset! import-modal-open? true)}
