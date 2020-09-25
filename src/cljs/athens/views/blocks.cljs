@@ -368,6 +368,7 @@
        [:div [:b "uid"] [:span uid]]
        [:div [:b "order"] [:span order]]])))
 
+
 (defn inline-item-click
   [state block expansion]
   (let [id        (str "#editable-uid-" (:block/uid block))
@@ -378,7 +379,7 @@
 
 
 (defn inline-search-el
-  [block state]
+  [_block state]
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
@@ -424,7 +425,7 @@
 
 
 (defn slash-menu-el
-  [block state]
+  [_block state]
   (let [ref (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
