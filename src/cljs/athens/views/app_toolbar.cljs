@@ -150,9 +150,8 @@
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         current-route (subscribe [:current-route])
-        db-synced (subscribe [:db/synced])]
-        ;;not supporting import modal yet
-        ;;import-modal-open? (r/atom false)]
+        db-synced (subscribe [:db/synced])
+        import-modal-open? (r/atom false)]
     (fn []
       (let [route-name (-> @current-route :data :name)]
         [:<>
@@ -191,17 +190,18 @@
                     :on-click #(dispatch [:right-sidebar/toggle])}
             [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
 
-         #_(when @import-modal-open?
-             [:div (use-style modal-style)
-              [modal/modal
-               {:title [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
-                                                                                           {:on-click #(reset! import-modal-open? false)}
-                                                                                           [:> mui-icons/Close]]]
-                :content [:div (use-style modal-contents-style)
-                          ;; TODO: Write intro copy
-                          [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
-                          [features-table]
-                          ;; TODO: Create browser file dialog and actually import stuff
-                          [:div [button {:primary true} "Add Files"]]]
-                :on-close #(reset! import-modal-open? false)}]])]))))
+         ;; always false — not supporting import modal yet
+         (when @import-modal-open?
+           [:div (use-style modal-style)
+            [modal/modal
+             {:title [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
+                                                                                         {:on-click #(reset! import-modal-open? false)}
+                                                                                         [:> mui-icons/Close]]]
+              :content [:div (use-style modal-contents-style)
+                        ;; TODO: Write intro copy
+                        [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
+                        [features-table]
+                        ;; TODO: Create browser file dialog and actually import stuff
+                        [:div [button {:primary true} "Add Files"]]]
+              :on-close #(reset! import-modal-open? false)}]])]))))
 
