@@ -392,9 +392,7 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
                                  (let [{:search/keys [query results index type]} @state]
-                                   (when (or (= type :page)
-                                             (= type :block)
-                                             (= type :hashtag))
+                                   (when (some #(= % type) [:page :block :hashtag])
                                      [:div (merge (use-style dropdown-style
                                                              {:ref           #(reset! ref %)
                                                               ;; don't blur textarea when clicking to auto-complete

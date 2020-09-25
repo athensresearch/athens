@@ -200,10 +200,7 @@
      (setStart target (+ 2 start))))
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         value        (.. target -value)
-         [start end] (get-end-points target)
-         head         (subs value 0 start)
-         tail         (subs value end)
+         {:keys [start head tail]} target
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
