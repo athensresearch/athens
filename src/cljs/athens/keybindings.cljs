@@ -505,6 +505,17 @@
       type (update-query state head key type))))
 
 
+(defn handle-delete
+  [e uid _state]
+  (let [{:keys [start end value]} (destruct-key-down e)
+        no-selection? (= start end)
+        end? (= end (count value))]
+    (when (and no-selection? end?)
+      (let [next-block-uid (db/next-block-uid uid)
+            next-block (db/get-block [:block/uid next-block-uid])]
+        (dispatch [:backspace next-block-uid (:block/string next-block)])))))
+
+
 (defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-key-down e)
@@ -517,6 +528,7 @@
       (= key-code KeyCodes.TAB)       (handle-tab e uid state)
       (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+      (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
       (= key-code KeyCodes.ESC)       (handle-escape e state)
       (or meta ctrl)                  (handle-shortcuts e uid state)
       (is-character-key? e)           (write-char e uid state))))
