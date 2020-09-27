@@ -478,7 +478,7 @@
                   retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
                   new-prev-block {:db/id          [:block/uid prev-block-uid-]
                                   :block/string   (str (:block/string prev-block) value)
-                                  :block/children (or children [])}
+                                  :block/children children}
                   new-parent     {:db/id (:db/id parent) :block/children reindex}
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}

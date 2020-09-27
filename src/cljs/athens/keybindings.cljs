@@ -506,6 +506,7 @@
 
 
 (defn handle-delete
+  "Delete has the same behavior as pressing backspace on the next block."
   [e uid _state]
   (let [{:keys [start end value]} (destruct-key-down e)
         no-selection? (= start end)
