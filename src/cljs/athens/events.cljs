@@ -446,23 +446,42 @@
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
+;;(d/q '[:find ?sib
+;;       :in $ % ?uid
+;;       :where
+;;       (siblings ?uid ?sib)]
+;;     @db/dsdb db/rules "8d592ac22")
 
 ;; no-op if root 0th child
 ;; otherwise delete block and join with previous block
 (defn backspace
   [uid value]
-  (let [block (db/get-block [:block/uid uid])
-        parent (db/get-parent [:block/uid uid])
-        reindex (dec-after (:db/id parent) (:block/order block))
+  (let [block           (db/get-block [:block/uid uid])
+        {:block/keys [children open order]} block
+        parent          (db/get-parent [:block/uid uid])
+        reindex         (dec-after (:db/id parent) (:block/order block))
         prev-block-uid- (db/prev-block-uid uid)
-        {prev-block-string :block/string} (db/get-block [:block/uid prev-block-uid-])]
+        prev-block      (db/get-block [:block/uid prev-block-uid-])]
+    (prn "PAR" uid parent)
+    ;; if prev-block is parent, or if prev-sibling has children
     (cond
-      (and (:node/title parent) (zero? (:block/order block))) nil
-      (:block/children block) nil
-      :else {:dispatch-later [{:ms 0 :dispatch [:transact [[:db/retractEntity [:block/uid uid]]
-                                                           {:db/id [:block/uid prev-block-uid-] :block/string (str prev-block-string value) :edit/time (now-ts)}
-                                                           {:db/id (:db/id parent) :block/children reindex}]]}
-                              {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})))
+      (and (:node/title parent) (zero? order)) nil
+      children (let [retract-block  [:db/retractEntity [:block/uid uid]]
+                     retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+                     new-prev-block {:db/id          [:block/uid prev-block-uid-]
+                                     :block/string   (str (:block/string prev-block) value)
+                                     :block/children children}
+                     new-parent     {:db/id (:db/id parent) :block/children reindex}
+                     tx-data        (conj retracts retract-block new-prev-block new-parent)]
+                 {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
+                                   {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})
+      :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
+                  new-prev-block {:db/id        [:block/uid prev-block-uid-]
+                                  :block/string (str (:block/string prev-block) value)}
+                  new-parent     {:db/id (:db/id parent) :block/children reindex}
+                  tx-data        [retract-block new-prev-block new-parent]]
+              {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
+                                {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]}))))
 
 
 (reg-event-fx
