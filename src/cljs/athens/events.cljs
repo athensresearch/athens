@@ -447,7 +447,6 @@
     {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
 
-
 (defn backspace
   "No-op if root and 0th child.
   No-op if parent is prev-block and block has children.
@@ -484,7 +483,6 @@
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
                                 {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]}))))
-
 
 
 (reg-event-fx
