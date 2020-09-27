@@ -24,18 +24,19 @@
   [e]
   (let [selected-items @(subscribe [:selected/items])]
     (when (not-empty selected-items)
-      (let [shift     (.. e -shiftKey)
+      (let [shift    (.. e -shiftKey)
             key-code (.. e -keyCode)
-            enter? (= key-code KeyCodes.ENTER)
-            bksp? (= key-code KeyCodes.BACKSPACE)
-            up? (= key-code KeyCodes.UP)
-            down? (= key-code KeyCodes.DOWN)
-            tab? (= key-code KeyCodes.TAB)]
+            enter?   (= key-code KeyCodes.ENTER)
+            bksp?    (= key-code KeyCodes.BACKSPACE)
+            up?      (= key-code KeyCodes.UP)
+            down?    (= key-code KeyCodes.DOWN)
+            tab?     (= key-code KeyCodes.TAB)
+            delete?  (= key-code KeyCodes.DELETE)]
         (cond
           enter? (do
                    (dispatch [:editing/uid (first selected-items)])
                    (dispatch [:selected/clear-items]))
-          bksp? (dispatch [:selected/delete selected-items])
+          (or bksp? delete?) (dispatch [:selected/delete selected-items])
           tab? (do
                  (.preventDefault e)
                  (if shift

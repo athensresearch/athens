@@ -456,7 +456,7 @@
   If prev-block has children"
   [uid value]
   (let [block           (db/get-block [:block/uid uid])
-        {:block/keys [children order]} block
+        {:block/keys [children order] :or {children []}} block
         parent          (db/get-parent [:block/uid uid])
         reindex         (dec-after (:db/id parent) (:block/order block))
         prev-block-uid- (db/prev-block-uid uid)
@@ -473,8 +473,8 @@
         prev-sib        (db/get-block prev-sib)]
     (cond
       (and (:node/title parent) (zero? order)) nil
-      (and children (not-empty (:block/children prev-sib))) nil
-      (and children (= parent prev-block)) nil
+      (and (not-empty children) (not-empty (:block/children prev-sib))) nil
+      (and (not-empty children) (= parent prev-block)) nil
       :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
                   retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
                   new-prev-block {:db/id          [:block/uid prev-block-uid-]
@@ -497,7 +497,7 @@
   [uid val index]
   (let [parent     (db/get-parent [:block/uid uid])
         block      (db/get-block [:block/uid uid])
-        {:block/keys [order children]} block
+        {:block/keys [order children] :or {children []}} block
         head       (subs val 0 index)
         tail       (subs val index)
         new-uid    (gen-block-uid)
