@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after dec-before plus-before minus-before]]
+    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -912,7 +912,7 @@
         new-parent-children (concat new-source-blocks reindex)
         new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
         tx-data             [new-parent]]
-     tx-data))
+    tx-data))
 
 
 (defn drop-multi-below-same-parent-all
@@ -953,10 +953,11 @@
         last-s-order          (:block/order last-source)
         t-order               (:block/order target)
         n                     (count source-uids)
-        new-source-blocks     (map-indexed (fn [idx x] (let [new-order (if (= kind :above)
-                                                                         (+ idx t-order)
-                                                                         (inc (+ idx t-order)))]
-                                                         {:db/id (:db/id x) :block/order new-order}))
+        new-source-blocks     (map-indexed (fn [idx x]
+                                             (let [new-order (if (= kind :above)
+                                                               (+ idx t-order)
+                                                               (inc (+ idx t-order)))]
+                                               {:db/id (:db/id x) :block/order new-order}))
                                            source-blocks)
         reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
         bound                 (if (= kind :above) (dec t-order) t-order)
@@ -968,6 +969,7 @@
         new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}
         tx-data               (conj retracts new-source-parent new-target-parent)]
     tx-data))
+
 
 (defn drop-multi-diff-source-parents
   "Only reindex after last target. plus-after"
@@ -1009,6 +1011,7 @@
         tx-data                    (conj retracts new-target-parent #_new-source-parent)]
     (identity new-source-parent)
     tx-data))
+
 
 (defn drop-multi-child
   [source-uids target]

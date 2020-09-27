@@ -63,7 +63,6 @@
         closest-page-header (.. e -target (closest ".page-header"))
         closest-bullet (.. e -target (closest ".bullet"))
         closest (or closest-block closest-block-header closest-page-header)]
-    (when selected-items?)
     (when (and selected-items?
                (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
