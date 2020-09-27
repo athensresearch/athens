@@ -68,17 +68,24 @@
     (fn []
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (get-day)])
-        (let [notes (some->> @note-refs
-                             not-empty
-                             (map (fn [x] [:block/uid x]))
-                             (pull-many db/dsdb '[*])
-                             deref)]
-          [:div#daily-notes (use-style daily-notes-scroll-area-style)
-           (doall
-             (for [{:keys [block/uid]} notes]
-               ^{:key uid}
-               [:<>
-                [:div (use-style daily-notes-page-style)
-                 [node-page-component [:block/uid uid]]]]))
-           [:div (use-style daily-notes-notional-page-style)
-            [:h1 "Earlier"]]])))))
+        (try
+          (let [notes (some->> @note-refs
+                               not-empty
+                               (map (fn [x] [:block/uid x]))
+                               ;; the problem is note-refs from re-frame is updated, and there is a brief period where datascript has not yet updated
+                               ;; and when pull-many doesn't find anything, it throws an error
+                               (pull-many db/dsdb '[*])
+                               deref)]
+            [:div#daily-notes (use-style daily-notes-scroll-area-style)
+             (doall
+               (for [{:keys [block/uid]} notes]
+                 ^{:key uid}
+                 [:<>
+                  [:div (use-style daily-notes-page-style)
+                   [node-page-component [:block/uid uid]]]]))
+             [:div (use-style daily-notes-notional-page-style)
+              [:h1 "Earlier"]]])
+          (catch js/Object e
+            (prn "EXCEPTION" e)))))))
+
+
