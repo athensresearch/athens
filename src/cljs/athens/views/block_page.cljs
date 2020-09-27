@@ -75,7 +75,7 @@
 
 (defn handle-enter
   [e uid _state]
-  (let [{:keys [start value]} (destruct-event e)]
+  (let [{:keys [start value]} (athens.keybindings/destruct-event e)]
     (.. e preventDefault)
     (dispatch [:split-block-to-children uid value start])))
 
