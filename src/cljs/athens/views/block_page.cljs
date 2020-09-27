@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.keybindings :refer [destruct-event]]
+    [athens.keybindings :refer [destruct-key-down]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
@@ -82,7 +82,7 @@
 
 (defn block-page-key-down
   [e uid state]
-  (let [d-event (destruct-event e)
+  (let [d-event (destruct-key-down e)
         {:keys [key-code]} d-event]
     (cond
       (= key-code KeyCodes.ENTER) (handle-enter e uid state))))
@@ -104,7 +104,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div (use-style page-style)
+        [:div.block-page (use-style page-style)
          ;; Parent Context
          [:span {:style {:color "gray"}}
 

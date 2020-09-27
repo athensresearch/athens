@@ -67,16 +67,6 @@
       (dispatch [:editing/uid nil]))))
 
 
-;; -- Close Athena -------------------------------------------------------
-
-(defn click-outside-athena
-  [e]
-  (let [athena? @(subscribe [:athena/open])
-        closest (.. e -target (closest ".athena"))]
-    (when (and athena? (nil? closest))
-      (dispatch [:athena/toggle]))))
-
-
 ;; -- Hotkeys ------------------------------------------------------------
 
 
@@ -145,7 +135,6 @@
 (defn init
   []
   (events/listen js/document EventType.MOUSEDOWN unfocus)
-  (events/listen js/window EventType.CLICK click-outside-athena)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)
   (events/listen js/window EventType.COPY copy)
