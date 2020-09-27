@@ -446,42 +446,45 @@
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
-;;(d/q '[:find ?sib
-;;       :in $ % ?uid
-;;       :where
-;;       (siblings ?uid ?sib)]
-;;     @db/dsdb db/rules "8d592ac22")
 
-;; no-op if root 0th child
-;; otherwise delete block and join with previous block
+
 (defn backspace
+  "No-op if root and 0th child.
+  No-op if parent is prev-block and block has children.
+  No-op if prev-sibling-block has children.
+  Otherwise delete block and join with previous block
+  If prev-block has children"
   [uid value]
   (let [block           (db/get-block [:block/uid uid])
-        {:block/keys [children open order]} block
+        {:block/keys [children order]} block
         parent          (db/get-parent [:block/uid uid])
         reindex         (dec-after (:db/id parent) (:block/order block))
         prev-block-uid- (db/prev-block-uid uid)
-        prev-block      (db/get-block [:block/uid prev-block-uid-])]
-    (prn "PAR" uid parent)
-    ;; if prev-block is parent, or if prev-sibling has children
+        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        prev-sib-order  (dec (:block/order block))
+        prev-sib        (d/q '[:find ?sib .
+                               :in $ % ?target-uid ?prev-sib-order
+                               :where
+                               (siblings ?target-uid ?sib)
+                               [?sib :block/order ?prev-sib-order]
+                               [?sib :block/uid ?uid]
+                               [?sib :block/children ?ch]]
+                             @db/dsdb db/rules uid prev-sib-order)
+        prev-sib        (db/get-block prev-sib)]
     (cond
       (and (:node/title parent) (zero? order)) nil
-      children (let [retract-block  [:db/retractEntity [:block/uid uid]]
-                     retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
-                     new-prev-block {:db/id          [:block/uid prev-block-uid-]
-                                     :block/string   (str (:block/string prev-block) value)
-                                     :block/children children}
-                     new-parent     {:db/id (:db/id parent) :block/children reindex}
-                     tx-data        (conj retracts retract-block new-prev-block new-parent)]
-                 {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
-                                   {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})
+      (and children (not-empty (:block/children prev-sib))) nil
+      (and children (= parent prev-block)) nil
       :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
-                  new-prev-block {:db/id        [:block/uid prev-block-uid-]
-                                  :block/string (str (:block/string prev-block) value)}
+                  retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+                  new-prev-block {:db/id          [:block/uid prev-block-uid-]
+                                  :block/string   (str (:block/string prev-block) value)
+                                  :block/children (or children [])}
                   new-parent     {:db/id (:db/id parent) :block/children reindex}
-                  tx-data        [retract-block new-prev-block new-parent]]
+                  tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
                                 {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]}))))
+
 
 
 (reg-event-fx
@@ -625,7 +628,7 @@
         block-zero? (zero? (:block/order block))]
     (when-not block-zero?
       (let [parent        (db/get-parent [:block/uid uid])
-            older-sib     (db/get-older-sib block parent)
+            older-sib     (db/get-older-sib uid)
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       (dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
@@ -655,7 +658,7 @@
         block-zero?  (-> first-block :block/order zero?)]
     (when (and same-parent? (not block-zero?))
       (let [parent        (db/get-parent [:block/uid (first uids)])
-            older-sib     (db/get-older-sib first-block parent)
+            older-sib     (db/get-older-sib (first uids))
             n-sib         (count (:block/children older-sib))
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                        blocks)

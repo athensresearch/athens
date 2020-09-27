@@ -200,7 +200,11 @@
      [(+ ?o ?x) ?new-o]]
     [(minus-after ?p ?at ?ch ?new-o ?x)
      (after ?p ?at ?ch ?o)
-     [(- ?o ?x) ?new-o]]])
+     [(- ?o ?x) ?new-o]]
+    [(siblings ?uid ?sib-e)
+     [?e :block/uid ?uid]
+     [?p :block/children ?e]
+     [?p :block/children ?sib-e]]])
 
 
 (defn inc-after
@@ -303,15 +307,19 @@
 
 
 (defn get-older-sib
-  "Given a block and a parent, find the older sibling.
-  Rfct: can be rewritten with just `block` parameter, and could use a check if it is oldest sibling (block zero)."
-  [block parent]
-  (->> parent
-       :block/children
-       (filter #(= (dec (:block/order block)) (:block/order %)))
-       first
-       :db/id
-       get-block))
+  [uid]
+  (let [sib-uid   (d/q '[:find ?uid .
+                         :in $ % ?target-uid
+                         :where
+                         (siblings ?target-uid ?sib)
+                         [?target-e :block/uid ?target-uid]
+                         [?target-e :block/order ?target-o]
+                         [(dec ?target-o) ?prev-sib-order]
+                         [?sib :block/order ?prev-sib-order]
+                         [?sib :block/uid ?uid]]
+                       @dsdb rules uid)
+        older-sib (get-block [:block/uid sib-uid])]
+    older-sib))
 
 
 (defn same-parent?
