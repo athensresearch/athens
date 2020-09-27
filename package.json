@@ -1,21 +1,28 @@
 {
   "name": "athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "description": "Open-Source Networked Thought",
   "main": "resources/main.js",
   "build": {
+    "appId": "com.athensresearch.athens",
     "generateUpdatesFilesForAllChannels": true,
+    "afterSign": "electron-builder-notarize",
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
     "linux": {
       "target": [
         "AppImage"
       ]
     },
-    "publish": {
-      "provider": "s3",
-      "bucket": "athens-apps",
-      "region": "us-east-2"
-    }
+    "publish": "github"
   },
   "scripts": {
     "dev": "shadow-cljs watch main renderer",
@@ -26,6 +33,7 @@
   "devDependencies": {
     "electron": "^9.2.0",
     "electron-builder": "22.8.1",
+    "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
     "karma": "^4.4.1",
     "karma-chrome-launcher": "^3.1.0",
