@@ -189,12 +189,27 @@
      [?p :block/children ?ch]
      [?ch :block/order ?o]
      [(> ?o ?at)]]
+    [(before ?p ?at ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(< ?o ?at)]]
+    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?lower-bound)]
+     [(< ?o ?upper-bound)]]
     [(inc-after ?p ?at ?ch ?new-o)
      (after ?p ?at ?ch ?o)
      [(inc ?o) ?new-o]]
     [(dec-after ?p ?at ?ch ?new-o)
      (after ?p ?at ?ch ?o)
      [(dec ?o) ?new-o]]
+    [(dec-before ?p ?at ?ch ?new-o)
+     (before ?p ?at ?ch ?o)
+     [(dec ?o) ?new-o]]
+    [(plus-before ?p ?at ?ch ?new-o ?x)
+     (before ?p ?at ?ch ?o)
+     [(+ ?o ?x) ?new-o]]
     [(plus-after ?p ?at ?ch ?new-o ?x)
      (after ?p ?at ?ch ?o)
      [(+ ?o ?x) ?new-o]]
@@ -225,6 +240,24 @@
             @dsdb rules eid order)))
 
 
+(defn dec-before
+  [eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at
+              :where (dec-before ?p ?at ?ch ?new-o)]
+            @dsdb rules eid order)))
+
+
+(defn plus-before
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-before ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
 (defn plus-after
   [eid order x]
   (->> (d/q '[:find ?ch ?new-o
@@ -241,6 +274,35 @@
               :in $ % ?p ?at ?x
               :where (minus-after ?p ?at ?ch ?new-o ?x)]
             @dsdb rules eid order x)))
+
+
+(defn minus-before
+  [eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-before ?p ?at ?ch ?new-o ?x)]
+            @dsdb rules eid order x)))
+
+
+(defn not-contains?
+  [coll v]
+  (not (contains? coll v)))
+
+
+(defn last-child?
+  [uid]
+  (->> (d/q '[:find ?sib-uid ?sib-o
+              :in $ % ?uid
+              :where
+              (siblings ?uid ?sib)
+              [?sib :block/uid ?sib-uid]
+              [?sib :block/order ?sib-o]]
+            @dsdb rules uid)
+       (sort-by second)
+       last
+       first
+       (= uid)))
 
 
 (defn sort-block-children
@@ -304,6 +366,17 @@
       first
       :db/id
       get-block))
+
+
+(defn get-children
+  [parent-eid]
+  (->> (d/q '[:find [?uid ...]
+              :in $ ?parent-eid
+              :where
+              [?parent-eid :block/children ?ch]
+              [?ch :block/uid ?uid]]
+            @dsdb parent-eid)
+       set))
 
 
 (defn get-older-sib

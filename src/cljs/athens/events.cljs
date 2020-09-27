@@ -1,6 +1,6 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
+    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after dec-before plus-before minus-before]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -748,13 +748,22 @@
 (defn drop-child
   "Order will always be 0"
   [source source-parent target]
-  (let [new-source-block {:block/uid (:block/uid source) :block/order 0}
+  (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
         reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:dbid target) (dec 0))
-                                   (concat [new-source-block]))]
-    [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target) :block/children reindex-target-parent}]))
+        reindex-target-parent (inc-after (:db/id target) -1)
+        retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
+        tx-data               [retract
+                               new-source-parent
+                               new-target-parent]]
+    tx-data))
+
+
+(reg-event-fx
+  :drop/child
+  (fn [_ [_ source source-parent target]]
+    {:dispatch [:transact (drop-child source source-parent target)]}))
 
 
 (defn between
@@ -766,86 +775,290 @@
 
 
 (defn drop-above-same-parent
-  "Give source block target block's order
+  "Give source-block target-block's order.
   When source is below target, increment block orders between source and target-1
   When source is above target, decrement block order between them.
   No effect if block/orders wouldn't change: :above and s-order == t-order - 1"
-  [source target parent]
-  (let [s-order (:block/order source)
-        t-order (:block/order target)
-        no-effect? (= s-order (dec t-order))]
-    (when-not no-effect?
-      (let [new-source-block {:db/id (:db/id source) :block/order t-order}
-            inc-or-dec       (if (> s-order t-order) inc dec)
-            reindex          (->> (d/q '[:find ?ch ?new-order
-                                         :keys db/id block/order
-                                         :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
-                                         :where
-                                         [?parent :block/children ?ch]
-                                         [?ch :block/order ?order]
-                                         [(?between ?s-order ?t-order ?order)]
-                                         [(?inc-or-dec ?order) ?new-order]]
-                                       @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
-                                  (concat [new-source-block]))]
-        [{:db/id (:db/id parent) :block/children reindex}]))))
+  [source parent target]
+  (let [s-order             (:block/order source)
+        t-order             (:block/order target)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        lower-bound         (if target-above? (dec t-order) s-order)
+        upper-bound         (if target-above? s-order t-order)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order 1) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
+        new-source-block    {:db/id (:db/id source) :block/order (if target-above? t-order (dec t-order))}
+        new-parent-children (concat [new-source-block] reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
 
 
-(defn drop-above-diff-parent
-  [source target source-parent target-parent]
-  (let [new-block             {:db/id (:db/id source) :block/order (:block/order target)}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
-                                   (concat [new-block]))]
-    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]))
+(reg-event-fx
+  :drop/above-same
+  (fn [_ [_ source parent target]]
+    {:dispatch [:transact (drop-above-same-parent source parent target)]}))
 
 
 (defn drop-below-same-parent
-  "Source block's new order is target block's order.
-  No effect if block/orders wouldn't change: :below and t-order == s-order - 1"
   [source parent target]
-  (let [s-order (:block/order source)
-        t-order (:block/order target)
-        no-effect? (= (dec s-order) t-order)]
-    (when-not no-effect?
-      (let [new-source-block {:db/id (:db/id source) :block/order t-order}
-            reindex (dec-after (:db/id parent) s-order)]
-        (concat [new-source-block] reindex)))))
+  (let [s-order             (:block/order source)
+        t-order             (:block/order target)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        lower-bound         (if target-above? t-order s-order)
+        upper-bound         (if target-above? s-order (inc t-order))
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order 1) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
+        new-source-block    {:db/id (:db/id source) :block/order (if target-above? (inc t-order) t-order)}
+        new-parent-children (concat [new-source-block] reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
 
 
-(defn drop-below-diff-parent
-  "source block's new order is target-order + 1"
-  [source source-parent target target-parent]
-  (let [new-source-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
-        reindex-source-parent   (dec-after (:db/id source-parent) (:block/order source))]
-    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target-parent) :block/children [new-source-block]}]))
+(reg-event-fx
+  :drop/below-same
+  (fn [_ [_ source parent target]]
+    {:dispatch [:transact (drop-below-same-parent source parent target)]}))
 
 
-;; TODO: don't transact when we know TXes won't change anything
+(defn drop-diff-parent
+  "- Give source-block target-block's order.
+  - inc-after target
+  - dec-after source"
+  [kind source source-parent target target-parent]
+  (let [t-order               (:block/order target)
+        new-block             {:db/id (:db/id source) :block/order (if (= kind :above)
+                                                                     t-order
+                                                                     (inc t-order))}
+        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
+        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
+                                                                       (dec t-order)
+                                                                       t-order))
+                                   (concat [new-block]))
+        retract               [:db/retract (:db/id source-parent) :block/children (:db/id source)]
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
+    [retract
+     new-source-parent
+     new-target-parent]))
+
+
+(reg-event-fx
+  :drop/diff
+  (fn [_ [_ kind source source-parent target target-parent]]
+    {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
+
+
 (defn drop-bullet
   [source-uid target-uid kind]
   (let [source        (db/get-block [:block/uid source-uid])
         target        (db/get-block [:block/uid target-uid])
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
-        same-parent? (= source-parent target-parent)]
-    {:fx [[:dispatch
-           [:transact
-            (cond
-              (= kind :child) (drop-child source source-parent target)
-              (and (= kind :below) same-parent?) (drop-below-same-parent source source-parent target)
-              (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
-              (and (= kind :above) same-parent?) (drop-above-same-parent source target source-parent)
-              (and (= kind :above) (not same-parent?)) (drop-above-diff-parent source target source-parent target-parent))]]]}))
+        same-parent?  (= source-parent target-parent)
+        above? (= kind :above)
+        below? (= kind :below)]
+    {:dispatch (cond
+                 (= kind :child) [:drop/child source source-parent target]
+                 (and same-parent? below?) [:drop/below-same source source-parent target]
+                 (and same-parent? above?) [:drop/above-same source source-parent target]
+                 (and (not same-parent?) (or below? above?)) [:drop/diff kind source source-parent target target-parent])}))
 
 
 (reg-event-fx
   :drop-bullet
-  (fn-traced [_ [_ source-uid target-uid kind]]
-             (drop-bullet source-uid target-uid kind)))
+  (fn [_ [_ source-uid target-uid kind]]
+    (drop-bullet source-uid target-uid kind)))
+
+
+(defn drop-multi-above-same-parent-all
+  [source-uids parent target]
+  (let [source-blocks       (map #(db/get-block [:block/uid %]) source-uids)
+        source              (first source-blocks)
+        last-source         (last source-blocks)
+        s-order             (:block/order source)
+        t-order             (:block/order target)
+        last-s-order        (:block/order last-source)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        lower-bound         (if target-above? (dec t-order) last-s-order)
+        upper-bound         (if target-above? s-order t-order)
+        n                   (count source-uids)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order ?n) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
+        new-source-blocks   (if target-above?
+                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx t-order)})
+                                           source-blocks)
+                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (dec (- t-order idx))})
+                                           (reverse source-blocks)))
+        new-parent-children (concat new-source-blocks reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+     tx-data))
+
+
+(defn drop-multi-below-same-parent-all
+  [source-uids parent target]
+  (let [source-blocks       (map #(db/get-block [:block/uid %]) source-uids)
+        source              (first source-blocks)
+        last-source         (last source-blocks)
+        s-order             (:block/order source)
+        t-order             (:block/order target)
+        last-s-order        (:block/order last-source)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        lower-bound         (if target-above? t-order last-s-order)
+        upper-bound         (if target-above? s-order (inc t-order))
+        n                   (count source-uids)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order ?n) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
+        new-source-blocks   (if target-above?
+                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (inc (+ idx t-order))})
+                                           source-blocks)
+                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (- t-order idx)})
+                                           (reverse source-blocks)))
+        new-parent-children (concat new-source-blocks reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
+
+
+(defn drop-multi-diff-parent
+  [kind source-uids source-parent target target-parent]
+  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
+        last-source           (last source-blocks)
+        last-s-order          (:block/order last-source)
+        t-order               (:block/order target)
+        n                     (count source-uids)
+        new-source-blocks     (map-indexed (fn [idx x] (let [new-order (if (= kind :above)
+                                                                         (+ idx t-order)
+                                                                         (inc (+ idx t-order)))]
+                                                         {:db/id (:db/id x) :block/order new-order}))
+                                           source-blocks)
+        reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
+        bound                 (if (= kind :above) (dec t-order) t-order)
+        reindex-target-parent (->> (plus-after (:db/id target-parent) bound n)
+                                   (concat new-source-blocks))
+        retracts              (map (fn [x] [:db/retract (:db/id source-parent) :block/children [:block/uid x]])
+                                   source-uids)
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}
+        tx-data               (conj retracts new-source-parent new-target-parent)]
+    tx-data))
+
+(defn drop-multi-diff-source-parents
+  "Only reindex after last target. plus-after"
+  [kind source-uids target target-parent]
+  (let [filtered-children          (->> (d/q '[:find ?children-uid ?o
+                                               :keys block/uid block/order
+                                               :in $ % ?target-uid ?not-contains? ?source-uids
+                                               :where
+                                               (siblings ?target-uid ?children-e)
+                                               [?children-e :block/uid ?children-uid]
+                                               [(?not-contains? ?source-uids ?children-uid)]
+                                               [?children-e :block/order ?o]]
+                                             @db/dsdb db/rules (:block/uid target) db/not-contains? (set source-uids))
+                                        (sort-by :block/order)
+                                        (mapv #(:block/uid %)))
+        t-order                    (:block/order target)
+        index                      (cond
+                                     (= kind :above) t-order
+                                     (and (= kind :below) (db/last-child? (:block/uid target))) t-order
+                                     (= kind :below) (inc t-order))
+        n                          (count filtered-children)
+        head                       (subvec filtered-children 0 index)
+        tail                       (subvec filtered-children index n)
+        new-vec                    (concat head source-uids tail)
+        new-source-uids            (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        source-blocks              (mapv #(db/get-block [:block/uid %]) source-uids)
+        last-s-parent              (last source-parents)
+        last-s-order               (:block/order (last source-blocks))
+        n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
+        reindex-last-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
+                                         source-uids
+                                         source-parents)
+        new-target-parent          {:db/id (:db/id target-parent) :block/children new-source-uids}
+        ;; need to reindex last-source-parent but requires more index management depending on the level of the target parent
+        new-source-parent          {:db/id (:db/id last-s-parent) :block/children reindex-last-source-parent}
+        tx-data                    (conj retracts new-target-parent #_new-source-parent)]
+    (identity new-source-parent)
+    tx-data))
+
+(defn drop-multi-child
+  [source-uids target]
+  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
+        source-parents        (mapv #(db/get-parent [:block/uid %]) source-uids)
+        last-source           (last source-blocks)
+        last-s-order          (:block/order last-source)
+        last-s-parent         (last source-parents)
+        new-source-blocks     (map-indexed (fn [idx x] {:block/uid (:block/uid x) :block/order idx})
+                                           source-blocks)
+        n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
+        reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        reindex-target-parent (plus-after (:db/id target) -1 n)
+        retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
+                                    source-uids
+                                    source-parents)
+        new-source-parent     {:db/id (:db/id last-s-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target) :block/children (concat reindex-target-parent new-source-blocks)}
+        tx-data               (conj retracts new-source-parent new-target-parent)]
+    tx-data))
+
+
+(defn drop-bullet-multi
+  "Cases:
+  - the same 4 cases from drop-bullet
+  - but also if blocks span across multiple parent levels"
+  [source-uids target-uid kind]
+  (let [same-parent-all?    (db/same-parent? (conj source-uids target-uid))
+        same-parent-source? (db/same-parent? source-uids)
+        diff-parents-source? (not same-parent-source?)
+        target              (db/get-block [:block/uid target-uid])
+        first-source-uid    (first source-uids)
+        first-source-parent (db/get-parent [:block/uid first-source-uid])
+        target-parent       (db/get-parent [:block/uid target-uid])]
+    {:fx [[:dispatch [:selected/clear-items]]
+          [:dispatch
+           [:transact
+            (cond
+              (= kind :child) (drop-multi-child source-uids target)
+              (and (= kind :above) same-parent-all?) (drop-multi-above-same-parent-all source-uids first-source-parent target)
+              (and (= kind :below) same-parent-all?) (drop-multi-below-same-parent-all source-uids first-source-parent target)
+              (and (or (= kind :above) (= kind :below)) diff-parents-source?) (drop-multi-diff-source-parents kind source-uids target target-parent)
+              (and (or (= kind :above) (= kind :below)) same-parent-source?) (drop-multi-diff-parent kind source-uids first-source-parent target target-parent))]]]}))
+
+
+(reg-event-fx
+  :drop-bullet/multi
+  (fn [_ [_ uids target-uid kind]]
+    (drop-bullet-multi uids target-uid kind)))
+
 
 
 ;; TODO: convert to tree instead of flat map (handling indentation), write tests for markdown list parsing

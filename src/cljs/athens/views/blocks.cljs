@@ -140,6 +140,9 @@
                                    :color (color :body-text-color)}]]})
 
 
+(stylefy/class "bullet" bullet-style)
+
+
 (stylefy/keyframes "drop-area-appear"
                    [:from
                     {:opacity "0"}]
@@ -666,7 +669,7 @@
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        [parse-and-render local uid]
-       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
+       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:color "green" :opacity 1})))]])))
 
 
 (defn bullet-mouse-out
@@ -714,16 +717,15 @@
   [_ _]
   (fn [block state]
     (let [{:block/keys [uid children open]} block]
-      [:span (use-style bullet-style
-                        {:class           [(when (and (seq children) (not open))
-                                             "closed-with-children")]
-                         :draggable       true
-                         :on-click        (fn [e] (navigate-uid uid e))
-                         :on-context-menu (fn [e] (bullet-context-menu e uid state))
-                         :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
-                         :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
-                         :on-drag-start   (fn [e] (bullet-drag-start e uid state))
-                         :on-drag-end     (fn [e] (bullet-drag-end e uid state))})])))
+      [:span {:class           ["bullet" (when (and (seq children) (not open))
+                                           "closed-with-children")]
+              :draggable       true
+              :on-click        (fn [e] (navigate-uid uid e))
+              :on-context-menu (fn [e] (bullet-context-menu e uid state))
+              :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+              :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+              :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+              :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
 
 
 (defn copy-refs-click
@@ -787,17 +789,19 @@
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
-  (let [{:block/keys [children]} block
+  (let [{:block/keys [children uid open]} block
         closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]}     (mouse-offset e closest-container)
+        {:keys [x y]} (mouse-offset e closest-container)
         middle-y          (vertical-center closest-container)
         dragging-ancestor (.. e -target (closest ".dragging"))
-        not-dragging?     (nil? dragging-ancestor)
-        target            (when not-dragging?
-                            (cond
-                              (or (neg? y) (< y middle-y)) :above
-                              (and (empty? children) (< 50 x)) :child
-                              (< middle-y y) :below))]
+        dragging?         dragging-ancestor
+        is-selected?      @(subscribe [:selected/is-selected uid])
+        target            (cond
+                            dragging? nil
+                            is-selected? nil
+                            (or (neg? y) (< y middle-y)) :above
+                            (or (not open) (and (empty? children) (< 50 x))) :child
+                            (< middle-y y) :below)]
     (when target
       (swap! state assoc :drag-target target))))
 
@@ -812,9 +816,12 @@
         effect-allowed (.. e -dataTransfer -effectAllowed)
         valid-drop (and (not (nil? drag-target))
                         (not= source-uid target-uid)
-                        (= effect-allowed "move"))]
+                        (= effect-allowed "move"))
+        selected-items @(subscribe [:selected/items])]
     (when valid-drop
-      (dispatch [:drop-bullet source-uid target-uid drag-target]))
+      (if (empty? selected-items)
+        (dispatch [:drop-bullet source-uid target-uid drag-target])
+        (dispatch [:drop-bullet/multi selected-items target-uid drag-target])))
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 
@@ -865,15 +872,15 @@
           (swap! state assoc :string/previous string :string/local string))
 
         [:div
-         {:class          ["block-container"
-                           (when dragging "dragging")
-                           (when is-editing "is-editing")
-                           (when is-selected "is-selected")
-                           (when (and (seq children) open) "show-tree-indicator")]
-          :data-uid       uid
-          :on-drag-over   (fn [e] (block-drag-over e block state))
-          :on-drag-leave  (fn [e] (block-drag-leave e block state))
-          :on-drop        (fn [e] (block-drop e block state))}
+         {:class         ["block-container"
+                          (when (and dragging (not is-selected)) "dragging")
+                          (when is-editing "is-editing")
+                          (when is-selected "is-selected")
+                          (when (and (seq children) open) "show-tree-indicator")]
+          :data-uid      uid
+          :on-drag-over  (fn [e] (block-drag-over e block state))
+          :on-drag-leave (fn [e] (block-drag-leave e block state))
+          :on-drop       (fn [e] (block-drop e block state))}
 
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
@@ -900,7 +907,7 @@
              [:div {:key (:db/id child)}
               [block-el child]]))
 
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:color "red" :opacity "1"})))]]))))
 
 
 (defn block-component

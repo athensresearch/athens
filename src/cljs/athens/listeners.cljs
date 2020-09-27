@@ -61,10 +61,15 @@
         closest-block (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header (.. e -target (closest ".page-header"))
+        closest-bullet (.. e -target (closest ".bullet"))
         closest (or closest-block closest-block-header closest-page-header)]
-    (when selected-items?
+    (when selected-items?)
+    (when (and selected-items?
+               (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
-    (when (and (nil? closest) editing-uid selected-items?)
+    (when (and (nil? closest)
+               editing-uid
+               selected-items?)
       (dispatch [:editing/uid nil]))))
 
 
