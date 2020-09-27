@@ -495,21 +495,26 @@
 
 (defn split-block
   [uid val index]
-  (let [parent (db/get-parent [:block/uid uid])
-        block (db/get-block [:block/uid uid])
-        head (subs val 0 index)
-        tail (subs val index)
-        new-uid (gen-block-uid)
-        new-block {:db/id        -1
-                   :block/order  (inc (:block/order block))
-                   :block/uid    new-uid
-                   :block/open   true
-                   :block/string tail}
-        reindex (->> (inc-after (:db/id parent) (:block/order block))
-                     (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
-                                 {:db/id (:db/id parent)
-                                  :block/children reindex}]]]
+  (let [parent     (db/get-parent [:block/uid uid])
+        block      (db/get-block [:block/uid uid])
+        {:block/keys [order children]} block
+        head       (subs val 0 index)
+        tail       (subs val index)
+        new-uid    (gen-block-uid)
+        retracts   (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)])
+                         children)
+        new-block  {:db/id          -1
+                    :block/order    (inc order)
+                    :block/uid      new-uid
+                    :block/open     true
+                    :block/children children
+                    :block/string   tail}
+        reindex    (->> (inc-after (:db/id parent) order)
+                        (concat [new-block]))
+        new-block  {:db/id (:db/id block) :block/string head}
+        new-parent {:db/id (:db/id parent) :block/children reindex}
+        tx-data    (conj retracts new-block new-parent)]
+    {:fx [[:dispatch [:transact tx-data]]
           [:dispatch [:editing/uid new-uid]]]}))
 
 
