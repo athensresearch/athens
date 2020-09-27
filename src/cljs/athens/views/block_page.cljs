@@ -5,7 +5,6 @@
     [athens.keybindings :refer [destruct-key-down]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.blocks :refer [block-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -73,18 +72,12 @@
 
 ;;; Components
 
+
 (defn handle-enter
-  [e uid _]
-  (let [new-uid (gen-block-uid)
-        now (now-ts)]
+  [e uid _state]
+  (let [{:keys [start value]} (athens.keybindings/destruct-event e)]
     (.. e preventDefault)
-    (dispatch [:transact [{:block/uid      uid
-                           :edit/time      now
-                           :block/children [{:block/order  0
-                                             :block/uid    new-uid
-                                             :block/open   true
-                                             :block/string ""}]}]])
-    (dispatch [:editing/uid new-uid])))
+    (dispatch [:split-block-to-children uid value start])))
 
 
 (defn block-page-key-down
