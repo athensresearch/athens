@@ -189,6 +189,11 @@
      [?p :block/children ?ch]
      [?ch :block/order ?o]
      [(> ?o ?at)]]
+    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?lower-bound)]
+     [(< ?o ?upper-bound)]]
     [(inc-after ?p ?at ?ch ?new-o)
      (after ?p ?at ?ch ?o)
      [(inc ?o) ?new-o]]
@@ -241,6 +246,26 @@
               :in $ % ?p ?at ?x
               :where (minus-after ?p ?at ?ch ?new-o ?x)]
             @dsdb rules eid order x)))
+
+
+(defn not-contains?
+  [coll v]
+  (not (contains? coll v)))
+
+
+(defn last-child?
+  [uid]
+  (->> (d/q '[:find ?sib-uid ?sib-o
+              :in $ % ?uid
+              :where
+              (siblings ?uid ?sib)
+              [?sib :block/uid ?sib-uid]
+              [?sib :block/order ?sib-o]]
+            @dsdb rules uid)
+       (sort-by second)
+       last
+       first
+       (= uid)))
 
 
 (defn sort-block-children
