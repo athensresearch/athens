@@ -1049,31 +1049,87 @@
 
 
 
-;; TODO: convert to tree instead of flat map (handling indentation), write tests for markdown list parsing
+;;algorithm:
+;;- map over each line
+;;- sanitize: trim * -
+;;- make tuples with whitespace count
+;;- convert the tuple value to expected depth
+;;
+;;two options for each line:
+
+(defn text-to-blocks
+  [text uid]
+  (let [lines    (clojure.string/split-lines text)
+        counts   (->> lines
+                      (map #(re-find #"\s*(-|\*)?" %))
+                      (map #(-> % first count)))
+        sanitize (map (fn [x] (clojure.string/replace x #"\s*(-|\*)?\s*" ""))
+                      lines)
+        blocks   (map-indexed (fn [idx x]
+                                {:db/id (dec (* -1 idx))
+                                 :block/string x
+                                 :block/open true
+                                 :block/uid (gen-block-uid)}) sanitize)
+        n        (count blocks)
+        parents  (loop [i   1
+                        res [(first blocks)]]
+                   (if (= n i)
+                     res
+                     (recur (inc i)
+                            (loop [j (dec i)]
+                              (if (neg? j)
+                                (conj res (nth blocks i))
+                                (let [curr-count (nth counts i)
+                                      prev-count (nth counts j nil)]
+                                  (if (< prev-count curr-count)
+                                    (conj res {:db/id (:db/id (nth blocks j)) :block/children (nth blocks i)})
+                                    (recur (dec j)))))))))
+        tx-data (->> (group-by :db/id parents)
+                     (mapcat (fn [[_tempid blocks]]
+                               (loop [order 0
+                                      res   []
+                                      data  blocks]
+                                 (let [block (first data)
+                                       {:block/keys [children]} block]
+                                   (cond
+                                     (nil? block) res
+                                     (nil? children) (recur order
+                                                            (conj res {:db/id [:block/uid uid] :block/children (assoc block :block/order 0)})
+                                                            (next data))
+                                     :else (recur (inc order)
+                                                  (conj res (assoc-in block [:block/children :block/order] order))
+                                                  (next data))))))))]
+
+    tx-data))
+
+
+"TODO: If at end of a parent block, prepend children with new datoms.
+If in an empty block, make empty block the root
+Otherwise append after current block. "
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
-    (let [lines (clojure.string/split-lines text)
-          block (db/get-block [:block/uid uid])
-          {b-order :block/order} block
-          parent (db/get-parent [:block/uid uid])
-          {p-id :db/id} parent
-          now (now-ts)
-          new-datoms (map-indexed (fn [i x]
-                                    (let [start (subs x 0 2)
-                                          s (if (or (= start "- ")
-                                                    (= start "* "))
-                                              (subs x 2)
-                                              x)]
-                                      {:block/uid    (gen-block-uid)
-                                       :create/time  now
-                                       :edit/time    now
-                                       :block/order  (+ 1 i b-order)
-                                       :block/string s}))
-                                  lines)
-          reindex (plus-after p-id b-order (count lines))
-          children (concat new-datoms reindex)]
-      {:dispatch [:transact [{:db/id p-id :block/children children}]]})))
+    (let [block      (db/get-block [:block/uid uid])
+          start-idx  (inc (:block/order block))
+          parent     (db/get-parent [:block/uid uid])
+          blocks     (text-to-blocks text (:block/uid parent))
+          n          (count (filter (fn [x] (vector? (:db/id x))) blocks))
+          reindex    (plus-after (:db/id parent) (:block/order block) n)
+          new-blocks (loop [idx  0
+                            res  []
+                            data blocks]
+                       (if (= idx n)
+                         res
+                         (let [block (first data)]
+                           (if (vector? (:db/id block))
+                             (recur (inc idx)
+                                    (conj res (assoc-in block [:block/children :block/order] (+ start-idx idx)))
+                                    (next data))
+                             (recur idx
+                                    (conj res block)
+                                    (next data))))))
+          tx-data (concat reindex new-blocks)]
+      {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above
