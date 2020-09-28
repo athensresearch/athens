@@ -820,8 +820,8 @@
         selected-items @(subscribe [:selected/items])]
     (when valid-drop
       (if (empty? selected-items)
-        (dispatch [:drop-bullet source-uid target-uid drag-target])
-        (dispatch [:drop-bullet/multi selected-items target-uid drag-target])))
+        (dispatch [:drop source-uid target-uid drag-target])
+        (dispatch [:drop-multi selected-items target-uid drag-target])))
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 

@@ -357,8 +357,9 @@
 (reg-event-fx
   :transact
   (fn [_ [_ datoms]]
-    {:fx [[:dispatch [:db/not-synced]]
-          [:transact! datoms]]}))
+    (let [synced? @(subscribe [:db/synced])]
+      {:fx [(when synced? [:dispatch [:db/not-synced]])
+            [:transact! datoms]]})))
 
 
 (reg-event-fx
@@ -869,33 +870,42 @@
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
         same-parent?  (= source-parent target-parent)
-        above? (= kind :above)
-        below? (= kind :below)]
-    {:dispatch (cond
-                 (= kind :child) [:drop/child source source-parent target]
-                 (and same-parent? below?) [:drop/below-same source source-parent target]
-                 (and same-parent? above?) [:drop/above-same source source-parent target]
-                 (and (not same-parent?) (or below? above?)) [:drop/diff kind source source-parent target target-parent])}))
+        above?        (= kind :above)
+        below?        (= kind :below)
+        event         (cond
+                        (= kind :child) [:drop/child source source-parent target]
+                        (and same-parent? below?) [:drop/below-same source source-parent target]
+                        (and same-parent? above?) [:drop/above-same source source-parent target]
+                        (and (not same-parent?) (or below? above?)) [:drop/diff kind source source-parent target target-parent])]
+    {:dispatch event}))
 
 
 (reg-event-fx
-  :drop-bullet
+  :drop
   (fn [_ [_ source-uid target-uid kind]]
     (drop-bullet source-uid target-uid kind)))
 
 
-(defn drop-multi-above-same-parent-all
-  [source-uids parent target]
-  (let [source-blocks       (map #(db/get-block [:block/uid %]) source-uids)
-        source              (first source-blocks)
-        last-source         (last source-blocks)
-        s-order             (:block/order source)
+(defn drop-multi-same-parent-all
+  [kind source-uids parent target]
+  (let [source-blocks       (mapv #(db/get-block [:block/uid %]) source-uids)
+        f-source            (first source-blocks)
+        l-source            (last source-blocks)
+        f-s-order           (:block/order f-source)
+        l-s-order           (:block/order l-source)
         t-order             (:block/order target)
-        last-s-order        (:block/order last-source)
-        target-above?       (< t-order s-order)
+        target-above?       (< t-order f-s-order)
         +or-                (if target-above? + -)
-        lower-bound         (if target-above? (dec t-order) last-s-order)
-        upper-bound         (if target-above? s-order t-order)
+        above?              (= kind :above)
+        below?              (= kind :below)
+        lower-bound         (cond
+                              (and above? target-above?) (dec t-order)
+                              (and below? target-above?) t-order
+                              :else l-s-order)
+        upper-bound         (cond
+                              (and above? (not target-above?)) t-order
+                              (and below? (not target-above?)) (inc t-order)
+                              :else f-s-order)
         n                   (count source-uids)
         reindex             (d/q '[:find ?ch ?new-order
                                    :keys db/id block/order
@@ -905,9 +915,15 @@
                                    [(?+or- ?order ?n) ?new-order]]
                                  @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
         new-source-blocks   (if target-above?
-                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx t-order)})
+                              (map-indexed (fn [idx x]
+                                             (let [new-order (cond-> (+ idx t-order) below? inc)]
+                                               {:db/id       (:db/id x)
+                                                :block/order new-order}))
                                            source-blocks)
-                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (dec (- t-order idx))})
+                              (map-indexed (fn [idx x]
+                                             (let [new-order (cond-> (- t-order idx) above? dec)]
+                                               {:db/id       (:db/id x)
+                                                :block/order new-order}))
                                            (reverse source-blocks)))
         new-parent-children (concat new-source-blocks reindex)
         new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
@@ -915,38 +931,7 @@
     tx-data))
 
 
-(defn drop-multi-below-same-parent-all
-  [source-uids parent target]
-  (let [source-blocks       (map #(db/get-block [:block/uid %]) source-uids)
-        source              (first source-blocks)
-        last-source         (last source-blocks)
-        s-order             (:block/order source)
-        t-order             (:block/order target)
-        last-s-order        (:block/order last-source)
-        target-above?       (< t-order s-order)
-        +or-                (if target-above? + -)
-        lower-bound         (if target-above? t-order last-s-order)
-        upper-bound         (if target-above? s-order (inc t-order))
-        n                   (count source-uids)
-        reindex             (d/q '[:find ?ch ?new-order
-                                   :keys db/id block/order
-                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
-                                   :where
-                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-                                   [(?+or- ?order ?n) ?new-order]]
-                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
-        new-source-blocks   (if target-above?
-                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (inc (+ idx t-order))})
-                                           source-blocks)
-                              (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (- t-order idx)})
-                                           (reverse source-blocks)))
-        new-parent-children (concat new-source-blocks reindex)
-        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
-        tx-data             [new-parent]]
-    tx-data))
-
-
-(defn drop-multi-diff-parent
+(defn drop-multi-same-source-parents
   [kind source-uids source-parent target target-parent]
   (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
         last-source           (last source-blocks)
@@ -1034,31 +1019,53 @@
     tx-data))
 
 
+(reg-event-fx
+  :drop-multi/child
+  (fn [_ [_ source-uid target]]
+    {:dispatch [:transact (drop-multi-child source-uid target)]}))
+
+
+(reg-event-fx
+  :drop-multi/same-all
+  (fn [_ [_ kind source-uids parent target]]
+    {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
+
+
+(reg-event-fx
+  :drop-multi/diff-source
+  (fn [_ [_ kind source-uids target target-parent]]
+    {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
+
+
+(reg-event-fx
+  :drop-multi/same-source
+  (fn [_ [_ kind source-uids first-source-parent target target-parent]]
+    {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
+
+
 (defn drop-bullet-multi
   "Cases:
   - the same 4 cases from drop-bullet
   - but also if blocks span across multiple parent levels"
   [source-uids target-uid kind]
-  (let [same-parent-all?    (db/same-parent? (conj source-uids target-uid))
-        same-parent-source? (db/same-parent? source-uids)
+  (let [same-parent-all?     (db/same-parent? (conj source-uids target-uid))
+        same-parent-source?  (db/same-parent? source-uids)
         diff-parents-source? (not same-parent-source?)
-        target              (db/get-block [:block/uid target-uid])
-        first-source-uid    (first source-uids)
-        first-source-parent (db/get-parent [:block/uid first-source-uid])
-        target-parent       (db/get-parent [:block/uid target-uid])]
+        target               (db/get-block [:block/uid target-uid])
+        first-source-uid     (first source-uids)
+        first-source-parent  (db/get-parent [:block/uid first-source-uid])
+        target-parent        (db/get-parent [:block/uid target-uid])
+        event                (cond
+                               (= kind :child) [:drop-multi/child source-uids target]
+                               (and same-parent-all?) [:drop-multi/same-all kind source-uids first-source-parent target]
+                               (and diff-parents-source?) [:drop-multi/diff-source kind source-uids target target-parent]
+                               (and same-parent-source?) [:drop-multi/same-source kind source-uids first-source-parent target target-parent])]
     {:fx [[:dispatch [:selected/clear-items]]
-          [:dispatch
-           [:transact
-            (cond
-              (= kind :child) (drop-multi-child source-uids target)
-              (and (= kind :above) same-parent-all?) (drop-multi-above-same-parent-all source-uids first-source-parent target)
-              (and (= kind :below) same-parent-all?) (drop-multi-below-same-parent-all source-uids first-source-parent target)
-              (and (or (= kind :above) (= kind :below)) diff-parents-source?) (drop-multi-diff-source-parents kind source-uids target target-parent)
-              (and (or (= kind :above) (= kind :below)) same-parent-source?) (drop-multi-diff-parent kind source-uids first-source-parent target target-parent))]]]}))
+          [:dispatch event]]}))
 
 
 (reg-event-fx
-  :drop-bullet/multi
+  :drop-multi
   (fn [_ [_ uids target-uid kind]]
     (drop-bullet-multi uids target-uid kind)))
 
