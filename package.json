@@ -1,7 +1,7 @@
 {
   "name": "athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "description": "Open-Source Networked Thought",
   "main": "resources/main.js",
   "build": {
@@ -22,7 +22,11 @@
         "AppImage"
       ]
     },
-    "publish": "github"
+    "publish": {
+      "provider": "s3",
+      "bucket": "athens-apps",
+      "region": "us-east-2"
+    }
   },
   "scripts": {
     "dev": "shadow-cljs watch main renderer",
