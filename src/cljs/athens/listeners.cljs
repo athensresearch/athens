@@ -1,6 +1,6 @@
 (ns athens.listeners
   (:require
-    [athens.db :refer [dsdb]]
+    [athens.db :as db :refer [dsdb]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -107,34 +107,39 @@
 
 ;; -- Clipboard ----------------------------------------------------------
 
-;; TODO: once :selected/items is a nested tree instead of flat list, walk tree and add hyphens instead of mapping
-(defn to-markdown-list
-  [blocks]
-  (->> blocks
-       (map (fn [x] [:block/uid x]))
-       (d/pull-many @dsdb '[:block/string])
-       (map #(str "- " (:block/string %) "\n"))
-       (string/join "")))
+(defn walk-str
+  "Four spaces per depth level."
+  [depth node]
+  (let [{:block/keys [string children]} node
+        left-offset   (apply str (repeat depth "    "))
+        walk-children (apply str (map #(walk-str (inc depth) %) children))]
+    (str left-offset "- " string "\n" walk-children)))
 
 
 (defn copy
-  "If blocks are selected, copy blocks as markdown list."
+  "If blocks are selected, copy blocks as markdown list.
+  Use -event_ because goog events quirk "
   [^js e]
-  (let [blocks @(subscribe [:selected/items])]
-    (when (not-empty blocks)
-      (.. e preventDefault)
-      ;; Use -event_ because goog events quirk
-      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks))))))
+  (let [uids @(subscribe [:selected/items])]
+    (when (not-empty uids)
+      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                           (map #(walk-str 0 %))
+                           (apply str))]
+        (.. e preventDefault)
+        (.. e -event_ -clipboardData (setData "text/plain" copy-data))))))
 
 
 (defn cut
   "Cut is essentially copy AND delete selected blocks"
   [^js e]
-  (let [blocks @(subscribe [:selected/items])]
-    (when (not-empty blocks)
-      (.. e preventDefault)
-      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks)))
-      (dispatch [:selected/delete blocks]))))
+  (let [uids @(subscribe [:selected/items])]
+    (when (not-empty uids)
+      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                           (map #(walk-str 0 %))
+                           (apply str))]
+        (.. e preventDefault)
+        (.. e -event_ -clipboardData (setData "text/plain" copy-data))
+        (dispatch [:selected/delete uids])))))
 
 
 (defn init
