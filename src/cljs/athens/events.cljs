@@ -1048,16 +1048,12 @@
     (drop-bullet-multi uids target-uid kind)))
 
 
-
-;;algorithm:
-;;- map over each line
-;;- sanitize: trim * -
-;;- make tuples with whitespace count
-;;- convert the tuple value to expected depth
-;;
-;;two options for each line:
-
 (defn text-to-blocks
+  "Split text by new line.
+  For each line, count left offset.
+  Trim * - and whitespace.
+  Use a double loop to determine parent.
+  Assign parents and orders."
   [text uid]
   (let [lines    (clojure.string/split-lines text)
         counts   (->> lines
@@ -1066,10 +1062,10 @@
         sanitize (map (fn [x] (clojure.string/replace x #"\s*(-|\*)?\s*" ""))
                       lines)
         blocks   (map-indexed (fn [idx x]
-                                {:db/id (dec (* -1 idx))
+                                {:db/id        (dec (* -1 idx))
                                  :block/string x
-                                 :block/open true
-                                 :block/uid (gen-block-uid)}) sanitize)
+                                 :block/open   true
+                                 :block/uid    (gen-block-uid)}) sanitize)
         n        (count blocks)
         parents  (loop [i   1
                         res [(first blocks)]]
@@ -1084,28 +1080,29 @@
                                   (if (< prev-count curr-count)
                                     (conj res {:db/id (:db/id (nth blocks j)) :block/children (nth blocks i)})
                                     (recur (dec j)))))))))
-        tx-data (->> (group-by :db/id parents)
-                     (mapcat (fn [[_tempid blocks]]
-                               (loop [order 0
-                                      res   []
-                                      data  blocks]
-                                 (let [block (first data)
-                                       {:block/keys [children]} block]
-                                   (cond
-                                     (nil? block) res
-                                     (nil? children) (recur order
-                                                            (conj res {:db/id [:block/uid uid] :block/children (assoc block :block/order 0)})
-                                                            (next data))
-                                     :else (recur (inc order)
-                                                  (conj res (assoc-in block [:block/children :block/order] order))
-                                                  (next data))))))))]
-
+        tx-data  (->> (group-by :db/id parents)
+                      (mapcat (fn [[_tempid blocks]]
+                                (loop [order 0
+                                       res   []
+                                       data  blocks]
+                                  (let [block (first data)
+                                        {:block/keys [children]} block]
+                                    (cond
+                                      (nil? block) res
+                                      (nil? children) (recur order
+                                                             (conj res {:db/id [:block/uid uid] :block/children (assoc block :block/order 0)})
+                                                             (next data))
+                                      :else (recur (inc order)
+                                                   (conj res (assoc-in block [:block/children :block/order] order))
+                                                   (next data))))))))]
     tx-data))
 
 
 "TODO: If at end of a parent block, prepend children with new datoms.
 If in an empty block, make empty block the root
-Otherwise append after current block. "
+Otherwise append after current block."
+
+
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
@@ -1128,7 +1125,7 @@ Otherwise append after current block. "
                              (recur idx
                                     (conj res block)
                                     (next data))))))
-          tx-data (concat reindex new-blocks)]
+          tx-data    (concat reindex new-blocks)]
       {:dispatch [:transact tx-data]})))
 
 
