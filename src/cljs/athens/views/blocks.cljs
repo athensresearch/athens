@@ -669,7 +669,8 @@
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        [parse-and-render local uid]
-       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:color "green" :opacity 1})))]])))
+       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                                           :opacity 1})))]])))
 
 
 (defn bullet-mouse-out
@@ -907,7 +908,8 @@
              [:div {:key (:db/id child)}
               [block-el child]]))
 
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:color "red" :opacity "1"})))]]))))
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
+                                                                                   :opacity "1"})))]]))))
 
 
 (defn block-component
