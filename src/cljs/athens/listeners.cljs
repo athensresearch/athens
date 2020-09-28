@@ -1,6 +1,6 @@
 (ns athens.listeners
   (:require
-    [athens.db :as db :refer [dsdb]]
+    [athens.db :as db]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
