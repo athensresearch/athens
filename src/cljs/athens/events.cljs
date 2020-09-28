@@ -775,18 +775,22 @@
     (and (< t x) (< x s))))
 
 
-(defn drop-above-same-parent
-  "Give source-block target-block's order.
-  When source is below target, increment block orders between source and target-1
-  When source is above target, decrement block order between them.
-  No effect if block/orders wouldn't change: :above and s-order == t-order - 1"
-  [source parent target]
+(defn drop-same-parent
+  [kind source parent target]
   (let [s-order             (:block/order source)
         t-order             (:block/order target)
         target-above?       (< t-order s-order)
         +or-                (if target-above? + -)
-        lower-bound         (if target-above? (dec t-order) s-order)
-        upper-bound         (if target-above? s-order t-order)
+        above?              (= kind :above)
+        below?              (= kind :below)
+        lower-bound         (cond
+                              (and above? target-above?) (dec t-order)
+                              (and below? target-above?) t-order
+                              :else s-order)
+        upper-bound         (cond
+                              (and above? (not target-above?)) t-order
+                              (and below? (not target-above?)) (inc t-order)
+                              :else s-order)
         reindex             (d/q '[:find ?ch ?new-order
                                    :keys db/id block/order
                                    :in $ % ?+or- ?parent ?lower-bound ?upper-bound
@@ -794,7 +798,12 @@
                                    (between ?parent ?lower-bound ?upper-bound ?ch ?order)
                                    [(?+or- ?order 1) ?new-order]]
                                  @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
-        new-source-block    {:db/id (:db/id source) :block/order (if target-above? t-order (dec t-order))}
+        new-source-order    (cond
+                              (and above? target-above?) t-order
+                              (and above? (not target-above?)) (dec t-order)
+                              (and below? target-above?) (inc t-order)
+                              (and below? (not target-above?)) t-order)
+        new-source-block    {:db/id (:db/id source) :block/order new-source-order}
         new-parent-children (concat [new-source-block] reindex)
         new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
         tx-data             [new-parent]]
@@ -802,37 +811,9 @@
 
 
 (reg-event-fx
-  :drop/above-same
-  (fn [_ [_ source parent target]]
-    {:dispatch [:transact (drop-above-same-parent source parent target)]}))
-
-
-(defn drop-below-same-parent
-  [source parent target]
-  (let [s-order             (:block/order source)
-        t-order             (:block/order target)
-        target-above?       (< t-order s-order)
-        +or-                (if target-above? + -)
-        lower-bound         (if target-above? t-order s-order)
-        upper-bound         (if target-above? s-order (inc t-order))
-        reindex             (d/q '[:find ?ch ?new-order
-                                   :keys db/id block/order
-                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
-                                   :where
-                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-                                   [(?+or- ?order 1) ?new-order]]
-                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
-        new-source-block    {:db/id (:db/id source) :block/order (if target-above? (inc t-order) t-order)}
-        new-parent-children (concat [new-source-block] reindex)
-        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
-        tx-data             [new-parent]]
-    tx-data))
-
-
-(reg-event-fx
-  :drop/below-same
-  (fn [_ [_ source parent target]]
-    {:dispatch [:transact (drop-below-same-parent source parent target)]}))
+  :drop/same
+  (fn [_ [_ kind source parent target]]
+    {:dispatch [:transact (drop-same-parent kind source parent target)]}))
 
 
 (defn drop-diff-parent
@@ -870,13 +851,10 @@
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
         same-parent?  (= source-parent target-parent)
-        above?        (= kind :above)
-        below?        (= kind :below)
         event         (cond
                         (= kind :child) [:drop/child source source-parent target]
-                        (and same-parent? below?) [:drop/below-same source source-parent target]
-                        (and same-parent? above?) [:drop/above-same source source-parent target]
-                        (and (not same-parent?) (or below? above?)) [:drop/diff kind source source-parent target target-parent])]
+                        same-parent? [:drop/same kind source source-parent target]
+                        (not same-parent?) [:drop/diff kind source source-parent target target-parent])]
     {:dispatch event}))
 
 

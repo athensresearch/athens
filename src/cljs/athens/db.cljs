@@ -189,10 +189,6 @@
      [?p :block/children ?ch]
      [?ch :block/order ?o]
      [(> ?o ?at)]]
-    [(before ?p ?at ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(< ?o ?at)]]
     [(between ?p ?lower-bound ?upper-bound ?ch ?o)
      [?p :block/children ?ch]
      [?ch :block/order ?o]
