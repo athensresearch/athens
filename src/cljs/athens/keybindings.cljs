@@ -509,11 +509,11 @@
   "Delete has the same behavior as pressing backspace on the next block."
   [e uid _state]
   (let [{:keys [start end value]} (destruct-key-down e)
-        no-selection? (= start end)
-        end? (= end (count value))]
-    (when (and no-selection? end?)
-      (let [next-block-uid (db/next-block-uid uid)
-            next-block (db/get-block [:block/uid next-block-uid])]
+        no-selection?  (= start end)
+        end?           (= end (count value))
+        next-block-uid (db/next-block-uid uid)]
+    (when (and no-selection? end? next-block-uid)
+      (let [next-block (db/get-block [:block/uid next-block-uid])]
         (dispatch [:backspace next-block-uid (:block/string next-block)])))))
 
 
