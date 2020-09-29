@@ -387,6 +387,10 @@
   (let [{:keys [key-code head tail selection shift start end target]} (destruct-key-down e)
         selection? (not= start end)]
     (cond
+      ;; When undo no longer makes changes for local textarea, do datascript undo.
+      (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
+                                (when (= local previous)
+                                  (dispatch [:undo])))
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :string/local new-str)
                                 (if selection?
