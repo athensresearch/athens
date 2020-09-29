@@ -112,65 +112,10 @@
                     :db/valueType :db.type/ref}})
 
 
-(def welcome-datoms
-  [{:db/id -1
-    :node/title "athens/Welcome"
-    :block/uid "0"
-    :block/children [{:block/uid "welcome"
-                      :block/string "Welcome to Athens, Open-Source Networked Thought."
-                      :block/order 0}
-                     {:block/uid "features"
-                      :block/string "Markup Features"
-                      :block/open true
-                      :block/order 1
-                      :block/children [{:block/uid "bold"
-                                        :block/order 0
-                                        :block/string "cmd-b **bold text with double asterisks**"}
-                                       {:block/uid "single-backticks"
-                                        :block/order 1
-                                        :block/string "`mono-spaced text with backticks`"}
-                                       {:block/uid "links"
-                                        :block/order 2
-                                        :block/string "links with double brackets: [[athens/Welcome]]"}
-                                       {:block/uid "nested-links"
-                                        :block/order 2
-                                        :block/string "links with double brackets: [[nested [[links]]]]"}
-                                       {:block/uid "hashtags"
-                                        :block/order 3
-                                        :block/string "or hashtags: #athens/Welcome"}
-                                       {:block/uid "long-hashtags"
-                                        :block/order 4
-                                        :block/string "can use `#[[]]` for multi-word tags: #[[Hello Athens]]"}
-                                       {:block/uid "block-refs"
-                                        :block/order 5
-                                        :block/string "Can reference other blocks with `(())`: ((features))"
-                                        :block/refs [:block/uid "features"]}
-                                       {:block/uid "todo"
-                                        :block/order 6
-                                        :block/string "{{[[TODO]]}} `cmd-enter` for a TODO checkbox"}
-                                       {:block/uid "done"
-                                        :block/order 7
-                                        :block/string "{{[[DONE]]}} `cmd-enter` again for DONE"}
-                                       {:block/uid "embeds"
-                                        :block/order 8
-                                        :block/string "embeds with `{{[[youtube: ]]}}` and `{{``iframe: }}`"
-                                        :block/children [{:block/uid "youtube"
-                                                          :block/order 0
-                                                          :block/string "{{[[youtube]]: https://www.youtube.com/watch?v=dQw4w9WgXcQ}}"}
-                                                         {:block/uid "iframe"
-                                                          :block/order 1
-                                                          :block/string "{{iframe: https://www.openstreetmap.org/export/embed.html?bbox=-0.004017949104309083%2C51.47612752641776%2C0.00030577182769775396%2C51.478569861898606&layer=mapnik}}"}]}
-                                       {:block/uid "images"
-                                        :block/order 9
-                                        :block/string "images with `![]()` ![athens-splash](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"}]}]}])
-
-
 (defonce dsdb (d/create-conn schema))
 
 
-(d/transact! dsdb welcome-datoms)
-
-
+;; todo: turn into an effect
 (posh! dsdb)
 
 
