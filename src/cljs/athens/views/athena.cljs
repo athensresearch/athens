@@ -13,7 +13,7 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
+    ;;[goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
@@ -185,7 +185,8 @@
       (and shift (= KeyCodes.ENTER key) (zero? index) (nil? item))
       (let [uid (gen-block-uid)]
         (dispatch [:athena/toggle])
-        (dispatch [:right-sidebar/open-item uid]))
+        (dispatch [:page/create query uid])
+        (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500))
 
       (and shift (= key KeyCodes.ENTER))
       (do
@@ -288,7 +289,7 @@
                                        s              (r/atom {:index   0
                                                                :query   nil
                                                                :results []})
-                                       search-handler (debounce (create-search-handler s) 500)]
+                                       search-handler (create-search-handler s)]
                                    (when open?
                                      [:div.athena (use-style container-style
                                                              {:ref #(reset! ref %)})

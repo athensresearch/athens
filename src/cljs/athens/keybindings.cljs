@@ -384,12 +384,21 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code head tail selection shift]} (destruct-key-down e)]
+  (let [{:keys [key-code head tail selection shift start end target]} (destruct-key-down e)
+        selection? (not= start end)]
     (cond
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :string/local new-str))
+                                (swap! state assoc :string/local new-str)
+                                (if selection?
+                                  (js/setTimeout #(do (setStart target (+ 2 start))
+                                                      (setEnd target (+ 2 end))) 0)
+                                  (js/setTimeout #(setCursorPosition target (+ 2 start)) 0)))
       (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
-                                                  (swap! state assoc :string/local new-str)))))
+                                                  (swap! state assoc :string/local new-str)
+                                                  (if selection?
+                                                    (js/setTimeout #(do (setStart target (+ 2 start))
+                                                                        (setEnd target (+ 2 end))) 0)
+                                                    (js/setTimeout #(setCursorPosition target (+ 2 start)) 0))))))
 
 
 (defn pair-char?

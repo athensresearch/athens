@@ -88,7 +88,9 @@
 (reg-event-db
   :right-sidebar/close-item
   (fn [db [_ uid]]
-    (update db :right-sidebar/items dissoc uid)))
+    (let [{:right-sidebar/keys [items]} db]
+      (cond-> (update db :right-sidebar/items dissoc uid)
+        (= 1 (count items)) (assoc :right-sidebar/open false)))))
 
 
 ;; TODO: change right sidebar items from map to datascript
