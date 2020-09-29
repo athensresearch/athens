@@ -1,6 +1,7 @@
 (ns athens.electron
   (:require
     [athens.db :as db :refer [dsdb]]
+    [athens.athens-datoms :refer [datoms]]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
@@ -64,7 +65,7 @@
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
                                    {:when :seen? :events :fs/create-new-db :dispatch [:navigate :page {:id "0"}]}
-                                   {:when :seen? :events :loading/unset :dispatch [:transact db/welcome-datoms]}
+                                   {:when :seen? :events :loading/unset :dispatch [:transact datoms]}
                                    {:when :seen? :events :loading/unset :halt? true}]}}))
 
 
