@@ -1,5 +1,6 @@
 (ns athens.electron
   (:require
+    [athens.athens-datoms :refer [datoms]]
     [athens.db :as db :refer [dsdb]]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -58,11 +59,13 @@
                                                    (cond
                                                      (nil? filepath) (dispatch [:fs/create-new-db])
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                     db (dt/read-transit-str read-db)]
+                                                                                     db      (dt/read-transit-str read-db)]
                                                                                  (dispatch [:reset-conn db])
                                                                                  (dispatch [:loading/unset]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
+                                   {:when :seen? :events :fs/create-new-db :dispatch [:navigate :page {:id "0"}]}
+                                   {:when :seen? :events :loading/unset :dispatch [:transact datoms]}
                                    {:when :seen? :events :loading/unset :halt? true}]}}))
 
 
