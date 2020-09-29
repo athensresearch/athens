@@ -1090,9 +1090,9 @@
   [text uid]
   (let [lines    (clojure.string/split-lines text)
         counts   (->> lines
-                      (map #(re-find #"\s*(-|\*)?" %))
+                      (map #(re-find #"^\s*(-|\*)?" %))
                       (map #(-> % first count)))
-        sanitize (map (fn [x] (clojure.string/replace x #"\s*(-|\*)?\s*" ""))
+        sanitize (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
                       lines)
         blocks   (map-indexed (fn [idx x]
                                 {:db/id        (dec (* -1 idx))
@@ -1148,7 +1148,7 @@ Otherwise append after current block."
           new-blocks (loop [idx  0
                             res  []
                             data blocks]
-                       (if (= idx n)
+                       (if (empty? data)
                          res
                          (let [block (first data)]
                            (if (vector? (:db/id block))
