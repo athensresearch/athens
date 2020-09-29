@@ -521,7 +521,12 @@
         (walk-string! new-data local)
         (let [new-titles (->> (:titles @new-data)
                               (filter (fn [x] (nil? (db/search-exact-node-title x))))
-                              (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
+                              (map (fn [t]
+                                     {:node/title t
+                                      :block/uid (gen-block-uid)
+                                      :create/time (.getTime (js/Date.))
+                                      :edit/time (.getTime (js/Date.))})))
+
               old-titles (->> (:titles @old-data)
                               (filter (fn [t]
                                         (let [block (db/search-exact-node-title t)]
