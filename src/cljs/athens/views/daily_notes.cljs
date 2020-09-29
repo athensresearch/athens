@@ -8,7 +8,7 @@
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull-many]]
+    [posh.reagent :refer [q pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -68,7 +68,10 @@
     (fn []
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (get-day)])
-        (let [notes (some->> @note-refs
+        (let [notes (some->> @(q '[:find [?uid ...]
+                                   :in $ [?uid ...]
+                                   :where [?e :block/uid ?uid]]
+                                 db/dsdb @note-refs)
                              not-empty
                              (map (fn [x] [:block/uid x]))
                              (pull-many db/dsdb '[*])
