@@ -498,20 +498,20 @@
   [uid val index]
   (let [parent     (db/get-parent [:block/uid uid])
         block      (db/get-block [:block/uid uid])
-        {:block/keys [order children] :or {children []}} block
+        {:block/keys [order children open] :or {children []}} block
         head       (subs val 0 index)
         tail       (subs val index)
         new-uid    (gen-block-uid)
         retracts   (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)])
                          children)
-        new-block  {:db/id          -1
-                    :block/order    (inc order)
-                    :block/uid      new-uid
-                    :block/open     true
-                    :block/children children
-                    :block/string   tail}
+        next-block  {:db/id          -1
+                     :block/order    (inc order)
+                     :block/uid      new-uid
+                     :block/open     open
+                     :block/children children
+                     :block/string   tail}
         reindex    (->> (inc-after (:db/id parent) order)
-                        (concat [new-block]))
+                        (concat [next-block]))
         new-block  {:db/id (:db/id block) :block/string head}
         new-parent {:db/id (:db/id parent) :block/children reindex}
         tx-data    (conj retracts new-block new-parent)]
@@ -593,31 +593,62 @@
           [:dispatch [:editing/uid new-uid]]]}))
 
 
+(reg-event-fx
+  :enter/add-child
+  (fn [_ [_ block]]
+    (add-child block)))
+
+
+(reg-event-fx
+  :enter/split-block
+  (fn [_ [_ uid val index]]
+    (split-block uid val index)))
+
+
+(reg-event-fx
+  :enter/bump-up
+  (fn [_ [_ uid]]
+    (bump-up uid)))
+
+
+(reg-event-fx
+  :enter/new-block
+  (fn [_ [_ block parent]]
+    (new-block block parent)))
+
+
 (defn enter
   "- If block is open, has children, and caret at end, create new child
-  - If caret is at start, split block in half.
-  - If value is empty and a root block, create new block.
+  - If block is CLOSED, has children, and caret at end, add a sibling block.
+  - If caret is not at start, split block in half.
+  - If block has children and is closed, if at end, just add another child.
+  - If block has children and is closed and is in middle of block, split block.
+  - If value is empty and a root block, add a sibling block.
   - If value is empty, unindent.
-  - If caret is at start and there is a value, create new block below."
-  [uid val index]
-  (let [block       (db/get-block [:block/uid uid])
-        parent      (db/get-parent [:block/uid uid])
-        root-block? (boolean (:node/title parent))
-        children-open-and-end? (and (:block/open block)
-                                    (not-empty (:block/children block))
-                                    (= index (count val)))]
-    (cond
-      children-open-and-end? (add-child block)
-      (not (zero? index)) (split-block uid val index)
-      (and (empty? val) root-block?) (new-block block parent)
-      (empty? val) {:dispatch [:unindent uid]}
-      (and (zero? index) val) (bump-up uid))))
+  - If caret is at start and there is a value, create new block below but keep same block index."
+  [rfdb uid val index]
+  (let [block                  (db/get-block [:block/uid uid])
+        parent                 (db/get-parent [:block/uid uid])
+        root-block?            (boolean (:node/title parent))
+        context-root-uid       (get-in rfdb [:current-route :path-params :id])
+        event                  (cond
+                                 (and (:block/open block)
+                                      (not-empty (:block/children block))
+                                      (= index (count val))) [:enter/add-child block]
+                                 (and (not (:block/open block))
+                                      (not-empty (:block/children block))
+                                      (= index (count val))) [:enter/new-block block parent]
+                                 (not (zero? index)) [:enter/split-block uid val index]
+                                 (and (empty? val) root-block?) [:enter/new-block block parent]
+                                 (empty? val) [:unindent uid val context-root-uid]
+                                 (and (zero? index) val) [:enter/bump-up uid])]
+    {:dispatch event}))
 
 
 (reg-event-fx
   :enter
-  (fn [_ [_ uid val index]]
-    (enter uid val index)))
+  (fn [{rfdb :db} [_ uid val index]]
+    (enter rfdb uid val index)))
 
 
 (defn indent
