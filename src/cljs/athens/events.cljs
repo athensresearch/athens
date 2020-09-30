@@ -263,19 +263,12 @@
 
 
 ;; Block Events
-;; TODO: refactor to an effect
-(defn focus-el
-  [id]
-  (fn []
-    (if-let [el (getElement id)]
-      (.focus el))))
 
-
-(reg-event-db
+(reg-event-fx
   :editing/uid
-  (fn-traced [db [_ uid]]
-             (js/setTimeout (focus-el (str "editable-uid-" uid)) 300)
-             (assoc db :editing/uid uid)))
+  (fn [{:keys [db]} [_ uid index]]
+    {:db            (assoc db :editing/uid uid)
+     :editing/focus [uid index]}))
 
 
 (reg-event-db
@@ -485,7 +478,7 @@
                   new-parent     {:db/id (:db/id parent) :block/children reindex}
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
-                                {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]}))))
+                                {:ms 10 :dispatch [:editing/uid prev-block-uid- (count (:block/string prev-block))]}]}))))
 
 
 (reg-event-fx
