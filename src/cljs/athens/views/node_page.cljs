@@ -342,7 +342,8 @@
 
         (sync-title title state)
 
-        [:div (use-style page-style {:class ["node-page"]})
+        [:div (use-style page-style {:class ["node-page"]
+                                     :data-uid uid})
 
          (when alert-show
            [:div (use-style {:position "absolute"

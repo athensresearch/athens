@@ -384,9 +384,17 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code head tail selection shift start end target]} (destruct-key-down e)
+  (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
     (cond
+      (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
+                                                              closest-block-page (.. target (closest ".block-page"))
+                                                              closest            (or closest-node-page closest-block-page)
+                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              children           (->> (:block/children block)
+                                                                                      (sort-by :block/order)
+                                                                                      (mapv :block/uid))]
+                                                          (dispatch [:selected/add-items children]))
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
