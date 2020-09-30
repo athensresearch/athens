@@ -353,6 +353,7 @@
   (fn [_ [_ datoms]]
     (let [synced? @(subscribe [:db/synced])]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
+            [:dispatch [:save]]
             [:transact! datoms]]})))
 
 
