@@ -7,6 +7,8 @@
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
+    [goog.dom :refer [getElement]]
+    [goog.dom.selection :refer [setCursorPosition]]
     [posh.reagent :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]))
 
@@ -58,4 +60,19 @@
         :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
         :clear (do (js/clearTimeout (get @timers id))
                    (swap! timers dissoc id))))))
+
+
+;; Using DOM, focus the target block.
+;; If an index is passed, set cursor that index.
+(reg-fx
+  :editing/focus
+  (fn [[uid index]]
+    (js/setTimeout (fn []
+                     (let [id (str "editable-uid-" uid)
+                           el (getElement id)]
+                       (when el
+                         (.focus el)
+                         (when index
+                           (setCursorPosition el index)))))
+                   300)))
 

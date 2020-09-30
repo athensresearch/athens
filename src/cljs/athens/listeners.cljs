@@ -50,23 +50,22 @@
                              (dispatch [:down (last selected-items)]))))))))
 
 
-;; -- When user clicks elsewhere -----------------------------------------
-
 (defn unfocus
+  "Clears editing/uid when user clicks anywhere besides bullets, header, or on a block.
+  Clears selected/items when user clicks somewhere besides a bullet point."
   [e]
-  (let [selected-items? (not-empty @(subscribe [:selected/items]))
-        editing-uid    @(subscribe [:editing/uid])
-        closest-block (.. e -target (closest ".block-content"))
+  (let [selected-items?      (not-empty @(subscribe [:selected/items]))
+        editing-uid          @(subscribe [:editing/uid])
+        closest-block        (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
-        closest-page-header (.. e -target (closest ".page-header"))
-        closest-bullet (.. e -target (closest ".bullet"))
-        closest (or closest-block closest-block-header closest-page-header)]
+        closest-page-header  (.. e -target (closest ".page-header"))
+        closest-bullet       (.. e -target (closest ".bullet"))
+        closest              (or closest-block closest-block-header closest-page-header)]
     (when (and selected-items?
                (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
     (when (and (nil? closest)
-               editing-uid
-               selected-items?)
+               editing-uid)
       (dispatch [:editing/uid nil]))))
 
 
@@ -87,8 +86,10 @@
       (and (= key KeyCodes.Z) ctrl shift)
       (dispatch [:redo])
 
-      (and (= key KeyCodes.Z) ctrl)
-      (dispatch [:undo])
+      ;; When no editing/uid, do datascript undo.
+      (and (= key KeyCodes.Z) ctrl) (let [editing-uid @(subscribe [:editing/uid])]
+                                      (when (nil? editing-uid)
+                                        (dispatch [:undo])))
 
       (and (= key KeyCodes.K) ctrl)
       (dispatch [:athena/toggle])
