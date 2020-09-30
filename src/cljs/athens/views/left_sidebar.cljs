@@ -22,6 +22,7 @@
    :height "100%"
    :display "flex"
    :flex-direction "column"
+   :overflow-x "hidden"
    :overflow-y "auto"
    :transition "width 0.5s ease"
    ::stylefy/sub-styles {:top-line {:margin-bottom "2.5rem"
