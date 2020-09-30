@@ -1,11 +1,8 @@
 (ns athens.listeners
   (:require
-    [athens.db :refer [dsdb]]
-    [athens.keybindings :refer [arrow-key-direction]]
+    [athens.db :as db]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as string]
-    [datascript.core :as d]
     [goog.events :as events]
     [re-frame.core :refer [dispatch subscribe]])
   (:import
@@ -14,88 +11,62 @@
       KeyCodes)))
 
 
-;; -- shift-up/down when multi-block selection ---------------------------
-
-;; can no longer use on-key-down from keybindings.cljs. textarea is no longer focused, so events must be handled globally
 (defn multi-block-selection
+  "When blocks are selected, handle various keypresses:
+  - shift+up/down: increase/decrease selection.
+  - enter: deselect and begin editing textarea
+  - backspace: delete all blocks
+  - up/down: change editing textarea
+  - tab: indent/unindent blocks
+  Can't use textarea-key-down from keybindings.cljs because textarea is no longer focused."
   [e]
   (let [selected-items @(subscribe [:selected/items])]
     (when (not-empty selected-items)
-      (let [shift     (.. e -shiftKey)
+      (let [shift    (.. e -shiftKey)
             key-code (.. e -keyCode)
-            direction (arrow-key-direction e)]
-        ;; what should tab/shift-tab do? roam and workflowy have slightly different behavior
+            enter?   (= key-code KeyCodes.ENTER)
+            bksp?    (= key-code KeyCodes.BACKSPACE)
+            up?      (= key-code KeyCodes.UP)
+            down?    (= key-code KeyCodes.DOWN)
+            tab?     (= key-code KeyCodes.TAB)
+            delete?  (= key-code KeyCodes.DELETE)]
         (cond
-          (= key-code KeyCodes.ENTER) (do
-                                        (dispatch [:editing/uid (first selected-items)])
-                                        (dispatch [:selected/clear-items]))
-          (= key-code KeyCodes.BACKSPACE) (dispatch [:selected/delete selected-items])
-          (and shift (= direction :up)) (dispatch [:selected/up selected-items])
-          (and shift (= direction :down)) (dispatch [:selected/down selected-items])
-          (= direction :up) (do
-                              (.preventDefault e)
-                              (dispatch [:selected/clear-items])
-                              (dispatch [:up (first selected-items)]))
-          (= direction :down) (do
-                                (.preventDefault e)
-                                (dispatch [:selected/clear-items])
-                                (dispatch [:down (last selected-items)])))))))
+          enter? (do
+                   (dispatch [:editing/uid (first selected-items)])
+                   (dispatch [:selected/clear-items]))
+          (or bksp? delete?) (dispatch [:selected/delete selected-items])
+          tab? (do
+                 (.preventDefault e)
+                 (if shift
+                   (dispatch [:unindent/multi selected-items])
+                   (dispatch [:indent/multi selected-items])))
+          (and shift up?) (dispatch [:selected/up selected-items])
+          (and shift down?) (dispatch [:selected/down selected-items])
+          (or up? down?) (do
+                           (.preventDefault e)
+                           (dispatch [:selected/clear-items])
+                           (if up?
+                             (dispatch [:up (first selected-items)])
+                             (dispatch [:down (last selected-items)]))))))))
 
-
-;; -- When dragging across multiple blocks to select ---------------------
-
-(defn get-dataset-uid
-  [el]
-  (let [block (when el (.. el (closest ".block-container")))
-        uid (when block (.. block -dataset -uid))]
-    uid))
-
-
-(defn multi-block-select-over
-  "If going over something, add it.
-  If leaving it, remove"
-  [e]
-  (let [target             (.. e -target)
-        related-target     (.. e -relatedTarget)
-        target-uid         (get-dataset-uid target)
-        _related-target-uid (get-dataset-uid related-target)
-        selected-items     @(subscribe [:selected/items])
-        _set-items (set selected-items)]
-    (.. e stopPropagation)
-    (.. target blur)
-    (dispatch [:selected/add-item target-uid])))
-
-
-(defn multi-block-select-up
-  [_]
-  (events/unlisten js/window EventType.MOUSEOVER multi-block-select-over)
-  (events/unlisten js/window EventType.MOUSEUP multi-block-select-up))
-
-;; -- When user clicks elsewhere -----------------------------------------
 
 (defn unfocus
+  "Clears editing/uid when user clicks anywhere besides bullets, header, or on a block.
+  Clears selected/items when user clicks somewhere besides a bullet point."
   [e]
-  (let [selected-items @(subscribe [:selected/items])
-        editing-uid    @(subscribe [:editing/uid])
-        closest-block (.. e -target (closest ".block-content"))
+  (let [selected-items?      (not-empty @(subscribe [:selected/items]))
+        editing-uid          @(subscribe [:editing/uid])
+        closest-block        (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
-        closest-page-header (.. e -target (closest ".page-header"))
-        closest (or closest-block closest-block-header closest-page-header)]
-    ;;(prn e (.. e -type))
-    (when (not-empty selected-items)
+        closest-page-header  (.. e -target (closest ".page-header"))
+        closest-bullet       (.. e -target (closest ".bullet"))
+        closest              (or closest-block closest-block-header closest-page-header)]
+    (when (and selected-items?
+               (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
-    (when (and (nil? closest) editing-uid)
+    (when (and (nil? closest)
+               editing-uid)
       (dispatch [:editing/uid nil]))))
-
-
-;; -- Close Athena -------------------------------------------------------
-
-(defn click-outside-athena
-  [e]
-  (let [athena? @(subscribe [:athena/open])
-        closest (.. e -target (closest ".athena"))]
-    (when (and athena? (nil? closest))
-      (dispatch [:athena/toggle]))))
 
 
 ;; -- Hotkeys ------------------------------------------------------------
@@ -115,8 +86,10 @@
       (and (= key KeyCodes.Z) ctrl shift)
       (dispatch [:redo])
 
-      (and (= key KeyCodes.Z) ctrl)
-      (dispatch [:undo])
+      ;; When no editing/uid, do datascript undo.
+      (and (= key KeyCodes.Z) ctrl) (let [editing-uid @(subscribe [:editing/uid])]
+                                      (when (nil? editing-uid)
+                                        (dispatch [:undo])))
 
       (and (= key KeyCodes.K) ctrl)
       (dispatch [:athena/toggle])
@@ -133,41 +106,44 @@
 
 ;; -- Clipboard ----------------------------------------------------------
 
-;; TODO: once :selected/items is a nested tree instead of flat list, walk tree and add hyphens instead of mapping
-(defn to-markdown-list
-  [blocks]
-  (->> blocks
-       (map (fn [x] [:block/uid x]))
-       (d/pull-many @dsdb '[:block/string])
-       (map #(str "- " (:block/string %) "\n"))
-       (string/join "")))
+(defn walk-str
+  "Four spaces per depth level."
+  [depth node]
+  (let [{:block/keys [string children]} node
+        left-offset   (apply str (repeat depth "    "))
+        walk-children (apply str (map #(walk-str (inc depth) %) children))]
+    (str left-offset "- " string "\n" walk-children)))
 
 
 (defn copy
-  "If blocks are selected, copy blocks as markdown list."
+  "If blocks are selected, copy blocks as markdown list.
+  Use -event_ because goog events quirk "
   [^js e]
-  (let [blocks @(subscribe [:selected/items])]
-    (when (not-empty blocks)
-      (.. e preventDefault)
-      ;; Use -event_ because goog events quirk
-      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks))))))
+  (let [uids @(subscribe [:selected/items])]
+    (when (not-empty uids)
+      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                           (map #(walk-str 0 %))
+                           (apply str))]
+        (.. e preventDefault)
+        (.. e -event_ -clipboardData (setData "text/plain" copy-data))))))
 
 
-;; do same as copy AND delete selected blocks
 (defn cut
+  "Cut is essentially copy AND delete selected blocks"
   [^js e]
-  (let [blocks @(subscribe [:selected/items])]
-    (when (not-empty blocks)
-      (.. e preventDefault)
-      (.. e -event_ -clipboardData (setData "text/plain" (to-markdown-list blocks)))
-      (dispatch [:selected/delete blocks]))))
+  (let [uids @(subscribe [:selected/items])]
+    (when (not-empty uids)
+      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                           (map #(walk-str 0 %))
+                           (apply str))]
+        (.. e preventDefault)
+        (.. e -event_ -clipboardData (setData "text/plain" copy-data))
+        (dispatch [:selected/delete uids])))))
 
 
 (defn init
   []
-  ;; (events/listen js/window EventType.MOUSEDOWN edit-block)
-  (events/listen js/window EventType.CLICK unfocus)
-  (events/listen js/window EventType.CLICK click-outside-athena)
+  (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)
   (events/listen js/window EventType.COPY copy)

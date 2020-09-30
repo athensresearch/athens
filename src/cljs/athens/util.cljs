@@ -35,11 +35,14 @@
 
 
 (defn mouse-offset
-  [e]
-  (let [rect (.. e -target getBoundingClientRect)
-        offset-x (- (.. e -pageX) (.. rect -left))
-        offset-y (- (.. e -pageY) (.. rect -top))]
-    {:x offset-x :y offset-y}))
+  "Finds offset between mouse event and container. If container is not passed, use target as container."
+  ([e]
+   (mouse-offset e (.. e -target)))
+  ([e container]
+   (let [rect (.. container getBoundingClientRect)
+         offset-x (- (.. e -pageX) (.. rect -left))
+         offset-y (- (.. e -pageY) (.. rect -top))]
+     {:x offset-x :y offset-y})))
 
 
 (defn vertical-center
@@ -63,6 +66,13 @@
 (defn scroll-into-view [element container align-top?]
   (when (is-beyond-rect? element container)
     (.. element (scrollIntoView align-top? {:behavior "auto"}))))
+
+
+(defn get-dataset-uid
+  [el]
+  (let [block (when el (.. el (closest ".block-container")))
+        uid (when block (.. block -dataset -uid))]
+    uid))
 
 
 ;; -- Date and Time ------------------------------------------------------

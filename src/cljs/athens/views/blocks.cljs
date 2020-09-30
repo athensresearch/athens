@@ -1,15 +1,14 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [count-linked-references-excl-uid e-by-av]]
-    [athens.events :refer [delete-page]]
-    [athens.keybindings :refer [textarea-key-down #_auto-complete-slash #_auto-complete-inline]]
-    [athens.listeners :refer [multi-block-select-over multi-block-select-up]]
+    [athens.db :as db :refer [retract-uid-recursively count-linked-references-excl-uid e-by-av]]
+    [athens.events :refer [select-up select-down]]
+    [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [gen-block-uid mouse-offset vertical-center]]
+    [athens.util :refer [get-dataset-uid gen-block-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -79,10 +78,10 @@
                                                   :top 0
                                                   :right 0
                                                   :bottom 0
-                                                  :left 0}]
-                      [:&:hover {:background (color :background-minus-1)}]]
+                                                  :left 0}]]
+                      ;;[:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing, 
-                     [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
+                     ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"}]]})
 
@@ -141,6 +140,9 @@
                                    :color (color :body-text-color)}]]})
 
 
+(stylefy/class "bullet" bullet-style)
+
+
 (stylefy/keyframes "drop-area-appear"
                    [:from
                     {:opacity "0"}]
@@ -158,6 +160,7 @@
 (def drop-area-indicator
   {:display "block"
    :height "1px"
+   :pointer-events "none"
    :margin-bottom "-1px"
    :color (color :link-color :opacity-high)
    :position "relative"
@@ -355,10 +358,10 @@
     [:span (use-style block-disclosure-toggle-style)]))
 
 
-;; FIXME: fix flicker from on-mouse-enter on-mouse-leave
 (defn tooltip-el
-  [{:block/keys [uid order] dbid :db/id} state]
-  (let [{:keys [dragging tooltip]} @state]
+  [block state]
+  (let [{:block/keys [uid order] dbid :db/id} block
+        {:keys [dragging tooltip]} @state]
     (when (and tooltip (not dragging))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
@@ -369,43 +372,89 @@
        [:div [:b "order"] [:span order]]])))
 
 
+(defn inline-item-click
+  [state block expansion]
+  (let [id        (str "#editable-uid-" (:block/uid block))
+        target    (.. js/document (querySelector id))]
+    (case (:search/type @state)
+      :hashtag (auto-complete-hashtag state target expansion)
+      (auto-complete-inline state target expansion))))
+
+
 (defn inline-search-el
-  [state]
-  (let [{:search/keys [query results index type]} @state]
-    [:div (merge (use-style dropdown-style)
-                 {:style {:position   "absolute"
-                          :top        "100%"
-                          :max-height "20rem"
-                          :left       "1.75em"}})
-     [:div#dropdown-menu (use-style menu-style)
-      (if (or (str/blank? query)
-              (empty? results))
-        ;; Just using button for styling
-        [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
-        (doall
-          (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-            [button {:key      (str "inline-search-item" uid)
-                     :id       (str "dropdown-item-" i)
-                     :active   (= index i)
-                     ;; TODO: pass relevant textarea values to auto-complete-inline
-                     ;;#(auto-complete-inline state % (or title string))}
-                     :on-click #(prn "TODO")}
-             (or title string)])))]]))
+  [_block state]
+  (let [ref (atom nil)
+        handle-click-outside (fn [e]
+                               (let [{:search/keys [type]} @state]
+                                 (when (and (or (= type :page) (= type :block) (= type :hashtag))
+                                            (not (.. @ref (contains (.. e -target)))))
+                                   (swap! state assoc :search/type false))))]
+    (r/create-class
+      {:display-name           "inline-search"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render         (fn [block state]
+                                 (let [{:search/keys [query results index type]} @state]
+                                   (when (some #(= % type) [:page :block :hashtag])
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position   "absolute"
+                                                           :top        "100%"
+                                                           :max-height "20rem"
+                                                           :left       "1.75em"}})
+                                      [:div#dropdown-menu (use-style menu-style)
+                                       (if (or (str/blank? query)
+                                               (empty? results))
+                                         ;; Just using button for styling
+                                         [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
+                                         (doall
+                                           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                                             [button {:key      (str "inline-search-item" uid)
+                                                      :id       (str "dropdown-item-" i)
+                                                      :active   (= index i)
+                                                      :on-click (fn [_] (inline-item-click state block (or string title)))}
+                                              (or title string)])))]])))})))
+
+
+(defn slash-item-click
+  [state block expansion]
+  (let [id        (str "#editable-uid-" (:block/uid block))
+        target    (.. js/document (querySelector id))]
+    (auto-complete-slash state target expansion)))
 
 
 (defn slash-menu-el
-  [state]
-  (let [{:search/keys [index results]} @state]
-    [:div (merge (use-style dropdown-style) {:style {:position "absolute" :top "100%" :left "-0.125em"}})
-     [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
-      (doall
-        (for [[i [text icon _expansion kbd]] (map-indexed list results)]
-          [button {:key    text
-                   :id     (str "dropdown-item-" i)
-                   :active (= i index)}
-                   ;; TODO: do not unfocus textarea
-                   ;;:on-click #(auto-complete-slash i state)}
-           [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]]))
+  [_block state]
+  (let [ref (atom nil)
+        handle-click-outside (fn [e]
+                               (let [{:search/keys [type]} @state]
+                                 (when (and (= type :slash)
+                                            (not (.. @ref (contains (.. e -target)))))
+                                   (swap! state assoc :search/type false))))]
+    (r/create-class
+      {:display-name           "slash-menu"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render         (fn [block state]
+                                 (let [{:search/keys [index results type]} @state]
+                                   (when (= type :slash)
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+                                      [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
+                                       (doall
+                                         (for [[i [text icon expansion kbd]] (map-indexed list results)]
+                                           [button {:key      text
+                                                    :id       (str "dropdown-item-" i)
+                                                    :active   (= i index)
+                                                    :on-click (fn [_] (slash-item-click state block expansion))}
+                                            ;; TODO: do not unfocus textarea
+                                            ;;:on-click #(auto-complete-slash i state)}
+                                            [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
 (defn textarea-paste
@@ -426,10 +475,7 @@
 
 (defn textarea-change
   [e _uid state]
-  (let [{:keys [string/generated]} @state]
-    (if generated
-      (swap! state assoc :string/local generated :string/generated nil)
-      (swap! state assoc :string/local (.. e -target -value)))))
+  (swap! state assoc :string/local (.. e -target -value)))
 
 
 ;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
@@ -475,7 +521,12 @@
         (walk-string! new-data local)
         (let [new-titles (->> (:titles @new-data)
                               (filter (fn [x] (nil? (db/search-exact-node-title x))))
-                              (map (fn [t] {:node/title t :block/uid (gen-block-uid)})))
+                              (map (fn [t]
+                                     {:node/title t
+                                      :block/uid (gen-block-uid)
+                                      :create/time (.getTime (js/Date.))
+                                      :edit/time (.getTime (js/Date.))})))
+
               old-titles (->> (:titles @old-data)
                               (filter (fn [t]
                                         (let [block (db/search-exact-node-title t)]
@@ -487,7 +538,7 @@
                               (mapcat (fn [t]
                                         (let [uid (:block/uid @(pull-node-from-string t))]
                                           (when (some? uid)
-                                            (delete-page uid))))))
+                                            (retract-uid-recursively uid))))))
               new-block-refs (->> (:block-refs @new-data)
                                   (filter (fn [ref-uid]
                                             ;; check that ((ref-uid)) points to an actual entity
@@ -515,124 +566,216 @@
           (dispatch [:transact new-datoms]))))))
 
 
+(defn find-selected-items
+  "Used by both shift-click and click-drag for multi-block-selection.
+  Given a mouse event, a source block, and a target block, highlight blocks.
+  Find all blocks on the page using the DOM.
+  Determine if direction is up or down.
+  Algorithm: call select-up or select-down until start and end of vector are source and target.
+
+  Bug: there isn't an algorithmic path for all pairs of source and target blocks, because sometimes the parent is
+  highlighted, meaning a child block might not be selected itself. Rather, it inherits selection from parent.
+  
+  e.g.: 1 and 3 as source and target, or vice versa.
+  • 1
+  • 2
+   • 3
+  Because of this bug, add additional exit cases to prevent stack overflow."
+  [e source-uid target-uid]
+  (let [target (.. e -target)
+        page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
+        blocks (->> (.. page (querySelectorAll ".block-container"))
+                    array-seq
+                    vec)
+        uids (map get-dataset-uid blocks)
+        start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
+        end-idx   (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))]
+    (when (and start-idx end-idx)
+      (let [up? (> start-idx end-idx)
+            delta (js/Math.abs (- start-idx end-idx))
+            select-fn  (if up? select-up select-down)
+            start-uid (nth uids start-idx)
+            end-uid   (nth uids end-idx)
+            new-items (loop [new-items [source-uid]
+                             prev-items []]
+                        (cond
+                          (= prev-items new-items) new-items
+                          (> (count new-items) delta) new-items
+                          (nil? new-items) []
+                          (or (and (= (first new-items) start-uid)
+                                   (= (last new-items) end-uid))
+                              (and (= (last new-items) start-uid)
+                                   (= (first new-items) end-uid))) new-items
+                          :else (recur (select-fn new-items)
+                                       new-items)))]
+        (dispatch [:selected/add-items new-items])))))
+
+
 (defn textarea-click
-  [e uid _state]
+  "If shift key is held when user clicks across multiple blocks, select the blocks."
+  [e target-uid _state]
   (let [source-uid @(subscribe [:editing/uid])]
-    ;; if shift key is held when user clicks across multiple blocks, select the blocks
-    (when (and source-uid uid (not= source-uid uid) (.. e -shiftKey))
-      (let [target (.. e -target)
-            page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-            target-block (.. target (closest ".block-container"))
-            blocks (vec (array-seq (.. page (querySelectorAll ".block-container"))))
-            [start end] (-> (keep-indexed (fn [i el]
-                                            (when (or (= el target-block)
-                                                      (= source-uid (.. el -dataset -uid)))
-                                              i))
-                                          blocks))]
-        (when (and start end)
-          (let [selected-blocks (subvec blocks start (inc end))
-                selected-uids (mapv #(.. % -dataset -uid) selected-blocks)]
-            (dispatch [:editing/uid nil])
-            (dispatch [:selected/add-items selected-uids])))))))
+    (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
+      (find-selected-items e source-uid target-uid))))
+
+
+(defn global-mouseup
+  "Detach global mouseup listener (self)."
+  [_]
+  (events/unlisten js/document EventType.MOUSEUP global-mouseup)
+  (dispatch [:mouse-down/unset]))
+
+
+(defn textarea-mouse-down
+  "Attach global mouseup listener. Listener can't be local because user might let go of mousedown off of a block.
+  See https://javascript.info/mouse-events-basics#events-order"
+  [e uid _]
+  (.. e stopPropagation)
+  (when (false? (.. e -shiftKey))
+    (dispatch [:editing/uid uid])
+    (let [mouse-down @(subscribe [:mouse-down])]
+      (when (false? mouse-down)
+        (dispatch [:mouse-down/set])
+        (events/listen js/document EventType.MOUSEUP global-mouseup)))))
+
+
+(defn textarea-mouse-enter
+  "When mouse-down, user is selecting multiple blocks with click+drag.
+  Use same algorithm as shift-enter, only updating the source and target."
+  [e target-uid _]
+  (let [source-uid @(subscribe [:editing/uid])
+        mouse-down @(subscribe [:mouse-down])]
+    (when mouse-down
+      (dispatch [:selected/clear-items])
+      (find-selected-items e source-uid target-uid))))
 
 
 (defn block-content-el
-  "Actual string contents. Two elements, one for reading and one for writing."
-  [_ _ _]
-  (fn [block state is-editing]
+  "Actual string contents. Two elements, one for reading and one for writing.
+  The CSS class is-editing is used for many things, such as block selection.
+  Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
+  is-editing can be used for shift up/down, so it is used in both editing and selection."
+  [_ _]
+  (fn [block state]
     (let [{:block/keys [uid]} block
-          {:string/keys [local]} @state]
-      [:div {:class "block-content"
-             :on-click (fn [e]
-                         (when (false? (.. e -shiftKey))
-                           (dispatch [:editing/uid uid])))}
-       [autosize/textarea {:value         (:string/local @state)
-                           :class         [(when is-editing "is-editing") "textarea"]
-                           :auto-focus    true
-                           :id            (str "editable-uid-" uid)
-                           :on-change     (fn [e] (textarea-change   e uid state))
-                           :on-paste      (fn [e] (textarea-paste    e uid state))
-                           :on-key-down   (fn [e] (textarea-key-down e uid state))
-                           :on-blur       (fn [e] (textarea-blur     e uid state))
-                           :on-mouse-down (fn [_]
-                                            (events/listen js/window EventType.MOUSEOVER multi-block-select-over)
-                                            (events/listen js/window EventType.MOUSEUP multi-block-select-up))
-                           :on-click      (fn [e] (textarea-click    e uid state))}]
+          {:string/keys [local]} @state
+          is-editing @(subscribe [:editing/is-editing uid])
+          selected-items @(subscribe [:selected/items])]
+      [:div {:class "block-content"}
+       [autosize/textarea {:value          (:string/local @state)
+                           :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
+                           :auto-focus     true
+                           :id             (str "editable-uid-" uid)
+                           :on-change      (fn [e] (textarea-change e uid state))
+                           :on-paste       (fn [e] (textarea-paste e uid state))
+                           :on-key-down    (fn [e] (textarea-key-down e uid state))
+                           :on-blur        (fn [e] (textarea-blur e uid state))
+                           :on-click       (fn [e] (textarea-click e uid state))
+                           :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                           :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        [parse-and-render local uid]
-       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {:opacity 1})))]])))
+       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                                           :opacity 1})))]])))
+
+
+(defn bullet-mouse-out
+  "Hide tooltip."
+  [e _uid state]
+  (let [related (.. e -relatedTarget)]
+    (when-not (and related (contains related "tooltip"))
+      (swap! state assoc :tooltip false))))
+
+
+(defn bullet-mouse-over
+  "Show tooltip."
+  [_e _uid state]
+  (swap! state assoc :tooltip true))
+
+
+(defn bullet-context-menu
+  "Handle right click. If no blocks are selected, just give option for copying current block's uid."
+  [e _uid state]
+  (.. e preventDefault)
+  (let [selected-blocks @(subscribe [:selected/items])
+        rect (.. e -target getBoundingClientRect)
+        show-type (if (empty? selected-blocks) :one :many)]
+    (swap! state assoc
+           :context-menu/x    (.. rect -left)
+           :context-menu/y    (.. rect -bottom)
+           :context-menu/show show-type)))
+
+
+(defn bullet-drag-start
+  "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
+  [e uid state]
+  (set! (.. e -dataTransfer -effectAllowed) "move")
+  (.. e -dataTransfer (setData "text/plain" uid))
+  (swap! state assoc :dragging true))
+
+
+(defn bullet-drag-end
+  "End drag event."
+  [_e _uid state]
+  (swap! state assoc :dragging false))
 
 
 (defn bullet-el
   [_ _]
   (fn [block state]
-    (let [{:block/keys [uid children open]} block
-          {:context-menu/keys [show x y]} @state]
-
-      [:<>
-       (when show
-         [:div (merge (use-style dropdown-style)
-                      {:style {:position "fixed"
-                               :x        (str x "px")
-                               :y        (str y "px")}})
-          [:div (use-style menu-style)
-           ;; TODO: create listener that lets user exit context menu if click outside
-           [button {:on-click (fn [_]
-                                (let [selected-items @(subscribe [:selected/items])
-                                      ;; use this when using datascript-transit
-                                      ;uids (map (fn [x] [:block/uid x]) selected-items)
-                                      ;blocks (d/pull-many @db/dsdb '[*] ids)
-                                      data (cond
-                                             (= show :one) (str "((" uid "))")
-                                             (= show :many) (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                                                                 (str/join "")))]
-                                  (.. js/navigator -clipboard (writeText data))
-                                  (swap! state assoc :context-menu/show false)))}
-                                  ; TODO: unable to copy with roam/data as data type. leaving this scrap here until return to this problem
-                                  ;(= show :many) (dt/write-transit-str
-                                  ;                 {:db-id       nil ;; roam has a value for this
-                                  ;                  :type        :copy ;; or :cut
-                                  ;                  :copied-data block-refs}))]
-                                  ;(let [blob (js/Blob. [dt-data] (clj->js {"type" "roam/data"}))
-                                  ;      item (js/ClipboardItem. (clj->js {"roam/data" blob}))]
-                                  ;  (.then (.. js/navigator -clipboard (write [item]))
-                                  ;         #(js/console.log "suc" %)
-                                  ;         #(js/console.log "fail" %)))))}
+    (let [{:block/keys [uid children open]} block]
+      [:span {:class           ["bullet" (when (and (seq children) (not open))
+                                           "closed-with-children")]
+              :draggable       true
+              :on-click        (fn [e] (navigate-uid uid e))
+              :on-context-menu (fn [e] (bullet-context-menu e uid state))
+              :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+              :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+              :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+              :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
 
 
+(defn copy-refs-click
+  [_ uid state]
+  (let [{:context-menu/keys [show]} @state
+        selected-items @(subscribe [:selected/items])
+        ;; use this when using datascript-transit
+        ;uids (map (fn [x] [:block/uid x]) selected-items)
+        ;blocks (d/pull-many @db/dsdb '[*] ids)
+        data (case show
+               :one (str "((" uid "))")
+               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                          (str/join "")))]
+    (.. js/navigator -clipboard (writeText data))
+    (swap! state assoc :context-menu/show false)))
 
-            (cond
-              (= show :one) "Copy block ref"
-              (= show :many) "Copy block refs")]]])
-       [:span (use-style bullet-style
-                         {:class           [(when (and (seq children) (not open))
-                                              "closed-with-children")]
-                          :on-mouse-over   #(swap! state assoc :tooltip true)
-                          :on-mouse-out    (fn [e]
-                                             (let [related (.. e -relatedTarget)]
-                                               (when-not (and related (contains related "tooltip"))
-                                                 (swap! state assoc :tooltip false))))
-                          :on-click        (fn [e] (navigate-uid uid e))
-                          :draggable       true
-                          :on-context-menu (fn [e]
-                                             (.. e preventDefault)
-                                             (let [selected-blocks @(subscribe [:selected/items])
-                                                   rect (.. e -target getBoundingClientRect)
-                                                   new-context-menu-state (merge {:context-menu/x    (.. rect -left)
-                                                                                  :context-menu/y    (.. rect -bottom)
-                                                                                  :context-menu/show (if (empty? selected-blocks)
-                                                                                                       :one
-                                                                                                       :many)})]
-                                               (if (empty? selected-blocks)
-                                                 (swap! state merge new-context-menu-state)
-                                                 (swap! state merge new-context-menu-state))))
-                          :on-drag-start   (fn [e]
-                                             (set! (.. e -dataTransfer -effectAllowed) "move")
-                                             (.. e -dataTransfer (setData "text/plain" uid))
-                                             (swap! state assoc :dragging true))
-                          :on-drag-end     (fn [_]
-                                             ;; FIXME: not always called
-                                             ;         (prn "DRAG END BULLET")
-                                             (swap! state assoc :dragging false))})]])))
+
+(defn context-menu-el
+  "Only option in context menu right now is copy block ref(s)."
+  [_block state]
+  (let [ref (atom nil)
+        handle-click-outside (fn [e]
+                               (when (and (:context-menu/show @state)
+                                          (not (.. @ref (contains (.. e -target)))))
+                                 (swap! state assoc :context-menu/show false)))]
+    (r/create-class
+      {:display-name "context-menu"
+       :component-did-mount (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render (fn [block state]
+                         (let [{:block/keys [uid]} block
+                               {:context-menu/keys [show x y]} @state]
+                           (when show
+                             [:div (merge (use-style dropdown-style
+                                                     {:ref #(reset! ref %)})
+                                          {:style {:position "fixed"
+                                                   :x        (str x "px")
+                                                   :y        (str y "px")}})
+                              [:div (use-style menu-style)
+                               ;; TODO: create listener that lets user exit context menu if click outside
+                               [button {:on-click (fn [e] (copy-refs-click e uid state))}
+                                (case show
+                                  :one "Copy block ref"
+                                  :many "Copy block refs")]]])))})))
 
 
 (defn block-refs-count-el
@@ -644,14 +787,71 @@
      [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
 
 
+(defn block-drag-over
+  "If block or ancestor has CSS dragging class, do not show drop indicator; do not allow block to drop onto itself.
+  If above midpoint, show drop indicator above block.
+  If no children and over X pixels from the left, show child drop indicator.
+  If below midpoint, show drop indicator below."
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  (let [{:block/keys [children uid open]} block
+        closest-container (.. e -target (closest ".block-container"))
+        {:keys [x y]} (mouse-offset e closest-container)
+        middle-y          (vertical-center closest-container)
+        dragging-ancestor (.. e -target (closest ".dragging"))
+        dragging?         dragging-ancestor
+        is-selected?      @(subscribe [:selected/is-selected uid])
+        target            (cond
+                            dragging? nil
+                            is-selected? nil
+                            (or (neg? y) (< y middle-y)) :above
+                            (or (not open) (and (empty? children) (< 50 x))) :child
+                            (< middle-y y) :below)]
+    (when target
+      (swap! state assoc :drag-target target))))
+
+
+(defn block-drop
+  "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+  [e block state]
+  (.. e stopPropagation)
+  (let [{target-uid :block/uid} block
+        {:keys [drag-target]} @state
+        source-uid (.. e -dataTransfer (getData "text/plain"))
+        effect-allowed (.. e -dataTransfer -effectAllowed)
+        valid-drop (and (not (nil? drag-target))
+                        (not= source-uid target-uid)
+                        (= effect-allowed "move"))
+        selected-items @(subscribe [:selected/items])]
+    (when valid-drop
+      (if (empty? selected-items)
+        (dispatch [:drop source-uid target-uid drag-target])
+        (dispatch [:drop-multi selected-items target-uid drag-target])))
+    (dispatch [:mouse-down/unset])
+    (swap! state assoc :drag-target nil)))
+
+
+(defn block-drag-leave
+  "When mouse leaves block, remove any drop area indicator.
+  Ignore if target-uid and related-uid are the same — user went over a child component and we don't want flicker."
+  [e block state]
+  (.. e preventDefault)
+  (.. e stopPropagation)
+  (let [{target-uid :block/uid} block
+        related-uid (get-dataset-uid (.. e -relatedTarget))]
+    (when-not (= related-uid target-uid)
+      ;;(prn target-uid related-uid  "LEAVE")
+      (swap! state assoc :drag-target nil))))
+
+
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
-  "Two checks to make sure block is open or not: children exist and :block/open bool"
+  "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   [_]
   (let [state (r/atom {:string/local      nil
-                       :string/generated  nil
                        :string/previous   nil
-                       :search/type       nil ;; one of #{:page :block :slash}
+                       :search/type       nil ;; one of #{:page :block :slash :hashtag}
                        :search/results    nil
                        :search/query      nil
                        :search/index      nil
@@ -662,18 +862,10 @@
                        :context-menu/y    nil
                        :context-menu/show false})]
 
-    ;; If generated string is updated, automatically update local string
-    ;; Necessary because modifying generated string itself won't trigger the on-change event of the textarea
-    ;; local string must be modified to trigger new value of generated string
-    (add-watch state :generated-string-listener
-               (fn [_context _atom old new]
-                 (when (and (not= (:string/generated old) (:string/generated new))
-                            (not (nil? (:string/generated new))))
-                   (swap! state assoc :string/local (:string/generated new)))))
 
     (fn [block]
       (let [{:block/keys [uid string open children _refs]} block
-            {:search/keys [type] :keys [dragging drag-target]} @state
+            {:search/keys [] :keys [dragging drag-target]} @state
             is-editing @(subscribe [:editing/is-editing uid])
             is-selected @(subscribe [:selected/is-selected uid])]
 
@@ -687,44 +879,15 @@
 
         [:div
          {:class         ["block-container"
-                          (when dragging "dragging")
+                          (when (and dragging (not is-selected)) "dragging")
                           (when is-editing "is-editing")
                           (when is-selected "is-selected")
-                          ;; TODO: is it possible to make this show-tree-indicator a mergable -style map like above?
                           (when (and (seq children) open) "show-tree-indicator")]
           :data-uid      uid
-          :on-drag-over  (fn [e]
-                           (.. e preventDefault)
-                           (.. e stopPropagation)
-                           ;; if last block-container (i.e. no siblings), allow drop below
-                           ;; if block or ancestor has css dragging class, do not show drop indicator
-                           (let [offset            (mouse-offset e)
-                                 middle-y          (vertical-center (.. e -target))
-                                 closest-container (.. e -target (closest ".block-container"))
-                                 next-sibling      (.. closest-container -nextElementSibling)
-                                 last-child?       (nil? next-sibling)
-                                 dragging-ancestor (.. e -target (closest ".dragging"))
-                                 not-dragging?     (nil? dragging-ancestor)
-                                 target            (when not-dragging?
-                                                     (cond
-                                                       ;; if above midpoint, show drop indicator above block
-                                                       (< (:y offset) middle-y) :above
-                                                       ;; if no children and over 50 pixels from the left, show child drop indicator
-                                                       (and (empty? children) (< 50 (:x offset))) :child
-                                                       ;; if below midpoint and last child, show drop indicator below
-                                                       (and last-child? (< middle-y (:y offset))) :below))]
-                             (swap! state assoc :drag-target target)))
-          :on-drag-enter (fn [_])
-          :on-drag-leave (fn [_]
-                           (swap! state assoc :drag-target nil))
-          :on-drop       (fn [e]
-                           (.. e stopPropagation)
-                           (let [source-uid (.. e -dataTransfer (getData "text/plain"))]
-                             (cond
-                               (nil? drag-target) nil
-                               (= source-uid uid) nil)
-                             (dispatch [:drop-bullet source-uid uid drag-target])
-                             (swap! state assoc :drag-target nil)))}
+          :on-drag-over  (fn [e] (block-drag-over e block state))
+          :on-drag-leave (fn [e] (block-drag-leave e block state))
+          :on-drop       (fn [e] (block-drop e block state))}
+
          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
          [:div.block-body
@@ -734,14 +897,15 @@
                           (dispatch [:editing/uid uid])))}]
 
           [toggle-el block]
+          [context-menu-el block state]
           [bullet-el block state]
           [tooltip-el block state]
-          [block-content-el block state is-editing]
+          [block-content-el block state]
           [block-refs-count-el (count _refs) uid]]
 
-         (cond
-           (or (= type :page) (= type :block)) [inline-search-el state]
-           (= type :slash) [slash-menu-el state])
+         [inline-search-el block state]
+         [slash-menu-el block state]
+
 
          ;; Children
          (when (and open (seq children))
@@ -749,7 +913,8 @@
              [:div {:key (:db/id child)}
               [block-el child]]))
 
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {:opacity "1"})))]]))))
+         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
+                                                                                   :opacity "1"})))]]))))
 
 
 (defn block-component

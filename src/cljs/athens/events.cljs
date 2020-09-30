@@ -1,12 +1,11 @@
 (ns athens.events
   (:require
-    [athens.db :as db :refer [rules get-children-recursively]]
+    [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [goog.dom :refer [getElement]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -73,11 +72,24 @@
     (update-in db [:right-sidebar/items item :open] not)))
 
 
+(reg-event-db
+  :mouse-down/set
+  (fn [db _]
+    (assoc db :mouse-down true)))
+
+
+(reg-event-db
+  :mouse-down/unset
+  (fn [db _]
+    (assoc db :mouse-down false)))
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
   (fn [db [_ uid]]
-    (update db :right-sidebar/items dissoc uid)))
+    (let [{:right-sidebar/keys [items]} db]
+      (cond-> (update db :right-sidebar/items dissoc uid)
+        (= 1 (count items)) (assoc :right-sidebar/open false)))))
 
 
 ;; TODO: change right sidebar items from map to datascript
@@ -112,6 +124,13 @@
 
 
 (reg-event-db
+  :selected/remove-item
+  (fn [db [_ uid]]
+    (let [items (:selected/items db)]
+      (assoc db :selected/items (filterv #(not= % uid) items)))))
+
+
+(reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
     (update db :selected/items concat uids)))
@@ -123,40 +142,94 @@
     (assoc db :selected/items [])))
 
 
+(defn select-up
+  [selected-items]
+  (let [first-item      (first selected-items)
+        prev-block-uid- (db/prev-block-uid first-item)
+        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        parent          (db/get-parent [:block/uid first-item])
+        editing-uid     @(subscribe [:editing/uid])
+        editing-idx     (first (keep-indexed (fn [idx x]
+                                               (when (= x editing-uid)
+                                                 idx))
+                                             selected-items))
+        n               (count selected-items)
+        new-items (cond
+                    ;; if prev-block is root node TODO: (OR context root), don't do anything
+                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
+                    (:node/title prev-block) selected-items
+                    ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+                    (= (:block/uid parent) prev-block-uid-) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                                                                                      set)
+                                                                  to-keep         (filter (fn [x] (not (contains? parent-children x)))
+                                                                                          selected-items)
+                                                                  new-vec         (into [prev-block-uid-] to-keep)]
+                                                              new-vec)
+                    :else (into [prev-block-uid-] selected-items))]
+    new-items))
+
+
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (let [first-item (first selected-items)
-          prev-block-uid- (db/prev-block-uid first-item)
-          prev-block (db/get-block [:block/uid prev-block-uid-])
-         ;;parent (db/get-parent [:block/uid first-item])
-          new-vec (cond
-                   ;; if prev-block is root node TODO: (OR context root), don't do anything
-                    (:node/title prev-block) nil
-                   ;; if prev block is parent, replace head of vector with parent
-                   ;; TODO needs to replace all children blocks of the parent
-                   ;; TODO: needs to delete blocks recursively. :db/retractEntity does not delete recursively, which would create orphan blocks
-                   ;;(= (:block/uid parent) prev-block-uid-) (assoc selected-items 0 prev-block-uid-)
-                    :else (into [prev-block-uid-] selected-items))]
-      (assoc db :selected/items new-vec))))
+    (assoc db :selected/items (select-up selected-items))))
 
 
+(defn select-down
+  [selected-items]
+  (let [editing-uid @(subscribe [:editing/uid])
+        editing-idx (first (keep-indexed (fn [idx x]
+                                           (when (= x editing-uid)
+                                             idx))
+                                         selected-items))
+        last-item (last selected-items)
+        next-block-uid- (db/next-block-uid last-item true)]
+    (cond
+      (pos? editing-idx) (subvec selected-items 1)
+      next-block-uid-    (conj selected-items next-block-uid-)
+      :else selected-items)))
+
+
+;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
+;; this would let us know if the operation is additive or subtractive
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (let [last-item (last selected-items)
-          next-block-uid- (db/next-block-uid last-item)
-          new-vec (conj selected-items next-block-uid-)]
-      (assoc db :selected/items new-vec))))
+    (assoc db :selected/items (select-down selected-items))))
 
 
-;; TODO: minus-after to reindex but what about nested blocks?
+(defn delete-selected
+  "We know that we only need to dec indices after the last block. The former blocks are necessarily going to remove all
+  tail children, meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings, to
+  determine the minus-after value."
+  [selected-items]
+  (let [last-item (last selected-items)
+        selected-sibs-of-last (->> (d/q '[:find ?sib-uid ?o
+                                          :in $ ?uid [?selected ...]
+                                          :where
+                                          ;; get all siblings of the last block
+                                          [?e :block/uid ?uid]
+                                          [?p :block/children ?e]
+                                          [?p :block/children ?sib]
+                                          [?sib :block/uid ?sib-uid]
+                                          ;; filter selected
+                                          [(= ?sib-uid ?selected)]
+                                          [?sib :block/order ?o]]
+                                        @db/dsdb last-item selected-items)
+                                   (sort-by second))
+        [uid order] (last selected-sibs-of-last)
+        parent (db/get-parent [:block/uid uid])
+        n (count selected-sibs-of-last)]
+    (minus-after (:db/id parent) order n)))
+
+
 (reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
-    (let [retract-vecs (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-                             selected-items)]
-      {:dispatch [:transact retract-vecs]
+    (let [retract-vecs (mapcat #(retract-uid-recursively %) selected-items)
+          reindex-last-selected-parent (delete-selected selected-items)
+          tx-data (concat retract-vecs reindex-last-selected-parent)]
+      {:dispatch [:transact tx-data]
        :db       (assoc db :selected/items [])})))
 
 
@@ -189,19 +262,12 @@
 
 
 ;; Block Events
-;; TODO: refactor to an effect
-(defn focus-el
-  [id]
-  (fn []
-    (if-let [el (getElement id)]
-      (.focus el))))
 
-
-(reg-event-db
+(reg-event-fx
   :editing/uid
-  (fn-traced [db [_ uid]]
-             (js/setTimeout (focus-el (str "editable-uid-" uid)) 300)
-             (assoc db :editing/uid uid)))
+  (fn [{:keys [db]} [_ uid index]]
+    {:db            (assoc db :editing/uid uid)
+     :editing/focus [uid index]}))
 
 
 (reg-event-db
@@ -285,8 +351,10 @@
 (reg-event-fx
   :transact
   (fn [_ [_ datoms]]
-    {:fx [[:dispatch [:db/not-synced]]
-          [:transact! datoms]]}))
+    (let [synced? @(subscribe [:db/synced])]
+      {:fx [(when synced? [:dispatch [:db/not-synced]])
+            [:dispatch [:save]]
+            [:transact! datoms]]})))
 
 
 (reg-event-fx
@@ -305,17 +373,10 @@
             [:dispatch [:editing/uid child-uid]]]})))
 
 
-(defn delete-page
-  "Retract all blocks of a page, including the page."
-  [uid]
-  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-        (get-children-recursively uid)))
-
-
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact (delete-page uid)]]]}))
+    {:fx [[:dispatch [:transact (retract-uid-recursively uid)]]]}))
 
 
 (reg-event-fx
@@ -357,33 +418,6 @@
       {:reset-conn! next})))
 
 
-(defn inc-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (inc-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)))
-
-
-(defn dec-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (dec-after ?p ?at ?ch ?new-o)]
-            @db/dsdb rules eid order)))
-
-
-(defn plus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
-            @db/dsdb rules eid order x)))
-
-
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
@@ -409,22 +443,42 @@
     {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
 
-;; no-op if root 0th child
-;; otherwise delete block and join with previous block
 (defn backspace
+  "No-op if root and 0th child.
+  No-op if parent is prev-block and block has children.
+  No-op if prev-sibling-block has children.
+  Otherwise delete block and join with previous block
+  If prev-block has children"
   [uid value]
-  (let [block (db/get-block [:block/uid uid])
-        parent (db/get-parent [:block/uid uid])
-        reindex (dec-after (:db/id parent) (:block/order block))
+  (let [block           (db/get-block [:block/uid uid])
+        {:block/keys [children order] :or {children []}} block
+        parent          (db/get-parent [:block/uid uid])
+        reindex         (dec-after (:db/id parent) (:block/order block))
         prev-block-uid- (db/prev-block-uid uid)
-        {prev-block-string :block/string} (db/get-block [:block/uid prev-block-uid-])]
+        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        prev-sib-order  (dec (:block/order block))
+        prev-sib        (d/q '[:find ?sib .
+                               :in $ % ?target-uid ?prev-sib-order
+                               :where
+                               (siblings ?target-uid ?sib)
+                               [?sib :block/order ?prev-sib-order]
+                               [?sib :block/uid ?uid]
+                               [?sib :block/children ?ch]]
+                             @db/dsdb db/rules uid prev-sib-order)
+        prev-sib        (db/get-block prev-sib)]
     (cond
-      (and (:node/title parent) (zero? (:block/order block))) nil
-      (:block/children block) nil
-      :else {:dispatch-later [{:ms 0 :dispatch [:transact [[:db/retractEntity [:block/uid uid]]
-                                                           {:db/id [:block/uid prev-block-uid-] :block/string (str prev-block-string value) :edit/time (now-ts)}
-                                                           {:db/id (:db/id parent) :block/children reindex}]]}
-                              {:ms 10 :dispatch [:editing/uid prev-block-uid-]}]})))
+      (and (:node/title parent) (zero? order)) nil
+      (and (not-empty children) (not-empty (:block/children prev-sib))) nil
+      (and (not-empty children) (= parent prev-block)) nil
+      :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
+                  retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+                  new-prev-block {:db/id          [:block/uid prev-block-uid-]
+                                  :block/string   (str (:block/string prev-block) value)
+                                  :block/children children}
+                  new-parent     {:db/id (:db/id parent) :block/children reindex}
+                  tx-data        (conj retracts retract-block new-prev-block new-parent)]
+              {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
+                                {:ms 10 :dispatch [:editing/uid prev-block-uid- (count (:block/string prev-block))]}]}))))
 
 
 (reg-event-fx
@@ -435,22 +489,55 @@
 
 (defn split-block
   [uid val index]
-  (let [parent (db/get-parent [:block/uid uid])
-        block (db/get-block [:block/uid uid])
+  (let [parent     (db/get-parent [:block/uid uid])
+        block      (db/get-block [:block/uid uid])
+        {:block/keys [order children open] :or {children []}} block
+        head       (subs val 0 index)
+        tail       (subs val index)
+        new-uid    (gen-block-uid)
+        retracts   (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)])
+                         children)
+        next-block  {:db/id          -1
+                     :block/order    (inc order)
+                     :block/uid      new-uid
+                     :block/open     open
+                     :block/children children
+                     :block/string   tail}
+        reindex    (->> (inc-after (:db/id parent) order)
+                        (concat [next-block]))
+        new-block  {:db/id (:db/id block) :block/string head}
+        new-parent {:db/id (:db/id parent) :block/children reindex}
+        tx-data    (conj retracts new-block new-parent)]
+    {:fx [[:dispatch [:transact tx-data]]
+          [:dispatch [:editing/uid new-uid]]]}))
+
+
+(defn split-block-to-children
+  "Takes a block uid, its value, and the index to split the value string.
+  It sets the value of the block to the head of (subs val 0 index)
+  It then creates a new child block with the tail of the string set as its value and sets editing to that block."
+  [uid val index]
+  (let [block (db/get-block [:block/uid uid])
         head (subs val 0 index)
         tail (subs val index)
         new-uid (gen-block-uid)
         new-block {:db/id        -1
-                   :block/order  (inc (:block/order block))
+                   :block/order  0
                    :block/uid    new-uid
                    :block/open   true
                    :block/string tail}
-        reindex (->> (inc-after (:db/id parent) (:block/order block))
+        reindex (->> (inc-after (:db/id block) -1)
                      (concat [new-block]))]
     {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
-                                 {:db/id (:db/id parent)
+                                 {:db/id (:db/id block)
                                   :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
+
+
+(reg-event-fx
+  :split-block-to-children
+  (fn [_ [_ uid val index]]
+    (split-block-to-children uid val index)))
 
 
 (defn bump-up
@@ -467,7 +554,7 @@
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
                      (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex :block/string ""}]]]
+    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
 
@@ -486,77 +573,224 @@
           [:dispatch [:editing/uid new-uid]]]}))
 
 
+(defn add-child
+  [block]
+  (let [{p-eid :db/id} block
+        new-uid (gen-block-uid)
+        new-child {:block/uid new-uid :block/string "" :block/order 0}
+        reindex (->> (inc-after p-eid -1)
+                     (concat [new-child]))
+        new-block {:db/id p-eid :block/children reindex}
+        tx-data [new-block]]
+    {:fx [[:dispatch [:transact tx-data]]
+          [:dispatch [:editing/uid new-uid]]]}))
+
+
+(reg-event-fx
+  :enter/add-child
+  (fn [_ [_ block]]
+    (add-child block)))
+
+
+(reg-event-fx
+  :enter/split-block
+  (fn [_ [_ uid val index]]
+    (split-block uid val index)))
+
+
+(reg-event-fx
+  :enter/bump-up
+  (fn [_ [_ uid]]
+    (bump-up uid)))
+
+
+(reg-event-fx
+  :enter/new-block
+  (fn [_ [_ block parent]]
+    (new-block block parent)))
+
+
 (defn enter
-  [uid val index]
-  (let [block       (db/get-block [:block/uid uid])
-        parent      (db/get-parent [:block/uid uid])
-        root-block? (boolean (:node/title parent))]
-    (cond
-      (not (zero? index)) (split-block uid val index)
-      (and (empty? val) root-block?) (new-block block parent)
-      (empty? val) {:dispatch [:unindent uid]}
-      (and (zero? index) val) (bump-up uid))))
+  "- If block is open, has children, and caret at end, create new child
+  - If block is CLOSED, has children, and caret at end, add a sibling block.
+  - If caret is not at start, split block in half.
+  - If block has children and is closed, if at end, just add another child.
+  - If block has children and is closed and is in middle of block, split block.
+  - If value is empty and a root block, add a sibling block.
+  - If value is empty, unindent.
+  - If caret is at start and there is a value, create new block below but keep same block index."
+  [rfdb uid val index]
+  (let [block                  (db/get-block [:block/uid uid])
+        parent                 (db/get-parent [:block/uid uid])
+        root-block?            (boolean (:node/title parent))
+        context-root-uid       (get-in rfdb [:current-route :path-params :id])
+        event                  (cond
+                                 (and (:block/open block)
+                                      (not-empty (:block/children block))
+                                      (= index (count val))) [:enter/add-child block]
+                                 (and (not (:block/open block))
+                                      (not-empty (:block/children block))
+                                      (= index (count val))) [:enter/new-block block parent]
+                                 (not (zero? index)) [:enter/split-block uid val index]
+                                 (and (empty? val) root-block?) [:enter/new-block block parent]
+                                 (empty? val) [:unindent uid val context-root-uid]
+                                 (and (zero? index) val) [:enter/bump-up uid])]
+    {:dispatch event}))
 
 
 (reg-event-fx
   :enter
-  (fn [_ [_ uid val index]]
-    (enter uid val index)))
+  (fn [{rfdb :db} [_ uid val index]]
+    (enter rfdb uid val index)))
 
 
 (defn indent
-  [uid]
-  (let [block (db/get-block [:block/uid uid])
-        parent (db/get-parent [:block/uid uid])
-        older-sib (->> parent
-                       :block/children
-                       (filter #(= (dec (:block/order block)) (:block/order %)))
-                       first
-                       :db/id
-                       db/get-block)
-        new-block {:db/id (:db/id block) :block/order (count (:block/children older-sib))}
-        reindex (dec-after (:db/id parent) (:block/order block))]
-    {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children (:db/id block)]
-                                 {:db/id (:db/id older-sib) :block/children [new-block]} ;; becomes child of older sibling block — same parent but order-1
-                                 {:db/id (:db/id parent) :block/children reindex}]]]]}))
+  "When indenting a single block:
+  - retract block from parent
+  - make block the last child of older sibling
+  - reindex parent
+  Only indent a block if it is not the zeroth block (first child).
+
+  Uses `value` to update block/string as well. Otherwise, if user changes block string and indents, the local string
+  is reset to original value, since it has not been unfocused yet (which is currently the transaction that updates the string)."
+  [uid value]
+  (let [block       (db/get-block [:block/uid uid])
+        block-zero? (zero? (:block/order block))]
+    (when-not block-zero?
+      (let [parent        (db/get-parent [:block/uid uid])
+            older-sib     (db/get-older-sib uid)
+            new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
+            reindex       (dec-after (:db/id parent) (:block/order block))
+            retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
+            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
+            new-parent    {:db/id (:db/id parent) :block/children reindex}]
+        {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
 
 
 (reg-event-fx
   :indent
-  (fn [_ [_ uid]]
-    (indent uid)))
+  (fn [_ [_ uid value]]
+    (indent uid value)))
+
+
+(defn indent-multi
+  "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child).
+
+  older-sib is the current older-sib, before indent happens, AKA the new parent.
+  new-parent is current parent, not older-sib. new-parent becomes grandparent.
+  Reindex parent, add blocks to end of older-sib."
+  [uids]
+  (let [blocks       (map #(db/get-block [:block/uid %]) uids)
+        same-parent? (db/same-parent? uids)
+        n-blocks     (count blocks)
+        first-block  (first blocks)
+        last-block   (last blocks)
+        block-zero?  (-> first-block :block/order zero?)]
+    (when (and same-parent? (not block-zero?))
+      (let [parent        (db/get-parent [:block/uid (first uids)])
+            older-sib     (db/get-older-sib (first uids))
+            n-sib         (count (:block/children older-sib))
+            new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
+                                       blocks)
+            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks}
+            reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+            new-parent    {:db/id (:db/id parent) :block/children reindex}
+            retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
+                                blocks)
+            tx-data       (conj retracts new-older-sib new-parent)]
+        {:fx [[:dispatch [:transact tx-data]]]}))))
+
+
+(reg-event-fx
+  :indent/multi
+  (fn [_ [_ uids]]
+    (indent-multi uids)))
 
 
 (defn unindent
-  [uid context-root-uid]
-  (let [parent (db/get-parent [:block/uid uid])
-        grandpa (db/get-parent (:db/id parent))
-        new-block {:block/uid uid :block/order (inc (:block/order parent))}
-        reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
-                             (concat [new-block]))]
-    ;; if parent is context-root or has node/title, no-op
-    (when-not (or (:node/title parent) (= (:block/uid parent) context-root-uid))
-      {:fx [[:dispatch [:transact [[:db/retract (:db/id parent) :block/children [:block/uid uid]]
-                                   {:db/id (:db/id grandpa) :block/children reindex-grandpa}]]]]})))
+  "If parent is context-root or has node/title (date page), no-op.
+  Otherwise, block becomes direct older sibling of parent (parent-order +1). reindex parent and grandparent.
+   - inc-after for grandparent
+   - dec-after for parent"
+  [uid value context-root-uid]
+  (let [parent (db/get-parent [:block/uid uid])]
+    (cond
+      (:node/title parent) nil
+      (= (:block/uid parent) context-root-uid) nil
+      :else (let [block           (db/get-block [:block/uid uid])
+                  grandpa         (db/get-parent (:db/id parent))
+                  new-block       {:block/uid uid :block/order (inc (:block/order parent)) :block/string value}
+                  reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
+                                       (concat [new-block]))
+                  reindex-parent  (dec-after (:db/id parent) (:block/order block))
+                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
+                  retract         [:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                  new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
+                  tx-data         [retract new-parent new-grandpa]]
+              {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ uid]]
+  (fn [{rfdb :db} [_ uid value]]
     (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
-      (unindent uid context-root-uid))))
+      (unindent uid value context-root-uid))))
+
+
+(defn unindent-multi
+  "Do not do anything if root block child or if blocks are not siblings.
+  Otherwise, retract and assert new parent for each block, and reindex parent and grandparent."
+  [uids context-root-uid]
+  (let [parent (db/get-parent [:block/uid (first uids)])
+        same-parent? (db/same-parent? uids)]
+    (cond
+      (:node/title parent) nil
+      (= (:block/uid parent) context-root-uid) nil
+      (not same-parent?) nil
+      :else (let [grandpa         (db/get-parent (:db/id parent))
+                  blocks          (map #(db/get-block [:block/uid %]) uids)
+                  o-parent        (:block/order parent)
+                  n-blocks        (count blocks)
+                  last-block      (last blocks)
+                  reindex-parent  (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
+                  new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
+                                               uids)
+                  reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
+                                       (concat new-blocks))
+                  retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
+                                        blocks)
+                  new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
+                  tx-data         (conj retracts new-parent new-grandpa)]
+              {:fx [[:dispatch [:transact tx-data]]]}))))
+
+
+(reg-event-fx
+  :unindent/multi
+  (fn [{rfdb :db} [_ uids]]
+    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
+      (unindent-multi uids context-root-uid))))
 
 
 (defn drop-child
   "Order will always be 0"
   [source source-parent target]
-  (let [new-source-block {:block/uid (:block/uid source) :block/order 0}
+  (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
         reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:dbid target) (dec 0))
-                                   (concat [new-source-block]))]
-    [[:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target) :block/children reindex-target-parent}]))
+        reindex-target-parent (inc-after (:db/id target) -1)
+        retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
+        tx-data               [retract
+                               new-source-parent
+                               new-target-parent]]
+    tx-data))
+
+
+(reg-event-fx
+  :drop/child
+  (fn [_ [_ source source-parent target]]
+    {:dispatch [:transact (drop-child source source-parent target)]}))
 
 
 (defn between
@@ -567,109 +801,358 @@
     (and (< t x) (< x s))))
 
 
-(defn drop-above-same-parent
-  "Give source block target block's order
-    When source is below target, increment block orders between source and target-1
-    When source is above target, decrement block order between...";; TODO
+(defn drop-same-parent
+  [kind source parent target]
+  (let [s-order             (:block/order source)
+        t-order             (:block/order target)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        above?              (= kind :above)
+        below?              (= kind :below)
+        lower-bound         (cond
+                              (and above? target-above?) (dec t-order)
+                              (and below? target-above?) t-order
+                              :else s-order)
+        upper-bound         (cond
+                              (and above? (not target-above?)) t-order
+                              (and below? (not target-above?)) (inc t-order)
+                              :else s-order)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order 1) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
+        new-source-order    (cond
+                              (and above? target-above?) t-order
+                              (and above? (not target-above?)) (dec t-order)
+                              (and below? target-above?) (inc t-order)
+                              (and below? (not target-above?)) t-order)
+        new-source-block    {:db/id (:db/id source) :block/order new-source-order}
+        new-parent-children (concat [new-source-block] reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
 
-  [source target parent]
-  (let [s-order (:block/order source)
-        t-order (:block/order target)]
-    (if (= s-order (dec t-order))
-      nil
-      (let [new-source-block {:db/id (:db/id source) :block/order t-order}
-            inc-or-dec       (if (> s-order t-order) inc dec)
-            reindex          (->> (d/q '[:find ?ch ?new-order
-                                         :keys db/id block/order
-                                         :in $ ?parent ?s-order ?t-order ?between ?inc-or-dec
-                                         :where
-                                         [?parent :block/children ?ch]
-                                         [?ch :block/order ?order]
-                                         [(?between ?s-order ?t-order ?order)]
-                                         [(?inc-or-dec ?order) ?new-order]]
-                                       @db/dsdb (:db/id parent) s-order (dec t-order) between inc-or-dec)
-                                  (concat [new-source-block]))]
-        [{:db/id (:db/id parent) :block/children reindex}]))))
+
+(reg-event-fx
+  :drop/same
+  (fn [_ [_ kind source parent target]]
+    {:dispatch [:transact (drop-same-parent kind source parent target)]}))
 
 
-(defn drop-above-diff-parent
-  [source target source-parent target-parent]
-  (let [new-block             {:db/id (:db/id source) :block/order (:block/order target)}
+(defn drop-diff-parent
+  "- Give source-block target-block's order.
+  - inc-after target
+  - dec-after source"
+  [kind source source-parent target target-parent]
+  (let [t-order               (:block/order target)
+        new-block             {:db/id (:db/id source) :block/order (if (= kind :above)
+                                                                     t-order
+                                                                     (inc t-order))}
         reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (dec (:block/order target)))
-                                   (concat [new-block]))]
-    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]))
+        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
+                                                                       (dec t-order)
+                                                                       t-order))
+                                   (concat [new-block]))
+        retract               [:db/retract (:db/id source-parent) :block/children (:db/id source)]
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
+    [retract
+     new-source-parent
+     new-target-parent]))
 
 
-(defn drop-below-same-parent
-  "source block's new order is target block's order"
-  [source source-parent target]
-  (let [new-source-block {:db/id (:db/id source) :block/order (:block/order target)}
-        reindex (dec-after (:db/id source-parent) (:block/order source))]
-    (concat [new-source-block] reindex)))
+(reg-event-fx
+  :drop/diff
+  (fn [_ [_ kind source source-parent target target-parent]]
+    {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
 
 
-(defn drop-below-diff-parent
-  "source block's new order is target-order + 1"
-  [source source-parent target target-parent]
-  (let [new-source-block {:db/id (:db/id source) :block/order (inc (:block/order target))}
-        reindex-source-parent   (dec-after (:db/id source-parent) (:block/order source))]
-    [[:db/retract (:db/id source-parent) :block/children (:db/id source)]
-     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-     {:db/id (:db/id target-parent) :block/children [new-source-block]}]))
-
-
-;; TODO: don't transact when we know TXes won't change anything
 (defn drop-bullet
   [source-uid target-uid kind]
   (let [source        (db/get-block [:block/uid source-uid])
         target        (db/get-block [:block/uid target-uid])
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
-        same-parent? (= source-parent target-parent)]
-    {:fx [[:dispatch
-           [:transact
-            (cond
-              (= kind :child) (drop-child source source-parent target)
-              (and (= kind :below) same-parent?) (drop-below-same-parent source source-parent target)
-              (and (= kind :below) (not same-parent?)) (drop-below-diff-parent source source-parent target target-parent)
-              (and (= kind :above) same-parent?) (drop-above-same-parent source target source-parent)
-              (and (= kind :above) (not same-parent?)) (drop-above-diff-parent source target source-parent target-parent))]]]}))
+        same-parent?  (= source-parent target-parent)
+        event         (cond
+                        (= kind :child) [:drop/child source source-parent target]
+                        same-parent? [:drop/same kind source source-parent target]
+                        (not same-parent?) [:drop/diff kind source source-parent target target-parent])]
+    {:dispatch event}))
 
 
 (reg-event-fx
-  :drop-bullet
-  (fn-traced [_ [_ source-uid target-uid kind]]
-             (drop-bullet source-uid target-uid kind)))
+  :drop
+  (fn [_ [_ source-uid target-uid kind]]
+    (drop-bullet source-uid target-uid kind)))
 
 
-;; TODO: convert to tree instead of flat map (handling indentation), write tests for markdown list parsing
+(defn drop-multi-same-parent-all
+  [kind source-uids parent target]
+  (let [source-blocks       (mapv #(db/get-block [:block/uid %]) source-uids)
+        f-source            (first source-blocks)
+        l-source            (last source-blocks)
+        f-s-order           (:block/order f-source)
+        l-s-order           (:block/order l-source)
+        t-order             (:block/order target)
+        target-above?       (< t-order f-s-order)
+        +or-                (if target-above? + -)
+        above?              (= kind :above)
+        below?              (= kind :below)
+        lower-bound         (cond
+                              (and above? target-above?) (dec t-order)
+                              (and below? target-above?) t-order
+                              :else l-s-order)
+        upper-bound         (cond
+                              (and above? (not target-above?)) t-order
+                              (and below? (not target-above?)) (inc t-order)
+                              :else f-s-order)
+        n                   (count source-uids)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order ?n) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
+        new-source-blocks   (if target-above?
+                              (map-indexed (fn [idx x]
+                                             (let [new-order (cond-> (+ idx t-order) below? inc)]
+                                               {:db/id       (:db/id x)
+                                                :block/order new-order}))
+                                           source-blocks)
+                              (map-indexed (fn [idx x]
+                                             (let [new-order (cond-> (- t-order idx) above? dec)]
+                                               {:db/id       (:db/id x)
+                                                :block/order new-order}))
+                                           (reverse source-blocks)))
+        new-parent-children (concat new-source-blocks reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
+
+
+(defn drop-multi-same-source-parents
+  [kind source-uids source-parent target target-parent]
+  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
+        last-source           (last source-blocks)
+        last-s-order          (:block/order last-source)
+        t-order               (:block/order target)
+        n                     (count source-uids)
+        new-source-blocks     (map-indexed (fn [idx x]
+                                             (let [new-order (if (= kind :above)
+                                                               (+ idx t-order)
+                                                               (inc (+ idx t-order)))]
+                                               {:db/id (:db/id x) :block/order new-order}))
+                                           source-blocks)
+        reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
+        bound                 (if (= kind :above) (dec t-order) t-order)
+        reindex-target-parent (->> (plus-after (:db/id target-parent) bound n)
+                                   (concat new-source-blocks))
+        retracts              (map (fn [x] [:db/retract (:db/id source-parent) :block/children [:block/uid x]])
+                                   source-uids)
+        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}
+        tx-data               (conj retracts new-source-parent new-target-parent)]
+    tx-data))
+
+
+(defn drop-multi-diff-source-parents
+  "Only reindex after last target. plus-after"
+  [kind source-uids target target-parent]
+  (let [filtered-children          (->> (d/q '[:find ?children-uid ?o
+                                               :keys block/uid block/order
+                                               :in $ % ?target-uid ?not-contains? ?source-uids
+                                               :where
+                                               (siblings ?target-uid ?children-e)
+                                               [?children-e :block/uid ?children-uid]
+                                               [(?not-contains? ?source-uids ?children-uid)]
+                                               [?children-e :block/order ?o]]
+                                             @db/dsdb db/rules (:block/uid target) db/not-contains? (set source-uids))
+                                        (sort-by :block/order)
+                                        (mapv #(:block/uid %)))
+        t-order                    (:block/order target)
+        index                      (cond
+                                     (= kind :above) t-order
+                                     (and (= kind :below) (db/last-child? (:block/uid target))) t-order
+                                     (= kind :below) (inc t-order))
+        n                          (count filtered-children)
+        head                       (subvec filtered-children 0 index)
+        tail                       (subvec filtered-children index n)
+        new-vec                    (concat head source-uids tail)
+        new-source-uids            (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        source-blocks              (mapv #(db/get-block [:block/uid %]) source-uids)
+        last-s-parent              (last source-parents)
+        last-s-order               (:block/order (last source-blocks))
+        n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
+        reindex-last-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
+                                         source-uids
+                                         source-parents)
+        new-target-parent          {:db/id (:db/id target-parent) :block/children new-source-uids}
+        ;; need to reindex last-source-parent but requires more index management depending on the level of the target parent
+        new-source-parent          {:db/id (:db/id last-s-parent) :block/children reindex-last-source-parent}
+        tx-data                    (conj retracts new-target-parent #_new-source-parent)]
+    (identity new-source-parent)
+    tx-data))
+
+
+(defn drop-multi-child
+  [source-uids target]
+  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
+        source-parents        (mapv #(db/get-parent [:block/uid %]) source-uids)
+        last-source           (last source-blocks)
+        last-s-order          (:block/order last-source)
+        last-s-parent         (last source-parents)
+        new-source-blocks     (map-indexed (fn [idx x] {:block/uid (:block/uid x) :block/order idx})
+                                           source-blocks)
+        n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
+        reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        reindex-target-parent (plus-after (:db/id target) -1 n)
+        retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
+                                    source-uids
+                                    source-parents)
+        new-source-parent     {:db/id (:db/id last-s-parent) :block/children reindex-source-parent}
+        new-target-parent     {:db/id (:db/id target) :block/children (concat reindex-target-parent new-source-blocks)}
+        tx-data               (conj retracts new-source-parent new-target-parent)]
+    tx-data))
+
+
+(reg-event-fx
+  :drop-multi/child
+  (fn [_ [_ source-uid target]]
+    {:dispatch [:transact (drop-multi-child source-uid target)]}))
+
+
+(reg-event-fx
+  :drop-multi/same-all
+  (fn [_ [_ kind source-uids parent target]]
+    {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
+
+
+(reg-event-fx
+  :drop-multi/diff-source
+  (fn [_ [_ kind source-uids target target-parent]]
+    {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
+
+
+(reg-event-fx
+  :drop-multi/same-source
+  (fn [_ [_ kind source-uids first-source-parent target target-parent]]
+    {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
+
+
+(defn drop-bullet-multi
+  "Cases:
+  - the same 4 cases from drop-bullet
+  - but also if blocks span across multiple parent levels"
+  [source-uids target-uid kind]
+  (let [same-parent-all?     (db/same-parent? (conj source-uids target-uid))
+        same-parent-source?  (db/same-parent? source-uids)
+        diff-parents-source? (not same-parent-source?)
+        target               (db/get-block [:block/uid target-uid])
+        first-source-uid     (first source-uids)
+        first-source-parent  (db/get-parent [:block/uid first-source-uid])
+        target-parent        (db/get-parent [:block/uid target-uid])
+        event                (cond
+                               (= kind :child) [:drop-multi/child source-uids target]
+                               (and same-parent-all?) [:drop-multi/same-all kind source-uids first-source-parent target]
+                               (and diff-parents-source?) [:drop-multi/diff-source kind source-uids target target-parent]
+                               (and same-parent-source?) [:drop-multi/same-source kind source-uids first-source-parent target target-parent])]
+    {:fx [[:dispatch [:selected/clear-items]]
+          [:dispatch event]]}))
+
+
+(reg-event-fx
+  :drop-multi
+  (fn [_ [_ uids target-uid kind]]
+    (drop-bullet-multi uids target-uid kind)))
+
+
+(defn text-to-blocks
+  "Split text by new line.
+  For each line, count left offset.
+  Trim * - and whitespace.
+  Use a double loop to determine parent.
+  Assign parents and orders."
+  [text uid]
+  (let [lines    (clojure.string/split-lines text)
+        counts   (->> lines
+                      (map #(re-find #"^\s*(-|\*)?" %))
+                      (map #(-> % first count)))
+        sanitize (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
+                      lines)
+        blocks   (map-indexed (fn [idx x]
+                                {:db/id        (dec (* -1 idx))
+                                 :block/string x
+                                 :block/open   true
+                                 :block/uid    (gen-block-uid)}) sanitize)
+        n        (count blocks)
+        parents  (loop [i   1
+                        res [(first blocks)]]
+                   (if (= n i)
+                     res
+                     (recur (inc i)
+                            (loop [j (dec i)]
+                              (if (neg? j)
+                                (conj res (nth blocks i))
+                                (let [curr-count (nth counts i)
+                                      prev-count (nth counts j nil)]
+                                  (if (< prev-count curr-count)
+                                    (conj res {:db/id (:db/id (nth blocks j)) :block/children (nth blocks i)})
+                                    (recur (dec j)))))))))
+        tx-data  (->> (group-by :db/id parents)
+                      (mapcat (fn [[_tempid blocks]]
+                                (loop [order 0
+                                       res   []
+                                       data  blocks]
+                                  (let [block (first data)
+                                        {:block/keys [children]} block]
+                                    (cond
+                                      (nil? block) res
+                                      (nil? children) (recur order
+                                                             (conj res {:db/id [:block/uid uid] :block/children (assoc block :block/order 0)})
+                                                             (next data))
+                                      :else (recur (inc order)
+                                                   (conj res (assoc-in block [:block/children :block/order] order))
+                                                   (next data))))))))]
+    tx-data))
+
+
+"TODO: If at end of a parent block, prepend children with new datoms.
+If in an empty block, make empty block the root
+Otherwise append after current block."
+
+
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
-    (let [lines (clojure.string/split-lines text)
-          block (db/get-block [:block/uid uid])
-          {b-order :block/order} block
-          parent (db/get-parent [:block/uid uid])
-          {p-id :db/id} parent
-          now (now-ts)
-          new-datoms (map-indexed (fn [i x]
-                                    (let [start (subs x 0 2)
-                                          s (if (or (= start "- ")
-                                                    (= start "* "))
-                                              (subs x 2)
-                                              x)]
-                                      {:block/uid    (gen-block-uid)
-                                       :create/time  now
-                                       :edit/time    now
-                                       :block/order  (+ 1 i b-order)
-                                       :block/string s}))
-                                  lines)
-          reindex (plus-after p-id b-order (count lines))
-          children (concat new-datoms reindex)]
-      {:dispatch [:transact [{:db/id p-id :block/children children}]]})))
+    (let [block      (db/get-block [:block/uid uid])
+          start-idx  (inc (:block/order block))
+          parent     (db/get-parent [:block/uid uid])
+          blocks     (text-to-blocks text (:block/uid parent))
+          n          (count (filter (fn [x] (vector? (:db/id x))) blocks))
+          reindex    (plus-after (:db/id parent) (:block/order block) n)
+          new-blocks (loop [idx  0
+                            res  []
+                            data blocks]
+                       (if (empty? data)
+                         res
+                         (let [block (first data)]
+                           (if (vector? (:db/id block))
+                             (recur (inc idx)
+                                    (conj res (assoc-in block [:block/children :block/order] (+ start-idx idx)))
+                                    (next data))
+                             (recur idx
+                                    (conj res block)
+                                    (next data))))))
+          tx-data    (concat reindex new-blocks)]
+      {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above
