@@ -584,6 +584,7 @@
        (remove #(= (:block/uid %) uid))
        count))
 
+
 (defn get-linked-block-references
   [block]
   (->> (:block/_refs block)
