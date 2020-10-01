@@ -8,8 +8,8 @@
     [clojure.string :refer [replace-first blank?]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
-    [goog.functions :refer [throttle]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
+    [goog.functions :refer [throttle]]
     [re-frame.core :refer [dispatch]])
   (:import
     (goog.events
@@ -339,6 +339,7 @@
 ;;; Enter
 
 (def throttle-dispatch (throttle #(dispatch %) 500))
+
 
 (defn handle-enter
   [e uid state]
