@@ -97,10 +97,10 @@
       (and (= key KeyCodes.G) ctrl)
       (dispatch [:devtool/toggle])
 
-      (and (= key KeyCodes.L) ctrl shift)
+      (and (= key KeyCodes.BACKSLASH) ctrl shift)
       (dispatch [:right-sidebar/toggle])
 
-      (and (= key KeyCodes.L) ctrl)
+      (and (= key KeyCodes.BACKSLASH) ctrl)
       (dispatch [:left-sidebar/toggle]))))
 
 
