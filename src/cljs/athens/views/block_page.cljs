@@ -120,7 +120,8 @@
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
           [autosize/textarea
-           {:value       (:string/local @state)
+           {:id          (str "editable-uid-" uid)
+            :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
             :on-key-down (fn [e] (block-page-key-down e uid state))
