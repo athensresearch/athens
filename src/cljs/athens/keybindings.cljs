@@ -9,6 +9,7 @@
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
+    [goog.functions :refer [throttle]]
     [re-frame.core :refer [dispatch]])
   (:import
     (goog.events
@@ -337,6 +338,9 @@
 
 ;;; Enter
 
+(def throttle-dispatch (throttle #(dispatch %) 500))
+
+
 (defn handle-enter
   [e uid state]
   (let [{:keys [shift ctrl start head tail value]} (destruct-key-down e)
@@ -358,7 +362,7 @@
                                :else (str "{{[[TODO]]}} " value))]
              (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
-      :else (dispatch [:enter uid value start]))))
+      :else (throttle-dispatch [:enter uid value start]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
