@@ -138,10 +138,15 @@
                       :block/uid    "0250cd89f",
                       :block/open   true,
                       :db/id        377,
-                      :block/order  6}],
+                      :block/order  6}
+                     {:db/id 689,
+                      :block/uid "3938f6d7b",
+                      :block/string "Athens is persisted to your filesystem at `documents/athens`. Soon you will be able to choose any location for your db (including Dropbox folders).",
+                      :block/open true,
+                      :block/order 7}],
     :block/uid      "0",
     :db/id          1,
-    :page/sidebar   0}
+    :page/sidebar   999}
    {:node/title     "athens/Changelog",
     :block/children [{:block/string   "[[September 29, 2020]]",
                       :block/children [{:block/string "The beginning of the in-Athens Changelog.",
@@ -155,4 +160,4 @@
                       :block/order    0}],
     :block/uid      "1",
     :db/id          378
-    :page/sidebar   1}])
+    :page/sidebar   1000}])
