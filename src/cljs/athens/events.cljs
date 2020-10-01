@@ -1125,12 +1125,9 @@
                                                    (next data))))))))]
     tx-data))
 
-
-"TODO: If at end of a parent block, prepend children with new datoms.
-If in an empty block, make empty block the root
-Otherwise append after current block."
-
-
+;;TODO: If at end of a parent block, prepend children with new datoms.
+;;If in an empty block, make empty block the root
+;;Otherwise append after current block.
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
