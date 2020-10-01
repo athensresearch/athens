@@ -631,6 +631,8 @@
                                  (and (not (:block/open block))
                                       (not-empty (:block/children block))
                                       (= index (count val))) [:enter/new-block block parent]
+                                 (and (empty? val)
+                                      (= context-root-uid (:block/uid parent))) [:enter/new-block block parent]
                                  (not (zero? index)) [:enter/split-block uid val index]
                                  (and (empty? val) root-block?) [:enter/new-block block parent]
                                  (empty? val) [:unindent uid val context-root-uid]
