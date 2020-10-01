@@ -130,16 +130,43 @@
             :on-blur     (fn [e] (athens.views.blocks/textarea-blur e uid state))}]
           [:span (:string/local @state)]]
 
-
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]
-                   ^{:key id} [block-el child]))]]))))
+                   ^{:key id} [block-el child]))]
+
+         ;; Refs
+         (when (not-empty refs)
+           [:div
+            [:section (use-style node-page/references-style {:key "Linked References"})
+             [:h4 (use-style node-page/references-heading-style)
+              [(r/adapt-react-class mui-icons/Link)]
+              [:span "Linked References"]
+              [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+             [:div (use-style node-page/references-list-style)
+              (doall
+                (for [[group-title group] refs]
+                  [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+                   [:h4 (use-style node-page/references-group-title-style)
+                    [:a {:on-click #(navigate-uid (:block/uid @(athens.parse-renderer/pull-node-from-string group-title)))} group-title]]
+                   (doall
+                     (for [{:block/keys [uid parents] :as block} group]
+                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" uid)})
+                        ;; TODO: expand parent on click
+                        [block-el block]
+                        (when (> (count parents) 1)
+                          [breadcrumbs-list {:style node-page/reference-breadcrumbs-style}
+                           [(r/adapt-react-class mui-icons/LocationOn)]
+                           (doall
+                             (for [{:keys [node/title block/string block/uid]} parents]
+                               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]]])]))))
 
 
 (defn block-page-component
   [ident]
-  (let [block (db/get-block-document ident)
-        parents (db/get-parents-recursively ident)
-        editing-uid @(subscribe [:editing/uid])]
-    [block-page-el block parents editing-uid]))
+  (let [block       (db/get-block-document ident)
+        parents     (db/get-parents-recursively ident)
+        editing-uid @(subscribe [:editing/uid])
+        refs        (db/get-linked-block-references block)]
+    [block-page-el block parents editing-uid refs]))
+
