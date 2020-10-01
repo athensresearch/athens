@@ -7,6 +7,10 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+    [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
+    [athens.views.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -96,29 +100,23 @@
 
 
 (defn block-page-el
-  [_ _ _]
+  [_ _ _ _]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
-    (fn [block parents editing-uid]
+    (fn [block parents editing-uid refs]
       (let [{:block/keys [string children uid]} block]
 
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div.block-page (use-style page-style
-                                    {:data-uid uid})
+        [:div.block-page (use-style page-style {:data-uid uid})
          ;; Parent Context
          [:span {:style {:color "gray"}}
-
-          (doall
-            (->> (for [{:keys [node/title block/uid block/string]} parents]
-                   ^{:key uid}
-                   [:span {:style {:cursor "pointer"} :on-click #(navigate-uid uid)} [parse-and-render (or string title) uid]])
-                 (interpose ">")
-                 (map (fn [x]
-                        (if (= x ">")
-                          [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                          x)))))]
+          [breadcrumbs-list {:style {:font-size "1.2rem"}}
+           (doall
+             (for [{:keys [node/title block/uid block/string]} parents]
+               ^{:key uid}
+               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} [parse-and-render (or title string) uid]]))]]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
