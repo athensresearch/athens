@@ -4,7 +4,7 @@
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
-    [re-frame.core :refer [#_subscribe dispatch reg-sub reg-event-fx reg-fx]]
+    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
     [reitit.frontend.controllers :as rfc]
@@ -74,8 +74,12 @@
 
 
 (defn navigate-uid
+  "Don't navigate if already on the page."
   ([uid]
-   (dispatch [:navigate :page {:id uid}]))
+   (let [current-route @(subscribe [:current-route])
+         route-uid (-> current-route :path-params :id)]
+     (when (not= route-uid uid)
+       (dispatch [:navigate :page {:id uid}]))))
   ([uid e]
    (let [shift (.. e -shiftKey)]
      (if shift
