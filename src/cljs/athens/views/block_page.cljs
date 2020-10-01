@@ -3,6 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [destruct-key-down]]
+    [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
@@ -109,13 +110,15 @@
          ;; Parent Context
          [:span {:style {:color "gray"}}
 
-          (->> (for [{:keys [node/title block/uid block/string]} parents]
-                 [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
-               (interpose ">")
-               (map (fn [x]
-                      (if (= x ">")
-                        [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                        x))))]
+          (doall
+            (->> (for [{:keys [node/title block/uid block/string]} parents]
+                   ^{:key uid}
+                   [:span {:style {:cursor "pointer"} :on-click #(navigate-uid uid)} [parse-and-render (or string title) uid]])
+                 (interpose ">")
+                 (map (fn [x]
+                        (if (= x ">")
+                          [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
+                          x)))))]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
