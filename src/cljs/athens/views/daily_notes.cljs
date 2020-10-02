@@ -73,6 +73,8 @@
                                    :where [?e :block/uid ?uid]]
                                  db/dsdb @note-refs)
                              not-empty
+                             sort
+                             reverse
                              (map (fn [x] [:block/uid x]))
                              (pull-many db/dsdb '[*])
                              deref)]
