@@ -352,11 +352,11 @@
 
 (reg-event-fx
   :transact
-  (fn [_ [_ datoms]]
+  (fn [_ [_ tx-data]]
     (let [synced? @(subscribe [:db/synced])]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
             [:dispatch [:save]]
-            [:transact! datoms]]})))
+            [:transact! tx-data]]})))
 
 
 (reg-event-fx

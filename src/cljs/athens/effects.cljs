@@ -1,7 +1,6 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
-    [athens.parse-renderer :refer [pull-node-from-string]]
     [athens.parser :as parser]
     [athens.util :refer [now-ts gen-block-uid]]
     [cljs-http.client :as http]
@@ -20,11 +19,6 @@
 
 ;;; Effects
 
-;; Algorithm:
-;; - look at string (old or new)
-;; - parse for database values: links, block refs, attributes (not yet supported), etc.
-;; - filter based on remove or add conditions
-;; - map to datoms
 (defn walk-string
   "Walk previous and new strings to delete or add links, block references, etc. to datascript."
   [string]
@@ -44,6 +38,8 @@
 
 
 (defn new-titles-to-tx-data
+  "Filter: node/title doesn't exist yet.
+  Map: new node/title entity."
   [new-titles]
   (let [now (now-ts)]
     (->> new-titles
@@ -56,62 +52,52 @@
 
 
 (defn old-titles-to-tx-data
+  "Filter: new-str doesn't include link, page exists, page has no children, and has no other [[linked refs]].
+  Map: retractEntity"
   [old-titles uid new-str]
   (->> old-titles
-       (filter (fn [t]
-                 (let [block (db/search-exact-node-title t)]
-                   ;; makes sure the page link is deleted in this node as well
-                   (and (not (clojure.string/includes? new-str t))
-                        ;; makes sure the page link is deleted in this node as well
-                        (not (nil? block))
-                        ;; makes sure the page link has no children
-                        (nil? (:block/children (db/get-block-document (:db/id block))))
-                        ;; makes sure the page link is not present in other pages
-                        (zero? (db/count-linked-references-excl-uid t uid))))))
-       (mapcat (fn [t]
-                 (let [uid (:block/uid @(pull-node-from-string t))]
-                   (when (some? uid)
-                     (db/retract-uid-recursively uid)))))))
+       (filter (fn [title]
+                 (let [node (db/get-block [:node/title title])]
+                   (and (not (clojure.string/includes? new-str title))
+                        node
+                        (empty? (:block/children node))
+                        (zero? (db/count-linked-references-excl-uid title uid))))))
+       (map (fn [title]
+              (when-let [eid (:db/id (db/get-block [:node/title title]))]
+                [:db/retractEntity eid])))))
 
 
 (defn new-refs-to-tx-data
+  "Filter: ((ref-uid)) points to an actual block, and block/ref relationship doesn't exist yet.
+  Map: add block/ref relationship."
   [new-block-refs uid]
   (->> new-block-refs
        (filter (fn [ref-uid]
-                 ;; check that ((ref-uid)) points to an actual entity
-                 ;; find refs of uid
-                 ;; if ((ref-uid)) is not yet a reference, then map datoms
                  (let [eid (db/e-by-av :block/uid ref-uid)
-                       refs (-> (db/get-block-refs uid) set)]
-                   (nil? (refs eid)))))
+                       refs (-> uid db/get-block-refs set)]
+                   (not (contains? refs eid)))))
        (map (fn [ref-uid] [:db/add [:block/uid uid] :block/refs [:block/uid ref-uid]]))))
 
 
 (defn old-refs-to-tx-data
+  "Filter: new-str doesn't include block ref anymore, ((ref-uid)) points to an actual block, and block/ref relationship exists.
+  Map: retract relationship."
   [old-block-refs uid new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
-                 ;; check that ((ref-uid)) points to an actual entity
-                 ;; find refs of uid
-                 ;; if ((ref-uid)) is no longer in the current string and IS a valid reference, retract
-                 (when (not (str/includes? new-str (str "((" ref-uid "))")))
+                 (when-not (str/includes? new-str (str "((" ref-uid "))"))
                    (let [eid  (db/e-by-av :block/uid ref-uid)
-                         refs (-> (db/get-block-refs uid) set)]
-                     (refs eid)))))
+                         refs (-> uid db/get-block-refs set)]
+                     (contains? refs eid)))))
        (map (fn [ref-uid] [:db/retract [:block/uid uid] :block/refs [:block/uid ref-uid]]))))
 
 
-;; or node/title
-;; when block/string is asserted, parse for links and block refs to add
-;; when block/string is retracted, parse for links and block refs to remove
-;; retractions need to look at asserted block/string too. if includes?, obvious filter
-
 (defn parse-for-links
-  "Compare previous string with current string.
-    - If links were added, transact pages.
-    - If links were removed and page is an orphan, retract page.
-    - If block refs were added, transact block/ref.
-    - If block refs were removed, retract block/ref."
+  "When block/string is asserted, parse for links and block refs to add.
+  When block/string is retracted, parse for links and block refs to remove.
+  Retractions need to look at asserted block/string.
+
+  TODO: when user edits title, parse for new pages."
   [with-tx-data]
   (->> with-tx-data
        (filter #(= (second %) :block/string))
@@ -138,17 +124,17 @@
                                               old-block-refs)]
                    tx-data)))))
 
-;;(def a (atom nil))
 
 (reg-fx
   :transact!
   (fn [tx-data]
-    (prn "TX INPUTS")
+    ;;(prn "TX INPUTS")
     (pprint tx-data)
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
-      ;;(reset! a with-tx-data)
+      (prn "TX INPUTS") ;; parsed datoms
+      (pprint final-tx-data)
       (prn "TX OUTPUTS")
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
         (pprint outputs)))))
