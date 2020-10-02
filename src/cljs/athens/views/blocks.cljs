@@ -1,14 +1,13 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db :refer [retract-uid-recursively count-linked-references-excl-uid e-by-av]]
+    [athens.db :as db]
     [athens.events :refer [select-up select-down]]
     [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
-    [athens.parse-renderer :refer [parse-and-render pull-node-from-string]]
-    [athens.parser :as parser]
+    [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [get-dataset-uid gen-block-uid mouse-offset vertical-center]]
+    [athens.util :refer [get-dataset-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -18,7 +17,6 @@
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
-    [instaparse.core :as parse]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -478,92 +476,14 @@
   (swap! state assoc :string/local (.. e -target -value)))
 
 
-;; It's likely that transform can return a clean data structure directly, but just updating an atom for now.
-;; Algorithm:
-;; - look at string (old or new)
-;; - parse for database values: links, block refs, attributes (not yet supported), etc.
-;; - filter based on remove or add conditions
-;; - map to datoms
-(defn walk-string!
-  "Walk previous and new strings to delete or add links, block references, etc. to datascript."
-  [data string]
-  (parse/transform
-    {:page-link (fn [& title]
-                  (let [inner-title (str/join "" title)]
-                    (swap! data update :titles #(conj % inner-title))
-                    (str "[[" inner-title "]]")))
-     :hashtag   (fn [& title]
-                  (let [inner-title (str/join "" title)]
-                    (swap! data update :titles #(conj % inner-title))
-                    (str "#" inner-title)))
-     :block-ref (fn [uid] (swap! data update :block-refs #(conj % uid)))}
-    (parser/parse-to-ast string)))
-
-
-;; TODO: refactor, write better docs
 (defn textarea-blur
-  "When textarea loses focus, transact to datascript.
-  Compare previous string with current string (:string/local).
-  - If links were added, transact pages to database.
-  - If links were removed, add page is an orphan page, retract pages from database.
-  An orphan page has no linked references and no child blocks.
-
-  - If block refs were added, transact to datascript.
-  - If block refs were removed, retract."
   [_e uid state]
   (let [{:string/keys [local previous]} @state]
     (when (not= local previous)
       (swap! state assoc :string/previous local)
       (let [new-block-string {:db/id [:block/uid uid] :block/string local}
-            old-data (atom {})
-            new-data (atom {})]
-        (walk-string! old-data previous)
-        (walk-string! new-data local)
-        (let [new-titles (->> (:titles @new-data)
-                              (filter (fn [x] (nil? (db/search-exact-node-title x))))
-                              (map (fn [t]
-                                     {:node/title t
-                                      :block/uid (gen-block-uid)
-                                      :create/time (.getTime (js/Date.))
-                                      :edit/time (.getTime (js/Date.))})))
-
-              old-titles (->> (:titles @old-data)
-                              (filter (fn [t]
-                                        (let [block (db/search-exact-node-title t)]
-                                          (and (not (nil? block));; makes sure the page link is valid
-                                               (nil? (:block/children (db/get-block-document (:db/id block)))) ;; makes sure the page link has no children
-                                               (zero? (count-linked-references-excl-uid t uid)) ;; makes sure the page link is not present in other pages
-                                               ;; makes sure the page link is deleted in this node as well
-                                               (not (clojure.string/includes? local t))))))
-                              (mapcat (fn [t]
-                                        (let [uid (:block/uid @(pull-node-from-string t))]
-                                          (when (some? uid)
-                                            (retract-uid-recursively uid))))))
-              new-block-refs (->> (:block-refs @new-data)
-                                  (filter (fn [ref-uid]
-                                            ;; check that ((ref-uid)) points to an actual entity
-                                            ;; find refs of uid
-                                            ;; if ((ref-uid)) is not yet a reference, then map datoms
-                                            (let [eid (e-by-av :block/uid ref-uid)
-                                                  refs (-> (db/get-block-refs uid) set)]
-                                              (nil? (refs eid)))))
-                                  (map (fn [ref-uid] [:db/add [:block/uid uid] :block/refs [:block/uid ref-uid]])))
-              old-block-refs (->> (:block-refs @old-data)
-                                  (filter (fn [ref-uid]
-                                            ;; check that ((ref-uid)) points to an actual entity
-                                            ;; find refs of uid
-                                            ;; if ((ref-uid)) is no longer in the current string and IS a valid reference, retract
-                                            (when (not (str/includes? local (str "((" ref-uid "))")))
-                                              (let [eid (e-by-av :block/uid ref-uid)
-                                                    refs (-> (db/get-block-refs uid) set)]
-                                                (refs eid)))))
-                                  (map (fn [ref-uid] [:db/retract [:block/uid uid] :block/refs [:block/uid ref-uid]])))
-              new-datoms (concat [new-block-string]
-                                 new-titles
-                                 old-titles
-                                 new-block-refs
-                                 old-block-refs)]
-          (dispatch [:transact new-datoms]))))))
+            tx-data          [new-block-string]]
+        (dispatch [:transact tx-data])))))
 
 
 (defn find-selected-items
