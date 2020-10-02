@@ -125,8 +125,7 @@
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
             :on-key-down (fn [e] (block-page-key-down e uid state))
-            :on-change   (fn [e] (block-page-change e uid state))
-            :on-blur     (fn [e] (athens.views.blocks/textarea-blur e uid state))}]
+            :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 
          ;; Children
