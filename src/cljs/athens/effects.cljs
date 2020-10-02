@@ -1,20 +1,21 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
+    [athens.parse-renderer :refer [pull-node-from-string]]
     [athens.parser :as parser]
+    [athens.util :refer [now-ts gen-block-uid]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
+    [clojure.string :as str]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
-    [instaparse.core :as parse]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setCursorPosition]]
+    [instaparse.core :as parse]
     [posh.reagent :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx]]
-    [clojure.string :as str]
-    [athens.parser :as parser]))
+    [re-frame.core :refer [dispatch reg-fx]]))
 
 
 ;;; Effects
@@ -44,12 +45,12 @@
 
 (defn new-titles-to-tx-data
   [new-titles]
-  (let [now (athens.util/now-ts)]
+  (let [now (now-ts)]
     (->> new-titles
          (filter (fn [x] (nil? (db/search-exact-node-title x))))
          (map (fn [t]
                 {:node/title  t
-                 :block/uid   (athens.util/gen-block-uid)
+                 :block/uid   (gen-block-uid)
                  :create/time now
                  :edit/time   now})))))
 
@@ -68,7 +69,7 @@
                         ;; makes sure the page link is not present in other pages
                         (zero? (db/count-linked-references-excl-uid t uid))))))
        (mapcat (fn [t]
-                 (let [uid (:block/uid @(athens.parse-renderer/pull-node-from-string t))]
+                 (let [uid (:block/uid @(pull-node-from-string t))]
                    (when (some? uid)
                      (db/retract-uid-recursively uid)))))))
 
