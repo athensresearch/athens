@@ -76,13 +76,13 @@
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
-   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil]
-   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil]
-   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil]
-   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil]
-   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
+  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
+   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]])
 
 ;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
 ;;[mui-icons/DateRange "Date Picker"]
@@ -130,25 +130,32 @@
 (defn auto-complete-slash
   ([state e]
    (let [{:search/keys [index results]} @state
-         {:keys [value head tail]} (destruct-key-down e)
-         [_ _ expansion _] (nth results index)
-         expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #".*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)
-         value1    (swap! state assoc
-                          :search/type nil
-                          :string/local new-str)]
-     value1))
-  ([state target expansion]
-   (let [{:keys [value head tail]} (destruct-target target)
+         {:keys [value head tail target]} (destruct-key-down e)
+         [_ _ expansion _ pos] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
          start-idx (dec (count (re-find #".*/" head)))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expand tail)]
      (swap! state assoc
             :search/type nil
-            :string/local new-str))))
+            :string/local new-str)
+     (when pos
+       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
+                      50))))
+
+  ([state target item]
+   (let [{:keys [value head tail]} (destruct-target target)
+         [_ _ expansion _ pos] item
+         expand    (if (fn? expansion) (expansion) expansion)
+         start-idx (dec (count (re-find #".*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str)
+     (when pos
+       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
+                      50)))))
 
 
 (defn auto-complete-hashtag

@@ -60,7 +60,8 @@
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header  (.. e -target (closest ".page-header"))
         closest-bullet       (.. e -target (closest ".bullet"))
-        closest              (or closest-block closest-block-header closest-page-header)]
+        closest-dropdown     (.. e -target (closest "#dropdown-menu"))
+        closest              (or closest-block closest-block-header closest-page-header closest-dropdown)]
     (when (and selected-items?
                (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
