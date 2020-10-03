@@ -371,8 +371,8 @@
 
 
 (defn inline-item-click
-  [state block expansion]
-  (let [id        (str "#editable-uid-" (:block/uid block))
+  [state uid expansion]
+  (let [id        (str "#editable-uid-" uid)
         target    (.. js/document (querySelector id))]
     (case (:search/type @state)
       :hashtag (auto-complete-hashtag state target expansion)
@@ -412,7 +412,8 @@
                                              [button {:key      (str "inline-search-item" uid)
                                                       :id       (str "dropdown-item-" i)
                                                       :active   (= index i)
-                                                      :on-click (fn [_] (inline-item-click state block (or string title)))}
+                                                      ;; if page link, expand to title. otherwise expand to uid for a block ref
+                                                      :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
                                               (or title string)])))]])))})))
 
 
