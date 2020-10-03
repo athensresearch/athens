@@ -696,7 +696,7 @@
             n-sib         (count (:block/children older-sib))
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                        blocks)
-            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks}
+            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks :block/open true}
             reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
             new-parent    {:db/id (:db/id parent) :block/children reindex}
             retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
