@@ -417,10 +417,10 @@
 
 
 (defn slash-item-click
-  [state block expansion]
+  [state block item]
   (let [id        (str "#editable-uid-" (:block/uid block))
         target    (.. js/document (querySelector id))]
-    (auto-complete-slash state target expansion)))
+    (auto-complete-slash state target item)))
 
 
 (defn slash-menu-el
@@ -445,13 +445,11 @@
                                                   {:style {:position "absolute" :top "100%" :left "-0.125em"}})
                                       [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
                                        (doall
-                                         (for [[i [text icon expansion kbd]] (map-indexed list results)]
+                                         (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
                                            [button {:key      text
                                                     :id       (str "dropdown-item-" i)
                                                     :active   (= i index)
-                                                    :on-click (fn [_] (slash-item-click state block expansion))}
-                                            ;; TODO: do not unfocus textarea
-                                            ;;:on-click #(auto-complete-slash i state)}
+                                                    :on-click (fn [_] (slash-item-click state block item))}
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
