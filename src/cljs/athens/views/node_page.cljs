@@ -372,6 +372,7 @@
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
+                               (.. e stopPropagation)
                                (if show
                                  (swap! state assoc :menu/show false)
                                  (let [rect (.. e -target getBoundingClientRect)]
