@@ -38,7 +38,7 @@
                                   [:&:hover {:z-index 1}]]})
 
 
-(def hashtag {::stylefy/mode [[:hover {:text-decoration "underline"}]]
+(def hashtag {::stylefy/mode [[:hover {:text-decoration "underline" :cursor "pointer"}]]
               ::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
 
 
