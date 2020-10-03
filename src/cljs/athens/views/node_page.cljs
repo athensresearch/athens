@@ -420,7 +420,7 @@
                               [(r/adapt-react-class mui-icons/LocationOn)]
                               (doall
                                 (for [{:keys [node/title block/string block/uid]} parents]
-                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]])))]))))
+                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid %)} (or title string)]))])]))]))]])))]))))
 
 
 (defn node-page-component

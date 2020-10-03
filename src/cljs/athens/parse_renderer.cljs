@@ -115,7 +115,7 @@
                       (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
                         (if @block
                           [:span (use-style block-ref {:class "block-ref"})
-                           [:span {:class "contents" :on-click #(navigate-uid ref-uid)}
+                           [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
                             (if (= uid ref-uid)
                               [parse-and-render "{{SELF}}"]
                               [parse-and-render (:block/string @block) ref-uid])]]
