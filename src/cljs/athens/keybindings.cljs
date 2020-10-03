@@ -154,8 +154,8 @@
             :search/type nil
             :string/local new-str)
      (when pos
-        (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
-                       50)))))
+       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
+                      50)))))
 
 
 (defn auto-complete-hashtag
