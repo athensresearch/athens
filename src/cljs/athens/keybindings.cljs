@@ -201,7 +201,7 @@
      (setStart target (+ 2 start))))
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         {:keys [start head tail]} target
+         {:keys [start head tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
