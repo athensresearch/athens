@@ -440,7 +440,6 @@
                            [ref-comp block]]))]))]])))]))))
 
 
-
 (defn node-page-component
   [ident]
   (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)

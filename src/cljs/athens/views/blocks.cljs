@@ -854,7 +854,6 @@
                                                                                     :opacity "1"})))]])))))
 
 
-
 (defn block-component
   [ident]
   (let [block (db/get-block-document ident)]
