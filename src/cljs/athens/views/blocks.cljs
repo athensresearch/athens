@@ -347,11 +347,17 @@
 ;;; Components
 
 (defn toggle-el
-  [{:block/keys [open uid children]}]
+  [{:block/keys [open uid children]} state ref]
   (if (seq children)
     [:button (use-style block-disclosure-toggle-style
-                        {:class    (if open "open" "closed")
-                         :on-click #(toggle [:block/uid uid] open)})
+                        {:class    (if (or (and (true? ref) (:ref/open @state))
+                                           (and (false? ref) open))
+                                     "open"
+                                     "closed")
+                         :on-click (fn [_]
+                                     (if (true? ref)
+                                       (swap! state update :ref/open not)
+                                       (toggle [:block/uid uid] open)))})
      [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
@@ -359,7 +365,7 @@
 (defn tooltip-el!
   "Looks at re-frame-10x open state to show meta-data or not."
   [block state]
-  (let [{:block/keys [uid order] dbid :db/id} block
+  (let [{:block/keys [uid order open] dbid :db/id} block
         {:keys [dragging tooltip]} @state
         re-frame-10x? (= "\"true\"" (.. js/localStorage (getItem "day8.re-frame-10x.using-trace?")))]
     (when (and tooltip (not dragging) re-frame-10x?)
@@ -369,7 +375,8 @@
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]])))
+       [:div [:b "order"] [:span order]]
+       [:div [:b "open"] [:span (str open)]]])))
 
 
 (defn inline-item-click
@@ -641,10 +648,12 @@
 
 
 (defn bullet-el
-  [_ _]
-  (fn [block state]
+  [_ _ _]
+  (fn [block state ref]
     (let [{:block/keys [uid children open]} block]
-      [:span {:class           ["bullet" (when (and (seq children) (not open))
+      [:span {:class           ["bullet" (when (and (seq children)
+                                                    (or (and (true? ref) (not (:ref/open @state)))
+                                                        (and (false? ref) (not open))))
                                            "closed-with-children")]
               :draggable       true
               :on-click        (fn [e] (navigate-uid uid e))
@@ -769,73 +778,78 @@
 ;;TODO: more clarity on open? and closed? predicates, why we use `cond` in one case and `if` in another case)
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
-  [_]
-  (let [state (r/atom {:string/local      nil
-                       :string/previous   nil
-                       :search/type       nil ;; one of #{:page :block :slash :hashtag}
-                       :search/results    nil
-                       :search/query      nil
-                       :search/index      nil
-                       :dragging          false
-                       :drag-target       nil
-                       :last-keydown      nil
-                       :context-menu/x    nil
-                       :context-menu/y    nil
-                       :context-menu/show false})]
+  ([_block]
+   [block-el _block false])
+  ([_block ref]
+   (let [state (r/atom {:string/local      nil
+                        :string/previous   nil
+                        :search/type       nil              ;; one of #{:page :block :slash :hashtag}
+                        :search/results    nil
+                        :search/query      nil
+                        :search/index      nil
+                        :dragging          false
+                        :drag-target       nil
+                        :last-keydown      nil
+                        :context-menu/x    nil
+                        :context-menu/y    nil
+                        :context-menu/show false
+                        :ref/open          (not ref)})]
 
 
-    (fn [block]
-      (let [{:block/keys [uid string open children _refs]} block
-            {:search/keys [] :keys [dragging drag-target]} @state
-            is-editing @(subscribe [:editing/is-editing uid])
-            is-selected @(subscribe [:selected/is-selected uid])]
+     (fn [block ref]
+       (let [{:block/keys [uid string open children _refs]} block
+             {:search/keys [] :keys [dragging drag-target]} @state
+             is-editing  @(subscribe [:editing/is-editing uid])
+             is-selected @(subscribe [:selected/is-selected uid])]
 
-        ;;(prn uid is-selected)
+         ;; If datascript string value does not equal local value, overwrite local value.
+         ;; Write on initialization
+         ;; Write also from backspace, which can join bottom block's contents to top the block.
+         (when (not= string (:string/previous @state))
+           (swap! state assoc :string/previous string :string/local string))
 
-        ;; If datascript string value does not equal local value, overwrite local value.
-        ;; Write on initialization
-        ;; Write also from backspace, which can join bottom block's contents to top the block.
-        (when (not= string (:string/previous @state))
-          (swap! state assoc :string/previous string :string/local string))
+         [:div
+          {:class         ["block-container"
+                           (when (and dragging (not is-selected)) "dragging")
+                           (when is-editing "is-editing")
+                           (when is-selected "is-selected")
+                           (when (and (seq children) open) "show-tree-indicator")]
+           :data-uid      uid
+           :on-drag-over  (fn [e] (block-drag-over e block state))
+           :on-drag-leave (fn [e] (block-drag-leave e block state))
+           :on-drop       (fn [e] (block-drop e block state))}
 
-        [:div
-         {:class         ["block-container"
-                          (when (and dragging (not is-selected)) "dragging")
-                          (when is-editing "is-editing")
-                          (when is-selected "is-selected")
-                          (when (and (seq children) open) "show-tree-indicator")]
-          :data-uid      uid
-          :on-drag-over  (fn [e] (block-drag-over e block state))
-          :on-drag-leave (fn [e] (block-drag-leave e block state))
-          :on-drop       (fn [e] (block-drop e block state))}
+          [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
+          [:div.block-body
+           [:button.block-edit-toggle
+            {:on-click (fn [e]
+                         (when (false? (.. e -shiftKey))
+                           (dispatch [:editing/uid uid])))}]
 
-         [:div.block-body
-          [:button.block-edit-toggle
-           {:on-click (fn [e]
-                        (when (false? (.. e -shiftKey))
-                          (dispatch [:editing/uid uid])))}]
+           [toggle-el block state ref]
+           [context-menu-el block state]
+           [bullet-el block state ref]
+           [tooltip-el! block state]
+           [block-content-el block state]
+           [block-refs-count-el (count _refs) uid]]
 
-          [toggle-el block]
-          [context-menu-el block state]
-          [bullet-el block state]
-          [tooltip-el! block state]
-          [block-content-el block state]
-          [block-refs-count-el (count _refs) uid]]
-
-         [inline-search-el block state]
-         [slash-menu-el block state]
+          [inline-search-el block state]
+          [slash-menu-el block state]
 
 
-         ;; Children
-         (when (and open (seq children))
-           (for [child children]
-             [:div {:key (:db/id child)}
-              [block-el child]]))
+          ;; when true? ref, only look at ref/open
+          ;; Children
+          (when (and (seq children)
+                     (or (and (true? ref) (:ref/open @state))
+                         (and (false? ref) open)))
+            (for [child children]
+              [:div {:key (:db/id child)}
+               [block-el child ref]]))
 
-         [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
-                                                                                   :opacity "1"})))]]))))
+          [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
+                                                                                    :opacity "1"})))]])))))
+
 
 
 (defn block-component

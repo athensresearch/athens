@@ -415,7 +415,7 @@
                         (for [{:block/keys [uid parents] :as block} group]
                           [:div (use-style references-group-block-style {:key (str "ref-" uid)})
                            ;; TODO: expand parent on click
-                           [block-el block]
+                           [block-el block true]
                            (when (> (count parents) 1)
                              [breadcrumbs-list {:style reference-breadcrumbs-style}
                               [(r/adapt-react-class mui-icons/LocationOn)]
