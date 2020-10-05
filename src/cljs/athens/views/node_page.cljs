@@ -22,8 +22,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [tick.alpha.api :as t])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       KeyCodes)))
@@ -327,8 +326,7 @@
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
   (let [state (r/atom init-state)
-        current-route-uid (subscribe [:current-route/uid])
-        current-route-name (subscribe [:current-route/name])]
+        current-route-uid (subscribe [:current-route/uid])]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title} block
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]

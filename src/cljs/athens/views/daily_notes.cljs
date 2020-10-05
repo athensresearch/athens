@@ -87,7 +87,7 @@
            [:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
                                                            :opacity "0.5"
                                                            :min-height "10vh"}))
-             [:h1 "Later"]]
+            [:h1 "Later"]]
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}
