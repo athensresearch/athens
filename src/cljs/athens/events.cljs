@@ -467,17 +467,19 @@
                                [?sib :block/uid ?uid]
                                [?sib :block/children ?ch]]
                              @db/dsdb db/rules uid prev-sib-order)
-        prev-sib        (db/get-block prev-sib)]
+        prev-sib        (db/get-block prev-sib)
+        retract-block  [:db/retractEntity (:db/id block)]
+        new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
-      (and (:node/title parent) (zero? order)) nil
+      (and (:node/title parent) (zero? order)) (let [tx-data [retract-block new-parent]]
+                                                 {:dispatch-n [[:transact tx-data]
+                                                               [:editing/uid nil]]})
       (and (not-empty children) (not-empty (:block/children prev-sib))) nil
       (and (not-empty children) (= parent prev-block)) nil
-      :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
-                  retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+      :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
                   new-prev-block {:db/id          [:block/uid prev-block-uid-]
                                   :block/string   (str (:block/string prev-block) value)
                                   :block/children children}
-                  new-parent     {:db/id (:db/id parent) :block/children reindex}
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
                                 {:ms 10 :dispatch [:editing/uid prev-block-uid- (count (:block/string prev-block))]}]}))))
