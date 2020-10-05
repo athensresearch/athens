@@ -126,13 +126,20 @@
                                               :src   url})])
      :url-link      (fn [{url :url} text]
                       [:a (use-style url-link {:class "url-link"
-                                               :href  url})
+                                               :href  url
+                                               :target "_blank"})
                        text])
+     :raw-url       (fn [url]
+                      [:a (use-style url-link {:class "url-link"
+                                               :href  url
+                                               :target "_blank"})
+
+                       url])
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])
      :pre-formatted (fn [text]
                       [:code text])}
-   tree))
+    tree))
 
 
 (defn parse-and-render

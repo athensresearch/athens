@@ -19,7 +19,7 @@
    
    (* This first rule is the top-level one. *)
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
-   block = (non-reserved-chars / pre-formatted / syntax-in-block / reserved-char) *
+   block = (raw-url / non-reserved-chars / pre-formatted / syntax-in-block / reserved-char) *
    
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
    <any-non-pre-formatted-chars> = #'[^\\`]*'
@@ -45,6 +45,8 @@
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
    <hashtag-delimited> = <'#'> <'[['> page-link-content <']]'>
+
+   raw-url = #'(https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,})'
 
    url-image = <'!'> url-link-text url-link-url
    
