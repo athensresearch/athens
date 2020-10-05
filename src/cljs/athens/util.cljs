@@ -75,6 +75,13 @@
     uid))
 
 
+(defn get-caret-position
+  [target]
+  (let [fn (js/require "./textarea.js")
+        selectionEnd (.. target -selectionEnd)]
+    (js->clj (fn target selectionEnd) :keywordize-keys true)))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 

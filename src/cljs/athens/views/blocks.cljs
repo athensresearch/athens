@@ -25,6 +25,7 @@
     (goog.events
       EventType)))
 
+
 ;;; Styles
 ;;; 
 ;;; Blocks use Em units in many places rather than Rem units because
@@ -392,16 +393,17 @@
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
-                                 (let [{:search/keys [query results index type]} @state]
+                                 (let [{:search/keys [query results index type] caret-position :caret-position} @state
+                                       {:keys [left top]} caret-position]
                                    (when (some #(= % type) [:page :block :hashtag])
                                      [:div (merge (use-style dropdown-style
                                                              {:ref           #(reset! ref %)
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
-                                                           :top        "100%"
                                                            :max-height "20rem"
-                                                           :left       "1.75em"}})
+                                                           :top        (+ 24 top)
+                                                           :left       (+ 24 left)}})
                                       [:div#dropdown-menu (use-style menu-style)
                                        (if (or (str/blank? query)
                                                (empty? results))
@@ -437,13 +439,14 @@
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
-                                 (let [{:search/keys [index results type]} @state]
+                                 (let [{:search/keys [index results type] caret-position :caret-position} @state
+                                       {:keys [left top]} caret-position]
                                    (when (= type :slash)
                                      [:div (merge (use-style dropdown-style
                                                              {:ref           #(reset! ref %)
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
-                                                  {:style {:position "absolute" :top "100%" :left "-0.125em"}})
+                                                  {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
                                       [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
                                        (doall
                                          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
@@ -779,7 +782,8 @@
                        :last-keydown      nil
                        :context-menu/x    nil
                        :context-menu/y    nil
-                       :context-menu/show false})]
+                       :context-menu/show false
+                       :caret-position    nil})]
 
 
     (fn [block]
