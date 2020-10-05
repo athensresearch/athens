@@ -7,7 +7,7 @@
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -22,8 +22,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [tick.alpha.api :as t])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       KeyCodes)))
@@ -137,15 +136,6 @@
 
 
 ;;; Helpers
-
-
-(defn is-timeline-page
-  [uid]
-  (boolean
-    (try
-      (let [[m d y] (str/split uid "-")]
-        (t/date (str/join "-" [y m d])))
-      (catch js/Object _ false))))
 
 
 (defn handle-new-first-child-block-click
@@ -335,7 +325,8 @@
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
-  (let [state (r/atom init-state)]
+  (let [state (r/atom init-state)
+        current-route-uid (subscribe [:current-route/uid])]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title} block
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
@@ -351,13 +342,6 @@
                              :left "35%"})
             [alert-component message confirm-fn cancel-fn]])
 
-         ;; TODO: implement timeline
-         ;;(when timeline-page?
-         ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
-         ;;              [:<>
-         ;;               [:mui-icons Left]
-         ;;               [:span "Timeline"]]}])
-
          ;; Header
          [:h1 (use-style title-style
                          {:data-uid uid
@@ -370,6 +354,13 @@
               :on-blur       (fn [_] (handle-blur block state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
               :on-change     (fn [e] (handle-change e state))}])
+          (when (and timeline-page? (string? @current-route-uid))
+            [button {:on-click #(do (dispatch [:daily-notes/add uid])
+                                    (navigate :home))
+                     :style {}}
+             [:<>
+              [:> mui-icons/ArrowBack]
+              [:> mui-icons/Today]]])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (.. e stopPropagation)

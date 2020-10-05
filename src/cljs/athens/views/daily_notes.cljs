@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
-    [athens.util :refer [get-day]]
+    [athens.util :refer [get-day uid-to-date]]
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -47,13 +47,18 @@
 
 (defn scroll-daily-notes
   [_]
-  (let
-    [daily-notes @(subscribe [:daily-notes/items])
-     from-bottom (.. (getElement "daily-notes") getBoundingClientRect -bottom)
-     doc-height (.. js/document -documentElement -scrollHeight)
-     delta (- from-bottom doc-height)]
-    (when (< delta 1)
-      (dispatch [:daily-note/next (get-day (count daily-notes))]))))
+  (let [daily-notes @(subscribe [:daily-notes/items])
+        el          (getElement "daily-notes")
+        offset-top  (.. el -offsetTop)
+        rect        (.. el getBoundingClientRect)
+        from-bottom (.. rect -bottom)
+        from-top    (.. rect -top)
+        doc-height  (.. js/document -documentElement -scrollHeight)
+        top-delta   (- offset-top from-top)
+        bottom-delta (- from-bottom doc-height)]
+    (cond
+      (< top-delta 1) (dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+      (< bottom-delta 1) (dispatch [:daily-note/next (get-day (uid-to-date (last daily-notes)) 1)]))))
 
 
 (def db-scroll-daily-notes (debounce scroll-daily-notes 500))
@@ -79,6 +84,10 @@
                              (pull-many db/dsdb '[*])
                              deref)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
+           [:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
+                                                           :opacity "0.5"
+                                                           :min-height "10vh"}))
+            [:h1 "Later"]]
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}

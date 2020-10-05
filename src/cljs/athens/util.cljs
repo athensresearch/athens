@@ -103,6 +103,12 @@
                (t/date-time)
                (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
+      :title (t/format title-format day)}))
+  ([date offset]
+   (let [day (t/-
+               (-> date (t/at "0"))
+               (t/new-duration offset :days))]
+     {:uid   (t/format US-format day)
       :title (t/format title-format day)})))
 
 
@@ -116,6 +122,21 @@
       (t/format date-col-format x)
       (string/replace x #"AM" "am")
       (string/replace x #"PM" "pm"))))
+
+
+(defn uid-to-date
+  [uid]
+  (try
+    (let [[m d y] (string/split uid "-")
+          rejoin (string/join "-" [y m d])]
+      (t/date rejoin))
+    (catch js/Object _ nil)))
+
+
+(defn is-timeline-page
+  [uid]
+  (boolean (uid-to-date uid)))
+
 
 
 ;; -- Regex -----------------------------------------------------------

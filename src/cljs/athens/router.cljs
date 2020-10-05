@@ -14,7 +14,20 @@
 (reg-sub
   :current-route
   (fn [db]
-    (:current-route db)))
+    (-> db :current-route)))
+
+
+(reg-sub
+  :current-route/uid
+  (fn [db]
+    (-> db :current-route :path-params :id)))
+
+
+(reg-sub
+  :current-route/name
+  (fn [db]
+    (-> db :current-route :data :name)))
+
 
 ;; events
 (reg-event-fx
@@ -76,9 +89,8 @@
 (defn navigate-uid
   "Don't navigate if already on the page."
   ([uid]
-   (let [current-route @(subscribe [:current-route])
-         route-uid (-> current-route :path-params :id)]
-     (when (not= route-uid uid)
+   (let [current-route-uid @(subscribe [:current-route/uid])]
+     (when (not= current-route-uid uid)
        (dispatch [:navigate :page {:id uid}]))))
   ([uid e]
    (let [shift (.. e -shiftKey)]

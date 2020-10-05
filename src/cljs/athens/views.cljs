@@ -81,9 +81,8 @@
 
 (defn page-panel
   []
-  (let [current-route (subscribe [:current-route])
-        uid           (-> @current-route :path-params :id)
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid uid])]
+  (let [uid (subscribe [:current-route/uid])
+        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
     (cond
       title [node-page-component id]
       string [block-page-component id]
@@ -104,21 +103,20 @@
 
 (defn main-panel
   []
-  (let [current-route (subscribe [:current-route])
+  (let [route-name (subscribe [:current-route/name])
         loading (subscribe [:loading?])]
     (fn []
-      (let [route-name (-> @current-route :data :name)]
-        [:<>
-         [alert]
-         [athena-component]
-         (if @loading
-           [initial-spinner-component]
-           [:div (use-style app-wrapper-style)
-            [app-toolbar]
-            [left-sidebar]
-            [:div (use-style main-content-style
-                             {:on-scroll (when (= route-name :home)
-                                           db-scroll-daily-notes)})
-             [match-panel route-name]]
-            [right-sidebar-component]
-            [devtool-component]])]))))
+      [:<>
+       [alert]
+       [athena-component]
+       (if @loading
+         [initial-spinner-component]
+         [:div (use-style app-wrapper-style)
+          [app-toolbar]
+          [left-sidebar]
+          [:div (use-style main-content-style
+                           {:on-scroll (when (= @route-name :home)
+                                         #(db-scroll-daily-notes %))})
+           [match-panel @route-name]]
+          [right-sidebar-component]
+          [devtool-component]])])))
