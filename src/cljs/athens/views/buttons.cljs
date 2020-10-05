@@ -5,6 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -37,6 +38,7 @@
    :border           "none"
    :display          "inline-flex"
    :align-items      "center"
+   :position         "relative"
    :color            (color :body-text-color)
    :background-color "transparent"
    :transition       "all 0.075s ease"
@@ -79,7 +81,24 @@
   Can pass in a :key prop to make react happy, as a :key or ^{:key}. Just works"
   ([children] [button {} children])
   ([{:keys [style active primary class] :as props} children]
-   (let [props- (dissoc props :style :active :primary :class)]
-     [:button (use-style (merge buttons-style style)
-                         (merge props- {:class (vec (flatten [(when active "is-active") (when primary "is-primary") class]))}))
-      children])))
+   (let [state (r/atom {:tooltip false})]
+     (fn []
+       (let [props- (dissoc props :style :active :primary :class)
+             {:keys [tooltip]} @state]
+         [:div {:style {:position "relative"}}
+          [:button (use-style (merge buttons-style style)
+                              (merge props- {:class          (vec (flatten [(when active "is-active") (when primary "is-primary") class]))
+                                             :on-mouse-enter #(swap! state assoc :tooltip true)
+                                             :on-mouse-leave #(swap! state assoc :tooltip false)}))
+
+           children]
+          (when tooltip
+            [:span (use-style
+                     {:font-size        "1rem"
+                      :position         "absolute"
+                      :z-index          10
+                      :background-color (color :background-plus-1)
+                      :top              "100%"
+                      :left             "0%"
+                      :color            "white"})
+             "tooltip"])])))))
