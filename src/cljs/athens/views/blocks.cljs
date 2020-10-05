@@ -780,7 +780,7 @@
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([_block]
-   [block-el _block {}])
+   [block-el _block {:ref false}])
   ([_block linked-ref-data]
    (let [{:keys [ref initial-open linked-ref-uid parents]} linked-ref-data
          state (r/atom {:string/local      nil
