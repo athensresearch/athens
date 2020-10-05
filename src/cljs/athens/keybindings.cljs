@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day]]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
@@ -280,14 +280,19 @@
 (defn handle-arrow-key
   [e uid state]
   (let [{:keys [key-code shift target]} (destruct-key-down e)
-        top-row?    (block-start? e)
-        bottom-row? (block-end? e)
-        {:search/keys [results type index]} @state
-        up? (= key-code KeyCodes.UP)
-        down? (= key-code KeyCodes.DOWN)
-        left? (= key-code KeyCodes.LEFT)
-        right? (= key-code KeyCodes.RIGHT)]
-
+        start?          (block-start? e)
+        end?            (block-end? e)
+        {:search/keys [results type index] caret-position :caret-position} @state
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (/ textarea-height height)
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)
+        up?             (= key-code KeyCodes.UP)
+        down?           (= key-code KeyCodes.DOWN)
+        left?           (= key-code KeyCodes.LEFT)
+        right?          (= key-code KeyCodes.RIGHT)]
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
@@ -301,22 +306,22 @@
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
-             (or up? down?) (let [cur-index index
-                                  min-index 0
-                                  max-index (max-idx results)
-                                  next-index (cycle-list min-index max-index cur-index up? down?)
+             (or up? down?) (let [cur-index    index
+                                  min-index    0
+                                  max-index    (max-idx results)
+                                  next-index   (cycle-list min-index max-index cur-index up? down?)
                                   container-el (getElement "dropdown-menu")
-                                  target-el (getElement (str "dropdown-item-" next-index))]
+                                  target-el    (getElement (str "dropdown-item-" next-index))]
                               (.. e preventDefault)
                               (swap! state assoc :search/index next-index)
                               (scroll-if-needed target-el container-el)))
 
       ;; Else: navigate across blocks
       :else (cond
-              (and up? top-row?)       (dispatch [:up uid])
-              (and left? top-row?)     (dispatch [:left uid])
-              (and down? bottom-row?)  (dispatch [:down uid])
-              (and right? bottom-row?) (dispatch [:right uid])))))
+              (and up? top-row?) (dispatch [:up uid])
+              (and left? start?) (dispatch [:left uid])
+              (and down? bottom-row?) (dispatch [:down uid])
+              (and right? end?) (dispatch [:right uid])))))
 
 
 ;;; Tab
@@ -553,8 +558,16 @@
   [e uid state]
   (let [d-event (destruct-key-down e)
         {:keys [meta ctrl key-code]} d-event]
+
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
+
+    ;; update caret position for search dropdowns and for up/down
+    (when (nil? (:search/type @state))
+      (let [caret-position (get-caret-position (.. e -target))]
+        (swap! state assoc :caret-position caret-position)))
+
+    ;; dispatch center
     (cond
       (arrow-key-direction e)         (handle-arrow-key e uid state)
       (pair-char? e)                  (handle-pair-char e uid state)
@@ -565,6 +578,3 @@
       (= key-code KeyCodes.ESC)       (handle-escape e state)
       (or meta ctrl)                  (handle-shortcuts e uid state)
       (is-character-key? e)           (write-char e uid state))))
-
-;;:else (prn "non-event" key key-code))))
-
