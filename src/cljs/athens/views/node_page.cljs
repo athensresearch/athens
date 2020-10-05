@@ -337,7 +337,8 @@
                          :linked-ref-uid (:block/uid block)
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
-      (let [{:keys [block parents]} @state]
+      (let [{:keys [block parents]} @state
+            block (db/get-block-document (:db/id block))]
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall

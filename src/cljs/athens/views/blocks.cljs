@@ -799,7 +799,6 @@
 
      (fn [block linked-ref-data]
 
-       (prn "LINK" linked-ref-data)
 
        (let [{:block/keys [uid string open children _refs]} block
              {:search/keys [] :keys [dragging drag-target]} @state
