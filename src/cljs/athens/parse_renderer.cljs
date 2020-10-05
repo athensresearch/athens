@@ -137,6 +137,8 @@
                        url])
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])
+     :italics       (fn [text]
+                      [:em {:class "contents bold"} text])
      :pre-formatted (fn [text]
                       [:code text])}
     tree))

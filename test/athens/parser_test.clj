@@ -33,6 +33,10 @@
     [:block "it’s " [:bold "very"] " important"]
     "it’s **very** important"
 
+    [:block "I cannot" [:italics "emphasize"] " this enough"]
+    "I cannot __emphasize__ this enough"
+    "it’s **very** important"
+
     [:block "I found the answer at" [:raw-url "https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url."]]
     "I found the answer at https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url"))
 
