@@ -78,6 +78,7 @@
                                                   :bottom 0
                                                   :left 0}]]
                       ;;[:&:hover {:background (color :background-minus-1)}]]
+                     [:&.is-linked-ref {:background-color (color :background-plus-2)}]
                      ;; Darken block body when block editing, 
                      ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
@@ -779,8 +780,8 @@
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([_block]
-   [block-el _block false])
-  ([_block ref]
+   [block-el _block false false nil #{}])
+  ([_block ref initial-open linked-ref-uid parents]
    (let [state (r/atom {:string/local      nil
                         :string/previous   nil
                         :search/type       nil              ;; one of #{:page :block :slash :hashtag}
@@ -793,7 +794,7 @@
                         :context-menu/x    nil
                         :context-menu/y    nil
                         :context-menu/show false
-                        :ref/open          (not ref)})]
+                        :ref/open          (or (not ref) initial-open)})]
 
 
      (fn [block ref]
@@ -813,7 +814,8 @@
                            (when (and dragging (not is-selected)) "dragging")
                            (when is-editing "is-editing")
                            (when is-selected "is-selected")
-                           (when (and (seq children) open) "show-tree-indicator")]
+                           (when (and (seq children) open) "show-tree-indicator")
+                           (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
            :data-uid      uid
            :on-drag-over  (fn [e] (block-drag-over e block state))
            :on-drag-leave (fn [e] (block-drag-leave e block state))
@@ -837,7 +839,6 @@
           [inline-search-el block state]
           [slash-menu-el block state]
 
-
           ;; when true? ref, only look at ref/open
           ;; Children
           (when (and (seq children)
@@ -845,7 +846,7 @@
                          (and (false? ref) open)))
             (for [child children]
               [:div {:key (:db/id child)}
-               [block-el child ref]]))
+               [block-el child ref (contains? parents (:block/uid child)) linked-ref-uid parents]]))
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
                                                                                     :opacity "1"})))]])))))

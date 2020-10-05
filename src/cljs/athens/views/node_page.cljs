@@ -328,6 +328,28 @@
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
+(defn ref-comp
+  [block]
+  (let [B (r/atom block)
+        P (r/atom (rest (:block/parents block)))
+        linked-ref-data (r/atom {:ref true
+                                 :initial-open true
+                                 :linked-ref-uid (:block/uid block)
+                                 :parent-uids (set (map :block/uid (:block/parents block)))})]
+    (fn [block]
+      [:<>
+       [breadcrumbs-list {:style reference-breadcrumbs-style}
+        (doall
+          (for [{:keys [node/title block/string block/uid]} @P]
+            [breadcrumb {:key      (str "breadcrumb-" uid)
+                         :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                              new-P (drop-last @P)]
+                                          (reset! B new-B)
+                                          (reset! P new-P)))}
+             (or title string)]))]
+       [block-el @B true true (:block/uid block) (set (map :block/uid (:block/parents block)))]])))
+
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
@@ -412,16 +434,10 @@
                       [:h4 (use-style references-group-title-style)
                        [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                       (doall
-                        (for [{:block/keys [uid parents] :as block} group]
-                          [:div (use-style references-group-block-style {:key (str "ref-" uid)})
-                           ;; TODO: expand parent on click
-                           [block-el block true]
-                           (when (> (count parents) 1)
-                             [breadcrumbs-list {:style reference-breadcrumbs-style}
-                              [(r/adapt-react-class mui-icons/LocationOn)]
-                              (doall
-                                (for [{:keys [node/title block/string block/uid]} parents]
-                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid %)} (or title string)]))])]))]))]])))]))))
+                        (for [block group]
+                          [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                           [ref-comp block]]))]))]])))]))))
+
 
 
 (defn node-page-component
