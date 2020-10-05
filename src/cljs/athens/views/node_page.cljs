@@ -330,24 +330,24 @@
 
 (defn ref-comp
   [block]
-  (let [B (r/atom block)
-        P (r/atom (rest (:block/parents block)))
-        linked-ref-data (r/atom {:ref true
-                                 :initial-open true
-                                 :linked-ref-uid (:block/uid block)
-                                 :parent-uids (set (map :block/uid (:block/parents block)))})]
-    (fn [block]
-      [:<>
-       [breadcrumbs-list {:style reference-breadcrumbs-style}
-        (doall
-          (for [{:keys [node/title block/string block/uid]} @P]
-            [breadcrumb {:key      (str "breadcrumb-" uid)
-                         :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
-                                              new-P (drop-last @P)]
-                                          (reset! B new-B)
-                                          (reset! P new-P)))}
-             (or title string)]))]
-       [block-el @B true true (:block/uid block) (set (map :block/uid (:block/parents block)))]])))
+  (let [state (r/atom {:block block
+                       :parents (rest (:block/parents block))})
+        linked-ref-data {:ref            true
+                         :initial-open   true
+                         :linked-ref-uid (:block/uid block)
+                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+    (fn [_]
+      (let [{:keys [block parents]} @state]
+        [:<>
+         [breadcrumbs-list {:style reference-breadcrumbs-style}
+          (doall
+            (for [{:keys [node/title block/string block/uid]} parents]
+              [breadcrumb {:key      (str "breadcrumb-" uid)
+                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                                new-P (drop-last parents)]
+                                            (swap! state assoc :block new-B :parents new-P)))}
+               (or title string)]))]
+         [block-el block linked-ref-data]]))))
 
 
 ;; TODO: where to put page-level link filters?

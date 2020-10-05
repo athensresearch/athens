@@ -780,9 +780,10 @@
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([_block]
-   [block-el _block false false nil #{}])
-  ([_block ref initial-open linked-ref-uid parents]
-   (let [state (r/atom {:string/local      nil
+   [block-el _block {}])
+  ([_block linked-ref-data]
+   (let [{:keys [ref initial-open linked-ref-uid parents]} linked-ref-data
+         state (r/atom {:string/local      nil
                         :string/previous   nil
                         :search/type       nil              ;; one of #{:page :block :slash :hashtag}
                         :search/results    nil
@@ -796,8 +797,8 @@
                         :context-menu/show false
                         :ref/open          (or (not ref) initial-open)})]
 
+     (fn [block linked-ref-data]
 
-     (fn [block ref]
        (let [{:block/keys [uid string open children _refs]} block
              {:search/keys [] :keys [dragging drag-target]} @state
              is-editing  @(subscribe [:editing/is-editing uid])
@@ -846,7 +847,7 @@
                          (and (false? ref) open)))
             (for [child children]
               [:div {:key (:db/id child)}
-               [block-el child ref (contains? parents (:block/uid child)) linked-ref-uid parents]]))
+               [block-el child (assoc linked-ref-data :initial-open (contains? parents (:block/uid child)))]]))
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
                                                                                     :opacity "1"})))]])))))
