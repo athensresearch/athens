@@ -352,11 +352,11 @@
             [alert-component message confirm-fn cancel-fn]])
 
          ;; TODO: implement timeline
-         ;;(when timeline-page?
-         ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
-         ;;              [:<>
-         ;;               [:mui-icons Left]
-         ;;               [:span "Timeline"]]}])
+         (when timeline-page?
+           [button {:on-click #(do (dispatch [:daily-notes/reset])
+                                   (navigate :home))}
+            [:> mui-icons/Today]])
+
 
          ;; Header
          [:h1 (use-style title-style

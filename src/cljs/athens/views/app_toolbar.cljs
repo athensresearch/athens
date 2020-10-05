@@ -149,59 +149,59 @@
   []
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
-        current-route (subscribe [:current-route])
+        route-name (subscribe [:current-route/name])
         db-synced (subscribe [:db/synced])
         import-modal-open? (r/atom false)]
     (fn []
-      (let [route-name (-> @current-route :data :name)]
-        [:<>
-         [:header (use-style app-header-style)
-          [:div (use-style app-header-control-section-style)
-           [button {:active @left-open?
-                    :on-click #(dispatch [:left-sidebar/toggle])}
-            [:> mui-icons/Menu]]
-           [separator]
-           ;; TODO: refactor to effects
-           [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
-           [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
-           [separator]
-           [button {:on-click #(do (dispatch [:daily-notes/reset])
-                                   (navigate :home))
-                    :active   (= route-name :home)} [:> mui-icons/Today]]
-           [button {:on-click #(navigate :pages)
-                    :active   (= route-name :pages)} [:> mui-icons/FileCopy]]
-           [button {:on-click #(dispatch [:athena/toggle])
-                    :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
-                    :active   @(subscribe [:athena/open])}
-            [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
-          [:div (use-style app-header-secondary-controls-style)
-           [(r/adapt-react-class mui-icons/FiberManualRecord)
-            {:style {:color (color (if @db-synced
-                                     :confirmation-color
-                                     :highlight-color))
-                     :align-self "center"}}]
+      [:<>
+       [:header (use-style app-header-style)
+        [:div (use-style app-header-control-section-style)
+         [button {:active   @left-open?
+                  :on-click #(dispatch [:left-sidebar/toggle])}
+          [:> mui-icons/Menu]]
+         [separator]
+         ;; TODO: refactor to effects
+         [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
+         [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
+         [separator]
+         [button {:on-click #(do (dispatch [:daily-notes/reset])
+                                 (navigate :home))
+                  :active   (= @route-name :home)} [:> mui-icons/Today]]
+         [button {:on-click #(navigate :pages)
+                  :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
+         [button {:on-click #(dispatch [:athena/toggle])
+                  :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                  :active   @(subscribe [:athena/open])}
+          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
-           [separator]
-           ;;[button {:on-click #(reset! import-modal-open? true)}
-           ;; [:> mui-icons/Publish]]
-           [separator]
-           [button {:active @right-open?
-                    :on-click #(dispatch [:right-sidebar/toggle])}
-            [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
+        [:div (use-style app-header-secondary-controls-style)
+         [(r/adapt-react-class mui-icons/FiberManualRecord)
+          {:style {:color      (color (if @db-synced
+                                        :confirmation-color
+                                        :highlight-color))
+                   :align-self "center"}}]
 
-         ;; always false — not supporting import modal yet
-         (when @import-modal-open?
-           [:div (use-style modal-style)
-            [modal/modal
-             {:title [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
-                                                                                         {:on-click #(reset! import-modal-open? false)}
-                                                                                         [:> mui-icons/Close]]]
-              :content [:div (use-style modal-contents-style)
-                        ;; TODO: Write intro copy
-                        [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
-                        [features-table]
-                        ;; TODO: Create browser file dialog and actually import stuff
-                        [:div [button {:primary true} "Add Files"]]]
-              :on-close #(reset! import-modal-open? false)}]])]))))
+         [separator]
+         ;;[button {:on-click #(reset! import-modal-open? true)}
+         ;; [:> mui-icons/Publish]]
+         [separator]
+         [button {:active   @right-open?
+                  :on-click #(dispatch [:right-sidebar/toggle])}
+          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
+
+       ;; always false — not supporting import modal yet
+       (when @import-modal-open?
+         [:div (use-style modal-style)
+          [modal/modal
+           {:title    [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
+                                                                                          {:on-click #(reset! import-modal-open? false)}
+                                                                                          [:> mui-icons/Close]]]
+            :content  [:div (use-style modal-contents-style)
+                       ;; TODO: Write intro copy
+                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
+                       [features-table]
+                       ;; TODO: Create browser file dialog and actually import stuff
+                       [:div [button {:primary true} "Add Files"]]]
+            :on-close #(reset! import-modal-open? false)}]])])))
 
