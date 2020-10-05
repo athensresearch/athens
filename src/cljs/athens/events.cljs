@@ -284,7 +284,23 @@
     (assoc db :daily-notes/items [])))
 
 
-;; TODO: don't use app-db, use dsdb
+(reg-event-db
+  :daily-notes/add
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items [uid])))
+
+
+(reg-event-fx
+  :daily-note/prev
+  (fn [{:keys [db]} [_ {:keys [uid title]}]]
+    (let [new-db (update db :daily-notes/items (fn [items]
+                                                 (into [uid] items)))]
+      (if (db/e-by-av :block/uid uid)
+        {:db new-db}
+        {:db        new-db
+         :dispatch [:page/create title uid]}))))
+
+
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]

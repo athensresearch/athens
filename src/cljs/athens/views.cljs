@@ -116,7 +116,7 @@
           [left-sidebar]
           [:div (use-style main-content-style
                            {:on-scroll (when (= @route-name :home)
-                                         db-scroll-daily-notes)})
+                                         #(db-scroll-daily-notes %))})
            [match-panel @route-name]]
           [right-sidebar-component]
           [devtool-component]])])))
