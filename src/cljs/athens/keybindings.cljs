@@ -110,11 +110,13 @@
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :slash filter-slash-options)
-        query-start-idx (case type
-                          :block (count (re-find #".*\(\(" head))
-                          :page (count (re-find #".*\[\[" head))
-                          :hashtag (count (re-find #".*#" head))
-                          :slash (count (re-find #".*/" head)))
+        regex           (case type
+                          :block #"(?s).*\(\("
+                          :page #"(?s).*\[\["
+                          :hashtag #"(?s).*#"
+                          :slash #"(?s).*/")
+        find            (re-find regex head)
+        query-start-idx (count find)
         new-query       (str (subs head query-start-idx) key)
         results         (query-fn new-query)]
     (if (and (= type :slash) (empty? results))
@@ -133,7 +135,7 @@
          {:keys [value head tail target]} (destruct-key-down e)
          [_ _ expansion _ pos] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #".*/" head)))
+         start-idx (dec (count (re-find #"(?s).*/" head)))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expand tail)]
      (swap! state assoc
@@ -147,7 +149,7 @@
    (let [{:keys [value head tail]} (destruct-target target)
          [_ _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #".*/" head)))
+         start-idx (dec (count (re-find #"(?s).*/" head)))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expand tail)]
      (swap! state assoc
@@ -164,7 +166,7 @@
          {:keys [node/title block/uid]} (nth results index nil)
          {:keys [value head tail]} (destruct-key-down e)
          expansion (or title uid)
-         start-idx (count (re-find #".*#" head))
+         start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expansion tail)]
      (swap! state assoc
@@ -172,7 +174,7 @@
             :string/local new-str)))
   ([state target expansion]
    (let [{:keys [value head tail]} (destruct-target target)
-         start-idx (count (re-find #".*#" head))
+         start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expansion tail)]
      (swap! state assoc
@@ -189,10 +191,10 @@
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                            page? (re-pattern (str "(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(\)\))?(.*)"
-                            page? #"(\]\])?(.*)")
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
          new-head     (cond block? "$1(("
                             page? "$1[[")
          closing-str  (cond block? "))"
@@ -212,10 +214,10 @@
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                            page? (re-pattern (str "(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(\)\))?(.*)"
-                            page? #"(\]\])?(.*)")
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
          new-head     (cond block? "$1(("
                             page? "$1[[")
          closing-str  (cond block? "))"
