@@ -568,6 +568,9 @@
       (dispatch [:selected/clear-items])
       (find-selected-items e source-uid target-uid))))
 
+(defn textarea-input
+  [e uid state]
+  (prn "iNPUT"))
 
 (defn block-content-el
   "Actual string contents. Two elements, one for reading and one for writing.
@@ -585,6 +588,7 @@
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            :auto-focus     true
                            :id             (str "editable-uid-" uid)
+                           :on-input       (fn [e] (textarea-input e uid state))
                            :on-change      (fn [e] (textarea-change e uid state))
                            :on-paste       (fn [e] (textarea-paste e uid state))
                            :on-key-down    (fn [e] (textarea-key-down e uid state))
