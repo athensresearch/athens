@@ -348,16 +348,16 @@
 ;;; Components
 
 (defn toggle-el
-  [{:block/keys [open uid children]} state ref]
+  [{:block/keys [open uid children]} state linked-ref]
   (if (seq children)
     [:button (use-style block-disclosure-toggle-style
-                        {:class    (if (or (and (true? ref) (:ref/open @state))
-                                           (and (false? ref) open))
+                        {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
+                                           (and (false? linked-ref) open))
                                      "open"
                                      "closed")
                          :on-click (fn [_]
-                                     (if (true? ref)
-                                       (swap! state update :ref/open not)
+                                     (if (true? linked-ref)
+                                       (swap! state update :linked-ref/open not)
                                        (toggle [:block/uid uid] open)))})
      [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
@@ -650,11 +650,11 @@
 
 (defn bullet-el
   [_ _ _]
-  (fn [block state ref]
+  (fn [block state linked-ref]
     (let [{:block/keys [uid children open]} block]
       [:span {:class           ["bullet" (when (and (seq children)
-                                                    (or (and (true? ref) (not (:ref/open @state)))
-                                                        (and (false? ref) (not open))))
+                                                    (or (and (true? linked-ref) (not (:linked-ref/open @state)))
+                                                        (and (false? linked-ref) (not open))))
                                            "closed-with-children")]
               :draggable       true
               :on-click        (fn [e] (navigate-uid uid e))
@@ -780,9 +780,9 @@
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([_block]
-   [block-el _block {:ref false}])
+   [block-el _block {:linked-ref false}])
   ([_block linked-ref-data]
-   (let [{:keys [ref initial-open linked-ref-uid parents]} linked-ref-data
+   (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
                         :search/type       nil              ;; one of #{:page :block :slash :hashtag}
@@ -795,9 +795,11 @@
                         :context-menu/x    nil
                         :context-menu/y    nil
                         :context-menu/show false
-                        :ref/open          (or (not ref) initial-open)})]
+                        :linked-ref/open   (or (not linked-ref) initial-open)})]
 
      (fn [block linked-ref-data]
+
+       (prn "LINK" linked-ref-data)
 
        (let [{:block/keys [uid string open children _refs]} block
              {:search/keys [] :keys [dragging drag-target]} @state
@@ -830,9 +832,9 @@
                          (when (false? (.. e -shiftKey))
                            (dispatch [:editing/uid uid])))}]
 
-           [toggle-el block state ref]
+           [toggle-el block state linked-ref]
            [context-menu-el block state]
-           [bullet-el block state ref]
+           [bullet-el block state linked-ref]
            [tooltip-el! block state]
            [block-content-el block state]
            [block-refs-count-el (count _refs) uid]]
@@ -843,11 +845,11 @@
           ;; when true? ref, only look at ref/open
           ;; Children
           (when (and (seq children)
-                     (or (and (true? ref) (:ref/open @state))
-                         (and (false? ref) open)))
+                     (or (and (true? linked-ref) (:linked-ref/open @state))
+                         (and (false? linked-ref) open)))
             (for [child children]
               [:div {:key (:db/id child)}
-               [block-el child (assoc linked-ref-data :initial-open (contains? parents (:block/uid child)))]]))
+               [block-el child (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))]]))
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
                                                                                     :opacity "1"})))]])))))

@@ -332,7 +332,7 @@
   [block]
   (let [state (r/atom {:block block
                        :parents (rest (:block/parents block))})
-        linked-ref-data {:ref            true
+        linked-ref-data {:linked-ref            true
                          :initial-open   true
                          :linked-ref-uid (:block/uid block)
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
