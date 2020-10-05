@@ -356,14 +356,16 @@
     [:span (use-style block-disclosure-toggle-style)]))
 
 
-(defn tooltip-el
+(defn tooltip-el!
+  "Looks at re-frame-10x open state to show meta-data or not."
   [block state]
   (let [{:block/keys [uid order] dbid :db/id} block
-        {:keys [dragging tooltip]} @state]
-    (when (and tooltip (not dragging))
+        {:keys [dragging tooltip]} @state
+        re-frame-10x? (= "\"true\"" (.. js/localStorage (getItem "day8.re-frame-10x.using-trace?")))]
+    (when (and tooltip (not dragging) re-frame-10x?)
       [:div (use-style tooltip-style
                        {:class          "tooltip"
-                        :on-click (fn [e] (.. e stopPropagation))
+                        :on-click       (fn [e] (.. e stopPropagation))
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
@@ -818,7 +820,7 @@
           [toggle-el block]
           [context-menu-el block state]
           [bullet-el block state]
-          [tooltip-el block state]
+          [tooltip-el! block state]
           [block-content-el block state]
           [block-refs-count-el (count _refs) uid]]
 
