@@ -280,6 +280,7 @@
    :alert/cancel-fn  nil})
 
 
+
 (defn menu-dropdown
   [_block state]
   (let [ref                  (atom nil)
@@ -317,6 +318,28 @@
                                                        (dispatch [:page/delete uid]))}
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
+(defn ref-comp
+  [block]
+  (let [state           (r/atom {:block   block
+                                 :parents (rest (:block/parents block))})
+        linked-ref-data {:linked-ref     true
+                         :initial-open   true
+                         :linked-ref-uid (:block/uid block)
+                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+    (fn [_]
+      (let [{:keys [block parents]} @state
+            block (db/get-block-document (:db/id block))]
+        [:<>
+         [breadcrumbs-list {:style reference-breadcrumbs-style}
+          (doall
+            (for [{:keys [node/title block/string block/uid]} parents]
+              [breadcrumb {:key      (str "breadcrumb-" uid)
+                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                                new-P (drop-last parents)]
+                                            (swap! state assoc :block new-B :parents new-P)))}
+               (or title string)]))]
+         [block-el block linked-ref-data]]))))
+
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
@@ -328,7 +351,7 @@
   (let [state (r/atom init-state)
         current-route-uid (subscribe [:current-route/uid])]
     (fn [block editing-uid ref-groups timeline-page?]
-      (let [{:block/keys [children uid] title :node/title} block
+      (let [ {:block/keys [children uid] title :node/title} block
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
         (sync-title title state)
@@ -403,16 +426,10 @@
                       [:h4 (use-style references-group-title-style)
                        [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                       (doall
-                        (for [{:block/keys [uid parents] :as block} group]
-                          [:div (use-style references-group-block-style {:key (str "ref-" uid)})
-                           ;; TODO: expand parent on click
-                           [block-el block]
-                           (when (> (count parents) 1)
-                             [breadcrumbs-list {:style reference-breadcrumbs-style}
-                              [(r/adapt-react-class mui-icons/LocationOn)]
-                              (doall
-                                (for [{:keys [node/title block/string block/uid]} parents]
-                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid %)} (or title string)]))])]))]))]])))]))))
+                        (for [block group]
+                         [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                          [ref-comp block]]))]))]])))]))))
+
 
 
 (defn node-page-component
