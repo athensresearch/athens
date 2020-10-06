@@ -359,16 +359,18 @@
 
 (defn tooltip-el
   [block state]
-  (let [{:block/keys [uid order] dbid :db/id} block
-        {:keys [dragging tooltip]} @state]
-    (when (and tooltip (not dragging))
+  (let [{:block/keys [uid order open] dbid :db/id} block
+        {:keys [dragging tooltip]} @state
+        re-frame-10x? (= "\"true\"" (.. js/localStorage (getItem "day8.re-frame-10x.using-trace?")))]
+    (when (and tooltip (not dragging) re-frame-10x?)
       [:div (use-style tooltip-style
                        {:class          "tooltip"
-                        :on-click (fn [e] (.. e stopPropagation))
+                        :on-click       (fn [e] (.. e stopPropagation))
                         :on-mouse-leave #(swap! state assoc :tooltip false)})
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]])))
+       [:div [:b "order"] [:span order]]
+       [:div [:b "open"] [:span (str open)]]])))
 
 
 (defn inline-item-click
