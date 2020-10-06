@@ -148,16 +148,10 @@
                    [:h4 (use-style node-page/references-group-title-style)
                     [:a {:on-click #(navigate-uid (:block/uid @(athens.parse-renderer/pull-node-from-string group-title)))} group-title]]
                    (doall
-                     (for [{:block/keys [uid parents] :as block} group]
-                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" uid)})
-                        ;; TODO: expand parent on click
-                        [block-el block]
-                        (when (> (count parents) 1)
-                          [breadcrumbs-list {:style node-page/reference-breadcrumbs-style}
-                           [(r/adapt-react-class mui-icons/LocationOn)]
-                           (doall
-                             (for [{:keys [node/title block/string block/uid]} parents]
-                               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]]])]))))
+                     (for [block group]
+                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                        [node-page/ref-comp block]]))]))]]])]))))
+
 
 
 (defn block-page-component
