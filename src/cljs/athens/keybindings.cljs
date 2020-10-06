@@ -10,7 +10,7 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle]]
-    [re-frame.core :refer [dispatch]])
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -329,19 +329,21 @@
 ;;; Tab
 
 (defn handle-tab
-  "Bug: indenting sets the cursor position to 0, liekely because a new textarea element is created on the DOM. Set selection appropriately.
+  "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
   [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift value start end]} (destruct-key-down e)]
-    (if shift
-      (dispatch [:unindent uid value])
-      (dispatch [:indent uid value]))
-    (js/setTimeout (fn []
-                     (when-let [el (getElement (str "editable-uid-" uid))]
-                       (setStart el start)
-                       (setEnd el end)))
-                   50)))
+  (let [{:keys [shift value start end]} (destruct-key-down e)
+        selected-items @(subscribe [:selected/items])]
+    (when (empty? selected-items)
+      (if shift
+        (dispatch [:unindent uid value])
+        (dispatch [:indent uid value]))
+      (js/setTimeout (fn []
+                       (when-let [el (getElement (str "editable-uid-" uid))]
+                         (setStart el start)
+                         (setEnd el end)))
+                     50))))
 
 
 (defn handle-escape
