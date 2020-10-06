@@ -88,8 +88,10 @@
       (dispatch [:redo])
 
       ;; When no editing/uid, do datascript undo.
-      (and (= key KeyCodes.Z) ctrl) (let [editing-uid @(subscribe [:editing/uid])]
-                                      (when (nil? editing-uid)
+      (and (= key KeyCodes.Z) ctrl) (let [editing-uid    @(subscribe [:editing/uid])
+                                          selected-items @(subscribe [:selected/items])]
+                                      (when (or (nil? editing-uid)
+                                                (not-empty selected-items))
                                         (dispatch [:undo])))
 
       (and (= key KeyCodes.K) ctrl)
