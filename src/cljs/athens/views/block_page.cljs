@@ -153,7 +153,6 @@
                         [node-page/ref-comp block]]))]))]]])]))))
 
 
-
 (defn block-page-component
   [ident]
   (let [block       (db/get-block-document ident)

@@ -280,7 +280,6 @@
    :alert/cancel-fn  nil})
 
 
-
 (defn menu-dropdown
   [_block state]
   (let [ref                  (atom nil)
@@ -318,6 +317,7 @@
                                                        (dispatch [:page/delete uid]))}
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
+
 (defn ref-comp
   [block]
   (let [state           (r/atom {:block   block
@@ -351,7 +351,7 @@
   (let [state (r/atom init-state)
         current-route-uid (subscribe [:current-route/uid])]
     (fn [block editing-uid ref-groups timeline-page?]
-      (let [ {:block/keys [children uid] title :node/title} block
+      (let [{:block/keys [children uid] title :node/title} block
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
         (sync-title title state)
@@ -427,9 +427,8 @@
                        [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                       (doall
                         (for [block group]
-                         [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
-                          [ref-comp block]]))]))]])))]))))
-
+                          [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                           [ref-comp block]]))]))]])))]))))
 
 
 (defn node-page-component
