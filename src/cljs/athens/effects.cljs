@@ -70,26 +70,26 @@
 (defn new-refs-to-tx-data
   "Filter: ((ref-uid)) points to an actual block, and block/ref relationship doesn't exist yet.
   Map: add block/ref relationship."
-  [new-block-refs uid]
+  [new-block-refs e]
   (->> new-block-refs
        (filter (fn [ref-uid]
-                 (let [eid (db/e-by-av :block/uid ref-uid)
-                       refs (-> uid db/get-block-refs set)]
+                 (let [eid  (db/e-by-av :block/uid ref-uid)
+                       refs (-> e db/get-block-refs set)]
                    (not (contains? refs eid)))))
-       (map (fn [ref-uid] [:db/add [:block/uid uid] :block/refs [:block/uid ref-uid]]))))
+       (map (fn [ref-uid] [:db/add e :block/refs [:block/uid ref-uid]]))))
 
 
 (defn old-refs-to-tx-data
   "Filter: new-str doesn't include block ref anymore, ((ref-uid)) points to an actual block, and block/ref relationship exists.
   Map: retract relationship."
-  [old-block-refs uid new-str]
+  [old-block-refs e new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
                  (when-not (str/includes? new-str (str "((" ref-uid "))"))
                    (let [eid  (db/e-by-av :block/uid ref-uid)
-                         refs (-> uid db/get-block-refs set)]
+                         refs (-> e db/get-block-refs set)]
                      (contains? refs eid)))))
-       (map (fn [ref-uid] [:db/retract [:block/uid uid] :block/refs [:block/uid ref-uid]]))))
+       (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
 
 
 (defn parse-for-links
@@ -115,13 +115,15 @@
                        assert-data    (walk-string assert-string)
                        new-titles     (new-titles-to-tx-data (:node/titles assert-data))
                        old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                       new-block-refs (new-refs-to-tx-data (:block/refs assert-data) uid)
-                       old-block-refs (old-refs-to-tx-data (:block/refs retract-data) uid assert-string)
+                       new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
+                       old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                        tx-data        (concat []
                                               new-titles
                                               old-titles
                                               new-block-refs
                                               old-block-refs)]
+                   (when (not-empty new-block-refs)
+                     (prn "NEW BLOCK" assertion retraction))
                    tx-data)))))
 
 
@@ -129,7 +131,7 @@
   :transact!
   (fn [tx-data]
     ;;(prn "TX INPUTS")
-    (pprint tx-data)
+    ;;(pprint tx-data)
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
