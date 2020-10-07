@@ -385,14 +385,13 @@
 
 
 (defn get-block-refs
-  [uid]
+  [e]
   (d/q '[:find [?refs ...]
-         :in $ ?uid
+         :in $ ?e
          :where
-         [?e :block/uid ?uid]
          [?e :block/refs ?refs]]
        @dsdb
-       uid))
+       e))
 
 ;; xxx 2 kinds of operations
 ;; write operations, it's nice to have entire block and entire parent block to make TXes
