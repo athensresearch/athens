@@ -406,6 +406,7 @@
   [e _ state]
   (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
+
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))

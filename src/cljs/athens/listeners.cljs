@@ -77,34 +77,35 @@
   [e]
   (let [key (.. e -keyCode)
         ctrl (.. e -ctrlKey)
-        ;meta (.. e -metaKey)
-        shift (.. e -shiftKey)]
+        meta (.. e -metaKey)
+        shift (.. e -shiftKey)
+        mac? false
+        linux? true
+        windows? false]
 
-    (cond
-      (and (= key KeyCodes.S) ctrl)
-      (dispatch [:save])
+    (when ctrl (or (and mac? meta)
+                   (and linux? ctrl)
+                   (and windows? ctrl))
 
-      (and (= key KeyCodes.Z) ctrl shift)
-      (dispatch [:redo])
+      (condp = key
+        KeyCodes.S (dispatch [:save])
 
-      ;; When no editing/uid, do datascript undo.
-      (and (= key KeyCodes.Z) ctrl) (let [editing-uid    @(subscribe [:editing/uid])
-                                          selected-items @(subscribe [:selected/items])]
-                                      (when (or (nil? editing-uid)
-                                                (not-empty selected-items))
-                                        (dispatch [:undo])))
+        KeyCodes.K (dispatch [:athena/toggle])
 
-      (and (= key KeyCodes.K) ctrl)
-      (dispatch [:athena/toggle])
+        KeyCodes.G (dispatch [:devtool/toggle])
 
-      (and (= key KeyCodes.G) ctrl)
-      (dispatch [:devtool/toggle])
+        KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
+                         selected-items @(subscribe [:selected/items])]
+                     ;; editing/uid must be nil or selected-items must be non-empty
+                     (when (or (nil? editing-uid)
+                               (not-empty selected-items))
+                       (if shift
+                         (dispatch [:redo])
+                         (dispatch [:undo]))))
 
-      (and (= key KeyCodes.BACKSLASH) ctrl shift)
-      (dispatch [:right-sidebar/toggle])
-
-      (and (= key KeyCodes.BACKSLASH) ctrl)
-      (dispatch [:left-sidebar/toggle]))))
+        KeyCodes.BACKSLASH (if shift
+                             (dispatch [:right-sidebar/toggle])
+                             (dispatch [:left-sidebar/toggle]))))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
