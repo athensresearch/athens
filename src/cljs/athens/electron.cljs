@@ -73,15 +73,15 @@
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
                                                                                  (dispatch [:reset-conn db]))
-                                                                                 ;;(dispatch [:db/retract-athens-pages])
-                                                                                 ;;(dispatch [:db/transact-athens-pages])
-                                                                                 ;;(dispatch [:loading/unset]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
-                                   {:when :seen-any-of? :events [:fs/create-new-db :reset-conn] :dispatch-n [[:db/retract-athens-pages]
-                                                                                                             [:db/transact-athens-pages]
-                                                                                                             [:loading/unset]
-                                                                                                             [:navigate :page {:id "0"}]]}]}}))
+                                   {:when :seen-any-of?
+                                    :events [:fs/create-new-db :reset-conn]
+                                    :dispatch-n [[:db/retract-athens-pages]
+                                                 [:db/transact-athens-pages]
+                                                 [:loading/unset]
+                                                 [:navigate :page {:id "0"}]]
+                                    :halt? true}]}}))
 
 
 ;; TODO: implement with streams
