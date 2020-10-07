@@ -336,7 +336,6 @@
          next)))
 
 
-
 (defn retract-uid-recursively
   "Retract all blocks of a page, including the page."
   [uid]
