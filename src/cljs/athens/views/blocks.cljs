@@ -667,7 +667,7 @@
               :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
 
 
-(defn copy-refs-click
+(defn copy-refs-mouse-down
   [_ uid state]
   (let [{:context-menu/keys [show]} @state
         selected-items @(subscribe [:selected/items])
@@ -685,30 +685,30 @@
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
   [_block state]
-  (let [ref (atom nil)
+  (let [ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (and (:context-menu/show @state)
                                           (not (.. @ref (contains (.. e -target)))))
                                  (swap! state assoc :context-menu/show false)))]
     (r/create-class
-      {:display-name "context-menu"
-       :component-did-mount (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+      {:display-name           "context-menu"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render (fn [block state]
-                         (let [{:block/keys [uid]} block
-                               {:context-menu/keys [show x y]} @state]
-                           (when show
-                             [:div (merge (use-style dropdown-style
-                                                     {:ref #(reset! ref %)})
-                                          {:style {:position "fixed"
-                                                   :x        (str x "px")
-                                                   :y        (str y "px")}})
-                              [:div (use-style menu-style)
-                               ;; TODO: create listener that lets user exit context menu if click outside
-                               [button {:on-click (fn [e] (copy-refs-click e uid state))}
-                                (case show
-                                  :one "Copy block ref"
-                                  :many "Copy block refs")]]])))})))
+       :reagent-render         (fn [block state]
+                                 (let [{:block/keys [uid]} block
+                                       {:context-menu/keys [show x y]} @state]
+                                   (when show
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref #(reset! ref %)})
+                                                  {:style {:position "fixed"
+                                                           :left     (str x "px")
+                                                           :top      (str y "px")}})
+                                      [:div (use-style menu-style)
+                                       ;; TODO: create listener that lets user exit context menu if click outside
+                                       [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+                                        (case show
+                                          :one "Copy block ref"
+                                          :many "Copy block refs")]]])))})))
 
 
 (defn block-refs-count-el
