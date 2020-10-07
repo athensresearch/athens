@@ -1,6 +1,7 @@
 (ns athens.electron
   (:require
     [athens.athens-datoms :as athens-datoms]
+    [athens.db :as db]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
