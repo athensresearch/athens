@@ -7,7 +7,7 @@
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -22,8 +22,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [tick.alpha.api :as t])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       KeyCodes)))
@@ -137,15 +136,6 @@
 
 
 ;;; Helpers
-
-
-(defn is-timeline-page
-  [uid]
-  (boolean
-    (try
-      (let [[m d y] (str/split uid "-")]
-        (t/date (str/join "-" [y m d])))
-      (catch js/Object _ false))))
 
 
 (defn handle-new-first-child-block-click
@@ -328,6 +318,29 @@
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
+(defn ref-comp
+  [block]
+  (let [state           (r/atom {:block   block
+                                 :parents (rest (:block/parents block))})
+        linked-ref-data {:linked-ref     true
+                         :initial-open   true
+                         :linked-ref-uid (:block/uid block)
+                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+    (fn [_]
+      (let [{:keys [block parents]} @state
+            block (db/get-block-document (:db/id block))]
+        [:<>
+         [breadcrumbs-list {:style reference-breadcrumbs-style}
+          (doall
+            (for [{:keys [node/title block/string block/uid]} parents]
+              [breadcrumb {:key      (str "breadcrumb-" uid)
+                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                                new-P (drop-last parents)]
+                                            (swap! state assoc :block new-B :parents new-P)))}
+               (or title string)]))]
+         [block-el block linked-ref-data]]))))
+
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
@@ -335,27 +348,22 @@
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
-  (let [state (r/atom init-state)]
+  (let [state (r/atom init-state)
+        current-route-uid (subscribe [:current-route/uid])]
     (fn [block editing-uid ref-groups timeline-page?]
       (let [{:block/keys [children uid] title :node/title} block
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
         (sync-title title state)
 
-        [:div (use-style page-style {:class ["node-page"]})
+        [:div (use-style page-style {:class ["node-page"]
+                                     :data-uid uid})
 
          (when alert-show
            [:div (use-style {:position "absolute"
                              :top "50px"
                              :left "35%"})
             [alert-component message confirm-fn cancel-fn]])
-
-         ;; TODO: implement timeline
-         ;;(when timeline-page?
-         ;;  [button {:on-click #(dispatch [:jump-to-timeline uid])}
-         ;;              [:<>
-         ;;               [:mui-icons Left]
-         ;;               [:span "Timeline"]]}])
 
          ;; Header
          [:h1 (use-style title-style
@@ -369,8 +377,16 @@
               :on-blur       (fn [_] (handle-blur block state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
               :on-change     (fn [e] (handle-change e state))}])
+          (when (and timeline-page? (string? @current-route-uid))
+            [button {:on-click #(do (dispatch [:daily-notes/add uid])
+                                    (navigate :home))
+                     :style {}}
+             [:<>
+              [:> mui-icons/ArrowBack]
+              [:> mui-icons/Today]]])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
+                               (.. e stopPropagation)
                                (if show
                                  (swap! state assoc :menu/show false)
                                  (let [rect (.. e -target getBoundingClientRect)]
@@ -410,16 +426,9 @@
                       [:h4 (use-style references-group-title-style)
                        [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                       (doall
-                        (for [{:block/keys [uid parents] :as block} group]
-                          [:div (use-style references-group-block-style {:key (str "ref-" uid)})
-                           ;; TODO: expand parent on click
-                           [block-el block]
-                           (when (> (count parents) 1)
-                             [breadcrumbs-list {:style reference-breadcrumbs-style}
-                              [(r/adapt-react-class mui-icons/LocationOn)]
-                              (doall
-                                (for [{:keys [node/title block/string block/uid]} parents]
-                                  [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} (or title string)]))])]))]))]])))]))))
+                        (for [block group]
+                          [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                           [ref-comp block]]))]))]])))]))))
 
 
 (defn node-page-component

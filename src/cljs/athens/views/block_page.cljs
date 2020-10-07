@@ -3,9 +3,13 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [destruct-key-down]]
+    [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
+    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -95,48 +99,65 @@
 
 
 (defn block-page-el
-  [_ _ _]
+  [_ _ _ _]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
-    (fn [block parents editing-uid]
+    (fn [block parents editing-uid refs]
       (let [{:block/keys [string children uid]} block]
 
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div.block-page (use-style page-style)
+        [:div.block-page (use-style page-style {:data-uid uid})
          ;; Parent Context
          [:span {:style {:color "gray"}}
-
-          (->> (for [{:keys [node/title block/uid block/string]} parents]
-                 [:span {:key uid :style {:cursor "pointer"} :on-click #(navigate-uid uid)} (or string title)])
-               (interpose ">")
-               (map (fn [x]
-                      (if (= x ">")
-                        [(r/adapt-react-class mui-icons/KeyboardArrowRight) (use-style {:vertical-align "middle"})]
-                        x))))]
+          [breadcrumbs-list {:style {:font-size "1.2rem"}}
+           (doall
+             (for [{:keys [node/title block/uid block/string]} parents]
+               ^{:key uid}
+               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} [parse-and-render (or title string) uid]]))]]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
           [autosize/textarea
-           {:value       (:string/local @state)
+           {:id          (str "editable-uid-" uid)
+            :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
             :on-key-down (fn [e] (block-page-key-down e uid state))
-            :on-change   (fn [e] (block-page-change e uid state))
-            :on-blur     (fn [e] (athens.views.blocks/textarea-blur e uid state))}]
+            :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
-
 
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]
-                   ^{:key id} [block-el child]))]]))))
+                   ^{:key id} [block-el child]))]
+
+         ;; Refs
+         (when (not-empty refs)
+           [:div
+            [:section (use-style node-page/references-style {:key "Linked References"})
+             [:h4 (use-style node-page/references-heading-style)
+              [(r/adapt-react-class mui-icons/Link)]
+              [:span "Linked References"]
+              [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+             [:div (use-style node-page/references-list-style)
+              (doall
+                (for [[group-title group] refs]
+                  [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+                   [:h4 (use-style node-page/references-group-title-style)
+                    [:a {:on-click #(navigate-uid (:block/uid @(athens.parse-renderer/pull-node-from-string group-title)))} group-title]]
+                   (doall
+                     (for [block group]
+                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                        [node-page/ref-comp block]]))]))]]])]))))
 
 
 (defn block-page-component
   [ident]
-  (let [block (db/get-block-document ident)
-        parents (db/get-parents-recursively ident)
-        editing-uid @(subscribe [:editing/uid])]
-    [block-page-el block parents editing-uid]))
+  (let [block       (db/get-block-document ident)
+        parents     (db/get-parents-recursively ident)
+        editing-uid @(subscribe [:editing/uid])
+        refs        (db/get-linked-block-references block)]
+    [block-page-el block parents editing-uid refs]))
+

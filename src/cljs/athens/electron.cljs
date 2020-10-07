@@ -1,7 +1,7 @@
 (ns athens.electron
   (:require
-    [athens.athens-datoms :refer [datoms]]
-    [athens.db :as db :refer [dsdb]]
+    [athens.athens-datoms :as athens-datoms]
+    [athens.db :as db]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
@@ -35,10 +35,22 @@
       (when (not (.existsSync fs db-dir))
         (.mkdirSync fs db-dir))
       (js/localStorage.setItem "db/filepath" db-path)
-      (.writeFileSync fs db-path (write-transit-str @dsdb))
+      (.writeFileSync fs db-path (write-transit-str athens-datoms/datoms))
       (dispatch [:db/update-filepath db-path])
       (dispatch [:loading/unset]))))
 
+
+(reg-event-fx
+  :db/retract-athens-pages
+  (fn []
+    {:dispatch [:transact (concat (db/retract-page-recursively "athens/Welcome")
+                                  (db/retract-page-recursively "athens/Changelog"))]}))
+
+
+(reg-event-fx
+  :db/transact-athens-pages
+  (fn []
+    {:dispatch [:transact athens-datoms/datoms]}))
 
 ;; if localStorage is empty, assume first open
 ;; create a Documents/athens directory and Documents/athens/db.transit file
@@ -60,13 +72,16 @@
                                                      (nil? filepath) (dispatch [:fs/create-new-db])
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
-                                                                                 (dispatch [:reset-conn db])
-                                                                                 (dispatch [:loading/unset]))
+                                                                                 (dispatch [:reset-conn db]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
-                                   {:when :seen? :events :fs/create-new-db :dispatch [:navigate :page {:id "0"}]}
-                                   {:when :seen? :events :loading/unset :dispatch [:transact datoms]}
-                                   {:when :seen? :events :loading/unset :halt? true}]}}))
+                                   {:when :seen-any-of?
+                                    :events [:fs/create-new-db :reset-conn]
+                                    :dispatch-n [[:db/retract-athens-pages]
+                                                 [:db/transact-athens-pages]
+                                                 [:loading/unset]
+                                                 [:navigate :page {:id "0"}]]
+                                    :halt? true}]}}))
 
 
 ;; TODO: implement with streams

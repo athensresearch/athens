@@ -60,7 +60,8 @@
         closest-block-header (.. e -target (closest ".block-header"))
         closest-page-header  (.. e -target (closest ".page-header"))
         closest-bullet       (.. e -target (closest ".bullet"))
-        closest              (or closest-block closest-block-header closest-page-header)]
+        closest-dropdown     (.. e -target (closest "#dropdown-menu"))
+        closest              (or closest-block closest-block-header closest-page-header closest-dropdown)]
     (when (and selected-items?
                (nil? closest-bullet))
       (dispatch [:selected/clear-items]))
@@ -87,8 +88,10 @@
       (dispatch [:redo])
 
       ;; When no editing/uid, do datascript undo.
-      (and (= key KeyCodes.Z) ctrl) (let [editing-uid @(subscribe [:editing/uid])]
-                                      (when (nil? editing-uid)
+      (and (= key KeyCodes.Z) ctrl) (let [editing-uid    @(subscribe [:editing/uid])
+                                          selected-items @(subscribe [:selected/items])]
+                                      (when (or (nil? editing-uid)
+                                                (not-empty selected-items))
                                         (dispatch [:undo])))
 
       (and (= key KeyCodes.K) ctrl)
@@ -97,10 +100,10 @@
       (and (= key KeyCodes.G) ctrl)
       (dispatch [:devtool/toggle])
 
-      (and (= key KeyCodes.L) ctrl shift)
+      (and (= key KeyCodes.BACKSLASH) ctrl shift)
       (dispatch [:right-sidebar/toggle])
 
-      (and (= key KeyCodes.L) ctrl)
+      (and (= key KeyCodes.BACKSLASH) ctrl)
       (dispatch [:left-sidebar/toggle]))))
 
 

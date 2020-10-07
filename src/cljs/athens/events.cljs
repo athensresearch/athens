@@ -284,7 +284,23 @@
     (assoc db :daily-notes/items [])))
 
 
-;; TODO: don't use app-db, use dsdb
+(reg-event-db
+  :daily-notes/add
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items [uid])))
+
+
+(reg-event-fx
+  :daily-note/prev
+  (fn [{:keys [db]} [_ {:keys [uid title]}]]
+    (let [new-db (update db :daily-notes/items (fn [items]
+                                                 (into [uid] items)))]
+      (if (db/e-by-av :block/uid uid)
+        {:db new-db}
+        {:db        new-db
+         :dispatch [:page/create title uid]}))))
+
+
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
@@ -348,13 +364,15 @@
 
 ;; Datascript
 
+
+
 (reg-event-fx
   :transact
-  (fn [_ [_ datoms]]
+  (fn [_ [_ tx-data]]
     (let [synced? @(subscribe [:db/synced])]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
             [:dispatch [:save]]
-            [:transact! datoms]]})))
+            [:transact! tx-data]]})))
 
 
 (reg-event-fx
@@ -444,7 +462,7 @@
 
 
 (defn backspace
-  "No-op if root and 0th child.
+  "If root and 0th child, 1) if value, no-op, 2) if blank value, delete only block.
   No-op if parent is prev-block and block has children.
   No-op if prev-sibling-block has children.
   Otherwise delete block and join with previous block
@@ -465,17 +483,20 @@
                                [?sib :block/uid ?uid]
                                [?sib :block/children ?ch]]
                              @db/dsdb db/rules uid prev-sib-order)
-        prev-sib        (db/get-block prev-sib)]
+        prev-sib        (db/get-block prev-sib)
+        retract-block  [:db/retractEntity (:db/id block)]
+        new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
-      (and (:node/title parent) (zero? order)) nil
+      (and (:node/title parent) (zero? order)) (when (clojure.string/blank? value)
+                                                 (let [tx-data [retract-block new-parent]]
+                                                   {:dispatch-n [[:transact tx-data]
+                                                                 [:editing/uid nil]]}))
       (and (not-empty children) (not-empty (:block/children prev-sib))) nil
       (and (not-empty children) (= parent prev-block)) nil
-      :else (let [retract-block  [:db/retractEntity [:block/uid uid]]
-                  retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+      :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
                   new-prev-block {:db/id          [:block/uid prev-block-uid-]
                                   :block/string   (str (:block/string prev-block) value)
                                   :block/children children}
-                  new-parent     {:db/id (:db/id parent) :block/children reindex}
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
                                 {:ms 10 :dispatch [:editing/uid prev-block-uid- (count (:block/string prev-block))]}]}))))
@@ -631,6 +652,8 @@
                                  (and (not (:block/open block))
                                       (not-empty (:block/children block))
                                       (= index (count val))) [:enter/new-block block parent]
+                                 (and (empty? val)
+                                      (= context-root-uid (:block/uid parent))) [:enter/new-block block parent]
                                  (not (zero? index)) [:enter/split-block uid val index]
                                  (and (empty? val) root-block?) [:enter/new-block block parent]
                                  (empty? val) [:unindent uid val context-root-uid]
@@ -692,7 +715,7 @@
             n-sib         (count (:block/children older-sib))
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                        blocks)
-            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks}
+            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks :block/open true}
             reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
             new-parent    {:db/id (:db/id parent) :block/children reindex}
             retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
@@ -1123,12 +1146,9 @@
                                                    (next data))))))))]
     tx-data))
 
-
-"TODO: If at end of a parent block, prepend children with new datoms.
-If in an empty block, make empty block the root
-Otherwise append after current block."
-
-
+;;TODO: If at end of a parent block, prepend children with new datoms.
+;;If in an empty block, make empty block the root
+;;Otherwise append after current block.
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]

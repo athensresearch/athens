@@ -2,14 +2,15 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day]]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [re-frame.core :refer [dispatch]])
+    [goog.functions :refer [throttle]]
+    [re-frame.core :refer [dispatch subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -75,13 +76,13 @@
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter"]
-   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil]
-   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil]
-   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil]
-   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil]
-   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil]])
+  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
+   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]])
 
 ;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
 ;;[mui-icons/DateRange "Date Picker"]
@@ -109,11 +110,13 @@
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :slash filter-slash-options)
-        query-start-idx (case type
-                          :block (count (re-find #".*\(\(" head))
-                          :page (count (re-find #".*\[\[" head))
-                          :hashtag (count (re-find #".*#" head))
-                          :slash (count (re-find #".*/" head)))
+        regex           (case type
+                          :block #"(?s).*\(\("
+                          :page #"(?s).*\[\["
+                          :hashtag #"(?s).*#"
+                          :slash #"(?s).*/")
+        find            (re-find regex head)
+        query-start-idx (count find)
         new-query       (str (subs head query-start-idx) key)
         results         (query-fn new-query)]
     (if (and (= type :slash) (empty? results))
@@ -129,25 +132,32 @@
 (defn auto-complete-slash
   ([state e]
    (let [{:search/keys [index results]} @state
-         {:keys [value head tail]} (destruct-key-down e)
-         [_ _ expansion _] (nth results index)
+         {:keys [value head tail target]} (destruct-key-down e)
+         [_ _ expansion _ pos] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #".*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)
-         value1    (swap! state assoc
-                          :search/type nil
-                          :string/local new-str)]
-     value1))
-  ([state target expansion]
-   (let [{:keys [value head tail]} (destruct-target target)
-         expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #".*/" head)))
+         start-idx (dec (count (re-find #"(?s).*/" head)))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expand tail)]
      (swap! state assoc
             :search/type nil
-            :string/local new-str))))
+            :string/local new-str)
+     (when pos
+       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
+                      50))))
+
+  ([state target item]
+   (let [{:keys [value head tail]} (destruct-target target)
+         [_ _ expansion _ pos] item
+         expand    (if (fn? expansion) (expansion) expansion)
+         start-idx (dec (count (re-find #"(?s).*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str)
+     (when pos
+       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
+                      50)))))
 
 
 (defn auto-complete-hashtag
@@ -156,7 +166,7 @@
          {:keys [node/title block/uid]} (nth results index nil)
          {:keys [value head tail]} (destruct-key-down e)
          expansion (or title uid)
-         start-idx (count (re-find #".*#" head))
+         start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expansion tail)]
      (swap! state assoc
@@ -164,7 +174,7 @@
             :string/local new-str)))
   ([state target expansion]
    (let [{:keys [value head tail]} (destruct-target target)
-         start-idx (count (re-find #".*#" head))
+         start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head expansion tail)]
      (swap! state assoc
@@ -181,10 +191,10 @@
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                            page? (re-pattern (str "(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(\)\))?(.*)"
-                            page? #"(\]\])?(.*)")
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
          new-head     (cond block? "$1(("
                             page? "$1[[")
          closing-str  (cond block? "))"
@@ -200,14 +210,14 @@
      (setStart target (+ 2 start))))
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         {:keys [start head tail]} target
+         {:keys [start head tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
          ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(.*)\\(\\(" query))
-                            page? (re-pattern (str "(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(\)\))?(.*)"
-                            page? #"(\]\])?(.*)")
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
          new-head     (cond block? "$1(("
                             page? "$1[[")
          closing-str  (cond block? "))"
@@ -272,14 +282,19 @@
 (defn handle-arrow-key
   [e uid state]
   (let [{:keys [key-code shift target]} (destruct-key-down e)
-        top-row?    (block-start? e)
-        bottom-row? (block-end? e)
-        {:search/keys [results type index]} @state
-        up? (= key-code KeyCodes.UP)
-        down? (= key-code KeyCodes.DOWN)
-        left? (= key-code KeyCodes.LEFT)
-        right? (= key-code KeyCodes.RIGHT)]
-
+        start?          (block-start? e)
+        end?            (block-end? e)
+        {:search/keys [results type index] caret-position :caret-position} @state
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (/ textarea-height height)
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)
+        up?             (= key-code KeyCodes.UP)
+        down?           (= key-code KeyCodes.DOWN)
+        left?           (= key-code KeyCodes.LEFT)
+        right?          (= key-code KeyCodes.RIGHT)]
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
@@ -293,40 +308,42 @@
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
-             (or up? down?) (let [cur-index index
-                                  min-index 0
-                                  max-index (max-idx results)
-                                  next-index (cycle-list min-index max-index cur-index up? down?)
+             (or up? down?) (let [cur-index    index
+                                  min-index    0
+                                  max-index    (max-idx results)
+                                  next-index   (cycle-list min-index max-index cur-index up? down?)
                                   container-el (getElement "dropdown-menu")
-                                  target-el (getElement (str "dropdown-item-" next-index))]
+                                  target-el    (getElement (str "dropdown-item-" next-index))]
                               (.. e preventDefault)
                               (swap! state assoc :search/index next-index)
                               (scroll-if-needed target-el container-el)))
 
       ;; Else: navigate across blocks
       :else (cond
-              (and up? top-row?)       (dispatch [:up uid])
-              (and left? top-row?)     (dispatch [:left uid])
-              (and down? bottom-row?)  (dispatch [:down uid])
-              (and right? bottom-row?) (dispatch [:right uid])))))
+              (and up? top-row?) (dispatch [:up uid])
+              (and left? start?) (dispatch [:left uid])
+              (and down? bottom-row?) (dispatch [:down uid])
+              (and right? end?) (dispatch [:right uid])))))
 
 
 ;;; Tab
 
 (defn handle-tab
-  "Bug: indenting sets the cursor position to 0, liekely because a new textarea element is created on the DOM. Set selection appropriately.
+  "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
   [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift value start end]} (destruct-key-down e)]
-    (if shift
-      (dispatch [:unindent uid value])
-      (dispatch [:indent uid value]))
-    (js/setTimeout (fn []
-                     (when-let [el (getElement (str "editable-uid-" uid))]
-                       (setStart el start)
-                       (setEnd el end)))
-                   50)))
+  (let [{:keys [shift value start end]} (destruct-key-down e)
+        selected-items @(subscribe [:selected/items])]
+    (when (empty? selected-items)
+      (if shift
+        (dispatch [:unindent uid value])
+        (dispatch [:indent uid value]))
+      (js/setTimeout (fn []
+                       (when-let [el (getElement (str "editable-uid-" uid))]
+                         (setStart el start)
+                         (setEnd el end)))
+                     50))))
 
 
 (defn handle-escape
@@ -336,6 +353,9 @@
   (dispatch [:editing/uid nil]))
 
 ;;; Enter
+
+(def throttle-dispatch (throttle #(dispatch %) 500))
+
 
 (defn handle-enter
   [e uid state]
@@ -358,7 +378,7 @@
                                :else (str "{{[[TODO]]}} " value))]
              (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
-      :else (dispatch [:enter uid value start]))))
+      :else (throttle-dispatch [:enter uid value start]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -384,9 +404,17 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e _ state]
-  (let [{:keys [key-code head tail selection shift start end target]} (destruct-key-down e)
+  (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
     (cond
+      (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
+                                                              closest-block-page (.. target (closest ".block-page"))
+                                                              closest            (or closest-node-page closest-block-page)
+                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              children           (->> (:block/children block)
+                                                                                      (sort-by :block/order)
+                                                                                      (mapv :block/uid))]
+                                                          (dispatch [:selected/add-items children]))
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
@@ -534,8 +562,16 @@
   [e uid state]
   (let [d-event (destruct-key-down e)
         {:keys [meta ctrl key-code]} d-event]
+
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
+
+    ;; update caret position for search dropdowns and for up/down
+    (when (nil? (:search/type @state))
+      (let [caret-position (get-caret-position (.. e -target))]
+        (swap! state assoc :caret-position caret-position)))
+
+    ;; dispatch center
     (cond
       (arrow-key-direction e)         (handle-arrow-key e uid state)
       (pair-char? e)                  (handle-pair-char e uid state)
@@ -546,6 +582,3 @@
       (= key-code KeyCodes.ESC)       (handle-escape e state)
       (or meta ctrl)                  (handle-shortcuts e uid state)
       (is-character-key? e)           (write-char e uid state))))
-
-;;:else (prn "non-event" key key-code))))
-
