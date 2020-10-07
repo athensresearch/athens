@@ -122,8 +122,6 @@
                                               old-titles
                                               new-block-refs
                                               old-block-refs)]
-                   (when (not-empty new-block-refs)
-                     (prn "NEW BLOCK" assertion retraction))
                    tx-data)))))
 
 
