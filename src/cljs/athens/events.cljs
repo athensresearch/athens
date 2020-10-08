@@ -369,10 +369,11 @@
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
-    (let [synced? @(subscribe [:db/synced])]
-      {:fx [(when synced? [:dispatch [:db/not-synced]])
-            [:dispatch [:save]]
-            [:transact! tx-data]]})))
+    ;; always stay synced for now because auto-saving
+    #_(let [synced? @(subscribe [:db/synced])])
+    {:fx [(when false [:dispatch [:db/not-synced]])
+          [:dispatch [:save]]
+          [:transact! tx-data]]}))
 
 
 (reg-event-fx
@@ -419,8 +420,8 @@
   (fn [_ _]
     (let [db-filepath (subscribe [:db/filepath])]
       {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]
-       :dispatch-n [[:db/sync]
-                    [:db/update-mtime nil]]})))
+       :dispatch-n [#_[:db/sync] ;; stay synced because auto-saving
+                    [:db/update-mtime (js/Date.)]]})))
 
 
 (reg-event-fx

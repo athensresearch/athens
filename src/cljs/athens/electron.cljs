@@ -5,7 +5,7 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch #_subscribe]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch subscribe reg-sub]]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -59,10 +59,11 @@
 
 (defn sync-db-from-fs
   "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
-  [db filepath _filename]
-  (let [prev-mtime (:db/mtime db)
+  [filepath _filename]
+  (let [prev-mtime @(subscribe [:db/mtime])
         curr-mtime (.-mtime (.statSync fs filepath))
         newer?     (< prev-mtime curr-mtime)]
+    (prn "tiME" prev-mtime curr-mtime)
     (when newer?
       (dispatch [:db/update-mtime curr-mtime])
       (let [read-db (.readFileSync fs filepath)
@@ -79,22 +80,27 @@
 ;; Debounce because files can be changed multiple times per save.
 (reg-event-fx
   :fs/watch
-  (fn [{:keys [db]} [_ filepath]]
+  (fn [_ [_ filepath]]
     (let [dirpath (.dirname path filepath)]
       (.. fs (watch dirpath (fn [_event filename]
                               ;; when filename matches last part of filepath
                               ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
                               (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                (debounce-sync-db-from-fs db filepath filename))))))
+                                (debounce-sync-db-from-fs filepath filename))))))
     {}))
+
+
+(reg-sub
+  :db/mtime
+  (fn [db _]
+    (:db/mtime db)))
 
 
 (reg-event-db
   :db/update-mtime
-  (fn [db [_ mtime]]
+  (fn [db [_ mtime1]]
     (let [{:db/keys [filepath]} db
-          ;; TODO: effect
-          mtime (or mtime (.. fs (statSync filepath) -mtime))]
+          mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
       (assoc db :db/mtime mtime))))
 
 
