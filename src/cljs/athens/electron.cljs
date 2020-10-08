@@ -8,6 +8,9 @@
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch #_subscribe]]))
 
 
+;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
+
+
 (def electron (js/require "electron"))
 (def remote (.. electron -remote))
 
@@ -25,7 +28,7 @@
   (fn [{:keys [local-storage]} _]
     {:dispatch [:db/update-filepath local-storage]}))
 
-;; todo: refactor effects
+
 (reg-event-fx
   :fs/create-new-db
   (fn []
@@ -74,7 +77,6 @@
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Watching db file directly doesn't always work, so watch directory and regex match.
 ;; Debounce because files can be changed multiple times per save.
-;; TODO: effect
 (reg-event-fx
   :fs/watch
   (fn [{:keys [db]} [_ filepath]]
@@ -104,6 +106,7 @@
 ;; else - localStorage has filepath, but no file at filepath
 ;; open or create a new starter db
 
+;; Watch filesystem, e.g. in case db is updated via Dropbox sync
 (reg-event-fx
   :desktop/boot
   (fn [_ _]
