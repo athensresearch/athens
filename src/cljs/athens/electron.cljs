@@ -5,7 +5,7 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch subscribe]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch #_subscribe]]))
 
 
 (def electron (js/require "electron"))
@@ -54,7 +54,6 @@
     {:dispatch [:transact athens-datoms/datoms]}))
 
 
-
 (defn sync-db-from-fs
   "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
   [db filepath _filename]
@@ -66,6 +65,7 @@
       (let [read-db (.readFileSync fs filepath)
             db      (dt/read-transit-str read-db)]
         (dispatch [:reset-conn db])))))
+
 
 (def debounce-sync-db-from-fs
   (debounce sync-db-from-fs 100))
