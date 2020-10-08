@@ -4,7 +4,11 @@
     [athens.db :as db]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
-    [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
+    [goog.functions :refer [debounce]]
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch subscribe reg-sub]]))
+
+
+;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
 
 
 (def electron (js/require "electron"))
@@ -24,7 +28,7 @@
   (fn [{:keys [local-storage]} _]
     {:dispatch [:db/update-filepath local-storage]}))
 
-;; todo: refactor effects
+
 (reg-event-fx
   :fs/create-new-db
   (fn []
@@ -52,6 +56,54 @@
   (fn []
     {:dispatch [:transact athens-datoms/datoms]}))
 
+
+(defn sync-db-from-fs
+  "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
+  [filepath _filename]
+  (let [prev-mtime @(subscribe [:db/mtime])
+        curr-mtime (.-mtime (.statSync fs filepath))
+        newer?     (< prev-mtime curr-mtime)]
+    (prn "tiME" prev-mtime curr-mtime)
+    (when newer?
+      (dispatch [:db/update-mtime curr-mtime])
+      (let [read-db (.readFileSync fs filepath)
+            db      (dt/read-transit-str read-db)]
+        (dispatch [:reset-conn db])))))
+
+
+(def debounce-sync-db-from-fs
+  (debounce sync-db-from-fs 100))
+
+
+;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
+;; Watching db file directly doesn't always work, so watch directory and regex match.
+;; Debounce because files can be changed multiple times per save.
+(reg-event-fx
+  :fs/watch
+  (fn [_ [_ filepath]]
+    (let [dirpath (.dirname path filepath)]
+      (.. fs (watch dirpath (fn [_event filename]
+                              ;; when filename matches last part of filepath
+                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                (debounce-sync-db-from-fs filepath filename))))))
+    {}))
+
+
+(reg-sub
+  :db/mtime
+  (fn [db _]
+    (:db/mtime db)))
+
+
+(reg-event-db
+  :db/update-mtime
+  (fn [db [_ mtime1]]
+    (let [{:db/keys [filepath]} db
+          mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
+      (assoc db :db/mtime mtime))))
+
+
 ;; if localStorage is empty, assume first open
 ;; create a Documents/athens directory and Documents/athens/db.transit file
 ;; store path in localStorage and re-frame
@@ -60,6 +112,7 @@
 ;; else - localStorage has filepath, but no file at filepath
 ;; open or create a new starter db
 
+;; Watch filesystem, e.g. in case db is updated via Dropbox sync
 (reg-event-fx
   :desktop/boot
   (fn [_ _]
@@ -72,6 +125,7 @@
                                                      (nil? filepath) (dispatch [:fs/create-new-db])
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
+                                                                                 (dispatch [:fs/watch filepath])
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}

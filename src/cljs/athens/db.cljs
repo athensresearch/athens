@@ -19,6 +19,7 @@
 (defonce rfdb {:user                "Socrates"
                :db/filepath         nil
                :db/synced           true
+               :db/mtime            nil
                :current-route       nil
                :loading?            true
                :alert               nil
