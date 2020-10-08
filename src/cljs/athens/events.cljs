@@ -418,8 +418,9 @@
   :save
   (fn [_ _]
     (let [db-filepath (subscribe [:db/filepath])]
-      {:fs/write! [@db-filepath (dt/write-transit-str @db/dsdb)]
-       :dispatch  [:db/sync]})))
+      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]
+       :dispatch-n [[:db/sync]
+                    [:db/update-mtime nil]]})))
 
 
 (reg-event-fx

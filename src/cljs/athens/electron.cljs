@@ -4,7 +4,8 @@
     [athens.db :as db]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
-    [re-frame.core :refer [#_reg-event-db reg-event-fx inject-cofx reg-fx dispatch]]))
+    [goog.functions :refer [debounce]]
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch subscribe]]))
 
 
 (def electron (js/require "electron"))
@@ -52,6 +53,42 @@
   (fn []
     {:dispatch [:transact athens-datoms/datoms]}))
 
+
+(def debounce-update-db-from-fs
+  (debounce (fn [db filepath filename]
+              (let [prev-mtime (:db/mtime db)
+                    curr-mtime (.-mtime (.statSync fs filepath))
+                    newer?     (< prev-mtime curr-mtime)]
+                (when newer?
+                  (dispatch [:db/update-mtime curr-mtime])
+                  (let [read-db (.readFileSync fs filepath)
+                        db      (dt/read-transit-str read-db)]
+                    (dispatch [:reset-conn db])))))
+            100))
+
+
+(reg-event-fx
+  :fs/watch
+  (fn [{:keys [db]} [_ filepath]]
+    (let [dirpath (.dirname path filepath)]
+      (.. fs (watch dirpath (fn [event filename]
+                              (prn "EVENT" event filename)
+                              ;; when filename matches last part of filepath
+                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                (debounce-update-db-from-fs db filepath filename))))))
+    {}))
+
+
+(reg-event-db
+  :db/update-mtime
+  (fn [db [_ mtime]]
+    (let [{:db/keys [filepath]} db
+          ;; TODO: effect
+          mtime (or mtime (.. fs (statSync filepath) -mtime))]
+      (assoc db :db/mtime mtime))))
+
+
 ;; if localStorage is empty, assume first open
 ;; create a Documents/athens directory and Documents/athens/db.transit file
 ;; store path in localStorage and re-frame
@@ -72,6 +109,7 @@
                                                      (nil? filepath) (dispatch [:fs/create-new-db])
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
+                                                                                 (dispatch [:fs/watch filepath])
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
