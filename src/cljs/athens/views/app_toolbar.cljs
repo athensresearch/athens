@@ -150,7 +150,7 @@
   (let [left-open? (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name (subscribe [:current-route/name])
-        db-synced (subscribe [:db/synced])
+        ;;db-synced (subscribe [:db/synced])
         import-modal-open? (r/atom false)]
     (fn []
 
@@ -173,24 +173,23 @@
          [button {:on-click #(dispatch [:athena/toggle])
                   :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
-          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]
+          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
-          [:div (use-style app-header-secondary-controls-style)
-           ;; Click to Open
-           #_[button {:on-click #(prn "TODO")}
-              [(r/adapt-react-class mui-icons/FolderOpen)
-               {:style {:align-self "center"}}]]
-           ;; sync UI
-           #_[(r/adapt-react-class mui-icons/FiberManualRecord)
-              {:style {:color (color (if @db-synced
-                                       :confirmation-color
-                                       :highlight-color))
-                       :align-self "center"}}]]]
-
-         [separator]
+        [:div (use-style app-header-secondary-controls-style)
+         ;; Click to Open
+         #_[button {:on-click #(prn "TODO")}
+            [(r/adapt-react-class mui-icons/FolderOpen)
+             {:style {:align-self "center"}}]]
+         ;; sync UI
+         #_[(r/adapt-react-class mui-icons/FiberManualRecord)
+            {:style {:color      (color (if @db-synced
+                                          :confirmation-color
+                                          :highlight-color))
+                     :align-self "center"}}]
+         #_[separator]
          ;;[button {:on-click #(reset! import-modal-open? true)}
          ;; [:> mui-icons/Publish]]
-         [separator]
+         #_[separator]
          [button {:active   @right-open?
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
