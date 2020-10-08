@@ -54,29 +54,36 @@
     {:dispatch [:transact athens-datoms/datoms]}))
 
 
-(def debounce-update-db-from-fs
-  (debounce (fn [db filepath filename]
-              (let [prev-mtime (:db/mtime db)
-                    curr-mtime (.-mtime (.statSync fs filepath))
-                    newer?     (< prev-mtime curr-mtime)]
-                (when newer?
-                  (dispatch [:db/update-mtime curr-mtime])
-                  (let [read-db (.readFileSync fs filepath)
-                        db      (dt/read-transit-str read-db)]
-                    (dispatch [:reset-conn db])))))
-            100))
+
+(defn sync-db-from-fs
+  "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
+  [db filepath _filename]
+  (let [prev-mtime (:db/mtime db)
+        curr-mtime (.-mtime (.statSync fs filepath))
+        newer?     (< prev-mtime curr-mtime)]
+    (when newer?
+      (dispatch [:db/update-mtime curr-mtime])
+      (let [read-db (.readFileSync fs filepath)
+            db      (dt/read-transit-str read-db)]
+        (dispatch [:reset-conn db])))))
+
+(def debounce-sync-db-from-fs
+  (debounce sync-db-from-fs 100))
 
 
+;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
+;; Watching db file directly doesn't always work, so watch directory and regex match.
+;; Debounce because files can be changed multiple times per save.
+;; TODO: effect
 (reg-event-fx
   :fs/watch
   (fn [{:keys [db]} [_ filepath]]
     (let [dirpath (.dirname path filepath)]
-      (.. fs (watch dirpath (fn [event filename]
-                              (prn "EVENT" event filename)
+      (.. fs (watch dirpath (fn [_event filename]
                               ;; when filename matches last part of filepath
                               ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
                               (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                (debounce-update-db-from-fs db filepath filename))))))
+                                (debounce-sync-db-from-fs db filepath filename))))))
     {}))
 
 
