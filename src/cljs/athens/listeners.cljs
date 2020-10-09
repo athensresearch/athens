@@ -1,6 +1,7 @@
 (ns athens.listeners
   (:require
     [athens.db :as db]
+    [athens.util :as util]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.events :as events]
@@ -75,17 +76,12 @@
 
 (defn key-down
   [e]
-  (let [key (.. e -keyCode)
-        ctrl (.. e -ctrlKey)
-        meta (.. e -metaKey)
-        shift (.. e -shiftKey)
-        mac? false
-        linux? true
-        windows? false]
+  (let [key      (.. e -keyCode)
+        ctrl     (.. e -ctrlKey)
+        meta     (.. e -metaKey)
+        shift    (.. e -shiftKey)]
 
-    (when ctrl (or (and mac? meta)
-                   (and linux? ctrl)
-                   (and windows? ctrl))
+    (when (util/shortcut-key? meta ctrl)
 
       (condp = key
         KeyCodes.S (dispatch [:save])
@@ -105,7 +101,8 @@
 
         KeyCodes.BACKSLASH (if shift
                              (dispatch [:right-sidebar/toggle])
-                             (dispatch [:left-sidebar/toggle]))))))
+                             (dispatch [:left-sidebar/toggle]))
+        nil))))
 
 
 ;; -- Clipboard ----------------------------------------------------------

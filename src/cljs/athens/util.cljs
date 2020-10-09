@@ -152,3 +152,24 @@
   "Take a string and escape all regex special characters in it"
   [str]
   (string/escape str regex-esc-char-map))
+
+
+;; OS
+
+(defn get-os
+  []
+  (let [os (.. js/window -navigator -appVersion)]
+    (cond
+      (re-find #"Windows" os) :windows
+      (re-find #"Linux" os) :linux
+      (re-find #"Mac" os) :mac)))
+
+
+(defn shortcut-key?
+  "Use meta for mac, ctrl for others."
+  [meta ctrl]
+  (let [os (get-os)]
+    (or (and (= os :mac) meta)
+        (and (= os :windows) ctrl)
+        (and (= os :linux) ctrl))))
+
