@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position]]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
@@ -406,6 +406,7 @@
   [e _ state]
   (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
+
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
@@ -580,5 +581,5 @@
       (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
       (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
       (= key-code KeyCodes.ESC)       (handle-escape e state)
-      (or meta ctrl)                  (handle-shortcuts e uid state)
+      (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
       (is-character-key? e)           (write-char e uid state))))
