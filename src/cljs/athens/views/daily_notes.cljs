@@ -56,8 +56,9 @@
         doc-height  (.. js/document -documentElement -scrollHeight)
         top-delta   (- offset-top from-top)
         bottom-delta (- from-bottom doc-height)]
+    ;; Don't allow user to scroll up for now.
     (cond
-      (< top-delta 1) (dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+      (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
       (< bottom-delta 1) (dispatch [:daily-note/next (get-day (uid-to-date (last daily-notes)) 1)]))))
 
 
@@ -84,10 +85,10 @@
                              (pull-many db/dsdb '[*])
                              deref)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
-           [:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
-                                                           :opacity "0.5"
-                                                           :min-height "10vh"}))
-            [:h1 "Later"]]
+           #_[:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
+                                                             :opacity "0.5"
+                                                             :min-height "10vh"}))
+              [:h1 "Later"]]
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}
