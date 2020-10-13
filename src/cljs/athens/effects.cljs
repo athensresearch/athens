@@ -38,12 +38,14 @@
 
 
 (defn new-titles-to-tx-data
-  "Filter: node/title doesn't exist yet.
+  "Filter: node/title doesn't exist yet in the db or in the titles being asserted (e.g. when renaming a page and changing it's references).
   Map: new node/title entity."
-  [new-titles]
+  [new-titles assert-titles]
   (let [now (now-ts)]
     (->> new-titles
-         (filter (fn [x] (nil? (db/search-exact-node-title x))))
+         (filter (fn [x]
+                   (and (nil? (db/search-exact-node-title x))
+                        (not (contains? assert-titles x)))))
          (map (fn [t]
                 {:node/title  t
                  :block/uid   (gen-block-uid)
@@ -99,41 +101,46 @@
 
   TODO: when user edits title, parse for new pages."
   [with-tx-data]
-  (->> with-tx-data
-       (filter #(= (second %) :block/string))
-       ;; group-by entity
-       (group-by first)
-       ;; map sort-by so [true false] gives us [assertion retraction]
-       (mapv (fn [[_eid datoms]]
-               (sort-by #(-> % last not) datoms)))
-       (mapcat (fn [[assertion retraction]]
-                 (let [eid            (first assertion)
-                       retract-string (nth retraction 2)
-                       assert-string  (nth assertion 2)
-                       uid            (db/v-by-ea eid :block/uid)
-                       retract-data   (walk-string retract-string)
-                       assert-data    (walk-string assert-string)
-                       new-titles     (new-titles-to-tx-data (:node/titles assert-data))
-                       old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                       new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
-                       old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
-                       tx-data        (concat []
-                                              new-titles
-                                              old-titles
-                                              new-block-refs
-                                              old-block-refs)]
-                   tx-data)))))
+  (let [assert-titles (->> with-tx-data
+                           (filter #(and (= (second %) :node/title)
+                                         (true? (last %))))
+                           (map #(nth % 2))
+                           set)]
+    (->> with-tx-data
+         (filter #(= (second %) :block/string))
+         ;; group-by entity
+         (group-by first)
+         ;; map sort-by so [true false] gives us [assertion retraction]
+         (mapv (fn [[_eid datoms]]
+                 (sort-by #(-> % last not) datoms)))
+         (mapcat (fn [[assertion retraction]]
+                   (let [eid            (first assertion)
+                         retract-string (nth retraction 2)
+                         assert-string  (nth assertion 2)
+                         uid            (db/v-by-ea eid :block/uid)
+                         retract-data   (walk-string retract-string)
+                         assert-data    (walk-string assert-string)
+                         new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
+                         old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                         new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
+                         old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                         tx-data        (concat []
+                                                new-titles
+                                                old-titles
+                                                new-block-refs
+                                                old-block-refs)]
+                     tx-data))))))
 
 
 (reg-fx
   :transact!
   (fn [tx-data]
-    ;;(prn "TX INPUTS")
-    ;;(pprint tx-data)
+    (prn "TX RAW INPUTS")
+    (pprint tx-data)
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
-      (prn "TX INPUTS") ;; parsed datoms
+      (prn "TX FINAL INPUTS") ;; parsed datoms
       (pprint final-tx-data)
       (prn "TX OUTPUTS")
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
