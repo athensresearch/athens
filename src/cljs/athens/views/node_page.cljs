@@ -188,19 +188,25 @@
 
 
 (defn get-existing-page
-  "?uid used for navigate-uid, go to existing page following the merge
-  ?b is used for finding the count of blocks on existing page. Add this count value to current blocks to reindex.
-   - This means that the current blocks will be at the end of the existing page.
-  FROM page is current page.
-  TO page is existing page."
+  "?uid used for navigate-uid. Go to existing page following the merge."
   [local-title]
-  (d/q '[:find ?uid ?b
+  (d/q '[:find ?uid .
          :in $ ?t
          :where
          [?e :node/title ?t]
-         [?e :block/uid ?uid]
-         [?e :block/children ?b]]
+         [?e :block/uid ?uid]]
        @db/dsdb local-title))
+
+
+(defn existing-block-count
+  "Count is used to reindex blocks after merge."
+  [local-title]
+  (count (d/q '[:find [?ch ...]
+                :in $ ?t
+                :where
+                [?e :node/title ?t]
+                [?e :block/children ?ch]]
+              @db/dsdb local-title)))
 
 
 (declare init-state)
@@ -211,35 +217,36 @@
    - if no other page exists, rewrite page title and linked refs
    - else page with same title does exists: prompt to merge
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
-     - cancel-fn: reset state"
-  [block state ref-groups]
-  (let [{dbid :db/id children :block/children} block
+     - cancel-fn: reset state
+  The current blocks will be at the end of the existing page."
+  [node state ref-groups]
+  (let [{dbid :db/id children :block/children} node
         {:keys [title/initial title/local]} @state]
     (when (not= initial local)
       (let [existing-page   (get-existing-page local)
             linked-refs     (get-linked-refs ref-groups)
             new-linked-refs (map-new-refs linked-refs initial local)]
         (if (empty? existing-page)
-          (let [new-page {:db/id dbid :node/title local}
+          (let [new-page   {:db/id dbid :node/title local}
                 new-datoms (concat [new-page] new-linked-refs)]
             (swap! state assoc :title/initial local)
             (dispatch [:transact new-datoms]))
-          (let [new-parent-uid (ffirst existing-page)
-                existing-page-block-count (count existing-page)
-                reindex (map (fn [{:block/keys [order uid]}]
-                               {:db/id [:block/uid uid]
-                                :block/order (+ order existing-page-block-count)
-                                :block/_children [:block/uid new-parent-uid]})
-                             children)
-                delete-page [:db/retractEntity dbid]
-                new-datoms (concat [delete-page]
-                                   new-linked-refs
-                                   reindex)
-                cancel-fn #(swap! state merge init-state)
-                confirm-fn (fn []
-                             (navigate-uid new-parent-uid)
-                             (dispatch [:transact new-datoms])
-                             (cancel-fn))]
+          (let [new-parent-uid            existing-page
+                existing-page-block-count (existing-block-count local)
+                reindex                   (map (fn [{:block/keys [order uid]}]
+                                                 {:db/id           [:block/uid uid]
+                                                  :block/order     (+ order existing-page-block-count)
+                                                  :block/_children [:block/uid new-parent-uid]})
+                                               children)
+                delete-page               [:db/retractEntity dbid]
+                new-datoms                (concat [delete-page]
+                                                  new-linked-refs
+                                                  reindex)
+                cancel-fn                 #(swap! state merge init-state)
+                confirm-fn                (fn []
+                                            (navigate-uid new-parent-uid)
+                                            (dispatch [:transact new-datoms])
+                                            (cancel-fn))]
             (swap! state assoc
                    :alert/show true
                    :alert/message (str "\"" local "\"" " already exists, merge pages?")
@@ -281,7 +288,7 @@
 
 
 (defn menu-dropdown
-  [_block state]
+  [_node state]
   (let [ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (and (:menu/show @state)
@@ -291,8 +298,8 @@
       {:display-name "node-page-menu"
        :component-did-mount (fn [_this] (listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render   (fn [block state]
-                           (let [{:block/keys [uid] sidebar :page/sidebar} block
+       :reagent-render   (fn [node state]
+                           (let [{:block/keys [uid] sidebar :page/sidebar} node
                                  {:menu/keys [show x y]} @state]
                              (when show
                                [:div (merge (use-style dropdown-style
@@ -350,8 +357,8 @@
   [_ _ _ _]
   (let [state (r/atom init-state)
         current-route-uid (subscribe [:current-route/uid])]
-    (fn [block editing-uid ref-groups timeline-page?]
-      (let [{:block/keys [children uid] title :node/title} block
+    (fn [node editing-uid ref-groups timeline-page?]
+      (let [{:block/keys [children uid] title :node/title} node
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
 
         (sync-title title state)
@@ -374,7 +381,7 @@
             [autosize/textarea
              {:value         (:title/local @state)
               :class         (when (= editing-uid uid) "is-editing")
-              :on-blur       (fn [_] (handle-blur block state ref-groups))
+              :on-blur       (fn [_] (handle-blur node state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
               :on-change     (fn [e] (handle-change e state))}])
           (when (and timeline-page? (string? @current-route-uid))
@@ -399,7 +406,7 @@
           ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
-         [menu-dropdown block state]
+         [menu-dropdown node state]
 
          ;; Children
          (if (empty? children)
