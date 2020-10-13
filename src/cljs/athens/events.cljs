@@ -599,12 +599,12 @@
 (defn add-child
   [block]
   (let [{p-eid :db/id} block
-        new-uid (gen-block-uid)
-        new-child {:block/uid new-uid :block/string "" :block/order 0}
-        reindex (->> (inc-after p-eid -1)
-                     (concat [new-child]))
+        new-uid   (gen-block-uid)
+        new-child {:block/uid new-uid :block/string "" :block/order 0 :block/open true}
+        reindex   (->> (inc-after p-eid -1)
+                       (concat [new-child]))
         new-block {:db/id p-eid :block/children reindex}
-        tx-data [new-block]]
+        tx-data   [new-block]]
     {:fx [[:dispatch [:transact tx-data]]
           [:dispatch [:editing/uid new-uid]]]}))
 
