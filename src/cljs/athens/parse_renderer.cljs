@@ -126,7 +126,8 @@
                                               :src   url})])
      :url-link      (fn [{url :url} text]
                       [:a (use-style url-link {:class "url-link"
-                                               :href  url})
+                                               :href  url
+                                               :target "_blank"})
                        text])
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])

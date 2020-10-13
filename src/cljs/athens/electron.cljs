@@ -47,8 +47,8 @@
 (reg-event-fx
   :db/retract-athens-pages
   (fn []
-    {:dispatch [:transact (concat (db/retract-page-recursively "athens/Welcome")
-                                  (db/retract-page-recursively "athens/Changelog"))]}))
+    {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
+                                  (db/retract-page-recursively "Changelog"))]}))
 
 
 (reg-event-fx

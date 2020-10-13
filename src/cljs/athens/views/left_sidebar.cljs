@@ -92,6 +92,13 @@
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
+(def version-style
+  {:color "inherit"
+   :text-decoration "none"
+   :opacity 0.3
+   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
+
+
 ;;; Components
 
 
@@ -163,6 +170,8 @@
        ;; LOGO + BOTTOM BUTTONS
       [:footer (use-sub-style left-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
-       [:h5 (use-style {:opacity 0.5 :align-self "center"})
-        (.. (js/require "electron") -remote -app getVersion)]]]]))
+       [:h5 (use-style {:align-self "center"})
+        [:a (use-style version-style {:href "https://www.notion.so/athensresearch/Weekly-Updates-e18afa006cfd4fec9c462940ac3b84da"
+                                      :target "_blank"})
+         (.. (js/require "electron") -remote -app getVersion)]]]]]))
 ;;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))
