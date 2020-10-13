@@ -15,7 +15,7 @@
                                                 :order 0}]}
                      #:block{:uid "7e409b1cb",
                              :string "**How to Use Athens**",
-                             :open true,
+                             :open false,
                              :order 1,
                              :children [#:block{:uid "289cc9981",
                                                 :string "Outliner Features",
