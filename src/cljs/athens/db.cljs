@@ -243,6 +243,12 @@
        sort-block-children))
 
 
+(defn get-athens-datoms
+  [id]
+  (->> @(pull dsdb (next node-document-pull-vector) id)
+       sort-block-children))
+
+
 (defn shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
