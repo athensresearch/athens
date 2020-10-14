@@ -463,7 +463,6 @@
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
-   ;; FIXME: specify behavior when going up would go to title or context-root
     {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
 
 
