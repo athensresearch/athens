@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [destruct-key-down]]
-    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parse-renderer :as parse-renderer] ;;:refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
@@ -147,7 +147,7 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(athens.parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
