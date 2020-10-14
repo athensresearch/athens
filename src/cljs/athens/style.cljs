@@ -164,11 +164,11 @@
     theme))
 
 
-(stylefy/tag "html" base-styles)
-
-
-(stylefy/tag ":root" (merge (remap-theme-keys THEME-LIGHT)
-                            {::stylefy/media {{:prefers-color-scheme "dark"} (remap-theme-keys THEME-DARK)}}))
-
-
-(stylefy/tag "*" {:box-sizing "border-box"})
+(defn init
+  []
+  (stylefy/init)
+  (stylefy/tag "html" base-styles)
+  (stylefy/tag "*" {:box-sizing "border-box"})
+  (stylefy/tag ":root" (merge (remap-theme-keys THEME-LIGHT)
+                              {::stylefy/media {{:prefers-color-scheme "dark"} (remap-theme-keys THEME-DARK)}}))
+  (stylefy/tag "#--re-frame-10x--" {:display "none !important"}))

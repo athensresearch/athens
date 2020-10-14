@@ -7,7 +7,7 @@
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
-    [athens.style :refer [app-styles]]
+    [athens.style :as style]
     [athens.subs]
     [athens.views :as views]
     [goog.dom :refer [getElement]]
@@ -32,8 +32,8 @@
 
 (defn init
   []
-  (stylefy/tag "body" app-styles)
-  (stylefy/init)
+  (style/init)
+  (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (rf/dispatch-sync [:desktop/boot])
   ;(rf/dispatch-sync [:init-rfdb])
