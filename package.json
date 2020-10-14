@@ -1,7 +1,7 @@
 {
   "name": "athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "description": "Open-Source Networked Thought",
   "main": "resources/main.js",
   "build": {
