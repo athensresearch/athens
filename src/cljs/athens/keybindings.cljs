@@ -295,6 +295,7 @@
         down?           (= key-code KeyCodes.DOWN)
         left?           (= key-code KeyCodes.LEFT)
         right?          (= key-code KeyCodes.RIGHT)]
+
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
@@ -318,12 +319,13 @@
                               (swap! state assoc :search/index next-index)
                               (scroll-if-needed target-el container-el)))
 
-      ;; Else: navigate across blocks
-      :else (cond
-              (and up? top-row?) (dispatch [:up uid])
-              (and left? start?) (dispatch [:left uid])
-              (and down? bottom-row?) (dispatch [:down uid])
-              (and right? end?) (dispatch [:right uid])))))
+      (or (and up? top-row?)
+          (and left? start?)) (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
+
+      (or (and down? bottom-row?)
+          (and right? end?)) (do (.. e preventDefault)
+                                 (dispatch [:down uid])))))
 
 
 ;;; Tab

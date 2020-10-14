@@ -468,19 +468,7 @@
 
 
 (reg-event-fx
-  :left
-  (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
-
-
-(reg-event-fx
   :down
-  (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
-
-
-(reg-event-fx
-  :right
   (fn [_ [_ uid]]
     {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
 
