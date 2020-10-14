@@ -1,8 +1,9 @@
 (ns athens.style
   (:require
     [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]))
-    ;;[athens.views.dropdown :as dropdown]))
+    [stylefy.core :as stylefy]
+    [goog.dom :refer [getElement setProperties]]))
+;;[athens.views.dropdown :as dropdown]))
 
 
 ;; (defn cssv
@@ -171,4 +172,6 @@
   (stylefy/tag "*" {:box-sizing "border-box"})
   (stylefy/tag ":root" (merge (remap-theme-keys THEME-LIGHT)
                               {::stylefy/media {{:prefers-color-scheme "dark"} (remap-theme-keys THEME-DARK)}}))
-  (stylefy/tag "#--re-frame-10x--" {:display "none !important"}))
+  ;; hide re-frame-10x by default
+  (let [el (getElement "--re-frame-10x--")]
+    (setProperties el (clj->js {"style" "display: none"}))))
