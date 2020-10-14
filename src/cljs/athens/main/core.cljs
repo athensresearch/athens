@@ -67,7 +67,8 @@
 
   (.on autoUpdater "update-downloaded"
        (fn [_]
-         (send-status-to-window "Update downloaded."))))
+         (send-status-to-window "Update downloaded.")
+         (.. autoUpdater quitAndInstall))))
 
 
 (defn main

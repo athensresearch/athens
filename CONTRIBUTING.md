@@ -84,7 +84,7 @@ lein dev
 In another terminal, run:
 
 ```
-npx electron .
+yarn run electron .
 ```
 
 Another window should open automatically. That's your Athens!
@@ -145,7 +145,7 @@ OS - Windows 10
 ```
 
 1. [Install Cursive](https://cursive-ide.com/userguide/index.html)
-1. In a terminal, navigate to the repository root and generate a pom.xml file: `npx shadow-cljs pom`.
+1. In a terminal, navigate to the repository root and generate a pom.xml file: `yarn run shadow-cljs pom`.
 1. In Intellij, go to `File → New → Project from Existing Sources...`, then select the generated pom.xml in the project directory.
 1. In a terminal, start a development server: `lein dev`
 1. Once the project has been opened in Intellij IDEA, go to `Run → Edit Configurations...`.
