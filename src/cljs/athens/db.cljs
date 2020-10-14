@@ -314,7 +314,8 @@
 
 (defn deepest-child-block
   [id]
-  (let [document (->> @(pull dsdb '[:block/order :block/uid {:block/children ...}] id))]
+  (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
+                      sort-block-children)]
     (loop [block document]
       (if (nil? (:block/children block))
         block
