@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [destruct-key-down]]
-    [athens.parse-renderer :as parse-renderer] ;;:refer [parse-and-render]]
+    [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
