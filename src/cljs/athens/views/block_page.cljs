@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.keybindings :refer [destruct-key-down]]
-    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
@@ -115,7 +115,8 @@
            (doall
              (for [{:keys [node/title block/uid block/string]} parents]
                ^{:key uid}
-               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} [parse-and-render (or title string) uid]]))]]
+               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
+                (or title string)]))]]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
@@ -146,7 +147,7 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(athens.parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
