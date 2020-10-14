@@ -4,7 +4,8 @@
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]))
+    [posh.reagent :refer [posh! pull q]]
+    [clojure.string :as string]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -573,6 +574,20 @@
   "For node-page references UI."
   [title]
   (-> title patterns/linked get-data))
+
+
+(defn replace-linked-refs
+  "Removes [[brackets]] surrounding linked refs."
+  ;; TODO: test with #[[long hashtags]] and #hashtags
+  [title]
+  (let [pattern (patterns/linked title)]
+    (->> pattern
+         get-ref-ids
+         (d/pull-many @dsdb [:db/id :block/string])
+         (mapv (fn [x]
+                 (let [new-str (string/replace (:block/string x) pattern title)]
+                   (assoc x :block/string new-str)))))))
+
 
 
 (defn get-linked-references-by-block

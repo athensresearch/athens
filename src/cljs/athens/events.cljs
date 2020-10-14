@@ -420,8 +420,12 @@
 
 (reg-event-fx
   :page/delete
-  (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact (retract-uid-recursively uid)]]]}))
+  (fn [_ [_ uid title]]
+    (let [retract-blocks     (retract-uid-recursively uid)
+          delete-linked-refs (db/replace-linked-refs title)
+          tx-data            (concat retract-blocks
+                                     delete-linked-refs)]
+      {:fx [[:dispatch [:transact tx-data]]]})))
 
 
 (reg-event-fx

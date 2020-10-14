@@ -299,8 +299,10 @@
        :component-did-mount (fn [_this] (listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render   (fn [node state]
-                           (let [{:block/keys [uid] sidebar :page/sidebar} node
-                                 {:menu/keys [show x y]} @state]
+                           (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
+                                 {:menu/keys [show x y]} @state
+                                 linked-refs (get-linked-references (escape-str title))]
+                             (prn "REF" linked-refs)
                              (when show
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
@@ -321,7 +323,7 @@
                                  [:hr (use-style menu-separator-style)]
                                  [button {:on-click #(do
                                                        (navigate :pages)
-                                                       (dispatch [:page/delete uid]))}
+                                                       (dispatch [:page/delete uid title]))}
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
