@@ -33,7 +33,7 @@
                                              :opacity "0"
                                              :border-radius "0.25rem"
                                              :transition "all 0.05s ease"
-                                             :background (color :link-color 0.1)}]
+                                             :background (color :link-color :opacity-lower)}]
                                   [:&:hover:after {:opacity "1"}]
                                   [:&:hover {:z-index 1}]]})
 

@@ -14,7 +14,8 @@
     [goog.dom.selection :refer [setCursorPosition]]
     [instaparse.core :as parse]
     [posh.reagent :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx]]))
+    [re-frame.core :refer [dispatch reg-fx]]
+    [stylefy.core :as stylefy]))
 
 
 ;;; Effects
@@ -154,6 +155,12 @@
 
 
 (reg-fx
+  :local-storage/set!
+  (fn [[key value]]
+    (js/localStorage.setItem key value)))
+
+
+(reg-fx
   :local-storage/set-db!
   (fn [db]
     (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
@@ -197,3 +204,8 @@
                            (setCursorPosition el index)))))
                    300)))
 
+
+(reg-fx
+  :stylefy/tag
+  (fn [[tag properties]]
+    (stylefy/tag tag properties)))

@@ -1,7 +1,7 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [color COLORS OPACITIES]]
+    [athens.style :refer [color THEME-LIGHT THEME-DARK OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]
@@ -50,10 +50,23 @@
 ;;; Devcards
 
 
-(defcard-rg Colors
+(defcard-rg Light-Theme
   [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
    (doall
-     (for [c (keys COLORS)]
+     (for [c (keys THEME-LIGHT)]
+       ^{:key c}
+       [:div (use-style color-item-style)
+        [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+        [:span c]
+        [:span {:style {:color (color c)}} (color c)]]))]
+  {}
+  {:padding false})
+
+
+(defcard-rg Dark-Theme
+  [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
+   (doall
+     (for [c (keys THEME-DARK)]
        ^{:key c}
        [:div (use-style color-item-style)
         [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]

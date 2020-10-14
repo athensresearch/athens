@@ -1,6 +1,7 @@
 (ns athens.events
   (:require
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
+    [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -360,6 +361,27 @@
   :local-storage/set-db
   (fn [_ [_ db]]
     {:local-storage/set-db! db}))
+
+
+(reg-event-fx
+  :local-storage/set-theme
+  [(inject-cofx :local-storage "theme/dark")]
+  (fn [{:keys [local-storage db]} _]
+    (let [is-dark (= "true" local-storage)
+          theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
+      {:db          (assoc db :theme/dark is-dark)
+       :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
+
+
+(reg-event-fx
+  :theme/toggle
+  (fn [{:keys [db]} _]
+    (let [dark?    (:theme/dark db)
+          new-dark (not dark?)
+          theme    (if dark? style/THEME-LIGHT style/THEME-DARK)]
+      {:db                 (assoc db :theme/dark new-dark)
+       :local-storage/set! ["theme/dark" new-dark]
+       :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
 
 
 ;; Datascript

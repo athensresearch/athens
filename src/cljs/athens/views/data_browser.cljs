@@ -1,10 +1,9 @@
 (ns athens.views.data-browser
   (:require
     [athens.db :as db]
-    [athens.style :refer [color COLORS HSL-COLORS]]
+    [athens.style :refer [color]]
     [clojure.string :as str]
     [datascript.core :as d]
-    [garden.color :refer [opacify]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -169,8 +168,8 @@
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "0.5rem"}]
                      [:td:last-child :th-last-child {:padding-right "0.5rem"}]
-                     [:tbody [:tr:hover {:background (opacify (:background-minus-1 HSL-COLORS) 0.15)
-                                         :color (:header-text-color COLORS)}]]
+                     [:tbody [:tr:hover {:background (color :background-minus-1 :opacity-low)
+                                         :color (color :header-text-color)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
@@ -178,13 +177,13 @@
                                 :padding-top "0.25rem";
                                 :border-top (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
-                     [:a {:color (:link-color COLORS)}]
+                     [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})
 
 
 (def footer-style
   {:margin "0.5rem 0"
-   ::stylefy/manual [[:a {:color (:link-color COLORS)}]]})
+   ::stylefy/manual [[:a {:color (color :link-color)}]]})
 
 
 (defn table-view

@@ -147,11 +147,12 @@
 
 (defn app-toolbar
   []
-  (let [left-open? (subscribe [:left-sidebar/open])
-        right-open? (subscribe [:right-sidebar/open])
-        route-name (subscribe [:current-route/name])
+  (let [left-open?         (subscribe [:left-sidebar/open])
+        right-open?        (subscribe [:right-sidebar/open])
+        route-name         (subscribe [:current-route/name])
         ;;db-synced (subscribe [:db/synced])
-        import-modal-open? (r/atom false)]
+        import-modal-open? (r/atom false)
+        theme-dark         (subscribe [:theme/dark])]
     (fn []
 
       [:<>
@@ -190,6 +191,11 @@
          ;;[button {:on-click #(reset! import-modal-open? true)}
          ;; [:> mui-icons/Publish]]
          #_[separator]
+         [button {:on-click #(dispatch [:theme/toggle])}
+          (if @theme-dark
+            [:> mui-icons/ToggleOff]
+            [:> mui-icons/ToggleOn])]
+         [separator]
          [button {:active   @right-open?
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]

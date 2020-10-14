@@ -29,10 +29,10 @@
                :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}
-               ;;:dragging-global     false
-               :mouse-down false
+               :mouse-down          false
                :daily-notes/items   []
-               :selected/items   []})
+               :selected/items      []
+               :theme/dark          true})
 
 
 ;; -- JSON Parsing ----------------------------------------------------

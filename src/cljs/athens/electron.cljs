@@ -128,6 +128,7 @@
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
+                                   {:when :seen? :events :local-storage/get-db-filepath :dispatch [:local-storage/set-theme]}
                                    {:when :seen-any-of?
                                     :events [:fs/create-new-db :reset-conn]
                                     :dispatch-n [[:db/retract-athens-pages]
