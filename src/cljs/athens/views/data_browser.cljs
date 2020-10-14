@@ -4,7 +4,6 @@
     [athens.style :refer [color]]
     [clojure.string :as str]
     [datascript.core :as d]
-    [garden.color :refer [opacify]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 

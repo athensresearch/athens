@@ -12,7 +12,6 @@
     [clojure.datafy :refer [nav datafy]]
     [datascript.core :as d]
     [datascript.db]
-    [garden.color :refer [darken]]
     [komponentit.autosize :as autosize]
     [me.tonsky.persistent-sorted-set]
     [re-frame.core :refer [subscribe dispatch]]

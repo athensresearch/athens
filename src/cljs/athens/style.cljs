@@ -5,7 +5,6 @@
     [stylefy.core :as stylefy]))
 
 
-
 (def THEME-DARK
   {:link-color         "#2399E7"
    :highlight-color    "#FBBE63"
