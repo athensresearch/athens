@@ -1,7 +1,7 @@
 (ns athens.views.spinner
   (:require
     [athens.db]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :as style]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
@@ -52,13 +52,13 @@
   {:width "3em"
    :height "3em"
    :border-radius "1000px"
-   :border (str "1.5px solid " (color :background-minus-1))
-   :border-top-color (color :link-color)
+   :border (str "1.5px solid " (style/color :background-minus-1))
+   :border-top-color (style/color :link-color)
    :animation "spinning 3s linear infinite"})
 
 
 (def spinner-message-style
-  {:--anim-opacity-end (:opacity-high OPACITIES)
+  {:--anim-opacity-end (:opacity-high style/OPACITIES)
    :animation "appear-and-drop 1s 0.75s ease"
    :font-size "14px"
    :animation-fill-mode "both"})
@@ -96,6 +96,6 @@
 
 (defn ^:export init-spinner
   []
-  (stylefy/init)
+  (style/init)
   (r-dom/render [initial-spinner-component]
                 (getElement "app")))

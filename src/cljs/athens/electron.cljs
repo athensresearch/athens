@@ -63,7 +63,6 @@
   (let [prev-mtime @(subscribe [:db/mtime])
         curr-mtime (.-mtime (.statSync fs filepath))
         newer?     (< prev-mtime curr-mtime)]
-    (prn "tiME" prev-mtime curr-mtime)
     (when newer?
       (dispatch [:db/update-mtime curr-mtime])
       (let [read-db (.readFileSync fs filepath)

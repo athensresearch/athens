@@ -15,6 +15,7 @@
     [clojure.string :as str]
     #_[datascript.core :as d]
     [garden.selectors :as selectors]
+    [goog.dom :refer [getElement]]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [komponentit.autosize :as autosize]
@@ -368,7 +369,10 @@
   [block state]
   (let [{:block/keys [uid order open] dbid :db/id} block
         {:keys [dragging tooltip]} @state
-        re-frame-10x? (= "\"true\"" (.. js/localStorage (getItem "day8.re-frame-10x.using-trace?")))]
+        el-10x        (getElement "--re-frame-10x--")
+        display-10x   (.. el-10x -style -display)
+        re-frame-10x? (not (= "none" display-10x))]
+    ;; if re-frame-10x is hidden, don't show tooltip. see style.cljs
     (when (and tooltip (not dragging) re-frame-10x?)
       [:div (use-style tooltip-style
                        {:class          "tooltip"
