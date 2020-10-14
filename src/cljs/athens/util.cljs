@@ -1,6 +1,7 @@
 (ns athens.util
   (:require
     [clojure.string :as string]
+    [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
     [tick.locale-en-us]))
@@ -173,3 +174,19 @@
         (and (= os :windows) ctrl)
         (and (= os :linux) ctrl))))
 
+
+;; re-frame-10x
+
+(defn re-frame-10x-open?
+  []
+  (let [el-10x      (getElement "--re-frame-10x--")
+        display-10x (.. el-10x -style -display)]
+    (not (= "none" display-10x))))
+
+
+(defn toggle-10x
+  []
+  (let [el    (getElement "--re-frame-10x--")
+        open? (re-frame-10x-open?)
+        display (str "display: " (if open? "none" "block"))]
+    (setProperties el (clj->js {"style" display}))))

@@ -102,6 +102,7 @@
         KeyCodes.BACKSLASH (if shift
                              (dispatch [:right-sidebar/toggle])
                              (dispatch [:left-sidebar/toggle]))
+        KeyCodes.H (util/toggle-10x)
         nil))))
 
 

@@ -1,7 +1,7 @@
 (ns athens.style
   (:require
+    [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
-    [goog.dom :refer [getElement setProperties]]
     [stylefy.core :as stylefy]))
 
 
@@ -157,5 +157,4 @@
     (stylefy/tag ":root" (merge permute-light
                                 {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
-  (let [el (getElement "--re-frame-10x--")]
-    (setProperties el (clj->js {"style" "display: none"}))))
+  (util/toggle-10x))
