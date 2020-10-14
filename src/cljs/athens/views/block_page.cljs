@@ -115,7 +115,8 @@
            (doall
              (for [{:keys [node/title block/uid block/string]} parents]
                ^{:key uid}
-               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)} [parse-and-render (or title string) uid]]))]]
+               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
+                (or title string)]))]]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
