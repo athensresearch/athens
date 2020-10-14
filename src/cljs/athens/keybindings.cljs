@@ -287,7 +287,7 @@
         {:search/keys [results type index] caret-position :caret-position} @state
         textarea-height (.. target -offsetHeight)
         {:keys [top height]} caret-position
-        rows            (/ textarea-height height)
+        rows            (js/Math.round (/ textarea-height height))
         row             (js/Math.ceil (/ top height))
         top-row?        (= row 1)
         bottom-row?     (= row rows)
@@ -319,10 +319,10 @@
                               (swap! state assoc :search/index next-index)
                               (scroll-if-needed target-el container-el)))
 
+      ;; Else: navigate across blocks
       (or (and up? top-row?)
           (and left? start?)) (do (.. e preventDefault)
                                   (dispatch [:up uid]))
-
       (or (and down? bottom-row?)
           (and right? end?)) (do (.. e preventDefault)
                                  (dispatch [:down uid])))))

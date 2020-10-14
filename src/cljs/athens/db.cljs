@@ -317,11 +317,11 @@
   (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
                       sort-block-children)]
     (loop [block document]
-      (if (nil? (:block/children block))
-        block
-        (let [ch (:block/children block)
-              n  (count ch)]
-          (recur (get ch (dec n))))))))
+      (let [{:block/keys [children]} block
+            n (count children)]
+        (if (zero? n)
+          block
+          (recur (get children (dec n))))))))
 
 
 (defn get-children-recursively
@@ -415,60 +415,45 @@
        @dsdb
        e))
 
-;; xxx 2 kinds of operations
-;; write operations, it's nice to have entire block and entire parent block to make TXes
-;; read operations (navigation), only need uids
 
-;; xxx these all assume all blocks are open. have to skip closed blocks
-;; TODO: focus AND set selection-start for :editing/uid
+(defn nth-sibling
+  "Find sibling that has order+n of current block.
+  Negative n means previous sibling.
+  Positive n means next sibling."
+  [uid n]
+  (let [block      (get-block [:block/uid uid])
+        {:block/keys [order]} block
+        find-order (+ n order)]
+    (d/q '[:find (pull ?sibs [*]) .
+           :in $ % ?curr-uid ?find-order
+           :where
+           (siblings ?curr-uid ?sibs)
+           [?sibs :block/order ?find-order]]
+         @dsdb rules uid find-order)))
 
-(defn prev-sibling-uid
-  [uid]
-  (d/q '[:find ?sib-uid .
-         :in $ ?block-uid
-         :where
-         [?block :block/uid ?block-uid]
-         [?block :block/order ?block-o]
-         [?parent :block/children ?block]
-         [?parent :block/children ?sib]
-         [?sib :block/order ?sib-o]
-         [?sib :block/uid ?sib-uid]
-         [(dec ?block-o) ?prev-sib-o]
-         [(= ?sib-o ?prev-sib-o)]]
-       @dsdb uid))
 
-;; if order 0, go to parent
-;; if order n, go to prev siblings deepest child
 (defn prev-block-uid
+  "If order 0, go to parent.
+   If order n but block is closed, go to prev sibling.
+   If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
-  (let [block (get-block [:block/uid uid])
-        parent (get-parent [:block/uid uid])
-        deepest-child-prev-sibling (deepest-child-block [:block/uid (prev-sibling-uid uid)])]
-    (if (zero? (:block/order block))
-      (:block/uid parent)
-      (:block/uid deepest-child-prev-sibling))))
+  (let [block        (get-block [:block/uid uid])
+        parent       (get-parent [:block/uid uid])
+        prev-sibling (nth-sibling uid -1)
+        {:block/keys [open uid]} prev-sibling
+        prev-block   (cond
+                       (zero? (:block/order block)) parent
+                       (false? open) prev-sibling
+                       (true? open) (deepest-child-block [:block/uid uid]))]
+    (:block/uid prev-block)))
 
 
-(defn next-sibling-block
-  [uid]
-  (d/q '[:find (pull ?sib [*]) .
-         :in $ ?block-uid
-         :where
-         [?block :block/uid ?block-uid]
-         [?block :block/order ?block-o]
-         [?parent :block/children ?block]
-         [?parent :block/children ?sib]
-         [?sib :block/order ?sib-o]
-         [?sib :block/uid ?sib-uid]
-         [(inc ?block-o) ?prev-sib-o]
-         [(= ?sib-o ?prev-sib-o)]]
-       @dsdb uid))
-
-
-(defn next-sibling-block-recursively
+(defn next-sibling-recursively
+  "Search for next sibling. If not there (i.e. is last child), find sibling of parent.
+  If parent is root, go to next sibling."
   [uid]
   (loop [uid uid]
-    (let [sib (next-sibling-block uid)
+    (let [sib    (nth-sibling uid +1)
           parent (get-parent [:block/uid uid])]
       (if (or sib (:node/title parent))
         sib
@@ -477,22 +462,22 @@
 
 (defn next-block-uid
   "1-arity:
-    if child, go to child 0
+    if open and children, go to child 0
     else recursively find next sibling of parent
   2-arity:
     used for multi-block-selection; ignores child blocks"
   ([uid]
    (let [block                (->> (get-block [:block/uid uid])
                                    sort-block-children)
-         ch                   (:block/children block)
-         next-block-recursive (next-sibling-block-recursively uid)]
+         {:block/keys [children open]} block
+         next-block-recursive (next-sibling-recursively uid)]
      (cond
-       ch (:block/uid (first ch))
+       (and open children) (:block/uid (first children))
        next-block-recursive (:block/uid next-block-recursive))))
   ([uid selection?]
    (if selection?
-     (let [next-block-recursive (next-sibling-block-recursively uid)]
-       next-block-recursive (:block/uid next-block-recursive))
+     (let [next-block-recursive (next-sibling-recursively uid)]
+       (:block/uid next-block-recursive))
      (next-block-uid uid))))
 
 ;; history
