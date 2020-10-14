@@ -418,8 +418,8 @@
 
 (defn nth-sibling
   "Find sibling that has order+n of current block.
-  negative is previous
-  positive is next"
+  Negative n means previous sibling.
+  Positive n means next sibling."
   [uid n]
   (let [block      (get-block [:block/uid uid])
         {:block/keys [order]} block
@@ -428,8 +428,7 @@
            :in $ % ?curr-uid ?find-order
            :where
            (siblings ?curr-uid ?sibs)
-           [?sibs :block/order ?find-order]
-           [?sibs :block/uid ?uid]]
+           [?sibs :block/order ?find-order]]
          @dsdb rules uid find-order)))
 
 
@@ -441,10 +440,11 @@
   (let [block        (get-block [:block/uid uid])
         parent       (get-parent [:block/uid uid])
         prev-sibling (nth-sibling uid -1)
+        {:block/keys [open uid]} prev-sibling
         prev-block   (cond
                        (zero? (:block/order block)) parent
-                       (false? (:block/open prev-sibling)) prev-sibling
-                       (true? (:block/open prev-sibling)) (deepest-child-block [:block/uid (:block/uid prev-sibling)]))]
+                       (false? open) prev-sibling
+                       (true? open) (deepest-child-block [:block/uid uid]))]
     (:block/uid prev-block)))
 
 
@@ -453,7 +453,7 @@
   If parent is root, go to next sibling."
   [uid]
   (loop [uid uid]
-    (let [sib    (nth-sibling uid 1)
+    (let [sib    (nth-sibling uid +1)
           parent (get-parent [:block/uid uid])]
       (if (or sib (:node/title parent))
         sib
@@ -462,7 +462,7 @@
 
 (defn next-block-uid
   "1-arity:
-    if children, go to child 0
+    if open and children, go to child 0
     else recursively find next sibling of parent
   2-arity:
     used for multi-block-selection; ignores child blocks"
@@ -472,12 +472,12 @@
          {:block/keys [children open]} block
          next-block-recursive (next-sibling-recursively uid)]
      (cond
-       (and open (seq children)) (:block/uid (first children))
+       (and open children) (:block/uid (first children))
        next-block-recursive (:block/uid next-block-recursive))))
   ([uid selection?]
    (if selection?
      (let [next-block-recursive (next-sibling-recursively uid)]
-       next-block-recursive (:block/uid next-block-recursive))
+       (:block/uid next-block-recursive))
      (next-block-uid uid))))
 
 ;; history
