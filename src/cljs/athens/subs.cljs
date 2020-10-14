@@ -23,6 +23,12 @@
 
 
 (re-frame/reg-sub
+  :theme/dark
+  (fn [db _]
+    (:theme/dark db)))
+
+
+(re-frame/reg-sub
   :app-db
   (fn [db _]
     db))

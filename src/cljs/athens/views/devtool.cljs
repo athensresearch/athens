@@ -42,11 +42,11 @@
 
 
 (def tabs-style
-  {:padding "0 0.5rem"
-   :flex "0 0 auto"
-   :background (darken (color :background-minus-1) 5)
-   :display "flex"
-   :align-items "stretch"
+  {:padding         "0 0.5rem"
+   :flex            "0 0 auto"
+   :background      (color :background-minus-1)
+   :display         "flex"
+   :align-items     "stretch"
    :justify-content "space-between"
    ::stylefy/manual [[:button {:border-radius "0"}]]})
 
@@ -62,11 +62,11 @@
 
 
 (def current-location-style
-  {:display "flex"
-   :align-items "center"
-   :flex "1 1 100%"
-   :font-size "14px"
-   :border-bottom [["1px solid" (darken (color :background-minus-1) 10)]]})
+  {:display       "flex"
+   :align-items   "center"
+   :flex          "1 1 100%"
+   :font-size     "14px"
+   :border-bottom [["1px solid" (color :background-minus-1) 10]]})
 
 
 (def current-location-name-style
@@ -82,28 +82,28 @@
 
 (def devtool-table-style
   {:border-collapse "collapse"
-   :font-size "12px"
-   :font-family "IBM Plex Sans Condensed"
-   :letter-spacing "-0.01em"
-   :margin "0.5rem 0 0"
-   :border-spacing "0"
-   :min-width "100%"
+   :font-size       "12px"
+   :font-family     "IBM Plex Sans Condensed"
+   :letter-spacing  "-0.01em"
+   :margin          "0.5rem 0 0"
+   :border-spacing  "0"
+   :min-width       "100%"
    ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
-                           :padding "0.125rem"}]
+                           :padding    "0.125rem"}]
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "left" :padding "0.125rem 0.125rem" :white-space "nowrap"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "0.5rem"}]
                      [:td:last-child :th-last-child {:padding-right "0.5rem"}]
-                     [:tbody [:tr:hover {:cursor "pointer"
-                                         :background (darken (color :background-minus-1) 2.5)
+                     [:tbody [:tr:hover {:cursor     "pointer"
+                                         :background (color :background-minus-1)
                                          :color (color :header-text-color)}]]
-                     [:td>ul {:padding "0"
-                              :margin "0"
+                     [:td>ul {:padding    "0"
+                              :margin     "0"
                               :list-style "none"}]
-                     [:td [:li {:margin "0 0 0.25rem"
-                                :padding-top "0.25rem";
-                                :border-top (str "1px solid " (color :border-color))}]]
+                     [:td [:li {:margin      "0 0 0.25rem"
+                                :padding-top "0.25rem" ;
+                                :border-top  (str "1px solid " (color :border-color))}]]
                      [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
                      [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})

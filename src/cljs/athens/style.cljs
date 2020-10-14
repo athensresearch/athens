@@ -3,24 +3,10 @@
     [garden.color :refer [opacify hex->hsl]]
     [goog.dom :refer [getElement setProperties]]
     [stylefy.core :as stylefy]))
-;;[athens.views.dropdown :as dropdown]))
 
 
-;; (defn cssv
-;;   ;; Helper for accessing CSS Custom Properties defined
-;;   ;; in the application's :root
-;;   ([variable]
-;;    ;; When the variable is alone, reformat it and pass it through
-;;   (str "var(--" variable ")"))
 
-;;   ([variable alpha]
-;;    ;; 1. Create a new color with the requested alpha value
-;;    ;; 1a. If this is a new color add it to the :root, with a logical name like "link-color-50" for blue at 50% opacity
-;;    ;; 2. Return the custom property name of the new color
-;;    (str "var(--" variable "-" alpha ")")))
-
-
-(def COLORS
+(def THEME-DARK
   {:link-color         "#2399E7"
    :highlight-color    "#FBBE63"
    :warning-color      "#DE3C21"
@@ -50,13 +36,6 @@
    :background-minus-2 "#EFEDEB"})
 
 
-(def THEME-DARK COLORS)
-
-
-(def HSL-COLORS
-  (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
-
-
 (def DEPTH-SHADOWS
   {:4                  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
    :8                  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
@@ -84,24 +63,21 @@
 
 
 ;; Color
-;; Provide color keyword
-;; (optional) Provide alpha value, either keyword or 0-1
-
-(defn- return-color
-  [c]
-  (c COLORS))
-
-
-(defn- return-color-with-alpha
-  [c a]
-  (if (keyword? a)
-    (opacify (c HSL-COLORS) (a OPACITIES))
-    (opacify (c HSL-COLORS) a)))
-
-
 (defn color
-  ([c] (return-color c))
-  ([c a] (return-color-with-alpha c a)))
+  "Turns a color and optional opacity into a CSS variable.
+  Only accepts keywords."
+  ([variable]
+   (when (keyword? variable)
+     (str "var(--"
+          (symbol variable)
+          ")")))
+  ([variable alpha]
+   (when (and (keyword? variable) (keyword? alpha))
+     (str "var(--"
+          (symbol variable)
+          "---"
+          (symbol alpha)
+          ")"))))
 
 
 ;; Base Styles
@@ -154,15 +130,22 @@
    :width    "100vw"})
 
 
-(defn remap-theme-keys
-  "Maps theme keys to css variable keys."
+(defn permute-color-opacities
+  "Permutes all colors and opacities.
+  There are 5 opacities and 12 colors. There are 72 keys (includes default opacity, 1.0)"
   [theme]
-  (reduce-kv
-    (fn [m k v]
-      (let [css-k (keyword (str "--" (symbol k)))]
-        (assoc m css-k v)))
-    {}
-    theme))
+  (->> theme
+       (mapcat (fn [[color-k color-v]]
+                 (concat [(keyword (str "--" (symbol color-k)))
+                          color-v]
+                         (mapcat (fn [[opacity-k opacity-v]]
+                                   [(keyword (str "--"
+                                                  (symbol color-k)
+                                                  "---"
+                                                  (symbol opacity-k)))
+                                    (opacify (hex->hsl color-v) opacity-v)])
+                                 OPACITIES))))
+       (apply hash-map)))
 
 
 (defn init
@@ -170,8 +153,10 @@
   (stylefy/init)
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
-  (stylefy/tag ":root" (merge (remap-theme-keys THEME-LIGHT)
-                              {::stylefy/media {{:prefers-color-scheme "dark"} (remap-theme-keys THEME-DARK)}}))
+  (let [permute-light (permute-color-opacities THEME-LIGHT)
+        permute-dark  (permute-color-opacities THEME-DARK)]
+    (stylefy/tag ":root" (merge permute-light
+                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
   (let [el (getElement "--re-frame-10x--")]
     (setProperties el (clj->js {"style" "display: none"}))))

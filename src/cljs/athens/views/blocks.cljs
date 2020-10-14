@@ -104,7 +104,7 @@
    :justify-content "center"
    :padding "0"
    :-webkit-appearance "none"
-   :color (color :body-text-color 0.4)
+   :color (color :body-text-color :opacity-med)
    ::stylefy/mode [[:hover {:color (color :link-color)}]
                    [":is(button)" {:cursor "pointer"}]]
    ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]
