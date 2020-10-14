@@ -1,8 +1,8 @@
 (ns athens.style
   (:require
     [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]
-    [goog.dom :refer [getElement setProperties]]))
+    [goog.dom :refer [getElement setProperties]]
+    [stylefy.core :as stylefy]))
 ;;[athens.views.dropdown :as dropdown]))
 
 
