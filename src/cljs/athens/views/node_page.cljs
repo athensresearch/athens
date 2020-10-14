@@ -86,7 +86,7 @@
 (def references-heading-style
   {:font-weight "normal"
    :display "flex"
-   :padding "0 2rem"
+   ;;:padding "0 2rem"
    :align-items "center"
    ::stylefy/manual [[:svg {:margin-right "0.25em"
                             :font-size "1rem"}]
