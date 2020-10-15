@@ -168,26 +168,27 @@ OS - MacOS Catalina v10.15.5
 
 1. Navigate to any file within your local athens folder.
 1. Run `M-x cider-jack-in-cljs`
-![cider-jack-in-cljs](doc/emacs-cider-jack-in.png)
+   ![cider-jack-in-cljs](doc/emacs-cider-jack-in.png)
 1. Choose `shadow-cljs`
-![choose cljs](doc/emacs-cider-shadow-cljs.png)
+   ![choose cljs](doc/emacs-cider-shadow-cljs.png)
 1. You should see something like.
-![start repl](doc/emacs-cider-starting-server.png)
+   ![start repl](doc/emacs-cider-starting-server.png)
 1. Choose `shadow` and then you should be able to choose which `shadow-cljs` build to run.
-![shadow cljs profile](doc/emacs-cider-shadow-cljs-profile.png)
+   ![shadow cljs profile](doc/emacs-cider-shadow-cljs-profile.png)
 1. You should see a new buffer open within your current Emacs window with a ClojureScript REPL.
-![shadow cljs REPL connected](doc/emacs-cider-connected-repl.png)
+   ![shadow cljs REPL connected](doc/emacs-cider-connected-repl.png)
 
 You now have access to a REPL. If you want to load the file you are editing in it:
+
 1. <kbd>C-c C-k</kbd>, or `cider-load-buffer`
-1. Then, <kbd>C-c M-n n</kbd>, or `cider-repl-set-ns` and you should be able to have the file's namespace in your REPL (e.g. `athens.db>`) 
+1. Then, <kbd>C-c M-n n</kbd>, or `cider-repl-set-ns` and you should be able to have the file's namespace in your REPL (e.g. `athens.db>`)
 
 ## Calva
 
 ```
 Editor - Visual Studio Code
-Cursive plugin: 1.47.0 Built on: 2020-07-09
-OS - Windows 10
+Calva plugin: v2.0.126 Built on: 2020-07-09
+OS - Windows 10, MacOS Catalina v10.15.6
 ```
 
 1. In VS Code, run `ctrl+shift+c` and `ctrl+shift+j` to jack into a repl session.
