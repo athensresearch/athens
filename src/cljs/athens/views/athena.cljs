@@ -36,7 +36,7 @@
    :overflow      "hidden"
    :max-height    "60vh"
    :z-index       (:zindex-modal ZINDICES)
-   :top           "50%"
+   :top           "40%"
    :left          "50%"
    :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
