@@ -190,13 +190,12 @@ Cursive plugin: 1.47.0 Built on: 2020-07-09
 OS - Windows 10
 ```
 
-1. In a terminal, navigate to the repository root, and start a development server: `lein dev`.
-2. In VS Code, run `ctrl+shift+p`, and choose `Calva: Connect to a Running Repl Server in the Project`
-3. Pick shadow-cljs.
-4. Enter the host and port: `localhost:8777`.
-5. Select `:app` profile.
-6. Run `ctrl+shift+p`, then run load the current namespace in REPL window.
-![load the namespace](doc/vscode-calva-repl-config.PNG)
+1. In VS Code, run `ctrl+shift+c` and `ctrl+shift+j` to jack into a repl session.
+2. Pick shadow-cljs.
+3. Select `:main` and `:renderer` profile for shadow-cljs to watch.
+4. Select the `:renderer` build to connect to.
+5. In another terminal tab, run `npx electron .`
+   ![load the namespace](doc/vscode-calva-repl-config.PNG)
 
 ## Vim Plugins
 
