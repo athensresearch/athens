@@ -10,7 +10,7 @@
                              :open true,
                              :order 0,
                              :children [#:block{:uid "02a37d053",
-                                                :string "Click on ⮞ or ⮟ on the **left of the bullet** to open or close a block.",
+                                                :string "Click on the arrows to the **left of the bullet** to open or close a block.",
                                                 :open true,
                                                 :order 0}]}
                      #:block{:uid "7e409b1cb",
@@ -62,7 +62,7 @@
                                                                    :open true,
                                                                    :order 2}
                                                            #:block{:uid "a8760ca6d",
-                                                                   :string "Links with `[[]]`, `#`, or `#[[]]`: [[athens/Welcome]] #athens/Welcome #[[athens/Welcome]]",
+                                                                   :string "Links with `[[]]`, `#`, or `#[[]]`: [[Welcome]] #Welcome #[[Welcome]]",
                                                                    :open false,
                                                                    :order 3,
                                                                    :children [#:block{:uid "239090a3c",
