@@ -402,7 +402,6 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-           ;;[:> mui-icons/ExpandMore]]
           (:title/local @state)]
           ;;(parse-renderer/parse-and-render title uid)]
 
