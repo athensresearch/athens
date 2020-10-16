@@ -32,7 +32,7 @@
 
 (def page-style
   {:margin "2rem auto"
-   :padding "1rem 2rem"
+   :padding "1rem 2rem 10rem 2rem"
    :flex-basis "100%"
    :max-width "55rem"})
 
@@ -354,12 +354,12 @@
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_ _ _ _]
-  (let [state (r/atom init-state)
-        current-route-uid (subscribe [:current-route/uid])]
-    (fn [node editing-uid ref-groups timeline-page?]
+  [_ _ _]
+  (let [state (r/atom init-state)]
+    (fn [node editing-uid ref-groups]
       (let [{:block/keys [children uid] title :node/title} node
-            {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state]
+            {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            timeline-page? (is-timeline-page uid)]
 
         (sync-title title state)
 
@@ -377,6 +377,8 @@
                          {:data-uid uid
                           :class    "page-header"
                           :on-click (fn [e] (navigate-uid uid e))})
+          ;; Prevent editable textarea if a node/title is a date
+          ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
           (when-not timeline-page?
             [autosize/textarea
              {:value         (:title/local @state)
@@ -384,13 +386,6 @@
               :on-blur       (fn [_] (handle-blur node state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
               :on-change     (fn [e] (handle-change e state))}])
-          (when (and timeline-page? (string? @current-route-uid))
-            [button {:on-click #(do (dispatch [:daily-notes/add uid])
-                                    (navigate :home))
-                     :style {}}
-             [:<>
-              [:> mui-icons/ArrowBack]
-              [:> mui-icons/Today]]])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (.. e stopPropagation)
@@ -440,11 +435,10 @@
 
 (defn node-page-component
   [ident]
-  (let [{:keys [block/uid node/title] :as node} (db/get-node-document ident)
-        editing-uid @(subscribe [:editing/uid])
-        timeline-page? (is-timeline-page uid)]
+  (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
+        editing-uid @(subscribe [:editing/uid])]
     (when-not (str/blank? title)
       ;; TODO: let users toggle open/close references
       (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
                         ["Unlinked References" (get-unlinked-references (escape-str title))]]]
-        [node-page-el node editing-uid ref-groups timeline-page?]))))
+        [node-page-el node editing-uid ref-groups]))))

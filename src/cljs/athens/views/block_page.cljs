@@ -25,13 +25,6 @@
 ;;; Styles
 
 
-(def page-style
-  {:margin     "2rem auto"
-   :padding    "1rem 2rem"
-   :flex-basis "100%"
-   :max-width  "55rem"})
-
-
 (def title-style
   {:position        "relative"
    :overflow        "visible"
@@ -108,7 +101,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div.block-page (use-style page-style {:data-uid uid})
+        [:div.block-page (use-style node-page/page-style {:data-uid uid})
          ;; Parent Context
          [:span {:style {:color "gray"}}
           [breadcrumbs-list {:style {:font-size "1.2rem"}}
