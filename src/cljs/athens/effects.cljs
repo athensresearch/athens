@@ -10,7 +10,7 @@
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
-    [goog.dom :refer [getElement]]
+    [goog.dom :refer [getElement getElementsByClass findCommonAncestor]]
     [goog.dom.selection :refer [setCursorPosition]]
     [instaparse.core :as parse]
     [posh.reagent :refer [transact!]]
@@ -195,9 +195,18 @@
 (reg-fx
   :editing/focus
   (fn [[uid index]]
+    ;;(js/console.log "A" (findCommonAncestor (.. js/document -activeElement)))
+    ;;(js/console.log (js/document.querySelectorAll "textarea.is-editing"))
     (js/setTimeout (fn []
-                     (let [id (str "editable-uid-" uid)
-                           el (getElement id)]
+                     (let [id        (str "editable-uid-" uid)
+                           el        (if (string? uid)
+                                       (getElement id)
+                                       uid)
+                           potential (js/document.querySelectorAll (str "#editable-uid-" uid))
+                           active-el (.. js/document -activeElement)
+                           ancestors (mapv #(findCommonAncestor active-el %) potential)]
+                       ;; XXX: problem is that findCommonAncestor finds greatest/deepest ancestor. i want the lowest ancestor.
+                       (js/console.log "ANCESTORS" ancestors potential active-el)
                        (when el
                          (.focus el)
                          (when index
