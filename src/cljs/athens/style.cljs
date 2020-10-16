@@ -157,4 +157,4 @@
     (stylefy/tag ":root" (merge permute-light
                                 {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
-  (util/toggle-10x))
+  (util/hide-10x))
