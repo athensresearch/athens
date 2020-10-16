@@ -396,7 +396,7 @@
                                                        :menu/x    (.. rect -left)
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
-           [:> mui-icons/ExpandMore]]
+           [:> mui-icons/MoreHoriz]]
           (:title/local @state)]
           ;;(parse-renderer/parse-and-render title uid)]
 
