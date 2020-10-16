@@ -117,12 +117,6 @@
 
 
 (re-frame/reg-sub
-  :dragging-global
-  (fn-traced [db _]
-             (:dragging-global db)))
-
-
-(re-frame/reg-sub
   :daily-notes/items
   (fn-traced [db _]
              (:daily-notes/items db)))

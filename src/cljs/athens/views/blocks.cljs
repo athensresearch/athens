@@ -560,10 +560,10 @@
 (defn textarea-mouse-down
   "Attach global mouseup listener. Listener can't be local because user might let go of mousedown off of a block.
   See https://javascript.info/mouse-events-basics#events-order"
-  [e uid _]
+  [e _uid _]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
-    (dispatch [:editing/uid uid])
+    (dispatch [:editing/target (.. e -target)])
     (let [mouse-down @(subscribe [:mouse-down])]
       (when (false? mouse-down)
         (dispatch [:mouse-down/set])

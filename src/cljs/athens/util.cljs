@@ -83,6 +83,35 @@
     (js->clj (fn target selectionEnd) :keywordize-keys true)))
 
 
+(defn dom-parents
+  "This and common-ancestor taken from https://stackoverflow.com/a/5350888."
+  [node]
+  (loop [nodes [node]
+         node node]
+    (if (nil? node)
+      (reverse nodes)
+      (recur (conj nodes node) (.-parentNode node)))))
+
+
+(defn common-ancestor
+  [node1 node2]
+  (let [p1 (dom-parents node1)
+        p2 (dom-parents node2)]
+    (if (not= (first p1) (first p2))
+      (throw (js/Error. "No common ancestor!"))
+      (let [n (dec (count p1))]
+        (loop [i 0]
+          (cond
+            (not= (nth p1 i nil) (nth p2 i nil))
+            (nth p1 (dec i))
+
+            (= i n)
+            (js/Error. "No common ancestor after n loops!")
+
+            :else
+            (recur (inc i))))))))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 

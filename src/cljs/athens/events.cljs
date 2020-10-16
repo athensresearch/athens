@@ -3,6 +3,7 @@
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
+    [clojure.string :as string]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
@@ -112,10 +113,20 @@
                             [:right-sidebar/toggle])})))
 
 
-(reg-event-db
-  :dragging-global/toggle
-  (fn [db _]
-    (update db :dragging-global not)))
+(reg-event-fx
+  :editing/uid
+  (fn [{:keys [db]} [_ uid index]]
+    {:db            (assoc db :editing/uid uid)
+     :editing/focus [uid index]}))
+
+
+(reg-event-fx
+  :editing/target
+  (fn [{:keys [db]} [_ target]]
+    (let [uid (-> (.. target -id)
+                  (string/split "editable-uid-")
+                  second)]
+      {:db (assoc db :editing/uid uid)})))
 
 
 (reg-event-db
@@ -260,15 +271,6 @@
   :loading/unset
   (fn-traced [db]
              (assoc-in db [:loading?] false)))
-
-
-;; Block Events
-
-(reg-event-fx
-  :editing/uid
-  (fn [{:keys [db]} [_ uid index]]
-    {:db            (assoc db :editing/uid uid)
-     :editing/focus [uid index]}))
 
 
 (reg-event-db

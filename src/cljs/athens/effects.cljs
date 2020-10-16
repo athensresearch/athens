@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.parser :as parser]
-    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.util :as util :refer [now-ts gen-block-uid]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
@@ -10,7 +10,7 @@
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
-    [goog.dom :refer [getElement]]
+    [goog.dom.classlist :refer [contains]]
     [goog.dom.selection :refer [setCursorPosition]]
     [instaparse.core :as parse]
     [posh.reagent :refer [transact!]]
@@ -191,18 +191,29 @@
 
 
 ;; Using DOM, focus the target block.
+;; There can actually be multiple elements with the same #editable-uid-UID HTML id
+;; The same unique datascript block can be rendered multiple times: node-page, right sidebar, linked/unlinked references
+;; In this case, find the all the potential HTML blocks with that uid. The one that shares the same closest ancestor as the
+;; activeElement (where the text caret is before the new focus happens), is the container of the block to focus on.
+
 ;; If an index is passed, set cursor that index.
 (reg-fx
   :editing/focus
   (fn [[uid index]]
-    (js/setTimeout (fn []
-                     (let [id (str "editable-uid-" uid)
-                           el (getElement id)]
-                       (when el
-                         (.focus el)
-                         (when index
-                           (setCursorPosition el index)))))
-                   300)))
+    (let [active-el (.. js/document -activeElement)]
+      (js/setTimeout (fn []
+                       (let [html-id (str "#editable-uid-" uid)
+                             el      (as-> html-id x
+                                           (js/document.querySelectorAll x)
+                                           (map #(util/common-ancestor active-el %) x)
+                                           (filter #(contains % "block-container") x)
+                                           (first x)
+                                           (.. x (querySelector html-id)))]
+                         (when el
+                           (.focus el)
+                           (when index
+                             (setCursorPosition el index)))))
+                     300))))
 
 
 (reg-fx
