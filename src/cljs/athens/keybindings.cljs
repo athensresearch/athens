@@ -361,7 +361,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl start head tail value]} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta start head tail value]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -373,12 +373,12 @@
       ;; shift-enter: add line break to textarea
       shift (swap! state assoc :string/local (str head "\n" tail))
       ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
-      ctrl (let [first    (subs value 0 13)
-                 new-tail (subs value 13)
-                 new-str (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
-                               (= first "{{[[DONE]]}} ") new-tail
-                               :else (str "{{[[TODO]]}} " value))]
-             (swap! state assoc :string/local new-str))
+      (shortcut-key? meta ctrl) (let [first    (subs value 0 13)
+                                      new-tail (subs value 13)
+                                      new-str  (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
+                                                     (= first "{{[[DONE]]}} ") new-tail
+                                                     :else (str "{{[[TODO]]}} " value))]
+                                  (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
       :else (throttle-dispatch [:enter uid value start]))))
 
