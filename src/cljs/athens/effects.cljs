@@ -200,20 +200,21 @@
 (reg-fx
   :editing/focus
   (fn [[uid index]]
-    (let [active-el (.. js/document -activeElement)]
-      (js/setTimeout (fn []
-                       (let [html-id (str "#editable-uid-" uid)
-                             el      (as-> html-id x
-                                           (js/document.querySelectorAll x)
-                                           (map #(util/common-ancestor active-el %) x)
-                                           (filter #(contains % "block-container") x)
-                                           (first x)
-                                           (.. x (querySelector html-id)))]
-                         (when el
-                           (.focus el)
-                           (when index
-                             (setCursorPosition el index)))))
-                     300))))
+    (when uid
+      (let [active-el (.. js/document -activeElement)]
+        (js/setTimeout (fn []
+                         (let [html-id (str "#editable-uid-" uid)
+                               el      (as-> html-id x
+                                             (js/document.querySelectorAll x)
+                                             (map #(util/common-ancestor active-el %) x)
+                                             (filter #(contains % "block-container") x)
+                                             (first x)
+                                             (.. x (querySelector html-id)))]
+                           (when el
+                             (.focus el)
+                             (when index
+                               (setCursorPosition el index)))))
+                       300)))))
 
 
 (reg-fx
