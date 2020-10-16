@@ -7,7 +7,8 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]
+    [clojure.string :as string]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -112,10 +113,20 @@
                             [:right-sidebar/toggle])})))
 
 
-(reg-event-db
-  :dragging-global/toggle
-  (fn [db _]
-    (update db :dragging-global not)))
+(reg-event-fx
+  :editing/uid
+  (fn [{:keys [db]} [_ uid index]]
+    {:db            (assoc db :editing/uid uid)
+     :editing/focus [uid index]}))
+
+
+(reg-event-fx
+  :editing/target
+  (fn [{:keys [db]} [_ target]]
+    (let [uid (-> (.. target -id)
+                  (string/split "editable-uid-")
+                  second)]
+      {:db (assoc db :editing/uid uid)})))
 
 
 (reg-event-db
@@ -262,13 +273,7 @@
              (assoc-in db [:loading?] false)))
 
 
-;; Block Events
 
-(reg-event-fx
-  :editing/uid
-  (fn [{:keys [db]} [_ uid index]]
-    {:db            (assoc db :editing/uid uid)
-     :editing/focus [uid index]}))
 
 
 (reg-event-db

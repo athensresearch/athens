@@ -563,7 +563,8 @@
   [e uid _]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
-    (dispatch [:editing/uid uid])
+    ;;(dispatch [:editing/uid uid])
+    (dispatch [:editing/target (.. e -target)])
     (let [mouse-down @(subscribe [:mouse-down])]
       (when (false? mouse-down)
         (dispatch [:mouse-down/set])
