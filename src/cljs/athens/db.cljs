@@ -246,7 +246,7 @@
 (defn get-athens-datoms
   "Copy REPL output to athens-datoms.cljs"
   [id]
-  (->> @(pull dsdb (next node-document-pull-vector) id)
+  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
        sort-block-children))
 
 

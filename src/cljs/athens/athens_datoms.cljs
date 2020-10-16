@@ -8,15 +8,19 @@
     :block/children [#:block{:uid "ee770c334",
                              :string "Welcome to Athens, Open-Source Networked Thought!",
                              :open true,
-                             :order 0,
-                             :children [#:block{:uid "02a37d053",
-                                                :string "Click on ⮞ or ⮟ on the **left of the bullet** to open or close a block.",
+                             :order 0}
+                     #:block{:uid "6aecd4172",
+                             :string "You can open and close blocks that have children.",
+                             :open true,
+                             :order 1,
+                             :children [#:block{:uid "5f82a48ef",
+                                                :string "![](https://athens-assets-1.s3.us-east-2.amazonaws.com/welcome.gif)",
                                                 :open true,
                                                 :order 0}]}
                      #:block{:uid "7e409b1cb",
                              :string "**How to Use Athens**",
                              :open false,
-                             :order 1,
+                             :order 2,
                              :children [#:block{:uid "289cc9981",
                                                 :string "Outliner Features",
                                                 :open false,
@@ -62,7 +66,7 @@
                                                                    :open true,
                                                                    :order 2}
                                                            #:block{:uid "a8760ca6d",
-                                                                   :string "Links with `[[]]`, `#`, or `#[[]]`: [[athens/Welcome]] #athens/Welcome #[[athens/Welcome]]",
+                                                                   :string "Links with `[[]]`, `#`, or `#[[]]`: [[Welcome]] #Welcome #[[Welcome]]",
                                                                    :open false,
                                                                    :order 3,
                                                                    :children [#:block{:uid "239090a3c",
@@ -77,8 +81,7 @@
                                                                                       :string "I am being referenced by other blocks.",
                                                                                       :open true,
                                                                                       :order 0,
-                                                                                      :_refs [#:db{:id 2071}
-                                                                                              #:db{:id 2284}]}]}
+                                                                                      :_refs []}]}
                                                            #:block{:uid "0f5b500f6",
                                                                    :string "{{[[TODO]]}} `ctrl-enter` to cycle between TODO and DONE",
                                                                    :open true,
@@ -174,7 +177,7 @@
                      #:block{:uid "21785e1a9",
                              :string "**FAQ**",
                              :open false,
-                             :order 2,
+                             :order 3,
                              :children [#:block{:uid "792717c36",
                                                 :string "How does Athens persist data?",
                                                 :open false,
