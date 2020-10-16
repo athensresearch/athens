@@ -3,12 +3,12 @@
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
+    [clojure.string :as string]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]
-    [clojure.string :as string]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -271,9 +271,6 @@
   :loading/unset
   (fn-traced [db]
              (assoc-in db [:loading?] false)))
-
-
-
 
 
 (reg-event-db
