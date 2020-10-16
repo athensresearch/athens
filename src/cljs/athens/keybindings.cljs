@@ -281,7 +281,8 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift target]} (destruct-key-down e)
+  (let [{:keys [key-code shift target selection]} (destruct-key-down e)
+        selection?      (not (blank? selection))
         start?          (block-start? e)
         end?            (block-end? e)
         {:search/keys [results type index] caret-position :caret-position} @state
@@ -318,6 +319,8 @@
                               (.. e preventDefault)
                               (swap! state assoc :search/index next-index)
                               (scroll-if-needed target-el container-el)))
+
+      selection? nil
 
       ;; Else: navigate across blocks
       (or (and up? top-row?)
