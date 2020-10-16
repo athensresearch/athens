@@ -81,8 +81,7 @@
                                                                                       :string "I am being referenced by other blocks.",
                                                                                       :open true,
                                                                                       :order 0,
-                                                                                      :_refs [#:db{:id 2071}
-                                                                                              #:db{:id 2284}]}]}
+                                                                                      :_refs []}]}
                                                            #:block{:uid "0f5b500f6",
                                                                    :string "{{[[TODO]]}} `ctrl-enter` to cycle between TODO and DONE",
                                                                    :open true,
