@@ -4,6 +4,7 @@
     [athens.router :refer [navigate]]
     [athens.style :refer [color]]
     [athens.subs]
+    [athens.util :as util]
     [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [komponentit.modal :as modal]
@@ -145,12 +146,21 @@
      [:td [feature-yes]]]]])
 
 
+(defn daily-notes-click
+  "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
+  [_e route-uid]
+  (if (util/is-timeline-page route-uid)
+    (dispatch [:daily-notes/add route-uid])
+    (dispatch [:daily-notes/reset]))
+  (navigate :home))
+
+
 (defn app-toolbar
   []
   (let [left-open?         (subscribe [:left-sidebar/open])
         right-open?        (subscribe [:right-sidebar/open])
         route-name         (subscribe [:current-route/name])
-        ;;db-synced (subscribe [:db/synced])
+        route-uid          (subscribe [:current-route/uid])
         import-modal-open? (r/atom false)
         theme-dark         (subscribe [:theme/dark])]
     (fn []
@@ -166,8 +176,7 @@
          [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
          [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
          [separator]
-         [button {:on-click #(do (dispatch [:daily-notes/reset])
-                                 (navigate :home))
+         [button {:on-click #(daily-notes-click % @route-uid)
                   :active   (= @route-name :home)} [:> mui-icons/Today]]
          [button {:on-click #(navigate :pages)
                   :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]

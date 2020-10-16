@@ -7,7 +7,7 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :refer [get-dataset-uid mouse-offset vertical-center]]
+    [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
@@ -15,7 +15,6 @@
     [clojure.string :as str]
     #_[datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.dom :refer [getElement]]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [komponentit.autosize :as autosize]
@@ -368,12 +367,9 @@
 (defn tooltip-el
   [block state]
   (let [{:block/keys [uid order open] dbid :db/id} block
-        {:keys [dragging tooltip]} @state
-        el-10x        (getElement "--re-frame-10x--")
-        display-10x   (.. el-10x -style -display)
-        re-frame-10x? (not (= "none" display-10x))]
+        {:keys [dragging tooltip]} @state]
     ;; if re-frame-10x is hidden, don't show tooltip. see style.cljs
-    (when (and tooltip (not dragging) re-frame-10x?)
+    (when (and tooltip (not dragging) (util/re-frame-10x-open?))
       [:div (use-style tooltip-style
                        {:class          "tooltip"
                         :on-click       (fn [e] (.. e stopPropagation))
