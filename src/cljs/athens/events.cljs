@@ -19,10 +19,11 @@
              db/rfdb))
 
 
-(reg-event-db
+(reg-event-fx
   :db/update-filepath
   (fn [db [_ filepath]]
-    (assoc db :db/filepath filepath)))
+    {:db (assoc db :db/filepath filepath)
+     :local-storage/set! ["db/filepath" filepath]}))
 
 
 (reg-event-db

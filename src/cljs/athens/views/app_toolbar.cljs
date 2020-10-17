@@ -1,6 +1,7 @@
 (ns athens.views.app-toolbar
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.electron :as electron]
     [athens.router :refer [navigate]]
     [athens.style :refer [color]]
     [athens.subs]
@@ -157,70 +158,94 @@
 
 (defn app-toolbar
   []
-  (let [left-open?         (subscribe [:left-sidebar/open])
-        right-open?        (subscribe [:right-sidebar/open])
-        route-name         (subscribe [:current-route/name])
-        route-uid          (subscribe [:current-route/uid])
-        import-modal-open? (r/atom false)
-        theme-dark         (subscribe [:theme/dark])]
+  (let [left-open?  (subscribe [:left-sidebar/open])
+        right-open? (subscribe [:right-sidebar/open])
+        route-name  (subscribe [:current-route/name])
+        route-uid   (subscribe [:current-route/uid])
+        db-filepath   (subscribe [:db/filepath])
+        state       (r/atom {:modal nil})
+        theme-dark  (subscribe [:theme/dark])
+        close-modal #(swap! state assoc :modal nil)]
     (fn []
+      (let [{:keys [modal]} @state]
+        [:<>
+         [:header (use-style app-header-style)
+          [:div (use-style app-header-control-section-style)
+           [button {:active   @left-open?
+                    :on-click #(dispatch [:left-sidebar/toggle])}
+            [:> mui-icons/Menu]]
+           [separator]
+           ;; TODO: refactor to effects
+           [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
+           [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
+           [separator]
+           [button {:on-click #(daily-notes-click % @route-uid)
+                    :active   (= @route-name :home)} [:> mui-icons/Today]]
+           [button {:on-click #(navigate :pages)
+                    :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
+           [button {:on-click #(dispatch [:athena/toggle])
+                    :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                    :active   @(subscribe [:athena/open])}
+            [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
-      [:<>
-       [:header (use-style app-header-style)
-        [:div (use-style app-header-control-section-style)
-         [button {:active   @left-open?
-                  :on-click #(dispatch [:left-sidebar/toggle])}
-          [:> mui-icons/Menu]]
-         [separator]
-         ;; TODO: refactor to effects
-         [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
-         [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
-         [separator]
-         [button {:on-click #(daily-notes-click % @route-uid)
-                  :active   (= @route-name :home)} [:> mui-icons/Today]]
-         [button {:on-click #(navigate :pages)
-                  :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
-         [button {:on-click #(dispatch [:athena/toggle])
-                  :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
-                  :active   @(subscribe [:athena/open])}
-          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
+          [:div (use-style app-header-secondary-controls-style)
+           ;; Click to Open
+           #_[button {:on-click #(prn "TODO")}
+              [(r/adapt-react-class mui-icons/FolderOpen)
+               {:style {:align-self "center"}}]]
+           ;; sync UI
+           #_[(r/adapt-react-class mui-icons/FiberManualRecord)
+              {:style {:color      (color (if @db-synced
+                                            :confirmation-color
+                                            :highlight-color))
+                       :align-self "center"}}]
+           #_[separator]
+           [button {:on-click #(swap! state assoc :modal :folder)}
+            [:> mui-icons/FolderOpen]]
+            ;;[:> mui-icons/Publish]]
+           [separator]
+           [button {:on-click #(dispatch [:theme/toggle])}
+            (if @theme-dark
+              [:> mui-icons/ToggleOff]
+              [:> mui-icons/ToggleOn])]
+           [separator]
+           [button {:active   @right-open?
+                    :on-click #(dispatch [:right-sidebar/toggle])}
+            [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
 
-        [:div (use-style app-header-secondary-controls-style)
-         ;; Click to Open
-         #_[button {:on-click #(prn "TODO")}
-            [(r/adapt-react-class mui-icons/FolderOpen)
-             {:style {:align-self "center"}}]]
-         ;; sync UI
-         #_[(r/adapt-react-class mui-icons/FiberManualRecord)
-            {:style {:color      (color (if @db-synced
-                                          :confirmation-color
-                                          :highlight-color))
-                     :align-self "center"}}]
-         #_[separator]
-         ;;[button {:on-click #(reset! import-modal-open? true)}
-         ;; [:> mui-icons/Publish]]
-         #_[separator]
-         [button {:on-click #(dispatch [:theme/toggle])}
-          (if @theme-dark
-            [:> mui-icons/ToggleOff]
-            [:> mui-icons/ToggleOn])]
-         [separator]
-         [button {:active   @right-open?
-                  :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
+         (case modal
+           :folder
+           [:div (use-style modal-style)
+            [modal/modal
+             {:title    [:div.modal__title
+                         [:> mui-icons/FolderOpen]
+                         [:h4 "Change DB Location"]
+                         [button
+                          {:on-click close-modal}
+                          [:> mui-icons/Close]]]
+              :content  [:div (use-style modal-contents-style)
 
-       ;; always false — not supporting import modal yet
-       (when @import-modal-open?
-         [:div (use-style modal-style)
-          [modal/modal
-           {:title    [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
-                                                                                          {:on-click #(reset! import-modal-open? false)}
-                                                                                          [:> mui-icons/Close]]]
-            :content  [:div (use-style modal-contents-style)
-                       ;; TODO: Write intro copy
-                       [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
-                       [features-table]
-                       ;; TODO: Create browser file dialog and actually import stuff
-                       [:div [button {:primary true} "Add Files"]]]
-            :on-close #(reset! import-modal-open? false)}]])])))
+                         [:b {:style {:align-self "flex-start"}} "Current Location"]
+                         [:code {:style {:margin "1rem 0 2rem 0"}} @db-filepath]
+                         [button {:primary  true
+                                  :on-click #(electron/open-dialog!)}
+                          "Change Directory"]]
+              :on-close close-modal}]]
+
+           ;; always false — not supporting import modal yet
+           :import
+           [:div (use-style modal-style)
+            [modal/modal
+             {:title    [:div.modal__title [:> mui-icons/Publish] [:h4 "Import to Athens"] [button
+                                                                                            {:on-click close-modal}
+                                                                                            [:> mui-icons/Close]]]
+              :content  [:div (use-style modal-contents-style)
+                         ;; TODO: Write intro copy
+                         [:p "Some helpful framing about what Athens does and what users should expect. Athens is not Roam."]
+                         [features-table]
+                         ;; TODO: Create browser file dialog and actually import stuff
+                         [:div [button {:primary true} "Add Files"]]]
+              :on-close close-modal}]]
+           nil)]))))
+
 
