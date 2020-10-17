@@ -215,7 +215,7 @@
                                                 :open false,
                                                 :order 3,
                                                 :children [#:block{:uid "6275554a3",
-                                                                   :string "[[Welcome]] is a special page. When your restart Athens, any changes you make to this page will be overwritten, so don't write anything you need in this page!",
+                                                                   :string "[[Welcome]] is a special page. When you restart Athens, any changes you make to this page will be overwritten, so don't write anything you need in this page!",
                                                                    :open true,
                                                                    :order 0}]}]}]}])
 
