@@ -196,24 +196,26 @@
 ;; In this case, find the all the potential HTML blocks with that uid. The one that shares the same closest ancestor as the
 ;; activeElement (where the text caret is before the new focus happens), is the container of the block to focus on.
 
-;; If an index is passed, set cursor that index.
+;; If an index is passed, set cursor to that index.
+;; TODO: there are some querySelector bugs, sometimes element is nil
 (reg-fx
   :editing/focus
   (fn [[uid index]]
-    (let [active-el (.. js/document -activeElement)]
-      (js/setTimeout (fn []
-                       (let [html-id (str "#editable-uid-" uid)
-                             el      (as-> html-id x
-                                           (js/document.querySelectorAll x)
-                                           (map #(util/common-ancestor active-el %) x)
-                                           (filter #(contains % "block-container") x)
-                                           (first x)
-                                           (.. x (querySelector html-id)))]
-                         (when el
-                           (.focus el)
-                           (when index
-                             (setCursorPosition el index)))))
-                     300))))
+    (when uid
+      (let [active-el (.. js/document -activeElement)]
+        (js/setTimeout (fn []
+                         (let [html-id (str "#editable-uid-" uid)
+                               el      (as-> html-id x
+                                             (js/document.querySelectorAll x)
+                                             (map #(util/common-ancestor active-el %) x)
+                                             (filter #(contains % "block-container") x)
+                                             (first x)
+                                             (.. x (querySelector html-id)))]
+                           (when el
+                             (.focus el)
+                             (when index
+                               (setCursorPosition el index)))))
+                       300)))))
 
 
 (reg-fx

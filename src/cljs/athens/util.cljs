@@ -213,9 +213,21 @@
     (not (= "none" display-10x))))
 
 
+(defn open-10x
+  []
+  (let [el (js/document.querySelector "#--re-frame-10x--")]
+    (setProperties el (clj->js {"style" "display: block"}))))
+
+
+(defn hide-10x
+  []
+  (let [el (js/document.querySelector "#--re-frame-10x--")]
+    (setProperties el (clj->js {"style" "display: none"}))))
+
+
 (defn toggle-10x
   []
-  (let [el    (getElement "--re-frame-10x--")
-        open? (re-frame-10x-open?)
-        display (str "display: " (if open? "none" "block"))]
-    (setProperties el (clj->js {"style" display}))))
+  (let [open? (re-frame-10x-open?)]
+    (if open?
+      (hide-10x)
+      (open-10x))))
