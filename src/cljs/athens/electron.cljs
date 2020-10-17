@@ -40,15 +40,13 @@
   :fs/create-new-db
   (fn []
     (let [doc-path (.getPath app "documents")
-          db-name "first-db.transit"
-          db-dir (.resolve path doc-path "athens")
-          db-path (.resolve path db-dir db-name)]
+          db-name  "first-db.transit"
+          db-dir   (.resolve path doc-path "athens")
+          db-path  (.resolve path db-dir db-name)]
       (when (not (.existsSync fs db-dir))
         (.mkdirSync fs db-dir))
-      (js/localStorage.setItem "db/filepath" db-path)
-      (.writeFileSync fs db-path (write-transit-str athens-datoms/datoms))
-      (dispatch [:db/update-filepath db-path])
-      (dispatch [:loading/unset]))))
+      {:fs/write! [db-path (write-transit-str athens-datoms/datoms)]
+       :dispatch-n [[:db/update-filepath db-path]]})))
 
 
 (reg-event-fx
@@ -168,12 +166,22 @@
 
 
 (defn open-dialog!
+  "If new-dir/athens already exists, no-op and alert user.
+  Else copy db to new db location. Keep /athens subdir."
   []
-  (let [res (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
-                                                  :filters [{:name "Transit" :extensions ["transit"]}]}))
-        filepath (first res)]
-    (when filepath
-      (dispatch [:db/update-filepath filepath]))))
+  (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
+        new-dir (first res)]
+    (when new-dir
+      (let [curr-db-path   @(subscribe [:db/filepath])
+            ;;curr-db-dir    (.dirname path curr-db-path)
+            basename       (.basename path curr-db-path)
+            new-dir-athens (.resolve path new-dir "athens")
+            new-db-path    (.resolve path new-dir-athens basename)]
+        (if (.existsSync fs new-dir-athens)
+          (js/alert (str "Directory " new-dir-athens " already exists, sorry."))
+          (do (.mkdirSync fs new-dir-athens)
+              (.copyFileSync fs curr-db-path new-db-path)
+              (dispatch [:db/update-filepath new-db-path])))))))
 
 
 (defn save-dialog!
