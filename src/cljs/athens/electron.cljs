@@ -30,6 +30,13 @@
 
 
 (reg-event-fx
+  :local-storage/navigate
+  [(inject-cofx :local-storage "current-route/uid")]
+  (fn [{:keys [local-storage]} _]
+    {:dispatch [:navigate {:page {:id local-storage}}]}))
+
+
+(reg-event-fx
   :fs/create-new-db
   (fn []
     (let [doc-path (.getPath app "documents")
@@ -128,14 +135,26 @@
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; TODO: implement
                                                      :else (dispatch [:dialog/open])))}
-                                   {:when :seen? :events :local-storage/get-db-filepath :dispatch [:local-storage/set-theme]}
-                                   {:when :seen-any-of?
-                                    :events [:fs/create-new-db :reset-conn]
+
+                                   ;; if first time, go to Daily Pages and open left-sidebar
+                                   {:when       :seen?
+                                    :events     :fs/create-new-db
+                                    :dispatch-n [[:navigate :home]
+                                                 [:left-sidebar/toggle]]}
+
+                                   ;; if nth time, remember dark/light theme and last page
+                                   {:when       :seen?
+                                    :events     :reset-conn
+                                    :dispatch-n [[:local-storage/set-theme]
+                                                 [:local-storage/navigate]]}
+
+                                   ;; whether first or nth time, update athens pages
+                                   {:when       :seen-any-of?
+                                    :events     [:fs/create-new-db :reset-conn]
                                     :dispatch-n [[:db/retract-athens-pages]
                                                  [:db/transact-athens-pages]
-                                                 [:loading/unset]
-                                                 [:navigate :page {:id "0"}]]
-                                    :halt? true}]}}))
+                                                 [:loading/unset]]
+                                    :halt?      true}]}}))
 
 
 ;; TODO: implement with streams

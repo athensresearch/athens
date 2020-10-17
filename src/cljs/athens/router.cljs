@@ -4,7 +4,7 @@
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
+    [re-frame.core :as rf :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
     [reitit.frontend.controllers :as rfc]
@@ -33,7 +33,8 @@
 (reg-event-fx
   :navigate
   (fn [_ [_ & route]]
-    {:navigate! route}))
+    {:navigate!          route
+     :local-storage/set! ["current-route/uid" (-> route second :id)]}))
 
 
 (reg-event-fx
@@ -50,6 +51,15 @@
                (dissoc :merge-prompt))
        :timeout {:action :clear
                  :id :merge-prompt}})))
+
+
+(reg-event-fx
+  :local-storage/navigate
+  [(rf/inject-cofx :local-storage "current-route/uid")]
+  (fn [{:keys [local-storage]} _]
+    (if (= "null" local-storage)
+      {:dispatch [:navigate :home]}
+      {:dispatch [:navigate :page {:id local-storage}]})))
 
 
 ;; effects
