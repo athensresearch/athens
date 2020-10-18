@@ -595,7 +595,7 @@
       [:div {:class "block-content"}
        [autosize/textarea {:value          (:string/local @state)
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
-                           :auto-focus     true
+                           ;;:auto-focus     true
                            :id             (str "editable-uid-" uid)
                            :on-change      (fn [e] (textarea-change e uid state))
                            :on-paste       (fn [e] (textarea-paste e uid state))

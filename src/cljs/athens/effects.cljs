@@ -197,25 +197,30 @@
 ;; activeElement (where the text caret is before the new focus happens), is the container of the block to focus on.
 
 ;; If an index is passed, set cursor to that index.
-;; TODO: there are some querySelector bugs, sometimes element is nil
+
+;; TODO: some issues
+;; - auto-focus on textarea
+;; - searching for common-ancestor on inside of setTimeout vs outside
+;;   - element sometimes hasn't been created yet (enter), sometimes has been just destroyed (backspace)
+;; - uid sometimes nil
+
 (reg-fx
   :editing/focus
   (fn [[uid index]]
-    (when uid
-      (let [active-el (.. js/document -activeElement)]
-        (js/setTimeout (fn []
-                         (let [html-id (str "#editable-uid-" uid)
-                               el      (as-> html-id x
-                                             (js/document.querySelectorAll x)
-                                             (map #(util/common-ancestor active-el %) x)
-                                             (filter #(contains % "block-container") x)
-                                             (first x)
-                                             (.. x (querySelector html-id)))]
-                           (when el
-                             (.focus el)
-                             (when index
-                               (setCursorPosition el index)))))
-                       300)))))
+    (js/setTimeout (fn []
+                     (let [html-id (str "#editable-uid-" uid)
+                           ;;targets (js/document.querySelectorAll html-id)
+                           ;;n       (count (array-seq targets))
+                           el      (js/document.querySelector html-id)]
+                       #_(cond
+                           (zero? n) (prn "No targets")
+                           (= 1 n) (prn "One target")
+                           (< 1 n) (prn "Several targets"))
+                       (when el
+                         (.focus el)
+                         (when index
+                           (setCursorPosition el index)))))
+                   300)))
 
 
 (reg-fx
