@@ -168,7 +168,7 @@
          expansion (or title uid)
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
-         new-str   (str new-head expansion tail)]
+         new-str   (str new-head "[[" expansion "]]" tail)]
      (swap! state assoc
             :search/type nil
             :string/local new-str)))
@@ -176,7 +176,7 @@
    (let [{:keys [value head tail]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
-         new-str   (str new-head expansion tail)]
+         new-str   (str new-head "[[" expansion "]]" tail)]
      (swap! state assoc
             :search/type nil
             :string/local new-str))))
