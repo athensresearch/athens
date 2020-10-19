@@ -346,6 +346,7 @@
         (dispatch [:indent uid value]))
       (js/setTimeout (fn []
                        (when-let [el (getElement (str "editable-uid-" uid))]
+                         (.focus el)
                          (setStart el start)
                          (setEnd el end)))
                      50))))
