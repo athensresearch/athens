@@ -152,7 +152,7 @@ jobs:
 
      strategy:
        matrix:
-         os: [windows-latest] # doesn't work yet. see https://github.com/DeLaGuardo/setup-clojure/issues/1
+         os: [ubuntu-latest, macos-latest, windows-latest]
 
      steps:
        - name: Check out Git repository
@@ -205,12 +205,16 @@ jobs:
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
       # Using lein directly because Windows doesn't recognize lein when lein is called via yarn
-       - name: Compile
+       - name: Build
          run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer
 
        - name: Build/release Electron app
          uses: samuelmeuli/action-electron-builder@v1
          with:
+
+          # Don't run `yarn build`, which otherwise happens by default
+          skip_build: true
+
            # GitHub token, automatically provided to the action
            # (No need to define this secret in the repo settings)
            github_token: ${{ secrets.github_token }}
