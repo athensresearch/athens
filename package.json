@@ -30,7 +30,6 @@
   },
   "scripts": {
     "dev": "shadow-cljs watch main renderer",
-    "build": "lein -h",
     "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs",
     "dist": "electron-builder -p always"
   },
