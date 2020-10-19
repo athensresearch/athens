@@ -212,8 +212,8 @@ jobs:
          uses: samuelmeuli/action-electron-builder@v1
          with:
 
-          # Don't run `yarn build`, which otherwise happens by default
-          skip_build: true
+           # Don't run `yarn build`, which otherwise happens by default
+           skip_build: true
 
            # GitHub token, automatically provided to the action
            # (No need to define this secret in the repo settings)
