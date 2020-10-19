@@ -152,7 +152,7 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, macos-latest, windows-latest] # doesn't work yet. see https://github.com/DeLaGuardo/setup-clojure/issues/1
+         os: [windows-latest] # doesn't work yet. see https://github.com/DeLaGuardo/setup-clojure/issues/1
 
      steps:
        - name: Check out Git repository
