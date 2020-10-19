@@ -204,10 +204,10 @@ jobs:
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
-       - name: compile
+      # Using lein directly because Windows doesn't recognize lein when lein is called via yarn
+       - name: Compile
          run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer
 
-      # runs: yarn build && electron-builder `args`
        - name: Build/release Electron app
          uses: samuelmeuli/action-electron-builder@v1
          with:
