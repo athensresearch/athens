@@ -10,7 +10,6 @@
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
-    [goog.dom.classlist :refer [contains]]
     [goog.dom.selection :refer [setCursorPosition]]
     [instaparse.core :as parse]
     [posh.reagent :refer [transact!]]
