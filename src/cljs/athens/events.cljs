@@ -21,7 +21,7 @@
 
 (reg-event-fx
   :db/update-filepath
-  (fn [db [_ filepath]]
+  (fn [{:keys [db]} [_ filepath]]
     {:db (assoc db :db/filepath filepath)
      :local-storage/set! ["db/filepath" filepath]}))
 
