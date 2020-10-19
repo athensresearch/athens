@@ -205,7 +205,7 @@ jobs:
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
        - name: compile
-         run: shadow-cljs compile main renderer
+         run: yarn run shadow-cljs compile main renderer
 
       # runs: yarn build && electron-builder `args`
        - name: Build/release Electron app
