@@ -152,15 +152,11 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, macos-latest] # windows-latest doesn't work yet. see https://github.com/DeLaGuardo/setup-clojure/issues/1
+         os: [ubuntu-latest, macos-latest, windows-latest]
 
      steps:
        - name: Check out Git repository
          uses: actions/checkout@v1
-
-       - uses: DeLaGuardo/setup-clojure@2.0
-         with:
-           tools-deps: '1.10.1.469'
 
        - name: Restore maven
          uses: actions/cache@v1
@@ -208,11 +204,17 @@ jobs:
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
+      # Using lein directly because Windows doesn't recognize lein when lein is called via yarn
+       - name: Compile JS Assets
+         run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer
 
-      # runs: yarn build && electron-builder `args`
-       - name: Build/release Electron app
+       - name: Build and Publish Electron App
          uses: samuelmeuli/action-electron-builder@v1
          with:
+
+           # Don't run `yarn build`, which otherwise happens by default
+           skip_build: true
+
            # GitHub token, automatically provided to the action
            # (No need to define this secret in the repo settings)
            github_token: ${{ secrets.github_token }}
