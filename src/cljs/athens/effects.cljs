@@ -135,16 +135,16 @@
 (reg-fx
   :transact!
   (fn [tx-data]
-    (prn "TX RAW INPUTS")
-    (pprint tx-data)
+    ;;(prn "TX RAW INPUTS")
+    ;;(pprint tx-data)
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
-      (prn "TX FINAL INPUTS") ;; parsed datoms
-      (pprint final-tx-data)
-      (prn "TX OUTPUTS")
-      (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-        (pprint outputs)))))
+      ;;(prn "TX FINAL INPUTS") ;; parsed datoms
+      ;;(pprint final-tx-data)
+      ;;(prn "TX OUTPUTS")
+      (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]))))
+        ;;(pprint outputs)))))
 
 
 (reg-fx

@@ -1112,53 +1112,100 @@
 
 
 (defn text-to-blocks
-  "Split text by new line.
-  For each line, count left offset.
-  Trim * - and whitespace.
-  Use a double loop to determine parent.
-  Assign parents and orders."
-  [text uid]
-  (let [lines    (clojure.string/split-lines text)
-        counts   (->> lines
-                      (map #(re-find #"^\s*(-|\*)?" %))
-                      (map #(-> % first count)))
-        sanitize (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
-                      lines)
-        blocks   (map-indexed (fn [idx x]
-                                {:db/id        (dec (* -1 idx))
-                                 :block/string x
-                                 :block/open   true
-                                 :block/uid    (gen-block-uid)}) sanitize)
-        n        (count blocks)
-        parents  (loop [i   1
-                        res [(first blocks)]]
-                   (if (= n i)
-                     res
-                     (recur (inc i)
-                            (loop [j (dec i)]
-                              (if (neg? j)
-                                (conj res (nth blocks i))
-                                (let [curr-count (nth counts i)
-                                      prev-count (nth counts j nil)]
-                                  (if (< prev-count curr-count)
-                                    (conj res {:db/id (:db/id (nth blocks j)) :block/children (nth blocks i)})
-                                    (recur (dec j)))))))))
-        tx-data  (->> (group-by :db/id parents)
-                      (mapcat (fn [[_tempid blocks]]
-                                (loop [order 0
-                                       res   []
-                                       data  blocks]
-                                  (let [block (first data)
-                                        {:block/keys [children]} block]
-                                    (cond
-                                      (nil? block) res
-                                      (nil? children) (recur order
-                                                             (conj res {:db/id [:block/uid uid] :block/children (assoc block :block/order 0)})
-                                                             (next data))
-                                      :else (recur (inc order)
-                                                   (conj res (assoc-in block [:block/children :block/order] order))
-                                                   (next data))))))))]
-    tx-data))
+  [text uid start-idx]
+  (let [;; Split by line
+        lines        (clojure.string/split-lines text)
+        ;; Count left offset
+        left-counts  (->> lines
+                          (map #(re-find #"^\s*(-|\*)?" %))
+                          (map #(-> % first count)))
+        ;; Trim * - and whitespace
+        sanitize     (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
+                          lines)
+        ;; Generate blocks with tempids
+        blocks       (map-indexed (fn [idx x]
+                                    {:db/id        (dec (* -1 idx))
+                                     :block/string x
+                                     :block/open   true
+                                     :block/uid    (gen-block-uid)}) sanitize)
+        ;; Count blocks
+        n            (count blocks)
+        ;; Assign parents
+        parents      (loop [i   1
+                            res [(first blocks)]]
+                       (if (= n i)
+                         res
+                         ;; Nested loop: worst-case O(n^2)
+                         (recur (inc i)
+                                (loop [j (dec i)]
+                                  ;; if j is negative, that means the loop has been compared to every previous line,
+                                  ;; and there are no previous lines with smaller left-offsets, which means block i
+                                  ;; should be a root block
+                                  ;; otherwise, block i's parent is the first block with a smaller left-offset
+                                  #_(when (neg? j)
+                                      (prn "NEG" (nth blocks i)))
+                                  (if (neg? j)
+                                    (conj res (nth blocks i))
+                                    (let [curr-count (nth left-counts i)
+                                          prev-count (nth left-counts j nil)]
+                                      (if (< prev-count curr-count)
+                                        (conj res {:db/id          (:db/id (nth blocks j))
+                                                   :block/children (nth blocks i)})
+                                        (recur (dec j)))))))))
+        tx-data      (->> (group-by :db/id parents)
+                          ;; maps smaller than size 8 are ordered, larger are not https://stackoverflow.com/a/15500064
+                          (into (sorted-map-by >))
+                          (mapcat (fn [[_tempid blocks]]
+                                    (loop [order 0
+                                           res   []
+                                           data  blocks]
+                                      (let [block (first data)
+                                            {:block/keys [children]} block]
+                                        #_(when (and block (nil? children))
+                                            (prn "NIL CHIL" block))
+
+                                        (cond
+                                          (empty? data) res
+                                          ;;(nil? block) res
+                                          ;; if block has no children, block is root, and order depends on block where paste action originated
+
+                                          ;; BUT a block only has a vector for it's id
+                                          ;; if it has no children
+                                          ;; if there are no blocks with previous count OR first block
+                                          (nil? children) (recur order
+                                                                 (conj res {:db/id [:block/uid uid]
+                                                                            ;; root-order binding?
+                                                                            :block/children (assoc block :block/order 0)})
+                                                                 (next data))
+                                          ;; otherwise, block is given children
+                                          :else (recur (inc order)
+                                                       (conj res (assoc-in block [:block/children :block/order] order))
+                                                       (next data))))))))
+        ;; - iterate over text-to-blocks result
+        ;; - if block is identified by a vector, e.g. [:block/uid "UID"], then it is a root node (of the paste context)
+        ;; - in this case, it's index is reached from the outer context
+        root-tx-data (loop [idx  0
+                            res  []
+                            data tx-data]
+                       (if (empty? data)
+                         res
+                         (let [block (first data)]
+                           #_(when (vector? (:db/id block))
+                                (prn "VEC" block))
+                           (if (vector? (:db/id block))
+                             (recur (inc idx)
+                                    (conj res (assoc-in block [:block/children :block/order] (+ start-idx idx)))
+                                    (next data))
+                             (recur idx
+                                    (conj res block)
+                                    (next data))))))]
+    #_(cljs.pprint/pprint (->> (group-by :db/id parents)
+                               ;; maps smaller than size 8 are ordered, larger are not https://stackoverflow.com/a/15500064
+                               (into (sorted-map-by >))
+                               (mapcat (fn [[_tempid blocks]]
+                                         [_tempid blocks]))))
+    root-tx-data))
+
 
 ;;TODO: If at end of a parent block, prepend children with new datoms.
 ;;If in an empty block, make empty block the root
@@ -1166,26 +1213,13 @@
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
-    (let [block      (db/get-block [:block/uid uid])
-          start-idx  (inc (:block/order block))
-          parent     (db/get-parent [:block/uid uid])
-          blocks     (text-to-blocks text (:block/uid parent))
-          n          (count (filter (fn [x] (vector? (:db/id x))) blocks))
-          reindex    (plus-after (:db/id parent) (:block/order block) n)
-          new-blocks (loop [idx  0
-                            res  []
-                            data blocks]
-                       (if (empty? data)
-                         res
-                         (let [block (first data)]
-                           (if (vector? (:db/id block))
-                             (recur (inc idx)
-                                    (conj res (assoc-in block [:block/children :block/order] (+ start-idx idx)))
-                                    (next data))
-                             (recur idx
-                                    (conj res block)
-                                    (next data))))))
-          tx-data    (concat reindex new-blocks)]
+    (let [block     (db/get-block [:block/uid uid])
+          start-idx (inc (:block/order block))
+          parent    (db/get-parent [:block/uid uid])
+          tx-data   (text-to-blocks text (:block/uid parent) start-idx)
+          n         (count (filter (fn [x] (vector? (:db/id x))) tx-data))
+          reindex   (plus-after (:db/id parent) (:block/order block) n)
+          tx-data   (concat reindex tx-data)]
       {:dispatch [:transact tx-data]})))
 
 
