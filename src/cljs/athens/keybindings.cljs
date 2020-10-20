@@ -168,7 +168,7 @@
          expansion (or title uid)
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
-         new-str   (str new-head expansion tail)]
+         new-str   (str new-head "[[" expansion "]]" tail)]
      (swap! state assoc
             :search/type nil
             :string/local new-str)))
@@ -176,7 +176,7 @@
    (let [{:keys [value head tail]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
-         new-str   (str new-head expansion tail)]
+         new-str   (str new-head "[[" expansion "]]" tail)]
      (swap! state assoc
             :search/type nil
             :string/local new-str))))
@@ -346,12 +346,14 @@
         (dispatch [:indent uid value]))
       (js/setTimeout (fn []
                        (when-let [el (getElement (str "editable-uid-" uid))]
+                         (.focus el)
                          (setStart el start)
                          (setEnd el end)))
                      50))))
 
 
 (defn handle-escape
+  "BUG: escape is fired 24 times for some reason."
   [e state]
   (.. e preventDefault)
   (swap! state assoc :search/type nil)
