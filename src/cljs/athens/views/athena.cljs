@@ -201,25 +201,23 @@
 
       (= key KeyCodes.ENTER)
       (do (dispatch [:athena/toggle])
-          (navigate-uid (or (:block/uid (:block/parent item)) (:block/uid item))))
+          (navigate-uid (or (:block/uid (:block/parent item))
+                            (:block/uid item)))
+          ;; TODO: open block if it is closed and focus doesn't work because not available on DOM
+          (dispatch [:editing/uid (:block/uid item)]))
 
       (= key KeyCodes.UP)
       (do
         (.. e preventDefault)
         (swap! state update :index #(dec (if (zero? %) (count results) %)))
         (let [cur-index (:index @state)
-
               ;; Search input box
               input-el (.. e -target)
-
               ;; Get the result list container which is the last element child
               ;; of the whole athena component
-
               result-el (.. input-el (closest "div.athena") -lastElementChild)
-
               ;; Get next element in the result list
               next-el (nth (array-seq (.. result-el -children)) cur-index)]
-
           ;; Check if next el is beyond the bounds of the result list and scroll if so
           (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
 
