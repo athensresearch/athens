@@ -1,6 +1,7 @@
 (ns athens.events
   (:require
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
+    [athens.keybindings :as keybindings]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
     [clojure.string :as string]
@@ -1182,42 +1183,41 @@
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
-    (let [block        (db/get-block [:block/uid uid])
+    (let [block         (db/get-block [:block/uid uid])
           {:block/keys [#_string order children open]} block
-          {:keys [start value]} (athens.keybindings/destruct-target js/document.activeElement)
-          empty-block? (and (string/blank? value)
-                            (empty? children))
-          block-start? (zero? start)
-          parent?      (and children open)]
-      (let [start-idx     (cond
-                            empty-block? order
-                            block-start? order
-                            parent? 0
-                            :else (inc order))
-            root-order    (atom start-idx)
-            parent        (cond
-                            parent? block
-                            :else (db/get-parent [:block/uid uid]))
-            paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
-            n             (- @root-order start-idx)
-            index-i       (cond
-                            block-start? (dec order)
-                            parent? -1
-                            :else order)
-            index-n       (cond
-                            empty-block? (dec n)
-                            :else n)
-            reindex       (plus-after (:db/id parent) index-i index-n)
-            tx-data       (concat reindex
-                                  paste-tx-data
-                                  (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
-        {:dispatch-n [[:transact tx-data]
-                      (when block-start?
-                        (let [block (-> paste-tx-data first :block/children)
-                              {:block/keys [uid string]} block
-                              n     (count string)]
-                          [:editing/uid uid n]))]}))))
-
+          {:keys [start value]} (keybindings/destruct-target js/document.activeElement)
+          empty-block?  (and (string/blank? value)
+                             (empty? children))
+          block-start?  (zero? start)
+          parent?       (and children open)
+          start-idx     (cond
+                          empty-block? order
+                          block-start? order
+                          parent? 0
+                          :else (inc order))
+          root-order    (atom start-idx)
+          parent        (cond
+                          parent? block
+                          :else (db/get-parent [:block/uid uid]))
+          paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
+          n             (- @root-order start-idx)
+          index-i       (cond
+                          block-start? (dec order)
+                          parent? -1
+                          :else order)
+          index-n       (cond
+                          empty-block? (dec n)
+                          :else n)
+          reindex       (plus-after (:db/id parent) index-i index-n)
+          tx-data       (concat reindex
+                                paste-tx-data
+                                (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
+      {:dispatch-n [[:transact tx-data]
+                    (when block-start?
+                      (let [block (-> paste-tx-data first :block/children)
+                            {:block/keys [uid string]} block
+                            n     (count string)]
+                        [:editing/uid uid n]))]})))
 
 
 (defn left-sidebar-drop-above
