@@ -1175,17 +1175,18 @@
     tx-data))
 
 
-;; If in an empty block, delete block in place but make that location the root
-;; If at text start of non-empty block, prepend with siblings
-;; If anywhere else beyond text start of OPEN parent block, prepend children with new datoms
-;; Otherwise append after current block.
+;; Paste based on conditions of block where paste originated from.
+;; - If from an empty block, delete block in place and make that location the root
+;; - If at text start of non-empty block, prepend block and focus first new root
+;; - If anywhere else beyond text start of an OPEN parent block, prepend children
+;; - Otherwise append after current block.
 
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
     (let [block         (db/get-block [:block/uid uid])
-          {:block/keys [#_string order children open]} block
-          {:keys [start value]} (keybindings/destruct-target js/document.activeElement)
+          {:block/keys [order children open]} block
+          {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
           block-start?  (zero? start)
@@ -1200,15 +1201,16 @@
                           parent? block
                           :else (db/get-parent [:block/uid uid]))
           paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
+          ;; the delta between root-order and start-idx is how many root blocks were added
           n             (- @root-order start-idx)
-          index-i       (cond
+          start-reindex (cond
                           block-start? (dec order)
                           parent? -1
                           :else order)
-          index-n       (cond
+          amount        (cond
                           empty-block? (dec n)
                           :else n)
-          reindex       (plus-after (:db/id parent) index-i index-n)
+          reindex       (plus-after (:db/id parent) start-reindex amount)
           tx-data       (concat reindex
                                 paste-tx-data
                                 (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
