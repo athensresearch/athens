@@ -368,18 +368,20 @@
 
 
 (defn search-in-node-title
-  ([query] (search-in-node-title query 20))
-  ([query n]
-   (->> (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
-               :in $ ?query-pattern ?query
-               :where
-               [?node :node/title ?title]
-               [(re-find ?query-pattern ?title)]
-               [(not= ?title ?query)]] ;; ignore exact match to avoid duplicate
-             @dsdb
-             (re-case-insensitive query)
-             query)
-        (take n))))
+  ([query] (search-in-node-title query 20 false))
+  ([query n] (search-in-node-title query n false))
+  ([query n ignore-dup]
+   (let [results (->> (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
+                             :in $ ?query-pattern ?query
+                             :where
+                             [?node :node/title ?title]
+                             [(re-find ?query-pattern ?title)]
+                             [(not= ?title ?query)]]                ;; ignore exact match to avoid duplicate
+                           @dsdb
+                           (re-case-insensitive query)
+                           (when ignore-dup query))
+                      (take n))]
+     results)))
 
 
 (defn get-root-parent-node
