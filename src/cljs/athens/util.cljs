@@ -112,6 +112,20 @@
             (recur (inc i))))))))
 
 
+(defn destruct-key-down
+  [e]
+  (let [key   (.. e -keyCode)
+        ctrl  (.. e -ctrlKey)
+        meta  (.. e -metaKey)
+        shift (.. e -shiftKey)
+        alt   (.. e -altKey)]
+    {:key-code key
+     :ctrl     ctrl
+     :meta     meta
+     :shift    shift
+     :alt      alt}))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 
