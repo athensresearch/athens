@@ -76,34 +76,33 @@
 
 (defn key-down
   [e]
-  (let [key      (.. e -keyCode)
-        ctrl     (.. e -ctrlKey)
-        meta     (.. e -metaKey)
-        shift    (.. e -shiftKey)]
+  (let [{:keys [key-code ctrl meta shift alt]} (util/destruct-key-down e)]
+    (cond
+      (util/shortcut-key? meta ctrl) (condp = key-code
+                                       KeyCodes.S (dispatch [:save])
 
-    (when (util/shortcut-key? meta ctrl)
+                                       KeyCodes.K (dispatch [:athena/toggle])
 
-      (condp = key
-        KeyCodes.S (dispatch [:save])
+                                       KeyCodes.G (dispatch [:devtool/toggle])
 
-        KeyCodes.K (dispatch [:athena/toggle])
+                                       KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
+                                                        selected-items @(subscribe [:selected/items])]
+                                                    ;; editing/uid must be nil or selected-items must be non-empty
+                                                    (when (or (nil? editing-uid)
+                                                              (not-empty selected-items))
+                                                      (if shift
+                                                        (dispatch [:redo])
+                                                        (dispatch [:undo]))))
 
-        KeyCodes.G (dispatch [:devtool/toggle])
-
-        KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
-                         selected-items @(subscribe [:selected/items])]
-                     ;; editing/uid must be nil or selected-items must be non-empty
-                     (when (or (nil? editing-uid)
-                               (not-empty selected-items))
-                       (if shift
-                         (dispatch [:redo])
-                         (dispatch [:undo]))))
-
-        KeyCodes.BACKSLASH (if shift
-                             (dispatch [:right-sidebar/toggle])
-                             (dispatch [:left-sidebar/toggle]))
-        KeyCodes.H (util/toggle-10x)
-        nil))))
+                                       KeyCodes.BACKSLASH (if shift
+                                                            (dispatch [:right-sidebar/toggle])
+                                                            (dispatch [:left-sidebar/toggle]))
+                                       KeyCodes.H (util/toggle-10x)
+                                       nil)
+      alt (condp = key-code
+            KeyCodes.LEFT (.back js/window.history)
+            KeyCodes.RIGHT (.forward js/window.history)
+            nil))))
 
 
 ;; -- Clipboard ----------------------------------------------------------

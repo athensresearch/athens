@@ -169,17 +169,21 @@
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head "[[" expansion "]]" tail)]
-     (swap! state assoc
-            :search/type nil
-            :string/local new-str)))
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc
+              :search/type nil
+              :string/local new-str))))
   ([state target expansion]
    (let [{:keys [value head tail]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))
          new-head  (subs value 0 start-idx)
          new-str   (str new-head "[[" expansion "]]" tail)]
-     (swap! state assoc
-            :search/type nil
-            :string/local new-str))))
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc
+              :search/type nil
+              :string/local new-str)))))
 
 
 (defn auto-complete-inline
