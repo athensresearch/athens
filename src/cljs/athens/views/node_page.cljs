@@ -419,8 +419,9 @@
                [:section (use-style references-style {:key linked-or-unlinked})
                 [:h4 (use-style references-heading-style)
                  [(r/adapt-react-class mui-icons/Link)]
-                 [:span linked-or-unlinked]
-                 [button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+                 [:span linked-or-unlinked]]
+                 ;; Hide button until feature is implemented
+                 ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
                 [:div (use-style references-list-style)
                  (doall
                    (for [[group-title group] refs]
