@@ -13,6 +13,7 @@
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
+    [athens.views.filters :refer [filters-el]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -348,7 +349,8 @@
          [block-el block linked-ref-data]]))))
 
 
-;; TODO: where to put page-level link filters?
+
+
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
   title/local is the value of the textarea.
@@ -414,25 +416,46 @@
 
          ;; References
          (doall
-           (for [[linked-or-unlinked refs] ref-groups]
-             (when (not-empty refs)
+           (for [[linked-or-unlinked ref-filters] ref-groups]
+             ;;(prn references)
+             (when (not-empty @ref-filters)
                [:section (use-style references-style {:key linked-or-unlinked})
                 [:h4 (use-style references-heading-style)
                  [(r/adapt-react-class mui-icons/Link)]
                  [:span linked-or-unlinked]]
-                 ;; Hide button until feature is implemented
-                 ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+                ;; Hide button until feature is implemented
+                ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+                [filters-el uid ref-filters]
+                ;;(prn "REF" @ref-filters)
                 [:div (use-style references-list-style)
                  (doall
-                   (for [[group-title group] refs]
-                     [:div (use-style references-group-style {:key (str "group-" group-title)})
-                      [:h4 (use-style references-group-title-style)
-                       [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
-                      (doall
-                        (for [block group]
-                          [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
-                           [ref-comp block]]))]))]])))]))))
+                   (let [any-includes? (some (fn [[k v]] (:state v)) @ref-filters)]
+                     (for [[group-title {:keys [refs state]}] @ref-filters]
+                       (cond
 
+                         any-includes?
+                         (when (= state :included)
+                           [:div (use-style references-group-style {:key (str "group-" group-title)})
+                            [:h4 (use-style references-group-title-style)
+                             [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+                            (doall
+                              (for [block refs]
+                                [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                                 [ref-comp block]]))])
+
+                         :else
+                         [:div (use-style references-group-style {:key (str "group-" group-title)})
+                          [:h4 (use-style references-group-title-style)
+                           [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+                          (doall
+                            (for [block refs]
+                              [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                               [ref-comp block]]))]))))]])))]))))
+
+
+(->> {"September 28, 2020" {:refs [{:db/id 253, :block/uid "d71452238", :block/string "ok. just had [[Baptiste]] [[Beta Test]]. here's what I learned:", :block/open true, :block/order 5, :block/children [{:db/id 299, :block/uid "0beecc322", :block/string "in person was the move. i shouldn't have texted Haitham, Austin, Ian, Shanberg, etc.", :block/open true, :block/order 0} {:db/id 300, :block/uid "56baf27aa", :block/string "there's still so many bugs that it doesn't really matter if the person uses roam or not. usability is everything, and that is pretty independent: DOES IT WORK?", :block/open true, :block/order 1}], :block/parents [{:db/id 220, :node/title "September 28, 2020", :block/uid "09-28-2020"} {:db/id 281, :block/uid "013ab4ecc", :block/string "[[v1.0.0-beta.7]]"}]} {:db/id 262, :block/uid "ba9b3400e", :block/string "[[Baptiste]]", :block/open false, :block/order 2, :block/children [{:db/id 267, :block/uid "49280b413", :block/string "{{[[DONE]]}} if you press enter while debouncing hasn't finished, leads to freeze", :block/open true, :block/order 0, :block/children [{:db/id 263, :block/uid "3bba42182", :block/string "create a new page", :block/open true, :block/order 0}]} {:db/id 266, :block/uid "2b9a90f50", :block/string "gray refresh", :block/open true, :block/order 1} {:db/id 268, :block/uid "d54e5259a", :block/string "test2 doesn't exist?", :block/open true, :block/order 2} {:db/id 269, :block/uid "56169929c", :block/string "{{[[TODO]]}} nested links sometimes aren't generated, and link doesn't always work", :block/open true, :block/order 3} {:db/id 292, :block/uid "ef4dbef6d", :block/string "go to the block if you click on the link", :block/open true, :block/order 4} {:db/id 270, :block/uid "d6cb78837", :block/string "fix (())", :block/open true, :block/order 5} {:db/id 311, :block/uid "e3b572f2b", :block/string "shortcuts", :block/open false, :block/order 6, :block/children [{:db/id 271, :block/uid "7029cdc5e", :block/string "cmd vs ctrl enter for todo", :block/open true, :block/order 0, :block/_refs [{:db/id 315}]} {:db/id 272, :block/uid "b404b488a", :block/string "{{[[TODO]]}} ctrl-z is weird", :block/open true, :block/order 1} {:db/id 273, :block/uid "a833ed85d", :block/string "{{[[TODO]]}} ctrl-b should place caret", :block/open true, :block/order 2}]} {:db/id 274, :block/uid "2a51a3c0a", :block/string "{{[[TODO]]}} welcome datoms", :block/open false, :block/order 7, :block/children [{:db/id 275, :block/uid "611cb06ea", :block/string "links should work", :block/open true, :block/order 0} {:db/id 276, :block/uid "66b556a4b", :block/string "favorite?", :block/open true, :block/order 1} {:db/id 277, :block/uid "d17b2fa37", :block/string "outside nested links", :block/open true, :block/order 2} {:db/id 291, :block/uid "0aaab0f25", :block/string "the welcome datoms use links that don't exist in the db", :block/open true, :block/order 3} {:db/id 290, :block/uid "060178b32", :block/string "links with double brackets order is off", :block/open true, :block/order 4} {:db/id 287, :block/uid "ef0e0d490", :block/string "onboarding — where does this get saved? how often?", :block/open true, :block/order 5} {:db/id 315, :block/uid "7a633afa0", :block/string "((7029cdc5e))", :block/open true, :block/order 6}]} {:db/id 278, :block/uid "0fd0e0b5b", :block/string "nav", :block/open true, :block/order 8, :block/children [{:db/id 310, :block/uid "2acf372d6", :block/string "clicking on the same page should not add to navigation stack", :block/open true, :block/order 0}]} {:db/id 309, :block/uid "55571cee0", :block/string "blocks", :block/open true, :block/order 9, :block/children [{:db/id 279, :block/uid "58ec56cf8", :block/string "{{[[TODO]]}} enter on an indented empty block freezes", :block/open true, :block/order 0} {:db/id 280, :block/uid "c0bbe4a43", :block/string "{{[[TODO]]}} enter on a closed block should create new block", :block/open true, :block/order 1} {:db/id 285, :block/uid "918ebc941", :block/string "{{[[TODO]]}} clicking into side of page exit edit mode?", :block/open true, :block/order 2} {:db/id 286, :block/uid "c313f0c2a", :block/string "{{[[TODO]]}} show block references when zoomed in", :block/open true, :block/order 3}]} {:db/id 303, :block/uid "3693870dc", :block/string "help UI or shortcut", :block/open true, :block/order 10, :block/children [{:db/id 283, :block/uid "c7bd56ff4", :block/string "{{[[TODO]]}} list of shortcuts or even a keybinding", :block/open true, :block/order 0}]} {:db/id 289, :block/uid "5a93e0ae5", :block/string "sync/save?", :block/open true, :block/order 11, :block/children [{:db/id 312, :block/uid "32b9ae264", :block/string "what does yellow circle do?", :block/open true, :block/order 0} {:db/id 313, :block/uid "27d185785", :block/string "auto-save", :block/open true, :block/order 1}]} {:db/id 307, :block/uid "b4a169052", :block/string "left sidebar", :block/open true, :block/order 12, :block/children [{:db/id 284, :block/uid "09477f472", :block/string "{{[[TODO]]}} any tooltip info for left sidebar?", :block/open true, :block/order 0}]} {:db/id 306, :block/uid "98c0bce49", :block/string "right sidebar", :block/open true, :block/order 13, :block/children [{:db/id 288, :block/uid "6d0df8642", :block/string "{{[[DONE]]}} closing out of last right sidebar item should close sidebar", :block/open true, :block/order 0}]} {:db/id 308, :block/uid "80a0fbc80", :block/string "biz model", :block/open true, :block/order 14, :block/children [{:db/id 293, :block/uid "34cd44c05", :block/string "e2e? for cloud", :block/open true, :block/order 0}]}], :block/parents [{:db/id 220, :node/title "September 28, 2020", :block/uid "09-28-2020"} {:db/id 281, :block/uid "013ab4ecc", :block/string "[[v1.0.0-beta.7]]"} {:db/id 226, :block/uid "e405bd192", :block/string "[[Beta Testers]]"}]}], :count 1}, "September 29, 2020" {:refs [{:db/id 317, :block/uid "c6aec6632", :block/string "[[Baptiste]] it's actually ridiculous that I even drafted an email with 50 people. in the heat of the moment of a real startup, I only understand the cliche almost after it's too late. in this case, I just gotta [[Do Things That Don't Scale]]", :block/open true, :block/order 0, :block/parents [{:db/id 316, :node/title "September 29, 2020", :block/uid "09-29-2020"}]}], :count 1}}
+     (some (fn [[k v]]
+             (:included v))))
 
 (defn node-page-component
   [ident]
@@ -440,6 +463,6 @@
         editing-uid @(subscribe [:editing/uid])]
     (when-not (str/blank? title)
       ;; TODO: let users toggle open/close references
-      (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
-                        ["Unlinked References" (get-unlinked-references (escape-str title))]]]
+      (let [ref-groups [["Linked References" (r/atom (get-linked-references (escape-str title)))]
+                        ["Unlinked References" (r/atom (get-unlinked-references (escape-str title)))]]]
         [node-page-el node editing-uid ref-groups]))))

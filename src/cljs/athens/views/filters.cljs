@@ -81,7 +81,7 @@
                      [:&:active {:transform "scale(0.99)"}]]})
 
 
-(def added-style
+(def included-style
   {:background-color (color :link-color :opacity-low)
    :color (color :link-color)
    ::stylefy/manual [[:&:hover {:background (color :link-color 0.3)}]
@@ -134,91 +134,85 @@
 
 
 (defn filters-el
-  [_uid items]
-  (let [s (r/atom {:sort :lex
-                   :items items
-                   :search ""})]
-    (fn [_uid items]
-      (let [sort_ (:sort @s)
-            filtered-items (reduce-kv
-                             (fn [m k v]
-                               (if (re-find
-                                    (re-pattern (str "(?i)" (:search @s)))
-                                    k)
-                                 (assoc m k v)
-                                 m))
-                             {}
-                             (:items @s))
-            items (if (= sort_ :lex)
-                    (into (sorted-map) filtered-items)
-                    (into (sorted-map-by (fn [k1 k2]
-                                           (compare
-                                            [(get-in items [k2 :count]) k1]
-                                            [(get-in items [k1 :count]) k2]))) filtered-items))
-            num-filters (count (filter
-                                (fn [[_k v]] (:state v))
-                                items))]
+  [_uid ref-filters]
+  (let [s          (r/atom {:sort   :lex
+                            :search ""})
+        init-items @ref-filters]
+    (fn [_uid ref-filters]
+      (let [{:keys [sort search]} @s
+            items        @ref-filters
+            ;; filter items based on search type: alphabetically or by frequency
+            search-items (reduce-kv
+                           (fn [m k v]
+                             (if (re-find (re-pattern (str "(?i)" search)) k)
+                               (assoc m k v)
+                               m))
+                           {}
+                           items)
+            items        (if (= sort :lex)
+                           (into (sorted-map) search-items)
+                           (into (sorted-map-by (fn [k1 k2]
+                                                  (compare [(get-in items [k2 :count]) k1]
+                                                           [(get-in items [k1 :count]) k2]))) search-items))
+            num-filters  (count (filter (fn [[_k v]] (:state v)) items))]
 
         [:div (use-style container-style)
-
          ;; Search
          [textinput (use-style search-style
                                {:type        "search"
-                                :autoFocus  true
+                                :autoFocus   true
                                 :placeholder "Type to find filters"
-                                :icon [:> mui-icons/FilterList]
-                                :value (:search @s)
-                                :on-change   (fn [e]
-                                               (swap! s assoc-in [:search] (.. e -target -value)))})]
+                                :icon        [:> mui-icons/FilterList]
+                                :value       search
+                                :on-change   (fn [e] (swap! s assoc :search (.. e -target -value)))})]
 
          ;; Controls
          [:div (use-style controls-style)
-          [button {:style sort-control-style
-                   :on-click (fn [_]
-                               (swap! s assoc :sort (if (= sort_ :lex)
-                                                      :count
-                                                      :lex)))}
+          [button {:style    sort-control-style
+                   :on-click (fn [_] (swap! s assoc :sort (case sort
+                                                            :lex :count
+                                                            :count :lex)))}
            [:> mui-icons/Sort]]
-          [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
+          [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (case sort
+                                                                                      nil nil
+                                                                                      :lex "Title"
+                                                                                      :count "Count")]]
           [:span (str num-filters " Active")]
-          [button {:style reset-control-style
+          [button {:style    reset-control-style
                    :on-click (fn [_]
-                               (swap! s assoc :items
-                                      (reduce-kv
-                                       (fn [m k v]
-                                         (assoc m k (dissoc v :state)))
-                                       {}
-                                       (:items @s))))}
+                               (reset! ref-filters init-items)
+                               (swap! s assoc :search ""))}
            "Reset"]]
-         
 
-         ;; List
+         ;; Filter List
          [:div (use-style filter-list-style)
-          (if (> (count items) 0)
+          (if (zero? (count items))
+            [:p (use-style no-items-message-style) "No filters found"]
             (doall
-             (for [[k {:keys [count state]}] items
-                   :let [added?    (= state :added)
-                         excluded? (= state :excluded)]]
-               ^{:key k}
-               [:div (use-style (merge filter-style
-                                       (cond
-                                         added? added-style
-                                         excluded? excluded-style))
-                                {:on-click (fn [_]
-                                             (swap! s assoc-in [:items k :state]
-                                                    (case state
-                                                      nil :added
-                                                      :added :excluded
-                                                      :excluded nil)))})
+              (for [[k {:keys [count state]}] items]
+                ^{:key k}
+                [:div (use-style (merge filter-style
+                                        (case state
+                                          nil nil
+                                          :included included-style
+                                          :excluded excluded-style))
+                                 {:on-click (fn [_]
+                                              ;; cycles through include/exclude state for clicked item
+                                              (swap! ref-filters assoc-in [k :state]
+                                                     (case state
+                                                       nil :included
+                                                       :included :excluded
+                                                       :excluded nil)))})
 
-               ;; Left
-                [:span (use-style count-style) count]
-                [:span (use-style filter-name-style) k]
+                 ;; Left
+                 [:span (use-style count-style) count]
+                 [:span (use-style filter-name-style) k]
 
-               ;; Right
-                (when (or added? excluded?)
-                  [:span (use-style state-style) state
-                   (if added?
-                     [:> mui-icons/Check]
-                     [:> mui-icons/Block])])]))
-            [:p (use-style no-items-message-style) "No filters found"])]]))))
+                 ;; Right
+
+                 (when state
+                   [:span (use-style state-style) state
+                    (case state
+                      :included [:> mui-icons/Check]
+                      :excluded [:> mui-icons/Block])])])))]]))))
+

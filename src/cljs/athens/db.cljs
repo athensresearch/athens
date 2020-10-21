@@ -561,7 +561,20 @@
 
 (defn get-data
   [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+  (->> pattern get-ref-ids merge-parents-and-block group-by-parent
+       (reduce-kv (fn [acc k v]
+                    (assoc acc k {:refs          v
+                                  :count 1}))
+                  {})))
+
+
+#_(let [pattern (patterns/linked "Beta Test")]
+    (->> pattern get-ref-ids merge-parents-and-block group-by-parent
+        (reduce-kv (fn [acc k v]
+                     (assoc acc k {:refs v
+                                   :filters/count 1}))
+                   {})
+        seq))
 
 
 (defn get-data-by-block
