@@ -5,6 +5,7 @@
     [re-frame.core :refer [dispatch]]))
 
 
+
 (defn todo-on-click
   [uid from-str to-str]
   (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
@@ -37,8 +38,8 @@
                                               :font-family "IBM Plex Mono"}}
                              content])
    #"embed: \(\((.*)\)\)" (fn [content _]
-                            [:h4
-                             "yeet"])})
+                            (let [uid (second (re-find #"embed: \(\((.*)\)\)" content))]
+                              [:h5 uid]))})
 
 
 (defn empty-component
