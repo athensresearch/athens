@@ -12,4 +12,4 @@
 ; also excludes [title] :(
 (defn unlinked
   [string]
-  (re-pattern (str "[^\\[|#]" string)))
+  (re-pattern (str "(?i)[^\\[|#]" string)))
