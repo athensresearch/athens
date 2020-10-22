@@ -112,14 +112,15 @@
                          [:span {:class "formatting"} "#"]
                          [:span {:class "contents"} title-coll]]))
      :block-ref     (fn [ref-uid]
-                      (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
-                        (if @block
-                          [:span (use-style block-ref {:class "block-ref"})
-                           [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
-                            (if (= uid ref-uid)
-                              [parse-and-render "{{SELF}}"]
-                              [parse-and-render (:block/string @block) ref-uid])]]
-                          (str "((" ref-uid "))"))))
+                      [:span ref-uid]
+                      #_(let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+                          (if @block
+                            [:span (use-style block-ref {:class "block-ref"})
+                             [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
+                              (if (= uid ref-uid)
+                                [parse-and-render "{{SELF}}"]
+                                [parse-and-render (:block/string @block) ref-uid])]]
+                            (str "((" ref-uid "))"))))
      :url-image     (fn [{url :url alt :alt}]
                       [:img (use-style image {:class "url-image"
                                               :alt   alt
@@ -134,6 +135,8 @@
      :pre-formatted (fn [text]
                       [:code text])}
    tree))
+(parse-and-render "{{[[youtube]]: https://www.youtube.com/watch?v=c9NQ5ENiNdM}}" "1")
+(parse-and-render "{{embed: ((0))}}" "1")
 
 
 (defn parse-and-render
