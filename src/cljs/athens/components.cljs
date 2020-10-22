@@ -5,7 +5,6 @@
     [re-frame.core :refer [dispatch]]))
 
 
-
 (defn todo-on-click
   [uid from-str to-str]
   (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
