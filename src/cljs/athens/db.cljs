@@ -3,9 +3,9 @@
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
-    [clojure.string :as string]))
+    [posh.reagent :refer [posh! pull q]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -587,7 +587,6 @@
          (mapv (fn [x]
                  (let [new-str (string/replace (:block/string x) pattern title)]
                    (assoc x :block/string new-str)))))))
-
 
 
 (defn get-linked-references-by-block
