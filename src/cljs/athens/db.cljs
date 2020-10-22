@@ -3,6 +3,7 @@
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
+    [clojure.string :as string]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull q]]))
 
@@ -600,3 +601,15 @@
        (merge-parents-and-block)
        (group-by-parent)
        vec))
+
+
+(defn replace-linked-refs
+  "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
+  [title]
+  (let [pattern (patterns/linked title)]
+    (->> pattern
+         get-ref-ids
+         (d/pull-many @dsdb [:db/id :block/string])
+         (mapv (fn [x]
+                 (let [new-str (string/replace (:block/string x) pattern title)]
+                   (assoc x :block/string new-str)))))))
