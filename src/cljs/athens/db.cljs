@@ -576,19 +576,6 @@
   (-> title patterns/linked get-data))
 
 
-(defn replace-linked-refs
-  "Removes [[brackets]] surrounding linked refs."
-  ;; TODO: test with #[[long hashtags]] and #hashtags
-  [title]
-  (let [pattern (patterns/linked title)]
-    (->> pattern
-         get-ref-ids
-         (d/pull-many @dsdb [:db/id :block/string])
-         (mapv (fn [x]
-                 (let [new-str (string/replace (:block/string x) pattern title)]
-                   (assoc x :block/string new-str)))))))
-
-
 (defn get-linked-references-by-block
   [title]
   (-> title patterns/linked get-data-by-block))
@@ -614,3 +601,15 @@
        (merge-parents-and-block)
        (group-by-parent)
        vec))
+
+
+(defn replace-linked-refs
+  "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
+  [title]
+  (let [pattern (patterns/linked title)]
+    (->> pattern
+         get-ref-ids
+         (d/pull-many @dsdb [:db/id :block/string])
+         (mapv (fn [x]
+                 (let [new-str (string/replace (:block/string x) pattern title)]
+                   (assoc x :block/string new-str)))))))
