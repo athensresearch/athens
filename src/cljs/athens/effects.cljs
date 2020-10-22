@@ -12,7 +12,7 @@
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [instaparse.core :as parse]
-    [posh.reagent :refer [transact!]]
+    [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [stylefy.core :as stylefy]))
 
@@ -70,14 +70,17 @@
 
 
 (defn new-refs-to-tx-data
-  "Filter: ((ref-uid)) points to an actual block, and block/ref relationship doesn't exist yet.
+  "Filter: ((ref-uid)) points to an actual block (without a title), and block/ref relationship doesn't exist yet.
   Map: add block/ref relationship."
   [new-block-refs e]
   (->> new-block-refs
        (filter (fn [ref-uid]
-                 (let [eid  (db/e-by-av :block/uid ref-uid)
-                       refs (-> e db/get-block-refs set)]
-                   (not (contains? refs eid)))))
+                 (let [block @(p/pull db/dsdb '[*] [:block/uid ref-uid])
+                       {:keys [node/title db/id]} block
+                       refs  (-> e db/get-block-refs set)]
+                   (and block
+                        (nil? title)
+                        (not (contains? refs id))))))
        (map (fn [ref-uid] [:db/add e :block/refs [:block/uid ref-uid]]))))
 
 

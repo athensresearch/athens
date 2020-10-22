@@ -4,9 +4,7 @@
     [athens.util :refer [now-ts]]
     [re-frame.core :refer [dispatch]]))
 
-;; Note to contributors: After you define the component, you should add it in the exported components vector at bottom.
 
-;; ---- Helper functions for default components ----
 (defn todo-on-click
   [uid from-str to-str]
   (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
@@ -18,72 +16,45 @@
                            :edit/time    (now-ts)}]])))
 
 
-(defn find-weblink
-  [content]
-  (re-find #"http.*" content))
+(def components
+  {#"\[\[TODO\]\]"        (fn [_ uid]
+                            [:input {:type      "checkbox"
+                                     :checked   false
+                                     :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])
+   #"\[\[DONE\]\]"        (fn [_ uid]
+                            [:input {:type      "checkbox"
+                                     :checked   true
+                                     :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])
+   #"\[\[youtube\]\]\:.*" (fn [content _]
+                            [:div.media-16-9
+                             [:iframe {:src   (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
+                                       :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]])
+   #"iframe\:.*"          (fn [content _]
+                            [:div.media-16-9
+                             [:iframe {:src (re-find #"http.*" content)}]])
+   #"SELF"                (fn [content _]
+                            [:button {:style {:color       "red"
+                                              :font-family "IBM Plex Mono"}}
+                             content])
+   #"embed: \(\((.*)\)\)" (fn [content _]
+                            (let [uid (second (re-find #"embed: \(\((.*)\)\)" content))]
+                              [:h5 uid]))})
 
 
-;; ---- Todo component declaration ----
-(def component-todo
-  {:match #"\[\[TODO\]\]"
-   :render (fn [_ uid]
-             [:input {:type     "checkbox"
-                      :checked  false
-                      :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}])})
-
-
-(def component-done
-  {:match #"\[\[DONE\]\]"
-   :render (fn [_ uid]
-             [:input {:type     "checkbox"
-                      :checked  true
-                      :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}])})
-
-
-;; ---- Website embed component declaration ----
-(def component-youtube-embed
-  {:match  #"\[\[youtube\]\]\:.*"
-   :render (fn [content _]
-             [:div.media-16-9
-              [:iframe {:src         (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
-                        :allow       "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]])})
-
-
-(def component-generic-embed
-  {:match  #"iframe\:.*"
-   :render (fn [content _]
-             [:div.media-16-9
-              [:iframe {:src         (find-weblink content)}]])})
-
-
-;; SELF: when blocks try to transclude themselves
-(def component-self
-  {:match  #"SELF"
-   :render (fn [content _]
-             [:button {:style {:color "red"
-                               :font-family "IBM Plex Mono"}}
-              content])})
-
-
-;; Components
-(def components [component-todo component-done component-youtube-embed component-generic-embed component-self])
-
-
-;; ---- Render function for custom components
 (defn empty-component
   [content _]
   [:button content])
 
 
-;; TODO: use metaprogramming to achieve dynamic rendering with both basic components and custom components
 (defn render-component
   "Renders a component using its parse tree & its uid."
   [content uid]
-  (let [render     (some (fn [comp]
-                           (when (re-matches (:match comp) content)
-                             (:render comp))) components)]
+  (let [render (some (fn [[pattern render]]
+                       (when (re-matches pattern content)
+                         render))
+                     components)]
     [:span {:on-click (fn [e]
                         (.. e stopPropagation))}
      (if render
-       [render            content uid]
-       [empty-component   content uid])]))
+       [render content uid]
+       [empty-component content uid])]))
