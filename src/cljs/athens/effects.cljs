@@ -97,9 +97,6 @@
        (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
 
 
-;; 3 cases
-
-
 (defn parse-for-links
   "When block/string is asserted, parse for links and block refs to add.
   When block/string is retracted, parse for links and block refs to remove.
@@ -164,8 +161,7 @@
                            tx-data        (concat []
                                                   old-titles
                                                   old-block-refs)]
-                        tx-data)))))))
-
+                       tx-data)))))))
 
 
 (reg-fx
