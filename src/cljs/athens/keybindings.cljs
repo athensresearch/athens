@@ -33,6 +33,11 @@
   (js->clj (getEndPoints target)))
 
 
+(defn set-cursor-position
+  [target idx]
+  (setCursorPosition target idx))
+
+
 (defn destruct-target
   [target]
   (let [value (.. target -value)
@@ -141,10 +146,10 @@
      (swap! state assoc
             :search/type nil
             :string/local new-str)
+     (set! (.-value target) new-str)
      (when pos
-       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
-                      50))))
-
+       (let [new-idx (- (count (str new-head expand)) pos)]
+         (set-cursor-position target new-idx)))))
   ([state target item]
    (let [{:keys [value head tail]} (destruct-target target)
          [_ _ expansion _ pos] item
@@ -155,9 +160,10 @@
      (swap! state assoc
             :search/type nil
             :string/local new-str)
+     (set! (.-value target) new-str)
      (when pos
-       (js/setTimeout #(setCursorPosition target (- (count (str new-head expand)) pos))
-                      50)))))
+       (let [new-idx (- (count (str new-head expand)) pos)]
+         (set-cursor-position target new-idx))))))
 
 
 (defn auto-complete-hashtag
@@ -342,18 +348,12 @@
   See :indent event for why value must be passed as well."
   [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift value start end]} (destruct-key-down e)
+  (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items @(subscribe [:selected/items])]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent uid value])
-        (dispatch [:indent uid value]))
-      (js/setTimeout (fn []
-                       (when-let [el (getElement (str "editable-uid-" uid))]
-                         (.focus el)
-                         (setStart el start)
-                         (setEnd el end)))
-                     50))))
+        (dispatch [:unindent uid d-key-down])
+        (dispatch [:indent uid d-key-down])))))
 
 
 (defn handle-escape
@@ -370,7 +370,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta start head tail value]} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -389,7 +389,7 @@
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
-      :else (throttle-dispatch [:enter uid value start]))))
+      :else (throttle-dispatch [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -433,16 +433,18 @@
                                   (dispatch [:undo])))
       (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
                                 (swap! state assoc :string/local new-str)
+                                (set! (.-value target) new-str)
                                 (if selection?
-                                  (js/setTimeout #(do (setStart target (+ 2 start))
-                                                      (setEnd target (+ 2 end))) 0)
-                                  (js/setTimeout #(setCursorPosition target (+ 2 start)) 0)))
+                                  (do (setStart target (+ 2 start))
+                                      (setEnd target (+ 2 end)))
+                                  (set-cursor-position target (+ 2 start))))
       (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
                                                   (swap! state assoc :string/local new-str)
+                                                  (set! (.-value target) new-str)
                                                   (if selection?
-                                                    (js/setTimeout #(do (setStart target (+ 2 start))
-                                                                        (setEnd target (+ 2 end))) 0)
-                                                    (js/setTimeout #(setCursorPosition target (+ 2 start)) 0))))))
+                                                    (do (setStart target (+ 2 start))
+                                                        (setEnd target (+ 2 end)))
+                                                    (set-cursor-position target (+ 2 start)))))))
 
 
 (defn pair-char?
@@ -470,18 +472,19 @@
                                            (swap! state assoc :search/type nil))
 
       ;; when no selection
-      (= start end) (let [new-str (str head key close-pair tail)]
-                      (js/setTimeout #(setCursorPosition target (inc start)) 25)
-                      (swap! state assoc :string/local new-str))
+      (= start end) (let [new-str (str head key close-pair tail)
+                          new-idx (inc start)]
+                      (swap! state assoc :string/local new-str)
+                      (set! (.-value target) new-str)
+                      (set-cursor-position target new-idx))
 
       ;; when selection
       (not= start end) (let [surround-selection (surround selection key)
                              new-str (str head surround-selection tail)]
                          (swap! state assoc :string/local new-str)
-                         (js/setTimeout (fn []
-                                          (setStart target (inc start))
-                                          (setEnd target (inc end)))
-                                        10)))
+                         (set! (.-value target) new-str)
+                         (set! (.-selectionStart target) (inc start))
+                         (set! (.-selectionEnd target) (inc end))))
 
     ;; when double pair char, open inline-search
     (when (>= (count (:string/local @state)) 4)
@@ -511,12 +514,15 @@
       ;; pair char: hide inline search and auto-balance
       (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
                                                          tail    (subs value (inc start))
-                                                         new-str (str head tail)]
+                                                         new-str (str head tail)
+                                                         new-idx (dec start)]
                                                      (.. e preventDefault)
                                                      (swap! state assoc
                                                             :search/type nil
                                                             :string/local new-str)
-                                                     (js/setTimeout #(setCursorPosition target (dec start)) 10))
+                                                     (set! (.-value target) new-str)
+                                                     (set-cursor-position target new-idx))
+
       ;; slash: close dropdown
       (= "/" look-behind-char) (swap! state assoc :search/type nil)
       ;; hashtag: close dropdown

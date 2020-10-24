@@ -257,6 +257,17 @@
 
 
 (reg-fx
+  :set-cursor-position
+  (fn [[uid start end]]
+    (js/setTimeout (fn []
+                     (when-let [target (js/document.querySelector (str "#editable-uid-" uid))]
+                       (.focus target)
+                       (set! (.-selectionStart target) start)
+                       (set! (.-selectionEnd target) end)))
+                   100)))
+
+
+(reg-fx
   :stylefy/tag
   (fn [[tag properties]]
     (stylefy/tag tag properties)))
