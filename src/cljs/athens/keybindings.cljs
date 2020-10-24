@@ -166,7 +166,6 @@
          (set-cursor-position target new-idx))))))
 
 
-
 (defn auto-complete-hashtag
   ([state e]
    (let [{:search/keys [index results]} @state
@@ -371,7 +370,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta start head tail value] :as d-key-down} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond

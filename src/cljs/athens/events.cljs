@@ -727,7 +727,6 @@
          :set-cursor-position [uid start end]}))))
 
 
-
 (reg-event-fx
   :indent
   (fn [_ [_ uid d-event]]
@@ -791,7 +790,6 @@
                   tx-data         [retract new-parent new-grandpa]]
               {:dispatch            [:transact tx-data]
                :set-cursor-position [uid start end]}))))
-
 
 
 (reg-event-fx
