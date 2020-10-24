@@ -113,37 +113,68 @@
          (filter #(= (second %) :block/string))
          ;; group-by entity
          (group-by first)
-         ;; map sort-by so [true false] gives us [assertion retraction]
+         ;; map sort-by so [true false] gives us [assertion retraction], [assertion], or [retraction]
          (mapv (fn [[_eid datoms]]
                  (sort-by #(-> % last not) datoms)))
          (mapcat (fn [[assertion retraction]]
-                   (let [eid            (first assertion)
-                         retract-string (nth retraction 2)
-                         assert-string  (nth assertion 2)
-                         uid            (db/v-by-ea eid :block/uid)
-                         retract-data   (walk-string retract-string)
-                         assert-data    (walk-string assert-string)
-                         new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
-                         old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                         new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
-                         old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
-                         tx-data        (concat []
-                                                new-titles
-                                                old-titles
-                                                new-block-refs
-                                                old-block-refs)]
-                     tx-data))))))
+                   (cond
+                     ;; [assertion retraction]
+                     (and (true? (last assertion)) (false? (last retraction)))
+                     (let [eid            (first assertion)
+                           uid            (db/v-by-ea eid :block/uid)
+                           assert-string  (nth assertion 2)
+                           retract-string (nth retraction 2)
+                           assert-data    (walk-string assert-string)
+                           retract-data   (walk-string retract-string)
+                           new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
+                           new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
+                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           tx-data        (concat []
+                                                  new-titles
+                                                  new-block-refs
+                                                  old-titles
+                                                  old-block-refs)]
+                       tx-data)
+
+                     ;; [assertion]
+                     (and (true? (last assertion)) (nil? retraction))
+                     (let [eid            (first assertion)
+                           assert-string  (nth assertion 2)
+                           assert-data    (walk-string assert-string)
+                           new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
+                           new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
+                           tx-data        (concat []
+                                                  new-titles
+                                                  new-block-refs)]
+                       tx-data)
+
+                     ;; [retraction]
+                     (and (false? (last assertion)) (nil? retraction))
+                     (let [eid            (first retraction)
+                           uid            (db/v-by-ea eid :block/uid)
+                           assert-string  ""
+                           retract-string (nth retraction 2)
+                           retract-data   (walk-string retract-string)
+                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           tx-data        (concat []
+                                                  old-titles
+                                                  old-block-refs)]
+                       tx-data)))))))
 
 
 (reg-fx
   :transact!
   (fn [tx-data]
-    (prn "TX RAW INPUTS")
+    (prn "TX RAW INPUTS") ;; event tx-data
     (pprint tx-data)
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
-      (prn "TX FINAL INPUTS") ;; parsed datoms
+      ;;(prn "TX WITH") ;; tx-data normalized by datascript to flat datoms
+      ;;(pprint with-tx-data)
+      (prn "TX FINAL INPUTS") ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
       (pprint final-tx-data)
       (prn "TX OUTPUTS")
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
