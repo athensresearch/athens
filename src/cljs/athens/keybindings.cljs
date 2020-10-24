@@ -349,18 +349,12 @@
   See :indent event for why value must be passed as well."
   [e uid _state]
   (.. e preventDefault)
-  (let [{:keys [shift value start end]} (destruct-key-down e)
+  (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items @(subscribe [:selected/items])]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent uid value])
-        (dispatch [:indent uid value]))
-      (js/setTimeout (fn []
-                       (when-let [el (getElement (str "editable-uid-" uid))]
-                         (.focus el)
-                         (setStart el start)
-                         (setEnd el end)))
-                     50))))
+        (dispatch [:unindent uid d-key-down])
+        (dispatch [:indent uid d-key-down])))))
 
 
 (defn handle-escape
@@ -377,7 +371,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta start head tail value]} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta start head tail value] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -396,7 +390,7 @@
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
       ;; default: may mutate blocks
-      :else (throttle-dispatch [:enter uid value start]))))
+      :else (throttle-dispatch [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars

@@ -659,31 +659,45 @@
   - If value is empty and a root block, add a sibling block.
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
-  [rfdb uid val index]
-  (let [block                  (db/get-block [:block/uid uid])
-        parent                 (db/get-parent [:block/uid uid])
-        root-block?            (boolean (:node/title parent))
-        context-root-uid       (get-in rfdb [:current-route :path-params :id])
-        event                  (cond
-                                 (and (:block/open block)
-                                      (not-empty (:block/children block))
-                                      (= index (count val))) [:enter/add-child block]
-                                 (and (not (:block/open block))
-                                      (not-empty (:block/children block))
-                                      (= index (count val))) [:enter/new-block block parent]
-                                 (and (empty? val)
-                                      (= context-root-uid (:block/uid parent))) [:enter/new-block block parent]
-                                 (not (zero? index)) [:enter/split-block uid val index]
-                                 (and (empty? val) root-block?) [:enter/new-block block parent]
-                                 (empty? val) [:unindent uid val context-root-uid]
-                                 (and (zero? index) val) [:enter/bump-up uid])]
+  [rfdb uid d-key-down]
+  (let [block            (db/get-block [:block/uid uid])
+        parent           (db/get-parent [:block/uid uid])
+        root-block?      (boolean (:node/title parent))
+        context-root-uid (get-in rfdb [:current-route :path-params :id])
+        {:keys [value start]} d-key-down
+        event            (cond
+                           (and (:block/open block)
+                                (not-empty (:block/children block))
+                                (= start (count value)))
+                           [:enter/add-child block]
+
+                           (and (not (:block/open block))
+                                (not-empty (:block/children block))
+                                (= start (count value)))
+                           [:enter/new-block block parent]
+
+                           (and (empty? value)
+                                (= context-root-uid (:block/uid parent)))
+                           [:enter/new-block block parent]
+
+                           (not (zero? start))
+                           [:enter/split-block uid value start]
+
+                           (and (empty? value) root-block?)
+                           [:enter/new-block block parent]
+
+                           (empty? value)
+                           [:unindent uid d-key-down context-root-uid]
+
+                           (and (zero? start) value)
+                           [:enter/bump-up uid])]
     {:dispatch event}))
 
 
 (reg-event-fx
   :enter
-  (fn [{rfdb :db} [_ uid val index]]
-    (enter rfdb uid val index)))
+  (fn [{rfdb :db} [_ uid d-event]]
+    (enter rfdb uid d-event)))
 
 
 (defn indent
@@ -695,8 +709,9 @@
 
   Uses `value` to update block/string as well. Otherwise, if user changes block string and indents, the local string
   is reset to original value, since it has not been unfocused yet (which is currently the transaction that updates the string)."
-  [uid value]
-  (let [block       (db/get-block [:block/uid uid])
+  [uid d-key-down]
+  (let [{:keys [value start end]} d-key-down
+        block       (db/get-block [:block/uid uid])
         block-zero? (zero? (:block/order block))]
     (when-not block-zero?
       (let [parent        (db/get-parent [:block/uid uid])
@@ -706,13 +721,15 @@
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
             new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
             new-parent    {:db/id (:db/id parent) :block/children reindex}]
-        {:fx [[:dispatch [:transact [retract new-older-sib new-parent]]]]}))))
+        {:dispatch [:transact [retract new-older-sib new-parent]]
+         :set-cursor-position [uid start end]}))))
+
 
 
 (reg-event-fx
   :indent
-  (fn [_ [_ uid value]]
-    (indent uid value)))
+  (fn [_ [_ uid d-event]]
+    (indent uid d-event)))
 
 
 (defn indent-multi
@@ -754,8 +771,9 @@
   Otherwise, block becomes direct older sibling of parent (parent-order +1). reindex parent and grandparent.
    - inc-after for grandparent
    - dec-after for parent"
-  [uid value context-root-uid]
-  (let [parent (db/get-parent [:block/uid uid])]
+  [uid d-key-down context-root-uid]
+  (let [parent (db/get-parent [:block/uid uid])
+        {:keys [value start end]} d-key-down]
     (cond
       (:node/title parent) nil
       (= (:block/uid parent) context-root-uid) nil
@@ -769,14 +787,16 @@
                   retract         [:db/retract (:db/id parent) :block/children [:block/uid uid]]
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
                   tx-data         [retract new-parent new-grandpa]]
-              {:fx [[:dispatch [:transact tx-data]]]}))))
+              {:dispatch            [:transact tx-data]
+               :set-cursor-position [uid start end]}))))
+
 
 
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ uid value]]
+  (fn [{rfdb :db} [_ uid d-event]]
     (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
-      (unindent uid value context-root-uid))))
+      (unindent uid d-event context-root-uid))))
 
 
 (defn unindent-multi
