@@ -655,10 +655,10 @@
 (defn enter
   "- If block is open, has children, and caret at end, create new child
   - If block is CLOSED, has children, and caret at end, add a sibling block.
+  - If value is empty and a root block, add a sibling block.
   - If caret is not at start, split block in half.
   - If block has children and is closed, if at end, just add another child.
   - If block has children and is closed and is in middle of block, split block.
-  - If value is empty and a root block, add a sibling block.
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
@@ -679,14 +679,12 @@
                            [:enter/new-block block parent]
 
                            (and (empty? value)
-                                (= context-root-uid (:block/uid parent)))
+                                (or (= context-root-uid (:block/uid parent))
+                                    root-block?))
                            [:enter/new-block block parent]
 
                            (not (zero? start))
                            [:enter/split-block uid value start]
-
-                           (and (empty? value) root-block?)
-                           [:enter/new-block block parent]
 
                            (empty? value)
                            [:unindent uid d-key-down context-root-uid]
@@ -722,8 +720,9 @@
             reindex       (dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
             new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
-            new-parent    {:db/id (:db/id parent) :block/children reindex}]
-        {:dispatch [:transact [retract new-older-sib new-parent]]
+            new-parent    {:db/id (:db/id parent) :block/children reindex}
+            tx-data       [retract new-older-sib new-parent]]
+        {:dispatch            [:transact tx-data]
          :set-cursor-position [uid start end]}))))
 
 
