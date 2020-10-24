@@ -253,7 +253,7 @@
                          (.focus el)
                          (when index
                            (setCursorPosition el index)))))
-                   300)))
+                   100)))
 
 
 (reg-fx

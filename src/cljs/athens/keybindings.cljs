@@ -365,7 +365,7 @@
 
 ;;; Enter
 
-(def throttle-dispatch (throttle #(dispatch %) 500))
+(def throttle-dispatch (throttle #(dispatch %) 100))
 
 
 (defn handle-enter
