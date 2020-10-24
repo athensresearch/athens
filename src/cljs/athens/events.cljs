@@ -580,21 +580,23 @@
     (split-block-to-children uid val index)))
 
 
+;; BUG: doesn't set the block/string to "" if the textarea starts off with empty, because the on-blur effect overwrites empty string.
 (defn bump-up
   "If user presses enter at the start of non-empty string, push that block down and
   and start editing a new block in the position of originating block - 'bump up' "
   [uid]
-  (let [parent (db/get-parent [:block/uid uid])
-        block (db/get-block [:block/uid uid])
-        new-uid (gen-block-uid)
+  (let [parent    (db/get-parent [:block/uid uid])
+        block     (db/get-block [:block/uid uid])
+        new-uid   (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (:block/order block)
                    :block/uid    new-uid
                    :block/open   true
                    :block/string ""}
-        reindex (->> (inc-after (:db/id parent) (dec (:block/order block)))
-                     (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}]]]
+        reindex   (->> (inc-after (:db/id parent) (dec (:block/order block)))
+                       (concat [new-block]))]
+    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}
+                                 {:db/id [:block/uid uid] :block/string ""}]]]
           [:dispatch [:editing/uid new-uid]]]}))
 
 
