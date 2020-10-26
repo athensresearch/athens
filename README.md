@@ -11,9 +11,14 @@
 
 — Socrates
 
-## [Use Athens](https://athensresearch.github.io/athens)
+## Use Athens
 
-**Athens does not yet persist data**. If you want to try Athens, simply go to [https://athensresearch.github.io/athens/](https://athensresearch.github.io/athens/).
+Athens persists data to your local filesystem.
+
+If you want to try Athens, you have two options:
+
+1. Build locally via the directions in [Contributing](CONTRIBUTING.md).
+1. Sponsor the project and join the [waitlist](https://forms.gle/9L1D1T7R3G7pvh1e7)! The beta is currently being rolled out, first to Sponsors and Contributors, and then to those on the waitlist.
 
 ## [Contribute](CONTRIBUTING.md)
 
