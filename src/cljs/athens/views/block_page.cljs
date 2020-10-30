@@ -8,7 +8,7 @@
     [athens.style :refer [color]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
+    #_[athens.views.buttons :refer [button]]
     [athens.views.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
