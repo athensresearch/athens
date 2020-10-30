@@ -300,7 +300,8 @@
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render   (fn [node state]
                            (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                 {:menu/keys [show x y]} @state]
+                                 {:menu/keys [show x y]} @state
+                                 timeline-page? (is-timeline-page uid)]
                              (when show
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
@@ -309,16 +310,19 @@
                                                      :left (str x "px")
                                                      :top (str y "px")}})
                                 [:div (use-style menu-style)
-                                 (if sidebar
-                                   [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/BookmarkBorder]
-                                     [:span "Remove Shortcut"]]]
-                                   [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/Bookmark]
-                                     [:span "Add Shortcut"]]])
-                                 [:hr (use-style menu-separator-style)]
+                                 (when-not timeline-page?
+                                   (if sidebar
+                                     [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                      [:<>
+                                       [:> mui-icons/BookmarkBorder]
+                                       [:span "Remove Shortcut"]]]
+
+                                     [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                      [:<>
+                                       [:> mui-icons/Bookmark]
+                                       [:span "Add Shortcut"]]]))
+                                 (when-not timeline-page?
+                                   [:hr (use-style menu-separator-style)])
                                  [button {:on-click #(do
                                                        (navigate :pages)
                                                        (dispatch [:page/delete uid title]))}
