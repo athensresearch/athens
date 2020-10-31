@@ -218,7 +218,7 @@
             [modal/modal
              {:title    [:div.modal__title
                          [:> mui-icons/FolderOpen]
-                         [:h4 "Change DB Location"]
+                         [:h4 "Move"]
                          [button
                           {:on-click close-modal}
                           [:> mui-icons/Close]]]
@@ -226,9 +226,19 @@
 
                          [:b {:style {:align-self "flex-start"}} "Current Location"]
                          [:code {:style {:margin "1rem 0 2rem 0"}} @db-filepath]
-                         [button {:primary  true
-                                  :on-click #(electron/open-dialog!)}
-                          "Change Directory"]]
+                         [:div (use-style {:display         "flex"
+                                           :justify-content "space-between"
+                                           :align-items     "center"
+                                           :min-width       "200px"})
+                          [button {:primary  true
+                                   :on-click #(electron/open-dialog!)}
+                           "Open"]
+                          [button {:primary  true
+                                   :on-click #(electron/move-dialog!)}
+                           "Move"]
+                          #_[button {:primary  true
+                                     :on-click #(prn "Create")}
+                             "Create"]]]
               :on-close close-modal}]]
 
            ;; always false — not supporting import modal yet

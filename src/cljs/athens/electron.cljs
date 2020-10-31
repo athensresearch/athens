@@ -5,7 +5,7 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch subscribe reg-sub]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -165,7 +165,7 @@
     (.writeFileSync fs filepath data)))
 
 
-(defn open-dialog!
+(defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
   Else copy db to new db location. Keep /athens subdir."
   []
@@ -182,6 +182,22 @@
           (do (.mkdirSync fs new-dir-athens)
               (.copyFileSync fs curr-db-path new-db-path)
               (dispatch [:db/update-filepath new-db-path])))))))
+
+
+(defn open-dialog!
+  "Allow user to open db elsewhere from filesystem."
+  []
+  (let [res       (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
+                                                        :filters    [{:name "Transit" :extensions ["transit"]}]}))
+        open-file (first res)]
+    (when (and open-file (.existsSync fs open-file))
+      (let [read-db (.readFileSync fs open-file)
+            db      (dt/read-transit-str read-db)]
+        (dispatch-sync [:init-rfdb])
+        (dispatch [:fs/watch open-file])
+        (dispatch [:reset-conn db])
+        (dispatch [:db/update-filepath open-file])
+        (dispatch [:loading/unset])))))
 
 
 (defn save-dialog!
