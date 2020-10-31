@@ -13,7 +13,12 @@
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [stylefy.core :as stylefy]
+    ["@sentry/react" :as Sentry]
+    ["@sentry/tracing" :refer (Integrations)]))
+
+
+(goog-define SENTRY_DSN "")
 
 
 (defn dev-setup
@@ -32,6 +37,11 @@
 
 (defn init
   []
+  (.init Sentry (clj->js {:dsn              SENTRY_DSN
+                          :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                          :integrations     [(new (.-BrowserTracing Integrations))]
+                          :environment      (if config/debug? "development" "production")
+                          :tracesSampleRate 1.0}))
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
