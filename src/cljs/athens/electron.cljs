@@ -165,7 +165,7 @@
     (.writeFileSync fs filepath data)))
 
 
-(defn open-dialog!
+(defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
   Else copy db to new db location. Keep /athens subdir."
   []
@@ -182,6 +182,21 @@
           (do (.mkdirSync fs new-dir-athens)
               (.copyFileSync fs curr-db-path new-db-path)
               (dispatch [:db/update-filepath new-db-path])))))))
+
+
+(defn open-dialog!
+  []
+  (let [res       (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]}))
+        open-file (first res)]
+    (when (and open-file (.existsSync fs open-file))
+      (re-frame.core/dispatch-sync [:init-rfdb])
+      (let [read-db (.readFileSync fs open-file)
+            db      (dt/read-transit-str read-db)]
+        (re-frame.core/dispatch-sync [:init-rfdb])
+        (dispatch [:fs/watch open-file])
+        (dispatch [:reset-conn db])
+        (dispatch [:db/update-filepath open-file])
+        (dispatch [:loading/unset])))))
 
 
 (defn save-dialog!
