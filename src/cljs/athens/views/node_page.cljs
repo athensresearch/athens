@@ -310,23 +310,22 @@
                                                      :left (str x "px")
                                                      :top (str y "px")}})
                                 [:div (use-style menu-style)
-                                 (when-not timeline-page?
-                                   (if sidebar
-                                     [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                      [:<>
-                                       [:> mui-icons/BookmarkBorder]
-                                       [:span "Remove Shortcut"]]]
-
-                                     [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                      [:<>
-                                       [:> mui-icons/Bookmark]
-                                       [:span "Add Shortcut"]]]))
+                                 (if sidebar
+                                   [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                    [:<>
+                                     [:> mui-icons/BookmarkBorder]
+                                     [:span "Remove Shortcut"]]]
+                                   [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                    [:<>
+                                     [:> mui-icons/Bookmark]
+                                     [:span "Add Shortcut"]]])
                                  (when-not timeline-page?
                                    [:hr (use-style menu-separator-style)])
-                                 [button {:on-click #(do
-                                                       (navigate :pages)
-                                                       (dispatch [:page/delete uid title]))}
-                                  [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
+                                 (when-not timeline-page?
+                                   [button {:on-click #(do
+                                                         (navigate :pages)
+                                                         (dispatch [:page/delete uid title]))}
+                                    [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]])))})))
 
 
 (defn ref-comp
