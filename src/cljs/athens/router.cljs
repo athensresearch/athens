@@ -1,6 +1,7 @@
 (ns athens.router
   (:require
     [athens.db :as db]
+    [athens.util :as util]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
@@ -94,6 +95,16 @@
 (defn navigate
   [page]
   (dispatch [:navigate page]))
+
+
+(defn nav-daily-notes
+  "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
+  []
+  (let [route-uid @(subscribe [:current-route/uid])]
+    (if (util/is-timeline-page route-uid)
+      (dispatch [:daily-notes/add route-uid])
+      (dispatch [:daily-notes/reset]))
+    (navigate :home)))
 
 
 (defn navigate-uid

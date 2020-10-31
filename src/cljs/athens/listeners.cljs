@@ -1,6 +1,7 @@
 (ns athens.listeners
   (:require
     [athens.db :as db]
+    [athens.router :as router]
     [athens.util :as util]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -102,6 +103,7 @@
       alt (condp = key-code
             KeyCodes.LEFT (.back js/window.history)
             KeyCodes.RIGHT (.forward js/window.history)
+            KeyCodes.D (router/nav-daily-notes)
             nil))))
 
 
