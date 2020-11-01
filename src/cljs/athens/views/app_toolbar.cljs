@@ -16,6 +16,7 @@
 
 ;;; Styles
 
+
 (def app-header-style
   {:grid-area "app-header"
    :-webkit-app-region "drag"
