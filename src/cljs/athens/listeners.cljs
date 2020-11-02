@@ -77,7 +77,8 @@
 
 (defn key-down
   [e]
-  (let [{:keys [key-code ctrl meta shift alt]} (util/destruct-key-down e)]
+  (let [{:keys [key-code ctrl meta shift alt]} (util/destruct-key-down e)
+        editing-uid @(subscribe [:editing/uid])]
     (cond
       (util/shortcut-key? meta ctrl) (condp = key-code
                                        KeyCodes.S (dispatch [:save])
@@ -101,8 +102,8 @@
                                        KeyCodes.H (util/toggle-10x)
                                        nil)
       alt (condp = key-code
-            KeyCodes.LEFT (.back js/window.history)
-            KeyCodes.RIGHT (.forward js/window.history)
+            KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
+            KeyCodes.RIGHT (when (nil? editing-uid) (.forward js/window.history))
             KeyCodes.D (router/nav-daily-notes)
             nil))))
 
