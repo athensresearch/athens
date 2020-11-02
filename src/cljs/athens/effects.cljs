@@ -240,20 +240,23 @@
 (reg-fx
   :editing/focus
   (fn [[uid index]]
-    (js/setTimeout (fn []
-                     (let [html-id (str "#editable-uid-" uid)
-                           ;;targets (js/document.querySelectorAll html-id)
-                           ;;n       (count (array-seq targets))
-                           el      (js/document.querySelector html-id)]
-                       #_(cond
-                           (zero? n) (prn "No targets")
-                           (= 1 n) (prn "One target")
-                           (< 1 n) (prn "Several targets"))
-                       (when el
-                         (.focus el)
-                         (when index
-                           (setCursorPosition el index)))))
-                   100)))
+    (if (nil? uid)
+      (when-let [active-el (.-activeElement js/document)]
+        (.blur active-el))
+      (js/setTimeout (fn []
+                       (let [html-id (str "#editable-uid-" uid)
+                             ;;targets (js/document.querySelectorAll html-id)
+                             ;;n       (count (array-seq targets))
+                             el      (js/document.querySelector html-id)]
+                         #_(cond
+                             (zero? n) (prn "No targets")
+                             (= 1 n) (prn "One target")
+                             (< 1 n) (prn "Several targets"))
+                         (when el
+                           (.focus el)
+                           (when index
+                             (setCursorPosition el index)))))
+                     100))))
 
 
 (reg-fx
