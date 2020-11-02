@@ -182,29 +182,24 @@
       (= key KeyCodes.ESC)
       (dispatch [:athena/toggle])
 
-      (and shift (= KeyCodes.ENTER key) (zero? index) (nil? item))
-      (let [uid (gen-block-uid)]
-        (dispatch [:athena/toggle])
-        (dispatch [:page/create query uid])
-        (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500))
-
-      (and shift (= key KeyCodes.ENTER))
-      (do
-        (dispatch [:athena/toggle])
-        (dispatch [:right-sidebar/open-item (:block/uid item)]))
-
-      (and (= KeyCodes.ENTER key) (zero? index) (nil? item))
-      (let [uid (gen-block-uid)]
-        (dispatch [:athena/toggle])
-        (dispatch [:page/create query uid])
-        (navigate-uid uid))
-
-      (= key KeyCodes.ENTER)
-      (do (dispatch [:athena/toggle])
-          (navigate-uid (or (:block/uid (:block/parent item))
-                            (:block/uid item)))
-          ;; TODO: open block if it is closed and focus doesn't work because not available on DOM
-          (dispatch [:editing/uid (:block/uid item)]))
+      (= KeyCodes.ENTER key) (cond
+                               ;; if page doesn't exist, create and open
+                               (and (zero? index) (nil? item))
+                               (let [uid (gen-block-uid)]
+                                 (dispatch [:athena/toggle])
+                                 (dispatch [:page/create query uid])
+                                 (if shift
+                                   (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500)
+                                   (navigate-uid uid)))
+                               ;; if shift: open in right-sidebar
+                               shift
+                               (do (dispatch [:athena/toggle])
+                                   (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                               ;; else open in main view
+                               :else
+                               (do (dispatch [:athena/toggle])
+                                   (navigate-uid (:block/uid item))
+                                   (dispatch [:editing/uid (:block/uid item)])))
 
       (= key KeyCodes.UP)
       (do
