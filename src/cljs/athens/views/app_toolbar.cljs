@@ -19,18 +19,23 @@
 
 (def app-header-style
   {:grid-area "app-header"
+   :-webkit-app-region "drag"
    :justify-content "flex-start"
    :background-clip "padding-box"
    :align-items "center"
    :display "grid"
    :position "absolute"
-   :top "-0.25rem"
+   :top 0
    :right 0
    :left 0
    :grid-template-columns "auto 1fr auto"
    :z-index "1000"
    :grid-auto-flow "column"
-   :padding "0.25rem 0.75rem"
+   :padding "0 0.75rem"
+   ;; TODO: padding (and toolbar height) should be linked
+   ;; to zoom level, so zooming out doesn't cause the buttons
+   ;; to be hidden by traffic lights.
+   :padding-left "80px"
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"}]]})
 
@@ -38,7 +43,7 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :background (:color :background-color :opacity-med)
+   :background (color :background-color :opacity-med)
    :backdrop-filter "blur(0.375rem)"
    :padding "0.25rem"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
