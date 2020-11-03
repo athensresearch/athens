@@ -557,10 +557,10 @@
                                            :search/type :slash
                                            :search/results slash-options)
       (and (= key "#") (nil? type)) (swap! state assoc
-                                            :search/index 0
-                                            :search/query ""
-                                            :search/type :hashtag
-                                            :search/results [])
+                                           :search/index 0
+                                           :search/query ""
+                                           :search/type :hashtag
+                                           :search/results [])
       type (update-query state head key type))))
 
 
