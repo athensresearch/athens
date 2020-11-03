@@ -524,9 +524,9 @@
                                                      (set-cursor-position target new-idx))
 
       ;; slash: close dropdown
-      (= "/" look-behind-char) (swap! state assoc :search/type nil)
+      (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
       ;; hashtag: close dropdown
-      (= "#" look-behind-char) (swap! state assoc :search/type nil)
+      (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -551,16 +551,16 @@
       (and (= key " ") (= type :hashtag)) (swap! state assoc
                                                  :search/type nil
                                                  :search/results [])
-      (= key "/") (swap! state assoc
-                         :search/index 0
-                         :search/query ""
-                         :search/type :slash
-                         :search/results slash-options)
-      (= key "#") (swap! state assoc
-                         :search/index 0
-                         :search/query ""
-                         :search/type :hashtag
-                         :search/results [])
+      (and (= key "/") (nil? type)) (swap! state assoc
+                                           :search/index 0
+                                           :search/query ""
+                                           :search/type :slash
+                                           :search/results slash-options)
+      (and (= key "#") (nil? type)) (swap! state assoc
+                                            :search/index 0
+                                            :search/query ""
+                                            :search/type :hashtag
+                                            :search/results [])
       type (update-query state head key type))))
 
 
