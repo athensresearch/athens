@@ -23,6 +23,7 @@
                :db/mtime            nil
                :current-route       nil
                :loading?            true
+               :modal               false
                :alert               nil
                :athena/open         false
                :athena/recent-items '()

@@ -84,7 +84,7 @@
   (fn [{:keys [db]} _]
     (js/alert (str "No DB found at " (:db/filepath db) "."
                    "\nPlease open or create a new db."))
-    (open-dialog!)))
+    {:dispatch-n [[:modal/toggle]]}))
 
 
 (reg-event-fx
@@ -185,13 +185,16 @@
                                     :events      :db/update-filepath
                                     :dispatch-fn (fn [[_ filepath]]
                                                    (cond
-                                                     (nil? filepath) (dispatch [:fs/create-new-db])
+                                                     (nil? filepath) (do (dispatch [:fs/create-new-db])
+                                                                         (prn "No database path found in localStorage. Creating new one"))
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
+                                                                                 (prn "Database found in local storage and filesystem:" filepath)
                                                                                  (dispatch [:fs/watch filepath])
                                                                                  (dispatch [:reset-conn db]))
-                                                     ;; TODO: implement
-                                                     :else (dispatch [:fs/open-dialog])))}
+                                                     :else (do
+                                                             (prn "Database found in localStorage but not on filesystem " filepath)
+                                                             (dispatch [:fs/open-dialog]))))}
 
                                    ;; if first time, go to Daily Pages and open left-sidebar
                                    {:when       :seen?

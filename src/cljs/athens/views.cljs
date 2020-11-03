@@ -104,19 +104,25 @@
 (defn main-panel
   []
   (let [route-name (subscribe [:current-route/name])
-        loading (subscribe [:loading?])]
+        loading    (subscribe [:loading?])
+        modal      (subscribe [:modal])]
     (fn []
       [:<>
        [alert]
        [athena-component]
-       (if @loading
-         [initial-spinner-component]
-         [:div (use-style app-wrapper-style)
-          [app-toolbar]
-          [left-sidebar]
-          [:div (use-style main-content-style
-                           {:on-scroll (when (= @route-name :home)
-                                         #(db-scroll-daily-notes %))})
-           [match-panel @route-name]]
-          [right-sidebar-component]
-          [devtool-component]])])))
+       (cond
+         (and @loading @modal) [athens.views.filesystem/window]
+
+         @loading [initial-spinner-component]
+
+         :else [:<>
+                (when @modal [athens.views.filesystem/window])
+                [:div (use-style app-wrapper-style)
+                 [app-toolbar]
+                 [left-sidebar]
+                 [:div (use-style main-content-style
+                                  {:on-scroll (when (= @route-name :home)
+                                                #(db-scroll-daily-notes %))})
+                  [match-panel @route-name]]
+                 [right-sidebar-component]
+                 [devtool-component]]])])))
