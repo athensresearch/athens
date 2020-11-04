@@ -29,23 +29,36 @@
 ;;; Filesystem Dialogs
 
 
+
 (defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
-  Else copy db to new db location. Keep /athens subdir."
+  Else copy db to new db location. When there is an images folder, copy /images folder and all images.
+    file:// image urls in block/string don't get updated, so if original images are deleted, links will be broken."
   []
   (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
         new-dir (first res)]
     (when new-dir
-      (let [curr-db-path   @(subscribe [:db/filepath])
-            basename       (.basename path curr-db-path)
-            ;; TODO copy /images folder, all images, and update name?
-            new-dir-athens (.resolve path new-dir "athens")
-            new-db-path    (.resolve path new-dir-athens basename)]
-        (if (.existsSync fs new-dir-athens)
-          (js/alert (str "Directory " new-dir-athens " already exists, sorry."))
-          (do (.mkdirSync fs new-dir-athens)
-              (.copyFileSync fs curr-db-path new-db-path)
-              (dispatch [:db/update-filepath new-db-path])))))))
+      (let [curr-db-filepath @(subscribe [:db/filepath])
+            base-dir         (.dirname path curr-db-filepath)
+            base-dir-name    (.basename path base-dir)
+            curr-dir-images  (.resolve path base-dir IMAGES-DIR-NAME)
+            new-dir          (.resolve path new-dir base-dir-name)
+            new-dir-images   (.resolve path new-dir IMAGES-DIR-NAME)
+            new-db-filepath  (.resolve path new-dir DB-INDEX)]
+        (if (.existsSync fs new-dir)
+          (js/alert (str "Directory " new-dir " already exists, sorry."))
+          (do (.mkdirSync fs new-dir)
+              (.copyFileSync fs curr-db-filepath new-db-filepath)
+              (dispatch [:db/update-filepath new-db-filepath])
+              (when (.existsSync fs curr-dir-images)
+                (.mkdirSync fs new-dir-images)
+                (let [imgs (->> (.readdirSync fs curr-dir-images)
+                                array-seq
+                                (map (fn [x]
+                                       [(.join path curr-dir-images x)
+                                        (.join path new-dir-images x)])))]
+                  (doseq [[curr new] imgs]
+                    (.copyFileSync fs curr new))))))))))
 
 
 (defn open-dialog!
