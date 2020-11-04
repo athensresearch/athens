@@ -126,3 +126,9 @@
   :athena/get-recent
   (fn-traced [db _]
              (:athena/recent-items db)))
+
+
+(re-frame/reg-sub
+  :modal
+  (fn [db _]
+    (:modal db)))

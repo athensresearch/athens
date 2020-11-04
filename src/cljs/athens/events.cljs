@@ -261,6 +261,15 @@
              (assoc db :alert nil)))
 
 
+;; Modal
+
+
+(reg-event-db
+  :modal/toggle
+  (fn [db _]
+    (update db :modal not)))
+
+
 ;; Loading
 
 (reg-event-db
