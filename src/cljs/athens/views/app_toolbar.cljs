@@ -1,15 +1,11 @@
 (ns athens.views.app-toolbar
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.electron :as electron]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
-    [athens.views.filesystem :as filesystem]
-    [athens.views.modal :refer [modal-style]]
-    [komponentit.modal :as modal]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -152,7 +148,6 @@
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
-        state       (r/atom {:modal nil})
         theme-dark  (subscribe [:theme/dark])]
     (fn []
       [:<>
@@ -199,8 +194,5 @@
          [separator]
          [button {:active   @right-open?
                   :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]
-
-       #_[filesystem/window state]])))
-
+          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
 

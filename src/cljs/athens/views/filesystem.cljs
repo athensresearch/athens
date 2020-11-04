@@ -2,8 +2,6 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.electron :as electron]
-    [athens.router :as router]
-    [athens.style :refer [color]]
     [athens.subs]
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
@@ -14,10 +12,6 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(defn features-table
-  []
-  [:div [:h3 "features table"]])
-
 (def modal-contents-style
   {:display "flex"
    :padding "1.5rem"
@@ -27,6 +21,7 @@
    ::stylefy/manual [[:p {:max-width "24rem"
                           :text-align "center"}]
                      [:button {:font-size "18px"}]]})
+
 
 (defn window
   "If loading is true, then that means the user has opened the modal and the db was not found on the filesystem.
@@ -48,7 +43,7 @@
                     (when-not @loading
                       [button {:on-click close-modal} [:> mui-icons/Close]])]
          :content  [:div (use-style modal-contents-style)
-                    (if-not (:create @state)
+                    (if (:create @state)
                       [:<>
                        [button {:style    {:align-self "start" :padding "0"}
                                 :on-click #(swap! state update :create not)}
@@ -84,8 +79,8 @@
                         [button {:primary  true
                                  :on-click #(electron/open-dialog!)}
                          "Open"]
-                        [button {:primary  true
-                                 :disabled @loading
+                        [button {:disabled @loading
+                                 :primary  true
                                  :on-click #(electron/move-dialog!)}
                          "Move"]
                         [button {:primary  true

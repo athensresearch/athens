@@ -8,6 +8,7 @@
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
+    [athens.views.filesystem :as filesystem]
     [athens.views.left-sidebar :refer [left-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
     [athens.views.right-sidebar :refer [right-sidebar-component]]
@@ -116,7 +117,7 @@
          @loading [initial-spinner-component]
 
          :else [:<>
-                (when @modal [athens.views.filesystem/window])
+                (when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style)
                  [app-toolbar]
                  [left-sidebar]
