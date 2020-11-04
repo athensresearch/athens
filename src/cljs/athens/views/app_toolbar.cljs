@@ -7,7 +7,6 @@
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -66,81 +65,12 @@
                     {:opacity "1"}])
 
 
-(def modal-contents-style
-  {:display "flex"
-   :padding "1.5rem"
-   :flex-direction "column"
-   :align-items "center"
-   ::stylefy/manual [[:p {:max-width "24rem"
-                          :text-align "center"}]
-                     [:button {:font-size "18px"}]]})
-
-
-(def features-table-style
-  {:background (color :background-plus-1 :opacity-low)
-   :border-radius "0.5rem"
-   :margin "0.5rem auto 1.25rem"
-   ::stylefy/manual [[:th {:font-weight "normal"
-                           :opacity "0.75"
-                           :padding-block-start "0.5rem"
-                           :text-align "left"}]
-                     [:th :td {:padding-inline "0.25rem"
-                               :padding-block "0.125rem"}]
-                     [:tr:last-child [:td {:padding-block-end "0.5rem"}]]
-                     [:th:first-child :td:first-child {:padding-inline-start "1rem"}]
-                     [:th:last-child :td:last-child {:padding-inline-end "1rem"}]]})
-
-
 ;;; Components
 
 
 (defn separator
   []
   [:hr (use-style separator-style)])
-
-
-(defn feature-yes
-  []
-  [(r/adapt-react-class mui-icons/Check) {:style {:margin "auto"
-                                                  :display "block"
-                                                  :color (color :confirmation-color)}}])
-
-
-(defn feature-no
-  []
-  [(r/adapt-react-class mui-icons/Close) {:style {:margin "auto"
-                                                  :display "block"
-                                                  :color (color :warning-color)}}])
-
-
-(defn features-table
-  []
-  [:table (use-style features-table-style)
-   [:thead
-    [:th]
-    [:th "Athens"]
-    [:th "Roam"]]
-   [:tbody
-    [:tr
-     [:td "Text Editing"]
-     [:td [feature-yes]]
-     [:td [feature-yes]]]
-    [:tr
-     [:td "Bidirectional Links"]
-     [:td [feature-yes]]
-     [:td [feature-yes]]]
-    [:tr
-     [:td "Timeline (Daily Notes)"]
-     [:td [feature-yes]]
-     [:td [feature-yes]]]
-    [:tr
-     [:td "Bookmarked Pages"]
-     [:td [feature-yes]]
-     [:td [feature-yes]]]
-    [:tr
-     [:td "Todos, Kanban, etc."]
-     [:td [feature-no]]
-     [:td [feature-yes]]]]])
 
 
 (defn app-toolbar
