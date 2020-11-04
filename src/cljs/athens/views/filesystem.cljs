@@ -69,7 +69,7 @@
                                       :width           "100%"}}
                         [:label "Location"]
                         [button {:primary  true
-                                 :on-click #(prn "hi")}
+                                 :on-click #(electron/create-dialog! (:input @state))}
                          "Browse"]]]
                       [:<>
                        [:b {:style {:align-self "flex-start"}}

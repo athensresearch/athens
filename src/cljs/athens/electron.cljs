@@ -2,6 +2,7 @@
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
+    [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
@@ -22,6 +23,9 @@
 (def path (js/require "path"))
 
 
+(def DB-INDEX "index.transit")
+(def IMAGES-DIR-NAME "images")
+
 ;;; Filesystem Dialogs
 
 
@@ -33,8 +37,8 @@
         new-dir (first res)]
     (when new-dir
       (let [curr-db-path   @(subscribe [:db/filepath])
-            ;;curr-db-dir    (.dirname path curr-db-path)
             basename       (.basename path curr-db-path)
+            ;; TODO copy /images folder, all images, and update name?
             new-dir-athens (.resolve path new-dir "athens")
             new-db-path    (.resolve path new-dir-athens basename)]
         (if (.existsSync fs new-dir-athens)
@@ -60,11 +64,30 @@
         (dispatch [:loading/unset])))))
 
 
-(defn save-dialog!
-  []
-  (let [filepath (.showSaveDialogSync dialog (clj->js {:title "my-db"
-                                                       :filters [{:name "Transit" :extensions ["transit"]}]}))]
-    (dispatch [:db/update-filepath filepath])))
+;; mkdir db-location/name/
+;; mkdir db-location/name/images
+;; write db-location/name/index.transit
+(defn create-dialog!
+  "Create a new database."
+  [db-name]
+  (let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
+        db-location (first res)]
+    (when (and db-location (not-empty db-name))
+      (let [db          (d/db-with (d/empty-db db/schema) athens-datoms/datoms)
+            dir         (.resolve path db-location db-name)
+            dir-images  (.resolve path dir IMAGES-DIR-NAME)
+            db-filepath (.resolve path dir DB-INDEX)]
+        (if (.existsSync fs dir)
+          (js/alert (str "Directory " dir " already exists, sorry."))
+          (do
+            (dispatch-sync [:init-rfdb])
+            (.mkdirSync fs dir)
+            (.mkdirSync fs dir-images)
+            (.writeFileSync fs db-filepath (dt/write-transit-str db))
+            (dispatch [:fs/watch db-filepath])
+            (dispatch [:db/update-filepath db-filepath])
+            (dispatch [:reset-conn db])
+            (dispatch [:loading/unset])))))))
 
 
 ;;; Subs
@@ -101,17 +124,22 @@
     {:dispatch [:navigate {:page {:id local-storage}}]}))
 
 
+;; Documents/athens
+;; ├── images
+;; └── index.transit
 (reg-event-fx
   :fs/create-new-db
   (fn []
-    (let [doc-path (.getPath app "documents")
-          db-name  "first-db.transit"
-          db-dir   (.resolve path doc-path "athens")
-          db-path  (.resolve path db-dir db-name)]
-      (when (not (.existsSync fs db-dir))
-        (.mkdirSync fs db-dir))
-      {:fs/write! [db-path (write-transit-str athens-datoms/datoms)]
-       :dispatch-n [[:db/update-filepath db-path]]})))
+    (let [DOC-PATH    (.getPath app "documents")
+          athens-dir  (.resolve path DOC-PATH "athens")
+          db-filepath (.resolve path athens-dir DB-INDEX)
+          db-images   (.resolve path athens-dir IMAGES-DIR-NAME)]
+      (when (not (.existsSync fs athens-dir))
+        (.mkdirSync fs athens-dir))
+      (when (not (.existsSync fs db-images))
+        (.mkdirSync fs db-images))
+      {:fs/write!  [db-filepath (write-transit-str athens-datoms/datoms)]
+       :dispatch-n [[:db/update-filepath db-filepath]]})))
 
 
 (reg-event-fx
