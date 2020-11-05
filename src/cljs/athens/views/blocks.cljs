@@ -467,6 +467,21 @@
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
+(defn f
+  [file]
+  (let [athens-dir @(subscribe [:db/filepath-dir])
+        reader     (js/FileReader.)
+        cb         (fn [e]
+                     (let [img-data (.. e -target -result)
+                           img      (.createElement js/document "img")
+                           range    (.. js/window getSelection (getRangeAt 0))]
+                       ;; save img-data to dir
+                       (set! (.. img -src) img-data)))]
+                       ;;(.insertNode range img)))]
+    (set! (.. reader -onload) cb)
+    (.readAsDataURL reader file)))
+
+
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -475,12 +490,27 @@
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data (.. e -clipboardData (getData "text"))
-        line-breaks (re-find #"\r?\n" data)
-        no-shift (-> @state :last-keydown :shift not)]
+  (let [data        (.. e -clipboardData)
+        text-data   (.. data (getData "text"))
+        line-breaks (re-find #"\r?\n" text-data)
+        no-shift    (-> @state :last-keydown :shift not)
+        items       (.. e -clipboardData -items)
+        n           (.. items -length)
+        regex       #"(?i)^image/(p?jpeg|gif|png)$"]
+
+    ;;(str/blank? text-data)
+    ;; are paste events mutually exclusive? i.e. can you paste img and text at same time? should be able to
+
+    (doseq [i (range n)]
+      (let [item (aget items i)
+            type (.. item -type)]
+        (when (re-find regex type)
+          (let [file (.getAsFile item)]
+            (f file)))))
+
     (when (and line-breaks no-shift)
       (.. e preventDefault)
-      (dispatch [:paste uid data]))))
+      (dispatch [:paste uid text-data]))))
 
 
 (defn textarea-change

@@ -112,6 +112,19 @@
     (:db/mtime db)))
 
 
+(reg-sub
+  :db/filepath
+  (fn [db _]
+    (:db/filepath db)))
+
+
+(reg-sub
+  :db/filepath-dir
+  (fn [db _]
+    (-> (:db/filepath db)
+        path.dirname)))
+
+
 ;;; Events
 
 
