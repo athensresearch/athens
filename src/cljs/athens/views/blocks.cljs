@@ -467,20 +467,13 @@
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
-(defn f
-  [file]
-  (let [athens-dir @(subscribe [:db/filepath-dir])
-        reader     (js/FileReader.)
-        cb         (fn [e]
-                     (let [img-data (.. e -target -result)
-                           img      (.createElement js/document "img")
-                           range    (.. js/window getSelection (getRangeAt 0))]
-                       ;; save img-data to dir
-                       (set! (.. img -src) img-data)))]
-                       ;;(.insertNode range img)))]
-    (set! (.. reader -onload) cb)
-    (.readAsDataURL reader file)))
 
+
+;;img      (.createElement js/document "img")
+;;range    (.. js/window getSelection (getRangeAt 0))]))]
+;; save img-data to dir
+;;(set! (.. img -src) img-data)))]
+;;(.insertNode range img)))]
 
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
@@ -505,8 +498,10 @@
       (let [item (aget items i)
             type (.. item -type)]
         (when (re-find regex type)
-          (let [file (.getAsFile item)]
-            (f file)))))
+          (let [file (.getAsFile item)
+                filepath (athens.electron/save-image file)]
+            (prn filepath)
+            #_(swap! state assoc :string/local filepath)))))
 
     (when (and line-breaks no-shift)
       (.. e preventDefault)

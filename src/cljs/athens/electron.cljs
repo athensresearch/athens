@@ -29,7 +29,6 @@
 ;;; Filesystem Dialogs
 
 
-
 (defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
   Else copy db to new db location. When there is an images folder, copy /images folder and all images.
@@ -103,6 +102,32 @@
             (dispatch [:loading/unset])))))))
 
 
+;; Image Paste
+(defn save-image
+  [file]
+  (let [curr-db-filepath @(subscribe [:db/filepath])
+        curr-db-dir      @(subscribe [:db/filepath-dir])
+        img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
+        base-dir         (.dirname path curr-db-filepath)
+        base-dir-name    (.basename path base-dir)
+        res              (atom nil)
+        reader           (js/FileReader.)
+        cb               (fn [e]
+                           (let [img-data     (as->
+                                                (.. e -target -result) x
+                                                (clojure.string/replace-first x #"data:image/png;base64," "")
+                                                (js/Buffer. x "base64"))
+                                 img-filename (.resolve path img-dir (str "img-" base-dir-name "-" (athens.util/gen-block-uid) ".png"))]
+                             (when-not (.existsSync fs img-dir)
+                               (.mkdirSync fs img-dir))
+                             (.writeFileSync fs img-filename img-data)
+                             (prn img-filename)
+                             (reset! res (str "file://" img-filename))))]
+    (set! (.. reader -onload) cb)
+    (.readAsDataURL reader file)
+    @res))
+
+
 ;;; Subs
 
 
@@ -120,6 +145,12 @@
 
 (reg-sub
   :db/filepath-dir
+  (fn [db _]
+    (-> (:db/filepath db)
+        path.dirname)))
+
+(reg-sub
+  :db/base-dir-name
   (fn [db _]
     (-> (:db/filepath db)
         path.dirname)))
