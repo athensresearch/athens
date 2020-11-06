@@ -1,8 +1,8 @@
 (ns athens.electron
   (:require
     [athens.athens-datoms :as athens-datoms]
-    [athens.util :as util]
     [athens.db :as db]
+    [athens.util :as util]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -133,15 +133,14 @@
 (defn dnd-image
   [target-uid drag-target item extension]
   (let [new-str   (save-image item extension)
-        block     (db/get-block [:block/uid target-uid])
+        {:block/keys [order]} (db/get-block [:block/uid target-uid])
         parent    (db/get-parent [:block/uid target-uid])
         new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
         tx-data   (if (= drag-target :child)
-                    (let [new-parent {:db/id target-uid :block/children new-block}]
-                      new-parent)
+                    {:db/id target-uid :block/children new-block}
                     (let [index        (case drag-target
-                                         :above (dec (:block/order block))
-                                         :below (:block/order block))
+                                         :above (dec order)
+                                         :below order)
                           reindex      (db/inc-after (:db/id parent) index)
                           new-children (conj reindex new-block)
                           new-parent   {:db/id (:db/id parent) :block/children new-children}]
@@ -169,6 +168,7 @@
   (fn [db _]
     (-> (:db/filepath db)
         path.dirname)))
+
 
 (reg-sub
   :db/base-dir-name

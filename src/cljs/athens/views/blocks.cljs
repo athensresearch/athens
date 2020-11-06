@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
     [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render]]
@@ -501,9 +502,9 @@
       (= n 2) (mapv (fn [item]
                       (let [datatype (.. item -type)]
                         (cond
-                          (re-find img-regex datatype) (let [new-str (athens.electron/save-image head tail item "png")]
+                          (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
                                                          (swap! state assoc :string/local new-str))
-                          (re-find #"text/html" datatype) (.getAsString item (fn [x] #_(prn "getAsString" x))))))
+                          (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
                     items)
       :else (when (and line-breaks no-shift)
               (.. e preventDefault)
@@ -772,7 +773,7 @@
     (when target
       (swap! state assoc :drag-target target))))
 
-(def a (atom nil))
+
 (defn block-drop
   "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
   [e block state]
@@ -796,7 +797,7 @@
                     datatype (.. item -type)
                     find (re-find img-regex datatype)]
                 (cond
-                   find (athens.electron/dnd-image target-uid drag-target item (second find))))
+                   find (electron/dnd-image target-uid drag-target item (second find))))
       valid-drop (if (empty? selected-items)
                    (dispatch [:drop source-uid target-uid drag-target])
                    (dispatch [:drop-multi selected-items target-uid drag-target])))
@@ -804,9 +805,6 @@
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 
-(re-find #"(?i)^image/(p?jpeg|gif|png)$" "image/jpeg")
-
-;;(athens.electron/save-image "" "" @a)
 
 (defn block-drag-leave
   "When mouse leaves block, remove any drop area indicator.
