@@ -478,7 +478,17 @@
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
-  Cases:
+
+  Image Cases:
+  - items N=1, image/png
+  - items N=2, text/html and image/png
+  For both of these, just write image to filesystem. Roam behavior is to copy the <img> src and alt of the copied picture.
+  Roam's approach is useful to preserve the original source url and description, but is unsafe in case the link breaks.
+  Writing to filesystem (or to Firebase a la Roam) is useful, but has storage costs.
+  Writing to filesystem each time for now until get feedback otherwise that user doesn't want to save the image.
+  Can eventually become a setting.
+
+  Plaintext cases:
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
@@ -487,25 +497,23 @@
         text-data   (.. data (getData "text"))
         line-breaks (re-find #"\r?\n" text-data)
         no-shift    (-> @state :last-keydown :shift not)
-        items       (.. e -clipboardData -items)
-        n           (.. items -length)
-        regex       #"(?i)^image/(p?jpeg|gif|png)$"]
-
-    ;;(str/blank? text-data)
-    ;; are paste events mutually exclusive? i.e. can you paste img and text at same time? should be able to
-
-    (doseq [i (range n)]
-      (let [item (aget items i)
-            type (.. item -type)]
-        (when (re-find regex type)
-          (let [file (.getAsFile item)
-                filepath (athens.electron/save-image file)]
-            (prn filepath)
-            #_(swap! state assoc :string/local filepath)))))
-
-    (when (and line-breaks no-shift)
-      (.. e preventDefault)
-      (dispatch [:paste uid text-data]))))
+        items       (array-seq (.. e -clipboardData -items))
+        n           (count items)
+        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
+    (cond
+      #_(= n 1) #_(let [item     (first items)
+                        datatype (.. item -type)]
+                    (when (re-find regex datatype)
+                      (athens.electron/save-image item state)))
+      (= n 2) (mapv (fn [item]
+                      (let [datatype (.. item -type)]
+                        (cond
+                          (re-find img-regex datatype) (athens.electron/save-image item state)
+                          (re-find #"text/html" datatype) (.getAsString item (fn [x] #_(prn "getAsString" x))))))
+                    items)
+      :else (when (and line-breaks no-shift)
+              (.. e preventDefault)
+              (dispatch [:paste uid text-data])))))
 
 
 (defn textarea-change
