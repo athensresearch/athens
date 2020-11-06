@@ -173,13 +173,6 @@
     (.dirname path (:db/filepath db))))
 
 
-(reg-sub
-  :db/base-dir-name
-  (fn [db _]
-    (-> (:db/filepath db)
-        path.dirname)))
-
-
 ;;; Events
 
 
