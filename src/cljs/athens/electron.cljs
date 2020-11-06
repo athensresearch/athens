@@ -170,8 +170,7 @@
 (reg-sub
   :db/filepath-dir
   (fn [db _]
-    (-> (:db/filepath db)
-        path.dirname)))
+    (.dirname path (:db/filepath db))))
 
 
 (reg-sub
