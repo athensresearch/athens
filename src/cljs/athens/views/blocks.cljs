@@ -508,7 +508,7 @@
       (= n 2) (mapv (fn [item]
                       (let [datatype (.. item -type)]
                         (cond
-                          (re-find img-regex datatype) (athens.electron/save-image item state)
+                          (re-find img-regex datatype) (athens.electron/save-image e item state)
                           (re-find #"text/html" datatype) (.getAsString item (fn [x] #_(prn "getAsString" x))))))
                     items)
       :else (when (and line-breaks no-shift)

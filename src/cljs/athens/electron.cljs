@@ -104,8 +104,9 @@
 
 ;; Image Paste
 (defn save-image
-  [item state]
-  (let [curr-db-filepath @(subscribe [:db/filepath])
+  [e item state]
+  (let [{:keys [head tail]} (athens.keybindings/destruct-target (.. e -target))
+        curr-db-filepath @(subscribe [:db/filepath])
         curr-db-dir      @(subscribe [:db/filepath-dir])
         img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
         base-dir         (.dirname path curr-db-filepath)
@@ -118,7 +119,7 @@
                                                 (clojure.string/replace-first x #"data:image/png;base64," "")
                                                 (js/Buffer. x "base64"))
                                  img-filename (.resolve path img-dir (str "img-" base-dir-name "-" (athens.util/gen-block-uid) ".png"))
-                                 new-str      (str "![](" "file://" img-filename ")")]
+                                 new-str      (str head "![](" "file://" img-filename ")" tail)]
                              (when-not (.existsSync fs img-dir)
                                (.mkdirSync fs img-dir))
                              (.writeFileSync fs img-filename img-data)
