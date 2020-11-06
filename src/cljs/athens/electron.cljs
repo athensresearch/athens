@@ -1,6 +1,7 @@
 (ns athens.electron
   (:require
     [athens.athens-datoms :as athens-datoms]
+    [athens.util :as util]
     [athens.db :as db]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -104,28 +105,48 @@
 
 ;; Image Paste
 (defn save-image
-  [e item state]
-  (let [{:keys [head tail]} (athens.keybindings/destruct-target (.. e -target))
-        curr-db-filepath @(subscribe [:db/filepath])
-        curr-db-dir      @(subscribe [:db/filepath-dir])
-        img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
-        base-dir         (.dirname path curr-db-filepath)
-        base-dir-name    (.basename path base-dir)
-        file             (.getAsFile item)
-        reader           (js/FileReader.)
-        cb               (fn [e]
-                           (let [img-data     (as->
-                                                (.. e -target -result) x
-                                                (clojure.string/replace-first x #"data:image/png;base64," "")
-                                                (js/Buffer. x "base64"))
-                                 img-filename (.resolve path img-dir (str "img-" base-dir-name "-" (athens.util/gen-block-uid) ".png"))
-                                 new-str      (str head "![](" "file://" img-filename ")" tail)]
-                             (when-not (.existsSync fs img-dir)
-                               (.mkdirSync fs img-dir))
-                             (.writeFileSync fs img-filename img-data)
-                             (swap! state assoc :string/local new-str)))]
-    (set! (.. reader -onload) cb)
-    (.readAsDataURL reader file)))
+  ([item extension]
+   (save-image "" "" item extension))
+  ([head tail item extension]
+   (let [curr-db-filepath @(subscribe [:db/filepath])
+         curr-db-dir      @(subscribe [:db/filepath-dir])
+         img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
+         base-dir         (.dirname path curr-db-filepath)
+         base-dir-name    (.basename path base-dir)
+         file             (.getAsFile item)
+         img-filename     (.resolve path img-dir (str "img-" base-dir-name "-" (util/gen-block-uid) "." extension))
+         reader           (js/FileReader.)
+         new-str          (str head "![](" "file://" img-filename ")" tail)
+         cb               (fn [e]
+                            (let [img-data (as->
+                                             (.. e -target -result) x
+                                             (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
+                                             (js/Buffer. x "base64"))]
+                              (when-not (.existsSync fs img-dir)
+                                (.mkdirSync fs img-dir))
+                              (.writeFileSync fs img-filename img-data)))]
+     (set! (.. reader -onload) cb)
+     (.readAsDataURL reader file)
+     new-str)))
+
+
+(defn dnd-image
+  [target-uid drag-target item extension]
+  (let [new-str   (save-image item extension)
+        block     (db/get-block [:block/uid target-uid])
+        parent    (db/get-parent [:block/uid target-uid])
+        new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
+        tx-data   (if (= drag-target :child)
+                    (let [new-parent {:db/id target-uid :block/children new-block}]
+                      new-parent)
+                    (let [index        (case drag-target
+                                         :above (dec (:block/order block))
+                                         :below (:block/order block))
+                          reindex      (db/inc-after (:db/id parent) index)
+                          new-children (conj reindex new-block)
+                          new-parent   {:db/id (:db/id parent) :block/children new-children}]
+                      new-parent))]
+    (dispatch [:transact [tx-data]])))
 
 
 ;;; Subs

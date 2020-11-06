@@ -467,14 +467,6 @@
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
-
-
-;;img      (.createElement js/document "img")
-;;range    (.. js/window getSelection (getRangeAt 0))]))]
-;; save img-data to dir
-;;(set! (.. img -src) img-data)))]
-;;(.insertNode range img)))]
-
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -498,6 +490,7 @@
         line-breaks (re-find #"\r?\n" text-data)
         no-shift    (-> @state :last-keydown :shift not)
         items       (array-seq (.. e -clipboardData -items))
+        {:keys [head tail]} (athens.keybindings/destruct-target (.-target e))
         n           (count items)
         img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
     (cond
@@ -508,7 +501,8 @@
       (= n 2) (mapv (fn [item]
                       (let [datatype (.. item -type)]
                         (cond
-                          (re-find img-regex datatype) (athens.electron/save-image e item state)
+                          (re-find img-regex datatype) (let [new-str (athens.electron/save-image head tail item "png")]
+                                                         (swap! state assoc :string/local new-str))
                           (re-find #"text/html" datatype) (.getAsString item (fn [x] #_(prn "getAsString" x))))))
                     items)
       :else (when (and line-breaks no-shift)
@@ -778,7 +772,7 @@
     (when target
       (swap! state assoc :drag-target target))))
 
-
+(def a (atom nil))
 (defn block-drop
   "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
   [e block state]
@@ -787,17 +781,32 @@
         {:keys [drag-target]} @state
         source-uid (.. e -dataTransfer (getData "text/plain"))
         effect-allowed (.. e -dataTransfer -effectAllowed)
+
+        items       (array-seq (.. e -dataTransfer -items))
+        n           (count items)
+        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"
+
         valid-drop (and (not (nil? drag-target))
                         (not= source-uid target-uid)
                         (= effect-allowed "move"))
         selected-items @(subscribe [:selected/items])]
-    (when valid-drop
-      (if (empty? selected-items)
-        (dispatch [:drop source-uid target-uid drag-target])
-        (dispatch [:drop-multi selected-items target-uid drag-target])))
+
+    (cond
+      (= n 1) (let [item     (first items)
+                    datatype (.. item -type)
+                    find (re-find img-regex datatype)]
+                (cond
+                   find (athens.electron/dnd-image target-uid drag-target item (second find))))
+      valid-drop (if (empty? selected-items)
+                   (dispatch [:drop source-uid target-uid drag-target])
+                   (dispatch [:drop-multi selected-items target-uid drag-target])))
+
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 
+(re-find #"(?i)^image/(p?jpeg|gif|png)$" "image/jpeg")
+
+;;(athens.electron/save-image "" "" @a)
 
 (defn block-drag-leave
   "When mouse leaves block, remove any drop area indicator.
