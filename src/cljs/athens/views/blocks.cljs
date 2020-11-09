@@ -780,27 +780,26 @@
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         {:keys [drag-target]} @state
-        source-uid (.. e -dataTransfer (getData "text/plain"))
+        source-uid     (.. e -dataTransfer (getData "text/plain"))
         effect-allowed (.. e -dataTransfer -effectAllowed)
 
-        items       (array-seq (.. e -dataTransfer -items))
-        n           (count items)
-        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"
+        items          (array-seq (.. e -dataTransfer -items))
+        item           (first items)
+        datatype       (.. item -type)
 
-        valid-drop (and (not (nil? drag-target))
-                        (not= source-uid target-uid)
-                        (= effect-allowed "move"))
+        img-regex      #"(?i)^image/(p?jpeg|gif|png)$"
+
+        valid-text-drop     (and (not (nil? drag-target))
+                                 (not= source-uid target-uid)
+                                 (= effect-allowed "move"))
         selected-items @(subscribe [:selected/items])]
 
     (cond
-      (= n 1) (let [item     (first items)
-                    datatype (.. item -type)
-                    find (re-find img-regex datatype)]
-                (cond
-                   find (electron/dnd-image target-uid drag-target item (second find))))
-      valid-drop (if (empty? selected-items)
-                   (dispatch [:drop source-uid target-uid drag-target])
-                   (dispatch [:drop-multi selected-items target-uid drag-target])))
+      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second find))
+      (re-find #"text/plain" datatype) (when valid-text-drop
+                                         (if (empty? selected-items)
+                                           (dispatch [:drop source-uid target-uid drag-target])
+                                           (dispatch [:drop-multi selected-items target-uid drag-target]))))
 
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
