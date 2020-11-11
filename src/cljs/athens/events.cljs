@@ -77,6 +77,12 @@
 
 
 (reg-event-db
+  :right-sidebar/set-width
+  (fn [db [_ width]]
+    (assoc db :right-sidebar/width width)))
+
+
+(reg-event-db
   :mouse-down/set
   (fn [db _]
     (assoc db :mouse-down true)))

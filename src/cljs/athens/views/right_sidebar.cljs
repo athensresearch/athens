@@ -7,6 +7,7 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [reagent.core :as r]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -22,14 +23,14 @@
    :display "flex"
    :justify-content "space-between"
    :padding-top "2.75rem"
-   :transition-property "width, border, background"
-   :transition-duration "0.35s"
-   :transition-timing-function "ease-out"
+   ;;:transition-property "width, border, background"
+   ;;:transition-duration "0.35s"
+   ;;:transition-timing-function "ease-out"
    :background-color (color :background-minus-1)
    :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
-                     [:&.is-open {:width "32vw"
+                     [:&.is-open {;:width "32vw"
                                   :background-color (color :background-minus-1)}]]})
 
 
@@ -38,10 +39,10 @@
    :flex "0 0 32vw"
    :flex-direction "column"
    :margin-left "0"
-   :transition "all 0.35s ease-out"
+   ;;:transition "all 0.35s ease-out"
    :overflow-y "auto"
-   ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
-                                    :opacity 0}]
+   ::stylefy/manual [;[:&.is-closed {:margin-left "-32vw"
+                                    :opacity 0
                      [:&.is-open {:opacity 1}]]})
 
 
@@ -158,44 +159,82 @@
    [:p
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
+(def dragging? (r/atom false))
+
+(defn move-handler [e]
+  (when @dragging?
+    (.. e preventDefault)
+    (let [x       (.-clientX e)
+          inner-w js/window.innerWidth
+          width       (-> (- inner-w x)
+                          (/ inner-w)
+                          (* 100))]
+      (dispatch [:right-sidebar/set-width width]))))
+;;(reset! panel-width w)))))
+
+
+(defn mouse-up-handler
+  []
+  (reset! dragging? false))
+
+
 
 (defn right-sidebar-el
-  [open? items]
-  [:div (use-style sidebar-style {:class (if open? "is-open" "is-closed")})
-   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
-    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents 
-    ;;  [:h1 "Pages and Blocks"]]
-    ;;  [button [:> mui-icons/FilterList]]
+  [_ _ _]
+  (r/create-class
+    {:display-name "right-sidebar"
+     :component-did-mount    (fn []
+                               (js/document.addEventListener "mousemove" move-handler)
+                               (js/document.addEventListener "mouseup" mouse-up-handler))
+     :component-will-unmount (fn []
+                               (js/document.removeEventListener "mousemove" move-handler)
+                               (js/document.removeEventListener "mouseup" mouse-up-handler))
+     :reagent-render         (fn [open? items width]
+                               [:div (use-style (merge sidebar-style
+                                                       (when open? {:width (str @width "vw")}))
+                                                {:class (if open? "is-open" "is-closed")})
+                                [:div (use-style {:cursor           "col-resize"
+                                                  :height           "100%"
+                                                  :position         "absolute"
+                                                  :top              0
+                                                  :width            "3px"
+                                                  :background-color (color :border-color)}
+                                                 {:on-mouse-down #(reset! dragging? true)})]
+                                [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
+                                 ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
+                                 ;;  [:h1 "Pages and Blocks"]]
+                                 ;;  [button [:> mui-icons/FilterList]]
 
-    (if (empty? items)
-      [empty-message]
-      (doall
-        (for [[uid {:keys [open node/title block/string]}] items]
-          ^{:key uid}
-          [:article (use-style sidebar-item-style)
-           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-            [button {:style sidebar-item-toggle-style
-                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
-                     :class (when open "is-open")}
-             [:> mui-icons/ChevronRight]]
-            [:h2
-             (if title
-               [:<> [:> mui-icons/Description] title]
-               [:<> [:> mui-icons/FiberManualRecord] string])]
-            [:div {:class "controls"}
-        ;;  [button [:> mui-icons/DragIndicator]]
-        ;;  [:hr]
-             [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
-              [:> mui-icons/Close]]]]
-           (when open
-             [:div (use-style sidebar-item-container-style)
-              (if title
-                [node-page-component [:block/uid uid]]
-                [block-page-component [:block/uid uid]])])])))]])
+                                 (if (empty? items)
+                                   [empty-message]
+                                   (doall
+                                     (for [[uid {:keys [open node/title block/string]}] items]
+                                       ^{:key uid}
+                                       [:article (use-style sidebar-item-style)
+                                        [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
+                                         [button {:style    sidebar-item-toggle-style
+                                                  :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                  :class    (when open "is-open")}
+                                          [:> mui-icons/ChevronRight]]
+                                         [:h2
+                                          (if title
+                                            [:<> [:> mui-icons/Description] title]
+                                            [:<> [:> mui-icons/FiberManualRecord] string])]
+                                         [:div {:class "controls"}
+                                          ;;  [button [:> mui-icons/DragIndicator]]
+                                          ;;  [:hr]
+                                          [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+                                           [:> mui-icons/Close]]]]
+                                        (when open
+                                          [:div (use-style sidebar-item-container-style)
+                                           (if title
+                                             [node-page-component [:block/uid uid]]
+                                             [block-page-component [:block/uid uid]])])])))]])}))
 
 
 (defn right-sidebar-component
   []
   (let [open? @(subscribe [:right-sidebar/open])
-        items @(subscribe [:right-sidebar/items])]
-    [right-sidebar-el open? items]))
+        items @(subscribe [:right-sidebar/items])
+        width (subscribe [:right-sidebar/width])]
+    [right-sidebar-el open? items width]))
