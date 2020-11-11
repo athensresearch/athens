@@ -7,7 +7,6 @@
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    #_[goog.functions :refer [throttle]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -31,8 +30,8 @@
    :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
-                     [:&.is-open {;:width "32vw"
-                                  :background-color (color :background-minus-1)}]]})
+                     [:&.is-open {}]]});:width "32vw"
+                                  ;;:background-color (color :background-minus-1)}]]})
 
 
 (def sidebar-content-style
@@ -42,9 +41,9 @@
    :margin-left "0"
    ;;:transition "all 0.35s ease-out"
    :overflow-y "auto"
-   ::stylefy/manual [;[:&.is-closed {:margin-left "-32vw"
-                     :opacity 0
-                     [:&.is-open {:opacity 1}]]})
+   ::stylefy/manual []});[:&.is-closed {:margin-left "-32vw"
+                     ;;:opacity 0
+                     ;;[:&.is-open {:opacity 1}]]})
 
 
 (def sidebar-section-heading-style
@@ -162,29 +161,34 @@
 
 
 (defn right-sidebar-el
-  [_ _ _]
-  (let [dragging? (r/atom false)
-        move-handler (fn [e]
-                       (when @dragging?
-                         (.. e preventDefault)
-                         (let [x       (.-clientX e)
-                               inner-w js/window.innerWidth
-                               width   (-> (- inner-w x)
-                                           (/ inner-w)
-                                           (* 100))]
-                           (dispatch [:right-sidebar/set-width width]))))
-        mouse-up-handler (fn [] (reset! dragging? false))]
+  "Resizable: use local atom for width, but dispatch value to re-frame on mouse up. Instantiate local value with re-frame width too."
+  [_ _ rf-width]
+  (let [state (r/atom {:dragging false
+                       :width rf-width})
+        move-handler     (fn [e]
+                           (when (:dragging @state)
+                             (.. e preventDefault)
+                             (let [x       (.-clientX e)
+                                   inner-w js/window.innerWidth
+                                   width   (-> (- inner-w x)
+                                               (/ inner-w)
+                                               (* 100))]
+                               (swap! state assoc :width width))))
+        mouse-up-handler (fn []
+                           (when (:dragging @state)
+                             (swap! state assoc :dragging false)
+                             (dispatch [:right-sidebar/set-width (:width @state)])))]
     (r/create-class
-      {:display-name "right-sidebar"
+      {:display-name           "right-sidebar"
        :component-did-mount    (fn []
                                  (js/document.addEventListener "mousemove" move-handler)
                                  (js/document.addEventListener "mouseup" mouse-up-handler))
        :component-will-unmount (fn []
                                  (js/document.removeEventListener "mousemove" move-handler)
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
-       :reagent-render         (fn [open? items width]
+       :reagent-render         (fn [open? items _]
                                  [:div (use-style (merge sidebar-style
-                                                         (when open? {:width (str @width "vw")}))
+                                                         (when open? {:width (str (:width @state) "vw")}))
                                                   {:class (if open? "is-open" "is-closed")})
                                   [:div (use-style {:cursor           "col-resize"
                                                     :height           "100%"
@@ -193,12 +197,11 @@
                                                     :width            "3px"
                                                     :z-index          (:zindex-fixed ZINDICES)
                                                     :background-color (color :border-color)}
-                                                   {:on-mouse-down #(reset! dragging? true)})]
+                                                   {:on-mouse-down #(swap! state assoc :dragging true)})]
                                   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
                                    ;;  [button [:> mui-icons/FilterList]]
-
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
@@ -230,5 +233,5 @@
   []
   (let [open? @(subscribe [:right-sidebar/open])
         items @(subscribe [:right-sidebar/items])
-        width (subscribe [:right-sidebar/width])]
+        width @(subscribe [:right-sidebar/width])]
     [right-sidebar-el open? items width]))
