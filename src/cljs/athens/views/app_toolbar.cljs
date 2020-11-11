@@ -6,8 +6,8 @@
     [athens.subs]
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
-    [reagent.core :as r]
     [re-frame.core :refer [subscribe dispatch]]
+    #_[reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -79,8 +79,8 @@
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
-        theme-dark  (subscribe [:theme/dark])
-        db-synced   (subscribe [:db/synced])]
+        theme-dark  (subscribe [:theme/dark])]
+        ;;db-synced   (subscribe [:db/synced])]
     (fn []
       [:<>
        [:header (use-style app-header-style)
