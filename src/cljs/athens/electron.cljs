@@ -330,7 +330,7 @@
   [filepath data]
   (.writeFile fs filepath data (fn [err]
                                  (when err
-                                   (js/console.error err))))
+                                   (throw (js/Error. err)))))
   (dispatch [:db/sync])
   (dispatch [:db/update-mtime (js/Date.)]))
 
