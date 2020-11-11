@@ -325,8 +325,20 @@
 ;;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
 ;;(def w (.createWriteStream fs "./data/my-db.transit"))
 ;;(.pipe r w)
+
+(defn write-file
+  [filepath data]
+  (.writeFile fs filepath data (fn [err]
+                                 (when err
+                                   (throw (js/Error. err)))))
+  (dispatch [:db/sync])
+  (dispatch [:db/update-mtime (js/Date.)]))
+
+
+(def debounce-write (debounce write-file 15000))
+
+
 (reg-fx
   :fs/write!
   (fn [[filepath data]]
-    (.writeFileSync fs filepath data)))
-
+    (debounce-write filepath data)))
