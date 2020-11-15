@@ -19,7 +19,8 @@
    :padding "1.5rem"
    :flex-direction "column"
    :align-items "center"
-   :width "400px" })
+   :width "400px"})
+
 
 (def database-item-style
   {:padding "1rem"
@@ -42,7 +43,8 @@
                             :margin "auto"
                             :font-size "2.5rem"
                             :grid-row "1 / -1"}]]})
-  
+
+
 (def database-item-toolbar-style
   {:padding-top "0.5rem"
    :grid-area "toolbar"
@@ -53,6 +55,7 @@
    :color (color :body-text-color :opacity-low)
    ::stylefy/manual [[:button {:font-size "0.85em"
                                :padding "0.5em"}]]})
+
 
 (def db-name-style
   {:color "inherit"
@@ -119,7 +122,7 @@
                          [:<>
                           [:> mui-icons/Add]
                           [:span "Create"]]]]]
-                      
+
                       [:<>
                       ;;  [:b {:style {:align-self "flex-start"}}
                       ;;   (if @loading
