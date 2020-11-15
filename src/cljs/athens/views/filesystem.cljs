@@ -139,13 +139,23 @@
                                      :value (nth (reverse (str/split @db-filepath #"/")) 1)})]
                         [:p (->> (reverse (str/split @db-filepath #"/")) (drop 2) (reverse) (str/join "/"))]
                         [:div (use-style database-item-toolbar-style)
-                         [button {:disabled @loading
-                                  :on-click #(swap! state update :renaming not)}
-                          "Rename"]
-                         [:span "•"]
-                         [button {:disabled @loading
-                                  :on-click #(electron/move-dialog!)}
-                          "Move"]]]
+                         (if (:renaming @state)
+                           [:<>
+                            [button
+                             {:on-click #(swap! state update :renaming not)}
+                             "Save"]
+                            [:span "•"]
+                            [button
+                             {:on-click #(swap! state update :renaming not)}
+                             "Cancel"]]
+                           [:<>
+                            [button {:disabled @loading
+                                     :on-click #(swap! state update :renaming not)}
+                             "Rename"]
+                            [:span "•"]
+                            [button {:disabled @loading
+                                     :on-click #(electron/move-dialog!)}
+                             "Move"]])]]
                        ;;  Displaying current database
                        [:div (use-style {:display         "flex"
                                          :justify-content "space-between"
