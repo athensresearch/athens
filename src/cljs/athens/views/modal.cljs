@@ -12,6 +12,7 @@
 
 (def modal-style
   {:z-index (:zindex-modal ZINDICES)
+   :position "relative"
    :animation "fade-in 0.2s"
    ::stylefy/manual [[:.modal {:position "fixed"
                                :top "50vh"
@@ -29,13 +30,13 @@
                                                       :display "flex"
                                                       :align-items "center"}
                       [:&:empty {:display "none"}]]
-                     [:.modal__title {:border-bottom [["1px solid " (color :border-color)]]}
+                     [:.modal__title {:padding-right "0.25rem"}
+                      [(selectors/+ :svg :h4) {:margin-inline-start "0.5rem"}]
                       [:button {:margin-inline-start "auto"
                                 :align-self "flex-start"
                                 :margin-block "0.5rem"}]]
                      [:.modal__content {:flex "1 1 100%"
-                                        :overflow-y "auto"
-                                        :border-top [["1px solid " (color :border-color)]]}]
+                                        :overflow-y "auto"}]
                      [:.modal__footer {:display "flex"}]
                      [:.modal__backdrop {:position "fixed"
                                          :top 0

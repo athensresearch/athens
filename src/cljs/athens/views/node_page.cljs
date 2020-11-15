@@ -78,7 +78,8 @@
                      [:h1 {:grid-area "main"
                            :margin 0
                            :padding 0
-                           :font-size "inherit"}]
+                           :font-size "inherit"}
+                      [:&:empty:before {:content "'\200B'"}]]
                      [:textarea:focus
                       :.is-editing {:outline "none"
                                     :z-index 3
@@ -407,7 +408,7 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-          [:h1 (:title/local @state)]]
+          [:h1 (or (:title/local @state) "hi")]]
           ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
