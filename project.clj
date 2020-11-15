@@ -69,7 +69,9 @@
   {:dev
    {:dependencies [[binaryage/devtools "1.0.0"]
                    [day8.re-frame/re-frame-10x "0.6.0"]
-                   [day8.re-frame/tracing "0.5.3"]]
+                   [day8.re-frame/tracing "0.5.3"]
+                   [cider/cider-nrepl "0.25.1"]]
+
     :source-paths ["dev"]}
    :prod
    {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}}
