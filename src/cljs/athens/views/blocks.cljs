@@ -180,7 +180,9 @@
 
 
 (def block-content-style
-  {:position "relative"
+  {:display "grid"
+   :grid-template-areas "'main'"
+   :position "relative"
    :overflow "visible"
    :z-index 2
    :flex-grow "1"
@@ -195,12 +197,7 @@
                                  :color "inherit"
                                  :padding "0"
                                  :background (color :background-minus-1)
-                                 :position "absolute"
-                                 :top "0"
-                                 :left "0"
-                                 :right "0"
-                                 :width "100%"
-                                 :min-height "100%"
+                                 :grid-area "main"
                                  :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
@@ -215,9 +212,11 @@
                                     :z-index 3
                                     :display "block"
                                     :opacity "1"}]
-                     [:span [:span
-                             :a {:position "relative"
-                                 :z-index 2}]]
+                     [:span
+                      {:grid-area "main"}
+                      [:span
+                       :a {:position "relative"
+                           :z-index 2}]]
                      ;; May want to refactor specific component styles to somewhere else.
                      ;; Closer to the component perhaps?
                      ;; Code
