@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
     [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render]]
@@ -470,17 +471,44 @@
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
-  Cases:
+
+  Image Cases:
+  - items N=1, image/png
+  - items N=2, text/html and image/png
+  For both of these, just write image to filesystem. Roam behavior is to copy the <img> src and alt of the copied picture.
+  Roam's approach is useful to preserve the original source url and description, but is unsafe in case the link breaks.
+  Writing to filesystem (or to Firebase a la Roam) is useful, but has storage costs.
+  Writing to filesystem each time for now until get feedback otherwise that user doesn't want to save the image.
+  Can eventually become a setting.
+
+  Plaintext cases:
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data (.. e -clipboardData (getData "text"))
-        line-breaks (re-find #"\r?\n" data)
-        no-shift (-> @state :last-keydown :shift not)]
-    (when (and line-breaks no-shift)
-      (.. e preventDefault)
-      (dispatch [:paste uid data]))))
+  (let [data        (.. e -clipboardData)
+        text-data   (.. data (getData "text"))
+        line-breaks (re-find #"\r?\n" text-data)
+        no-shift    (-> @state :last-keydown :shift not)
+        items       (array-seq (.. e -clipboardData -items))
+        {:keys [head tail]} (athens.keybindings/destruct-target (.-target e))
+        n           (count items)
+        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
+    (cond
+      #_(= n 1) #_(let [item     (first items)
+                        datatype (.. item -type)]
+                    (when (re-find regex datatype)
+                      (athens.electron/save-image item state)))
+      (= n 2) (mapv (fn [item]
+                      (let [datatype (.. item -type)]
+                        (cond
+                          (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
+                                                         (swap! state assoc :string/local new-str))
+                          (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+                    items)
+      :else (when (and line-breaks no-shift)
+              (.. e preventDefault)
+              (dispatch [:paste uid text-data])))))
 
 
 (defn textarea-change
@@ -752,16 +780,27 @@
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         {:keys [drag-target]} @state
-        source-uid (.. e -dataTransfer (getData "text/plain"))
+        source-uid     (.. e -dataTransfer (getData "text/plain"))
         effect-allowed (.. e -dataTransfer -effectAllowed)
-        valid-drop (and (not (nil? drag-target))
-                        (not= source-uid target-uid)
-                        (= effect-allowed "move"))
+
+        items          (array-seq (.. e -dataTransfer -items))
+        item           (first items)
+        datatype       (.. item -type)
+
+        img-regex      #"(?i)^image/(p?jpeg|gif|png)$"
+
+        valid-text-drop     (and (not (nil? drag-target))
+                                 (not= source-uid target-uid)
+                                 (= effect-allowed "move"))
         selected-items @(subscribe [:selected/items])]
-    (when valid-drop
-      (if (empty? selected-items)
-        (dispatch [:drop source-uid target-uid drag-target])
-        (dispatch [:drop-multi selected-items target-uid drag-target])))
+
+    (cond
+      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second find))
+      (re-find #"text/plain" datatype) (when valid-text-drop
+                                         (if (empty? selected-items)
+                                           (dispatch [:drop source-uid target-uid drag-target])
+                                           (dispatch [:drop-multi selected-items target-uid drag-target]))))
+
     (dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
 
