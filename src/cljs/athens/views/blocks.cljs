@@ -182,6 +182,8 @@
 (def block-content-style
   {:display "grid"
    :grid-template-areas "'main'"
+   :align-items "stretch"
+   :justify "stretch"
    :position "relative"
    :overflow "visible"
    :z-index 2
@@ -198,6 +200,7 @@
                                  :padding "0"
                                  :background (color :background-minus-1)
                                  :grid-area "main"
+                                 :min-height "100%"
                                  :caret-color (color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
