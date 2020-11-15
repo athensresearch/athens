@@ -461,7 +461,8 @@
   [e _ state]
   (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
-        lookbehind-char (nth value start nil)]
+        lookbehind-char (nth value start nil)
+        {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
       ;; when close char, increment caret index without writing more
@@ -476,7 +477,9 @@
                           new-idx (inc start)]
                       (swap! state assoc :string/local new-str)
                       (set! (.-value target) new-str)
-                      (set-cursor-position target new-idx))
+                      (set-cursor-position target new-idx)
+                      (when type
+                        (update-query state head (str key close-pair) type)))
 
       ;; when selection
       (not= start end) (let [surround-selection (surround selection key)
@@ -493,7 +496,8 @@
             double-parens?   (= "(())" four-char)
             type (cond double-brackets? :page
                        double-parens? :block)]
-        (swap! state assoc :search/type type :search/query "" :search/results [])))))
+        (when type
+          (swap! state assoc :search/type type :search/query "" :search/results []))))))
 
     ;; TODO: close bracket should not be created if it already exists
     ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
@@ -505,23 +509,25 @@
   [e uid state]
   (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
-        possible-pair (subs value (dec start) (inc start))
+        sub-str (subs value (dec start) (inc start))
+        possible-pair (#{"[]" "{}" "()"} sub-str)
         head    (subs value 0 (dec start))
         {:search/keys [type]} @state
         look-behind-char (nth value (dec start) nil)]
+
     (cond
       (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
-      (some #(= possible-pair %) ["[]" "{}" "()"]) (let [head    (subs value 0 (dec start))
-                                                         tail    (subs value (inc start))
-                                                         new-str (str head tail)
-                                                         new-idx (dec start)]
-                                                     (.. e preventDefault)
-                                                     (swap! state assoc
-                                                            :search/type nil
-                                                            :string/local new-str)
-                                                     (set! (.-value target) new-str)
-                                                     (set-cursor-position target new-idx))
+      possible-pair (let [head    (subs value 0 (dec start))
+                          tail    (subs value (inc start))
+                          new-str (str head tail)
+                          new-idx (dec start)]
+                      (.. e preventDefault)
+                      (swap! state assoc
+                             :search/type nil
+                             :string/local new-str)
+                      (set! (.-value target) new-str)
+                      (set-cursor-position target new-idx))
 
       ;; slash: close dropdown
       (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)

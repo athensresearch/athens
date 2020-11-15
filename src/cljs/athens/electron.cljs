@@ -2,6 +2,7 @@
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
+    [athens.util :as util]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -27,7 +28,6 @@
 (def IMAGES-DIR-NAME "images")
 
 ;;; Filesystem Dialogs
-
 
 
 (defn move-dialog!
@@ -103,6 +103,55 @@
             (dispatch [:loading/unset])))))))
 
 
+;; Image Paste
+(defn save-image
+  ([item extension]
+   (save-image "" "" item extension))
+  ([head tail item extension]
+   (let [curr-db-filepath @(subscribe [:db/filepath])
+         curr-db-dir      @(subscribe [:db/filepath-dir])
+         img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
+         base-dir         (.dirname path curr-db-filepath)
+         base-dir-name    (.basename path base-dir)
+         file             (.getAsFile item)
+         img-filename     (.resolve path img-dir (str "img-" base-dir-name "-" (util/gen-block-uid) "." extension))
+         reader           (js/FileReader.)
+         new-str          (str head "![](" "file://" img-filename ")" tail)
+         cb               (fn [e]
+                            (let [img-data (as->
+                                             (.. e -target -result) x
+                                             (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
+                                             (js/Buffer. x "base64"))]
+                              (when-not (.existsSync fs img-dir)
+                                (.mkdirSync fs img-dir))
+                              (.writeFileSync fs img-filename img-data)))]
+     (set! (.. reader -onload) cb)
+     (.readAsDataURL reader file)
+     new-str)))
+
+
+(defn dnd-image
+  [target-uid drag-target item extension]
+  (let [new-str   (save-image item extension)
+        {:block/keys [order]} (db/get-block [:block/uid target-uid])
+        parent    (db/get-parent [:block/uid target-uid])
+        block     (db/get-block [:block/uid target-uid])
+        new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
+        tx-data   (if (= drag-target :child)
+                    (let [reindex   (db/inc-after (:db/id block) -1)
+                          new-children (conj reindex new-block)
+                          new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
+                      new-target-block)
+                    (let [index        (case drag-target
+                                         :above (dec order)
+                                         :below order)
+                          reindex      (db/inc-after (:db/id parent) index)
+                          new-children (conj reindex new-block)
+                          new-parent   {:db/id (:db/id parent) :block/children new-children}]
+                      new-parent))]
+    (dispatch [:transact [tx-data]])))
+
+
 ;;; Subs
 
 
@@ -110,6 +159,18 @@
   :db/mtime
   (fn [db _]
     (:db/mtime db)))
+
+
+(reg-sub
+  :db/filepath
+  (fn [db _]
+    (:db/filepath db)))
+
+
+(reg-sub
+  :db/filepath-dir
+  (fn [db _]
+    (.dirname path (:db/filepath db))))
 
 
 ;;; Events
@@ -264,8 +325,20 @@
 ;;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
 ;;(def w (.createWriteStream fs "./data/my-db.transit"))
 ;;(.pipe r w)
+
+(defn write-file
+  [filepath data]
+  (.writeFile fs filepath data (fn [err]
+                                 (when err
+                                   (throw (js/Error. err)))))
+  (dispatch [:db/sync])
+  (dispatch [:db/update-mtime (js/Date.)]))
+
+
+(def debounce-write (debounce write-file 15000))
+
+
 (reg-fx
   :fs/write!
   (fn [[filepath data]]
-    (.writeFileSync fs filepath data)))
-
+    (debounce-write filepath data)))
