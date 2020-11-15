@@ -23,15 +23,15 @@
    :display "flex"
    :justify-content "space-between"
    :padding-top "2.75rem"
-   ;;:transition-property "width, border, background"
-   ;;:transition-duration "0.35s"
-   ;;:transition-timing-function "ease-out"
+   :transition-property "width, border, background"
+   :transition-duration "0.35s"
+   :transition-timing-function "ease-out"
    :background-color (color :background-minus-1)
    :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
-                     [:&.is-open {}]]});:width "32vw"
-                                  ;;:background-color (color :background-minus-1)}]]})
+                     [:&.is-open {:width "32vw"
+                                  :background-color (color :background-minus-1)}]]})
 
 
 (def sidebar-content-style
@@ -39,11 +39,11 @@
    :flex "0 0 32vw"
    :flex-direction "column"
    :margin-left "0"
-   ;;:transition "all 0.35s ease-out"
+   :transition "all 0.35s ease-out"
    :overflow-y "auto"
-   ::stylefy/manual []});[:&.is-closed {:margin-left "-32vw"
-                     ;;:opacity 0
-                     ;;[:&.is-open {:opacity 1}]]})
+   ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
+                                    :opacity 0}]
+                     [:&.is-open {:opacity 1}]]})
 
 
 (def sidebar-section-heading-style
@@ -187,9 +187,11 @@
                                  (js/document.removeEventListener "mousemove" move-handler)
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
        :reagent-render         (fn [open? items _]
-                                 [:div (use-style (merge sidebar-style
-                                                         (when open? {:width (str (:width @state) "vw")}))
-                                                  {:class (if open? "is-open" "is-closed")})
+                                 [:div (merge (use-style sidebar-style
+                                                         {:class (if open? "is-open" "is-closed")})
+                                              {:style (cond-> {}
+                                                              (:dragging @state) (assoc :transition-duration "0s")
+                                                              open? (assoc :width (str (:width @state) "vw")))})
                                   [:div (use-style {:cursor           "col-resize"
                                                     :height           "100%"
                                                     :position         "absolute"
