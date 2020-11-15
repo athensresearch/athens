@@ -183,7 +183,7 @@
   {:display "grid"
    :grid-template-areas "'main'"
    :align-items "stretch"
-   :justify "stretch"
+   :justify-content "stretch"
    :position "relative"
    :overflow "visible"
    :z-index 2

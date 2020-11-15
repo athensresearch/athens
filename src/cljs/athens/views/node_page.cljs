@@ -38,12 +38,19 @@
 
 
 (def title-style
-  {:position "relative"
+  {:display "grid"
+   :position "relative"
+   :grid-template-areas "'main'"
+   :align-items "stretch"
+   :justify-content "stretch"
    :overflow "visible"
    :flex-grow "1"
    :margin "0.2em 0 0.2em 1rem"
    :letter-spacing "-0.03em"
+   :line-height "1.3"
    :white-space "pre-line"
+   :font-size "3.125em"
+   :font-weight 600
    :word-break "break-word"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
@@ -56,11 +63,7 @@
                                  :font-weight "inherit"
                                  :padding "0"
                                  :letter-spacing "inherit"
-                                 :position "absolute"
-                                 :top "0"
-                                 :left "0"
-                                 :right "0"
-                                 :width "100%"
+                                 :grid-area "main"
                                  :min-height "100%"
                                  :caret-color (color :link-color)
                                  :background "transparent"
@@ -72,6 +75,10 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
+                     [:h1 {:grid-area "main"
+                           :margin 0
+                           :padding 0
+                           :font-size "inherit"}]
                      [:textarea:focus
                       :.is-editing {:outline "none"
                                     :z-index 3
@@ -376,10 +383,10 @@
             [alert-component message confirm-fn cancel-fn]])
 
          ;; Header
-         [:h1 (use-style title-style
-                         {:data-uid uid
-                          :class    "page-header"
-                          :on-click (fn [e] (navigate-uid uid e))})
+         [:div (use-style title-style
+                          {:data-uid uid
+                           :class    "page-header"
+                           :on-click (fn [e] (navigate-uid uid e))})
           ;; Prevent editable textarea if a node/title is a date
           ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
           (when-not timeline-page?
@@ -400,7 +407,7 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-          (:title/local @state)]
+          [:h1 (:title/local @state)]]
           ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
