@@ -85,7 +85,14 @@
    :font-size "15px"
    :position "relative"
    :z-index 1
-   :width "32vw"})
+   :width "32vw"
+   ::stylefy/manual [[:h1 {:font-size "1.5em"
+                           :display "-webkit-box"
+                           :-webkit-box-orient "vertical"
+                           :-webkit-line-clamp 1
+                           :line-clamp 1
+                           :overflow "hidden"
+                           :text-overflow "ellipsis"}]]})
 
 
 (def sidebar-item-heading-style
