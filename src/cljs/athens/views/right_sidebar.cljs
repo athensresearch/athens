@@ -92,7 +92,8 @@
                            :-webkit-line-clamp 1
                            :line-clamp 1
                            :overflow "hidden"
-                           :text-overflow "ellipsis"}]]})
+                           :text-overflow "ellipsis"}]
+                     [:.node-page {:margin-top 0}]]})
 
 
 (def sidebar-item-heading-style
