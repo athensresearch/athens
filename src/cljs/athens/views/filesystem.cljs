@@ -21,18 +21,17 @@
    :align-items "center"
    :width "400px" })
 
-
 (def database-item-style
-  {:padding "1rem 0"
+  {:padding "1rem"
    :align-self "stretch"
    :background (color :background-plus-1 :opacity-low)
-   :margin "-0.5rem 0 1.5rem"
+   :margin "-1rem -0.5rem 1rem"
    :border [["1px solid" (color :border-color)]]
    :border-radius "0.5rem"
    :display "grid"
    :text-align "start"
    :grid-template-areas "'icon name' 'icon path' 'icon toolbar'"
-   :grid-gap "0.125rem 0"
+   :grid-gap "0.125rem 1rem"
    ::stylefy/manual [[:h4 {:grid-area "name"
                            :margin "0"}]
                      [:p {:grid-area "path"
@@ -43,7 +42,7 @@
                             :margin "auto"
                             :font-size "2.5rem"
                             :grid-row "1 / -1"}]]})
-
+  
 (def database-item-toolbar-style
   {:padding-top "0.5rem"
    :grid-area "toolbar"
@@ -54,6 +53,20 @@
    :color (color :body-text-color :opacity-low)
    ::stylefy/manual [[:button {:font-size "0.85em"
                                :padding "0.5em"}]]})
+
+(def db-name-style
+  {:color "inherit"
+   :padding "0.125rem 0.5rem"
+   :font-size "1.3125em"
+   :border 0
+   :caret-color (color :link-color)
+   :border-radius "0.25rem"
+   :transition "all 0.1s ease"
+   :margin-inline-start "-0.5rem"
+   :margin-inline-end "1.5rem"
+   :background (color :background-minus-1)
+   ::stylefy/manual [[:&:read-only {:color (color :header-text-color)
+                                    :background "transparent"}]]})
 
 
 (defn window
@@ -66,58 +79,70 @@
                         (dispatch [:modal/toggle])))
         db-filepath (subscribe [:db/filepath])
         state (r/atom {:create false
+                       :renaming false
                        :input ""})]
     (fn []
       [:div (use-style modal-style)
        [modal/modal
         {:title    [:div.modal__title
-                    [:h4 "Database"]
+                    [:h4 (if (:create @state)
+                           "Create New Database"
+                           "Current Database")]
                     (when-not @loading
                       [button {:on-click close-modal} [:> mui-icons/Close]])]
          :content  [:div (use-style modal-contents-style)
                     (if (:create @state)
                       [:<>
-                       [button {:style    {:align-self "start" :padding "0"}
-                                :on-click #(swap! state update :create not)}
-
-                        [:<>
-                         [:> mui-icons/ArrowBack]
-                         [:span "Back"]]]
-                       [:div {:style {:display         "flex"
-                                      :justify-content "space-between"
-                                      :width           "100%"
-                                      :margin-top      "2em"
-                                      :margin-bottom   "1em"}}
-                        [:label "Database Name"]
-                        [:input {:value       (:input @state)
-                                 :placeholder "DB Name"
-                                 :required true
-                                 :on-change   #(swap! state assoc :input (.. % -target -value))}]]
-                       [:div {:style {:display         "flex"
-                                      :justify-content "space-between"
-                                      :width           "100%"}}
-                        [:label "Location"]
-                        [button {:primary  true
-                                 :on-click #(electron/create-dialog! (:input @state))}
-                         "Browse"]]]
+                       [:div (use-style database-item-style)
+                        [:> mui-icons/LibraryBooks]
+                        [:input
+                         (use-style db-name-style
+                                    {;; TODO: Autofocus doesn't seem to be working
+                                     :autoFocus true
+                                     :value "{Default database name}"})]
+                        [:p "{Default database location}"]
+                        [:div (use-style database-item-toolbar-style)
+                         [button {:disabled @loading
+                                  :on-click #(electron/move-dialog!)}
+                          "Move"]]]
+                       ;;  Displaying current database
+                       [:div (use-style {:display         "flex"
+                                         :justify-content "space-between"
+                                         :align-items     "center"
+                                         :width           "80%"})
+                        [button {:on-click #(swap! state update :create not)}
+                         [:<>
+                          [:> mui-icons/ArrowBack]
+                          [:span "Back"]]]
+                        [button {:primary true
+                                 :on-click #(swap! state update :create not)}
+                         [:<>
+                          [:> mui-icons/Add]
+                          [:span "Create"]]]]]
+                      
                       [:<>
                       ;;  [:b {:style {:align-self "flex-start"}}
                       ;;   (if @loading
                       ;;     "No DB Found At"
                       ;;     "Current Location")]
-                       ;;  Displaying current database
+                        ;; Displaying current database
                        [:div (use-style database-item-style)
                         [:> mui-icons/LibraryBooks]
-                        [:h4 (nth (reverse (str/split @db-filepath #"/")) 1)]
+                        [:input
+                         (use-style db-name-style
+                                    {:read-only (not (:renaming @state))
+                                     ;; TODO: Autofocus doesn't seem to be working
+                                     :autoFocus (:renaming @state)
+                                     :value (nth (reverse (str/split @db-filepath #"/")) 1)})]
                         [:p (->> (reverse (str/split @db-filepath #"/")) (drop 2) (reverse) (str/join "/"))]
                         [:div (use-style database-item-toolbar-style)
                          [button {:disabled @loading
-                                  :on-click #(electron/move-dialog!)}
+                                  :on-click #(swap! state update :renaming not)}
                           "Rename"]
                          [:span "•"]
                          [button {:disabled @loading
                                   :on-click #(electron/move-dialog!)}
-                          "Relocate"]]]
+                          "Move"]]]
                        ;;  Displaying current database
                        [:div (use-style {:display         "flex"
                                          :justify-content "space-between"
@@ -125,8 +150,12 @@
                                          :width           "80%"})
                         [button {:primary true
                                  :on-click #(electron/open-dialog!)}
-                         "Open Database"]
+                         [:<>
+                          [:> mui-icons/FolderOpen]
+                          [:span "Open"]]]
                         [button {:primary true
                                  :on-click #(swap! state update :create not)}
-                         "New Database"]]])]
+                         [:<>
+                          [:> mui-icons/Add]
+                          [:span "New"]]]]])]
          :on-close close-modal}]])))
