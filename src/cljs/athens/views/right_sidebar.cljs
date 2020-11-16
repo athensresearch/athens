@@ -190,8 +190,8 @@
                                  [:div (merge (use-style sidebar-style
                                                          {:class (if open? "is-open" "is-closed")})
                                               {:style (cond-> {}
-                                                              (:dragging @state) (assoc :transition-duration "0s")
-                                                              open? (assoc :width (str (:width @state) "vw")))})
+                                                        (:dragging @state) (assoc :transition-duration "0s")
+                                                        open? (assoc :width (str (:width @state) "vw")))})
                                   [:div (use-style {:cursor           "col-resize"
                                                     :height           "100%"
                                                     :position         "absolute"
