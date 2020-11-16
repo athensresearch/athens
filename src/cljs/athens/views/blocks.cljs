@@ -795,7 +795,7 @@
         selected-items @(subscribe [:selected/items])]
 
     (cond
-      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second find))
+      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype)))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (dispatch [:drop source-uid target-uid drag-target])
