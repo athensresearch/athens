@@ -49,9 +49,10 @@
           html-title-prefix (cond
                               node-title node-title
                               (= route-name :pages) "All Pages"
-                              (= route-name :home) "Daily Notes"
-                              :else "Athens")
-          html-title (str html-title-prefix " | Athens Research")]
+                              (= route-name :home) "Daily Notes")
+          html-title (if html-title-prefix
+                       (str html-title-prefix " | Athens Research")
+                       "Athens Research")]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
