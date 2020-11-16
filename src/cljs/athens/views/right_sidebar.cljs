@@ -36,7 +36,7 @@
 
 (def sidebar-content-style
   {:display "flex"
-   :flex "0 0 32vw"
+   :flex "1 1 32vw"
    :flex-direction "column"
    :margin-left "0"
    :transition "all 0.35s ease-out"
@@ -86,7 +86,6 @@
    :font-size "15px"
    :position "relative"
    :z-index 1
-   :width "32vw"
    ::stylefy/manual [[:h1 {:font-size "1.5em"
                            :display "-webkit-box"
                            :-webkit-box-orient "vertical"
