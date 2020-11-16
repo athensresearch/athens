@@ -13,6 +13,7 @@
 (def modal-style
   {:z-index (:zindex-modal ZINDICES)
    :animation "fade-in 0.2s"
+   :position "relative"
    ::stylefy/manual [[:.modal {:position "fixed"
                                :top "50vh"
                                :left "50vw"
