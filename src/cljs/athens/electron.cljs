@@ -149,7 +149,9 @@
                           new-children (conj reindex new-block)
                           new-parent   {:db/id (:db/id parent) :block/children new-children}]
                       new-parent))]
-    (dispatch [:transact [tx-data]])))
+    ;; delay because you want to create block *after* the file has been saved to filesystem
+    ;; otherwise, <img> is created too fast, and no image is rendered
+    (js/setTimeout #(dispatch [:transact [tx-data]]) 50)))
 
 
 ;;; Subs
