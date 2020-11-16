@@ -45,8 +45,14 @@
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
           node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
           node-title (:node/title @node)
-          page-title (str (or node-title "untitled") " – Athens")]
-      (set! (.-title js/document) page-title) ;; TODO make this side effect explicit
+          route-name (-> new-match :data :name)
+          html-title-prefix (cond
+                              node-title node-title
+                              (= route-name :pages) "All Pages"
+                              (= route-name :home) "Daily Notes"
+                              :else "Athens")
+          html-title (str html-title-prefix " | Athens Research")]
+      (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
                (dissoc :merge-prompt))
