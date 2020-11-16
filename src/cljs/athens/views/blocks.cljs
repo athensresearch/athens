@@ -503,7 +503,7 @@
                       (let [datatype (.. item -type)]
                         (cond
                           (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
-                                                         (swap! state assoc :string/local new-str))
+                                                         (js/setTimeout #(swap! state assoc :string/local new-str) 50))
                           (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
                     items)
       :else (when (and line-breaks no-shift)
