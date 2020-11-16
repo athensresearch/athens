@@ -51,8 +51,8 @@
                               (= route-name :pages) "All Pages"
                               (= route-name :home) "Daily Notes")
           html-title (if html-title-prefix
-                       (str html-title-prefix " | Athens Research")
-                       "Athens Research")]
+                       (str html-title-prefix " | Athens")
+                       "Athens")]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
