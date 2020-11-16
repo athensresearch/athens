@@ -22,6 +22,7 @@
 
 (def fs (js/require "fs"))
 (def path (js/require "path"))
+(def stream (js/require "stream"))
 
 
 (def DB-INDEX "index.transit")
@@ -245,7 +246,7 @@
 
 
 (def debounce-sync-db-from-fs
-  (debounce sync-db-from-fs 100))
+  (debounce sync-db-from-fs 1000))
 
 
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
@@ -323,18 +324,21 @@
 ;;; Effects
 
 
-;; TODO: implement with streams
-;;(def r (.. stream -Readable (from (dt/write-transit-str @db/dsdb))))
-;;(def w (.createWriteStream fs "./data/my-db.transit"))
-;;(.pipe r w)
-
 (defn write-file
   [filepath data]
-  (.writeFile fs filepath data (fn [err]
-                                 (when err
-                                   (throw (js/Error. err)))))
-  (dispatch [:db/sync])
-  (dispatch [:db/update-mtime (js/Date.)]))
+  (let [r (.. stream -Readable (from data))
+        w (.createWriteStream fs filepath)
+        error-cb (fn [err]
+                   (when err
+                     (js/alert (js/Error. err))
+                     (js/console.error (js/Error. err))))]
+    (.setEncoding r "utf8")
+    (.on r "error" error-cb)
+    (.on w "error" error-cb)
+    (.on w "finish" (fn []
+                      (dispatch [:db/sync])
+                      (dispatch [:db/update-mtime (js/Date.)])))
+    (.pipe r w)))
 
 
 (def debounce-write (debounce write-file 15000))
