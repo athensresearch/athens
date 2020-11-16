@@ -326,12 +326,19 @@
 
 (defn write-file
   [filepath data]
-  (.writeFile fs filepath data (fn [err]
-                                 (if err
-                                   (throw (js/Error. err))
-                                   (do
-                                     (dispatch [:db/sync])
-                                     (dispatch [:db/update-mtime (js/Date.)]))))))
+  (let [r (.. stream -Readable (from data))
+        w (.createWriteStream fs filepath)
+        error-cb (fn [err]
+                   (when err
+                     (js/alert (js/Error. err))
+                     (js/console.error (js/Error. err))))]
+    (.setEncoding r "utf8")
+    (.on r "error" error-cb)
+    (.on w "error" error-cb)
+    (.on w "finish" (fn []
+                      (dispatch [:db/sync])
+                      (dispatch [:db/update-mtime (js/Date.)])))
+    (.pipe r w)))
 
 
 (def debounce-write (debounce write-file 15000))
