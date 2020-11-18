@@ -385,6 +385,7 @@
           (when-not timeline-page?
             [autosize/textarea
              {:value         (:title/local @state)
+              :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
               :on-blur       (fn [_] (handle-blur node state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
