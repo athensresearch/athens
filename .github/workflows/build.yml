@@ -45,7 +45,7 @@ jobs:
            fetch-depth: 1
            submodules: 'true'
 
-       - uses: DeLaGuardo/setup-clj-kondo@v1
+       - uses: DeLaGuardo/setup-clj-kondo@master
          with:
            version: '2020.05.09'
 
@@ -73,7 +73,7 @@ jobs:
            fetch-depth: 1
            submodules: 'true'
 
-       - uses: DeLaGuardo/setup-clojure@2.0
+       - uses: DeLaGuardo/setup-clojure@master
          with:
            tools-deps: '1.10.1.469'
 
