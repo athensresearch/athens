@@ -55,7 +55,7 @@
     "create-react-class": "^15.6.3",
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.4",
-    "highlight.js": "9.15.10",
+    "highlight.js": "10.1.2",
     "marked": "^1.0.0",
     "nedb": "^1.8.0",
     "react": "16.9.0",
