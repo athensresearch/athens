@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.keybindings :refer [destruct-key-down]]
+    [athens.keybindings :refer [destruct-key-down, textarea-key-down]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
@@ -41,10 +41,11 @@
   {:position "relative"
    :overflow "visible"
    :flex-grow "1"
-   :margin "0.2em 0 0.2em 1rem"
+   :margin "0.10em 0 0.10em 1rem"
    :letter-spacing "-0.03em"
    :white-space "pre-line"
    :word-break "break-word"
+   :line-height "1.40em"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -388,7 +389,7 @@
               :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
               :on-blur       (fn [_] (handle-blur node state ref-groups))
-              :on-key-down   (fn [e] (handle-key-down e state))
+              :on-key-down   (fn [e] (textarea-key-down e uid state))
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]

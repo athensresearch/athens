@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.keybindings :refer [destruct-key-down]]
+    [athens.keybindings :refer [destruct-key-down textarea-key-down]]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
@@ -29,9 +29,10 @@
   {:position        "relative"
    :overflow        "visible"
    :flex-grow       "1"
-   :margin          "0.2em 0"
+   :margin          "0.1em 0"
    :letter-spacing  "-0.03em"
    :word-break      "break-word"
+   :line-height     "1.4em"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -118,7 +119,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-key-down (fn [e] (block-page-key-down e uid state))
+            :on-key-down (fn [e] (textarea-key-down e uid state))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 
