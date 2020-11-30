@@ -2,10 +2,11 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.keybindings :refer [destruct-key-down textarea-key-down]]
+    [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
+    [athens.util :refer [get-caret-position]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
@@ -77,13 +78,39 @@
     (.. e preventDefault)
     (dispatch [:split-block-to-children uid value start])))
 
+(defn handle-block-page-arrow-key
+  [e uid state]
+  (let [{:keys [key-code target]} (destruct-key-down e)
+        start?          (block-start? e)
+        end?            (block-end? e)
+        { caret-position :caret-position} @state
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (js/Math.round (/ textarea-height height))
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)
+        up?             (= key-code KeyCodes.UP)
+        down?           (= key-code KeyCodes.DOWN)
+        left?           (= key-code KeyCodes.LEFT)
+        right?          (= key-code KeyCodes.RIGHT)]
+
+    (cond
+      (or (and up? top-row?)
+          (and left? start?)) (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
+      (or (and down? bottom-row?)
+          (and right? end?)) (do (.. e preventDefault)
+                                 (dispatch [:down uid])))))
 
 (defn block-page-key-down
   [e uid state]
-  (let [d-event (destruct-key-down e)
-        {:keys [key-code]} d-event]
+  (let [{:keys [key-code shift]} (destruct-key-down e)
+        caret-position (get-caret-position (.. e -target))]
+    (swap! state assoc :caret-position caret-position)
     (cond
-      (= key-code KeyCodes.ENTER) (handle-enter e uid state))))
+      (arrow-key-direction e) (handle-block-page-arrow-key e uid state)
+      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state))))
 
 
 (defn block-page-change
@@ -119,7 +146,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-key-down (fn [e] (textarea-key-down e uid state))
+            :on-key-down (fn [e] (block-page-key-down e uid state))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 

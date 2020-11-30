@@ -479,7 +479,7 @@
   ([uid]
    (let [block                (->> (get-block [:block/uid uid])
                                    sort-block-children)
-         {:block/keys [children open] node :node/title } block
+         {:block/keys [children open] node :node/title} block
          next-block-recursive (next-sibling-recursively uid)]
      (cond
        (and (or open node) children) (:block/uid (first children))

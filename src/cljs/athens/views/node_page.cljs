@@ -2,12 +2,12 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.keybindings :refer [destruct-key-down, textarea-key-down]]
+    [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page get-caret-position]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -151,13 +151,38 @@
                                               :block/string ""}]}]])
     (dispatch [:editing/uid new-uid])))
 
+(defn handle-page-arrow-key
+  [e uid state]
+  (let [{:keys [key-code target]} (destruct-key-down e)
+        start?          (block-start? e)
+        end?            (block-end? e)
+        { caret-position :caret-position} @state
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (js/Math.round (/ textarea-height height))
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)
+        up?             (= key-code KeyCodes.UP)
+        down?           (= key-code KeyCodes.DOWN)
+        left?           (= key-code KeyCodes.LEFT)
+        right?          (= key-code KeyCodes.RIGHT)]
+
+    (cond
+      (or (and up? top-row?)
+          (and left? start?)) (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
+      (or (and down? bottom-row?)
+          (and right? end?)) (do (.. e preventDefault)
+                                 (dispatch [:down uid])))))
 
 (defn handle-key-down
-  "When user presses shift-enter, normal behavior: create a linebreak.
-  When user presses enter, blur."
-  [e _state]
-  (let [{:keys [key-code shift]} (destruct-key-down e)]
-    (when
+  [e uid state]
+  (let [{:keys [key-code shift]} (destruct-key-down e)
+        caret-position (get-caret-position (.. e -target))]
+    (swap! state assoc :caret-position caret-position)
+    (cond
+      (arrow-key-direction e) (handle-page-arrow-key e uid state)
       (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
 
 
@@ -389,7 +414,7 @@
               :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
               :on-blur       (fn [_] (handle-blur node state ref-groups))
-              :on-key-down   (fn [e] (textarea-key-down e uid state))
+              :on-key-down   (fn [e] (handle-key-down e uid state))
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
