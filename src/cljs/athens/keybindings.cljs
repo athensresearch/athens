@@ -2,8 +2,8 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
     [athens.router :as router]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
