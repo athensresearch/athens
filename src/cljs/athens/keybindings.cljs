@@ -196,7 +196,7 @@
   ([state e]
    (let [{:search/keys [query type index results]} @state
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [start head tail target]} (destruct-key-down e)
+         {:keys [start end head tail target selection]} (destruct-key-down e)
          expansion    (or title uid)
          block?       (= type :block)
          page?        (= type :page)
@@ -214,10 +214,18 @@
          matches      (re-matches tail-pattern tail)
          [_ _ after-closing-str] matches
          new-str      (str replace-str after-closing-str)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc :search/type nil :string/local new-str))
-     (setStart target (+ 2 start))))
+
+     (if-not (blank? selection)
+       (let [new-str (str head expansion tail)
+             new-index (+ 2 (count (str head expansion)))]
+         (swap! state assoc :search/type nil :string/local new-str)
+         (set! (.-value target) new-str)
+         (set-cursor-position target new-index))
+       (do
+         (if (nil? expansion)
+           (swap! state assoc :search/type nil)
+           (swap! state assoc :search/type nil :string/local new-str))
+         (setStart target (+ 2 start))))))
   ([state target expansion]
    (let [{:search/keys [query type]} @state
          {:keys [start head tail]} (destruct-target target)
@@ -479,7 +487,16 @@
                       (set! (.-value target) new-str)
                       (set-cursor-position target new-idx)
                       (when type
-                        (update-query state head (str key close-pair) type)))
+                        (update-query state head (str key close-pair) type))
+                      ;; when double pair char, open inline-search
+                      (when (>= (count (:string/local @state)) 4)
+                        (let [four-char (subs (:string/local @state) (dec start) (+ start 3))
+                              double-brackets? (= "[[]]" four-char)
+                              double-parens?   (= "(())" four-char)
+                              type (cond double-brackets? :page
+                                         double-parens? :block)]
+                          (when type
+                            (swap! state assoc :search/type type :search/query "" :search/results [])))))
 
       ;; when selection
       (not= start end) (let [surround-selection (surround selection key)
@@ -487,20 +504,24 @@
                          (swap! state assoc :string/local new-str)
                          (set! (.-value target) new-str)
                          (set! (.-selectionStart target) (inc start))
-                         (set! (.-selectionEnd target) (inc end))))
+                         (set! (.-selectionEnd target) (inc end))
 
-    ;; when double pair char, open inline-search
-    (when (>= (count (:string/local @state)) 4)
-      (let [four-char (subs (:string/local @state) (dec start) (+ start 3))
-            double-brackets? (= "[[]]" four-char)
-            double-parens?   (= "(())" four-char)
-            type (cond double-brackets? :page
-                       double-parens? :block)]
-        (when type
-          (swap! state assoc :search/type type :search/query "" :search/results []))))))
+                         (when (>= (count (:string/local @state)) (+ (count selection) 4))
+                           (let [ahead-2 (subs (:string/local @state) (dec start) (inc start))
+                                 behind-2 (subs (:string/local @state) (inc end) (+ end 3))
+                                 four-char (str ahead-2 behind-2)
+                                 double-brackets? (= "[[]]" four-char)
+                                 double-parens?   (= "(())" four-char)
+                                 type (cond double-brackets? :page
+                                            double-parens? :block)
+                                 query-fn (cond
+                                            (= type :page) db/search-in-node-title
+                                            (= type :block) db/search-in-block-content)]
+                             (when type
+                               (let [results (query-fn selection)]
+                                 (swap! state assoc :search/type type :search/query type :search/results results :search/index 0)))))))))
 
-    ;; TODO: close bracket should not be created if it already exists
-    ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
+
 
 
 ;; Backspace
