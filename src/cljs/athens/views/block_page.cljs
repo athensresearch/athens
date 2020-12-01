@@ -2,11 +2,9 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.util :refer [get-caret-position]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
@@ -15,12 +13,9 @@
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
-  (:import
-    (goog.events
-      KeyCodes)))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -71,48 +66,6 @@
 
 ;;; Components
 
-
-(defn handle-enter
-  [e uid _state]
-  (let [{:keys [start value]} (destruct-key-down e)]
-    (.. e preventDefault)
-    (dispatch [:split-block-to-children uid value start])))
-
-(defn handle-block-page-arrow-key
-  [e uid state]
-  (let [{:keys [key-code target]} (destruct-key-down e)
-        start?          (block-start? e)
-        end?            (block-end? e)
-        { caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight)
-        {:keys [top height]} caret-position
-        rows            (js/Math.round (/ textarea-height height))
-        row             (js/Math.ceil (/ top height))
-        top-row?        (= row 1)
-        bottom-row?     (= row rows)
-        up?             (= key-code KeyCodes.UP)
-        down?           (= key-code KeyCodes.DOWN)
-        left?           (= key-code KeyCodes.LEFT)
-        right?          (= key-code KeyCodes.RIGHT)]
-
-    (cond
-      (or (and up? top-row?)
-          (and left? start?)) (do (.. e preventDefault)
-                                  (dispatch [:up uid]))
-      (or (and down? bottom-row?)
-          (and right? end?)) (do (.. e preventDefault)
-                                 (dispatch [:down uid])))))
-
-(defn block-page-key-down
-  [e uid state]
-  (let [{:keys [key-code shift]} (destruct-key-down e)
-        caret-position (get-caret-position (.. e -target))]
-    (swap! state assoc :caret-position caret-position)
-    (cond
-      (arrow-key-direction e) (handle-block-page-arrow-key e uid state)
-      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state))))
-
-
 (defn block-page-change
   [e _uid state]
   (let [value (.. e -target -value)]
@@ -146,7 +99,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-key-down (fn [e] (block-page-key-down e uid state))
+            :on-key-down (fn [e] (node-page/handle-key-down e uid state))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 

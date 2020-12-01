@@ -151,12 +151,20 @@
                                               :block/string ""}]}]])
     (dispatch [:editing/uid new-uid])))
 
+
+(defn handle-enter
+  [e uid _state]
+  (let [{:keys [start value]} (destruct-key-down e)]
+    (.. e preventDefault)
+    (dispatch [:split-block-to-children uid value start])))
+
+
 (defn handle-page-arrow-key
   [e uid state]
   (let [{:keys [key-code target]} (destruct-key-down e)
         start?          (block-start? e)
         end?            (block-end? e)
-        { caret-position :caret-position} @state
+        {caret-position :caret-position} @state
         textarea-height (.. target -offsetHeight)
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
@@ -176,6 +184,7 @@
           (and right? end?)) (do (.. e preventDefault)
                                  (dispatch [:down uid])))))
 
+
 (defn handle-key-down
   [e uid state]
   (let [{:keys [key-code shift]} (destruct-key-down e)
@@ -183,7 +192,7 @@
     (swap! state assoc :caret-position caret-position)
     (cond
       (arrow-key-direction e) (handle-page-arrow-key e uid state)
-      (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
+      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state))))
 
 
 (defn handle-change
