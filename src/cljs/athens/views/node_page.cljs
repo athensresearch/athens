@@ -153,10 +153,16 @@
 
 
 (defn handle-enter
-  [e uid _state]
-  (let [{:keys [start value]} (destruct-key-down e)]
-    (.. e preventDefault)
-    (dispatch [:split-block-to-children uid value start])))
+  [e uid _state children]
+  (.. e preventDefault)
+  (let [node-page  (.. e -target (closest ".node-page"))
+        block-page (.. e -target (closest ".block-page"))
+        {:keys [start value]} (destruct-key-down e)]
+    (cond
+      block-page (dispatch [:split-block-to-children uid value start])
+      node-page (if (empty? children)
+                  (handle-new-first-child-block-click uid)
+                  (dispatch [:down])))))
 
 
 (defn handle-page-arrow-key
@@ -186,13 +192,13 @@
 
 
 (defn handle-key-down
-  [e uid state]
+  [e uid state children]
   (let [{:keys [key-code shift]} (destruct-key-down e)
         caret-position (get-caret-position (.. e -target))]
     (swap! state assoc :caret-position caret-position)
     (cond
       (arrow-key-direction e) (handle-page-arrow-key e uid state)
-      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state))))
+      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state children))))
 
 
 (defn handle-change
@@ -423,7 +429,7 @@
               :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
               :on-blur       (fn [_] (handle-blur node state ref-groups))
-              :on-key-down   (fn [e] (handle-key-down e uid state))
+              :on-key-down   (fn [e] (handle-key-down e uid state children))
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]

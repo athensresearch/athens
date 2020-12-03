@@ -99,7 +99,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-key-down (fn [e] (node-page/handle-key-down e uid state))
+            :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 
