@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.router :as router]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -414,7 +415,7 @@
 
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
-  [e _ state]
+  [e uid state]
   (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
 
@@ -444,7 +445,54 @@
                                                   (if selection?
                                                     (do (setStart target (+ 2 start))
                                                         (setEnd target (+ 2 end)))
-                                                    (set-cursor-position target (+ 2 start)))))))
+                                                    (set-cursor-position target (+ 2 start))))
+
+      ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
+      ;; if caret on a #hashtag, navigate to that page
+      ;; if caret within ((uid)), navigate to that uid
+      ;; otherwise zoom into current block
+
+      (= key-code KeyCodes.O) (let [link      (str (replace-first head #"(?s)(.*)\[\[" "")
+                                                   (replace-first tail #"(?s)\]\](.*)" ""))
+                                    hashtag   (str (replace-first head #"(?s).*#" "")
+                                                   (replace-first tail #"(?s)\s(.*)" ""))
+                                    block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
+                                                   (replace-first tail #"(?s)\)\)(.*)" ""))]
+
+                                (cond
+                                  (and (re-find #"(?s)\[\[" head)
+                                       (re-find #"(?s)\]\]" tail)
+                                       (nil? (re-find #"(?s)\[" link))
+                                       (nil? (re-find #"(?s)\]" link)))
+                                  (let [eid (db/e-by-av :node/title link)
+                                        uid (db/v-by-ea eid :block/uid)]
+                                    (if eid
+                                      (router/navigate-uid uid e)
+                                      (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
+                                        (dispatch [:page/create link new-uid])
+                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+
+                                  ;; same logic as link
+                                  (and (re-find #"(?s)#" head)
+                                       (re-find #"(?s)\s" tail))
+                                  (let [eid (db/e-by-av :node/title hashtag)
+                                        uid (db/v-by-ea eid :block/uid)]
+                                    (if eid
+                                      (router/navigate-uid uid e)
+                                      (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
+                                        (dispatch [:page/create link new-uid])
+                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+
+                                  (and (re-find #"(?s)\(\(" head)
+                                       (re-find #"(?s)\)\)" tail)
+                                       (nil? (re-find #"(?s)\(" block-ref))
+                                       (nil? (re-find #"(?s)\)" block-ref))
+                                       (db/e-by-av :block/uid block-ref))
+                                  (router/navigate-uid block-ref e)
+
+                                  :else (router/navigate-uid uid e))))))
 
 
 (defn pair-char?
