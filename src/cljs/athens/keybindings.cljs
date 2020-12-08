@@ -469,6 +469,7 @@
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
                                         (dispatch [:page/create link new-uid])
                                         (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
@@ -480,6 +481,7 @@
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
                                         (dispatch [:page/create link new-uid])
                                         (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
