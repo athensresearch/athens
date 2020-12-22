@@ -492,23 +492,22 @@
         no-shift    (-> @state :last-keydown :shift not)
         items       (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.keybindings/destruct-target (.-target e))
-        n           (count items)
         img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
     (cond
-      #_(= n 1) #_(let [item     (first items)
-                        datatype (.. item -type)]
-                    (when (re-find regex datatype)
-                      (athens.electron/save-image item state)))
-      (= n 2) (mapv (fn [item]
-                      (let [datatype (.. item -type)]
-                        (cond
-                          (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
-                                                         (js/setTimeout #(swap! state assoc :string/local new-str) 50))
-                          (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-                    items)
-      :else (when (and line-breaks no-shift)
-              (.. e preventDefault)
-              (dispatch [:paste uid text-data])))))
+      (seq (filter (fn [item]
+                     (let [datatype (.. item -type)]
+                       (re-find img-regex datatype))) items))
+      (mapv (fn [item]
+              (let [datatype (.. item -type)]
+                (cond
+                  (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
+                                                 (js/setTimeout #(swap! state assoc :string/local new-str) 50))
+                  (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+            items)
+      :else
+      (when (and line-breaks no-shift)
+        (.. e preventDefault)
+        (dispatch [:paste uid text-data])))))
 
 
 (defn textarea-change
