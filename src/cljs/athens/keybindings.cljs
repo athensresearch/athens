@@ -292,7 +292,7 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift target selection]} (destruct-key-down e)
+  (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
         selection?      (not (blank? selection))
         start?          (block-start? e)
         end?            (block-end? e)
@@ -317,6 +317,11 @@
                   (and down? bottom-row?)) (do
                                              (.. target blur)
                                              (dispatch [:selected/add-item uid])))
+
+      ;; Control: fold or unfold blocks
+      ctrl (cond
+             up? (dispatch [:transact [[:db/add [:block/uid uid] :block/open false]]])
+             down? (dispatch [:transact [[:db/add [:block/uid uid] :block/open true]]]))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
