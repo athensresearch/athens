@@ -14,8 +14,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    #_[datascript.core :as d]
-    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
