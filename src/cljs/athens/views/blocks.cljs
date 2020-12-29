@@ -20,7 +20,8 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+    [stylefy.core :as stylefy :refer [use-style]]
+    [datascript.core :as d])
   (:import
     (goog.events
       EventType)))
