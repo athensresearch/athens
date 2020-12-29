@@ -319,13 +319,16 @@
                                              (dispatch [:selected/add-item uid])))
 
       ;; Control: fold or unfold blocks
-      ctrl (let [new-open-state (cond
-                                  up? false
-                                  down? true)
-                 event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
-             (.. e preventDefault)
-             (dispatch event))
-
+      ctrl (cond
+             left? nil
+             right? nil
+             (or up? down?) (let [new-open-state (cond
+                                                   up? false
+                                                   down? true)
+                                  event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
+                              (.. e preventDefault)
+                              (dispatch event)))
+      
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
