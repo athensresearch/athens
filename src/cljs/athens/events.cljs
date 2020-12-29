@@ -519,10 +519,9 @@
         retract-block  [:db/retractEntity (:db/id block)]
         new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
-      (and (:node/title parent) (zero? order)) (when (clojure.string/blank? value)
-                                                 (let [tx-data [retract-block new-parent]]
-                                                   {:dispatch-n [[:transact tx-data]
-                                                                 [:editing/uid nil]]}))
+      (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
+                                                                                                 {:dispatch-n [[:transact tx-data]
+                                                                                                               [:editing/uid nil]]})
       (and (not-empty children) (not-empty (:block/children prev-sib))) nil
       (and (not-empty children) (= parent prev-block)) nil
       :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)

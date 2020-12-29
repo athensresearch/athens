@@ -14,7 +14,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    #_[datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -516,9 +515,11 @@
 
 
 (defn textarea-blur
+  "Checks for eid to make sure safe write. Sometimes backspace deletes entity, and then blur wants to happen."
   [_e uid state]
-  (let [{:string/keys [local previous]} @state]
-    (when (not= local previous)
+  (let [{:string/keys [local previous]} @state
+        eid (db/e-by-av :block/uid uid)]
+    (when (and (not= local previous) eid)
       (swap! state assoc :string/previous local)
       (let [new-block-string {:db/id [:block/uid uid] :block/string local}
             tx-data          [new-block-string]]
