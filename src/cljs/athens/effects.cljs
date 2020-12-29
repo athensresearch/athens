@@ -185,8 +185,6 @@
         (prn "EXCEPTION" e)))))
 
 
-
-
 (reg-fx
   :reset-conn!
   (fn [new-db]
