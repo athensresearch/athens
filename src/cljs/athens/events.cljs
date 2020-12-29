@@ -39,11 +39,62 @@
     (assoc db :db/synced false)))
 
 
+(def ROAM-DB (atom nil))
+
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ roam-db]]
-    (let [shared-pages (athens.views.filesystem/shared-pages roam-db)]
+    (let [shared-pages (athens.views.filesystem/shared-pages @roam-db)]
+      (reset! ROAM-DB @roam-db)
+      (prn "SHARED" shared-pages)
       {})))
+
+
+;; For all shared pages, must merge blocks
+;; For all non-shared pages, simply transact them to dsdb
+;; merge ROAM into ATHENS because ROAM schema is a superset...
+;; actually, I think all the blocks should just get imported under a new block with the date on it
+
+;; db/ids is a tough edge case, e.g. block/refs and block/parents.
+;; if we remove all db/ids, then have to redo references
+;; if we have to keep all db/ids, then there will be collisions (probably)
+;; one way to avoid collisions is to start with a Roam db from the beginning
+
+
+(let [shared ["" "1" "2" "4" "5 Why's" "Airtable" "Amazon" "Andy Grove" "Apple" "Athens" "Babashka" "Beating the Averages" "Bureaucracy" "Changelog" "Christopher Alexander" "Clojure" "Clojure Routers - PurelyFunctional.tv" "Clojure from the Ground Up" "Community" "Conaw" "Contrarian" "DONE" "Datahike" "Datascript" "Datomic" "Day of Datomic Cloud 2018" "Devon Zuegel" "Discord" "Elad Gil" "Ethereum" "Facebook" "Figma" "First Principles" "Functional Programming with Jessica Kerr" "Gene Kim" "Good Artists Copy; Great Artists Steal" "Hacker News" "IFTTT" "Jeff Bezos" "Lisp" "Love Letter To Clojure" "MIT" "Mark Zuckerberg" "Metrics" "Microsoft" "Microsoft Fluid" "Mozilla" "Notion" "Nubank" "OKRs" "Patreon" "Paul Graham" "Power" "Quote" "Roam Research" "Samo Burja" "Semantic Web" "Silicon Valley" "Slack" "Smalltalk" "Steve Jobs" "TODO" "Technical Debt" "Ted Nelson" "Tiago Forte" "Tim Berners-Lee" "Venkatesh Rao" "VisiCalc" "Welcome" "asd" "athens" "logic programming" "macros" "meta-cognition" "programming languages" "roamcult"]]
+  ;;(merge-dbs @ROAM-DB @db/dsdb)
+  #_(->> shared
+        (map #(db/get-node-document [:node/title %] @ROAM-DB #_@db/dsdb))
+        (filter :block/children))
+  #_(->> shared
+         (map #(db/get-node-document [:node/title %] #_@ROAM-DB @db/dsdb))
+         (filter :block/children)))
+
+
+;;(map + [1 2] [9 0])
+
+
+;; TODO: what about all the roam db/ids? gotta ignore
+(let [page-athens              (db/get-node-document [:node/title "Athens"] #_@ROAM-DB @db/dsdb)
+      page-roam                (db/get-node-document [:node/title "Athens"] @ROAM-DB #_@db/dsdb)
+      athens-root-blocks-count (-> page-athens :block/children count)
+      new-children             (conj (:block/children page-athens)
+                                     {:block/uid      (gen-block-uid)
+                                      :block/children (:block/children page-roam)
+                                      :block/string   (str "Imported from " "xxx-db" " on " (js/Date.))
+                                      :block/order    athens-root-blocks-count
+                                      :block/open     true})]
+  (merge page-roam page-athens)
+  new-children)
+
+
+;;(d/pull @ROAM-DB '[*] 2090)
+
+#_(->> (d/q '[:find (count ?e) ?a
+              :where [?e ?a _]]
+            @ROAM-DB)
+       (sort-by first))
+
 
 
 (reg-event-db

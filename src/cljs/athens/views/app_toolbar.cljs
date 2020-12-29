@@ -5,6 +5,7 @@
     [athens.style :refer [color]]
     [athens.subs]
     #_[athens.util :as util]
+    [athens.views.filesystem :as filesystem]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
     #_[reagent.core :as r]
@@ -90,7 +91,7 @@
 
 
        (when @merge-open?
-         [athens.views.filesystem/merge-modal merge-open?])
+         [filesystem/merge-modal merge-open?])
 
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)

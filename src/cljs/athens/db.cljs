@@ -241,9 +241,12 @@
 
 
 (defn get-node-document
-  [id]
-  (->> @(pull dsdb node-document-pull-vector id)
-       sort-block-children))
+  ([id]
+   (->> @(pull dsdb node-document-pull-vector id)
+        sort-block-children))
+  ([id db]
+   (->> (d/pull db node-document-pull-vector id)
+        sort-block-children)))
 
 
 (defn get-athens-datoms
