@@ -328,7 +328,7 @@
                                   event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
                               (.. e preventDefault)
                               (dispatch event)))
-      
+
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
