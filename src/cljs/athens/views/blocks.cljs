@@ -15,14 +15,14 @@
     [cljsjs.react.dom]
     [clojure.string :as str]
     #_[datascript.core :as d]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [datascript.core :as d])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       EventType)))
