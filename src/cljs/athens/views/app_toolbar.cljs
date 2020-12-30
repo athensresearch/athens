@@ -102,6 +102,9 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
+         [button {:on-click #(router/navigate :settings)
+                  :active (= @route-name :settings)}
+          [:> mui-icons/Settings]]
          ;; Click to Open
          #_[button {:on-click #(prn "TODO")}
             [(r/adapt-react-class mui-icons/FolderOpen)
