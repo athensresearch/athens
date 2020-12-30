@@ -4,10 +4,10 @@
     [athens.db :as db]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
-    [athens.views.buttons :refer [button]]
     [athens.views.app-toolbar :refer [app-toolbar]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.block-page :refer [block-page-component]]
+    [athens.views.buttons :refer [button]]
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
@@ -16,8 +16,8 @@
     [athens.views.right-sidebar :refer [right-sidebar-component]]
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
-    [reagent.core :as r]
     [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
