@@ -81,8 +81,8 @@
 
 (def routes
   ["/"
-   [""      {:name :home}]
-   ["about" {:name :about}]
+   ["" {:name :home}]
+   ["settings" {:name :settings}]
    ["pages" {:name :pages}]
    ["page/:id" {:name :page}]])
 
