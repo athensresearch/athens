@@ -78,7 +78,7 @@
        (if @opted-out
          [:h5 "Opted Out of Analytics"]
          [:h5 "Opted Into Analytics"])
-       [:div
+       [:div {:style {:margin "10px 0"}}
         [button {:primary (false? @opted-out)
                  :on-click (fn []
                              (if @opted-out
