@@ -212,8 +212,7 @@
   (->> ref-groups
        first
        second
-       first
-       second))
+       (mapcat second)))
 
 
 (defn map-new-refs
@@ -263,6 +262,7 @@
   [node state ref-groups]
   (let [{dbid :db/id children :block/children} node
         {:keys [title/initial title/local]} @state]
+    (prn "ref-groups" ref-groups)
     (when (not= initial local)
       (let [existing-page   (get-existing-page local)
             linked-refs     (get-linked-refs ref-groups)
