@@ -670,6 +670,11 @@
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
 
+    ;; update caret position for search dropdowns and for up/down
+    (when (nil? (:search/type @state))
+      (let [caret-position (get-caret-position (.. e -target))]
+        (swap! state assoc :caret-position caret-position)))
+
     ;; dispatch center
     (cond
       (arrow-key-direction e)         (handle-arrow-key e uid state)
