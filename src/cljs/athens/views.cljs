@@ -64,7 +64,6 @@
     (.readAsText fr file)))
 
 
-
 ;; Panels
 
 

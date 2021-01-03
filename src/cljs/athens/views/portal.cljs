@@ -1,13 +1,12 @@
 (ns athens.views.portal
-  (:require ["react-dom" :refer [createPortal]]
-            [reagent.core :as r]
-            [goog.events :as events]
-            [athens.views.dropdown :as dropdown]
-            [stylefy.core :as stylefy]))
+  (:require
+    [goog.events :as events]
+    ["react-dom" :refer [createPortal]]
+    [reagent.core :as r]))
 
 
 (defn portal
-  [children click-outside-handler]
+  [_children click-outside-handler]
   (let [mount                (js/document.getElementById "portal")
         el                   (js/document.createElement "div")
         ref                  (atom nil)

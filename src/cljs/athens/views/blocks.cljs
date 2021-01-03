@@ -1,7 +1,6 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.views.portal :as portal]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
@@ -12,6 +11,7 @@
     [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [athens.views.portal :as portal]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -418,7 +418,6 @@
                         :style    {:text-align "left"}}
                 (or title string)])))]]
        #(swap! state assoc :search/type nil)])))
-
 
 
 (defn slash-item-click

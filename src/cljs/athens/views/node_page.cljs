@@ -19,7 +19,6 @@
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.events :refer [listen unlisten]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -381,6 +380,7 @@
                                             (swap! state assoc :block new-B :parents new-P)))}
                (or title string)]))]
          [block-el block linked-ref-data]]))))
+
 
 (defn get-click-position
   [target]
