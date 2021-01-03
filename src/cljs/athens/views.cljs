@@ -72,7 +72,7 @@
   (let [opted-out (r/atom (.. js/window -posthog has_opted_out_capturing))]
     (fn []
       [:div {:style {:display "flex"
-                     :margin "50px 300px"
+                     :margin "0vh 5vw"
                      :flex-direction "column"}}
        [:h1 "Settings"]
        (if @opted-out
