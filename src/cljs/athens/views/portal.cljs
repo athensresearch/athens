@@ -13,7 +13,8 @@
         ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (not (.. @ref (contains (.. e -target))))
-                                 (click-outside-handler)))]
+                                 (when (fn? click-outside-handler)
+                                   (click-outside-handler))))]
     (r/create-class
       {:display-name           "portal"
        :component-did-mount    (fn [_this]
