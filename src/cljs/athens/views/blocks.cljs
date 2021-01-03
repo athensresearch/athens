@@ -1,6 +1,7 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.views.portal :as portal]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
@@ -438,6 +439,25 @@
     (auto-complete-slash state target item)))
 
 
+;;(defn slash-menu-comp
+;;  [block state]
+;;  (let [{:search/keys [index results type] caret-position :caret-position} @state
+;;        {:keys [left top]} caret-position]
+;;    (when (= type :slash)
+;;      [portal [:div (merge (use-style dropdown-style
+;;                                      {:on-mouse-down (fn [e] (.. e preventDefault))})
+;;                           {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
+;;               [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
+;;                (doall
+;;                  (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+;;                    [button {:key      text
+;;                             :id       (str "dropdown-item-" i)
+;;                             :active   (= i index)
+;;                             :on-click (fn [_] (slash-item-click state block item))}
+;;                     [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]]])))
+
+
+
 (defn slash-menu-el
   [_block state]
   (let [ref (atom nil)
@@ -715,31 +735,17 @@
 
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
-  [_block state]
-  (let [ref                  (atom nil)
-        handle-click-outside (fn [e]
-                               (when (and (:context-menu/show @state)
-                                          (not (.. @ref (contains (.. e -target)))))
-                                 (swap! state assoc :context-menu/show false)))]
-    (r/create-class
-      {:display-name           "context-menu"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [block state]
-                                 (let [{:block/keys [uid]} block
-                                       {:context-menu/keys [show x y]} @state]
-                                   (when show
-                                     [:div (merge (use-style dropdown-style
-                                                             {:ref #(reset! ref %)})
-                                                  {:style {:position "fixed"
-                                                           :left     (str x "px")
-                                                           :top      (str y "px")}})
-                                      [:div (use-style menu-style)
-                                       ;; TODO: create listener that lets user exit context menu if click outside
-                                       [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-                                        (case show
-                                          :one "Copy block ref"
-                                          :many "Copy block refs")]]])))})))
+  [block state]
+  (let [{:block/keys [uid]} block
+        {:context-menu/keys [show x y]} @state]
+    (when show
+      [portal/portal-dropdown
+       [:<>
+        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+         (case show
+           :one "Copy block ref"
+           :many "Copy block refs")]]
+       state x y :context-menu/show])))
 
 
 (defn block-refs-count-el
@@ -885,6 +891,7 @@
 
           [inline-search-el block state]
           [slash-menu-el block state]
+          ;;[slash-menu-comp block state]
 
 
           ;; Children
