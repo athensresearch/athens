@@ -7,13 +7,13 @@
 
 
 (defn portal
-  [children state open-key]
+  [children click-outside-handler]
   (let [mount (js/document.getElementById "portal")
         el    (js/document.createElement "div")
         ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (not (.. @ref (contains (.. e -target))))
-                                 (swap! state assoc open-key false)))]
+                                 (click-outside-handler)))]
     (r/create-class
       {:display-name           "portal"
        :component-did-mount    (fn [_this]
@@ -31,13 +31,13 @@
 
 
 (defn portal-dropdown
-  [children state x y open-key]
+  [children x y click-outside-handler]
   (let [mount                (js/document.getElementById "portal")
         el                   (js/document.createElement "div")
         ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (not (.. @ref (contains (.. e -target))))
-                                 (swap! state assoc open-key false)))]
+                                 (click-outside-handler)))]
     (r/create-class
       {:display-name           "portal"
        :component-did-mount    (fn [_this]

@@ -329,73 +329,30 @@
 
 
 (defn menu-dropdown
-  [_node state]
-  (let [ref                  (atom nil)
-        handle-click-outside (fn [e]
-                               (when (and (:menu/show @state)
-                                          (not (.. @ref (contains (.. e -target)))))
-                                 (swap! state assoc :menu/show false)))]
-    (r/create-class
-      {:display-name           "node-page-menu"
-       :component-did-mount    (fn [_this] (listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [node state]
-                                 (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                       {:menu/keys [show x y]} @state
-                                       timeline-page? (is-timeline-page uid)]
-                                   (when show
-                                     [:div (merge (use-style dropdown-style
-                                                             {:ref #(reset! ref %)})
-                                                  {:style {:font-size "14px"
-                                                           :position  "fixed"
-                                                           :left      (str x "px")
-                                                           :top       (str y "px")}})
-                                      [:div (use-style menu-style)
-                                       (if sidebar
-                                         [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                          [:<>
-                                           [:> mui-icons/BookmarkBorder]
-                                           [:span "Remove Shortcut"]]]
-                                         [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                          [:<>
-                                           [:> mui-icons/Bookmark]
-                                           [:span "Add Shortcut"]]])
-                                       (when-not timeline-page?
-                                         [:hr (use-style menu-separator-style)])
-                                       (when-not timeline-page?
-                                         [button {:on-click #(do
-                                                               (navigate :pages)
-                                                               (dispatch [:page/delete uid title]))}
-                                          [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]])))})))
-
-
-(defn menu-drop
-  [_node state]
-  (fn [node state]
-    (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-          {:menu/keys [show x y]} @state
-          timeline-page? (is-timeline-page uid)]
-      (when show
-        [athens.views.portal/portal-dropdown
-         [:<>
-          (if sidebar
-            [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-             [:<>
-              [:> mui-icons/BookmarkBorder]
-              [:span "Remove Shortcut"]]]
-            [button {:on-click #(dispatch [:page/add-shortcut uid])}
-             [:<>
-              [:> mui-icons/Bookmark]
-              [:span "Add Shortcut"]]])
-          (when-not timeline-page?
-            [:hr (use-style menu-separator-style)])
-          (when-not timeline-page?
-            [button {:on-click #(do
-                                  (navigate :pages)
-                                  (dispatch [:page/delete uid title]))}
-             [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]
-         state x y :menu/show]))))
-
+  [node state]
+  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
+        {:menu/keys [show x y]} @state
+        timeline-page? (is-timeline-page uid)]
+    (when show
+      [athens.views.portal/portal-dropdown
+       [:<>
+        (if sidebar
+          [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+           [:<>
+            [:> mui-icons/BookmarkBorder]
+            [:span "Remove Shortcut"]]]
+          [button {:on-click #(dispatch [:page/add-shortcut uid])}
+           [:<>
+            [:> mui-icons/Bookmark]
+            [:span "Add Shortcut"]]])
+        (when-not timeline-page?
+          [:hr (use-style menu-separator-style)])
+        (when-not timeline-page?
+          [button {:on-click #(do
+                                (navigate :pages)
+                                (dispatch [:page/delete uid title]))}
+           [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]
+       state x y :menu/show])))
 
 
 
@@ -485,8 +442,7 @@
           ;;(parse-renderer/parse-and-render title uid)]
 
          ;; Dropdown
-         ;;[menu-dropdown node state]
-         [menu-drop node state]
+         [menu-dropdown node state]
 
          ;; Children
          (if (empty? children)
