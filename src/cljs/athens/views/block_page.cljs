@@ -47,7 +47,7 @@
                                  :color              "inherit"
                                  :font-weight        "inherit"
                                  :padding            "0"
-                                 :letter-spacing     "inherit"                                 
+                                 :letter-spacing     "inherit"
                                  :grid-area "main"
                                  :width              "100%"
                                  :min-height         "100%"
