@@ -382,15 +382,6 @@
          [block-el block linked-ref-data]]))))
 
 
-(defn get-click-position
-  [target]
-  (let [rect (.. target getBoundingClientRect)
-        left (+ (.. rect -x) (/ (.. rect -width) 2))
-        top (+ (.. rect -y) (.. js/window -scrollY))]
-    {:left left
-     :top top}))
-
-
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
