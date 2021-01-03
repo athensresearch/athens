@@ -31,7 +31,6 @@
    :flex-grow       "1"
    :margin          "0.2em 0"
    :letter-spacing  "-0.03em"
-   :line-height "1.3"
    :white-space "pre-line"
    :font-size "3.125em"
    :font-weight 600
