@@ -67,7 +67,8 @@
                      [:h1 {:grid-area "main"
                            :margin 0
                            :padding 0
-                           :font-size "inherit"}]
+                           :font-size "inherit"}
+                      [:&:empty:before {:content "'\002'"}]]
                      [:textarea:focus
                       :.is-editing {:outline "none"
                                     :z-index 3

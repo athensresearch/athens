@@ -79,7 +79,7 @@
                            :margin 0
                            :padding 0
                            :font-size "inherit"}
-                      [:&:empty:before {:content "'\200B'"}]]
+                      [:&:empty:before {:content "'\002'"}]]
                      [:textarea:focus
                       :.is-editing {:outline "none"
                                     :z-index 3
@@ -394,6 +394,7 @@
             [autosize/textarea
              {:value         (:title/local @state)
               :class         (when (= editing-uid uid) "is-editing")
+              :placeholder   "Page title"
               :on-blur       (fn [_] (handle-blur node state ref-groups))
               :on-key-down   (fn [e] (handle-key-down e state))
               :on-change     (fn [e] (handle-change e state))}])
