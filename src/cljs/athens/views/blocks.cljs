@@ -417,7 +417,7 @@
                         :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
                         :style    {:text-align "left"}}
                 (or title string)])))]]
-       #(swap! state :search/type nil)])))
+       #(swap! state assoc :search/type nil)])))
 
 
 
@@ -444,7 +444,7 @@
                       :active   (= i index)
                       :on-click (fn [_] (slash-item-click state block item))}
               [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]]
-       #(swap! state :search/type nil)])))
+       #(swap! state assoc :search/type nil)])))
 
 
 (defn textarea-paste
@@ -697,13 +697,17 @@
   (let [{:block/keys [uid]} block
         {:context-menu/keys [show x y]} @state]
     (when show
-      [portal/portal-dropdown
-       [:<>
-        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-         (case show
-           :one "Copy block ref"
-           :many "Copy block refs")]]
-       x y #(swap! state assoc :context-menu/show false)])))
+      [portal/portal
+       [:div (merge (use-style dropdown-style)
+                    {:style {:position "fixed"
+                             :left     (str x "px")
+                             :top      (str y "px")}})
+        [:div (use-style menu-style)
+         [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+          (case show
+            :one "Copy block ref"
+            :many "Copy block refs")]]]
+       #(swap! state assoc :context-menu/show false)])))
 
 
 (defn block-refs-count-el
@@ -849,7 +853,6 @@
 
           [inline-search-el block state]
           [slash-menu-el block state]
-          ;;[slash-menu-comp block state]
 
 
           ;; Children
