@@ -7,7 +7,6 @@
 
 
 (defn portal
-  "Update-in expects a hiccup form with a property map, e.g. [:div {}]"
   [children click-outside-handler]
   (let [mount                (js/document.getElementById "portal")
         el                   (js/document.createElement "div")
@@ -24,8 +23,10 @@
                                  (.. mount (removeChild el))
                                  (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [children]
-                                 (let [wrapped-children (update-in children [1]
-                                                                   #(merge %
-                                                                           {:on-mouse-down (fn [e] (.. e preventDefault))
-                                                                            :ref           (fn [e] (reset! ref e))}))]
-                                   (createPortal (r/as-element wrapped-children) el)))})))
+                                 (if (not (map? (second children)))
+                                   (throw (js/Error "Portal expects a hiccup form with a property map as the second item, e.g. [:div {}]"))
+                                   (let [wrapped-children (update-in children [1]
+                                                                     #(merge %
+                                                                             {:on-mouse-down (fn [e] (.. e preventDefault))
+                                                                              :ref           (fn [e] (reset! ref e))}))]
+                                     (createPortal (r/as-element wrapped-children) el))))})))
