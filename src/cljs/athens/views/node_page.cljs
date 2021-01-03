@@ -47,12 +47,11 @@
    :flex-grow "1"
    :margin "0.10em 0 0.10em 1rem"
    :letter-spacing "-0.03em"
-   :line-height "1.3"
    :white-space "pre-line"
    :font-size "3.125em"
    :font-weight 600
    :word-break "break-word"
-   :line-height "1.40em"
+   :line-height "1.4em"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
