@@ -14,7 +14,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    #_[datascript.core :as d]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -494,23 +493,22 @@
         no-shift    (-> @state :last-keydown :shift not)
         items       (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.keybindings/destruct-target (.-target e))
-        n           (count items)
         img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
     (cond
-      #_(= n 1) #_(let [item     (first items)
-                        datatype (.. item -type)]
-                    (when (re-find regex datatype)
-                      (athens.electron/save-image item state)))
-      (= n 2) (mapv (fn [item]
-                      (let [datatype (.. item -type)]
-                        (cond
-                          (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
-                                                         (swap! state assoc :string/local new-str))
-                          (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-                    items)
-      :else (when (and line-breaks no-shift)
-              (.. e preventDefault)
-              (dispatch [:paste uid text-data])))))
+      (seq (filter (fn [item]
+                     (let [datatype (.. item -type)]
+                       (re-find img-regex datatype))) items))
+      (mapv (fn [item]
+              (let [datatype (.. item -type)]
+                (cond
+                  (re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")]
+                                                 (js/setTimeout #(swap! state assoc :string/local new-str) 50))
+                  (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+            items)
+      :else
+      (when (and line-breaks no-shift)
+        (.. e preventDefault)
+        (dispatch [:paste uid text-data])))))
 
 
 (defn textarea-change
@@ -519,9 +517,11 @@
 
 
 (defn textarea-blur
+  "Checks for eid to make sure safe write. Sometimes backspace deletes entity, and then blur wants to happen."
   [_e uid state]
-  (let [{:string/keys [local previous]} @state]
-    (when (not= local previous)
+  (let [{:string/keys [local previous]} @state
+        eid (db/e-by-av :block/uid uid)]
+    (when (and (not= local previous) eid)
       (swap! state assoc :string/previous local)
       (let [new-block-string {:db/id [:block/uid uid] :block/string local}
             tx-data          [new-block-string]]
@@ -797,7 +797,7 @@
         selected-items @(subscribe [:selected/items])]
 
     (cond
-      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second find))
+      (re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype)))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (dispatch [:drop source-uid target-uid drag-target])

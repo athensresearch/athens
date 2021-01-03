@@ -31,6 +31,7 @@
                :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}
+               :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      []
@@ -462,8 +463,9 @@
   [uid]
   (loop [uid uid]
     (let [sib    (nth-sibling uid +1)
-          parent (get-parent [:block/uid uid])]
-      (if (or sib (:node/title parent))
+          parent (get-parent [:block/uid uid])
+          {node :node/title}   (get-block [:block/uid uid])]
+      (if (or sib (:node/title parent) node)
         sib
         (recur (:block/uid parent))))))
 
@@ -477,10 +479,10 @@
   ([uid]
    (let [block                (->> (get-block [:block/uid uid])
                                    sort-block-children)
-         {:block/keys [children open]} block
+         {:block/keys [children open] node :node/title} block
          next-block-recursive (next-sibling-recursively uid)]
      (cond
-       (and open children) (:block/uid (first children))
+       (and (or open node) children) (:block/uid (first children))
        next-block-recursive (:block/uid next-block-recursive))))
   ([uid selection?]
    (if selection?

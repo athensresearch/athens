@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
+    [athens.router :as router]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -291,7 +292,7 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift target selection]} (destruct-key-down e)
+  (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
         selection?      (not (blank? selection))
         start?          (block-start? e)
         end?            (block-end? e)
@@ -316,6 +317,17 @@
                   (and down? bottom-row?)) (do
                                              (.. target blur)
                                              (dispatch [:selected/add-item uid])))
+
+      ;; Control: fold or unfold blocks
+      ctrl (cond
+             left? nil
+             right? nil
+             (or up? down?) (let [new-open-state (cond
+                                                   up? false
+                                                   down? true)
+                                  event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
+                              (.. e preventDefault)
+                              (dispatch event)))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
@@ -414,7 +426,7 @@
 
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
-  [e _ state]
+  [e uid state]
   (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
         selection? (not= start end)]
 
@@ -444,7 +456,54 @@
                                                   (if selection?
                                                     (do (setStart target (+ 2 start))
                                                         (setEnd target (+ 2 end)))
-                                                    (set-cursor-position target (+ 2 start)))))))
+                                                    (set-cursor-position target (+ 2 start))))
+
+      ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
+      ;; if caret on a #hashtag, navigate to that page
+      ;; if caret within ((uid)), navigate to that uid
+      ;; otherwise zoom into current block
+
+      (= key-code KeyCodes.O) (let [link      (str (replace-first head #"(?s)(.*)\[\[" "")
+                                                   (replace-first tail #"(?s)\]\](.*)" ""))
+                                    hashtag   (str (replace-first head #"(?s).*#" "")
+                                                   (replace-first tail #"(?s)\s(.*)" ""))
+                                    block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
+                                                   (replace-first tail #"(?s)\)\)(.*)" ""))]
+
+                                (cond
+                                  (and (re-find #"(?s)\[\[" head)
+                                       (re-find #"(?s)\]\]" tail)
+                                       (nil? (re-find #"(?s)\[" link))
+                                       (nil? (re-find #"(?s)\]" link)))
+                                  (let [eid (db/e-by-av :node/title link)
+                                        uid (db/v-by-ea eid :block/uid)]
+                                    (if eid
+                                      (router/navigate-uid uid e)
+                                      (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
+                                        (dispatch [:page/create link new-uid])
+                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+
+                                  ;; same logic as link
+                                  (and (re-find #"(?s)#" head)
+                                       (re-find #"(?s)\s" tail))
+                                  (let [eid (db/e-by-av :node/title hashtag)
+                                        uid (db/v-by-ea eid :block/uid)]
+                                    (if eid
+                                      (router/navigate-uid uid e)
+                                      (let [new-uid (athens.util/gen-block-uid)]
+                                        (.blur target)
+                                        (dispatch [:page/create link new-uid])
+                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+
+                                  (and (re-find #"(?s)\(\(" head)
+                                       (re-find #"(?s)\)\)" tail)
+                                       (nil? (re-find #"(?s)\(" block-ref))
+                                       (nil? (re-find #"(?s)\)" block-ref))
+                                       (db/e-by-av :block/uid block-ref))
+                                  (router/navigate-uid block-ref e)
+
+                                  :else (router/navigate-uid uid e))))))
 
 
 (defn pair-char?

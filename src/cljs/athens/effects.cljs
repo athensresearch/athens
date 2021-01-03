@@ -169,16 +169,20 @@
   (fn [tx-data]
     (prn "TX RAW INPUTS") ;; event tx-data
     (pprint tx-data)
-    (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
-          more-tx-data  (parse-for-links with-tx-data)
-          final-tx-data (vec (concat tx-data more-tx-data))]
-      ;;(prn "TX WITH") ;; tx-data normalized by datascript to flat datoms
-      ;;(pprint with-tx-data)
-      (prn "TX FINAL INPUTS") ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-      (pprint final-tx-data)
-      (prn "TX OUTPUTS")
-      (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-        (pprint outputs)))))
+    (try
+      (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
+            more-tx-data  (parse-for-links with-tx-data)
+            final-tx-data (vec (concat tx-data more-tx-data))]
+        ;;(prn "TX WITH") ;; tx-data normalized by datascript to flat datoms
+        ;;(pprint with-tx-data)
+        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+        (pprint final-tx-data)
+        (prn "TX OUTPUTS")
+        (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+          (pprint outputs)))
+      (catch js/Error e
+        (js/alert (str e))
+        (prn "EXCEPTION" e)))))
 
 
 (reg-fx

@@ -1,13 +1,14 @@
 (ns athens.views.right-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :refer [color OPACITIES ZINDICES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -35,7 +36,7 @@
 
 (def sidebar-content-style
   {:display "flex"
-   :flex "0 0 32vw"
+   :flex "1 1 32vw"
    :flex-direction "column"
    :margin-left "0"
    :transition "all 0.35s ease-out"
@@ -85,7 +86,14 @@
    :font-size "15px"
    :position "relative"
    :z-index 1
-   :width "32vw"})
+   ::stylefy/manual [[:h1 {:font-size "1.5em"
+                           :display "-webkit-box"
+                           :-webkit-box-orient "vertical"
+                           :-webkit-line-clamp 1
+                           :line-clamp 1
+                           :overflow "hidden"
+                           :text-overflow "ellipsis"}]
+                     [:.node-page :.block-page {:margin-top 0}]]})
 
 
 (def sidebar-item-heading-style
@@ -160,42 +168,79 @@
 
 
 (defn right-sidebar-el
-  [open? items]
-  [:div (use-style sidebar-style {:class (if open? "is-open" "is-closed")})
-   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
-    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents 
-    ;;  [:h1 "Pages and Blocks"]]
-    ;;  [button [:> mui-icons/FilterList]]
-
-    (if (empty? items)
-      [empty-message]
-      (doall
-        (for [[uid {:keys [open node/title block/string]}] items]
-          ^{:key uid}
-          [:article (use-style sidebar-item-style)
-           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-            [button {:style sidebar-item-toggle-style
-                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
-                     :class (when open "is-open")}
-             [:> mui-icons/ChevronRight]]
-            [:h2
-             (if title
-               [:<> [:> mui-icons/Description] title]
-               [:<> [:> mui-icons/FiberManualRecord] string])]
-            [:div {:class "controls"}
-        ;;  [button [:> mui-icons/DragIndicator]]
-        ;;  [:hr]
-             [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
-              [:> mui-icons/Close]]]]
-           (when open
-             [:div (use-style sidebar-item-container-style)
-              (if title
-                [node-page-component [:block/uid uid]]
-                [block-page-component [:block/uid uid]])])])))]])
+  "Resizable: use local atom for width, but dispatch value to re-frame on mouse up. Instantiate local value with re-frame width too."
+  [_ _ rf-width]
+  (let [state (r/atom {:dragging false
+                       :width rf-width})
+        move-handler     (fn [e]
+                           (when (:dragging @state)
+                             (.. e preventDefault)
+                             (let [x       (.-clientX e)
+                                   inner-w js/window.innerWidth
+                                   width   (-> (- inner-w x)
+                                               (/ inner-w)
+                                               (* 100))]
+                               (swap! state assoc :width width))))
+        mouse-up-handler (fn []
+                           (when (:dragging @state)
+                             (swap! state assoc :dragging false)
+                             (dispatch [:right-sidebar/set-width (:width @state)])))]
+    (r/create-class
+      {:display-name           "right-sidebar"
+       :component-did-mount    (fn []
+                                 (js/document.addEventListener "mousemove" move-handler)
+                                 (js/document.addEventListener "mouseup" mouse-up-handler))
+       :component-will-unmount (fn []
+                                 (js/document.removeEventListener "mousemove" move-handler)
+                                 (js/document.removeEventListener "mouseup" mouse-up-handler))
+       :reagent-render         (fn [open? items _]
+                                 [:div (merge (use-style sidebar-style
+                                                         {:class (if open? "is-open" "is-closed")})
+                                              {:style (cond-> {}
+                                                        (:dragging @state) (assoc :transition-duration "0s")
+                                                        open? (assoc :width (str (:width @state) "vw")))})
+                                  [:div (use-style {:cursor           "col-resize"
+                                                    :height           "100%"
+                                                    :position         "absolute"
+                                                    :top              0
+                                                    :width            "3px"
+                                                    :z-index          (:zindex-fixed ZINDICES)
+                                                    :background-color (color :border-color)}
+                                                   {:on-mouse-down #(swap! state assoc :dragging true)})]
+                                  [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
+                                   ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
+                                   ;;  [:h1 "Pages and Blocks"]]
+                                   ;;  [button [:> mui-icons/FilterList]]
+                                   (if (empty? items)
+                                     [empty-message]
+                                     (doall
+                                       (for [[uid {:keys [open node/title block/string]}] items]
+                                         ^{:key uid}
+                                         [:article (use-style sidebar-item-style)
+                                          [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
+                                           [button {:style    sidebar-item-toggle-style
+                                                    :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                    :class    (when open "is-open")}
+                                            [:> mui-icons/ChevronRight]]
+                                           [:h2
+                                            (if title
+                                              [:<> [:> mui-icons/Description] title]
+                                              [:<> [:> mui-icons/FiberManualRecord] string])]
+                                           [:div {:class "controls"}
+                                            ;;  [button [:> mui-icons/DragIndicator]]
+                                            ;;  [:hr]
+                                            [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+                                             [:> mui-icons/Close]]]]
+                                          (when open
+                                            [:div (use-style sidebar-item-container-style)
+                                             (if title
+                                               [node-page-component [:block/uid uid]]
+                                               [block-page-component [:block/uid uid]])])])))]])})))
 
 
 (defn right-sidebar-component
   []
   (let [open? @(subscribe [:right-sidebar/open])
-        items @(subscribe [:right-sidebar/items])]
-    [right-sidebar-el open? items]))
+        items @(subscribe [:right-sidebar/items])
+        width @(subscribe [:right-sidebar/width])]
+    [right-sidebar-el open? items width]))

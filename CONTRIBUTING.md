@@ -202,7 +202,40 @@ OS - Windows 10, MacOS Catalina v10.15.6
 
 - [ ] TODO vim-iced
 - [ ] TODO conjure
-- [ ] TODO fireplace
+- [X] TODO fireplace
+
+### Fireplace
+
+[Fireplace](https://github.com/tpope/vim-fireplace) is a popular Clojure(script) development plugin for Vim (and Neovim) text editor. It's main dependency is the [cider-nrepl](https://github.com/clojure-emacs/cider-nrepl) which already included as a development dependency.
+
+Assume you already executed the commands described above in different terminal sessions and have the Athens instance running. And of course assume you installed vim-fireplace plugin too.
+
+```
+lein dev # in one terminal, running nrepl server on port 8777
+yarn run electron . # another terminal running the Athens app itself
+```
+
+Now open any Clojure file in Vim. This will load vim-fireplace plugin and necessary commands. First, we need to connect Clojure (not Clojurescript yet) runtime;
+
+```
+:FireplaceConnect 8777
+```
+
+Clojure part is done. Now to connect Clojurescript runtime with vim-fireplace;
+
+```
+:Piggieback :renderer
+```
+
+To test your development environment you can try to evaluate some Clojurescript and see the results on Athens running in electron;
+
+```
+:CljsEval (js/alert "hello!")
+```
+
+You supposed to see an alert on electron app saying "hello!" and your Vim instance would be blocked until you acknowledge the alert message.
+
+If all goes well, now you can see documentation of symbols (binding: K), go to definition (binding: [ C-d) and so fort. See `:help fireplace` for more information.
 
 # Using re-frame-10x
 

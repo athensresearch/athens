@@ -2,12 +2,12 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.keybindings :refer [destruct-key-down]]
+    [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page get-caret-position]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -45,13 +45,14 @@
    :justify-content "stretch"
    :overflow "visible"
    :flex-grow "1"
-   :margin "0.2em 0 0.2em 1rem"
+   :margin "0.10em 0 0.10em 1rem"
    :letter-spacing "-0.03em"
    :line-height "1.3"
    :white-space "pre-line"
    :font-size "3.125em"
    :font-weight 600
    :word-break "break-word"
+   :line-height "1.40em"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -159,13 +160,53 @@
     (dispatch [:editing/uid new-uid])))
 
 
+(defn handle-enter
+  [e uid _state children]
+  (.. e preventDefault)
+  (let [node-page  (.. e -target (closest ".node-page"))
+        block-page (.. e -target (closest ".block-page"))
+        {:keys [start value]} (destruct-key-down e)]
+    (cond
+      block-page (dispatch [:split-block-to-children uid value start])
+      node-page (if (empty? children)
+                  (handle-new-first-child-block-click uid)
+                  (dispatch [:down])))))
+
+
+(defn handle-page-arrow-key
+  [e uid state]
+  (let [{:keys [key-code target]} (destruct-key-down e)
+        start?          (block-start? e)
+        end?            (block-end? e)
+        {caret-position :caret-position} @state
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (js/Math.round (/ textarea-height height))
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)
+        up?             (= key-code KeyCodes.UP)
+        down?           (= key-code KeyCodes.DOWN)
+        left?           (= key-code KeyCodes.LEFT)
+        right?          (= key-code KeyCodes.RIGHT)]
+
+    (cond
+      (or (and up? top-row?)
+          (and left? start?)) (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
+      (or (and down? bottom-row?)
+          (and right? end?)) (do (.. e preventDefault)
+                                 (dispatch [:down uid])))))
+
+
 (defn handle-key-down
-  "When user presses shift-enter, normal behavior: create a linebreak.
-  When user presses enter, blur."
-  [e _state]
-  (let [{:keys [key-code shift]} (destruct-key-down e)]
-    (when
-      (and (not shift) (= key-code KeyCodes.ENTER)) (.. e -target blur))))
+  [e uid state children]
+  (let [{:keys [key-code shift]} (destruct-key-down e)
+        caret-position (get-caret-position (.. e -target))]
+    (swap! state assoc :caret-position caret-position)
+    (cond
+      (arrow-key-direction e) (handle-page-arrow-key e uid state)
+      (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state children))))
 
 
 (defn handle-change
@@ -179,8 +220,7 @@
   (->> ref-groups
        first
        second
-       first
-       second))
+       (mapcat second)))
 
 
 (defn map-new-refs
@@ -230,6 +270,7 @@
   [node state ref-groups]
   (let [{dbid :db/id children :block/children} node
         {:keys [title/initial title/local]} @state]
+    (prn "ref-groups" ref-groups)
     (when (not= initial local)
       (let [existing-page   (get-existing-page local)
             linked-refs     (get-linked-refs ref-groups)
@@ -393,10 +434,11 @@
           (when-not timeline-page?
             [autosize/textarea
              {:value         (:title/local @state)
+              :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
               :placeholder   "Page title"
               :on-blur       (fn [_] (handle-blur node state ref-groups))
-              :on-key-down   (fn [e] (handle-key-down e state))
+              :on-key-down   (fn [e] (handle-key-down e uid state children))
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]

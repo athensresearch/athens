@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    [athens.keybindings :refer [destruct-key-down]]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
@@ -14,12 +13,9 @@
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
-  (:import
-    (goog.events
-      KeyCodes)))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -34,12 +30,13 @@
    :overflow        "visible"
    :flex-grow       "1"
    :margin          "0.2em 0"
-   :letter-spacing "-0.03em"
+   :letter-spacing  "-0.03em"
    :line-height "1.3"
    :white-space "pre-line"
    :font-size "3.125em"
    :font-weight 600
    :word-break      "break-word"
+   :line-height     "1.4em"
    ::stylefy/manual [[:textarea {:display "none"}]
                      [:&:hover [:textarea {:display "block"
                                            :z-index 1}]]
@@ -79,22 +76,6 @@
 
 ;;; Components
 
-
-(defn handle-enter
-  [e uid _state]
-  (let [{:keys [start value]} (destruct-key-down e)]
-    (.. e preventDefault)
-    (dispatch [:split-block-to-children uid value start])))
-
-
-(defn block-page-key-down
-  [e uid state]
-  (let [d-event (destruct-key-down e)
-        {:keys [key-code]} d-event]
-    (cond
-      (= key-code KeyCodes.ENTER) (handle-enter e uid state))))
-
-
 (defn block-page-change
   [e _uid state]
   (let [value (.. e -target -value)]
@@ -128,7 +109,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-key-down (fn [e] (block-page-key-down e uid state))
+            :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:h1 (str (:string/local @state) "‌")]] ;; "‌" between these quotes is an invisible space character
 

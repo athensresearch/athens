@@ -80,7 +80,6 @@
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
         theme-dark  (subscribe [:theme/dark])]
-        ;;db-synced   (subscribe [:db/synced])]
     (fn []
       [:<>
        [:header (use-style app-header-style)
@@ -103,13 +102,16 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
+         [button {:on-click #(router/navigate :settings)
+                  :active (= @route-name :settings)}
+          [:> mui-icons/Settings]]
          ;; Click to Open
          #_[button {:on-click #(prn "TODO")}
             [(r/adapt-react-class mui-icons/FolderOpen)
              {:style {:align-self "center"}}]]
          ;; sync UI
-         #_[(r/adapt-react-class mui-icons/FiberManualRecord)
-            {:style {:color      (color (if @db-synced
+         #_[(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
+            {:style {:color      (color (if @(subscribe [:db/synced])
                                           :confirmation-color
                                           :highlight-color))
                      :align-self "center"}}]

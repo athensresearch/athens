@@ -71,6 +71,12 @@
 
 
 (re-frame/reg-sub
+  :right-sidebar/width
+  (fn [db _]
+    (:right-sidebar/width db)))
+
+
+(re-frame/reg-sub
   :mouse-down
   (fn [db _]
     (:mouse-down db)))

@@ -47,4 +47,4 @@ To learn more about this project, please see:
 
 ---
 
-![Athens](doc/athens-puk-patrick-unsplash.jpg)
+![Athens](doc/athens-logo-1065x600.png)
