@@ -4,14 +4,13 @@
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
-    [athens.keybindings :as keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
+    [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
-    [athens.views.portal :as portal]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -393,31 +392,43 @@
 
 
 (defn inline-search-el
-  [block state]
-  (let [{:search/keys [query results index type]} @state
-        {:keys [left top]} (keybindings/dropdown-position)]
-    (when (some #(= % type) [:page :block :hashtag])
-      [portal/portal
-       [:div (merge (use-style dropdown-style)
-                    {:style {:position   "absolute"
-                             :max-height "20rem"
-                             :top        top
-                             :left       left}})
-        [:div#dropdown-menu (use-style menu-style)
-         (if (or (str/blank? query)
-                 (empty? results))
-           ;; Just using button for styling
-           [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
-           (doall
-             (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-               [button {:key      (str "inline-search-item" uid)
-                        :id       (str "dropdown-item-" i)
-                        :active   (= index i)
-                        ;; if page link, expand to title. otherwise expand to uid for a block ref
-                        :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                        :style    {:text-align "left"}}
-                (or title string)])))]]
-       #(swap! state assoc :search/type nil)])))
+  [_block state]
+  (let [ref (atom nil)
+        handle-click-outside (fn [e]
+                               (let [{:search/keys [type]} @state]
+                                 (when (and (or (= type :page) (= type :block) (= type :hashtag))
+                                            (not (.. @ref (contains (.. e -target)))))
+                                   (swap! state assoc :search/type false))))]
+    (r/create-class
+      {:display-name           "inline-search"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render         (fn [block state]
+                                 (let [{:search/keys [query results index type] caret-position :caret-position} @state
+                                       {:keys [left top]} caret-position]
+                                   (when (some #(= % type) [:page :block :hashtag])
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position   "absolute"
+                                                           :max-height "20rem"
+                                                           :top        (+ 24 top)
+                                                           :left       (+ 24 left)}})
+                                      [:div#dropdown-menu (use-style menu-style)
+                                       (if (or (str/blank? query)
+                                               (empty? results))
+                                         ;; Just using button for styling
+                                         [button (use-style {:opacity (OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
+                                         (doall
+                                           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                                             [button {:key      (str "inline-search-item" uid)
+                                                      :id       (str "dropdown-item-" i)
+                                                      :active   (= index i)
+                                                      ;; if page link, expand to title. otherwise expand to uid for a block ref
+                                                      :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
+                                                      :style    {:text-align "left"}}
+                                              (or title string)])))]])))})))
 
 
 (defn slash-item-click
@@ -428,22 +439,34 @@
 
 
 (defn slash-menu-el
-  [block state]
-  (let [{:search/keys [index results type]} @state
-        {:keys [left top]} (keybindings/dropdown-position)]
-    (when (= type :slash)
-      [portal/portal
-       [:div (merge (use-style dropdown-style)
-                    {:style {:position "absolute" :left left :top top}})
-        [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
-         (doall
-           (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-             [button {:key      text
-                      :id       (str "dropdown-item-" i)
-                      :active   (= i index)
-                      :on-click (fn [_] (slash-item-click state block item))}
-              [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]]
-       #(swap! state assoc :search/type nil)])))
+  [_block state]
+  (let [ref (atom nil)
+        handle-click-outside (fn [e]
+                               (let [{:search/keys [type]} @state]
+                                 (when (and (= type :slash)
+                                            (not (.. @ref (contains (.. e -target)))))
+                                   (swap! state assoc :search/type false))))]
+    (r/create-class
+      {:display-name           "slash-menu"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render         (fn [block state]
+                                 (let [{:search/keys [index results type] caret-position :caret-position} @state
+                                       {:keys [left top]} caret-position]
+                                   (when (= type :slash)
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref           #(reset! ref %)
+                                                              ;; don't blur textarea when clicking to auto-complete
+                                                              :on-mouse-down (fn [e] (.. e preventDefault))})
+                                                  {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
+                                      [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
+                                       (doall
+                                         (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+                                           [button {:key      text
+                                                    :id       (str "dropdown-item-" i)
+                                                    :active   (= i index)
+                                                    :on-click (fn [_] (slash-item-click state block item))}
+                                            [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 
 (defn textarea-paste
@@ -692,21 +715,31 @@
 
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
-  [block state]
-  (let [{:block/keys [uid]} block
-        {:context-menu/keys [show x y]} @state]
-    (when show
-      [portal/portal
-       [:div (merge (use-style dropdown-style)
-                    {:style {:position "fixed"
-                             :left     (str x "px")
-                             :top      (str y "px")}})
-        [:div (use-style menu-style)
-         [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-          (case show
-            :one "Copy block ref"
-            :many "Copy block refs")]]]
-       #(swap! state assoc :context-menu/show false)])))
+  [_block state]
+  (let [ref                  (atom nil)
+        handle-click-outside (fn [e]
+                               (when (and (:context-menu/show @state)
+                                          (not (.. @ref (contains (.. e -target)))))
+                                 (swap! state assoc :context-menu/show false)))]
+    (r/create-class
+      {:display-name           "context-menu"
+       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render         (fn [block state]
+                                 (let [{:block/keys [uid]} block
+                                       {:context-menu/keys [show x y]} @state]
+                                   (when show
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref #(reset! ref %)})
+                                                  {:style {:position "fixed"
+                                                           :left     (str x "px")
+                                                           :top      (str y "px")}})
+                                      [:div (use-style menu-style)
+                                       ;; TODO: create listener that lets user exit context menu if click outside
+                                       [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+                                        (case show
+                                          :one "Copy block ref"
+                                          :many "Copy block refs")]]])))})))
 
 
 (defn block-refs-count-el

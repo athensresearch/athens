@@ -97,6 +97,11 @@
         ", an open-source provider of product analytics. This lets the designers and engineers at Athens know if we're really making something people love!"]])))
 
 
+;;(prn (.. js/window -posthog opt_out_capturing))
+;;(prn (.. js/window -posthog opt_in_capturing))
+
+
+
 (defn pages-panel
   []
   (fn []
