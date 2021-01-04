@@ -1,7 +1,7 @@
 (ns athens.views.portal
   (:require
-    [goog.events :as events]
     ["react-dom" :refer [createPortal]]
+    [goog.events :as events]
     [reagent.core :as r]))
 
 
