@@ -13,12 +13,12 @@
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
-    [athens.views.portal :as portal]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
+    [goog.events :refer [listen unlisten]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -329,34 +329,44 @@
 
 
 (defn menu-dropdown
-  [node state]
-  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-        {:menu/keys [show x y]} @state
-        timeline-page? (is-timeline-page uid)]
-    (when show
-      [portal/portal
-       [:div (merge (use-style dropdown-style)
-                    {:style {:position "fixed"
-                             :left     (str x "px")
-                             :top      (str y "px")}})
-        [:div (use-style menu-style)
-         (if sidebar
-           [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-            [:<>
-             [:> mui-icons/BookmarkBorder]
-             [:span "Remove Shortcut"]]]
-           [button {:on-click #(dispatch [:page/add-shortcut uid])}
-            [:<>
-             [:> mui-icons/Bookmark]
-             [:span "Add Shortcut"]]])
-         (when-not timeline-page?
-           [:hr (use-style menu-separator-style)])
-         (when-not timeline-page?
-           [button {:on-click #(do
-                                 (navigate :pages)
-                                 (dispatch [:page/delete uid title]))}
-            [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]]
-       #(swap! state assoc :menu/show false)])))
+  [_node state]
+  (let [ref                  (atom nil)
+        handle-click-outside (fn [e]
+                               (when (and (:menu/show @state)
+                                          (not (.. @ref (contains (.. e -target)))))
+                                 (swap! state assoc :menu/show false)))]
+    (r/create-class
+      {:display-name "node-page-menu"
+       :component-did-mount (fn [_this] (listen js/document "mousedown" handle-click-outside))
+       :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
+       :reagent-render   (fn [node state]
+                           (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
+                                 {:menu/keys [show x y]} @state
+                                 timeline-page? (is-timeline-page uid)]
+                             (when show
+                               [:div (merge (use-style dropdown-style
+                                                       {:ref #(reset! ref %)})
+                                            {:style {:font-size "14px"
+                                                     :position "fixed"
+                                                     :left (str x "px")
+                                                     :top (str y "px")}})
+                                [:div (use-style menu-style)
+                                 (if sidebar
+                                   [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                    [:<>
+                                     [:> mui-icons/BookmarkBorder]
+                                     [:span "Remove Shortcut"]]]
+                                   [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                    [:<>
+                                     [:> mui-icons/Bookmark]
+                                     [:span "Add Shortcut"]]])
+                                 (when-not timeline-page?
+                                   [:hr (use-style menu-separator-style)])
+                                 (when-not timeline-page?
+                                   [button {:on-click #(do
+                                                         (navigate :pages)
+                                                         (dispatch [:page/delete uid title]))}
+                                    [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]])))})))
 
 
 (defn ref-comp

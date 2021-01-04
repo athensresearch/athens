@@ -641,28 +641,6 @@
         (dispatch [:backspace next-block-uid (:block/string next-block)])))))
 
 
-(defn textarea-position
-  "By default, get-caret-position finds caret position *relative* to a textarea."
-  [target]
-  (let [rect (.. target getBoundingClientRect)]
-    {:left  (.. rect -x)
-     :top (.. rect -y)}))
-
-
-(defn dropdown-position
-  "By default, get-caret-position finds caret position *relative* to a textarea."
-  []
-  (let [target (.. js/document -activeElement)]
-    (when (= (.. target -nodeName) "TEXTAREA")
-      (let [abs-position (textarea-position target)
-            rel-position (get-caret-position target)
-            offset {:left 0 :top 24}]
-        (merge-with +
-                    abs-position
-                    rel-position
-                    offset)))))
-
-
 (defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-key-down e)

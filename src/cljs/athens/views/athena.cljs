@@ -231,6 +231,7 @@
 
 ;;; Components
 
+
 (defn athena-prompt-el
   []
   [button {:on-click #(dispatch [:athena/toggle])
@@ -338,5 +339,3 @@
                                                     (when string
                                                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
                                                    [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))})))
-
-
