@@ -22,18 +22,11 @@
 
 
 (def title-style
-  {:display "grid"
-   :position "relative"
-   :grid-template-areas "'main'"
-   :align-items "stretch"
-   :justify-content "stretch"
+  {:position        "relative"
    :overflow        "visible"
    :flex-grow       "1"
-   :margin          "0.2em 0"
+   :margin          "0.1em 0"
    :letter-spacing  "-0.03em"
-   :white-space "pre-line"
-   :font-size "3.125em"
-   :font-weight 600
    :word-break      "break-word"
    :line-height     "1.4em"
    ::stylefy/manual [[:textarea {:display "none"}]
@@ -47,7 +40,10 @@
                                  :font-weight        "inherit"
                                  :padding            "0"
                                  :letter-spacing     "inherit"
-                                 :grid-area "main"
+                                 :position           "absolute"
+                                 :top                "0"
+                                 :left               "0"
+                                 :right              "0"
                                  :width              "100%"
                                  :min-height         "100%"
                                  :caret-color        (color :link-color)
@@ -60,17 +56,12 @@
                                  :border             "0"
                                  :opacity            "0"
                                  :font-family        "inherit"}]
-                     [:h1 {:grid-area "main"
-                           :margin 0
-                           :padding 0
-                           :font-size "inherit"}
-                      [:&:empty:before {:content "'\002'"}]]
                      [:textarea:focus
                       :.is-editing {:outline "none"
                                     :z-index 3
                                     :display "block"
                                     :opacity "1"}]
-                     [(selectors/+ :.is-editing :h1) {:opacity 0}]]})
+                     [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
 ;;; Components
@@ -102,7 +93,7 @@
                 (or title string)]))]]
 
          ;; Header
-         [:div (use-style title-style {:data-uid uid :class "block-header"})
+         [:h1 (use-style title-style {:data-uid uid :class "block-header"})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
             :value       (:string/local @state)
@@ -110,7 +101,7 @@
             :auto-focus  true
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
-          [:h1 (str (:string/local @state) "‌")]] ;; "‌" between these quotes is an invisible space character
+          [:span (:string/local @state)]]
 
          ;; Children
          [:div (for [child children]
