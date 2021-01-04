@@ -1,3 +1,4 @@
+^:cljstyle/ignore
 (ns athens.views.portal
   (:require
     ["react-dom" :refer [createPortal]]
