@@ -18,10 +18,12 @@
     (r/create-class
       {:display-name           "portal"
        :component-did-mount    (fn [_this]
-                                 (.. mount (appendChild el))
+                                 (when mount
+                                   (.. mount (appendChild el)))
                                  (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this]
-                                 (.. mount (removeChild el))
+                                 (when mount
+                                   (.. mount (removeChild el)))
                                  (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [children]
                                  (if (not (map? (second children)))
