@@ -412,7 +412,7 @@
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
-                                                           :max-height "20rem"
+                                                           :max-height "10em"
                                                            :top        (+ 24 top)
                                                            :left       (+ 24 left)}})
                                       [:div#dropdown-menu (use-style menu-style)

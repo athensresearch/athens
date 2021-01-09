@@ -24,7 +24,7 @@
    :padding "0.25rem"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :min-height "2em"
-   :min-width "2em"
+   :min-width "16em"
    :animation "dropdown-appear 0.125s"
    :animation-fill-mode "both"
    :background (color :background-plus-2)
