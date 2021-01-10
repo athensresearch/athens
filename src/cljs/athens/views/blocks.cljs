@@ -196,6 +196,7 @@
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
+                                 :overflow "hidden"
                                  :padding "0"
                                  :background (color :background-minus-1)
                                  :grid-area "main"
