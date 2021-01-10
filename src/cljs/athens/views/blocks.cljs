@@ -195,6 +195,7 @@
                                  :cursor "text"
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
+                                 :overflow "hidden"
                                  :color "inherit"
                                  :padding "0"
                                  :background (color :background-minus-1)
