@@ -86,7 +86,7 @@
        (map (fn [page-id] [:db/add source-eid :block/refs page-id]))))
 
 
-(defn old-refs-to-tx-data
+(defn old-block-refs-to-tx-data
   "Filter: new-str doesn't include block ref anymore, ((ref-uid)) points to an actual block, and block/ref relationship exists.
   Map: retract relationship."
   [old-block-refs e new-str]
@@ -118,9 +118,7 @@
 (defn parse-for-links
   "When block/string is asserted, parse for links and block refs to add.
   When block/string is retracted, parse for links and block refs to remove.
-  Retractions need to look at asserted block/string.
-
-  TODO: when user edits title, parse for new pages."
+  Retractions need to look at asserted block/string."
   [with-tx-data]
   (let [assert-titles (->> with-tx-data
                            (filter #(and (= (second %) :node/title)
@@ -148,7 +146,7 @@
                            new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
                                                   new-titles
@@ -169,8 +167,8 @@
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            tx-data        (concat []
                                                   new-titles
-                                                  new-block-refs)]
-                                                  ;;new-page-refs)]
+                                                  new-block-refs
+                                                  new-page-refs)]
                        tx-data)
 
                      ;; [retraction]
@@ -181,12 +179,14 @@
                            retract-string (nth retraction 2)
                            retract-data   (walk/walk-string retract-string)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+
+                           ;; XXX: don't actually need old-block-refs and old-page-refs. They are auto-deleted with `d/with`
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
                                                   old-titles
-                                                  old-block-refs)]
-                                                  ;;old-page-refs)]
+                                                  old-block-refs
+                                                  old-page-refs)]
                        tx-data)))))))
 
 
@@ -198,13 +198,16 @@
     (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
           more-tx-data  (parse-for-links with-tx-data)
           final-tx-data (vec (concat tx-data more-tx-data))]
-      ;;(prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
-      ;;(pprint with-tx-data)
-      ;;(prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+      (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
+      (pprint with-tx-data)
+      (prn "TX MORE")                                       ;; parsed tx-data, e.g. asserting/retracting pages and references
+      (pprint more-tx-data)
+      (prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
       (pprint final-tx-data)
-      (prn "TX OUTPUTS")
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+        (prn "TX OUTPUTS")
         (pprint outputs)))
+
     (catch js/Error e
       (js/alert (str e))
       (prn "EXCEPTION" e))))
