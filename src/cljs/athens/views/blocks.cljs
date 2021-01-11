@@ -369,7 +369,7 @@
 
 (defn tooltip-el
   [block state]
-  (let [{:block/keys [uid order open] dbid :db/id} block
+  (let [{:block/keys [uid order open refs] dbid :db/id} block
         {:keys [dragging tooltip]} @state]
     ;; if re-frame-10x is hidden, don't show tooltip. see style.cljs
     (when (and tooltip (not dragging) (util/re-frame-10x-open?))
@@ -380,7 +380,8 @@
        [:div [:b "db/id"] [:span dbid]]
        [:div [:b "uid"] [:span uid]]
        [:div [:b "order"] [:span order]]
-       [:div [:b "open"] [:span (str open)]]])))
+       [:div [:b "open"] [:span (str open)]]
+       [:div [:b "refs"] [:span (str refs)]]])))
 
 
 (defn inline-item-click

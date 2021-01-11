@@ -1,8 +1,8 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
-    [athens.parser :as parser]
-    [athens.util :as util :refer [now-ts gen-block-uid]]
+    [athens.util :as util]
+    [athens.walk :as walk]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
@@ -11,7 +11,6 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
-    [instaparse.core :as parse]
     [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [stylefy.core :as stylefy]))
@@ -19,36 +18,18 @@
 
 ;;; Effects
 
-(defn walk-string
-  "Walk previous and new strings to delete or add links, block references, etc. to datascript."
-  [string]
-  (let [data (atom {})]
-    (parse/transform
-      {:page-link (fn [& title]
-                    (let [inner-title (str/join "" title)]
-                      (swap! data update :node/titles #(conj % inner-title))
-                      (str "[[" inner-title "]]")))
-       :hashtag   (fn [& title]
-                    (let [inner-title (str/join "" title)]
-                      (swap! data update :node/titles #(conj % inner-title))
-                      (str "#" inner-title)))
-       :block-ref (fn [uid] (swap! data update :block/refs #(conj % uid)))}
-      (parser/parse-to-ast string))
-    @data))
-
-
 (defn new-titles-to-tx-data
   "Filter: node/title doesn't exist yet in the db or in the titles being asserted (e.g. when renaming a page and changing it's references).
   Map: new node/title entity."
   [new-titles assert-titles]
-  (let [now (now-ts)]
+  (let [now (util/now-ts)]
     (->> new-titles
          (filter (fn [x]
                    (and (nil? (db/search-exact-node-title x))
                         (not (contains? assert-titles x)))))
          (map (fn [t]
                 {:node/title  t
-                 :block/uid   (gen-block-uid)
+                 :block/uid   (util/gen-block-uid)
                  :create/time now
                  :edit/time   now})))))
 
@@ -70,39 +51,61 @@
 
 
 (defn new-refs-to-tx-data
-  "Filter: ((ref-uid)) points to an actual block (without a title), and block/ref relationship doesn't exist yet.
+  "Filter: ((ref-uid)) points to a valid block (no :node/title).
   Map: add block/ref relationship."
   [new-block-refs e]
   (->> new-block-refs
        (filter (fn [ref-uid]
-                 (let [block @(p/pull db/dsdb '[*] [:block/uid ref-uid])
-                       {:keys [node/title db/id]} block
-                       refs  (-> e db/get-block-refs set)]
-                   (and block
-                        (nil? title)
-                        (not (contains? refs id))))))
+                 (let [block (d/q '[:find (pull ?e [*])
+                                    :in $ ?uid
+                                    :where [?e :block/uid ?uid]]
+                                  @db/dsdb ref-uid)
+                       {:keys [node/title]} block]
+                   (and block (nil? title)))))
        (map (fn [ref-uid] [:db/add e :block/refs [:block/uid ref-uid]]))))
 
 
-(defn old-refs-to-tx-data
+(defn new-page-refs-to-tx-data
+  "Filter: No filter.
+  Map: add block/ref relationship."
+  [new-page-refs source-eid]
+  (->> new-page-refs
+       (map (fn [page-id] [:db/add source-eid :block/refs page-id]))))
+
+
+(defn old-block-refs-to-tx-data
   "Filter: new-str doesn't include block ref anymore, ((ref-uid)) points to an actual block, and block/ref relationship exists.
   Map: retract relationship."
   [old-block-refs e new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
-                 (when-not (str/includes? new-str (str "((" ref-uid "))"))
-                   (let [eid  (db/e-by-av :block/uid ref-uid)
-                         refs (-> e db/get-block-refs set)]
-                     (contains? refs eid)))))
+                 (let [eid  (db/e-by-av :block/uid ref-uid)
+                       refs (-> e db/get-block-refs set)]
+                   (and (not (str/includes? new-str (str "((" ref-uid "))")))
+                        (contains? refs eid)))))
        (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
+
+
+(defn old-page-refs-to-tx-data
+  "Filter: [[page]] points to a page and block/ref relationship does exist.
+  Map: retract block/ref relationship."
+  [old-page-refs source-eid new-str]
+  (->> old-page-refs
+       (filter (fn [page-id]
+                 (let [page (d/pull @db/dsdb '[*] page-id)
+                       {:keys [node/title db/id]} page
+                       refs  (-> source-eid db/get-block-refs set)]
+                   (and (not (str/includes? new-str (str "[[" title "]]")))
+                        page
+                        title
+                        (contains? refs id)))))
+       (map (fn [page-id] [:db/retract source-eid :block/refs page-id]))))
 
 
 (defn parse-for-links
   "When block/string is asserted, parse for links and block refs to add.
   When block/string is retracted, parse for links and block refs to remove.
-  Retractions need to look at asserted block/string.
-
-  TODO: when user edits title, parse for new pages."
+  Retractions need to look at asserted block/string."
   [with-tx-data]
   (let [assert-titles (->> with-tx-data
                            (filter #(and (= (second %) :node/title)
@@ -124,29 +127,35 @@
                            uid            (db/v-by-ea eid :block/uid)
                            assert-string  (nth assertion 2)
                            retract-string (nth retraction 2)
-                           assert-data    (walk-string assert-string)
-                           retract-data   (walk-string retract-string)
+                           assert-data    (walk/walk-string assert-string)
+                           retract-data   (walk/walk-string retract-string)
                            new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
+                           new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
                                                   new-titles
                                                   new-block-refs
+                                                  new-page-refs
                                                   old-titles
-                                                  old-block-refs)]
+                                                  old-block-refs
+                                                  old-page-refs)]
                        tx-data)
 
                      ;; [assertion]
                      (and (true? (last assertion)) (nil? retraction))
                      (let [eid            (first assertion)
                            assert-string  (nth assertion 2)
-                           assert-data    (walk-string assert-string)
+                           assert-data    (walk/walk-string assert-string)
                            new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
+                           new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            tx-data        (concat []
                                                   new-titles
-                                                  new-block-refs)]
+                                                  new-block-refs
+                                                  new-page-refs)]
                        tx-data)
 
                      ;; [retraction]
@@ -155,34 +164,46 @@
                            uid            (db/v-by-ea eid :block/uid)
                            assert-string  ""
                            retract-string (nth retraction 2)
-                           retract-data   (walk-string retract-string)
+                           retract-data   (walk/walk-string retract-string)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
-                           old-block-refs (old-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+
+                           ;; XXX: don't actually need old-block-refs and old-page-refs. They are auto-deleted with `d/with`
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
                                                   old-titles
-                                                  old-block-refs)]
+                                                  old-block-refs
+                                                  old-page-refs)]
                        tx-data)))))))
+
+
+(defn walk-transact
+  [tx-data]
+  (prn "TX RAW INPUTS")                                     ;; event tx-data
+  (pprint tx-data)
+  (try
+    (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
+          more-tx-data  (parse-for-links with-tx-data)
+          final-tx-data (vec (concat tx-data more-tx-data))]
+      (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
+      (pprint with-tx-data)
+      (prn "TX MORE")                                       ;; parsed tx-data, e.g. asserting/retracting pages and references
+      (pprint more-tx-data)
+      (prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+      (pprint final-tx-data)
+      (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+        (prn "TX OUTPUTS")
+        (pprint outputs)))
+
+    (catch js/Error e
+      (js/alert (str e))
+      (prn "EXCEPTION" e))))
 
 
 (reg-fx
   :transact!
   (fn [tx-data]
-    (prn "TX RAW INPUTS") ;; event tx-data
-    (pprint tx-data)
-    (try
-      (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
-            more-tx-data  (parse-for-links with-tx-data)
-            final-tx-data (vec (concat tx-data more-tx-data))]
-        ;;(prn "TX WITH") ;; tx-data normalized by datascript to flat datoms
-        ;;(pprint with-tx-data)
-        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-        (pprint final-tx-data)
-        (prn "TX OUTPUTS")
-        (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-          (pprint outputs)))
-      (catch js/Error e
-        (js/alert (str e))
-        (prn "EXCEPTION" e)))))
+    (walk-transact tx-data)))
 
 
 (reg-fx
