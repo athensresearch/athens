@@ -51,7 +51,7 @@
 
 
 (defn new-refs-to-tx-data
-  "Filter: ((ref-uid)) points to an actual block (without a title), and block/ref relationship doesn't exist yet.
+  "Filter: ((ref-uid)) points to a valid block (no :node/title).
   Map: add block/ref relationship."
   [new-block-refs e]
   (->> new-block-refs
@@ -59,28 +59,17 @@
                  (let [block (d/q '[:find (pull ?e [*])
                                     :in $ ?uid
                                     :where [?e :block/uid ?uid]]
-                                  @db/dsdb
-                                  ref-uid)
-                       {:keys [node/title db/id]} block
-                       refs  (-> e db/get-block-refs set)]
-                   (and block
-                        (nil? title)
-                        (not (contains? refs id))))))
+                                  @db/dsdb ref-uid)
+                       {:keys [node/title]} block]
+                   (and block (nil? title)))))
        (map (fn [ref-uid] [:db/add e :block/refs [:block/uid ref-uid]]))))
 
 
 (defn new-page-refs-to-tx-data
-  "Filter: [[node]] points to a real page (has :node/title) and block/ref relationship doesn't exist yet.
+  "Filter: No filter.
   Map: add block/ref relationship."
   [new-page-refs source-eid]
   (->> new-page-refs
-       (map #(apply db/e-by-av %))
-       (filter (fn [target-eid]
-                 (let [block (d/pull @db/dsdb '[*] target-eid)
-                       {:keys [db/id]} block
-                       refs  (-> source-eid db/get-block-refs set)]
-                   (and block
-                        (not (contains? refs id))))))
        (map (fn [page-id] [:db/add source-eid :block/refs page-id]))))
 
 
