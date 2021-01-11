@@ -35,7 +35,9 @@
 
 
 (defn old-titles-to-tx-data
-  "Filter: new-str doesn't include link, page exists, page has no children, and has no other [[linked refs]].
+  "Purpose is to remove orphan pages. However, if entire entity is retracted, orphan pages are still created.
+
+  Filter: new-str doesn't include link, page exists, page has no children, and has no other [[linked refs]].
   Map: retractEntity"
   [old-titles uid new-str]
   (->> old-titles
