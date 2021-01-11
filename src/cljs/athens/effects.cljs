@@ -1,8 +1,8 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
-    [athens.parser :as parser]
-    [athens.util :as util :refer [now-ts gen-block-uid]]
+    [athens.util :as util]
+    [athens.walk :as walk]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
@@ -11,11 +11,9 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
-    [instaparse.core :as parse]
     [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]
-    [stylefy.core :as stylefy]
-    [athens.walk :as walk]))
+    [stylefy.core :as stylefy]))
 
 
 ;;; Effects
@@ -217,7 +215,6 @@
   :transact!
   (fn [tx-data]
     (walk-transact tx-data)))
-
 
 
 (reg-fx

@@ -2,7 +2,6 @@
   (:require
     [athens.parser :as parser]
     [clojure.string :as str]
-    [datascript.core :as d]
     [instaparse.core :as parse]))
 
 
