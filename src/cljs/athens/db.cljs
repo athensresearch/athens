@@ -415,16 +415,6 @@
        (mapv #(dissoc % :block/_children))))))
 
 
-(defn get-block-refs
-  [e]
-  (d/q '[:find [?refs ...]
-         :in $ ?e
-         :where
-         [?e :block/refs ?refs]]
-       @dsdb
-       e))
-
-
 (defn nth-sibling
   "Find sibling that has order+n of current block.
   Negative n means previous sibling.
