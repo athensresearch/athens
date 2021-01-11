@@ -20,10 +20,7 @@
              ;;{:node/titles ["ma" "ni hao"]}
 
     "#[[aloha]]"
-    {:node/titles ["aloha"]}
+    {:node/titles ["aloha"] :page/refs [[:node/title "aloha"]]}
 
     "((uid123))"
     {:block/refs ["uid123"]}))
-
-
-(run-tests)
