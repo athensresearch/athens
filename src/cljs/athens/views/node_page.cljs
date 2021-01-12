@@ -87,11 +87,10 @@
 (def references-heading-style
   {:font-weight "normal"
    :display "flex"
-   ;;:padding "0 2rem"
+   :padding "0 0.5rem 0 0"
    :align-items "center"
    ::stylefy/manual [[:svg {:margin-right "0.25em"
-                            :font-size "1rem"}]
-                     [:span {:flex "1 1 100%"}]]})
+                            :font-size "1rem"}]]})
 
 
 (def references-list-style
@@ -470,7 +469,14 @@
                     [:> mui-icons/KeyboardArrowDown]
                     [:> mui-icons/ChevronRight])]
                  [(r/adapt-react-class mui-icons/Link)]
-                 [:span linked-or-unlinked]]
+                 [:div {:style {:display "flex"
+                                :flex "1 1 100%"
+                                :justify-content "space-between"}}
+                  [:span linked-or-unlinked]
+                  (when (= linked-or-unlinked "Unlinked References")
+                    [button {:style {:font-size "14px"}
+                             :on-click #(dispatch [:unlinked-references/link-all refs title])}
+                     "Link All"])]]
                  ;; Hide button until feature is implemented
                  ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
                 (when (get @state linked-or-unlinked)
@@ -482,8 +488,17 @@
                          [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
                         (doall
                           (for [block group]
-                            [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
-                             [ref-comp block]]))]))])])))]))))
+                            ^{:key (str "ref-" (:block/uid block))}
+                            [:div {:style {:display "flex"
+                                           :flex "1 1 100%"
+                                           :justify-content "space-between"
+                                           :align-items "flex-start"}}
+                             [:div (use-style references-group-block-style)
+                              [ref-comp block]]
+                             (when (= linked-or-unlinked "Unlinked References")
+                               [button {:style {:margin-top "1.5em"}
+                                        :on-click #(dispatch [:unlinked-references/link block title])}
+                                "Link"])]))]))])])))]))))
 
 
 (defn node-page-component
