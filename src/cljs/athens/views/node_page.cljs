@@ -317,15 +317,17 @@
 
 
 (def init-state
-  {:menu/show        false
-   :menu/x           nil
-   :menu/y           nil
-   :title/initial    nil
-   :title/local      nil
-   :alert/show       nil
-   :alert/message    nil
-   :alert/confirm-fn nil
-   :alert/cancel-fn  nil})
+  {:menu/show            false
+   :menu/x               nil
+   :menu/y               nil
+   :title/initial        nil
+   :title/local          nil
+   :alert/show           nil
+   :alert/message        nil
+   :alert/confirm-fn     nil
+   :alert/cancel-fn      nil
+   "Linked References"   true
+   "Unlinked References" false})
 
 
 (defn menu-dropdown
@@ -463,20 +465,25 @@
              (when (not-empty refs)
                [:section (use-style references-style {:key linked-or-unlinked})
                 [:h4 (use-style references-heading-style)
+                 [button {:on-click (fn [] (swap! state update linked-or-unlinked not))}
+                  (if (get @state linked-or-unlinked)
+                    [:> mui-icons/KeyboardArrowDown]
+                    [:> mui-icons/ChevronRight])]
                  [(r/adapt-react-class mui-icons/Link)]
                  [:span linked-or-unlinked]]
                  ;; Hide button until feature is implemented
                  ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
-                [:div (use-style references-list-style)
-                 (doall
-                   (for [[group-title group] refs]
-                     [:div (use-style references-group-style {:key (str "group-" group-title)})
-                      [:h4 (use-style references-group-title-style)
-                       [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
-                      (doall
-                        (for [block group]
-                          [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
-                           [ref-comp block]]))]))]])))]))))
+                (when (get @state linked-or-unlinked)
+                  [:div (use-style references-list-style)
+                   (doall
+                     (for [[group-title group] refs]
+                       [:div (use-style references-group-style {:key (str "group-" group-title)})
+                        [:h4 (use-style references-group-title-style)
+                         [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+                        (doall
+                          (for [block group]
+                            [:div (use-style references-group-block-style {:key (str "ref-" (:block/uid block))})
+                             [ref-comp block]]))]))])])))]))))
 
 
 (defn node-page-component
@@ -484,7 +491,6 @@
   (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])]
     (when-not (str/blank? title)
-      ;; TODO: let users toggle open/close references
       (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
                         ["Unlinked References" (get-unlinked-references (escape-str title))]]]
         [node-page-el node editing-uid ref-groups]))))
