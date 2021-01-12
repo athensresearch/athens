@@ -1317,7 +1317,7 @@
   `TEST 10` -> [[test 10]]"
   [string title]
   (let [ignore-case-title (re-pattern (str "(?i)" title))
-        new-str           (string/replace-first string ignore-case-title (str "[[" title "]]"))]
+        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
     new-str))
 
 
