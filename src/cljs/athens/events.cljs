@@ -1313,8 +1313,9 @@
 
 (defn link-unlinked-reference
   "Ignores case. If title is `test`:
-  `test 1`  -> [[test 1]]
-  `TEST 10` -> [[test 10]]"
+  test 1     -> [[test 1]]
+  TEST 10    -> [[test 10]]
+  [[attest]] -> [[at[[test]]`"
   [string title]
   (let [ignore-case-title (re-pattern (str "(?i)" title))
         new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
