@@ -1311,3 +1311,31 @@
              {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
 
 
+(defn link-unlinked-reference
+  "Ignores case. If title is `test`:
+  test 1     -> [[test 1]]
+  TEST 10    -> [[test 10]]
+  [[attest]] -> [[at[[test]]`"
+  [string title]
+  (let [ignore-case-title (re-pattern (str "(?i)" title))
+        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+    new-str))
+
+
+(reg-event-fx
+  :unlinked-references/link
+  (fn [_ [_ block title]]
+    (let [{:block/keys [string uid]} block
+          new-str (link-unlinked-reference string title)]
+      {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
+
+
+(reg-event-fx
+  :unlinked-references/link-all
+  (fn [_ [_ unlinked-refs title]]
+    (let [new-str-tx-data (->> unlinked-refs
+                               (mapcat second unlinked-refs)
+                               (map (fn [{:block/keys [string uid]}]
+                                      (let [new-str (link-unlinked-reference string title)]
+                                        {:db/id [:block/uid uid] :block/string new-str}))))]
+      {:dispatch [:transact new-str-tx-data]})))
