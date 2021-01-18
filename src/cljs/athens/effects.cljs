@@ -75,10 +75,34 @@
        (map (fn [page-id] [:db/add source-eid :block/refs page-id]))))
 
 
+(defn old-block-refs-to-tx-data
+  "Filter: new-str doesn't include block ref anymore, ((ref-uid)) points to an actual block, and block/ref relationship exists.
+  Map: retract relationship."
+  [old-block-refs e new-str]
+  (->> old-block-refs
+       (filter (fn [ref-uid]
+                 (not (str/includes? new-str (str "((" ref-uid "))")))))
+       (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
+
+
+(defn old-page-refs-to-tx-data
+  "Filter: [[page]] points to a page and block/ref relationship does exist.
+  Map: retract block/ref relationship."
+  [old-page-refs source-eid new-str]
+  (->> old-page-refs
+       (filter (fn [page-id]
+                 (let [page (d/pull @db/dsdb '[*] page-id)
+                       {:keys [node/title]} page]
+                   (and (not (str/includes? new-str (str "[[" title "]]")))
+                        page
+                        title))))
+       (map (fn [page-id] [:db/retract source-eid :block/refs page-id]))))
+
+
 (defn parse-for-links
   "When block/string is asserted, parse for links and block refs to add.
   When block/string is retracted, parse for links and block refs to remove.
-  Retractions need to look at asserted block/string."
+  Retractions need to look at asserted block/string. Use empty string if only retract."
   [with-tx-data]
   (let [assert-titles (->> with-tx-data
                            (filter #(and (= (second %) :node/title)
@@ -105,12 +129,16 @@
                            new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
                            new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
                            tx-data        (concat []
                                                   new-titles
                                                   new-block-refs
                                                   new-page-refs
-                                                  old-titles)]
+                                                  old-titles
+                                                  old-block-refs
+                                                  old-page-refs)]
                        tx-data)
 
                      ;; [assertion]
@@ -128,6 +156,7 @@
                        tx-data)
 
                      ;; [retraction]
+                     ;; :block/string itself is rarely retracted directly.
                      (and (false? (last assertion)) (nil? retraction))
                      (let [eid            (first retraction)
                            uid            (db/v-by-ea eid :block/uid)
@@ -135,9 +164,34 @@
                            retract-string (nth retraction 2)
                            retract-data   (walk/walk-string retract-string)
                            old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                           old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
-                                                  old-titles)]
+                                                  old-titles
+                                                  old-block-refs
+                                                  old-page-refs)]
                        tx-data)))))))
+
+
+(defn ph-link-created!
+  "Only creates `link-created` events for now.
+  TODO: link-deleted events"
+  [outputs]
+  (doall (->> outputs
+              (filter (fn [[_e a _v _t t-or-f]]
+                        (and (= a :block/refs)
+                             t-or-f)))
+              (map (fn [[e _a v _t _t-or-f]]
+                     (let [num-refs (-> (d/pull @db/dsdb '[:block/_refs] v)
+                                        :block/_refs
+                                        count)
+                           block-or-page (if (:node/title (d/pull @db/dsdb '[:node/title :block/string] e))
+                                           :page
+                                           :block)]
+                       {:refs num-refs
+                        :attr block-or-page})))
+              (map (fn [x]
+                     (.. js/posthog (capture "link-created", (clj->js x))))))))
 
 
 (defn walk-transact
@@ -155,6 +209,7 @@
       (prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
       (pprint final-tx-data)
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+        (ph-link-created! outputs)
         (prn "TX OUTPUTS")
         (pprint outputs)))
 
