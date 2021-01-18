@@ -39,6 +39,13 @@
     (assoc db :db/synced false)))
 
 
+(reg-event-fx
+  :upload/roam-edn
+  (fn [_ [_ roam-db]]
+    (let [shared-pages (athens.views.filesystem/shared-pages roam-db)]
+      {})))
+
+
 (reg-event-db
   :athena/toggle
   (fn [db _]

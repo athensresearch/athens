@@ -74,14 +74,24 @@
   [:hr (use-style separator-style)])
 
 
+
+
+
+
 (defn app-toolbar
   []
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
-        theme-dark  (subscribe [:theme/dark])]
+        theme-dark  (subscribe [:theme/dark])
+        merge-open? (reagent.core/atom false)]
     (fn []
       [:<>
+
+
+       (when @merge-open?
+         [athens.views.filesystem/merge-modal merge-open?])
+
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
@@ -102,6 +112,10 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
+         [button {:on-click #(swap! merge-open? not)}
+          [:> mui-icons/MergeType]]
+
+
          [button {:on-click #(router/navigate :settings)
                   :active (= @route-name :settings)}
           [:> mui-icons/Settings]]
