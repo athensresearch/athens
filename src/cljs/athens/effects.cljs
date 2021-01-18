@@ -186,8 +186,8 @@
                                         :block/_refs
                                         count)
                            block-or-page (if (:node/title (d/pull @db/dsdb '[:node/title :block/string] e))
-                                            :page
-                                            :block)]
+                                           :page
+                                           :block)]
                        {:refs num-refs
                         :attr block-or-page})))
               (map (fn [x]
@@ -216,7 +216,6 @@
     (catch js/Error e
       (js/alert (str e))
       (prn "EXCEPTION" e))))
-
 
 
 (reg-fx
