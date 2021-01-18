@@ -96,7 +96,9 @@
                    (and (not (str/includes? new-str (str "[[" title "]]")))
                         page
                         title))))
-       (map (fn [page-id] [:db/retract source-eid :block/refs page-id]))))
+       (map (fn [page-id]
+              (let [page (d/pull @db/dsdb '[:block/uid] page-id)]
+                [:db/retract source-eid :block/refs [:block/uid (:block/uid page)]])))))
 
 
 (defn parse-for-links
@@ -140,6 +142,11 @@
                                                   old-block-refs
                                                   old-page-refs)]
                        tx-data)
+
+                     ;; changing "page" to another value triggers all linked references to rename
+                     ;; when a block re-asserts its block/string, code also runs to assert or retract block/refs
+                     ;; so when the retraction happens, its using the previous node/title
+
 
                      ;; [assertion]
                      (and (true? (last assertion)) (nil? retraction))
