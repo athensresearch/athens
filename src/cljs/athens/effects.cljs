@@ -96,6 +96,9 @@
                    (and (not (str/includes? new-str (str "[[" title "]]")))
                         page
                         title))))
+       ;; Renaming a page's node/title to another value updates all Linked References.
+       ;; When a block re-asserts its block/string, code also runs to assert or retract block/refs.
+       ;; So when the retraction happens, its using the previous node/title, which no longer exists, throwing an exception.
        (map (fn [page-id]
               (let [page (d/pull @db/dsdb '[:block/uid] page-id)]
                 [:db/retract source-eid :block/refs [:block/uid (:block/uid page)]])))))
@@ -142,11 +145,6 @@
                                                   old-block-refs
                                                   old-page-refs)]
                        tx-data)
-
-                     ;; changing "page" to another value triggers all linked references to rename
-                     ;; when a block re-asserts its block/string, code also runs to assert or retract block/refs
-                     ;; so when the retraction happens, its using the previous node/title
-
 
                      ;; [assertion]
                      (and (true? (last assertion)) (nil? retraction))
