@@ -173,6 +173,27 @@
                        tx-data)))))))
 
 
+(defn ph-link-created!
+  "Only creates `link-created` events for now.
+  TODO: link-deleted events"
+  [outputs]
+  (doall (->> outputs
+              (filter (fn [[_e a _v _t t-or-f]]
+                        (and (= a :block/refs)
+                             t-or-f)))
+              (map (fn [[e _a v _t _t-or-f]]
+                     (let [num-refs (-> (d/pull @db/dsdb '[:block/_refs] v)
+                                        :block/_refs
+                                        count)
+                           block-or-page (if (:node/title (d/pull @db/dsdb '[:node/title :block/string] e))
+                                            :page
+                                            :block)]
+                       {:refs num-refs
+                        :attr block-or-page})))
+              (map (fn [x]
+                     (.. js/posthog (capture "link-created", (clj->js x))))))))
+
+
 (defn walk-transact
   [tx-data]
   (prn "TX RAW INPUTS")                                     ;; event tx-data
@@ -188,12 +209,14 @@
       (prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
       (pprint final-tx-data)
       (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+        (ph-link-created! outputs)
         (prn "TX OUTPUTS")
         (pprint outputs)))
 
     (catch js/Error e
       (js/alert (str e))
       (prn "EXCEPTION" e))))
+
 
 
 (reg-fx
