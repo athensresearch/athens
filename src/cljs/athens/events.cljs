@@ -39,46 +39,6 @@
     (assoc db :db/synced false)))
 
 
-(def ROAM-DB (atom nil))
-
-;; Task: merge Roam and Athens dbs
-
-;; Cases
-;; - Merge ROAM into ATHENS because ROAM schema is a superset
-;; - Merge ATHENS into ROAM?
-;; - Roam db has lots of additional attributes. Import could break Athens if the schema is not maintained.
-;; -> In this case, just keep the necessary :block/ attributes below
-
-
-;; Approach 1
-;; - For all shared pages, merge top-level blocks
-;; - For all non-shared pages, simply transact them to dsdb
-
-;; Approach 2
-;; - All the blocks from the 2nd DB get imported under a new block with the date on it, similar to Quick Capture in Roam
-;; - Preserves context, rather than throwing all the top-level blocks together and forgetting where they come from.
-;; - Also easier code-wise :)
-
-;; Don't need to worry about db/ids, only need
-;; {:block/string "asd" :block/order 1 :block/open true :block/uid "asd123"}
-;; Can parse [[links]] and ((refs)) directly from block/string, and then generate block/refs. Avoid datascript entity id collisions
-
-;; Edge case: Roam uses natural language dates,
-;; Roam: Month 1st, 2nd, 3rd, 4th...
-;; Athens: Month 1, 2, 3, 4...
-;; Though they should have the same block-uid
-
-;; 1: find pages with same node/title. Merge blocks.
-;; 2: find blocks with same block/uid.
-;; If those blocks are date pages, merge. But have to change all the backlinks for this merge as well...
-;; Otherwise log error. (Unlikely there are two real blocks that collide in their uids)
-
-;; shared blocks
-;; these are are blocks with the same :block/uid in both Athens and Roam
-;; it's likely that these are all date pages
-;; find all the block/refs for this date page, and convert all those to Athens date format.
-;; do this by stripping the 2 characters before the comma of a Roam Date: "January 18th, 2021" -> "January 18r 2021"
-
 (defn shared-blocks-excl-date-pages
   [roam-db]
   (->> (d/q '[:find [?blocks ...]
