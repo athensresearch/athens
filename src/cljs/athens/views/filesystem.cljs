@@ -32,7 +32,7 @@
     (set! (.-onload fr)
           (fn [e]
             (let [edn-data (.. e -target -result)
-                  filename (.. e -target -fileName)
+                  filename (.-name file)
                   db       (edn/read-string {:readers datascript.core/data-readers} edn-data)]
               (reset! roam-db-filename filename)
               (reset! roam-db db))))
@@ -106,7 +106,7 @@
                             [:li (str "[[" x "]]")])]
                          [button {:style {:align-self "center"}
                                   :primary true
-                                  :on-click #(dispatch [:upload/roam-edn roam-db])}
+                                  :on-click #(dispatch [:upload/roam-edn roam-db @roam-db-filename])}
                           "Merge"]]))]
 
          :on-close close-modal}]])))
