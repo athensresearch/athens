@@ -78,58 +78,46 @@
 ;; it's likely that these are all date pages
 ;; find all the block/refs for this date page, and convert all those to Athens date format.
 ;; do this by stripping the 2 characters before the comma of a Roam Date: "January 18th, 2021" -> "January 18r 2021"
-(let [shared-blocks (->> (d/q '[:find [?blocks ...]
-                                :in $athens $roam
-                                :where
-                                [$athens _ :block/uid ?blocks]
-                                [$roam _ :block/uid ?blocks]]
-                              @athens.db/dsdb
-                              @ROAM-DB)
-                         sort)
-      ;; lots of other data here that might be good to keep hmm
-      pages         (->> shared-blocks
-                         (map (fn [x]
-                                (let [{:keys [node/title block/_refs]} (d/pull @ROAM-DB '[:node/title {:block/_refs [:block/string]}] [:block/uid x])]
-                                  (mapv (fn [{:block/keys [string]}]
-                                          (string/replace string athens.patterns/roam-date ","))
-                                        _refs)))))]
-    pages)
+
+(defn shared-blocks-excl-date-pages
+  [roam-db]
+  (->> (d/q '[:find [?blocks ...]
+              :in $athens $roam
+              :where
+              [$athens _ :block/uid ?blocks]
+              [$roam _ :block/uid ?blocks]
+              [$roam ?e :block/uid ?blocks]
+              [(missing? $roam ?e :node/title)]]
+            @athens.db/dsdb
+            roam-db)))
 
 
-;; shared pages
-(->> (d/q '[:find [?pages ...]
-            :in $athens $roam
-            :where
-            [$athens _ :node/title ?pages]
-            [$roam _ :node/title ?pages]]
-          @athens.db/dsdb
-          @ROAM-DB)
-     sort)
+(defn shared-date-pages
+  [roam-db]
+  (d/q '[:find [?blocks ...]
+         :in $athens $roam
+         :where
+         [$athens _ :block/uid ?blocks]
+         [$roam _ :block/uid ?blocks]
+         [$roam ?e :block/uid ?blocks]
+         [$roam ?e :node/title _]]
+       @athens.db/dsdb
+       roam-db))
 
 
-;; roam
-(->> (d/q '[:find [?pages ...]
-            :in $athens $roam
-            :where
-            [$roam _ :node/title ?pages]]
-          @athens.db/dsdb
-          @ROAM-DB)
-     sort)
-
-;; athens
-(->> (d/q '[:find [?pages ...]
-            :in $athens $roam
-            :where
-            [$athens _ :node/title ?pages]]
-          @athens.db/dsdb
-          @ROAM-DB)
-     sort)
+(defn roam-date-to-athens-date
+  [blocks]
+  ;; lots of other data here that might be good to keep hmm
+  (->> blocks
+       (mapv (fn [block]
+               (assoc block :block/string (string/replace (:block/string block) athens.patterns/roam-date ","))))))
 
 
 (defn merge-shared-page
-  [shared-page roam-db-filename]
-  (let [page-athens                   (db/get-node-document [:node/title shared-page])
-        page-roam                     (db/get-roam-node-document [:node/title shared-page] @ROAM-DB)
+  "shared-page-id can be either [:node/title TITLE] or [:block/uid UID]. The latter is for date pages."
+  [shared-page-id roam-db roam-db-filename]
+  (let [page-athens                   (db/get-node-document shared-page-id)
+        page-roam                     (db/get-roam-node-document shared-page-id roam-db)
         page-athens-root-blocks-count (-> page-athens :block/children count)
         new-uid                       (gen-block-uid)
         today-date-page               (:title (athens.util/get-day))
@@ -146,15 +134,60 @@
     final-page-with-children))
 
 
+(defn update-roam-db-dates
+  "Converts all the linked references to date pages from Roam format to Athens format."
+  [roam-db]
+  (let [shared-block-uids (->> (d/q '[:find ?refs ?str
+                                      :keys db/id block/string
+                                      :in $athens $roam
+                                      :where
+                                      [$athens _ :block/uid ?blocks]
+                                      [$roam _ :block/uid ?blocks]
+                                      [$roam ?e :block/uid ?blocks]
+                                      [$roam ?refs :block/refs ?e]
+                                      [$roam ?refs :block/string ?str]]
+                                    @db/dsdb
+                                    roam-db))
+        new-blocks (roam-date-to-athens-date shared-block-uids)]
+    (d/db-with @ROAM-DB new-blocks)))
+
+
+(defn shared-pages
+  [roam-db]
+  (->> (d/q '[:find [?pages ...]
+              :in $athens $roam
+              :where
+              [$athens _ :node/title ?pages]
+              [$roam _ :node/title ?pages]]
+            @athens.db/dsdb
+            roam-db)
+       sort))
+
+
+(defn shared-pages-incl-date-pages
+  [roam-db]
+  (let [pages (shared-pages roam-db)
+        blocks  (->> (shared-date-pages roam-db)
+                     (map (fn [x]
+                            (-> x
+                                athens.util/uid-to-date
+                                (athens.util/get-day 0)
+                                :title))))]
+    (concat pages blocks)))
+
+
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ roam-db roam-db-filename]]
-    (let [shared-pages (athens.views.filesystem/shared-pages @roam-db)]
-      (reset! ROAM-DB @roam-db)
-      (let [tx-data (mapv (fn [shared-page]
-                            (merge-shared-page shared-page roam-db-filename))
-                          shared-pages)]
-        {:dispatch [:transact tx-data]}))))
+    (reset! ROAM-DB @roam-db)
+    (let [shared-pages              (mapv (fn [x] [:node/title x]) (shared-pages @roam-db))
+          transformed-dates-roam-db (update-roam-db-dates @roam-db)
+          shared-date-pages             (mapv (fn [x] [:block/uid x]) (shared-date-pages @roam-db))
+          shared-page-ids           (concat shared-date-pages shared-pages)
+          merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-page-ids)]
+      {:dispatch [:transact merge-pages]})))
+
+
 
 
 (reg-event-db

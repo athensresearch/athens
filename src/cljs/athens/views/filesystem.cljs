@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.electron :as electron]
+    [athens.events :as events]
     [athens.subs]
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
@@ -48,18 +49,6 @@
        roam-db))
 
 
-(defn shared-pages
-  [roam-db]
-  (->> (d/q '[:find [?pages ...]
-              :in $athens $roam
-              :where
-              [$athens _ :node/title ?pages]
-              [$roam _ :node/title ?pages]]
-            @athens.db/dsdb
-            roam-db)
-       sort))
-
-
 (defn merge-modal
   [open?]
   (let [close-modal      #(reset! open? false)
@@ -81,20 +70,20 @@
                        [:input {:type "file" :accept ".edn" :on-change #(file-cb % roam-db roam-db-filename)}]
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
-                                      :margin "20px 0"
-                                      :width "100%"}}
-                        [:iframe {:src   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
-                                  :frameBorder "0"
+                                      :margin         "20px 0"
+                                      :width          "100%"}}
+                        [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
+                                  :frameBorder           "0"
                                   :webkitallowfullscreen "true"
-                                  :mozallowfullscreen "true"
-                                  :allowFullScreen true
-                                  :style {:position "absolute"
-                                          :top 0
-                                          :left 0
-                                          :width "100%"
-                                          :height "100%"}}]]]
+                                  :mozallowfullscreen    "true"
+                                  :allowFullScreen       true
+                                  :style                 {:position "absolute"
+                                                          :top      0
+                                                          :left     0
+                                                          :width    "100%"
+                                                          :height   "100%"}}]]]
                       (let [roam-pages   (roam-pages @roam-db)
-                            shared-pages (shared-pages @roam-db)]
+                            shared-pages (events/shared-pages-incl-date-pages @roam-db)]
                         [:div {:style {:display "flex" :flex-direction "column"}}
                          [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
                          [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]
@@ -104,9 +93,11 @@
                           (for [x shared-pages]
                             ^{:key x}
                             [:li (str "[[" x "]]")])]
-                         [button {:style {:align-self "center"}
-                                  :primary true
-                                  :on-click #(dispatch [:upload/roam-edn roam-db @roam-db-filename])}
+                         [button {:style    {:align-self "center"}
+                                  :primary  true
+                                  :on-click (fn []
+                                              (dispatch [:upload/roam-edn roam-db @roam-db-filename])
+                                              (close-modal))}
                           "Merge"]]))]
 
          :on-close close-modal}]])))
