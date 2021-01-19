@@ -26,13 +26,15 @@
 
 
 (defn file-cb
-  [e roam-db]
+  [e roam-db roam-db-filename]
   (let [fr   (js/FileReader.)
         file (.. e -target -files (item 0))]
     (set! (.-onload fr)
           (fn [e]
             (let [edn-data (.. e -target -result)
+                  filename (.. e -target -fileName)
                   db       (edn/read-string {:readers datascript.core/data-readers} edn-data)]
+              (reset! roam-db-filename filename)
               (reset! roam-db db))))
     (.readAsText fr file)))
 
@@ -60,8 +62,9 @@
 
 (defn merge-modal
   [open?]
-  (let [close-modal #(reset! open? false)
-        roam-db (r/atom nil)]
+  (let [close-modal      #(reset! open? false)
+        roam-db          (r/atom nil)
+        roam-db-filename (r/atom "")]
     (fn []
       [:div (use-style modal-style)
        [modal/modal
@@ -75,7 +78,7 @@
          :content  [:div (use-style modal-contents-style)
                     (if (nil? @roam-db)
                       [:<>
-                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % roam-db)}]
+                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % roam-db roam-db-filename)}]
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
                                       :margin "20px 0"

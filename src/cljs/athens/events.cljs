@@ -41,6 +41,28 @@
 
 (def ROAM-DB (atom nil))
 
+;; Task: merge Roam and Athens dbs
+
+;; Cases
+;; - Merge ROAM into ATHENS because ROAM schema is a superset
+;; - Merge ATHENS into ROAM?
+;; - Roam db has lots of additional attributes. Import could break Athens if the schema is not maintained.
+;; -> In this case, just keep the necessary :block/ attributes below
+
+
+;; Approach 1
+;; - For all shared pages, merge top-level blocks
+;; - For all non-shared pages, simply transact them to dsdb
+
+;; Approach 2
+;; - All the blocks from the 2nd DB get imported under a new block with the date on it, similar to Quick Capture in Roam
+;; - Preserves context, rather than throwing all the top-level blocks together and forgetting where they come from.
+;; - Also easier code-wise :)
+
+;; Don't need to worry about db/ids, only need
+;; {:block/string "asd" :block/order 1 :block/open true :block/uid "asd123"}
+;; Can parse [[links]] and ((refs)) directly from block/string, and then generate block/refs. Avoid datascript entity id collisions
+
 ;; Edge case: Roam uses natural language dates,
 ;; Roam: Month 1st, 2nd, 3rd, 4th...
 ;; Athens: Month 1, 2, 3, 4...
@@ -88,79 +110,35 @@
      sort)
 
 
+(defn merge-shared-page
+  [shared-page roam-db-filename]
+  (let [page-athens                   (db/get-node-document [:node/title shared-page])
+        page-roam                     (db/get-roam-node-document [:node/title shared-page] @ROAM-DB)
+        page-athens-root-blocks-count (-> page-athens :block/children count)
+        new-uid                       (gen-block-uid)
+        today-date-page               (:title (athens.util/get-day))
+        new-children                  (conj (:block/children page-athens)
+                                            {:block/uid      new-uid
+                                             :block/children (:block/children page-roam)
+                                             :block/string   (str "[[Roam Import]] "
+                                                                  "[[" today-date-page "]] "
+                                                                  "[[" roam-db-filename "]]")
+                                             :block/order    page-athens-root-blocks-count
+                                             :block/open     true})
+        merge-pages                   (merge page-roam page-athens)
+        final-page-with-children      (assoc merge-pages :block/children new-children)]
+    final-page-with-children))
+
+
 (reg-event-fx
   :upload/roam-edn
-  (fn [_ [_ roam-db]]
+  (fn [_ [_ roam-db roam-db-filename]]
     (let [shared-pages (athens.views.filesystem/shared-pages @roam-db)]
       (reset! ROAM-DB @roam-db)
-      (prn "SHARED" shared-pages)
-      {})))
-
-
-;; Task: merge Roam and Athens dbs
-
-;; Cases
-;; - Merge ROAM into ATHENS because ROAM schema is a superset
-;; - Merge ATHENS into ROAM?
-;; - Roam db has lots of additional attributes. Import could break Athens if the schema is not maintained.
-  ;; -> In this case, just keep the necessary :block/ attributes below
-
-
-;; Approach 1
-;; - For all shared pages, merge top-level blocks
-;; - For all non-shared pages, simply transact them to dsdb
-
-;; Approach 2
-;; - All the blocks from the 2nd DB get imported under a new block with the date on it, similar to Quick Capture in Roam
-;; - Preserves context, rather than throwing all the top-level blocks together and forgetting where they come from.
-;; - Also easier code-wise :)
-
-
-;; Don't need to worry about db/ids, only need
-;; {:block/string "asd" :block/order 1 :block/open true :block/uid "asd123"}
-;; Can parse [[links]] and ((refs)) directly from block/string, and then generate block/refs. Avoid datascript entity id collisions
-
-
-
-;; Can test this with Roam dbs: jefftang, ego
-;; Have a few Athens DBs too
-;; (merge-dbs Dropbox/index-athens.db ego-roam.db)
-
-
-#_(let [shared ["" "1" "2" "4" "5 Why's" "Airtable" "Amazon" "Andy Grove" "Apple" "Athens" "Babashka" "Beating the Averages" "Bureaucracy" "Changelog" "Christopher Alexander" "Clojure" "Clojure Routers - PurelyFunctional.tv" "Clojure from the Ground Up" "Community" "Conaw" "Contrarian" "DONE" "Datahike" "Datascript" "Datomic" "Day of Datomic Cloud 2018" "Devon Zuegel" "Discord" "Elad Gil" "Ethereum" "Facebook" "Figma" "First Principles" "Functional Programming with Jessica Kerr" "Gene Kim" "Good Artists Copy; Great Artists Steal" "Hacker News" "IFTTT" "Jeff Bezos" "Lisp" "Love Letter To Clojure" "MIT" "Mark Zuckerberg" "Metrics" "Microsoft" "Microsoft Fluid" "Mozilla" "Notion" "Nubank" "OKRs" "Patreon" "Paul Graham" "Power" "Quote" "Roam Research" "Samo Burja" "Semantic Web" "Silicon Valley" "Slack" "Smalltalk" "Steve Jobs" "TODO" "Technical Debt" "Ted Nelson" "Tiago Forte" "Tim Berners-Lee" "Venkatesh Rao" "VisiCalc" "Welcome" "asd" "athens" "logic programming" "macros" "meta-cognition" "programming languages" "roamcult"]]
-    ;;(merge-dbs @ROAM-DB @db/dsdb)
-    #_(->> shared
-          (map #(db/get-node-document [:node/title %] @ROAM-DB #_@db/dsdb))
-          (filter :block/children))
-    #_(->> shared
-           (map #(db/get-node-document [:node/title %] #_@ROAM-DB @db/dsdb))
-           (filter :block/children)))
-
-
-;;(map + [1 2] [9 0])
-
-
-;;;; TODO: what about all the roam db/ids? gotta ignore
-;;(let [page-athens              (db/get-node-document [:node/title "Athens"] #_@ROAM-DB @db/dsdb)
-;;      page-roam                (db/get-node-document [:node/title "Athens"] @ROAM-DB #_@db/dsdb)
-;;      athens-root-blocks-count (-> page-athens :block/children count)
-;;      new-children             (conj (:block/children page-athens)
-;;                                     {:block/uid      (gen-block-uid)
-;;                                      :block/children (:block/children page-roam)
-;;                                      :block/string   (str "Imported from " "xxx-db" " on " (js/Date.))
-;;                                      :block/order    athens-root-blocks-count
-;;                                      :block/open     true})]
-;;  (merge page-roam page-athens)
-;;  new-children)
-
-
-;;(d/pull @ROAM-DB '[*] 2090)
-
-#_(->> (d/q '[:find (count ?e) ?a
-              :where [?e ?a _]]
-            @ROAM-DB)
-       (sort-by first))
-
+      (let [tx-data (mapv (fn [shared-page]
+                            (merge-shared-page shared-page roam-db-filename))
+                          shared-pages)]
+        {:dispatch [:transact tx-data]}))))
 
 
 (reg-event-db

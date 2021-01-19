@@ -234,6 +234,10 @@
       (conj :node/title :page/sidebar)))
 
 
+(def roam-node-document-pull-vector
+  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+
+
 (defn get-block-document
   [id]
   (->> @(pull dsdb block-document-pull-vector id)
@@ -247,6 +251,13 @@
   ([id db]
    (->> (d/pull db node-document-pull-vector id)
         sort-block-children)))
+
+
+(defn get-roam-node-document
+  [id db]
+  (->> (d/pull db roam-node-document-pull-vector id)
+       sort-block-children))
+
 
 
 (defn get-athens-datoms
