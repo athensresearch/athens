@@ -136,12 +136,12 @@
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
-                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                           ;;old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
                            tx-data        (concat []
                                                   new-titles
                                                   new-block-refs
                                                   new-page-refs
-                                                  old-titles
+                                                  ;;old-titles
                                                   old-block-refs
                                                   old-page-refs)]
                        tx-data)
@@ -164,15 +164,15 @@
                      ;; :block/string itself is rarely retracted directly.
                      (and (false? (last assertion)) (nil? retraction))
                      (let [eid            (first retraction)
-                           uid            (db/v-by-ea eid :block/uid)
+                           ;;uid            (db/v-by-ea eid :block/uid)
                            assert-string  ""
                            retract-string (nth retraction 2)
                            retract-data   (walk/walk-string retract-string)
-                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
+                           ;;old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
                            tx-data        (concat []
-                                                  old-titles
+                                                  ;;old-titles
                                                   old-block-refs
                                                   old-page-refs)]
                        tx-data)))))))
