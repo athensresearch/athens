@@ -73,6 +73,30 @@
 ;; If those blocks are date pages, merge. But have to change all the backlinks for this merge as well...
 ;; Otherwise log error. (Unlikely there are two real blocks that collide in their uids)
 
+;; shared blocks
+;; these are are blocks with the same :block/uid in both Athens and Roam
+;; it's likely that these are all date pages
+;; find all the block/refs for this date page, and convert all those to Athens date format.
+;; do this by stripping the 2 characters before the comma of a Roam Date: "January 18th, 2021" -> "January 18r 2021"
+(let [shared-blocks (->> (d/q '[:find [?blocks ...]
+                                :in $athens $roam
+                                :where
+                                [$athens _ :block/uid ?blocks]
+                                [$roam _ :block/uid ?blocks]]
+                              @athens.db/dsdb
+                              @ROAM-DB)
+                         sort)
+      ;; lots of other data here that might be good to keep hmm
+      pages         (->> shared-blocks
+                         (map (fn [x]
+                                (let [{:keys [node/title block/_refs]} (d/pull @ROAM-DB '[:node/title {:block/_refs [:block/string]}] [:block/uid x])]
+                                  (mapv (fn [{:block/keys [string]}]
+                                          (string/replace string athens.patterns/roam-date ","))
+                                        _refs)))))]
+    pages)
+
+
+;; shared pages
 (->> (d/q '[:find [?pages ...]
             :in $athens $roam
             :where
@@ -83,16 +107,7 @@
      sort)
 
 
-(->> (d/q '[:find [?blocks ...]
-            :in $athens $roam
-            :where
-            [$athens _ :block/uid ?blocks]
-            [$roam _ :block/uid ?blocks]]
-          @athens.db/dsdb
-          @ROAM-DB)
-     sort)
-
-
+;; roam
 (->> (d/q '[:find [?pages ...]
             :in $athens $roam
             :where
@@ -101,6 +116,7 @@
           @ROAM-DB)
      sort)
 
+;; athens
 (->> (d/q '[:find [?pages ...]
             :in $athens $roam
             :where
