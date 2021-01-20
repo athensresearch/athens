@@ -104,16 +104,15 @@
   (->> old-page-refs
        (filter (fn [page-id]
                  (let [page (db/pull-nil with-db '[*] page-id)
+                       old-pages-eids (set (map second old-titles))
                        {:keys [node/title]} page]
                    (and (not (str/includes? new-str (str "[[" title "]]")))
                         page
-                        title))))
+                        title
+                        (not (get old-pages-eids (:db/id page)))))))
        (map (fn [page-id]
-              (let [page (db/pull-nil with-db '[*] page-id)
-                    old-pages-eids (set (map second old-titles))]
-                (when (and page
-                           (not (get old-pages-eids (:db/id page))))
-                  [:db/retract source-eid :block/refs [:block/uid (:block/uid page)]]))))))
+              (when-let [page (db/pull-nil with-db '[*] page-id)]
+                [:db/retract source-eid :block/refs [:block/uid (:block/uid page)]])))))
 
 
 (defn parse-for-links
