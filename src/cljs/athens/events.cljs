@@ -74,24 +74,28 @@
 
 
 (defn merge-shared-page
-  "shared-page-id can be either [:node/title TITLE] or [:block/uid UID]. The latter is for date pages."
+  "shared-page-id can be either [:node/title TITLE] or [:block/uid UID]. The latter is for date pages.
+  If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
   [shared-page-id roam-db roam-db-filename]
-  (let [page-athens                   (db/get-node-document shared-page-id)
-        page-roam                     (db/get-roam-node-document shared-page-id roam-db)
-        page-athens-root-blocks-count (-> page-athens :block/children count)
-        new-uid                       (gen-block-uid)
-        today-date-page               (:title (athens.util/get-day))
-        new-children                  (conj (:block/children page-athens)
-                                            {:block/uid      new-uid
-                                             :block/children (:block/children page-roam)
-                                             :block/string   (str "[[Roam Import]] "
-                                                                  "[[" today-date-page "]] "
-                                                                  "[[" roam-db-filename "]]")
-                                             :block/order    page-athens-root-blocks-count
-                                             :block/open     true})
-        merge-pages                   (merge page-roam page-athens)
-        final-page-with-children      (assoc merge-pages :block/children new-children)]
-    final-page-with-children))
+  (let [page-athens              (db/get-node-document shared-page-id)
+        page-roam                (db/get-roam-node-document shared-page-id roam-db)
+        athens-child-count       (-> page-athens :block/children count)
+        roam-child-count         (-> page-roam :block/children count)
+        new-uid                  (gen-block-uid)
+        today-date-page          (:title (athens.util/get-day))
+        new-children             (conj (:block/children page-athens)
+                                       {:block/string   (str "[[Roam Import]] "
+                                                             "[[" today-date-page "]] "
+                                                             "[[" roam-db-filename "]]")
+                                        :block/uid      new-uid
+                                        :block/children (:block/children page-roam)
+                                        :block/order    athens-child-count
+                                        :block/open     true})
+        merge-pages              (merge page-roam page-athens)
+        final-page-with-children (assoc merge-pages :block/children new-children)]
+    (if (zero? roam-child-count)
+      merge-pages
+      final-page-with-children)))
 
 
 (defn update-roam-db-dates
