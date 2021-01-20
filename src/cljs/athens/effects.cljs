@@ -236,10 +236,6 @@
       (prn "EXCEPTION" e))))
 
 
-(walk-transact '([:db/retractEntity 359]
-                 {:db/id [:block/uid "0ac2c4976"], :block/string "[[test 2]]"}))
-
-
 (reg-fx
   :transact!
   (fn [tx-data]
