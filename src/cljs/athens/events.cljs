@@ -130,16 +130,53 @@
 
 (defn shared-pages-incl-date-pages
   [roam-db]
-  (let [pages (shared-pages roam-db)
-        blocks  (->> (shared-date-pages roam-db)
-                     (map (fn [x]
-                            (-> x
-                                athens.util/uid-to-date
-                                (athens.util/get-day 0)
-                                :title))))]
+  (let [pages  (shared-pages roam-db)
+        blocks (->> (shared-date-pages roam-db)
+                    (map (fn [x]
+                           (-> x
+                               athens.util/uid-to-date
+                               (athens.util/get-day 0)
+                               :title))))]
     (concat pages blocks)))
 
+(defonce ROAM-DB (atom nil))
 
+(defn date
+  [str]
+  (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
+
+(defn not-date
+  [str]
+  (not (date str)))
+
+;; date pages, but we want to ignore the shared date pages
+(d/q '[:find ?t ?u
+       :in $ ?date
+       :where
+       [?e :node/title ?t]
+       [?e :block/uid ?u]
+       [(?date ?u)]]
+     @@ROAM-DB
+     athens.events/date)
+
+;; not date pages, not shared
+(d/q '[:find ?t ?u
+       :in $ ?not-date
+       :where
+       [?e :node/title ?t]
+       [?e :block/uid ?u]
+       [(?not-date ?u)]]
+     @@ROAM-DB
+     athens.events/not-date)
+
+(shared-pages @@ROAM-DB)
+(shared-date-pages @@ROAM-DB)
+
+(defn roam-pages-excl-date-pages
+  [roam-db])
+
+
+;; TODO: merge non-shared-pages, ignoring date pages
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ roam-db roam-db-filename]]
@@ -148,6 +185,7 @@
           shared-date-pages         (mapv (fn [x] [:block/uid x]) (shared-date-pages @roam-db))
           shared-page-ids           (concat shared-date-pages shared-pages)
           merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-page-ids)]
+      (reset! ROAM-DB @roam-db)
       {:dispatch [:transact merge-pages]})))
 
 
