@@ -131,7 +131,7 @@
                      ;; [assertion retraction]
                      (and (true? (last assertion)) (false? (last retraction)))
                      (let [eid            (first assertion)
-                           uid            (db/v-by-ea eid :block/uid)
+                           ;;uid            (db/v-by-ea eid :block/uid)
                            assert-string  (nth assertion 2)
                            retract-string (nth retraction 2)
                            assert-data    (walk/walk-string assert-string)
@@ -227,9 +227,9 @@
       (js/alert (str e))
       (prn "EXCEPTION" e))))
 
+
 (walk-transact '([:db/retractEntity 359]
                  {:db/id [:block/uid "0ac2c4976"], :block/string "[[test 2]]"}))
-
 
 
 (reg-fx
