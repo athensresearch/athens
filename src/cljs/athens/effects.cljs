@@ -90,10 +90,10 @@
 (defn old-page-refs-to-tx-data
   "Filter: [[page]] points to a page and block/ref relationship does exist.
   Map: retract block/ref relationship."
-  [old-page-refs source-eid new-str]
+  [old-page-refs source-eid new-str with-db]
   (->> old-page-refs
        (filter (fn [page-id]
-                 (let [page (d/pull @db/dsdb '[*] page-id)
+                 (let [page (db/pull-nil with-db '[*] page-id)
                        {:keys [node/title]} page]
                    (and (not (str/includes? new-str (str "[[" title "]]")))
                         page
@@ -101,8 +101,9 @@
        ;; Renaming a page's node/title to another value updates all Linked References.
        ;; When a block re-asserts its block/string, code also runs to assert or retract block/refs.
        ;; So when the retraction happens, its using the previous node/title, which no longer exists, throwing an exception.
+       ;; This is alleviated by querying the `with-db` value, which tells us the block/refs relationship no longer exists.
        (map (fn [page-id]
-              (let [page (d/pull @db/dsdb '[:block/uid] page-id)]
+              (when-let [page (db/pull-nil with-db '[:block/uid] page-id)]
                 [:db/retract source-eid :block/refs [:block/uid (:block/uid page)]])))))
 
 
@@ -110,8 +111,10 @@
   "When block/string is asserted, parse for links and block refs to add.
   When block/string is retracted, parse for links and block refs to remove.
   Retractions need to look at asserted block/string. Use empty string if only retract."
-  [with-tx-data]
-  (let [assert-titles (->> with-tx-data
+  [with-tx]
+  (let [with-tx-data  (:tx-data with-tx)
+        with-db       (:db-after with-tx)
+        assert-titles (->> with-tx-data
                            (filter #(and (= (second %) :node/title)
                                          (true? (last %))))
                            (map #(nth % 2))
@@ -137,7 +140,7 @@
                            new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
-                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string with-db)
                            ;;old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
                            tx-data        (concat []
                                                   new-titles
@@ -172,7 +175,7 @@
                            retract-data   (walk/walk-string retract-string)
                            ;;old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
-                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string)
+                           old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string with-db)
                            tx-data        (concat []
                                                   ;;old-titles
                                                   old-block-refs
@@ -206,23 +209,27 @@
   (prn "TX RAW INPUTS")                                     ;; event tx-data
   (pprint tx-data)
   (try
-    (let [with-tx-data  (:tx-data (d/with @db/dsdb tx-data))
-          more-tx-data  (parse-for-links with-tx-data)
-          final-tx-data (vec (concat tx-data more-tx-data))]
+    (let [with-tx (d/with @db/dsdb tx-data)]
       (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
-      (pprint with-tx-data)
-      (prn "TX MORE")                                       ;; parsed tx-data, e.g. asserting/retracting pages and references
-      (pprint more-tx-data)
-      (prn "TX FINAL INPUTS")                               ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-      (pprint final-tx-data)
-      (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-        (ph-link-created! outputs)
-        (prn "TX OUTPUTS")
-        (pprint outputs)))
+      (pprint (:tx-data with-tx))
+      (let [more-tx-data  (parse-for-links with-tx)
+            final-tx-data (vec (concat tx-data more-tx-data))]
+        (prn "TX MORE")                                     ;; parsed tx-data, e.g. asserting/retracting pages and references
+        (pprint more-tx-data)
+        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+        (pprint final-tx-data)
+        (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+          (ph-link-created! outputs)
+          (prn "TX OUTPUTS")
+          (pprint outputs))))
 
     (catch js/Error e
       (js/alert (str e))
       (prn "EXCEPTION" e))))
+
+(walk-transact '([:db/retractEntity 359]
+                 {:db/id [:block/uid "0ac2c4976"], :block/string "[[test 2]]"}))
+
 
 
 (reg-fx
