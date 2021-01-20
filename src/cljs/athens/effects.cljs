@@ -58,7 +58,7 @@
   [new-block-refs e]
   (->> new-block-refs
        (filter (fn [ref-uid]
-                 (let [block (d/q '[:find (pull ?e [*])
+                 (let [block (d/q '[:find (pull ?e [*]) .
                                     :in $ ?uid
                                     :where [?e :block/uid ?uid]]
                                   @db/dsdb ref-uid)
