@@ -610,3 +610,12 @@
          (mapv (fn [x]
                  (let [new-str (string/replace (:block/string x) pattern title)]
                    (assoc x :block/string new-str)))))))
+
+
+(defn pull-nil
+  [db selector id]
+  (try
+    (d/pull db selector id)
+    (catch js/Error _e
+      nil)))
+
