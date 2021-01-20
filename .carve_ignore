@@ -23,4 +23,3 @@ athens.main.core/main
 ;; used when updating athens-datoms (don't pull :db/id)
 athens.db/get-athens-datoms
 athens.util/common-ancestor
-athens.effects/old-titles-to-tx-data
