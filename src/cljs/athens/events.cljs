@@ -109,7 +109,7 @@
                                     @db/dsdb
                                     roam-db))
         new-blocks (roam-date-to-athens-date shared-block-uids)]
-    (d/db-with @ROAM-DB new-blocks)))
+    (d/db-with roam-db new-blocks)))
 
 
 (defn shared-pages
@@ -139,15 +139,12 @@
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ roam-db roam-db-filename]]
-    (reset! ROAM-DB @roam-db)
     (let [shared-pages              (mapv (fn [x] [:node/title x]) (shared-pages @roam-db))
           transformed-dates-roam-db (update-roam-db-dates @roam-db)
-          shared-date-pages             (mapv (fn [x] [:block/uid x]) (shared-date-pages @roam-db))
+          shared-date-pages         (mapv (fn [x] [:block/uid x]) (shared-date-pages @roam-db))
           shared-page-ids           (concat shared-date-pages shared-pages)
           merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-page-ids)]
       {:dispatch [:transact merge-pages]})))
-
-
 
 
 (reg-event-db
