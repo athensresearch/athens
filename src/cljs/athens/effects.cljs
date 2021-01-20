@@ -81,7 +81,9 @@
   [old-block-refs e new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
-                 (not (str/includes? new-str (str "((" ref-uid "))")))))
+                 (let [eid (db/e-by-av :block/uid ref-uid)]
+                   (and eid
+                        (not (str/includes? new-str (str "((" ref-uid "))")))))))
        (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
 
 
