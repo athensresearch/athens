@@ -27,7 +27,7 @@
 
 
 (defn file-cb
-  [e roam-db roam-db-filename]
+  [e transformed-db roam-db-filename]
   (let [fr   (js/FileReader.)
         file (.. e -target -files (item 0))]
     (set! (.-onload fr)
@@ -36,8 +36,9 @@
                   filename                  (.-name file)
                   db                        (edn/read-string {:readers datascript.core/data-readers} edn-data)
                   transformed-dates-roam-db (athens.events/update-roam-db-dates db)]
+              (reset! athens.events/ROAM-DB db)
               (reset! roam-db-filename filename)
-              (reset! roam-db transformed-dates-roam-db))))
+              (reset! transformed-db transformed-dates-roam-db))))
     (.readAsText fr file)))
 
 

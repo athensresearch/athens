@@ -147,24 +147,23 @@
     ;;tx-data))
     (d/db-with db tx-data)))
 
-
-(defonce ROAM-DB (atom nil))
+;;(/ 3736 3842) 97% clean
+;;(-> (- 1056 2)
+;;    (+ (- 3088 406))))
+;;(defonce ROAM-DB (atom nil))
 ;; 1056 pages, 2 shared
+;; 3088 pages, 406 shared
+;; 3736 math, 3842 actual count
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
-    (let [
-          ;;transformed-dates-roam-db @ROAM-DB
-          ;;roam-db-filename "ego.edn"
-          shared-pages   (get-shared-pages transformed-dates-roam-db)
-          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] @ROAM-DB roam-db-filename))
+    (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
+          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
                                shared-pages)
           merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
-                              (map (fn [x] (db/get-roam-node-document [:node/title x] @ROAM-DB))))
+                              (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
           tx-data        (concat merge-shared merge-unshared)]
-      ;;(reset! ROAM-DB transformed-dates-roam-db)
-      (re-frame.core/dispatch [:transact tx-data]))))
-      ;;{:dispatch [:transact tx-data]})))
+      {:dispatch [:transact tx-data]})))
 
 
 (reg-event-db
