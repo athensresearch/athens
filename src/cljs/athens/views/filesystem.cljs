@@ -32,11 +32,12 @@
         file (.. e -target -files (item 0))]
     (set! (.-onload fr)
           (fn [e]
-            (let [edn-data (.. e -target -result)
-                  filename (.-name file)
-                  db       (edn/read-string {:readers datascript.core/data-readers} edn-data)]
+            (let [edn-data                  (.. e -target -result)
+                  filename                  (.-name file)
+                  db                        (edn/read-string {:readers datascript.core/data-readers} edn-data)
+                  transformed-dates-roam-db (athens.events/update-roam-db-dates db)]
               (reset! roam-db-filename filename)
-              (reset! roam-db db))))
+              (reset! roam-db transformed-dates-roam-db))))
     (.readAsText fr file)))
 
 
@@ -51,9 +52,9 @@
 
 (defn merge-modal
   [open?]
-  (let [close-modal      #(reset! open? false)
-        roam-db          (r/atom nil)
-        roam-db-filename (r/atom "")]
+  (let [close-modal         #(reset! open? false)
+        transformed-roam-db (r/atom nil)
+        roam-db-filename    (r/atom "")]
     (fn []
       [:div (use-style modal-style)
        [modal/modal
@@ -65,9 +66,9 @@
                      [:> mui-icons/Close]]]
 
          :content  [:div (use-style modal-contents-style)
-                    (if (nil? @roam-db)
+                    (if (nil? @transformed-roam-db)
                       [:<>
-                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % roam-db roam-db-filename)}]
+                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
                                       :margin         "20px 0"
@@ -82,8 +83,8 @@
                                                           :left     0
                                                           :width    "100%"
                                                           :height   "100%"}}]]]
-                      (let [roam-pages   (roam-pages @roam-db)
-                            shared-pages (events/shared-pages-incl-date-pages @roam-db)]
+                      (let [roam-pages   (roam-pages @transformed-roam-db)
+                            shared-pages (events/shared-pages @transformed-roam-db)]
                         [:div {:style {:display "flex" :flex-direction "column"}}
                          [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
                          [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]
@@ -96,7 +97,7 @@
                          [button {:style    {:align-self "center"}
                                   :primary  true
                                   :on-click (fn []
-                                              (dispatch [:upload/roam-edn roam-db @roam-db-filename])
+                                              (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
                                               (close-modal))}
                           "Merge"]]))]
 

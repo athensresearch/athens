@@ -23,3 +23,19 @@
 ;; Comma
 ;; Positive Lookahead: whitespace and 4 digits
 (def roam-date #"(?<=\d{1,2})(st|nd|rd|th),(?=\s\d{4})")
+
+
+(defn date
+  [str]
+  (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
+
+
+(defn date-block-string
+  [str]
+  (re-find #"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{1,2}(?:st|nd|rd|th),\s\d{4}\b" str))
+
+
+(defn replace-roam-date
+  [string]
+  (clojure.string/replace string athens.patterns/roam-date ","))
+

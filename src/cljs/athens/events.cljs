@@ -52,30 +52,8 @@
             roam-db)))
 
 
-(defn shared-date-pages
-  [roam-db]
-  (d/q '[:find [?blocks ...]
-         :in $athens $roam
-         :where
-         [$athens _ :block/uid ?blocks]
-         [$roam _ :block/uid ?blocks]
-         [$roam ?e :block/uid ?blocks]
-         [$roam ?e :node/title _]]
-       @athens.db/dsdb
-       roam-db))
-
-
-(defn roam-date-to-athens-date
-  [blocks]
-  ;; lots of other data here that might be good to keep hmm
-  (->> blocks
-       (mapv (fn [block]
-               (assoc block :block/string (string/replace (:block/string block) athens.patterns/roam-date ","))))))
-
-
 (defn merge-shared-page
-  "shared-page-id can be either [:node/title TITLE] or [:block/uid UID]. The latter is for date pages.
-  If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
+  "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
   [shared-page-id roam-db roam-db-filename]
   (let [page-athens              (db/get-node-document shared-page-id)
         page-roam                (db/get-roam-node-document shared-page-id roam-db)
@@ -98,24 +76,6 @@
       final-page-with-children)))
 
 
-(defn update-roam-db-dates
-  "Converts all the linked references to date pages from Roam format to Athens format."
-  [roam-db]
-  (let [shared-block-uids (->> (d/q '[:find ?refs ?str
-                                      :keys db/id block/string
-                                      :in $athens $roam
-                                      :where
-                                      [$athens _ :block/uid ?blocks]
-                                      [$roam _ :block/uid ?blocks]
-                                      [$roam ?e :block/uid ?blocks]
-                                      [$roam ?refs :block/refs ?e]
-                                      [$roam ?refs :block/string ?str]]
-                                    @db/dsdb
-                                    roam-db))
-        new-blocks (roam-date-to-athens-date shared-block-uids)]
-    (d/db-with roam-db new-blocks)))
-
-
 (defn shared-pages
   [roam-db]
   (->> (d/q '[:find [?pages ...]
@@ -128,64 +88,47 @@
        sort))
 
 
-(defn shared-pages-incl-date-pages
-  [roam-db]
-  (let [pages  (shared-pages roam-db)
-        blocks (->> (shared-date-pages roam-db)
-                    (map (fn [x]
-                           (-> x
-                               athens.util/uid-to-date
-                               (athens.util/get-day 0)
-                               :title))))]
-    (concat pages blocks)))
-
 (defonce ROAM-DB (atom nil))
 
-(defn date
-  [str]
-  (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
-
-(defn not-date
-  [str]
-  (not (date str)))
-
-;; date pages, but we want to ignore the shared date pages
-(d/q '[:find ?t ?u
-       :in $ ?date
-       :where
-       [?e :node/title ?t]
-       [?e :block/uid ?u]
-       [(?date ?u)]]
-     @@ROAM-DB
-     athens.events/date)
-
-;; not date pages, not shared
-(d/q '[:find ?t ?u
-       :in $ ?not-date
-       :where
-       [?e :node/title ?t]
-       [?e :block/uid ?u]
-       [(?not-date ?u)]]
-     @@ROAM-DB
-     athens.events/not-date)
-
-(shared-pages @@ROAM-DB)
-(shared-date-pages @@ROAM-DB)
-
-(defn roam-pages-excl-date-pages
-  [roam-db])
+(defn update-roam-db-dates
+  "Strips the ordinal suffixes of Roam dates from block strings and dates.
+  e.g. January 18th, 2021 -> January 18, 2021"
+  [db]
+  (let [date-pages         (d/q '[:find ?t ?u
+                                  :keys node/title block/uid
+                                  :in $ ?date
+                                  :where
+                                  [?e :node/title ?t]
+                                  [(?date ?t)]
+                                  [?e :block/uid ?u]]
+                                db
+                                athens.patterns/date-block-string)
+        date-block-strings (d/q '[:find ?s ?u
+                                  :keys block/string block/uid
+                                  :in $ ?date
+                                  :where
+                                  [?e :block/string ?s]
+                                  [(?date ?s)]
+                                  [?e :block/uid ?u]]
+                                db
+                                athens.patterns/date-block-string)
+        date-concat        (concat date-pages date-block-strings)
+        tx-data            (map (fn [{:keys [block/string node/title block/uid]}]
+                                  (cond-> {:db/id [:block/uid uid]}
+                                          string (assoc :block/string (athens.patterns/replace-roam-date string))
+                                          title (assoc :node/title (athens.patterns/replace-roam-date title))))
+                                date-concat)]
+    ;;tx-data))
+    (d/db-with db tx-data)))
 
 
 ;; TODO: merge non-shared-pages, ignoring date pages
 (reg-event-fx
   :upload/roam-edn
-  (fn [_ [_ roam-db roam-db-filename]]
-    (let [shared-pages              (mapv (fn [x] [:node/title x]) (shared-pages @roam-db))
-          transformed-dates-roam-db (update-roam-db-dates @roam-db)
-          shared-date-pages         (mapv (fn [x] [:block/uid x]) (shared-date-pages @roam-db))
-          shared-page-ids           (concat shared-date-pages shared-pages)
-          merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-page-ids)]
-      (reset! ROAM-DB @roam-db)
+  (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
+    (let [shared-pages              (mapv (fn [x] [:node/title x]) (shared-pages transformed-dates-roam-db))
+          merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-pages)]
+      ;;(reset! ROAM-DB @roam-db)
       {:dispatch [:transact merge-pages]})))
 
 
