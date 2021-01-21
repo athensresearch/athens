@@ -54,9 +54,9 @@
 
 (defn merge-shared-page
   "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
-  [shared-page-id roam-db roam-db-filename]
-  (let [page-athens              (db/get-node-document shared-page-id)
-        page-roam                (db/get-roam-node-document shared-page-id roam-db)
+  [shared-page roam-db roam-db-filename]
+  (let [page-athens              (db/get-node-document shared-page)
+        page-roam                (db/get-roam-node-document shared-page roam-db)
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
         new-uid                  (gen-block-uid)
@@ -76,7 +76,7 @@
       final-page-with-children)))
 
 
-(defn shared-pages
+(defn get-shared-pages
   [roam-db]
   (->> (d/q '[:find [?pages ...]
               :in $athens $roam
@@ -88,7 +88,33 @@
        sort))
 
 
-(defonce ROAM-DB (atom nil))
+(defn pages
+  [roam-db]
+  (->> (d/q '[:find [?pages ...]
+              :in $
+              :where
+              [_ :node/title ?pages]]
+            roam-db)
+       sort))
+
+
+(defn gett
+  [s x]
+  (not ((set s) x)))
+
+
+(defn not-shared-pages
+  [roam-db shared-pages]
+  (->> (d/q '[:find [?pages ...]
+              :in $ ?fn ?shared
+              :where
+              [_ :node/title ?pages]
+              [(?fn ?shared ?pages)]]
+            roam-db
+            athens.events/gett
+            shared-pages)
+       sort))
+
 
 (defn update-roam-db-dates
   "Strips the ordinal suffixes of Roam dates from block strings and dates.
@@ -122,14 +148,23 @@
     (d/db-with db tx-data)))
 
 
-;; TODO: merge non-shared-pages, ignoring date pages
+(defonce ROAM-DB (atom nil))
+;; 1056 pages, 2 shared
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
-    (let [shared-pages              (mapv (fn [x] [:node/title x]) (shared-pages transformed-dates-roam-db))
-          merge-pages               (mapv #(merge-shared-page % transformed-dates-roam-db roam-db-filename) shared-pages)]
-      ;;(reset! ROAM-DB @roam-db)
-      {:dispatch [:transact merge-pages]})))
+    (let [
+          ;;transformed-dates-roam-db @ROAM-DB
+          ;;roam-db-filename "ego.edn"
+          shared-pages   (get-shared-pages transformed-dates-roam-db)
+          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] @ROAM-DB roam-db-filename))
+                               shared-pages)
+          merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
+                              (map (fn [x] (db/get-roam-node-document [:node/title x] @ROAM-DB))))
+          tx-data        (concat merge-shared merge-unshared)]
+      ;;(reset! ROAM-DB transformed-dates-roam-db)
+      (re-frame.core/dispatch [:transact tx-data]))))
+      ;;{:dispatch [:transact tx-data]})))
 
 
 (reg-event-db

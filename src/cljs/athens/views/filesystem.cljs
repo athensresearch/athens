@@ -84,7 +84,7 @@
                                                           :width    "100%"
                                                           :height   "100%"}}]]]
                       (let [roam-pages   (roam-pages @transformed-roam-db)
-                            shared-pages (events/shared-pages @transformed-roam-db)]
+                            shared-pages (events/get-shared-pages @transformed-roam-db)]
                         [:div {:style {:display "flex" :flex-direction "column"}}
                          [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
                          [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]

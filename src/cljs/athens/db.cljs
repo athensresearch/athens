@@ -235,7 +235,7 @@
 
 
 (def roam-node-document-pull-vector
-  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
 (defn get-block-document
