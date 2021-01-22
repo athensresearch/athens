@@ -417,6 +417,7 @@
                     [:div (use-style references-group-block-style)
                      [ref-comp block]]]))]))])])))
 
+
 (defn unlinked-ref-el
   [state daily-notes? unlinked-refs title]
   (let [unlinked? "Unlinked References"]
@@ -543,8 +544,6 @@
          ;; References
          [linked-ref-el state daily-notes? linked-refs]
          [unlinked-ref-el state daily-notes? unlinked-refs title]]))))
-
-
 
 
 (defn node-page-component

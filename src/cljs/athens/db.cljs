@@ -562,11 +562,6 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defn get-data-by-block
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block seq))
-
-
 (defn get-linked-references
   "For node-page references UI."
   [title]
@@ -576,6 +571,7 @@
        merge-parents-and-block
        group-by-parent
        vec))
+
 
 (defn get-linked-block-references
   "For block-page references UI."
@@ -587,22 +583,22 @@
        vec))
 
 
-(defn get-linked-references-by-block
-  [title]
-  (-> title patterns/linked get-data-by-block))
-
-
 (defn get-unlinked-references
   "For node-page references UI."
   [title]
   (-> title patterns/unlinked get-data))
 
 
-(defn count-linked-references-excl-uid
-  [title uid]
-  (->> (get-linked-references-by-block title)
-       (remove #(= (:block/uid %) uid))
-       count))
+(defn linked-refs-count
+  [title]
+  (d/q '[:find (count ?u) .
+         :in $ ?t
+         :where
+         [?e :node/title ?t]
+         [?r :block/refs ?e]
+         [?r :block/uid ?u]]
+       @dsdb
+       title))
 
 
 (defn replace-linked-refs
