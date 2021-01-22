@@ -77,8 +77,7 @@
                         @db/dsdb)
                    (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
                    deref
-                   (sort-by (fn [{:keys [edit/time]}]
-                              time))
+                   (sort-by :edit/time)
                    reverse)]
     [:div (use-style page-style)
      [:table (use-style table-style)
