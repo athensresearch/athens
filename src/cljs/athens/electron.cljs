@@ -352,7 +352,7 @@
                                                                (dispatch [:transact blocks-orig])
                                                                (dispatch [:transact [[:db/add -1 :schema/version 1]]]))
                                                          ;; Do nothing if schema version 1
-                                                         1 (prn "Schema version " (-> schema first second))
+                                                         1 (prn (str "Schema version " (-> schema first second)))
                                                          ;; Alert user if schema isn't 1
                                                          (js/alert (js/Error (str "No matching case clause for schema version: " schema)))))
                                                      (dispatch [:loading/unset])))
