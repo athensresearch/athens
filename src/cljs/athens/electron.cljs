@@ -311,7 +311,7 @@
                                    {:when       :seen?
                                     :events     :reset-conn
                                     :dispatch-n [[:local-storage/set-theme]
-                                                 [:local-storage/navigate]]}
+                                                 #_[:local-storage/navigate]]}
 
                                    ;; whether first or nth time, update athens pages
                                    #_{:when       :seen-any-of?
