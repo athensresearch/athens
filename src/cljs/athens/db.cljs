@@ -107,7 +107,8 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
-  {:block/uid      {:db/unique :db.unique/identity}
+  {:schema/version {}
+   :block/uid      {:db/unique :db.unique/identity}
    :node/title     {:db/unique :db.unique/identity}
    :attrs/lookup   {:db/cardinality :db.cardinality/many}
    :block/children {:db/cardinality :db.cardinality/many

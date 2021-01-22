@@ -36,6 +36,7 @@
                                     :font-weight "500"
                                     :font-size "1.3125em"
                                     :line-height "1.28"}
+                         :td-links {:font-size "1em"}
                          :body-preview {:white-space "wrap"
                                         :word-break "break-word"
                                         :overflow "hidden"
@@ -68,31 +69,31 @@
 
 (defn table
   []
-  (let [page-eids (q '[:find [?e ...]
-                       :where
-                       [?e :node/title ?t]]
-                     db/dsdb)
-        pages (pull-many db/dsdb '["*" {:block/children [:block/string] :limit 5}] @page-eids)]
+  (let [pages (->> (datascript.core/q '[:find [?e ...]
+                                        :where
+                                        [?e :node/title ?t]]
+                                      @db/dsdb)
+                   (pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
+                   deref
+                   (sort-by (fn [{:keys [edit/time]}]
+                              time))
+                   reverse)]
     [:div (use-style page-style)
      [:table (use-style table-style)
       [:thead
        [:tr
         [:th [:h5 "Title"]]
+        [:th [:h5 "Links"]]
         [:th [:h5 "Body"]]
         [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
         [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
       [:tbody
        (doall
-         (for [{uid :block/uid
-                title :node/title
-                modified :edit/time
-                created :create/time
-                children :block/children} @pages]
-           ^{:key uid}
-           [:tr
-            [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid %)})
-             title]
-            [:td
-             [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
-            [:td (use-sub-style table-style :td-date) (date-string modified)]
-            [:td (use-sub-style table-style :td-date) (date-string created)]]))]]]))
+         (for [page pages]
+           (let [{:keys [block/uid node/title block/children block/_refs] modified :edit/time created :create/time} page]
+             [:tr {:key uid}
+              [:td (use-sub-style table-style :td-title {:on-click #(navigate-uid uid %)}) title]
+              [:td (use-sub-style table-style :td-links) (count _refs)]
+              [:td [:div (use-sub-style table-style :body-preview) (str/join " ") (map #(str "• " (:block/string %)) children)]]
+              [:td (use-sub-style table-style :td-date) (date-string modified)]
+              [:td (use-sub-style table-style :td-date) (date-string created)]])))]]]))
