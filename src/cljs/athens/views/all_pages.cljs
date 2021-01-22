@@ -7,8 +7,9 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [datascript.core :as d]
     [garden.selectors :as selectors]
-    [posh.reagent :refer [pull-many q]]
+    [posh.reagent :as p]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
@@ -36,7 +37,8 @@
                                     :font-weight "500"
                                     :font-size "1.3125em"
                                     :line-height "1.28"}
-                         :td-links {:font-size "1em"}
+                         :td-links {:font-size "1em"
+                                    :text-align "center"}
                          :body-preview {:white-space "wrap"
                                         :word-break "break-word"
                                         :overflow "hidden"
@@ -69,11 +71,11 @@
 
 (defn table
   []
-  (let [pages (->> (datascript.core/q '[:find [?e ...]
-                                        :where
-                                        [?e :node/title ?t]]
-                                      @db/dsdb)
-                   (pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
+  (let [pages (->> (d/q '[:find [?e ...]
+                          :where
+                          [?e :node/title ?t]]
+                        @db/dsdb)
+                   (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
                    deref
                    (sort-by (fn [{:keys [edit/time]}]
                               time))

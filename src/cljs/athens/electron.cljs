@@ -2,6 +2,7 @@
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
+    [athens.patterns :as patterns]
     [athens.util :as util]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -326,7 +327,7 @@
                                                                        :where [?e :schema/version ?v]]
                                                                      @db/dsdb)]
                                                      (case schema
-                                                       nil (let [linked-ref-pattern      (athens.patterns/linked ".*")
+                                                       nil (let [linked-ref-pattern      (patterns/linked ".*")
                                                                  blocks-with-plain-links (d/q '[:find ?u ?s
                                                                                                 :keys block/uid block/string
                                                                                                 :in $ ?pattern
