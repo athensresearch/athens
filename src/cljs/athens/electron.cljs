@@ -326,7 +326,7 @@
                                                    (let [schema (d/q '[:find ?e ?v
                                                                        :where [?e :schema/version ?v]]
                                                                      @db/dsdb)]
-                                                     (if (> 1 (count schema))
+                                                     (if (< 1 (count schema))
                                                        (js/alert (js/Error (str "Multiple schema versions: " schema)))
                                                        (case (-> schema first second)
                                                          nil (let [linked-ref-pattern      (patterns/linked ".*")
