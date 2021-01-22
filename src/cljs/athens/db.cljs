@@ -570,7 +570,21 @@
 (defn get-linked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/linked get-data))
+  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
+       :block/_refs
+       (mapv :db/id)
+       merge-parents-and-block
+       group-by-parent
+       vec))
+
+(defn get-linked-block-references
+  "For block-page references UI."
+  [block]
+  (->> (:block/_refs block)
+       (mapv :db/id)
+       merge-parents-and-block
+       group-by-parent
+       vec))
 
 
 (defn get-linked-references-by-block
@@ -589,15 +603,6 @@
   (->> (get-linked-references-by-block title)
        (remove #(= (:block/uid %) uid))
        count))
-
-
-(defn get-linked-block-references
-  [block]
-  (->> (:block/_refs block)
-       (mapv (fn [x] (:db/id x)))
-       (merge-parents-and-block)
-       (group-by-parent)
-       vec))
 
 
 (defn replace-linked-refs
