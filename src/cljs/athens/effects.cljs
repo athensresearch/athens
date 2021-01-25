@@ -39,14 +39,14 @@
 
   Filter: new-str doesn't include link, page exists, page has no children, and has no other [[linked refs]].
   Map: retractEntity"
-  [old-titles uid new-str with-db]
+  [old-titles new-str with-db]
   (->> old-titles
        (filter (fn [title]
                  (let [node (db/pull-nil with-db '[*] [:node/title title])]
                    (and (not (clojure.string/includes? new-str title))
                         node
                         (empty? (:block/children node))
-                        (zero? (db/count-linked-references-excl-uid title uid))))))
+                        (= 1 (db/linked-refs-count title))))))
        (map (fn [title]
               (when-let [eid (:db/id (db/pull-nil with-db '[*] [:node/title title]))]
                 [:db/retractEntity eid])))))
@@ -139,13 +139,12 @@
                      ;; [assertion retraction]
                      (and (true? (last assertion)) (false? (last retraction)))
                      (let [eid            (first assertion)
-                           uid            (db/v-by-ea eid :block/uid)
                            assert-string  (nth assertion 2)
                            retract-string (nth retraction 2)
                            assert-data    (walk/walk-string assert-string)
                            retract-data   (walk/walk-string retract-string)
                            new-block-refs (new-refs-to-tx-data (:block/refs assert-data) eid)
-                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string with-db)
+                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) assert-string with-db)
                            new-titles     (new-titles-to-tx-data (:node/titles assert-data) assert-titles)
                            new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
@@ -177,11 +176,10 @@
                      ;; :block/string itself is rarely retracted directly.
                      (and (false? (last assertion)) (nil? retraction))
                      (let [eid            (first retraction)
-                           uid            (db/v-by-ea eid :block/uid)
                            assert-string  ""
                            retract-string (nth retraction 2)
                            retract-data   (walk/walk-string retract-string)
-                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) uid assert-string with-db)
+                           old-titles     (old-titles-to-tx-data (:node/titles retract-data) assert-string with-db)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string with-db old-titles)
                            tx-data        (concat []
