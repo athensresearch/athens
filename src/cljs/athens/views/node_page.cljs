@@ -81,7 +81,7 @@
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
-(def references-style {:margin-block "3em"})
+(def references-style {:margin-top "3em"})
 
 
 (def references-heading-style
@@ -206,14 +206,6 @@
     (swap! state assoc :title/local value)))
 
 
-(defn get-linked-refs
-  [ref-groups]
-  (->> ref-groups
-       first
-       second
-       (mapcat second)))
-
-
 (defn map-new-refs
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
@@ -258,13 +250,13 @@
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state
   The current blocks will be at the end of the existing page."
-  [node state ref-groups]
+  [node state linked-refs]
   (let [{dbid :db/id children :block/children} node
         {:keys [title/initial title/local]} @state]
     (when (not= initial local)
-      (let [existing-page   (get-existing-page local)
-            linked-refs     (get-linked-refs ref-groups)
-            new-linked-refs (map-new-refs linked-refs initial local)]
+      (let [existing-page     (get-existing-page local)
+            linked-ref-blocks (mapcat second linked-refs)
+            new-linked-refs   (map-new-refs linked-ref-blocks initial local)]
         (if (empty? existing-page)
           (let [new-page   {:db/id dbid :node/title local}
                 new-datoms (concat [new-page] new-linked-refs)]
@@ -392,18 +384,111 @@
          [block-el block linked-ref-data]]))))
 
 
+(defn linked-ref-el
+  [state daily-notes? linked-refs]
+  (let [linked? "Linked References"]
+    (when (or (and daily-notes? (not-empty linked-refs))
+              (not daily-notes?))
+      [:section (use-style references-style)
+       [:h4 (use-style references-heading-style)
+        [button {:on-click (fn [] (swap! state update linked? not))}
+         (if (get @state linked?)
+           [:> mui-icons/KeyboardArrowDown]
+           [:> mui-icons/ChevronRight])]
+        [(r/adapt-react-class mui-icons/Link)]
+        [:div {:style {:display "flex"
+                       :flex "1 1 100%"
+                       :justify-content "space-between"}}
+         [:span linked?]]]
+       (when (get @state linked?)
+         [:div (use-style references-list-style)
+          (doall
+            (for [[group-title group] linked-refs]
+              [:div (use-style references-group-style {:key (str "group-" group-title)})
+               [:h4 (use-style references-group-title-style)
+                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+               (doall
+                 (for [block group]
+                   ^{:key (str "ref-" (:block/uid block))}
+                   [:div {:style {:display "flex"
+                                  :flex "1 1 100%"
+                                  :justify-content "space-between"
+                                  :align-items "flex-start"}}
+                    [:div (use-style references-group-block-style)
+                     [ref-comp block]]]))]))])])))
+
+
+(defn unlinked-ref-el
+  [state daily-notes? unlinked-refs title]
+  (let [unlinked? "Unlinked References"]
+    (when (not daily-notes?)
+      [:section (use-style references-style)
+       [:h4 (use-style references-heading-style)
+        [button {:on-click (fn []
+                             (if (get @state unlinked?)
+                               (swap! state assoc unlinked? false)
+                               (let [un-refs (get-unlinked-references (escape-str title))]
+                                 (swap! state assoc unlinked? true)
+                                 (reset! unlinked-refs un-refs))))}
+         (if (get @state unlinked?)
+           [:> mui-icons/KeyboardArrowDown]
+           [:> mui-icons/ChevronRight])]
+        [(r/adapt-react-class mui-icons/Link)]
+        [:div {:style {:display         "flex"
+                       :flex            "1 1 100%"
+                       :justify-content "space-between"}}
+         [:span unlinked?]
+         (when (and unlinked? (not-empty @unlinked-refs))
+           [button {:style    {:font-size "14px"}
+                    :on-click (fn []
+                                (dispatch [:unlinked-references/link-all @unlinked-refs title])
+                                (swap! state assoc unlinked? false)
+                                (reset! unlinked-refs []))}
+            "Link All"])]]
+       (when (get @state unlinked?)
+         [:div (use-style references-list-style)
+          (doall
+            (for [[group-title group] @unlinked-refs]
+              [:div (use-style references-group-style {:key (str "group-" group-title)})
+               [:h4 (use-style references-group-title-style)
+                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+               (doall
+                 (for [block group]
+                   ^{:key (str "ref-" (:block/uid block))}
+                   [:div {:style {:display         "flex"
+                                  :flex            "1 1 100%"
+                                  :justify-content "space-between"
+                                  :align-items     "flex-start"}}
+                    [:div (use-style references-group-block-style)
+                     [ref-comp block]]
+                    (when unlinked?
+                      [button {:style    {:margin-top "1.5em"}
+                               :on-click (fn []
+                                           (let [hm                (into (hash-map) @unlinked-refs)
+                                                 new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                               (= uid (:block/uid block)))
+                                                                                                             %))
+                                                                        seq)]
+                                             ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                             (reset! unlinked-refs new-unlinked-refs)
+                                             (dispatch [:unlinked-references/link block title])))}
+                       "Link"])]))]))])])))
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_ _ _]
-  (let [state (r/atom init-state)]
-    (fn [node editing-uid ref-groups]
+  [_ _ _ _]
+  (let [state         (r/atom init-state)
+        unlinked-refs (r/atom [])]
+    (fn [node editing-uid linked-refs]
       (let [{:block/keys [children uid] title :node/title} node
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            timeline-page? (is-timeline-page uid)]
+            timeline-page? (is-timeline-page uid)
+            daily-notes?   (= :home @(subscribe [:current-route/name]))]
+
 
         (sync-title title state)
 
@@ -428,7 +513,7 @@
              {:value         (:title/local @state)
               :id            (str "editable-uid-" uid)
               :class         (when (= editing-uid uid) "is-editing")
-              :on-blur       (fn [_] (handle-blur node state ref-groups))
+              :on-blur       (fn [_] (handle-blur node state linked-refs))
               :on-key-down   (fn [e] (handle-key-down e uid state children))
               :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
@@ -456,55 +541,14 @@
               ^{:key uid}
               [block-el child])])
 
-
          ;; References
-         (doall
-           (for [[linked-or-unlinked refs] ref-groups]
-             (when (not-empty refs)
-               [:section (use-style references-style {:key linked-or-unlinked})
-                [:h4 (use-style references-heading-style)
-                 [button {:on-click (fn [] (swap! state update linked-or-unlinked not))}
-                  (if (get @state linked-or-unlinked)
-                    [:> mui-icons/KeyboardArrowDown]
-                    [:> mui-icons/ChevronRight])]
-                 [(r/adapt-react-class mui-icons/Link)]
-                 [:div {:style {:display "flex"
-                                :flex "1 1 100%"
-                                :justify-content "space-between"}}
-                  [:span linked-or-unlinked]
-                  (when (= linked-or-unlinked "Unlinked References")
-                    [button {:style {:font-size "14px"}
-                             :on-click #(dispatch [:unlinked-references/link-all refs title])}
-                     "Link All"])]]
-                 ;; Hide button until feature is implemented
-                 ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
-                (when (get @state linked-or-unlinked)
-                  [:div (use-style references-list-style)
-                   (doall
-                     (for [[group-title group] refs]
-                       [:div (use-style references-group-style {:key (str "group-" group-title)})
-                        [:h4 (use-style references-group-title-style)
-                         [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
-                        (doall
-                          (for [block group]
-                            ^{:key (str "ref-" (:block/uid block))}
-                            [:div {:style {:display "flex"
-                                           :flex "1 1 100%"
-                                           :justify-content "space-between"
-                                           :align-items "flex-start"}}
-                             [:div (use-style references-group-block-style)
-                              [ref-comp block]]
-                             (when (= linked-or-unlinked "Unlinked References")
-                               [button {:style {:margin-top "1.5em"}
-                                        :on-click #(dispatch [:unlinked-references/link block title])}
-                                "Link"])]))]))])])))]))))
+         [linked-ref-el state daily-notes? linked-refs]
+         [unlinked-ref-el state daily-notes? unlinked-refs title]]))))
 
 
 (defn node-page-component
   [ident]
   (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
-        editing-uid @(subscribe [:editing/uid])]
-    (when-not (str/blank? title)
-      (let [ref-groups [["Linked References" (get-linked-references (escape-str title))]
-                        ["Unlinked References" (get-unlinked-references (escape-str title))]]]
-        [node-page-el node editing-uid ref-groups]))))
+        editing-uid   @(subscribe [:editing/uid])
+        linked-refs   (get-linked-references title)]
+    [node-page-el node editing-uid linked-refs]))

@@ -107,7 +107,8 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
-  {:block/uid      {:db/unique :db.unique/identity}
+  {:schema/version {}
+   :block/uid      {:db/unique :db.unique/identity}
    :node/title     {:db/unique :db.unique/identity}
    :attrs/lookup   {:db/cardinality :db.cardinality/many}
    :block/children {:db/cardinality :db.cardinality/many
@@ -562,20 +563,25 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defn get-data-by-block
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block seq))
-
-
 (defn get-linked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/linked get-data))
+  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
+       :block/_refs
+       (mapv :db/id)
+       merge-parents-and-block
+       group-by-parent
+       vec))
 
 
-(defn get-linked-references-by-block
-  [title]
-  (-> title patterns/linked get-data-by-block))
+(defn get-linked-block-references
+  "For block-page references UI."
+  [block]
+  (->> (:block/_refs block)
+       (mapv :db/id)
+       merge-parents-and-block
+       group-by-parent
+       vec))
 
 
 (defn get-unlinked-references
@@ -584,20 +590,16 @@
   (-> title patterns/unlinked get-data))
 
 
-(defn count-linked-references-excl-uid
-  [title uid]
-  (->> (get-linked-references-by-block title)
-       (remove #(= (:block/uid %) uid))
-       count))
-
-
-(defn get-linked-block-references
-  [block]
-  (->> (:block/_refs block)
-       (mapv (fn [x] (:db/id x)))
-       (merge-parents-and-block)
-       (group-by-parent)
-       vec))
+(defn linked-refs-count
+  [title]
+  (d/q '[:find (count ?u) .
+         :in $ ?t
+         :where
+         [?e :node/title ?t]
+         [?r :block/refs ?e]
+         [?r :block/uid ?u]]
+       @dsdb
+       title))
 
 
 (defn replace-linked-refs

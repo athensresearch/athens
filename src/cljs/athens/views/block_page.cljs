@@ -110,8 +110,8 @@
 
          ;; Refs
          (when (not-empty refs)
-           [:div
-            [:section (use-style node-page/references-style {:key "Linked References"})
+           [:div (use-style node-page/references-style {:key "Linked References"})
+            [:section
              [:h4 (use-style node-page/references-heading-style)
               [(r/adapt-react-class mui-icons/Link)]
               [:span "Linked References"]]
