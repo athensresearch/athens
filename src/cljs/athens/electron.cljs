@@ -88,7 +88,7 @@
   (let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
         db-location (first res)]
     (when (and db-location (not-empty db-name))
-      (let [db          (d/db-with (d/empty-db db/schema) athens-datoms/datoms)
+      (let [db          (d/empty-db db/schema)
             dir         (.resolve path db-location db-name)
             dir-images  (.resolve path dir IMAGES-DIR-NAME)
             db-filepath (.resolve path dir DB-INDEX)]
@@ -102,6 +102,7 @@
             (dispatch [:fs/watch db-filepath])
             (dispatch [:db/update-filepath db-filepath])
             (dispatch [:reset-conn db])
+            (dispatch [:transact athens-datoms/datoms])
             (dispatch [:loading/unset])))))))
 
 
@@ -216,8 +217,9 @@
         (.mkdirSync fs athens-dir))
       (when (not (.existsSync fs db-images))
         (.mkdirSync fs db-images))
-      {:fs/write!  [db-filepath (write-transit-str athens-datoms/datoms)]
-       :dispatch-n [[:db/update-filepath db-filepath]]})))
+      {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
+       :dispatch-n [[:db/update-filepath db-filepath]
+                    [:transact athens-datoms/datoms]]})))
 
 
 (reg-event-fx
