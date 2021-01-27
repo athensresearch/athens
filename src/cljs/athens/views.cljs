@@ -14,6 +14,7 @@
     [athens.views.left-sidebar :refer [left-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
     [athens.views.right-sidebar :refer [right-sidebar-component]]
+    [athens.views.settings-page :as settings-page]
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
@@ -97,18 +98,9 @@
         ", an open-source provider of product analytics. This lets the designers and engineers at Athens know if we're really making something people love!"]])))
 
 
-;;(prn (.. js/window -posthog opt_out_capturing))
-;;(prn (.. js/window -posthog opt_in_capturing))
-
-
-
 (defn pages-panel
   []
   (fn []
-    ;;[:div
-    ;; [:input.input-file {:type      "file"
-    ;;                     :name      "file-input"
-    ;;                     :on-change (fn [e] (file-cb e))}]]
     [table db/dsdb]))
 
 
@@ -127,7 +119,7 @@
   created when app inits. This is expected, but perhaps shouldn't be a side effect here."
   [route-name]
   [(case route-name
-     :settings settings-panel
+     :settings settings-page/settings-panel
      :home daily-notes-panel
      :pages pages-panel
      :page page-panel
