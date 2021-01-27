@@ -274,7 +274,6 @@
           mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
       (assoc db :db/mtime mtime))))
 
-
 ;; if localStorage is empty, assume first open
 ;; create a Documents/athens directory and Documents/athens/db.transit file
 ;; store path in localStorage and re-frame

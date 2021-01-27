@@ -1,16 +1,36 @@
 (ns athens.main.core
   (:require
     ["electron" :refer [app BrowserWindow]]
-    ["electron-updater" :refer [autoUpdater]]))
+    ["electron-updater" :refer [autoUpdater]]
+    ["fs" :as fs]))
 
 
 (def log (js/require "electron-log"))
+(def settings-file "./settings.json")
+(def settings (atom {}))
 
-(set! (.. autoUpdater -logger) log)
-(set! (.. autoUpdater -logger -transports -file -level) "info")
-(set! (.. autoUpdater -channel) "beta")
 
-(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
+(defn load-settings!
+  []
+  (if (.. fs (existsSync settings-file))
+    (let [read-settings (-> (.. fs (readFileSync settings-file "utf8"))
+                            js/JSON.parse
+                            (js->clj :keywordize-keys true))]
+      (reset! settings read-settings))
+    (let [new-settings {:channel "beta"}]
+      (reset! settings new-settings)
+      (.. log (info "Settings not found, creating settings.json."))
+      (.. fs (writeFileSync settings-file (-> new-settings clj->js js/JSON.stringify))))))
+
+
+(defn set-channel!
+  "Defaults to \"beta\" for now."
+  []
+  (let [channel (:channel @settings)]
+    (cond
+      (#{"alpha" "beta" "latest"} channel) (set! (.. autoUpdater -channel) channel)
+      :else (do (.. log (warn "Settings have an invalid channel:" channel ". Defaulting to beta channel."))
+                (set! (.. autoUpdater -channel) "beta")))))
 
 
 (def main-window (atom nil))
@@ -71,6 +91,13 @@
          (.. autoUpdater quitAndInstall))))
 
 
+
+(set! (.. autoUpdater -logger) log)
+(set! (.. autoUpdater -logger -transports -file -level) "info")
+(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
+(load-settings!)
+(set-channel!)
+
 (defn main
   []
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
@@ -79,4 +106,3 @@
   (.on app "ready" (fn []
                      (init-updater)
                      (.. autoUpdater checkForUpdatesAndNotify))))
-
