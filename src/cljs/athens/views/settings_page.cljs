@@ -1,11 +1,10 @@
 (ns athens.views.settings-page
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.db :as db]
     [athens.subs]
     [athens.views.buttons :refer [button]]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    #_[stylefy.core :as stylefy :refer [use-style]]))
 
 
 (defn settings-panel

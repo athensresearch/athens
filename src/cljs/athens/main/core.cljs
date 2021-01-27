@@ -101,12 +101,12 @@
          (.. autoUpdater quitAndInstall))))
 
 
-
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
 (load-settings!)
 (set-channel!)
+
 
 (defn main
   []
