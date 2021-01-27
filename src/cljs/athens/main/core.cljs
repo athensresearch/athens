@@ -2,15 +2,28 @@
   (:require
     ["electron" :refer [app BrowserWindow]]
     ["electron-updater" :refer [autoUpdater]]
-    ["fs" :as fs]))
+    ["fs" :as fs]
+    ["path" :as path]))
 
-
+;; can't use :require expression for some reason
 (def log (js/require "electron-log"))
-(def settings-file "./settings.json")
+
+(declare settings-filepath)
+(def main-window (atom nil))
 (def settings (atom {}))
+(def settings-file (settings-filepath))
+
+
+(defn settings-filepath
+  []
+  (let [DOC-PATH (.getPath app "documents")
+        filepath (.resolve path DOC-PATH "athens" "settings.json")]
+    filepath))
 
 
 (defn load-settings!
+  "If ~/Documents/athens/settings.json exists, read it and reset settings atom.
+  Else write that file with beta settings."
   []
   (if (.. fs (existsSync settings-file))
     (let [read-settings (-> (.. fs (readFileSync settings-file "utf8"))
@@ -31,9 +44,6 @@
       (#{"alpha" "beta" "latest"} channel) (set! (.. autoUpdater -channel) channel)
       :else (do (.. log (warn "Settings have an invalid channel:" channel ". Defaulting to beta channel."))
                 (set! (.. autoUpdater -channel) "beta")))))
-
-
-(def main-window (atom nil))
 
 
 (defn send-status-to-window
