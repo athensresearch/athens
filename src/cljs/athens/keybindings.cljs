@@ -523,6 +523,7 @@
         lookbehind-char (nth value start nil)
         {:search/keys [type]} @state]
     (.. e preventDefault)
+
     (cond
       ;; when close char, increment caret index without writing more
       (or (= ")" key lookbehind-char)
@@ -531,35 +532,40 @@
           (= "]" key lookbehind-char)) (do (setStart target (inc start))
                                            (swap! state assoc :search/type nil))
 
-      ;; when no selection
-      (= start end) (let [new-str (str head key close-pair tail)
-                          new-idx (inc start)]
-                      (swap! state assoc :string/local new-str)
-                      (set! (.-value target) new-str)
-                      (set-cursor-position target new-idx)
-                      (when type
-                        (update-query state head (str key close-pair) type)))
-
-      ;; when selection
-      (not= start end) (let [surround-selection (surround selection key)
-                             new-str (str head surround-selection tail)]
+      (= selection "") (let [new-str (str head key close-pair tail)
+                             new-idx (inc start)]
                          (swap! state assoc :string/local new-str)
                          (set! (.-value target) new-str)
-                         (set! (.-selectionStart target) (inc start))
-                         (set! (.-selectionEnd target) (inc end))))
+                         (set-cursor-position target new-idx)
+                         ;; is this when statement needed?
+                         (when type
+                           (update-query state head (str key close-pair) type))
+                         (when (>= (count (:string/local @state)) 4)
+                           (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
+                                 double-brackets? (= "[[]]" four-char)
+                                 double-parens?   (= "(())" four-char)
+                                 type             (cond double-brackets? :page
+                                                        double-parens? :block)]
+                             (when type
+                               (swap! state assoc :search/type type :search/query "" :search/results [])))))
 
-    ;; when double pair char, open inline-search
-    (when (>= (count (:string/local @state)) 4)
-      (let [four-char (subs (:string/local @state) (dec start) (+ start 3))
-            double-brackets? (= "[[]]" four-char)
-            double-parens?   (= "(())" four-char)
-            type (cond double-brackets? :page
-                       double-parens? :block)]
-        (when type
-          (swap! state assoc :search/type type :search/query "" :search/results []))))))
+      (not= selection "") (let [surround-selection (surround selection key)
+                                new-str            (str head surround-selection tail)]
+                            (swap! state assoc :string/local new-str)
+                            (set! (.-value target) new-str)
+                            (set! (.-selectionStart target) (inc start))
+                            (set! (.-selectionEnd target) (inc end))
+                            (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
+                                                        (subs (:string/local @state) (+ end 1) (+ end 3)))
+                                  double-brackets? (= "[[]]" four-char)
+                                  double-parens?   (= "(())" four-char)
+                                  type             (cond double-brackets? :page
+                                                         double-parens? :block)
+                                  query-fn         (cond double-brackets? db/search-in-node-title
+                                                         double-parens? db/search-in-block-content)]
+                              (when type
+                                (swap! state assoc :search/type type :search/query selection :search/results (query-fn selection))))))))
 
-    ;; TODO: close bracket should not be created if it already exists
-    ;;(= key-code KeyCodes.CLOSE_SQUARE_BRACKET)
 
 
 ;; Backspace
