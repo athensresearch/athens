@@ -520,8 +520,7 @@
   [e _ state]
   (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
-        lookbehind-char (nth value start nil)
-        {:search/keys [type]} @state]
+        lookbehind-char (nth value start nil)]
     (.. e preventDefault)
 
     (cond
@@ -537,9 +536,6 @@
                          (swap! state assoc :string/local new-str)
                          (set! (.-value target) new-str)
                          (set-cursor-position target new-idx)
-                         ;; is this when statement needed?
-                         (when type
-                           (update-query state head (str key close-pair) type))
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
                                  double-brackets? (= "[[]]" four-char)
@@ -565,7 +561,6 @@
                                                          double-parens? db/search-in-block-content)]
                               (when type
                                 (swap! state assoc :search/type type :search/query selection :search/results (query-fn selection))))))))
-
 
 
 ;; Backspace
