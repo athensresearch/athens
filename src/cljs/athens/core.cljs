@@ -35,7 +35,7 @@
   https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror "
   []
   (set! js/window.onerror (fn [message, source, lineno, colno, error]
-                            (js/alert (str "message="message "\nsource="source "\nlineno=" lineno "\ncolno=" colno "\nerror="error)))))
+                            (js/alert (str "message=" message "\nsource=" source "\nlineno=" lineno "\ncolno=" colno "\nerror=" error)))))
 
 
 (defn init
