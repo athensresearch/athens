@@ -8,17 +8,17 @@
 ;; can't use :require expression for some reason
 (def log (js/require "electron-log"))
 
-(declare settings-filepath)
-(def main-window (atom nil))
-(def settings (atom {}))
-(def settings-file (settings-filepath))
-
-
+;; declare doesn't work
 (defn settings-filepath
   []
   (let [DOC-PATH (.getPath app "documents")
         filepath (.resolve path DOC-PATH "athens" "settings.json")]
     filepath))
+
+
+(def main-window (atom nil))
+(def settings (atom {}))
+(def settings-file (settings-filepath))
 
 
 (defn load-settings!
