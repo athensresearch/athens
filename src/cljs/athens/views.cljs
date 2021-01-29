@@ -11,6 +11,7 @@
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
+    [athens.views.graph-page :as graph-page]
     [athens.views.left-sidebar :refer [left-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
     [athens.views.right-sidebar :refer [right-sidebar-component]]
@@ -54,14 +55,6 @@
     (when-not (nil? @alert-)
       (js/alert (str @alert-))
       (dispatch [:alert/unset]))))
-
-
-(defn file-cb
-  [e]
-  (let [fr (js/FileReader.)
-        file (.. e -target -files (item 0))]
-    (set! (.-onload fr) #(dispatch [:parse-datoms (.. % -target -result)]))
-    (.readAsText fr file)))
 
 
 ;; Panels
@@ -131,6 +124,7 @@
      :home daily-notes-panel
      :pages pages-panel
      :page page-panel
+     :graph graph-page/graph-page
      daily-notes-panel)])
 
 
