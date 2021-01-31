@@ -1,6 +1,7 @@
 (ns athens.views.blocks
   (:require
     ["@material-ui/icons" :as mui-icons]
+    ["@popperjs/core" :as popper]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
@@ -439,6 +440,9 @@
         target    (.. js/document (querySelector id))]
     (auto-complete-slash state target item)))
 
+(defn popper-instance
+  []
+  (popper/createPopper. (.querySelector js/document ".is-editing") (.querySelector js/document "#dropdown-menu")))
 
 (defn slash-menu-el
   [_block state]
@@ -456,13 +460,14 @@
                                  (let [{:search/keys [index results type] caret-position :caret-position} @state
                                        {:keys [left top]} caret-position]
                                    (when (= type :slash)
-                                     [:div (merge (use-style dropdown-style
+                                     [:div#dropdown (merge (use-style dropdown-style
                                                              {:ref           #(reset! ref %)
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
                                       [:div#dropdown-menu (merge (use-style menu-style) {:style {:max-height "8em"}})
                                        (doall
+                                         (popper-instance)
                                          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
                                            [button {:key      text
                                                     :id       (str "dropdown-item-" i)
@@ -857,7 +862,7 @@
          ;; Write also from backspace, which can join bottom block's contents to top the block.
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
-
+        
          [:div
           {:class         ["block-container"
                            (when (and dragging (not is-selected)) "dragging")
@@ -887,7 +892,6 @@
 
           [inline-search-el block state]
           [slash-menu-el block state]
-
 
           ;; Children
           (when (and (seq children)
