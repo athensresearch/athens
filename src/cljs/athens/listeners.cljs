@@ -145,11 +145,28 @@
         (dispatch [:selected/delete uids])))))
 
 
+(defn prevent-save
+  "Google Closure's events/listen isn't working for some reason anymore.
+
+  beforeunload is called before unload, where the window would be redirected/refreshed/quit.
+  https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event "
+  []
+  (js/window.addEventListener
+    EventType.BEFOREUNLOAD
+    (fn [e]
+      (let [synced? @(subscribe [:db/synced])]
+        (when-not synced?
+          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green."])
+          (.. e preventDefault)
+          (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
+          "Returning a string also prevents exit on other browsers.")))))
+
+
 (defn init
   []
   (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
   (events/listen js/window EventType.KEYDOWN key-down)
   (events/listen js/window EventType.COPY copy)
-  (events/listen js/window EventType.CUT cut))
-
+  (events/listen js/window EventType.CUT cut)
+  (prevent-save))
