@@ -156,7 +156,7 @@
     (fn [e]
       (let [synced? @(subscribe [:db/synced])]
         (when-not synced?
-          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green."])
+          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
           (.. e preventDefault)
           (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
           "Returning a string also prevents exit on other browsers.")))))
