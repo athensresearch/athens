@@ -7,7 +7,7 @@
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
-    #_[reagent.core :as r]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
