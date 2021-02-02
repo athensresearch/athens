@@ -367,17 +367,24 @@
 
 
 (defn write-file
+  "Tries to create a write stream to index.transit.bkp. Then tries to copy index.transit.bkp to index.transit.
+  If the write operation fails, index.transit.bkp is corrupted, no copy is attempted, thus index.transit is assumed to be untouched.
+  If the write operation succeeds, index.transit is updated and a backup file is created.
+  Is it possible for index.transit.bkp to corrupt, as well as index.transit?"
   [filepath data]
-  (let [r (.. stream -Readable (from data))
-        w (.createWriteStream fs filepath)
-        error-cb (fn [err]
-                   (when err
-                     (js/alert (js/Error. err))
-                     (js/console.error (js/Error. err))))]
+  (let [r            (.. stream -Readable (from data))
+        bkp-filepath (str filepath ".bkp")
+        w            (.createWriteStream fs bkp-filepath)
+        error-cb     (fn [err]
+                       (when err
+                         (js/alert (js/Error. err))
+                         (js/console.error (js/Error. err))))]
     (.setEncoding r "utf8")
     (.on r "error" error-cb)
     (.on w "error" error-cb)
     (.on w "finish" (fn []
+                      ;; copyFileSync is not atomic, unlike rename
+                      (.. fs (copyFileSync bkp-filepath filepath))
                       (dispatch [:db/sync])
                       (dispatch [:db/update-mtime (js/Date.)])))
     (.pipe r w)))
