@@ -203,20 +203,26 @@
     {:dispatch [:navigate {:page {:id local-storage}}]}))
 
 
+(def documents-athens-dir
+  (let [DOC-PATH (.getPath app "documents")]
+    (.resolve path DOC-PATH "athens")))
+
+
+(defn create-dir-if-needed!
+  [dir]
+  (when (not (.existsSync fs dir))
+    (.mkdirSync fs dir)))
+
 ;; Documents/athens
 ;; ├── images
 ;; └── index.transit
 (reg-event-fx
   :fs/create-new-db
   (fn []
-    (let [DOC-PATH    (.getPath app "documents")
-          athens-dir  (.resolve path DOC-PATH "athens")
-          db-filepath (.resolve path athens-dir DB-INDEX)
-          db-images   (.resolve path athens-dir IMAGES-DIR-NAME)]
-      (when (not (.existsSync fs athens-dir))
-        (.mkdirSync fs athens-dir))
-      (when (not (.existsSync fs db-images))
-        (.mkdirSync fs db-images))
+    (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
+          db-images   (.resolve path documents-athens-dir IMAGES-DIR-NAME)]
+      (create-dir-if-needed! documents-athens-dir)
+      (create-dir-if-needed! db-images)
       {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
        :dispatch-n [[:db/update-filepath db-filepath]
                     [:transact athens-datoms/datoms]]})))
@@ -367,17 +373,28 @@
 
 
 (defn write-file
+  "Tries to create a write stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
+  If the write operation fails, the backup file is corrupted and no copy is attempted, thus index.transit is assumed to be untouched.
+  If the write operation succeeds, a backup is created and index.transit is overwritten.
+  User should eventually have MANY backups files. It's their job to manage these backups :)"
   [filepath data]
-  (let [r (.. stream -Readable (from data))
-        w (.createWriteStream fs filepath)
-        error-cb (fn [err]
-                   (when err
-                     (js/alert (js/Error. err))
-                     (js/console.error (js/Error. err))))]
+  (let [r            (.. stream -Readable (from data))
+        dirname      (.dirname path filepath)
+        time         (.. (js/Date.) getTime)
+        bkp-filename (str time "-" "index.transit.bkp")
+        bkp-filepath (.resolve path dirname bkp-filename)
+        w            (.createWriteStream fs bkp-filepath)
+        error-cb     (fn [err]
+                       (when err
+                         (js/alert (js/Error. err))
+                         (js/console.error (js/Error. err))))]
     (.setEncoding r "utf8")
     (.on r "error" error-cb)
     (.on w "error" error-cb)
     (.on w "finish" (fn []
+                      ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
+                      ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
+                      (.. fs (copyFileSync bkp-filepath filepath))
                       (dispatch [:db/sync])
                       (dispatch [:db/update-mtime (js/Date.)])))
     (.pipe r w)))
