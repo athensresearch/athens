@@ -183,11 +183,11 @@
                                                 :open false,
                                                 :order 0,
                                                 :children [#:block{:uid "58803d15f",
-                                                                   :string "Athens is persisted to your filesystem at `documents/athens`.",
+                                                                   :string "Athens is persisted to your filesystem at `documents/athens` by default.",
                                                                    :open true,
                                                                    :order 0}
                                                            #:block{:uid "0f62fecbc",
-                                                                   :string "Soon you will be able to choose any folder for your db (including folders synced to Dropbox or Google Drive).",
+                                                                   :string "Database can be changed through settings button on the top right corner.",
                                                                    :open true,
                                                                    :order 1}]}
                                         #:block{:uid "68246ce0a",
