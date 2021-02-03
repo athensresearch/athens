@@ -502,6 +502,7 @@
 
 (defn backspace
   "If root and 0th child, 1) if value, no-op, 2) if blank value, delete only block.
+  No-op if parent is missing.
   No-op if parent is prev-block and block has children.
   No-op if prev-sibling-block has children.
   Otherwise delete block and join with previous block
@@ -526,6 +527,7 @@
         retract-block  [:db/retractEntity (:db/id block)]
         new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
+      (not parent) nil
       (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
                                                                                                  {:dispatch-n [[:transact tx-data]
                                                                                                                [:editing/uid nil]]})
