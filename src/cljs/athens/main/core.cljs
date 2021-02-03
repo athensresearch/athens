@@ -76,6 +76,9 @@
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
                                   (.quit app)))
   (.on app "ready" init-browser)
+  (.on app "activate" (fn []
+                        (when (nil? @main-window)
+                          (init-browser))))
   (.on app "ready" (fn []
                      (init-updater)
                      (.. autoUpdater checkForUpdatesAndNotify))))
