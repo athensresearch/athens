@@ -267,6 +267,13 @@
              (assoc db :alert nil)))
 
 
+;; Use native js/alert rather than custom UI alert
+(reg-event-fx
+  :alert/js
+  (fn [_ [_ message]]
+    {:alert/js! message}))
+
+
 ;; Modal
 
 

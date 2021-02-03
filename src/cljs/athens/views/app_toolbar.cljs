@@ -7,7 +7,7 @@
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
-    #_[reagent.core :as r]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -101,7 +101,13 @@
                   :active   @(subscribe [:athena/open])}
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
+
         [:div (use-style app-header-secondary-controls-style)
+         [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
+          {:style {:color      (color (if @(subscribe [:db/synced])
+                                        :confirmation-color
+                                        :highlight-color))
+                   :align-self "center"}}]
          [button {:on-click #(router/navigate :settings)
                   :active (= @route-name :settings)}
           [:> mui-icons/Settings]]
@@ -110,11 +116,7 @@
             [(r/adapt-react-class mui-icons/FolderOpen)
              {:style {:align-self "center"}}]]
          ;; sync UI
-         #_[(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
-            {:style {:color      (color (if @(subscribe [:db/synced])
-                                          :confirmation-color
-                                          :highlight-color))
-                     :align-self "center"}}]
+
          #_[separator]
          [button {:on-click #(dispatch [:modal/toggle])
                   #_(swap! state assoc :modal :folder)}
