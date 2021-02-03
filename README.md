@@ -43,7 +43,9 @@ To learn more about this project, please see:
 - [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
-
+- [Athens Onboarding (video)](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
+- [How to file a bug report (video)](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
+- [How to file a feature request (video)](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
 
 ---
 
