@@ -427,7 +427,7 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection shift start end target value]} (destruct-key-down e)
+  (let [{:keys [key-code head tail selection start end target value]} (destruct-key-down e)
         selection? (not= start end)]
 
     (cond
