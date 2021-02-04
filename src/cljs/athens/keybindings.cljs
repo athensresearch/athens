@@ -450,13 +450,18 @@
                                   (do (setStart target (+ 2 start))
                                       (setEnd target (+ 2 end)))
                                   (set-cursor-position target (+ 2 start))))
-      (and (not shift) (= key-code KeyCodes.I)) (let [new-str (str head (surround selection "__") tail)]
-                                                  (swap! state assoc :string/local new-str)
-                                                  (set! (.-value target) new-str)
-                                                  (if selection?
-                                                    (do (setStart target (+ 2 start))
-                                                        (setEnd target (+ 2 end)))
-                                                    (set-cursor-position target (+ 2 start))))
+
+      ;; Disabling keybinding for now https://github.com/athensresearch/athens/issues/556
+      ;; TODO fix to make keybinding ("Ctrl-i") change font-style to italic
+
+      #_ (and (not shift) (= key-code KeyCodes.I))
+      #_(let [new-str (str head (surround selection "__") tail)]
+        (swap! state assoc :string/local new-str)
+        (set! (.-value target) new-str)
+        (if selection?
+          (do (setStart target (+ 2 start))
+              (setEnd target (+ 2 end)))
+          (set-cursor-position target (+ 2 start))))
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
