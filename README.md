@@ -4,14 +4,13 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens)
+<img src="./doc/yc.png" width="20" height="20" />
 
 [![Contributors](https://opencollective.com/athens/tiers/contributors.svg?avatarHeight=36)](https://opencollective.com/athens)
 
 > I am the wisest man alive, for I know one thing, and that is that I know nothing.
 
 — Socrates
-
-<img src="./doc/yc.png" width="100" height="100" />
 
 
 # What is Athens
@@ -22,8 +21,7 @@ Athens is a desktop app that stores all your data locally and privately on your 
 
 Athens is free for individuals to self-host.
 
-![](./doc/product-dark.png)
-![](./doc/product-light.png)
+<img src="./doc/product-dark.png" width="auto" />
 
 # How to Use Athens
 
@@ -41,6 +39,8 @@ Some tips once you've got Athens:
 # [Join Discord](https://discord.gg/GCJaV3V)
 
 Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUCT.md#values) (especially about Clojure!).
+
+Every Sunday we have a Community Call at 11am Pacific.
 
 We chat about other Tools for Thought, [graph visualizations](https://github.com/athensresearch/athens/issues/21), [graph DBs, decentralized DBs](https://github.com/athensresearch/athens/issues/9), blockchains, [open protocols, knowledge markets](https://github.com/athensresearch/athens/blob/master/VISION.md#a-protocol-for-knowledge-markets), [education](https://github.com/athensresearch/athens/blob/master/doc/ClojureFam.md), philosophy, and governance.
 
