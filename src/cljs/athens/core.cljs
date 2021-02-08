@@ -30,8 +30,18 @@
                 (getElement "app")))
 
 
+(defn init-ipcRenderer
+  []
+  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
+        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+    (when update-available?
+      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
+        (.sendSync ipcRenderer "confirm-update")))))
+
+
 (defn init
   []
+  (init-ipcRenderer)
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
