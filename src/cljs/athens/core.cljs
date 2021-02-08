@@ -37,11 +37,14 @@
 
 (defn init-sentry
   []
-  (.init Sentry (clj->js {:dsn              SENTRY_DSN}
-                         :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
-                         :integrations     [(new (.-BrowserTracing Integrations))]
-                         :environment      (if config/debug? "development" "production")
-                         :tracesSampleRate 1.0)))
+  (let [sentry (js/localStorage.getItem "sentry")]
+    (if (= sentry "off")
+      (prn "Sentry isn't initialized.")
+      (.init Sentry (clj->js {:dsn              SENTRY_DSN
+                              :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                              :integrations     [(new (.-BrowserTracing Integrations))]
+                              :environment      (if config/debug? "development" "production")
+                              :tracesSampleRate 1.0})))))
 
 
 (defn init-ipcRenderer
