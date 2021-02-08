@@ -1,5 +1,7 @@
 (ns athens.core
   (:require
+    ["@sentry/react" :as Sentry]
+    ["@sentry/tracing" :refer (Integrations)]
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
@@ -13,9 +15,7 @@
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]
-    ["@sentry/react" :as Sentry]
-    ["@sentry/tracing" :refer (Integrations)]))
+    [stylefy.core :as stylefy]))
 
 
 (goog-define SENTRY_DSN "")
@@ -35,15 +35,6 @@
                 (getElement "app")))
 
 
-(defn init-ipcRenderer
-  []
-  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
-    (when update-available?
-      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-        (.sendSync ipcRenderer "confirm-update")))))
-
-
 (defn init-sentry
   []
   (.init Sentry (clj->js {:dsn              SENTRY_DSN}
@@ -51,6 +42,15 @@
                          :integrations     [(new (.-BrowserTracing Integrations))]
                          :environment      (if config/debug? "development" "production")
                          :tracesSampleRate 1.0)))
+
+
+(defn init-ipcRenderer
+  []
+  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
+        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+    (when update-available?
+      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
+        (.sendSync ipcRenderer "confirm-update")))))
 
 
 (defn init
