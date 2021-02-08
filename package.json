@@ -52,6 +52,8 @@
     "@js-joda/timezone": "2.2.0",
     "@material-ui/core": "^4.10.1",
     "@material-ui/icons": "^4.9.1",
+    "@sentry/react": "^5.27.2",
+    "@sentry/tracing": "^5.27.2",
     "create-react-class": "^15.6.3",
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.4",
