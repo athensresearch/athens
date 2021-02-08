@@ -44,13 +44,18 @@
         (.sendSync ipcRenderer "confirm-update")))))
 
 
+(defn init-sentry
+  []
+  (.init Sentry (clj->js {:dsn              SENTRY_DSN}
+                         :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                         :integrations     [(new (.-BrowserTracing Integrations))]
+                         :environment      (if config/debug? "development" "production")
+                         :tracesSampleRate 1.0)))
+
+
 (defn init
   []
-  (.init Sentry (clj->js {:dsn              SENTRY_DSN
-                          :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
-                          :integrations     [(new (.-BrowserTracing Integrations))]
-                          :environment      (if config/debug? "development" "production")
-                          :tracesSampleRate 1.0}))
+  (init-sentry)
   (init-ipcRenderer)
   (style/init)
   (stylefy/tag "body" style/app-styles)
