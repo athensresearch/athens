@@ -11,20 +11,34 @@
 
 — Socrates
 
-## Use Athens
+<img src="./doc/yc.png" width="100" height="100" />
 
-Athens persists data to your local filesystem.
 
-If you want to try Athens, you have two options:
+# What is Athens
 
-1. Build locally via the directions in [Contributing](CONTRIBUTING.md).
-1. Sponsor the project and join the [waitlist](https://forms.gle/9L1D1T7R3G7pvh1e7)! The beta is currently being rolled out, first to Sponsors and Contributors, and then to those on the waitlist.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state.
 
-## [Contribute](CONTRIBUTING.md)
+Athens is a desktop app that stores all your data locally and privately on your local filesystem.
 
-To run the development build of Athens, follow the instructions in [Contributing](CONTRIBUTING.md) and checkout our [Project Board](https://github.com/athensresearch/athens/projects/2#column-9464291). If you're new to Clojure, [join ClojureFam](https://github.com/athensresearch/ClojureFam). Before creating issues, please ask in our Discord 👇
+Athens is free for individuals to self-host.
 
-## [Join Discord](https://discord.gg/GCJaV3V)
+![](./doc/product-dark.png)
+![](./doc/product-light.png)
+
+# How to Use Athens
+
+If you want to try Athens, you have a few options:
+
+1. Build yourself locally via the directions in [Contributing](CONTRIBUTING.md) (and consider contributing!).
+1. Sponsor the project on [OpenCollective](https://opencollective.com/athens) to receive the beta today.
+1. Join the [Waitlist](https://forms.gle/9L1D1T7R3G7pvh1e7) to get in line to use Athens.
+
+Some tips once you've got Athens:
+- [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
+- [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
+- [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
+
+# [Join Discord](https://discord.gg/GCJaV3V)
 
 Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUCT.md#values) (especially about Clojure!).
 
@@ -34,18 +48,16 @@ We also love [Future of Coding topics](https://futureofcoding.org/episodes/046#q
 
 Ultimately, however, we recognize technology does not exist in a vaccum. Technology shapes society as much as vice versa. There are never no externalities. If you are interested in "**sensemaking**" towards a better world, please join us!
 
-## Links
+# Links
 
 To learn more about this project, please see:
 
 - [Our Notion](https://www.notion.so/athensresearch/Athens-Research-67e1c6068cb449ff935d10e882fd9b05) — helpful docs like tutorials, updates, meeting notes
-- [v1 Project Board](https://github.com/athensresearch/athens/projects/2) — the effective roadmap and what specifically is being developed
+    - [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
+    - [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
 - [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
-- [Athens Onboarding (video)](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
-- [How to file a bug report (video)](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
-- [How to file a feature request (video)](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
 
 ---
 
