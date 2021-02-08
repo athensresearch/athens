@@ -267,9 +267,9 @@
     (let [dirpath (.dirname path filepath)]
       (.. fs (watch dirpath (fn [_event filename]
                               ;; when filename matches last part of filepath
-                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                (debounce-sync-db-from-fs filepath filename))))))
+                              (prn "DIR CHANGED" filename)
+                              #_(when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                  (debounce-sync-db-from-fs filepath filename))))))
     {}))
 
 
@@ -403,7 +403,30 @@
 (def debounce-write (debounce write-file 15000))
 
 
+(defn append-tx
+  "Creates a tx at dirname/tx-log/{timestamp}-tx.log"
+  [filepath data]
+  (let [r            (.. stream -Readable (from data))
+        dirname      (.dirname path filepath)
+        tx-dir       (.resolve dirname "tx-log")
+        time         (.. (js/Date.) getTime)
+        log-filename (str time "-" "tx.log")
+        log-filepath (.resolve path tx-dir log-filename)
+        w            (.createWriteStream fs log-filepath)
+        error-cb     (fn [err]
+                       (when err
+                         (js/alert (js/Error. err))
+                         (js/console.error (js/Error. err))))]
+    (.setEncoding r "utf8")
+    (.on r "error" error-cb)
+    (.on w "error" error-cb)
+    (.on w "finish" (fn []
+                      (dispatch [:db/sync])
+                      (dispatch [:db/update-mtime (js/Date.)])))
+    (.pipe r w)))
+
+
 (reg-fx
   :fs/write!
   (fn [[filepath data]]
-    (debounce-write filepath data)))
+    (append-tx filepath data)))
