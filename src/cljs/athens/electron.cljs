@@ -28,6 +28,50 @@
 
 (def DB-INDEX "index.transit")
 (def IMAGES-DIR-NAME "images")
+(def TX-LOGS "tx-logs")
+
+
+;; Helpers
+
+(defn dirname
+  [filepath]
+  (.dirname path filepath))
+
+(defn path-resolve
+  [& args]
+  (apply path.resolve args))
+
+
+(defn log-dir
+  ([]
+   (-> @re-frame.db/app-db
+       :db/filepath
+       dirname
+       (path-resolve TX-LOGS)))
+  ([filepath]
+   (-> filepath
+       dirname
+       (path-resolve TX-LOGS))))
+
+
+(defn img-dir
+  []
+  (-> @re-frame.db/app-db
+      :db/filepath
+      dirname
+      (path-resolve IMAGES-DIR-NAME)))
+
+
+(def documents-athens-dir
+  (let [DOC-PATH (.getPath app "documents")]
+    (path-resolve DOC-PATH "athens")))
+
+
+(defn create-dir-if-needed!
+  [dir]
+  (when (not (.existsSync fs dir))
+    (.mkdirSync fs dir)))
+
 
 ;;; Filesystem Dialogs
 
@@ -203,16 +247,6 @@
     {:dispatch [:navigate {:page {:id local-storage}}]}))
 
 
-(def documents-athens-dir
-  (let [DOC-PATH (.getPath app "documents")]
-    (.resolve path DOC-PATH "athens")))
-
-
-(defn create-dir-if-needed!
-  [dir]
-  (when (not (.existsSync fs dir))
-    (.mkdirSync fs dir)))
-
 ;; Documents/athens
 ;; ├── images
 ;; └── index.transit
@@ -255,7 +289,21 @@
 
 
 (def debounce-sync-db-from-fs
-  (debounce sync-db-from-fs 1000))
+  (debounce sync-db-from-fs 500))
+
+
+(defn sync-db-from-logs
+  [log-dirpath filename]
+  (let [realfilepath (path-resolve log-dirpath filename)
+        curr-mtime   (.-mtime (.statSync fs realfilepath))]
+    (dispatch [:db/update-mtime curr-mtime])
+    (let [tx-data (-> (.readFileSync fs realfilepath "utf-8")
+                      clojure.edn/read-string)]
+      (posh.reagent/transact! db/dsdb tx-data))))
+
+
+(def debounce-sync-db-from-logs
+  (debounce sync-db-from-logs 500))
 
 
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
@@ -263,13 +311,11 @@
 ;; Debounce because files can be changed multiple times per save.
 (reg-event-fx
   :fs/watch
-  (fn [_ [_ filepath]]
-    (let [dirpath (.dirname path filepath)]
-      (.. fs (watch dirpath (fn [_event filename]
-                              ;; when filename matches last part of filepath
-                              (prn "DIR CHANGED" filename)
-                              #_(when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                  (debounce-sync-db-from-fs filepath filename))))))
+  (fn [_ [_ basedir]]
+    (let [log-dirpath (path-resolve basedir TX-LOGS)]
+      (.. fs (watch log-dirpath (fn [_event filename]
+                                  (when (re-find #".log" filename)
+                                    (debounce-sync-db-from-logs log-dirpath filename))))))
     {}))
 
 
@@ -289,6 +335,7 @@
 ;; else - localStorage has filepath, but no file at filepath
 ;; open or create a new starter db
 
+
 ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
 (reg-event-fx
   :desktop/boot
@@ -304,7 +351,7 @@
                                                      ;; Database found in local storage and filesystem:
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
-                                                                                 (dispatch [:fs/watch filepath])
+                                                                                 (dispatch [:fs/watch (path.dirname filepath)])
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; Database found in localStorage but not on filesystem
                                                      :else (dispatch [:fs/open-dialog])))}
@@ -333,7 +380,7 @@
                                     :dispatch-fn (fn [_]
                                                    (let [schemas    (d/q '[:find ?e ?v
                                                                            :where [?e :schema/version ?v]]
-                                                                        @db/dsdb)
+                                                                         @db/dsdb)
                                                          schema-cnt (count schemas)]
                                                      (cond
                                                        (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
@@ -403,30 +450,25 @@
 (def debounce-write (debounce write-file 15000))
 
 
-(defn append-tx
-  "Creates a tx at dirname/tx-log/{timestamp}-tx.log"
-  [filepath data]
-  (let [r            (.. stream -Readable (from data))
-        dirname      (.dirname path filepath)
-        tx-dir       (.resolve dirname "tx-log")
+(defn write-log
+  "Creates a tx at dirname/tx-logs/{timestamp}.log"
+  [data]
+  (let [tx-dir       (log-dir)
         time         (.. (js/Date.) getTime)
-        log-filename (str time "-" "tx.log")
-        log-filepath (.resolve path tx-dir log-filename)
-        w            (.createWriteStream fs log-filepath)
-        error-cb     (fn [err]
-                       (when err
-                         (js/alert (js/Error. err))
-                         (js/console.error (js/Error. err))))]
-    (.setEncoding r "utf8")
-    (.on r "error" error-cb)
-    (.on w "error" error-cb)
-    (.on w "finish" (fn []
-                      (dispatch [:db/sync])
-                      (dispatch [:db/update-mtime (js/Date.)])))
-    (.pipe r w)))
+        log-filename (str time ".log")
+        log-filepath (path-resolve tx-dir log-filename)]
+    (fs.writeFileSync log-filepath data "utf-8")
+    (dispatch [:db/sync])
+    (dispatch [:db/update-mtime (js/Date.)])))
+
+
+(reg-event-fx
+  :fs/write-log
+  (fn [_ [_ tx-data]]
+    {:fs/write-log! tx-data}))
 
 
 (reg-fx
-  :fs/write!
-  (fn [[filepath data]]
-    (append-tx filepath data)))
+  :fs/write-log!
+  (fn [tx-data]
+    (write-log (str tx-data))))

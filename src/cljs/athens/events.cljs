@@ -420,7 +420,7 @@
     ;; always stay synced for now because auto-saving
     (let [synced? @(subscribe [:db/synced])]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
-            [:dispatch [:save]]
+            ;;[:dispatch [:save]]
             [:transact! tx-data]]})))
 
 
@@ -467,12 +467,11 @@
     {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]}))
 
 
-(reg-event-fx
-  :save
-  (fn [_ _]
-    (let [db-filepath (subscribe [:db/filepath])]
-      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]})))
-
+;;(reg-event-fx
+;;  :save
+;;  (fn [_ _]
+;;    (let [db-filepath (subscribe [:db/filepath])]
+;;      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]})))
 
 (reg-event-fx
   :undo
