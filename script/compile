@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-set -eo pipefail
-
-./node_modules/shadow-cljs/cli/runner.js compile main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\"}}"
