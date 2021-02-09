@@ -1,6 +1,6 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain]]
+    ["electron" :refer [app BrowserWindow ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]))
 
 
@@ -39,7 +39,8 @@
   ; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
-  (.. ^js @main-window -webContents (on "new-window" (fn [e url] (.. e preventDefault) (open url)))))
+  (. ^js @main-window -webContents on "new-window" (fn [e url] (.. e preventDefault) (. shell openExternal url))))
+
 
 (defn init-updater
   []

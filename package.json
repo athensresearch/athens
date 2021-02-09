@@ -60,7 +60,6 @@
     "highlight.js": "9.15.10",
     "marked": "^1.0.0",
     "nedb": "^1.8.0",
-    "open": "^7.4.0",
     "react": "16.9.0",
     "react-dom": "16.9.0",
     "react-highlight.js": "1.0.7"
