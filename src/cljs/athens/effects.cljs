@@ -228,7 +228,7 @@
            (ph-link-created! outputs)
            (prn "TX OUTPUTS")
            (pprint outputs)
-           (reset! a outputs)
+           ;;(reset! a outputs)
            (dispatch [:fs/write-log outputs]))
         #_(let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
             (ph-link-created! outputs)
