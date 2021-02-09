@@ -1,16 +1,14 @@
 ---
 name: Bug Report
-about: "Report \U0001F41E Bugs"
+about: Report 🐞 Bugs
 title: ''
-labels: "type: \U0001F41E bug"
+labels: 'type: 🐞 bug'
 assignees: ''
----
 
-# bug\_report
+---
 
 **Problem**
 
 **Screenshots/Demo**
 
 **Athens Version**
-
