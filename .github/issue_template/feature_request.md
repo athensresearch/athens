@@ -4,7 +4,9 @@ about: Suggest a feature for this project
 title: ''
 labels: 'type: feature request'
 assignees: ''
-
 ---
 
+# feature\_request
+
 Please search our GitHub and Discord to see if your feature has already been requested!
+

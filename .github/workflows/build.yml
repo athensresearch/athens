@@ -204,8 +204,16 @@ jobs:
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
-       - name: Compile JS Assets
+       - name: Compile JS Assets (*nix)
+         if: matrix.os != 'windows-latest'
          run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\"}}"
+         env:
+           SENTRY_DSN: ${{ secrets.sentry_dsn }}
+
+       # unable to interpolate Windows environment variables properly. Ignore for Windows for now
+       - name: Compile JS Assets (Windows)
+         if: matrix.os == 'windows-latest'
+         run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
 
