@@ -73,6 +73,10 @@
     (.mkdirSync fs dir)))
 
 
+(defn os-username!
+  []
+  (.. (js/require "os") userInfo -username))
+
 ;;; Filesystem Dialogs
 
 
@@ -305,18 +309,30 @@
 (def debounce-sync-db-from-logs
   (debounce sync-db-from-logs 500))
 
+(defn db-dir
+  "re-find */index.transit"
+  [db-filepath]
+  (path.dirname db-filepath))
+
+(defn tx-dir
+  "db/path/index.transit -> db/path -> db/path/tx-logs"
+  [db-filepath]
+  (-> db-filepath
+      db-dir
+      (path-resolve TX-LOGS)))
+
 
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
-;; Watching db file directly doesn't always work, so watch directory and regex match.
 ;; Debounce because files can be changed multiple times per save.
 (reg-event-fx
   :fs/watch
-  (fn [_ [_ basedir]]
-    (let [log-dirpath (path-resolve basedir TX-LOGS)]
-      (.. fs (watch log-dirpath (fn [_event filename]
-                                  (when (re-find #".log" filename)
-                                    (debounce-sync-db-from-logs log-dirpath filename))))))
+  (fn [_ [_ dir]]
+    (fs.watch dir (fn [_event filename]
+                    ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
+                    (when (re-find #".log" filename)
+                      (debounce-sync-db-from-logs dir filename))))
     {}))
+
 
 
 (reg-event-db
@@ -348,10 +364,10 @@
                                                    (cond
                                                      ;; No database path found in localStorage. Creating new one
                                                      (nil? filepath) (dispatch [:fs/create-new-db])
-                                                     ;; Database found in local storage and filesystem:
+                                                     ;; Database found in local storage and filesystem. Read db into memory
                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                      db      (dt/read-transit-str read-db)]
-                                                                                 (dispatch [:fs/watch (path.dirname filepath)])
+                                                                                 (dispatch [:fs/watch (tx-dir filepath)])
                                                                                  (dispatch [:reset-conn db]))
                                                      ;; Database found in localStorage but not on filesystem
                                                      :else (dispatch [:fs/open-dialog])))}
@@ -367,12 +383,6 @@
                                     :events     :reset-conn
                                     :dispatch-n [[:local-storage/set-theme]
                                                  #_[:local-storage/navigate]]}
-
-                                   ;; whether first or nth time, update athens pages
-                                   #_{:when       :seen-any-of?
-                                      :events     [:fs/create-new-db :reset-conn]
-                                      :dispatch-n [[:db/retract-athens-pages]
-                                                   [:db/transact-athens-pages]]}
 
                                    {:when        :seen-any-of?
                                     :events      [:fs/create-new-db :reset-conn]
@@ -451,13 +461,15 @@
 
 
 (defn write-log
-  "Creates a tx at dirname/tx-logs/{timestamp}.log"
-  [data]
-  (let [tx-dir       (log-dir)
+  "Creates a tx at db-dir/tx-logs/{timestamp}.log"
+  [tx-data]
+  (let [tx-data      (str tx-data)
+        tx-dir       (log-dir)
         time         (.. (js/Date.) getTime)
-        log-filename (str time ".log")
+        username     (os-username!)
+        log-filename (str time "-" username ".log")
         log-filepath (path-resolve tx-dir log-filename)]
-    (fs.writeFileSync log-filepath data "utf-8")
+    (fs.writeFileSync log-filepath tx-data "utf-8")
     (dispatch [:db/sync])
     (dispatch [:db/update-mtime (js/Date.)])))
 
@@ -471,4 +483,4 @@
 (reg-fx
   :fs/write-log!
   (fn [tx-data]
-    (write-log (str tx-data))))
+    (write-log tx-data)))
