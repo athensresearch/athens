@@ -19,23 +19,13 @@
 (def page-link {:cursor "pointer"
                 :text-decoration "none"
                 :color (color :link-color)
-                :position "relative"
+                :display "inline"
+                :border-radius "0.25rem"
                 ::stylefy/manual [[:.formatting {:color (color :body-text-color)
                                                  :opacity (:opacity-low OPACITIES)}]
-                                  [:&:after {:content "''"
-                                             :display "inline-block"
-                                             :position "absolute"
-                                             :top "-1px"
-                                             :right "-0.2em"
-                                             :left "-0.2em"
-                                             :bottom "-1px"
-                                             :z-index -1
-                                             :opacity "0"
-                                             :border-radius "0.25rem"
-                                             :transition "all 0.05s ease"
-                                             :background (color :link-color :opacity-lower)}]
-                                  [:&:hover:after {:opacity "1"}]
-                                  [:&:hover {:z-index 1}]]})
+                                  [:&:hover {:z-index 1
+                                             :background (color :link-color :opacity-lower)
+                                             :box-shadow (str "0px 0px 0px 1px " (color :link-color :opacity-lower))}]]})
 
 
 (def hashtag {::stylefy/mode [[:hover {:text-decoration "underline" :cursor "pointer"}]]
