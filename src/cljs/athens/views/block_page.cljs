@@ -66,12 +66,21 @@
 ;;; Helpers
 
 (defn transact-string
-  "A helper function that takes a `string` and a `block` dispatches a datascript transaction.
-  Used in `block-page-el` function to log when there is a diff and on-blur. "
+  "A helper function that takes a `string` and a `block` and datascript transaction vector
+  ready for `dispatch`. Used in `block-page-el` function to log when there is a diff and on-blur."
   [string block]
-  (dispatch [:transact [{:db/id        [:block/uid (:block/uid block)]
-                         :block/string string
-                         :edit/time    (now-ts)}]]))
+  [:transact [{:db/id        [:block/uid (:block/uid block)]
+               :block/string string
+               :edit/time    (now-ts)}]])
+
+
+(defn persist-textarea-string
+  "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`. "
+  [state block]
+  (let [diff? (not= (:string/local state)
+                    (:string/previous state))]
+    (when diff?
+      (dispatch (transact-string (:string/local state) block)))))
 
 ;;; Components
 
@@ -95,24 +104,22 @@
          ;; Parent Context
          [:span {:style {:color "gray"}}
           [breadcrumbs-list {:style {:font-size "1.2rem"}}
-           (doall
-            (for [{:keys [node/title block/uid block/string]} parents]
-              ^{:key uid}
-              [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
-               (or title string)]))]]
+            (doall
+             (for [{:keys [node/title block/uid block/string]} parents]
+               ^{:key uid}
+               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
+                (or title string)]))]]
 
          ;; Header
          [:h1 (use-style title-style {:data-uid uid :class "block-header"})
-          (let [diff? (when (not= (:string/local @state)
-                                  (:string/previous @state)) true)]
-            [autosize/textarea
-             {:id          (str "editable-uid-" uid)
-              :value       (:string/local @state)
-              :class       (when (= editing-uid uid) "is-editing")
-              :auto-focus  true
-              :on-blur     (fn [e] (when diff? (transact-string (:string/local @state) block)))
-              :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
-              :on-change   (fn [e] (block-page-change e uid state))}])
+          [autosize/textarea
+           {:id          (str "editable-uid-" uid)
+            :value       (:string/local @state)
+            :class       (when (= editing-uid uid) "is-editing")
+            :auto-focus  true
+            :on-blur     (fn [_] (persist-textarea-string @state block))
+            :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
+            :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]
 
          ;; Children
@@ -127,19 +134,18 @@
              [:h4 (use-style node-page/references-heading-style)
               [(r/adapt-react-class mui-icons/Link)]
               [:span "Linked References"]]
-              ;; Hide button until feature is implemented
-              ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+             ;; Hide button until feature is implemented
+             ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
-                (for [[group-title group] refs]
-                  [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
-                   [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
-                   (doall
-                     (for [block group]
-                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                        [node-page/ref-comp block]]))]))]]])]))))
-
+               (for [[group-title group] refs]
+                 [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+                  [:h4 (use-style node-page/references-group-title-style)
+                   [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                  (doall
+                   (for [block group]
+                     [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                      [node-page/ref-comp block]]))]))]]])]))))
 
 (defn block-page-component
   [ident]
