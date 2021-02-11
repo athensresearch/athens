@@ -295,15 +295,24 @@
 (def debounce-sync-db-from-fs
   (debounce sync-db-from-fs 500))
 
+(reg-event-fx
+  :transact/directly
+  (fn [_ [_ tx-data]]
+    {:transact/directly! tx-data}))
+
+(reg-fx
+  :transact/directly!
+  (fn [tx-data]
+    (posh.reagent/transact! db/dsdb tx-data)))
 
 (defn sync-db-from-logs
   [log-dirpath filename]
   (let [realfilepath (path-resolve log-dirpath filename)
         curr-mtime   (.-mtime (.statSync fs realfilepath))]
     (dispatch [:db/update-mtime curr-mtime])
-    (let [tx-data (-> (.readFileSync fs realfilepath "utf-8")
+    (let [tx-data (-> (fs.readFileSync realfilepath "utf-8")
                       clojure.edn/read-string)]
-      (posh.reagent/transact! db/dsdb tx-data))))
+      (dispatch [:transact/directly tx-data]))))
 
 
 (def debounce-sync-db-from-logs
@@ -321,6 +330,15 @@
       db-dir
       (path-resolve TX-LOGS)))
 
+(reg-event-fx
+  :sync/append-log
+  (fn [_ [_ dir filename]]
+    {:sync/append-log! [dir filename]}))
+
+(reg-fx
+  :sync/append-log!
+  (fn [[dir filename]]
+    (debounce-sync-db-from-logs dir filename)))
 
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Debounce because files can be changed multiple times per save.
@@ -330,7 +348,7 @@
     (fs.watch dir (fn [_event filename]
                     ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
                     (when (re-find #".log" filename)
-                      (debounce-sync-db-from-logs dir filename))))
+                      (dispatch [:sync/append-log dir filename]))))
     {}))
 
 
