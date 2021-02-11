@@ -305,6 +305,7 @@
   (fn [tx-data]
     (posh.reagent/transact! db/dsdb tx-data)))
 
+
 (defn sync-db-from-logs
   [log-dirpath filename]
   (let [realfilepath (path-resolve log-dirpath filename)
@@ -335,23 +336,28 @@
   (fn [_ [_ dir filename]]
     {:sync/append-log! [dir filename]}))
 
+
 (reg-fx
   :sync/append-log!
   (fn [[dir filename]]
     (debounce-sync-db-from-logs dir filename)))
 
-;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
-;; Debounce because files can be changed multiple times per save.
-(reg-event-fx
-  :fs/watch
-  (fn [_ [_ dir]]
-    (create-dir-if-needed! dir)
-    (fs.watch dir (fn [_event filename]
-                    ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
-                    (when (re-find #".log" filename)
-                      (dispatch [:sync/append-log dir filename]))))
-    {}))
+(declare write-file)
 
+
+(defn final-sync-db
+  []
+  (let [time-interval (* 15 1000)
+        cb            (fn []
+                        (let [db-filepath      (:db/filepath @re-frame.db/app-db)
+                              in-memory-db     (dt/write-transit-str @db/dsdb)
+                              in-memory-buffer (js/Buffer. in-memory-db)
+                              fs-db-buffer     (fs.readFileSync db-filepath)
+                              equivalent-dbs   (.equals in-memory-buffer fs-db-buffer)]
+                          (prn "DBS are SAME" equivalent-dbs)
+                          (when-not equivalent-dbs
+                            (write-file db-filepath in-memory-db))))]
+    (js/setInterval cb time-interval)))
 
 
 (reg-event-db
@@ -503,3 +509,21 @@
   :fs/write-log!
   (fn [tx-data]
     (write-log tx-data)))
+
+
+
+;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
+;; Debounce because files can be changed multiple times per save.
+(reg-event-fx
+  :fs/watch
+  (fn [_ [_ dir]]
+    (create-dir-if-needed! dir)
+    (final-sync-db)
+    (fs.watch dir (fn [_event filename]
+                    ;; TODO: only read logs from other users
+                    ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
+                    (when (re-find #".log" filename)
+                      (dispatch [:sync/append-log dir filename]))))
+    {}))
+
+
