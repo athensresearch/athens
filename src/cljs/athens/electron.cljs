@@ -345,6 +345,7 @@
 (reg-event-fx
   :fs/watch
   (fn [_ [_ dir]]
+    (create-dir-if-needed! dir)
     (fs.watch dir (fn [_event filename]
                     ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
                     (when (re-find #".log" filename)
