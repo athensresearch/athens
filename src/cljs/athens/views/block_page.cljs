@@ -135,8 +135,8 @@
              [:h4 (use-style node-page/references-heading-style)
               [(r/adapt-react-class mui-icons/Link)]
               [:span "Linked References"]]
-             ;; Hide button until feature is implemented
-             ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+              ;; Hide button until feature is implemented
+              ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
                 (for [[group-title group] refs]
