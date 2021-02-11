@@ -5,6 +5,7 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
+    [athens.util :refer [now-ts]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
@@ -13,7 +14,7 @@
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -66,8 +67,8 @@
 ;;; Helpers
 
 (defn transact-string
-  "A helper function that takes a `string` and a `block` and datascript transaction vector
-  ready for `dispatch`. Used in `block-page-el` function to log when there is a diff and on-blur."
+  "A helper function that takes a `string` and a `block` and datascript `transact` vector
+  ready for `dispatch`. Used in `block-page-el` function to log when there is a diff and `on-blur`."
   [string block]
   [:transact [{:db/id        [:block/uid (:block/uid block)]
                :block/string string
@@ -104,7 +105,7 @@
          ;; Parent Context
          [:span {:style {:color "gray"}}
           [breadcrumbs-list {:style {:font-size "1.2rem"}}
-            (doall
+           (doall
              (for [{:keys [node/title block/uid block/string]} parents]
                ^{:key uid}
                [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
@@ -138,14 +139,15 @@
              ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
-               (for [[group-title group] refs]
-                 [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
-                  [:h4 (use-style node-page/references-group-title-style)
-                   [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
-                  (doall
-                   (for [block group]
-                     [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                      [node-page/ref-comp block]]))]))]]])]))))
+                (for [[group-title group] refs]
+                  [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+                   [:h4 (use-style node-page/references-group-title-style)
+                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                   (doall
+                     (for [block group]
+                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                        [node-page/ref-comp block]]))]))]]])]))))
+
 
 (defn block-page-component
   [ident]
