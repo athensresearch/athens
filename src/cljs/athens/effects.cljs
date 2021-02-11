@@ -211,29 +211,18 @@
 
 
 (defn walk-transact
+  "Probably the worst code in the codebase.
+  When a transaction happens, look at the assertions and retractions of the :block/strings.
+  Based on datascript state, this may create page and block refs, and may create or delete pages.
+
+  TODO: Write tests around this with mock transactions and datascript values."
   [tx-data]
-  (prn "TX RAW INPUTS")                                     ;; event tx-data
-  (pprint tx-data)
   (try
-    (let [with-tx (d/with @db/dsdb tx-data)]
-      (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
-      (pprint (:tx-data with-tx))
-      (let [more-tx-data  (parse-for-links with-tx)
-            final-tx-data (vec (concat tx-data more-tx-data))]
-        (prn "TX MORE")                                     ;; parsed tx-data, e.g. asserting/retracting pages and references
-        (pprint more-tx-data)
-        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-        (pprint final-tx-data)
-        (let [outputs (:tx-data (d/with @db/dsdb final-tx-data))]
-           (ph-link-created! outputs)
-           (prn "TX OUTPUTS")
-           (pprint outputs)
-           ;;(reset! a outputs)
-           (dispatch [:fs/write-log outputs]))
-        #_(let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-            (ph-link-created! outputs)
-            (prn "TX OUTPUTS")
-            (pprint outputs))))
+    (let [with-tx        (d/with @db/dsdb tx-data)
+          more-tx-data   (parse-for-links with-tx)
+          total-tx-data  (vec (concat tx-data more-tx-data))
+          output-tx-data (:tx-data (d/with @db/dsdb total-tx-data))]
+      output-tx-data)
     (catch js/Error e
       (js/alert (str e))
       (prn "EXCEPTION" e))))
@@ -241,8 +230,8 @@
 
 (reg-fx
   :transact!
-  (fn [tx-data]
-    (walk-transact tx-data)))
+  (fn [final-tx-data]
+    (posh.reagent/transact! db/dsdb final-tx-data)))
 
 
 (reg-fx

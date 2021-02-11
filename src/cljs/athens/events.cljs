@@ -413,15 +413,21 @@
 ;; Datascript
 
 
-
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
-    ;; always stay synced for now because auto-saving
-    (let [synced? @(subscribe [:db/synced])]
+    (let [synced?       @(subscribe [:db/synced])
+          final-tx-data (athens.effects/walk-transact tx-data)]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
-            ;;[:dispatch [:save]]
-            [:transact! tx-data]]})))
+            [:transact/write-log! tx-data]
+            [:transact! final-tx-data]]})))
+
+
+;;(reg-event-fx
+;;  :save
+;;  (fn [_ _]
+;;    (let [db-filepath (subscribe [:db/filepath])]
+;;      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]})))
 
 
 (reg-event-fx
@@ -466,12 +472,6 @@
   (fn [_ [_ uid]]
     {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]}))
 
-
-;;(reg-event-fx
-;;  :save
-;;  (fn [_ _]
-;;    (let [db-filepath (subscribe [:db/filepath])]
-;;      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]})))
 
 (reg-event-fx
   :undo

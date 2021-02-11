@@ -306,19 +306,6 @@
     (posh.reagent/transact! db/dsdb tx-data)))
 
 
-(defn sync-db-from-logs
-  [log-dirpath filename]
-  (let [realfilepath (path-resolve log-dirpath filename)
-        curr-mtime   (.-mtime (.statSync fs realfilepath))]
-    (dispatch [:db/update-mtime curr-mtime])
-    (let [tx-data (-> (fs.readFileSync realfilepath "utf-8")
-                      clojure.edn/read-string)]
-      (dispatch [:transact/directly tx-data]))))
-
-
-(def debounce-sync-db-from-logs
-  (debounce sync-db-from-logs 500))
-
 (defn db-dir
   "re-find */index.transit"
   [db-filepath]
@@ -331,30 +318,20 @@
       db-dir
       (path-resolve TX-LOGS)))
 
-(reg-event-fx
-  :sync/append-log
-  (fn [_ [_ dir filename]]
-    {:sync/append-log! [dir filename]}))
-
-
-(reg-fx
-  :sync/append-log!
-  (fn [[dir filename]]
-    (debounce-sync-db-from-logs dir filename)))
 
 (declare write-file)
 
 
 (defn final-sync-db
   []
-  (let [time-interval (* 15 1000)
+  (let [time-interval (* 5 1000)
         cb            (fn []
                         (let [db-filepath      (:db/filepath @re-frame.db/app-db)
                               in-memory-db     (dt/write-transit-str @db/dsdb)
                               in-memory-buffer (js/Buffer. in-memory-db)
                               fs-db-buffer     (fs.readFileSync db-filepath)
                               equivalent-dbs   (.equals in-memory-buffer fs-db-buffer)]
-                          (prn "DBS are SAME" equivalent-dbs)
+                          (prn "DBS ARE SAME" equivalent-dbs)
                           (when-not equivalent-dbs
                             (write-file db-filepath in-memory-db))))]
     (js/setInterval cb time-interval)))
@@ -494,23 +471,25 @@
         username     (os-username!)
         log-filename (str time "-" username ".log")
         log-filepath (path-resolve tx-dir log-filename)]
-    (fs.writeFileSync log-filepath tx-data "utf-8")
-    (dispatch [:db/sync])
-    (dispatch [:db/update-mtime (js/Date.)])))
-
-
-(reg-event-fx
-  :fs/write-log
-  (fn [_ [_ tx-data]]
-    {:fs/write-log! tx-data}))
+    (fs.writeFileSync log-filepath tx-data "utf-8")))
 
 
 (reg-fx
-  :fs/write-log!
+  :transact/write-log!
   (fn [tx-data]
     (write-log tx-data)))
 
 
+(defn sync-db-from-logs
+  [log-dirpath filename]
+  (let [realfilepath (path-resolve log-dirpath filename)
+        curr-mtime   (.-mtime (.statSync fs realfilepath))]
+    (dispatch [:db/update-mtime curr-mtime])
+    (let [tx-data (clojure.edn/read-string (fs.readFileSync realfilepath "utf-8"))]
+      (dispatch [:transact/directly tx-data]))))
+
+(def debounce-sync-db-from-logs
+  (debounce sync-db-from-logs 500))
 
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Debounce because files can be changed multiple times per save.
@@ -521,9 +500,9 @@
     (final-sync-db)
     (fs.watch dir (fn [_event filename]
                     ;; TODO: only read logs from other users
-                    ;;(re-find #"\d+-\w+.log" "123123-jeff.log")
+                    ;; However, doesn't actually matter if we double transact datoms because datascript won't change.
                     (when (re-find #".log" filename)
-                      (dispatch [:sync/append-log dir filename]))))
+                      (debounce-sync-db-from-logs dir filename))))
     {}))
 
 
