@@ -204,9 +204,17 @@ jobs:
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
-      # Using lein directly because Windows doesn't recognize lein when lein is called via yarn
-       - name: Compile JS Assets
-         run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer
+       - name: Compile JS Assets (*nix)
+         if: matrix.os != 'windows-latest'
+         run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\"}}"
+         env:
+           SENTRY_DSN: ${{ secrets.sentry_dsn }}
+
+       - name: Compile JS Assets (Windows)
+         if: matrix.os == 'windows-latest'
+         run: lein run -m shadow.cljs.devtools.cli --npm compile main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \`"$env:SENTRY_DSN\`"}}"
+         env:
+           SENTRY_DSN: ${{ secrets.sentry_dsn }}
 
        - name: Build and Publish Electron App
          uses: samuelmeuli/action-electron-builder@v1
