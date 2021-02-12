@@ -98,7 +98,7 @@
      :hashtag       (fn [& title-coll]
                       (let [node (pull-node-from-string title-coll)]
                         [:span (use-style hashtag {:class    "hashtag"
-                                                   :on-click #(navigate-uid (:block/uid @node))})
+                                                   :on-click #(navigate-uid (:block/uid @node) %)})
                          [:span {:class "formatting"} "#"]
                          [:span {:class "contents"} title-coll]]))
      :block-ref     (fn [ref-uid]
