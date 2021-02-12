@@ -116,9 +116,9 @@
                                                        (compare
                                                          [(get-in new-items [k1 :index]) k2]
                                                          [(get-in new-items [k2 :index]) k1]))) inc-items)]
-               {:db (assoc db :right-sidebar/items sorted-items)
-                :dispatch (when (false? (:right-sidebar/open db))
-                            [:right-sidebar/toggle])})))
+               (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
+                 (not (:right-sidebar/open db))
+                 (assoc :dispatch [:right-sidebar/toggle])))))
 
 
 (reg-event-fx
