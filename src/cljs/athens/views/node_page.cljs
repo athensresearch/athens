@@ -161,7 +161,7 @@
       block-page (dispatch [:split-block-to-children uid value start])
       node-page (if (empty? children)
                   (handle-new-first-child-block-click uid)
-                  (dispatch [:down])))))
+                  (dispatch [:down uid])))))
 
 
 (defn handle-page-arrow-key
