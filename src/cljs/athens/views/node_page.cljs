@@ -352,13 +352,13 @@
                                     [:<>
                                      [:> mui-icons/Bookmark]
                                      [:span "Add Shortcut"]]])
-                                 (when-not timeline-page?
-                                   [:hr (use-style menu-separator-style)])
-                                 (when-not timeline-page?
-                                   [button {:on-click #(do
-                                                         (navigate :pages)
-                                                         (dispatch [:page/delete uid title]))}
-                                    [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]])))})))
+                                 ;; (when-not timeline-page?)
+                                 [:hr (use-style menu-separator-style)]
+                                 ;; (when-not timeline-page?)
+                                 [button {:on-click #(do
+                                                       (navigate :pages)
+                                                       (dispatch [:page/delete uid title]))}
+                                  [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
 (defn ref-comp
