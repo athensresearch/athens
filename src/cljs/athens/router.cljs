@@ -119,7 +119,7 @@
   ([uid]
    (let [current-route-uid @(subscribe [:current-route/uid])]
      (when (not= current-route-uid uid)
-       (dispatch [:right-sidebar/open-item uid]))))
+       (dispatch [:navigate :page {:id uid}]))))
   ([uid e]
    (let [shift (.. e -shiftKey)]
      (if shift
