@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
-    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string]]
+    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
@@ -380,7 +380,7 @@
                            :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
                                                 new-P (drop-last parents)]
                                             (swap! state assoc :block new-B :parents new-P)))}
-               (or title string)]))]
+               [parse-and-render (or title string) (:block/uid block)]]))]
          [block-el block linked-ref-data]]))))
 
 
