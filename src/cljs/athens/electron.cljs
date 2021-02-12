@@ -42,11 +42,32 @@
   (apply path.resolve args))
 
 
-(defn log-dir
+(defn db-filepath
+  []
+  (-> @re-frame.db/app-db
+      :db/filepath))
+
+(defn db-dir
   ([]
    (-> @re-frame.db/app-db
-       :db/filepath
-       dirname
+      :db/filepath
+      dirname))
+  ([db-filepath]
+   (path.dirname db-filepath)))
+
+
+(defn tx-dir
+  "db/path/index.transit -> db/path -> db/path/tx-logs"
+  ([]
+   (tx-dir (db-filepath)))
+  ([db-filepath]
+   (-> db-filepath
+       db-dir
+       (path-resolve TX-LOGS))))
+
+(defn log-dir
+  ([]
+   (-> (db-dir)
        (path-resolve TX-LOGS)))
   ([filepath]
    (-> filepath
@@ -306,37 +327,6 @@
     (posh.reagent/transact! db/dsdb tx-data)))
 
 
-(defn db-dir
-  "re-find */index.transit"
-  [db-filepath]
-  (path.dirname db-filepath))
-
-(defn tx-dir
-  "db/path/index.transit -> db/path -> db/path/tx-logs"
-  [db-filepath]
-  (-> db-filepath
-      db-dir
-      (path-resolve TX-LOGS)))
-
-
-(declare write-file)
-
-
-(defn final-sync-db
-  []
-  (let [time-interval (* 5 1000)
-        cb            (fn []
-                        (let [db-filepath      (:db/filepath @re-frame.db/app-db)
-                              in-memory-db     (dt/write-transit-str @db/dsdb)
-                              in-memory-buffer (js/Buffer. in-memory-db)
-                              fs-db-buffer     (fs.readFileSync db-filepath)
-                              equivalent-dbs   (.equals in-memory-buffer fs-db-buffer)]
-                          (prn "DBS ARE SAME" equivalent-dbs)
-                          (when-not equivalent-dbs
-                            (write-file db-filepath in-memory-db))))]
-    (js/setInterval cb time-interval)))
-
-
 (reg-event-db
   :db/update-mtime
   (fn [db [_ mtime1]]
@@ -471,6 +461,7 @@
         username     (os-username!)
         log-filename (str time "-" username ".log")
         log-filepath (path-resolve tx-dir log-filename)]
+    (create-dir-if-needed! tx-dir)
     (fs.writeFileSync log-filepath tx-data "utf-8")))
 
 
@@ -491,13 +482,28 @@
 (def debounce-sync-db-from-logs
   (debounce sync-db-from-logs 500))
 
+
+(defn interval-sync-index-transit!
+  []
+  (let [time-interval (* 5 1000)
+        cb            (fn []
+                        (let [db-filepath      (:db/filepath @re-frame.db/app-db)
+                              fs-db            (-> (fs.readFileSync db-filepath "utf-8")
+                                                   dt/read-transit-str)
+                              equivalent-dbs   (= fs-db @db/dsdb)]
+                          (prn "DBS ARE SAME" equivalent-dbs)
+                          (when-not equivalent-dbs
+                            (write-file db-filepath (dt/write-transit-str @db/dsdb)))))]
+    (js/setInterval cb time-interval)))
+
+
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Debounce because files can be changed multiple times per save.
 (reg-event-fx
   :fs/watch
   (fn [_ [_ dir]]
     (create-dir-if-needed! dir)
-    (final-sync-db)
+    (interval-sync-index-transit!)
     (fs.watch dir (fn [_event filename]
                     ;; TODO: only read logs from other users
                     ;; However, doesn't actually matter if we double transact datoms because datascript won't change.
