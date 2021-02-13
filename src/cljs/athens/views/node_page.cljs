@@ -333,8 +333,8 @@
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render   (fn [node state]
                            (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                 {:menu/keys [show x y]} @state
-                                 timeline-page? (is-timeline-page uid)]
+                                 {:menu/keys [show x y]} @state]
+                             ;; timeline-page? (is-timeline-page uid)
                              (when show
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
