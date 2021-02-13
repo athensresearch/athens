@@ -19,23 +19,13 @@
 (def page-link {:cursor "pointer"
                 :text-decoration "none"
                 :color (color :link-color)
-                :position "relative"
+                :display "inline"
+                :border-radius "0.25rem"
                 ::stylefy/manual [[:.formatting {:color (color :body-text-color)
                                                  :opacity (:opacity-low OPACITIES)}]
-                                  [:&:after {:content "''"
-                                             :display "inline-block"
-                                             :position "absolute"
-                                             :top "-1px"
-                                             :right "-0.2em"
-                                             :left "-0.2em"
-                                             :bottom "-1px"
-                                             :z-index -1
-                                             :opacity "0"
-                                             :border-radius "0.25rem"
-                                             :transition "all 0.05s ease"
-                                             :background (color :link-color :opacity-lower)}]
-                                  [:&:hover:after {:opacity "1"}]
-                                  [:&:hover {:z-index 1}]]})
+                                  [:&:hover {:z-index 1
+                                             :background (color :link-color :opacity-lower)
+                                             :box-shadow (str "0px 0px 0px 1px " (color :link-color :opacity-lower))}]]})
 
 
 (def hashtag {::stylefy/mode [[:hover {:text-decoration "underline" :cursor "pointer"}]]
@@ -100,7 +90,7 @@
   [tree uid]
   (insta/transform
     {:block         (fn [& contents]
-                      (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
+                      (concat [:span {:class "block"}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
                       (components/render-component (first contents) uid))
@@ -108,7 +98,7 @@
      :hashtag       (fn [& title-coll]
                       (let [node (pull-node-from-string title-coll)]
                         [:span (use-style hashtag {:class    "hashtag"
-                                                   :on-click #(navigate-uid (:block/uid @node))})
+                                                   :on-click #(navigate-uid (:block/uid @node) %)})
                          [:span {:class "formatting"} "#"]
                          [:span {:class "contents"} title-coll]]))
      :block-ref     (fn [ref-uid]

@@ -54,6 +54,8 @@
 
 # Running Athens Locally
 
+[Video version of this for Mac](https://www.loom.com/share/63618f2a2b2249e3923577fb88fabfdc).
+
 These dependencies are needed to get Athens up and running. To install them, follow the instructions in the links.
 
 1. [Java 11 and Leiningen](https://purelyfunctional.tv/guide/how-to-install-clojure/) (Leiningen installs Clojure)
@@ -89,10 +91,15 @@ yarn run electron .
 
 Another window should open automatically. That's your Athens!
 
+Now make sure you can run code in a [REPL](#Connecting-your-REPL) and that you know how to use [re-frame-10x](#using-re-frame-10x).
+
 ## Running in Docker
 
-For a quick way to get up and started with a local development environment you can also use [Docker](https://www.docker.com/) via the corresponding [Dockerfile](./Dockerfile).
-In order to do so, build a Docker image and run it like this:
+Docker doesn't work perfectly well anymore, because we are using Electron. Electron requires access to local resources such as `resources/index.html`.
+
+If you run `yarn run electron .` from your local system, but are running Athens from within Docker, it won't work. Furthermore, if you run `yarn run electron .` from within your Docker system, the GUI won't popup on your local system. The workaround would be to sync the `resources/` files from Docker to a local folder.
+
+The following command runs Athens in a docker container, but does not provide a workaround to actually run Electron.
 
 ```
 docker build -t athens .
@@ -132,56 +139,19 @@ Notes:
 
 # Connecting your REPL
 
+The REPL is one of the core features of Clojure. REPL-driven programming can make you code faster, with less tests and bugs. This [video](https://vvvvalvalval.github.io/posts/what-makes-a-good-repl.html#what_does_a_good_repl_give_you?:~:text=What%20does%20a%20good%20REPL%20give%20you%3F,-The) demonstrates this.
+
 * Make sure you can run Athens locally before proceeding with this section.
 * Refer to shadow-cljs [editor integration docs](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration) for more details.
 * nREPL port is 8777, as defined in [shadow-cljs.edn](./shadow-cljs.edn).
 
 ## Cursive
 
-```
-Editor - IntelliJ IDEA 2020.1.3 (Community Edition) Build #IC-201.8538.31, built on July 7, 2020
-Cursive plugin: 1.9.2 Built on: 2020-07-02
-OS - Windows 10
-```
-
-1. [Install Cursive](https://cursive-ide.com/userguide/index.html)
-1. In a terminal, navigate to the repository root and generate a pom.xml file: `yarn run shadow-cljs pom`.
-1. In Intellij, go to `File → New → Project from Existing Sources...`, then select the generated pom.xml in the project directory.
-1. In a terminal, start a development server: `lein dev`
-1. Once the project has been opened in Intellij IDEA, go to `Run → Edit Configurations...`.
-   - Click `+ → Clojure REPL → Remote`
-   - Name: "REPL for Athens"
-   - Connection type: nREPL
-   - Connection details: Host: localhost, Port: 8777
-![nREPL config](doc/athens-cursive-nrepl-config.PNG)
-1. Go to `Run → Run...` and select the configuration you just created.
-1. Once the clj REPL is started, run `(shadow/repl :app)` to switch to cljs REPL.
-![switch to nrepl](doc/athens-cursive-cljs-nrepl.PNG)
-
+[https://www.loom.com/share/a2cc5f36f8814704948a57e8277c04e9](https://www.loom.com/share/45d7c61703324089a425a9c91b14445b)
 
 ## CIDER
 
-```
-Editor - GNU Emacs 26.3 (build 1, x86_64-apple-darwin19.3.0, Carbon Version 162 AppKit 1894.3) of 2020-04-27\
-OS - MacOS Catalina v10.15.5
-```
-
-1. Navigate to any file within your local athens folder.
-1. Run `M-x cider-jack-in-cljs`
-   ![cider-jack-in-cljs](doc/emacs-cider-jack-in.png)
-1. Choose `shadow-cljs`
-   ![choose cljs](doc/emacs-cider-shadow-cljs.png)
-1. You should see something like.
-   ![start repl](doc/emacs-cider-starting-server.png)
-1. Choose `shadow` and then you should be able to choose which `shadow-cljs` build to run.
-   ![shadow cljs profile](doc/emacs-cider-shadow-cljs-profile.png)
-1. You should see a new buffer open within your current Emacs window with a ClojureScript REPL.
-   ![shadow cljs REPL connected](doc/emacs-cider-connected-repl.png)
-
-You now have access to a REPL. If you want to load the file you are editing in it:
-
-1. <kbd>C-c C-k</kbd>, or `cider-load-buffer`
-1. Then, <kbd>C-c M-n n</kbd>, or `cider-repl-set-ns` and you should be able to have the file's namespace in your REPL (e.g. `athens.db>`)
+[Video tutorial](https://www.loom.com/share/a2cc5f36f8814704948a57e8277c04e9)
 
 ## Calva
 
@@ -239,10 +209,11 @@ If all goes well, now you can see documentation of symbols (binding: K), go to d
 
 # Using re-frame-10x
 
-The right sidebar has [`re-frame-10x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`.
+The right sidebar has [`re-frame-10x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`, but you must not be focused on a block (ctrl-h has a specific action in some operating systems).
 
-This is useful for inspecting the state of re-frame apps. However, we are currently reducing usage on re-frame-10x because it doesn't work well with datascript ([#139](https://github.com/athensresearch/athens/issues/139)).
+Once you have 10x open, you can hover over blocks' bullets to see some of their datascript data.
 
+By default, 10x is closed everytime Athens starts. Sometimes you want 10x to be open immediately on start. To do, comment out the two lines of JavaScript code in `index.html`, where localStorage sets 10x to be closed by default.
 
 # Running CI Scripts Locally
 

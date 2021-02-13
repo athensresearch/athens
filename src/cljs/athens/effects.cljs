@@ -333,3 +333,9 @@
   :stylefy/tag
   (fn [[tag properties]]
     (stylefy/tag tag properties)))
+
+
+(reg-fx
+  :alert/js!
+  (fn [message]
+    (js/alert message)))

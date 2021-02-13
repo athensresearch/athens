@@ -5,6 +5,7 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
+    [athens.util :refer [now-ts]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
@@ -13,7 +14,7 @@
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -63,6 +64,24 @@
                                     :opacity "1"}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
+;;; Helpers
+
+(defn transact-string
+  "A helper function that takes a `string` and a `block` and datascript `transact` vector
+  ready for `dispatch`. Used in `block-page-el` function to log when there is a diff and `on-blur`."
+  [string block]
+  [:transact [{:db/id        [:block/uid (:block/uid block)]
+               :block/string string
+               :edit/time    (now-ts)}]])
+
+
+(defn persist-textarea-string
+  "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`. "
+  [state block]
+  (let [diff? (not= (:string/local state)
+                    (:string/previous state))]
+    (when diff?
+      (dispatch (transact-string (:string/local state) block)))))
 
 ;;; Components
 
@@ -99,6 +118,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
+            :on-blur     (fn [_] (persist-textarea-string @state block))
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
           [:span (:string/local @state)]]

@@ -19,8 +19,8 @@
    
    (* This first rule is the top-level one. *)
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
-   block = (non-reserved-chars / pre-formatted / syntax-in-block / reserved-char) *
-   
+   block = (url-raw / non-reserved-chars / pre-formatted / syntax-in-block / reserved-char) *
+
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
    <any-non-pre-formatted-chars> = #'[^\\`]*'
    pre-formatted = block-pre-formatted | inline-pre-formatted
@@ -46,6 +46,7 @@
    <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
    <hashtag-delimited> = <'#'> <'[['> page-link-content <']]'>
 
+   url-raw = #'(?i)\\b(?:(?:https?|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?!(?:10|127)(?:\\.\\d{1,3}){3})(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))\\.?)(?::\\d{2,5})?(?:[/?#]\\S*)?\\b'
    url-image = <'!'> url-link-text url-link-url
    
    url-link = url-link-text url-link-url
@@ -104,6 +105,8 @@
                                (into [:url-image {:url url :alt text-contents}]))
      :url-link               (fn [text-contents url]
                                (into [:url-link {:url url}] text-contents))
+     :url-raw                (fn [url]
+                               [:url-link {:url url} url])
      :url-link-text-contents (fn [& raw-contents]
                                (combine-adjacent-strings raw-contents))
      :url-link-url-parts     (fn [& chars]

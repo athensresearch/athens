@@ -116,9 +116,9 @@
                                                        (compare
                                                          [(get-in new-items [k1 :index]) k2]
                                                          [(get-in new-items [k2 :index]) k1]))) inc-items)]
-               {:db (assoc db :right-sidebar/items sorted-items)
-                :dispatch (when (false? (:right-sidebar/open db))
-                            [:right-sidebar/toggle])})))
+               (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
+                 (not (:right-sidebar/open db))
+                 (assoc :dispatch [:right-sidebar/toggle])))))
 
 
 (reg-event-fx
@@ -265,6 +265,13 @@
   :alert/unset
   (fn-traced [db]
              (assoc db :alert nil)))
+
+
+;; Use native js/alert rather than custom UI alert
+(reg-event-fx
+  :alert/js
+  (fn [_ [_ message]]
+    {:alert/js! message}))
 
 
 ;; Modal
@@ -495,6 +502,7 @@
 
 (defn backspace
   "If root and 0th child, 1) if value, no-op, 2) if blank value, delete only block.
+  No-op if parent is missing.
   No-op if parent is prev-block and block has children.
   No-op if prev-sibling-block has children.
   Otherwise delete block and join with previous block
@@ -519,6 +527,7 @@
         retract-block  [:db/retractEntity (:db/id block)]
         new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
+      (not parent) nil
       (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
                                                                                                  {:dispatch-n [[:transact tx-data]
                                                                                                                [:editing/uid nil]]})

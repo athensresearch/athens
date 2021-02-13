@@ -1,5 +1,7 @@
 (ns athens.core
   (:require
+    ["@sentry/react" :as Sentry]
+    ["@sentry/tracing" :refer (Integrations)]
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
@@ -16,6 +18,9 @@
     [stylefy.core :as stylefy]))
 
 
+(goog-define SENTRY_DSN "")
+
+
 (defn dev-setup
   []
   (when config/debug?
@@ -30,8 +35,31 @@
                 (getElement "app")))
 
 
+(defn init-sentry
+  []
+  (let [sentry (js/localStorage.getItem "sentry")]
+    (if (= sentry "off")
+      (prn "Sentry isn't initialized.")
+      (.init Sentry (clj->js {:dsn              SENTRY_DSN
+                              :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                              :integrations     [(new (.-BrowserTracing Integrations))]
+                              :environment      (if config/debug? "development" "production")
+                              :tracesSampleRate 1.0})))))
+
+
+(defn init-ipcRenderer
+  []
+  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
+        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+    (when update-available?
+      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
+        (.sendSync ipcRenderer "confirm-update")))))
+
+
 (defn init
   []
+  (init-sentry)
+  (init-ipcRenderer)
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
