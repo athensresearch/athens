@@ -90,7 +90,7 @@
   [tree uid]
   (insta/transform
     {:block         (fn [& contents]
-                      (concat [:span {:class "block" :style {:white-space "pre-line"}}] contents))
+                      (concat [:span {:class "block"}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
                       (components/render-component (first contents) uid))
