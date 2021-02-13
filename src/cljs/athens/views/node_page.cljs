@@ -333,8 +333,8 @@
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render   (fn [node state]
                            (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                 {:menu/keys [show x y]} @state]
-                             ;; timeline-page? (is-timeline-page uid)
+                                 {:menu/keys [show x y]} @state
+                                 daily-notes? (= :home @(subscribe [:current-route/name]))]
                              (when show
                                [:div (merge (use-style dropdown-style
                                                        {:ref #(reset! ref %)})
@@ -352,12 +352,12 @@
                                     [:<>
                                      [:> mui-icons/Bookmark]
                                      [:span "Add Shortcut"]]])
-                                 ;; (when-not timeline-page?)
                                  [:hr (use-style menu-separator-style)]
-                                 ;; (when-not timeline-page?)
-                                 [button {:on-click #(do
-                                                       (navigate :pages)
-                                                       (dispatch [:page/delete uid title]))}
+                                 [button {:on-click #(if daily-notes?
+                                                       (dispatch [:daily-note/delete uid])
+                                                       (do
+                                                         (navigate :pages)
+                                                         (dispatch [:page/delete uid title])))}
                                   [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
