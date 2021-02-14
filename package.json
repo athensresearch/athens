@@ -1,7 +1,7 @@
 {
   "name": "athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.38",
+  "version": "1.0.0-beta.39",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -71,17 +71,50 @@
   },
   "standard-version": {
     "types": [
-      {"type":"doc","section":"Documentation"},
-      {"type":"enhance","section":"Enhancements"},
-      {"type":"feat","section":"Features"},
-      {"type":"fix","section":"Bug Fixes"},
-      {"type":"rfct","section":"Refactors"},
-      {"type":"wip","section":"Work in Progress"},
-      {"type":"style","hiddren": true},
-      {"type":"chore","hidden": true},
-      {"type":"test","hidden": true},
-      {"type":"build","hidden": true},
-      {"type":"ci","hidden":true}
+      {
+        "type": "doc",
+        "section": "Documentation"
+      },
+      {
+        "type": "enhance",
+        "section": "Enhancements"
+      },
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "rfct",
+        "section": "Refactors"
+      },
+      {
+        "type": "wip",
+        "section": "Work in Progress"
+      },
+      {
+        "type": "style",
+        "hiddren": true
+      },
+      {
+        "type": "chore",
+        "hidden": true
+      },
+      {
+        "type": "test",
+        "hidden": true
+      },
+      {
+        "type": "build",
+        "hidden": true
+      },
+      {
+        "type": "ci",
+        "hidden": true
+      }
     ]
   }
 }
