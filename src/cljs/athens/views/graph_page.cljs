@@ -80,14 +80,16 @@
                                   val        (.. node -val)
                                   x          (.. node -x)
                                   y          (.. node -y)
-                                  font-size  8
-                                  text-width 30
+                                  font-size  (max 10 (-> (js/Math.sqrt val)
+                                                         (/ global-scale)
+                                                         (* 5)))
+                                  text-width (.. ctx (measureText label) -width)
                                   radius     (/ 4 global-scale)]
                               (set! (.-font ctx) (str font-size "px IBM Plex Sans, Sans-Serif"))
                               (set! (.-fillStyle ctx) (:header-text-color theme))
                               (.fillText ctx label
                                          (- x (/ text-width 2))
-                                         (- y (/ 9 global-scale)))
+                                         (- y (/ 7 global-scale)))
                               (.beginPath ctx)
                               (.arc ctx x y
                                     (-> val js/Math.sqrt (* radius))
