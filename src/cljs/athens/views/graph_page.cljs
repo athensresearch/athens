@@ -84,17 +84,16 @@
                                                          (/ global-scale)
                                                          (* 5)))
                                   text-width (.. ctx (measureText label) -width)
-                                  radius     (/ 4 global-scale)]
+                                  radius     (-> (js/Math.sqrt val)
+                                                 (/ global-scale)
+                                                 (* 4))]
                               (set! (.-font ctx) (str font-size "px IBM Plex Sans, Sans-Serif"))
                               (set! (.-fillStyle ctx) (:header-text-color theme))
                               (.fillText ctx label
                                          (- x (/ text-width 2))
-                                         (- y (/ 7 global-scale)))
+                                         (- y radius))
                               (.beginPath ctx)
-                              (.arc ctx x y
-                                    (-> val js/Math.sqrt (* radius))
-                                    0
-                                    (* 3 js/Math.PI)
-                                    false)
+                              ;; https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/arc
+                              (.arc ctx x y radius 0 (* js/Math.PI 2))
                               (set! (.-fillStyle ctx) (:link-color theme))
                               (.fill ctx)))}])))
