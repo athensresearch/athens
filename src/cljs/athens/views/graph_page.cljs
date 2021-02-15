@@ -68,6 +68,7 @@
       [:> rfg/ForceGraph2D
        {:graphData        {:nodes nodes
                            :links links}
+        ;; example data
         #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
                    {"id" "bar", "name" "name2", "val" 10}]
            :links [{"source" "foo", "target" "bar"}]}
@@ -83,8 +84,6 @@
                                   text-width 30
                                   radius     (/ 4 global-scale)]
                               (set! (.-font ctx) (str font-size "px IBM Plex Sans, Sans-Serif"))
-                              (set! (.-filltextAlign ctx) "center")
-                              (set! (.-textBaseLine ctx) "middle")
                               (set! (.-fillStyle ctx) (:header-text-color theme))
                               (.fillText ctx label
                                          (- x (/ text-width 2))
