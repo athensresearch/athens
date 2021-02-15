@@ -65,37 +65,36 @@
           links (build-links)
           theme (if dark? styles/THEME-DARK
                           styles/THEME-LIGHT)]
-      [:div {:style {:display "flex"}}
-       [:> rfg/ForceGraph2D
-        {:graphData        {:nodes nodes
-                            :links links}
-         #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
-                    {"id" "bar", "name" "name2", "val" 10}]
-            ;;:links []
-            :links [{"source" "foo", "target" "bar"}]}
-         :nodeAutoColorBy  "group"
-         :width            2048
-         :height           1100
-         :linkColor        "white"
-         :nodeCanvasObject (fn [^js node ^js ctx global-scale]
-                             (let [label      (.. node -name)
-                                   val        (.. node -val)
-                                   font-size  8
-                                   arc-radius (/ 4 global-scale)
-                                   _          (set! (.-font ctx) (str font-size "px Inter"))
-                                   text-width 30
-                                   x          (.. node -x)
-                                   y          (.. node -y)
-                                   color      (.. node -color)]
-                               (set! (.-filltextAlign ctx) "center")
-                               (set! (.-textBaseLine ctx) "middle")
-                               (set! (.-fillStyle ctx) (:body-text-color theme))
-                               (.fillText ctx label
-                                          (- x (/ text-width 2))
-                                          (- y (/ 9 global-scale)))
-                               (.beginPath ctx)
-                               (.arc ctx x y (if (zero? val)
-                                               arc-radius
-                                               (* arc-radius (js/Math.sqrt (js/Math.sqrt val)))) 0 (* 2 js/Math.PI) false)
-                               (set! (.-fillStyle ctx) (:link-color theme))
-                               (.fill ctx)))}]])))
+
+      [:> rfg/ForceGraph2D
+       {:graphData        {:nodes nodes
+                           :links links}
+        #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
+                   {"id" "bar", "name" "name2", "val" 10}]
+           :links [{"source" "foo", "target" "bar"}]}
+        :width            (* 0.95 (.-innerWidth js/window))
+        :height           (* 0.95 (.-innerHeight js/window))
+        :linkColor        (fn [] (:border-color theme))
+        :nodeCanvasObject (fn [^js node ^js ctx global-scale]
+                            (let [label      (.. node -name)
+                                  val        (.. node -val)
+                                  x          (.. node -x)
+                                  y          (.. node -y)
+                                  font-size  8
+                                  text-width 30
+                                  radius     (/ 4 global-scale)]
+                              (set! (.-font ctx) (str font-size "px IBM Plex Sans, Sans-Serif"))
+                              (set! (.-filltextAlign ctx) "center")
+                              (set! (.-textBaseLine ctx) "middle")
+                              (set! (.-fillStyle ctx) (:header-text-color theme))
+                              (.fillText ctx label
+                                         (- x (/ text-width 2))
+                                         (- y (/ 9 global-scale)))
+                              (.beginPath ctx)
+                              (.arc ctx x y
+                                    (-> val js/Math.sqrt (* radius))
+                                    0
+                                    (* 3 js/Math.PI)
+                                    false)
+                              (set! (.-fillStyle ctx) (:link-color theme))
+                              (.fill ctx)))}])))
