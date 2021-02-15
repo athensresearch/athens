@@ -98,6 +98,9 @@
                   :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
          [button {:on-click #(router/navigate :graph)
                   :active   (= @route-name :graph)} [:> mui-icons/BubbleChart]]
+         ;; below is used for testing error tracking
+         #_[button {:on-click #(throw (js/Error "error"))
+                    :style {:border "1px solid red"}} [:> mui-icons/Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
                   :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
