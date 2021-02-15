@@ -1,15 +1,11 @@
 (ns athens.views.graph-page
   (:require
+    ["react-force-graph" :as rfg]
     [athens.db :as db]
     [athens.style :as styles]
+    [clojure.set :as set]
     [datascript.core :as d]
-    [re-frame.core :as rf]
-    ["react-force-graph" :as rfg]))
-
-
-
-
-
+    [re-frame.core :as rf]))
 
 
 (defn build-nodes
@@ -23,7 +19,7 @@
                                   [?e :node/title _]
                                   [_ :block/refs ?e]]
                                 @db/dsdb)
-        nodes-without-refs (clojure.set/difference (set all-nodes) (set nodes-with-refs))
+        nodes-without-refs (set/difference (set all-nodes) (set nodes-with-refs))
         nodes-with-refs    (d/q '[:find ?e ?t (count ?r)
                                   :in $ [?e ...]
                                   :where
@@ -52,10 +48,10 @@
               [?r :block/refs ?e]]
             @db/dsdb)
        (map (fn [[node-eid ref]]
-              {"source"(-> ref
-                           db/get-parents-recursively
-                           first
-                           :db/id)
+              {"source" (-> ref
+                            db/get-parents-recursively
+                            first
+                            :db/id)
                "target" node-eid}))))
 
 
@@ -66,7 +62,7 @@
           nodes (build-nodes)
           links (build-links)
           theme (if dark? styles/THEME-DARK
-                          styles/THEME-LIGHT)]
+                    styles/THEME-LIGHT)]
 
       [:> rfg/ForceGraph2D
        {:graphData        {:nodes nodes
