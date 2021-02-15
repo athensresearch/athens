@@ -1,3 +1,4 @@
+^:cljstyle/ignore
 (ns athens.views.graph-page
   (:require
     ["react-force-graph" :as rfg]
