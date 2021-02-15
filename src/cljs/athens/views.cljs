@@ -1,13 +1,11 @@
 (ns athens.views
   (:require
-    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
     [athens.views.app-toolbar :refer [app-toolbar]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.block-page :refer [block-page-component]]
-    [athens.views.buttons :refer [button]]
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
@@ -15,11 +13,10 @@
     [athens.views.left-sidebar :refer [left-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
     [athens.views.right-sidebar :refer [right-sidebar-component]]
-    [athens.views.spinner :refer [initial-spinner-component]]
     [athens.views.settings-page :as settings-page]
+    [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 

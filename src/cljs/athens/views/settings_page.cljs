@@ -1,7 +1,8 @@
 (ns athens.views.settings-page
-  (:require ["@material-ui/icons" :as mui-icons]
-            [athens.views.buttons :refer [button]]
-            [reagent.core :as r]))
+  (:require
+    ["@material-ui/icons" :as mui-icons]
+    [athens.views.buttons :refer [button]]
+    [reagent.core :as r]))
 
 
 (defn opt-out
