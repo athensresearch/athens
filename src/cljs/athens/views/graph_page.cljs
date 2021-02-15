@@ -7,39 +7,41 @@
     ["react-force-graph" :as rfg]))
 
 
+
+
+
+
+
 (defn build-nodes
   []
-  (let [nodes                        (d/q '[:find [?e ...]
-                                            :where
-                                            [?e :node/title _]]
-                                          @db/dsdb)
-        nodes-with-edges             (d/q '[:find [?e ...]
-                                            :where
-                                            [?e :node/title _]
-                                            [_ :block/refs ?e]]
-                                          @db/dsdb)
-        nodes-without-edges          (clojure.set/difference (set nodes) (set nodes-with-edges))
-        nodes-with-edges-with-val    (->> (d/q '[:find ?e ?t (count ?r)
-                                                 :in $ [?e ...]
-                                                 :where
-                                                 [?e :node/title ?t]
-                                                 [?r :block/refs ?e]]
-                                               @db/dsdb nodes-with-edges)
-                                          (map (fn [[e t val]]
-                                                 {"id"   e
-                                                  "name" t
-                                                  "val"  val})))
-        nodes-without-edges-with-val (->> (d/q '[:find ?e ?t
-                                                 :in $ [?e ...]
-                                                 :where
-                                                 [?e :node/title ?t]]
-                                               @db/dsdb nodes-without-edges)
-                                          (map (fn [[x t]]
-                                                 {"id"   x
-                                                  "name" t
-                                                  "val"  1})))
-        final-nodes                  (concat nodes-with-edges-with-val nodes-without-edges-with-val)]
-    final-nodes))
+  (let [all-nodes          (d/q '[:find [?e ...]
+                                  :where
+                                  [?e :node/title _]]
+                                @db/dsdb)
+        nodes-with-refs    (d/q '[:find [?e ...]
+                                  :where
+                                  [?e :node/title _]
+                                  [_ :block/refs ?e]]
+                                @db/dsdb)
+        nodes-without-refs (clojure.set/difference (set all-nodes) (set nodes-with-refs))
+        nodes-with-refs    (d/q '[:find ?e ?t (count ?r)
+                                  :in $ [?e ...]
+                                  :where
+                                  [?e :node/title ?t]
+                                  [?r :block/refs ?e]]
+                                @db/dsdb nodes-with-refs)
+        nodes-without-refs (d/q '[:find ?e ?t ?c
+                                  :in $ [?e ...]
+                                  :where
+                                  [?e :node/title ?t]
+                                  [(get-else $ ?e :always-nil-value 1) ?c]]
+                                @db/dsdb nodes-without-refs)
+        all-nodes          (map (fn [[e t val]]
+                                  {"id"   e
+                                   "name" t
+                                   "val"  val})
+                                (concat nodes-with-refs nodes-without-refs))]
+    all-nodes))
 
 
 (defn build-links
