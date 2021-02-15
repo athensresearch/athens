@@ -1,7 +1,8 @@
 (ns athens.core
   (:require
     ["@sentry/react" :as Sentry]
-    ["@sentry/tracing" :refer (Integrations)]
+    ["@sentry/tracing" :as tracing]
+    ["@sentry/integrations" :as integrations]
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
@@ -35,16 +36,23 @@
                 (getElement "app")))
 
 
-(defn init-sentry
+(defn sentry-on?
+  "Checks localStorage to see if sentry is on. Sentry is disabled/enabled in settings along with Posthog."
   []
-  (let [sentry (js/localStorage.getItem "sentry")]
-    (if (= sentry "off")
-      (prn "Sentry isn't initialized.")
-      (.init Sentry (clj->js {:dsn              SENTRY_DSN
-                              :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
-                              :integrations     [(new (.-BrowserTracing Integrations))]
-                              :environment      (if config/debug? "development" "production")
-                              :tracesSampleRate 1.0})))))
+  (not= "off" (js/localStorage.getItem "sentry")))
+
+
+(defn init-sentry
+  "Two checks for sentry: once on init and once on beforeSend."
+  []
+  (when (sentry-on?)
+    (.init Sentry (clj->js {:dsn SENTRY_DSN
+                            :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                            :integrations     [(new (.. tracing -Integrations -BrowserTracing))
+                                               (new (.. integrations -CaptureConsole) ["warn" "error" "debug" "assert"])]
+                            :environment      (if config/debug? "development" "production")
+                            :beforeSend       #(when (sentry-on?) %)
+                            :tracesSampleRate 1.0}))))
 
 
 (defn init-ipcRenderer

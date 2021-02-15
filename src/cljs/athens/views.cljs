@@ -16,6 +16,7 @@
     [athens.views.node-page :refer [node-page-component]]
     [athens.views.right-sidebar :refer [right-sidebar-component]]
     [athens.views.spinner :refer [initial-spinner-component]]
+    [athens.views.settings-page :as settings-page]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -60,48 +61,9 @@
 ;; Panels
 
 
-(defn settings-panel
-  []
-  (let [opted-out (r/atom (.. js/window -posthog has_opted_out_capturing))]
-    (fn []
-      [:div {:style {:display "flex"
-                     :margin "0vh 5vw"
-                     :flex-direction "column"}}
-       [:h1 "Settings"]
-       (if @opted-out
-         [:h5 "Opted Out of Analytics"]
-         [:h5 "Opted Into Analytics"])
-       [:div {:style {:margin "10px 0"}}
-        [button {:primary (false? @opted-out)
-                 :on-click (fn []
-                             (if @opted-out
-                               (.. js/window -posthog opt_in_capturing)
-                               (.. js/window -posthog opt_out_capturing))
-                             (swap! opted-out not))}
-         (if @opted-out
-           [:div {:style {:display "flex"}}
-            [:> mui-icons/ToggleOn]
-            [:span "\uD83D\uDE41 We understand."]]
-           [:div {:style {:display "flex"}}
-            [:> mui-icons/ToggleOff]
-            [:span "\uD83D\uDE00 Thanks for helping make Athens better!"]])]]
-       [:span "Analytics are anonymized and delivered by "
-        [:a {:href "https://posthog.com" :target "_blank"} "Posthog"]
-        ", an open-source provider of product analytics. This lets the designers and engineers at Athens know if we're really making something people love!"]])))
-
-
-;;(prn (.. js/window -posthog opt_out_capturing))
-;;(prn (.. js/window -posthog opt_in_capturing))
-
-
-
 (defn pages-panel
   []
   (fn []
-    ;;[:div
-    ;; [:input.input-file {:type      "file"
-    ;;                     :name      "file-input"
-    ;;                     :on-change (fn [e] (file-cb e))}]]
     [table db/dsdb]))
 
 
@@ -120,7 +82,7 @@
   created when app inits. This is expected, but perhaps shouldn't be a side effect here."
   [route-name]
   [(case route-name
-     :settings settings-panel
+     :settings settings-page/settings-page
      :home daily-notes-panel
      :pages pages-panel
      :page page-panel
