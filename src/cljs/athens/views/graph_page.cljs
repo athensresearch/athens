@@ -76,17 +76,18 @@
         :height           (* 0.95 (.-innerHeight js/window))
         :linkColor        (fn [] (:border-color theme))
         :nodeCanvasObject (fn [^js node ^js ctx global-scale]
-                            (let [label      (.. node -name)
-                                  val        (.. node -val)
-                                  x          (.. node -x)
-                                  y          (.. node -y)
-                                  font-size  (max 10 (-> (js/Math.sqrt val)
-                                                         (/ global-scale)
-                                                         (* 5)))
-                                  text-width (.. ctx (measureText label) -width)
-                                  radius     (-> (js/Math.sqrt val)
-                                                 (/ global-scale)
-                                                 (* 4))]
+                            (let [label        (.. node -name)
+                                  val          (.. node -val)
+                                  x            (.. node -x)
+                                  y            (.. node -y)
+                                  scale-factor 4
+                                  font-size    (max 10 (-> (js/Math.sqrt val)
+                                                           (/ global-scale)
+                                                           (* scale-factor)))
+                                  text-width   (.. ctx (measureText label) -width)
+                                  radius       (-> (js/Math.sqrt val)
+                                                   (/ global-scale)
+                                                   (* scale-factor))]
                               (set! (.-font ctx) (str font-size "px IBM Plex Sans, Sans-Serif"))
                               (set! (.-fillStyle ctx) (:header-text-color theme))
                               (.fillText ctx label
