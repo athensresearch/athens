@@ -4,7 +4,7 @@
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
-    #_[athens.util :as util]
+    [athens.util :as util]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -80,7 +80,7 @@
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
         theme-dark  (subscribe [:theme/dark])
-        electron? (athens.util/electron?)]
+        electron? (util/electron?)]
     (fn []
       [:<>
        [:header (use-style app-header-style)

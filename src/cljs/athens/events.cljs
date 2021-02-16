@@ -124,8 +124,8 @@
                                                 [(get-in new-items [k1 :index]) k2]
                                                 [(get-in new-items [k2 :index]) k1]))) inc-items)]
       (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
-              (not (:right-sidebar/open db))
-              (assoc :dispatch [:right-sidebar/toggle])))))
+        (not (:right-sidebar/open db))
+        (assoc :dispatch [:right-sidebar/toggle])))))
 
 
 (reg-event-fx
@@ -429,7 +429,6 @@
             (when (and synced? (athens.util/electron?))
               [:dispatch [:db/not-synced]]
               [:dispatch [:save]])]})))
-
 
 
 (reg-event-fx

@@ -1,7 +1,7 @@
 (ns athens.util
   (:require
-    [clojure.string :as string]
     ["/textarea" :as getCaretCoordinates]
+    [clojure.string :as string]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]

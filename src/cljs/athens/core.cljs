@@ -12,8 +12,9 @@
     [athens.router :as router]
     [athens.style :as style]
     [athens.subs]
+    [athens.util :as util]
     [athens.views :as views]
-    [athens.ws]
+    ;;[athens.ws]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
@@ -48,7 +49,7 @@
   []
   (when (sentry-on?)
     (.init Sentry (clj->js {:dsn SENTRY_DSN
-                            :release          (str "athens@" (athens.util/athens-version))
+                            :release          (str "athens@" (util/athens-version))
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
                                                (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
                             :environment      (if config/debug? "development" "production")
@@ -66,7 +67,7 @@
 
 (defn init-ipcRenderer
   []
-  (when (athens.util/electron?)
+  (when (util/electron?)
     (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
           update-available? (.sendSync ipcRenderer "check-update" "renderer")]
       (when update-available?
@@ -82,7 +83,7 @@
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
-  (if (athens.util/electron?)
+  (if (util/electron?)
     (rf/dispatch-sync [:boot/desktop])
     (rf/dispatch-sync [:boot/web]))
   (dev-setup)

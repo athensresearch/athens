@@ -503,7 +503,7 @@
       (mapv (fn [item]
               (let [datatype (.. item -type)]
                 (cond
-                  (re-find img-regex datatype) (when (athens.util/electron?)
+                  (re-find img-regex datatype) (when (util/electron?)
                                                  (let [new-str (electron/save-image head tail item "png")]
                                                    (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
@@ -800,7 +800,7 @@
         selected-items @(subscribe [:selected/items])]
 
     (cond
-      (re-find img-regex datatype) (when (athens.util/electron?)
+      (re-find img-regex datatype) (when (util/electron?)
                                      (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
