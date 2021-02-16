@@ -6,7 +6,7 @@
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
-    ;;[athens.electron]
+    [athens.electron]
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
