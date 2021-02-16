@@ -95,7 +95,7 @@ jobs:
 
    deploy-gh-pages:
      needs: [test]
-#     if: github.event_name == 'push'
+     if: github.event_name == 'push'
      runs-on: ubuntu-latest
      steps:
        - name: Git checkout
