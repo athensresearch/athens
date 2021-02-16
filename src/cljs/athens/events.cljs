@@ -449,23 +449,33 @@
                                      delete-linked-refs)]
       {:fx [[:dispatch [:transact tx-data]]]})))
 
-
 (reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents (d/q '[:find ?e
-                              :where
-                              [?e :page/sidebar _]]
-                            @db/dsdb)]
-      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar (count sidebar-ents)}]]]]})))
+    (let [sidebar-ents (->> (d/q '[:find [(pull ?e [*]) ...] ;; Uses DS pull-query to get all details of entities.
+                                   :where
+                                   [?e :page/sidebar _]]
+                                 @db/dsdb)
+                            (sort-by :page/sidebar)  ;; Sort by page/sidebar bc that's the desired order to appear on page.
+                            (map-indexed (fn [i m] (assoc m :page/sidebar i))) ;; Overwrite/reindex- If 2 entries have the same `page/sidebar` fixes and clears up bug
+                            (#(conj % {:block/uid uid :page/sidebar ;; Add new shortcut
+                                       (-> (apply max-key :page/sidebar %) ;; This is `new-sidebar-index`
+                                           :page/sidebar
+                                           inc)}))
+                            vec)]
+      {:fx [[:dispatch [:transact sidebar-ents]]]})))
 
-
-;; TODO: reindex
 (reg-event-fx
-  :page/remove-shortcut
-  (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]}))
-
+ :page/remove-shortcut
+ (fn [_ [_ uid]]
+   (let [{eid   :db/id
+          order :block/order
+          :as   block} (athens.db/get-block [:block/uid uid])
+         reindex       (athens.db/dec-after eid)]
+     ;; Todo -- How is this used?  Appears that `order` will always
+     ;;       | be null b/c only top level nodes can be bookmarked
+     ;;       | and top level nodes don't appear to have an order
+     {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]})))
 
 (reg-event-fx
   :save
