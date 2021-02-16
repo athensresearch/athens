@@ -420,7 +420,7 @@
     ;; always stay synced for now because auto-saving
     (let [synced? @(subscribe [:db/synced])]
       {:fx [(when synced? [:dispatch [:db/not-synced]])
-            [:dispatch [:save]]
+            ;;[:dispatch [:save]]
             [:transact! tx-data]]})))
 
 

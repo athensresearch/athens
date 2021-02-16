@@ -155,6 +155,6 @@
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
-                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}}))))
   ;; hide re-frame-10x by default
-  (util/hide-10x))
+  ;;(util/hide-10x))

@@ -1,7 +1,7 @@
 (ns athens.views.filesystem
   (:require
     ["@material-ui/icons" :as mui-icons]
-    [athens.electron :as electron]
+    ;;[athens.electron :as electron]
     [athens.subs]
     #_[athens.util :as util]
     [athens.views.buttons :refer [button]]

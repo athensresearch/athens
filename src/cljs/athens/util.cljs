@@ -1,6 +1,7 @@
 (ns athens.util
   (:require
     [clojure.string :as string]
+    ["/textarea" :as getCaretCoordinates]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
@@ -78,9 +79,8 @@
 
 (defn get-caret-position
   [target]
-  (let [fn (js/require "./textarea.js")
-        selectionEnd (.. target -selectionEnd)]
-    (js->clj (fn target selectionEnd) :keywordize-keys true)))
+  (let [selectionEnd (.. target -selectionEnd)]
+    (js->clj (getCaretCoordinates target selectionEnd) :keywordize-keys true)))
 
 
 (defn dom-parents

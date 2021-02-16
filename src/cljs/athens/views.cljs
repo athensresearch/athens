@@ -8,7 +8,7 @@
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
-    [athens.views.filesystem :as filesystem]
+    ;;[athens.views.filesystem :as filesystem]
     [athens.views.graph-page :as graph-page]
     [athens.views.left-sidebar :refer [left-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
@@ -97,12 +97,12 @@
        [alert]
        [athena-component]
        (cond
-         (and @loading @modal) [athens.views.filesystem/window]
+         ;;(and @loading @modal) [athens.views.filesystem/window]
 
          @loading [initial-spinner-component]
 
          :else [:<>
-                (when @modal [filesystem/window])
+                ;;(when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style)
                  [app-toolbar]
                  [left-sidebar]

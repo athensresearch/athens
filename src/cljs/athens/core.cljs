@@ -6,13 +6,14 @@
     [athens.coeffects]
     [athens.config :as config]
     [athens.effects]
-    [athens.electron]
+    ;;[athens.electron]
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.style :as style]
     [athens.subs]
     [athens.views :as views]
+    [athens.ws]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
@@ -80,7 +81,8 @@
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
-  (rf/dispatch-sync [:desktop/boot])
+  ;;(rf/dispatch-sync [:desktop/boot])
+  (rf/dispatch-sync [:ws/boot])
   ;(rf/dispatch-sync [:init-rfdb])
   ;(rf/dispatch-sync [:loading/unset])
   ;;(rf/dispatch-sync [:boot])
