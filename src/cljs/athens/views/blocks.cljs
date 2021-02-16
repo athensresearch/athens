@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
-    ;;[athens.electron :as electron]
+    [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
     [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
     [athens.parse-renderer :refer [parse-and-render]]
@@ -503,7 +503,9 @@
       (mapv (fn [item]
               (let [datatype (.. item -type)]
                 (cond
-                  ;;(re-find img-regex datatype) (let [new-str (electron/save-image head tail item "png")] (js/setTimeout #(swap! state assoc :string/local new-str) 50))
+                  (re-find img-regex datatype) (when (athens.util/electron?)
+                                                 (let [new-str (electron/save-image head tail item "png")]
+                                                   (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
             items)
       :else
@@ -798,7 +800,8 @@
         selected-items @(subscribe [:selected/items])]
 
     (cond
-      ;;(re-find img-regex datatype) (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype)))
+      (re-find img-regex datatype) (when (athens.util/electron?)
+                                     (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (dispatch [:drop source-uid target-uid drag-target])
