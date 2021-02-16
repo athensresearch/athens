@@ -253,12 +253,12 @@
     (boolean (re-find #"electron" user-agent))))
 
 
-(goog-define COMMIT_URL "")
+;;(goog-define COMMIT_URL "")
 
 
 (defn athens-version
   []
   (cond
-    (electron?) (.. (js/require "electron") -remote -app getVersion)
-    (not (string/blank? COMMIT_URL)) COMMIT_URL
-    :else "Web"))
+    (electron?) (.. (js/require "electron") -remote -app getVersion)))
+    ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
+    ;;:else "Web"))
