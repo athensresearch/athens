@@ -354,7 +354,7 @@
                                      [:span "Add Shortcut"]]])
                                  [:hr (use-style menu-separator-style)]
                                  [button {:on-click #(if daily-notes?
-                                                       (dispatch [:daily-note/delete uid])
+                                                       (dispatch [:daily-note/delete uid title])
                                                        (do
                                                          (navigate :pages)
                                                          (dispatch [:page/delete uid title])))}
