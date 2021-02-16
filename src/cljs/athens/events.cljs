@@ -425,10 +425,13 @@
   :transact
   (fn [_ [_ tx-data]]
     (let [synced? @(subscribe [:db/synced])]
-      {:fx [[:transact! tx-data]
-            (when (and synced? (athens.util/electron?))
+      (if (and synced? (athens.util/electron?))
+        {:fx [[:transact! tx-data]
               [:dispatch [:db/not-synced]]
-              [:dispatch [:save]])]})))
+              [:dispatch [:save]]]}
+        {:fx [[:transact! tx-data]]}))))
+
+
 
 
 (reg-event-fx
