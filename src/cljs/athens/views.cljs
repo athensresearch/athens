@@ -97,7 +97,7 @@
        [alert]
        [athena-component]
        (cond
-         (and @loading @modal) [athens.views.filesystem/window]
+         (and @loading @modal) [filesystem/window]
 
          @loading [initial-spinner-component]
 

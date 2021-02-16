@@ -35,7 +35,7 @@
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      []
-               :theme/dark          true})
+               :theme/dark          false})
 
 
 ;; -- JSON Parsing ----------------------------------------------------

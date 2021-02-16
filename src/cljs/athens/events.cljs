@@ -14,10 +14,17 @@
 
 ;; -- re-frame app-db events ---------------------------------------------
 
+(reg-event-fx
+  :boot/web
+  (fn [_ _]
+    {:db         db/rfdb
+     :dispatch-n [[:loading/unset]]}))
+
+
 (reg-event-db
   :init-rfdb
-  (fn-traced [_ _]
-             db/rfdb))
+  (fn [_ _]
+    db/rfdb))
 
 
 (reg-event-fx
@@ -105,20 +112,20 @@
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
-  (fn-traced [{:keys [db]} [_ uid]]
-             (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-                   new-item  (merge block {:open true :index -1})
-                   new-items (assoc (:right-sidebar/items db) uid new-item)
-                   inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                                        {}
-                                        new-items)
-                   sorted-items (into (sorted-map-by (fn [k1 k2]
-                                                       (compare
-                                                         [(get-in new-items [k1 :index]) k2]
-                                                         [(get-in new-items [k2 :index]) k1]))) inc-items)]
-               (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
-                 (not (:right-sidebar/open db))
-                 (assoc :dispatch [:right-sidebar/toggle])))))
+  (fn [{:keys [db]} [_ uid]]
+    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
+          new-item  (merge block {:open true :index -1})
+          new-items (assoc (:right-sidebar/items db) uid new-item)
+          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                               {}
+                               new-items)
+          sorted-items (into (sorted-map-by (fn [k1 k2]
+                                              (compare
+                                                [(get-in new-items [k1 :index]) k2]
+                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+      (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
+        (not (:right-sidebar/open db))
+        (assoc :dispatch [:right-sidebar/toggle])))))
 
 
 (reg-event-fx
@@ -417,11 +424,13 @@
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
-    ;; always stay synced for now because auto-saving
-    (let [synced? @(subscribe [:db/synced])]
-      {:fx [(when synced? [:dispatch [:db/not-synced]])
-            [:dispatch [:save]]
-            [:transact! tx-data]]})))
+    (let [synced?   @(subscribe [:db/synced])
+          electron? (athens.util/electron?)]
+      (if (and synced? electron?)
+        {:fx [[:transact! tx-data]
+              [:dispatch [:db/not-synced]]
+              [:dispatch [:save]]]}
+        {:fx [[:transact! tx-data]]}))))
 
 
 (reg-event-fx

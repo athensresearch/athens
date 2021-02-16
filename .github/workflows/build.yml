@@ -93,57 +93,58 @@ jobs:
          run: script/carve
 
 
-   # Only deploy if a commit is pushed. This lets the previous jobs run on PRs. This also runs when a PR is merged, because a merge is a push.
-#   deploy:
-#     needs: [test]
-#     if: github.event_name == 'push'
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - name: Restore maven
-#         uses: actions/cache@v1
-#         id: restore-maven
-#         with:
-#           path: ~/.m2/repository
-#           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
-#           restore-keys: |
-#             ${{ runner.os }}-maven-
-#
-#       - name: Fetch maven
-#         if: steps.restore-maven.outputs.cache-hit != 'true'
-#         run: lein deps
-#
-#       - name: Get yarn cache directory path
-#         id: yarn-cache-dir-path
-#         run: echo "::set-output name=dir::$(yarn cache dir)"
-#
-#       - name: Restore yarn
-#         uses: actions/cache@v1
-#         id: restore-yarn
-#         with:
-#           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-#           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-#           restore-keys: |
-#             ${{ runner.os }}-yarn-
-#
-#       - name: Fetch yarn
-#         run: yarn install --frozen-lockfile
-#
-#       - name: Compile app and devcards
-#         run: COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}" script/deploy
-#
-#       - name: Deploy
-#         uses: peaceiris/actions-gh-pages@v3
-#         with:
-#           github_token: ${{ secrets.GITHUB_TOKEN }}
-#           publish_dir: ./resources/public
+   deploy-gh-pages:
+     needs: [test]
+     if: github.event_name == 'push'
+     runs-on: ubuntu-latest
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
 
-   dist:
+       - name: Restore maven
+         uses: actions/cache@v1
+         id: restore-maven
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+           restore-keys: |
+             ${{ runner.os }}-maven-
+
+       - name: Fetch maven
+         if: steps.restore-maven.outputs.cache-hit != 'true'
+         run: lein deps
+
+       - name: Get yarn cache directory path
+         id: yarn-cache-dir-path
+         run: echo "::set-output name=dir::$(yarn cache dir)"
+
+       - name: Restore yarn
+         uses: actions/cache@v1
+         id: restore-yarn
+         with:
+           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+           restore-keys: |
+             ${{ runner.os }}-yarn-
+
+       - name: Fetch yarn
+         run: yarn install --frozen-lockfile
+
+       - name: Compile app
+         run: COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}" lein run -m shadow.cljs.devtools.cli --npm compile app --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" }}"
+         env:
+           SENTRY_DSN: ${{ secrets.sentry_dsn }}
+
+       - name: Deploy
+         uses: peaceiris/actions-gh-pages@v3
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+           publish_dir: ./resources/public
+
+   dist-electron:
      if: github.event_name == 'push'
      runs-on: ${{ matrix.os }}
      env:

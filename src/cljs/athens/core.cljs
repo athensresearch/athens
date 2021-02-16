@@ -12,7 +12,9 @@
     [athens.router :as router]
     [athens.style :as style]
     [athens.subs]
+    [athens.util :as util]
     [athens.views :as views]
+    ;;[athens.ws]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
@@ -47,7 +49,7 @@
   []
   (when (sentry-on?)
     (.init Sentry (clj->js {:dsn SENTRY_DSN
-                            :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                            :release          (str "athens@" (util/athens-version))
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
                                                (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
                             :environment      (if config/debug? "development" "production")
@@ -65,11 +67,12 @@
 
 (defn init-ipcRenderer
   []
-  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
-    (when update-available?
-      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-        (.sendSync ipcRenderer "confirm-update")))))
+  (when (util/electron?)
+    (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
+          update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+      (when update-available?
+        (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
+          (.sendSync ipcRenderer "confirm-update"))))))
 
 
 (defn init
@@ -80,9 +83,8 @@
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
-  (rf/dispatch-sync [:desktop/boot])
-  ;(rf/dispatch-sync [:init-rfdb])
-  ;(rf/dispatch-sync [:loading/unset])
-  ;;(rf/dispatch-sync [:boot])
+  (if (util/electron?)
+    (rf/dispatch-sync [:boot/desktop])
+    (rf/dispatch-sync [:boot/web]))
   (dev-setup)
   (mount-root))
