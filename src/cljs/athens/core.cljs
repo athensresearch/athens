@@ -82,7 +82,7 @@
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
   ;;(rf/dispatch-sync [:desktop/boot])
-  (rf/dispatch-sync [:ws/boot])
+  (rf/dispatch-sync [:loading/unset])
   ;(rf/dispatch-sync [:init-rfdb])
   ;(rf/dispatch-sync [:loading/unset])
   ;;(rf/dispatch-sync [:boot])
