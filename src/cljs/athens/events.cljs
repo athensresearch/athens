@@ -358,12 +358,14 @@
 
 (reg-event-fx
   :daily-note/delete
-  (fn [{:keys [db]} [_ uid]]
-    (let [retract-blocks (db/retract-uid-recursively uid)
-          tx-data        (if (db/e-by-av :block/uid uid)  ;; If a page for the Daily Note exists
-                           retract-blocks                 ;; retract both the page and the child blocks
-                           (rest retract-blocks))         ;; else, only retract the child blocks
-          filtered-dn    (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+  (fn [{:keys [db]} [_ uid title]]
+    (let [all-blocks         (db/retract-uid-recursively uid)
+          retract-blocks     (if (db/e-by-av :block/uid uid)  ;; If a page for the Daily Note exists
+                               all-blocks                 ;; retract both the page and the child blocks
+                               (rest all-blocks))         ;; else, only retract the child blocks
+          delete-linked-refs (db/replace-linked-refs title)
+          tx-data            (concat retract-blocks delete-linked-refs)
+          filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:transact tx-data]]]
        :db new-db})))
