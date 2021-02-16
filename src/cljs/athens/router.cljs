@@ -84,7 +84,8 @@
    ["" {:name :home}]
    ["settings" {:name :settings}]
    ["pages" {:name :pages}]
-   ["page/:id" {:name :page}]])
+   ["page/:id" {:name :page}]
+   ["graph" {:name :graph}]])
 
 
 (def router
