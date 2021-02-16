@@ -7,6 +7,7 @@
 
 (defn opt-out
   [opted-out?]
+  (.. js/posthog (capture "opt-out"))
   (.. js/window -posthog opt_out_capturing)
   (js/localStorage.setItem "sentry" "off")
   (reset! opted-out? true))
@@ -15,6 +16,7 @@
 (defn opt-in
   [opted-out?]
   (.. js/window -posthog opt_in_capturing)
+  (.. js/posthog (capture "opt-in"))
   (js/localStorage.setItem "sentry" "on")
   (reset! opted-out? false))
 
