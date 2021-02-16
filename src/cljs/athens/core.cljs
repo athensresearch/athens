@@ -48,7 +48,7 @@
   []
   (when (sentry-on?)
     (.init Sentry (clj->js {:dsn SENTRY_DSN
-                            :release          (str "athens@" (.. (js/require "electron") -remote -app getVersion))
+                            :release          (str "athens@" (athens.util/athens-version))
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
                                                (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
                             :environment      (if config/debug? "development" "production")
@@ -66,11 +66,12 @@
 
 (defn init-ipcRenderer
   []
-  (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-        update-available? (.sendSync ipcRenderer "check-update" "renderer")]
-    (when update-available?
-      (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-        (.sendSync ipcRenderer "confirm-update")))))
+  (when (athens.util/electron?)
+    (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
+          update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+      (when update-available?
+        (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
+          (.sendSync ipcRenderer "confirm-update"))))))
 
 
 (defn init

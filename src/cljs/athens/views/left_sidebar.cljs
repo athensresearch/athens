@@ -172,6 +172,6 @@
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
        [:h5 (use-style {:align-self "center"})
         [:a (use-style version-style {:href "https://www.notion.so/athensresearch/Weekly-Updates-e18afa006cfd4fec9c462940ac3b84da"
-                                      :target "_blank"})]]]]]))
-         ;;(.. (js/require "electron") -remote -app getVersion)]]]]]))
+                                      :target "_blank"})
+         (athens.util/athens-version)]]]]]))
 ;;[button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test Data"]]]]))

@@ -245,3 +245,16 @@
     (if open?
       (hide-10x)
       (open-10x))))
+
+
+(defn electron?
+  []
+  (let [user-agent (.. js/navigator -userAgent toLowerCase)]
+    (boolean (re-find #"electron" user-agent))))
+
+
+(defn athens-version
+  []
+  (if (electron?)
+    (.. (js/require "electron") -remote -app getVersion)
+    "Web"))
