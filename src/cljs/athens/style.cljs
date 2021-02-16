@@ -1,5 +1,6 @@
 (ns athens.style
   (:require
+    [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
     [stylefy.core :as stylefy]))
 
@@ -154,6 +155,6 @@
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
-                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}}))))
-;; hide re-frame-10x by default
-;;(util/hide-10x))
+                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+  ;; hide re-frame-10x by default
+  (util/hide-10x))
