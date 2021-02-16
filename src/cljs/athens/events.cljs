@@ -451,20 +451,35 @@
 
 
 (reg-event-fx
+  :page/reindex-left-sidebar
+  (fn [_ _]
+    {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
+    (let [sidebar-ents (->> (d/q '[:find [(pull ?e [*]) ...]
+                                   :where
+                                   [?e :page/sidebar _]]
+                                 @db/dsdb)
+                            (sort-by :page/sidebar)
+                            (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                            vec)]
+      {:fx [[:dispatch [:transact sidebar-ents]]]})))
+
+
+(reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents (d/q '[:find ?e
-                              :where
-                              [?e :page/sidebar _]]
-                            @db/dsdb)]
-      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar (count sidebar-ents)}]]]]})))
+    (let [sidebar-ents-count (or (d/q '[:find (count ?e) .
+                                        :where
+                                        [?e :page/sidebar _]]
+                                      @db/dsdb) 1)]
+      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar sidebar-ents-count}]]]
+            [:dispatch [:page/reindex-left-sidebar]]]})))
 
 
-;; TODO: reindex
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]]}))
+    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]
+          [:dispatch [:page/reindex-left-sidebar]]]}))
 
 
 (reg-event-fx
