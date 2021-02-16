@@ -291,7 +291,7 @@
 
 ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
 (reg-event-fx
-  :desktop/boot
+  :boot/desktop
   (fn [_ _]
     {:db         db/rfdb
      :async-flow {:first-dispatch [:local-storage/get-db-filepath]

@@ -110,14 +110,13 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
-         [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
-          {:style {:color      (color (if @(subscribe [:db/synced])
-                                        :confirmation-color
-                                        :highlight-color))
-                   :align-self "center"}}]
          (when electron?
            [:<>
-
+            [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
+             {:style {:color      (color (if @(subscribe [:db/synced])
+                                           :confirmation-color
+                                           :highlight-color))
+                      :align-self "center"}}]
             [button {:on-click #(router/navigate :settings)
                      :active   (= @route-name :settings)}
              [:> mui-icons/Settings]]

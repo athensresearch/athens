@@ -224,7 +224,6 @@
         (pprint more-tx-data)
         (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
         (pprint final-tx-data)
-        ;;(dispatch [:ws/tx final-tx-data])
         (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
           (ph-link-created! outputs)
           (prn "TX OUTPUTS")

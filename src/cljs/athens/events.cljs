@@ -14,10 +14,17 @@
 
 ;; -- re-frame app-db events ---------------------------------------------
 
+(reg-event-fx
+  :boot/web
+  (fn [_ _]
+    {:db         db/rfdb
+     :dispatch-n [[:loading/unset]]}))
+
+
 (reg-event-db
   :init-rfdb
-  (fn-traced [_ _]
-             db/rfdb))
+  (fn [_ _]
+    db/rfdb))
 
 
 (reg-event-fx
@@ -417,11 +424,12 @@
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
-    ;; always stay synced for now because auto-saving
     (let [synced? @(subscribe [:db/synced])]
-      {:fx [(when synced? [:dispatch [:db/not-synced]])
-            ;;[:dispatch [:save]]
-            [:transact! tx-data]]})))
+      {:fx [[:transact! tx-data]
+            (when (and synced? (athens.util/electron?))
+              [:dispatch [:db/not-synced]]
+              [:dispatch [:save]])]})))
+
 
 
 (reg-event-fx
