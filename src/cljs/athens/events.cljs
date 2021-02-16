@@ -433,8 +433,6 @@
         {:fx [[:transact! tx-data]]}))))
 
 
-
-
 (reg-event-fx
   :reset-conn
   (fn [_ [_ db]]
