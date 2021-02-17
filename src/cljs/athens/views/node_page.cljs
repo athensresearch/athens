@@ -505,17 +505,11 @@
          [:h1 (use-style title-style
                          {:data-uid uid
                           :class    "page-header"
-                          :on-click (fn [e] (navigate-uid uid e))})
+                          :on-click (fn [e]
+                                      (.. e preventDefault)
+                                      (dispatch [:editing/uid uid]))})
           ;; Prevent editable textarea if a node/title is a date
           ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
-          (when-not timeline-page?
-            [autosize/textarea
-             {:value         (:title/local @state)
-              :id            (str "editable-uid-" uid)
-              :class         (when (= editing-uid uid) "is-editing")
-              :on-blur       (fn [_] (handle-blur node state linked-refs))
-              :on-key-down   (fn [e] (handle-key-down e uid state children))
-              :on-change     (fn [e] (handle-change e state))}])
           [button {:class    [(when show "active")]
                    :on-click (fn [e]
                                (.. e stopPropagation)
@@ -527,8 +521,15 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-          (:title/local @state)]
-          ;;(parse-renderer/parse-and-render title uid)]
+          (when-not timeline-page?
+            [autosize/textarea
+             {:value         (:title/local @state)
+              :id            (str "editable-uid-" uid)
+              :class         (when (= editing-uid uid) "is-editing")
+              :on-blur       (fn [_] (handle-blur node state linked-refs))
+              :on-key-down   (fn [e] (handle-key-down e uid state children))
+              :on-change     (fn [e] (handle-change e state))}])
+          [parse-renderer/parse-and-render (:title/local @state) uid]]
 
          ;; Dropdown
          [menu-dropdown node state]
