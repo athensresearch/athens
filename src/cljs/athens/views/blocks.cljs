@@ -430,7 +430,7 @@
                                                       ;; if page link, expand to title. otherwise expand to uid for a block ref
                                                       :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
                                                       :style    {:text-align "left"}}
-                                              (or title string)])))]])))})))
+                                              [parse-and-render (or title string) uid]])))]])))})))
 
 
 (defn slash-item-click
