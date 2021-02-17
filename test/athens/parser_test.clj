@@ -120,7 +120,10 @@
      " as "
      [:url-link {:url "https://example.com/c"} "separate"]
      "."]
-    "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."))
+    "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."
+
+    [:block [:url-link {:url "https://raw-link.com"} "https://raw-link.com"]]
+    "https://raw-link.com"))
 
 
 (deftest combine-adjacent-strings-tests

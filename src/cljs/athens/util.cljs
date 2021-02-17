@@ -1,5 +1,6 @@
 (ns athens.util
   (:require
+    ["/textarea" :as getCaretCoordinates]
     [clojure.string :as string]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
@@ -78,9 +79,8 @@
 
 (defn get-caret-position
   [target]
-  (let [fn (js/require "./textarea.js")
-        selectionEnd (.. target -selectionEnd)]
-    (js->clj (fn target selectionEnd) :keywordize-keys true)))
+  (let [selectionEnd (.. target -selectionEnd)]
+    (js->clj (getCaretCoordinates target selectionEnd) :keywordize-keys true)))
 
 
 (defn dom-parents
@@ -245,3 +245,20 @@
     (if open?
       (hide-10x)
       (open-10x))))
+
+
+(defn electron?
+  []
+  (let [user-agent (.. js/navigator -userAgent toLowerCase)]
+    (boolean (re-find #"electron" user-agent))))
+
+
+;;(goog-define COMMIT_URL "")
+
+
+(defn athens-version
+  []
+  (cond
+    (electron?) (.. (js/require "electron") -remote -app getVersion)))
+    ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
+    ;;:else "Web"))

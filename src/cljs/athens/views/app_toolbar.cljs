@@ -4,7 +4,7 @@
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
-    #_[athens.util :as util]
+    [athens.util :as util]
     [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -79,7 +79,8 @@
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
-        theme-dark  (subscribe [:theme/dark])]
+        theme-dark  (subscribe [:theme/dark])
+        electron? (util/electron?)]
     (fn []
       [:<>
        [:header (use-style app-header-style)
@@ -89,40 +90,39 @@
           [:> mui-icons/Menu]]
          [separator]
          ;; TODO: refactor to effects
-         [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
-         [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
-         [separator]
+         (when electron?
+           [:<>
+            [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
+            [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
+            [separator]])
          [button {:on-click router/nav-daily-notes
                   :active   (= @route-name :home)} [:> mui-icons/Today]]
          [button {:on-click #(router/navigate :pages)
                   :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
+         [button {:on-click #(router/navigate :graph)
+                  :active   (= @route-name :graph)} [:> mui-icons/BubbleChart]]
+         ;; below is used for testing error tracking
+         #_[button {:on-click #(throw (js/Error "error"))
+                    :style {:border "1px solid red"}} [:> mui-icons/Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
                   :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
-
         [:div (use-style app-header-secondary-controls-style)
-         [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
-          {:style {:color      (color (if @(subscribe [:db/synced])
-                                        :confirmation-color
-                                        :highlight-color))
-                   :align-self "center"}}]
-         [button {:on-click #(router/navigate :settings)
-                  :active (= @route-name :settings)}
-          [:> mui-icons/Settings]]
-         ;; Click to Open
-         #_[button {:on-click #(prn "TODO")}
-            [(r/adapt-react-class mui-icons/FolderOpen)
-             {:style {:align-self "center"}}]]
-         ;; sync UI
-
-         #_[separator]
-         [button {:on-click #(dispatch [:modal/toggle])
-                  #_(swap! state assoc :modal :folder)}
-          [:> mui-icons/FolderOpen]]
-         ;;[:> mui-icons/Publish]]
-         [separator]
+         (when electron?
+           [:<>
+            [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
+             {:style {:color      (color (if @(subscribe [:db/synced])
+                                           :confirmation-color
+                                           :highlight-color))
+                      :align-self "center"}}]
+            [button {:on-click #(router/navigate :settings)
+                     :active   (= @route-name :settings)}
+             [:> mui-icons/Settings]]
+            [button {:on-click #(dispatch [:modal/toggle])}
+             [:> mui-icons/FolderOpen]]
+            [separator]])
          [button {:on-click #(dispatch [:theme/toggle])}
           (if @theme-dark
             [:> mui-icons/ToggleOff]
