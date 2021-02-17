@@ -122,7 +122,11 @@
                 (or title string)]))]]
 
          ;; Header
-         [:h1 (use-style title-style {:data-uid uid :class "block-header"})
+         [:h1 (merge
+                (use-style title-style {:data-uid uid :class "block-header"})
+                {:on-click (fn [e]
+                             (.. e preventDefault)
+                             (dispatch [:editing/uid uid]))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
             :value       (:string/local @state)
@@ -131,7 +135,7 @@
             :on-blur     (fn [_] (persist-textarea-string @state block))
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
-          [:span (:string/local @state)]]
+          [:span [parse-renderer/parse-and-render (:string/local @state) uid]]]
 
          ;; Children
          [:div (for [child children]
