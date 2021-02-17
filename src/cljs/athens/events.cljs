@@ -348,15 +348,9 @@
 (reg-event-fx
   :daily-note/delete
   (fn [{:keys [db]} [_ uid title]]
-    (let [all-blocks         (db/retract-uid-recursively uid)
-          retract-blocks     (if (db/e-by-av :block/uid uid)  ;; If a page for the Daily Note exists
-                               all-blocks                 ;; retract both the page and the child blocks
-                               (rest all-blocks))         ;; else, only retract the child blocks
-          delete-linked-refs (db/replace-linked-refs title)
-          tx-data            (concat retract-blocks delete-linked-refs)
-          filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
-      {:fx [[:dispatch [:transact tx-data]]]
+      {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
 
 ;; -- event-fx and Datascript Transactions -------------------------------
