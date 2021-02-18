@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-    [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
@@ -153,8 +152,8 @@
     (doall
       (map-indexed (fn [i part]
                      (if (re-find query-pattern part)
-                       [:span.result-highlight (use-style result-highlight-style {:key i}) [parse-renderer/parse-and-render part]]
-                       [parse-renderer/parse-and-render part]))
+                       [:span.result-highlight (use-style result-highlight-style {:key i}) part]
+                       part))
                    (clojure.string/split txt query-pattern)))))
 
 
