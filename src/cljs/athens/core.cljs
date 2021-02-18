@@ -69,7 +69,7 @@
   []
   (when (util/electron?)
     (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-          update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+          update-available? (when-not config/debug? (.sendSync ipcRenderer "check-update" "renderer"))]
       (when update-available?
         (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
           (.sendSync ipcRenderer "confirm-update"))))))

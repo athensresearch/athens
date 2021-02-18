@@ -1,6 +1,7 @@
 (ns athens.views.daily-notes
   (:require
     [athens.db :as db]
+    [athens.dbrx :refer [q pull-many]]
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day uid-to-date]]
     [athens.views.node-page :refer [node-page-component]]
@@ -8,7 +9,6 @@
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [q pull-many]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -77,12 +77,12 @@
         (let [notes (some->> @(q '[:find [?uid ...]
                                    :in $ [?uid ...]
                                    :where [?e :block/uid ?uid]]
-                                 db/dsdb @note-refs)
+                                 @note-refs)
                              not-empty
                              sort
                              reverse
                              (map (fn [x] [:block/uid x]))
-                             (pull-many db/dsdb '[*])
+                             (pull-many '[*])
                              deref)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
            #_[:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)

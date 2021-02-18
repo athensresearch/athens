@@ -7,7 +7,7 @@
 ;;    [datascript.transit :as dt :refer [write-transit-str]]
 ;;    [day8.re-frame.async-flow-fx]
 ;;    [goog.functions :refer [debounce]]
-;;    [posh.reagent :as p]
+;;    [athens.dbrx :as p]
 ;;    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 ;;
 ;;
@@ -57,7 +57,7 @@
 ;;  [data]
 ;;  (prn "UPDATE" data)
 ;;  (case (:type data)
-;;    :tx  (p/transact! db/dsdb (:message data))
+;;    :tx  (p/transact! (:message data))
 ;;    :connect (dispatch [:ws/on-connect data])))
 ;;
 ;;

@@ -1,10 +1,10 @@
 (ns athens.router
   (:require
     [athens.db :as db]
+    [athens.dbrx :refer [pull]]
     [athens.util :as util]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :as rf :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]
@@ -41,24 +41,29 @@
 (reg-event-fx
   :navigated
   (fn [{:keys [db]} [_ new-match]]
-    (let [old-match   (:current-route db)
-          controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
-          node-title (:node/title @node)
-          route-name (-> new-match :data :name)
-          html-title-prefix (cond
-                              node-title node-title
-                              (= route-name :pages) "All Pages"
-                              (= route-name :home) "Daily Notes")
-          html-title (if html-title-prefix
-                       (str html-title-prefix " | Athens")
-                       "Athens")]
-      (set! (.-title js/document) html-title)
-      {:db (-> db
-               (assoc :current-route (assoc new-match :controllers controllers))
-               (dissoc :merge-prompt))
-       :timeout {:action :clear
-                 :id :merge-prompt}})))
+    (try
+      (let [old-match   (:current-route db)
+            controllers (rfc/apply-controllers (:controllers old-match) new-match)
+            node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
+            node-title (:node/title @node)
+            route-name (-> new-match :data :name)
+            html-title-prefix (cond
+                                node-title node-title
+                                (= route-name :pages) "All Pages"
+                                (= route-name :home) "Daily Notes")
+            html-title (if html-title-prefix
+                         (str html-title-prefix " | Athens")
+                         "Athens")]
+        (set! (.-title js/document) html-title)
+        {:db (-> db
+                 (assoc :current-route (assoc new-match :controllers controllers))
+                 (dissoc :merge-prompt))
+         :timeout {:action :clear
+                   :id :merge-prompt}})
+      (catch :default en
+        {:db db
+         :timeout {:action :clear
+                   :id :merge-prompt}}))))
 
 
 (reg-event-fx

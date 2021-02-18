@@ -1,6 +1,7 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
+    [athens.dbrx :as p :refer [transact!]]
     [athens.util :as util]
     [athens.walk :as walk]
     [cljs-http.client :as http]
@@ -11,7 +12,6 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
-    [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [stylefy.core :as stylefy]))
 
@@ -224,7 +224,7 @@
         (pprint more-tx-data)
         (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
         (pprint final-tx-data)
-        (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
+        (let [outputs (:tx-data (transact! final-tx-data))]
           (ph-link-created! outputs)
           (prn "TX OUTPUTS")
           (pprint outputs))))

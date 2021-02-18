@@ -1,6 +1,7 @@
 (ns athens.devcards.db
   (:require
     [athens.db :as db]
+    [athens.dbrx :refer [transact!]]
     [athens.views.buttons :refer [button]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
@@ -8,7 +9,6 @@
     [cljsjs.react.dom]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
-    [posh.reagent :refer [transact!]]
     [reagent.core :as r]))
 
 
@@ -21,7 +21,7 @@
     (let [res (<! (http/get db/athens-url {:with-credentials? false}))
           {:keys [success body]} res]
       (if success
-        (transact! db/dsdb (db/str-to-db-tx body))
+        (transact! (db/str-to-db-tx body))
         (js/alert "Failed to retrieve data from GitHub")))))
 
 

@@ -385,12 +385,12 @@
 
 (defn listener
   [tx-report]
-  (swap! state* update :tx-reports conj tx-report)
+  #_(swap! state* update :tx-reports conj tx-report)
   (when (not (:error @state*))
     (eval-box!)))
 
 
-(d/listen! dsdb :devtool/open listener)
+#_(d/listen! dsdb :devtool/open listener)
 
 
 (defn handle-box-change!

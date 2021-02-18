@@ -3,7 +3,6 @@
     ["/textarea" :as getCaretCoordinates]
     [clojure.string :as string]
     [goog.dom :refer [getElement setProperties]]
-    [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
     [tick.locale-en-us]))
 
@@ -16,7 +15,8 @@
 ;; -- DOM ----------------------------------------------------------------
 
 ;; TODO: move all these DOM utilities to a .cljs file instead of cljc
-(defn scroll-top! [element pos]
+(defn scroll-top!
+  [element pos]
   (when pos
     (set! (.. element -scrollTop) pos)))
 
@@ -65,7 +65,8 @@
       (< (.. el-box -top) (.. cont-box -top)))))
 
 
-(defn scroll-into-view [element container align-top?]
+(defn scroll-into-view
+  [element container align-top?]
   (when (is-beyond-rect? element container)
     (.. element (scrollIntoView align-top? {:behavior "auto"}))))
 

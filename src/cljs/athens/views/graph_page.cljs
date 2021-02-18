@@ -1,7 +1,7 @@
 ^:cljstyle/ignore
 (ns athens.views.graph-page
   (:require
-    ["react-force-graph" :as rfg]
+    #_["react-force-graph" :as rfg]
     [athens.db :as db]
     [athens.style :as styles]
     [clojure.set :as set]
@@ -59,7 +59,8 @@
 (defn graph-page
   []
   (fn []
-    (let [dark? @(rf/subscribe [:theme/dark])
+    [:div "graph page!"]
+    #_(let [dark? @(rf/subscribe [:theme/dark])
           nodes (build-nodes)
           links (build-links)
           theme (if dark? styles/THEME-DARK

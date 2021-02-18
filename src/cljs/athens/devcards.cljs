@@ -1,6 +1,7 @@
 (ns athens.devcards
   (:require
     [athens.db :refer [dsdb]]
+    [athens.dbrx :refer [transact!]]
     [athens.devcards.alerts]
     [athens.devcards.all-pages]
     [athens.devcards.athena]
@@ -30,7 +31,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core]
-    [posh.reagent :refer [transact!]]
     [re-frame.core :refer [dispatch-sync]]
     [stylefy.core :as stylefy]))
 

@@ -5,7 +5,8 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]))
+    [reagent.core :as reagent]
+    [reagent.ratom]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -117,11 +118,54 @@
                     :db/valueType :db.type/ref}})
 
 
-(defonce dsdb (d/create-conn schema))
+(defn create-conn
+  ([schema] (reagent/atom
+              (d/empty-db schema)
+              :meta {:listeners (atom [])}))
+  ([] (create-conn nil)))
 
 
-;; todo: turn into an effect
-(posh! dsdb)
+(defonce dsdb (create-conn schema))
+
+
+(defn q
+  [query & args]
+  (apply d/q query @dsdb args))
+
+
+(defn q-rx
+  [query & args]
+  (reagent.ratom/make-reaction
+    #(apply
+       d/q query
+       @dsdb args)))
+
+
+(defn pull
+  [& args]
+  (apply d/pull @dsdb args))
+
+
+(defn pull-rx
+  [& args]
+  (reagent.ratom/make-reaction
+    #(apply d/pull @dsdb args)))
+
+
+(defn pull*
+  [& args]
+  (apply d/pull-many @dsdb args))
+
+
+(defn pull*-rx
+  [& args]
+  (reagent.ratom/make-reaction
+    #(apply d/pull-many @dsdb args)))
+
+
+(defn transact!
+  [datoms]
+  (d/transact! dsdb datoms))
 
 
 (defn e-by-av
@@ -237,20 +281,20 @@
 
 (defn get-block-document
   [id]
-  (->> @(pull dsdb block-document-pull-vector id)
+  (->> @(pull-rx block-document-pull-vector id)
        sort-block-children))
 
 
 (defn get-node-document
   [id]
-  (->> @(pull dsdb node-document-pull-vector id)
+  (->> @(pull-rx node-document-pull-vector id)
        sort-block-children))
 
 
 (defn get-athens-datoms
   "Copy REPL output to athens-datoms.cljs"
   [id]
-  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
+  (->> @(pull-rx (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
        sort-block-children))
 
 
@@ -270,13 +314,13 @@
 
 (defn get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+  (->> @(pull-rx '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
        shape-parent-query))
 
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  @(pull-rx '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
 (defn get-parent
@@ -513,7 +557,7 @@
   (fnext (drop-while #(not (pred %)) xs)))
 
 
-(d/listen! dsdb :history
+#_(d/listen! dsdb :history
            (fn [tx-report]
              (let [{:keys [db-before db-after]} tx-report]
                (when (and db-before db-after)
@@ -527,13 +571,12 @@
 
 (defn get-ref-ids
   [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      dsdb
-      pattern))
+  @(q-rx '[:find [?e ...]
+           :in $ ?regex
+           :where
+           [?e :block/string ?s]
+           [(re-find ?regex ?s)]]
+         pattern))
 
 
 (defn merge-parents-and-block
@@ -566,7 +609,7 @@
 (defn get-linked-references
   "For node-page references UI."
   [title]
-  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
+  (->> @(pull-rx '[* :block/_refs] [:node/title title])
        :block/_refs
        (mapv :db/id)
        merge-parents-and-block
