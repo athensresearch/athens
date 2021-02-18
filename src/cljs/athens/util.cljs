@@ -183,7 +183,6 @@
   (boolean (uid-to-date uid)))
 
 
-
 ;; -- Regex -----------------------------------------------------------
 
 ;; https://stackoverflow.com/a/11672480
@@ -261,5 +260,5 @@
   []
   (cond
     (electron?) (.. (js/require "electron") -remote -app getVersion)))
-    ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
-    ;;:else "Web"))
+;;(not (string/blank? COMMIT_URL)) COMMIT_URL
+;;:else "Web"))
