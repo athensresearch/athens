@@ -5,7 +5,8 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]))
+    [posh.reagent :refer [posh! pull q]]
+    [re-frame.core :refer [dispatch]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -621,3 +622,18 @@
     (catch js/Error _e
       nil)))
 
+
+;; -- save ------------------------------------------------------------
+
+
+(defn transact-state-for-uid
+  "uid -> Current block
+   state -> Look at state atom in block-el"
+  [uid state]
+  (let [{:string/keys [local previous]} @state
+        eid (e-by-av :block/uid uid)]
+    (when (and (not= local previous) eid)
+      (swap! state assoc :string/previous local)
+      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
+            tx-data          [new-block-string]]
+        (dispatch [:transact tx-data])))))

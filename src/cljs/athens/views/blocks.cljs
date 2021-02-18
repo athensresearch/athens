@@ -519,18 +519,6 @@
   (swap! state assoc :string/local (.. e -target -value)))
 
 
-(defn textarea-blur
-  "Checks for eid to make sure safe write. Sometimes backspace deletes entity, and then blur wants to happen."
-  [_e uid state]
-  (let [{:string/keys [local previous]} @state
-        eid (db/e-by-av :block/uid uid)]
-    (when (and (not= local previous) eid)
-      (swap! state assoc :string/previous local)
-      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
-            tx-data          [new-block-string]]
-        (dispatch [:transact tx-data])))))
-
-
 (defn find-selected-items
   "Used by both shift-click and click-drag for multi-block-selection.
   Given a mouse event, a source block, and a target block, highlight blocks.
@@ -634,7 +622,7 @@
                            :on-change      (fn [e] (textarea-change e uid state))
                            :on-paste       (fn [e] (textarea-paste e uid state))
                            :on-key-down    (fn [e] (textarea-key-down e uid state))
-                           :on-blur        (fn [e] (textarea-blur e uid state))
+                           :on-blur        (fn [_e] (db/transact-state-for-uid uid state))
                            :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
