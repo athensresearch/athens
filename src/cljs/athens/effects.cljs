@@ -303,10 +303,13 @@
       (when-let [active-el (.-activeElement js/document)]
         (.blur active-el))
       (js/setTimeout (fn []
-                       (let [html-id (str "#editable-uid-" uid)
+                       (let [[uid embed-id]  (db/uid-and-embed-id uid)
+                             html-id         (str "editable-uid-" uid)
                              ;;targets (js/document.querySelectorAll html-id)
                              ;;n       (count (array-seq targets))
-                             el      (js/document.querySelector html-id)]
+                             el              (cond
+                                               embed-id (js/document.querySelector (str "textarea[id^=" html-id "-embed-]"))
+                                               :else (js/document.querySelector (str "#" html-id)))]
                          #_(cond
                              (zero? n) (prn "No targets")
                              (= 1 n) (prn "One target")

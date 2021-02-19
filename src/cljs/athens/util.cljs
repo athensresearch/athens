@@ -2,15 +2,35 @@
   (:require
     ["/textarea" :as getCaretCoordinates]
     [clojure.string :as string]
+    [com.rpl.specter :as s]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
-    [tick.locale-en-us]))
+    [tick.locale-en-us])
+  (:require-macros
+    [com.rpl.specter :refer [recursive-path]]))
 
 
 (defn gen-block-uid
   []
   (subs (str (random-uuid)) 27))
+
+
+;; embed block
+
+(declare specter-recursive-path)
+
+
+(defn recursively-modify-block-for-embed
+  "Modify the block and all the block children to have same embed-id for
+   referencing the embed block rather than block in original page"
+  [block embed-id]
+  (s/transform
+    (specter-recursive-path #(contains? % :block/uid))
+    (fn [{:block/keys [uid] :as block}]
+      (assoc block :block/uid (str uid "-embed-" embed-id)
+                   :block/original-uid uid))
+    block))
 
 
 ;; -- DOM ----------------------------------------------------------------
@@ -197,6 +217,18 @@
   [str]
   (string/escape str regex-esc-char-map))
 
+
+;; -- specter --------------------------------------------------------
+
+
+(defn specter-recursive-path
+  "Navigates across maps and lists to find the sub that
+   satisfies the function"
+  [afn]
+  (recursive-path [] p
+    (s/cond-path
+      map? (s/multi-path [s/MAP-VALS p] afn)
+      sequential? [s/ALL p])))
 
 ;; OS
 

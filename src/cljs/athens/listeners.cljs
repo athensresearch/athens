@@ -22,7 +22,10 @@
   - tab: indent/unindent blocks
   Can't use textarea-key-down from keybindings.cljs because textarea is no longer focused."
   [e]
-  (let [selected-items @(subscribe [:selected/items])]
+  (let [selected-items (->> @(subscribe [:selected/items])
+                            (map (comp
+                                   first
+                                   db/uid-and-embed-id)))]
     (when (not-empty selected-items)
       (let [shift    (.. e -shiftKey)
             key-code (.. e -keyCode)
