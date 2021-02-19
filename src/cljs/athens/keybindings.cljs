@@ -475,6 +475,9 @@
                                     block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
                                                    (replace-first tail #"(?s)\)\)(.*)" ""))]
 
+                                ;; save block before navigating away
+                                (db/transact-state-for-uid uid state)
+
                                 (cond
                                   (and (re-find #"(?s)\[\[" head)
                                        (re-find #"(?s)\]\]" tail)
