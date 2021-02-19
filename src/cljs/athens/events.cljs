@@ -557,12 +557,13 @@
   Otherwise delete block and join with previous block
   If prev-block has children"
   [uid value]
-  (let [block           (db/get-block [:block/uid uid])
-        {:block/keys [children order] :or {children []}} block
+  (let [[uid embed-id]  (db/uid-and-embed-id uid)
+        block           (db/get-block [:block/uid uid])
+        {:block/keys    [children order] :or {children []}} block
         parent          (db/get-parent [:block/uid uid])
         reindex         (dec-after (:db/id parent) (:block/order block))
-        prev-block-uid- (db/prev-block-uid uid)
-        prev-block      (db/get-block [:block/uid prev-block-uid-])
+        prev-block-uid  (db/prev-block-uid uid)
+        prev-block      (db/get-block [:block/uid prev-block-uid])
         prev-sib-order  (dec (:block/order block))
         prev-sib        (d/q '[:find ?sib .
                                :in $ % ?target-uid ?prev-sib-order
@@ -583,12 +584,15 @@
       (and (not-empty children) (not-empty (:block/children prev-sib))) nil
       (and (not-empty children) (= parent prev-block)) nil
       :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
-                  new-prev-block {:db/id          [:block/uid prev-block-uid-]
+                  new-prev-block {:db/id          [:block/uid prev-block-uid]
                                   :block/string   (str (:block/string prev-block) value)
                                   :block/children children}
                   tx-data        (conj retracts retract-block new-prev-block new-parent)]
               {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
-                                {:ms 10 :dispatch [:editing/uid prev-block-uid- (count (:block/string prev-block))]}]}))))
+                                {:ms 10 :dispatch [:editing/uid
+                                                   (cond-> prev-block-uid
+                                                     embed-id (str "-embed-" embed-id))
+                                                   (count (:block/string prev-block))]}]}))))
 
 
 (reg-event-fx
@@ -598,13 +602,12 @@
 
 
 (defn split-block
-  [uid val index]
+  [uid val index new-uid]
   (let [parent     (db/get-parent [:block/uid uid])
         block      (db/get-block [:block/uid uid])
         {:block/keys [order children open] :or {children []}} block
         head       (subs val 0 index)
         tail       (subs val index)
-        new-uid    (gen-block-uid)
         retracts   (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)])
                          children)
         next-block  {:db/id          -1
@@ -618,8 +621,7 @@
         new-block  {:db/id (:db/id block) :block/string head}
         new-parent {:db/id (:db/id parent) :block/children reindex}
         tx-data    (conj retracts new-block new-parent)]
-    {:fx [[:dispatch [:transact tx-data]]
-          [:dispatch [:editing/uid new-uid]]]}))
+    {:dispatch [:transact tx-data]}))
 
 
 (defn split-block-to-children
@@ -653,10 +655,9 @@
 (defn bump-up
   "If user presses enter at the start of non-empty string, push that block down and
   and start editing a new block in the position of originating block - 'bump up' "
-  [uid]
+  [uid new-uid]
   (let [parent    (db/get-parent [:block/uid uid])
         block     (db/get-block [:block/uid uid])
-        new-uid   (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  (:block/order block)
                    :block/uid    new-uid
@@ -664,60 +665,56 @@
                    :block/string ""}
         reindex   (->> (inc-after (:db/id parent) (dec (:block/order block)))
                        (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id parent) :block/children reindex}]]]
-          [:dispatch [:editing/uid new-uid]]]}))
+    {:dispatch [:transact [{:db/id          (:db/id parent)
+                            :block/children reindex}]]}))
 
 
 (defn new-block
   "Add a new-block after block"
-  [block parent]
-  (let [new-uid   (gen-block-uid)
-        new-block {:block/order  (inc (:block/order block))
+  [block parent new-uid]
+  (let [new-block {:block/order  (inc (:block/order block))
                    :block/uid    new-uid
                    :block/open   true
                    :block/string ""}
         reindex (->> (inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id          [:block/uid (:block/uid parent)]
-                                  :block/children reindex}]]]
-          [:dispatch [:editing/uid new-uid]]]}))
+    {:dispatch [:transact [{:db/id          [:block/uid (:block/uid parent)]
+                            :block/children reindex}]]}))
 
 
 (defn add-child
-  [block]
+  [block new-uid]
   (let [{p-eid :db/id} block
-        new-uid   (gen-block-uid)
         new-child {:block/uid new-uid :block/string "" :block/order 0 :block/open true}
         reindex   (->> (inc-after p-eid -1)
                        (concat [new-child]))
         new-block {:db/id p-eid :block/children reindex}
         tx-data   [new-block]]
-    {:fx [[:dispatch [:transact tx-data]]
-          [:dispatch [:editing/uid new-uid]]]}))
+    {:dispatch [:transact tx-data]}))
 
 
 (reg-event-fx
   :enter/add-child
-  (fn [_ [_ block]]
-    (add-child block)))
+  (fn [_ [_ block new-uid]]
+    (add-child block new-uid)))
 
 
 (reg-event-fx
   :enter/split-block
-  (fn [_ [_ uid val index]]
-    (split-block uid val index)))
+  (fn [_ [_ uid val index new-uid]]
+    (split-block uid val index new-uid)))
 
 
 (reg-event-fx
   :enter/bump-up
-  (fn [_ [_ uid]]
-    (bump-up uid)))
+  (fn [_ [_ uid new-uid]]
+    (bump-up uid new-uid)))
 
 
 (reg-event-fx
   :enter/new-block
-  (fn [_ [_ block parent]]
-    (new-block block parent)))
+  (fn [_ [_ block parent new-uid]]
+    (new-block block parent new-uid)))
 
 
 (defn enter
@@ -730,36 +727,40 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [block            (db/get-block [:block/uid uid])
+  (let [[uid embed-id]   (db/uid-and-embed-id uid)
+        block            (db/get-block [:block/uid uid])
         parent           (db/get-parent [:block/uid uid])
         root-block?      (boolean (:node/title parent))
         context-root-uid (get-in rfdb [:current-route :path-params :id])
+        new-uid          (gen-block-uid)
         {:keys [value start]} d-key-down
         event            (cond
                            (and (:block/open block)
                                 (not-empty (:block/children block))
                                 (= start (count value)))
-                           [:enter/add-child block]
+                           [:enter/add-child block new-uid]
 
                            (and (not (:block/open block))
                                 (not-empty (:block/children block))
                                 (= start (count value)))
-                           [:enter/new-block block parent]
+                           [:enter/new-block block parent new-uid]
 
                            (and (empty? value)
                                 (or (= context-root-uid (:block/uid parent))
                                     root-block?))
-                           [:enter/new-block block parent]
+                           [:enter/new-block block parent new-uid]
 
                            (not (zero? start))
-                           [:enter/split-block uid value start]
+                           [:enter/split-block uid value start new-uid]
 
                            (empty? value)
                            [:unindent uid d-key-down context-root-uid]
 
                            (and (zero? start) value)
-                           [:enter/bump-up uid])]
-    {:dispatch event}))
+                           [:enter/bump-up uid new-uid])]
+    {:dispatch-later [{:ms 0  :dispatch event}
+                      {:ms 10 :dispatch [:editing/uid (cond-> new-uid
+                                                        embed-id (str "-embed-" embed-id))]}]}))
 
 
 (reg-event-fx
@@ -1190,9 +1191,9 @@
         target-parent        (db/get-parent [:block/uid target-uid])
         event                (cond
                                (= kind :child) [:drop-multi/child source-uids target]
-                               (and same-parent-all?) [:drop-multi/same-all kind source-uids first-source-parent target]
-                               (and diff-parents-source?) [:drop-multi/diff-source kind source-uids target target-parent]
-                               (and same-parent-source?) [:drop-multi/same-source kind source-uids first-source-parent target target-parent])]
+                               same-parent-all? [:drop-multi/same-all kind source-uids first-source-parent target]
+                               diff-parents-source? [:drop-multi/diff-source kind source-uids target target-parent]
+                               same-parent-source? [:drop-multi/same-source kind source-uids first-source-parent target target-parent])]
     {:fx [[:dispatch [:selected/clear-items]]
           [:dispatch event]]}))
 
@@ -1275,8 +1276,9 @@
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
-    (let [block         (db/get-block [:block/uid uid])
-          {:block/keys [order children open]} block
+    (let [[uid embed-id]  (db/uid-and-embed-id uid)
+          block         (db/get-block [:block/uid uid])
+          {:block/keys  [order children open]} block
           {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
@@ -1310,7 +1312,8 @@
                       (let [block (-> paste-tx-data first :block/children)
                             {:block/keys [uid string]} block
                             n     (count string)]
-                        [:editing/uid uid n]))]})))
+                        [:editing/uid (cond-> uid
+                                        embed-id (str "-embed-" embed-id)) n]))]})))
 
 
 (defn left-sidebar-drop-above

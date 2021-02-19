@@ -219,6 +219,14 @@
        (= uid)))
 
 
+(defn uid-and-embed-id
+  [uid]
+  (or (some->> uid
+               (re-find #"^(.+)-embed-(.+)")
+               rest vec)
+      [uid nil]))
+
+
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -438,15 +446,17 @@
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
-  (let [block        (get-block [:block/uid uid])
-        parent       (get-parent [:block/uid uid])
-        prev-sibling (nth-sibling uid -1)
-        {:block/keys [open uid]} prev-sibling
-        prev-block   (cond
-                       (zero? (:block/order block)) parent
-                       (false? open) prev-sibling
-                       (true? open) (deepest-child-block [:block/uid uid]))]
-    (:block/uid prev-block)))
+  (let [[uid embed-id]  (uid-and-embed-id uid)
+        block           (get-block [:block/uid uid])
+        parent          (get-parent [:block/uid uid])
+        prev-sibling    (nth-sibling uid -1)
+        {:block/keys    [open uid]} prev-sibling
+        prev-block      (cond
+                          (zero? (:block/order block)) parent
+                          (false? open) prev-sibling
+                          (true? open) (deepest-child-block [:block/uid uid]))]
+    (cond-> (:block/uid prev-block)
+      embed-id (str "-embed-" embed-id))))
 
 
 (defn next-sibling-recursively
@@ -469,13 +479,16 @@
   2-arity:
     used for multi-block-selection; ignores child blocks"
   ([uid]
-   (let [block                (->> (get-block [:block/uid uid])
+   (let [[uid embed-id]       (uid-and-embed-id uid)
+         block                (->> (get-block [:block/uid uid])
                                    sort-block-children)
          {:block/keys [children open] node :node/title} block
          next-block-recursive (next-sibling-recursively uid)]
-     (cond
-       (and (or open node) children) (:block/uid (first children))
-       next-block-recursive (:block/uid next-block-recursive))))
+     (cond-> (cond
+               (and (or open node) children) (first children)
+               next-block-recursive          next-block-recursive)
+       true     :block/uid
+       embed-id (str "-embed-" embed-id))))
   ([uid selection?]
    (if selection?
      (let [next-block-recursive (next-sibling-recursively uid)]
