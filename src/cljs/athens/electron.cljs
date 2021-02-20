@@ -250,10 +250,17 @@
           curr-mtime (.-mtime (.statSync fs filepath))
           newer?     (< prev-mtime curr-mtime)]
       (when newer?
-        (dispatch [:db/update-mtime curr-mtime])
-        (let [read-db (.readFileSync fs filepath)
-              db      (dt/read-transit-str read-db)]
-          (dispatch [:reset-conn db])))))
+        (let [block-text js/document.activeElement.value
+              confirm    (js/window.confirm (str "New file found. Your current block's text is:"
+                                                 "\n\n"
+                                                 block-text
+                                                 "\n\n"
+                                                 "Accept changes?"))]
+          (when confirm
+            (dispatch [:db/update-mtime curr-mtime])
+            (let [read-db (.readFileSync fs filepath)
+                  db      (dt/read-transit-str read-db)]
+              (dispatch [:reset-conn db])))))))
 
 
   (def debounce-sync-db-from-fs
@@ -270,6 +277,8 @@
         (.. fs (watch dirpath (fn [_event filename]
                                 ;; when filename matches last part of filepath
                                 ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                                (when (re-find #"conflict" filename)
+                                  (throw "Conflict file created by Dropbox"))
                                 (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
                                   (debounce-sync-db-from-fs filepath filename))))))
       {}))
@@ -402,7 +411,7 @@
       (.pipe r w)))
 
 
-  (def debounce-write (debounce write-file 15000))
+  (def debounce-write (debounce write-file 1000))
 
 
   (reg-fx
