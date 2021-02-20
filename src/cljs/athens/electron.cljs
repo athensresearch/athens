@@ -251,12 +251,11 @@
           newer?     (< prev-mtime curr-mtime)]
       (when newer?
         (let [block-text js/document.activeElement.value
-              confirm    (js/window.confirm (str "New file found. Your current block's text is:"
-                                                 "\n\n"
-                                                 block-text
-                                                 "\n\n"
+              confirm    (js/window.confirm (str "New file found. Copying your current block's text to your clipboard."
+                                                 "\n"
                                                  "Accept changes?"))]
           (when confirm
+            (.. js/navigator -clipboard (writeText block-text))
             (dispatch [:db/update-mtime curr-mtime])
             (let [read-db (.readFileSync fs filepath)
                   db      (dt/read-transit-str read-db)]
