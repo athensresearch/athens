@@ -1,7 +1,9 @@
 (ns athens.views.settings-page
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.electron :as electron]
     [athens.views.buttons :refer [button]]
+    [goog.functions :as goog-functions]
     [reagent.core :as r]))
 
 
@@ -28,14 +30,25 @@
     (opt-out opted-out?)))
 
 
+(defn handle-debounce-save-input
+  [value debounce-time]
+  (when (and (<= 0 value) (<= value 1000))
+    (reset! debounce-time value)
+    (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
+    (js/localStorage.setItem "debounce-save-time" value)))
+
+
 (defn settings-page
   []
-  (let [opted-out? (r/atom (.. js/window -posthog has_opted_out_capturing))]
+  (let [opted-out?          (r/atom (.. js/window -posthog has_opted_out_capturing))
+        debounce-save-time! (r/atom (js/Number (js/localStorage.getItem "debounce-save-time")))]
     (fn []
-      [:div {:style {:display "flex"
-                     :margin "0vh 5vw"
+      [:div {:style {:display        "flex"
+                     :margin         "0vh 5vw"
                      :flex-direction "column"}}
        [:h2 "Settings"]
+
+       ;; Analytics
        (if @opted-out?
          [:h5 "Opted Out of Analytics"]
          [:h5 "Opted Into Analytics"])
@@ -53,6 +66,18 @@
         [:a {:href "https://posthog.com" :target "_blank"} "Posthog"]
         " and " [:a {:href "https://sentry.io" :target "_blank"} "Sentry"]
         ", open-source solutions to measure retention, performance, and crashes.
-         This lets the designers and engineers at Athens know if we're really making something people love!"]])))
+         This lets the designers and engineers at Athens know if we're really making something people love!"]
 
+       ;; Auto-save
+       [:div {:style {:margin "20px 0"}}
+        [:h5 "Auto-save"]
+        [:div {:style {:display "flex" :justify-content "space-between"
+                       :margin "10px 0"}}
+         [:input {:style {:width "4em"}
+                  :type  "number" :value @debounce-save-time! :on-change #(handle-debounce-save-input (js/Number (.. % -target -value)) debounce-save-time!)}]
+         (prn "type" @debounce-save-time! (js/Number @debounce-save-time!))
+         (case @debounce-save-time!
+           0 [:span (str "Athens will save and create a backup after each edit.")]
+           1 [:span (str "Athens will save and create a backup " @debounce-save-time! " second after your last edit.")]
+           [:span (str "Athens will save and create a backup " @debounce-save-time! " seconds after your last edit.")])]]])))
 

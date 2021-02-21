@@ -419,8 +419,15 @@
       (.pipe r w)))
 
 
-  ;; parameterize this
-  (def debounce-write-db (debounce write-db 1000))
+  (def debounce-write-db
+    (let [debounce-save-time (js/localStorage.getItem "debounce-save-time")]
+      (if (nil? debounce-save-time)
+        (let [debounce-save-time 15]
+          (js/localStorage.setItem "debounce-save-time" debounce-save-time)
+          (debounce write-db (* 1000 debounce-save-time)))
+
+        (let [debounce-save-time (js/Number debounce-save-time)]
+          (debounce write-db (* 1000 debounce-save-time))))))
 
 
   (defn write-bkp
