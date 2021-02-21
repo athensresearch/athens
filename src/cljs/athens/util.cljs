@@ -1,11 +1,11 @@
 (ns athens.util
   (:require
-    ["/textarea" :as getCaretCoordinates]
-    [clojure.string :as string]
-    [goog.dom :refer [getElement setProperties]]
-    [posh.reagent :refer [#_pull]]
-    [tick.alpha.api :as t]
-    [tick.locale-en-us]))
+   ["/textarea" :as getCaretCoordinates]
+   [clojure.string :as string]
+   [goog.dom :refer [getElement setProperties]]
+   [posh.reagent :refer [#_pull]]
+   [tick.alpha.api :as t]
+   [tick.locale-en-us]))
 
 
 (defn gen-block-uid
@@ -61,8 +61,8 @@
   (let [el-box (.. element getBoundingClientRect)
         cont-box (.. container getBoundingClientRect)]
     (or
-      (> (.. el-box -bottom) (.. cont-box -bottom))
-      (< (.. el-box -top) (.. cont-box -top)))))
+     (> (.. el-box -bottom) (.. cont-box -bottom))
+     (< (.. el-box -top) (.. cont-box -top)))))
 
 
 (defn scroll-into-view [element container align-top?]
@@ -144,14 +144,14 @@
   ([] (get-day 0))
   ([offset]
    (let [day (t/-
-               (t/date-time)
-               (t/new-duration offset :days))]
+              (t/date-time)
+              (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)}))
   ([date offset]
    (let [day (t/-
-               (-> date (t/at "0"))
-               (t/new-duration offset :days))]
+              (-> date (t/at "0"))
+              (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)})))
 
@@ -161,7 +161,7 @@
   (if (not ts)
     [:span "(unknown date)"]
     (as->
-      (t/instant ts) x
+     (t/instant ts) x
       (t/date-time x)
       (t/format date-col-format x)
       (string/replace x #"AM" "am")
@@ -262,3 +262,21 @@
     (electron?) (.. (js/require "electron") -remote -app getVersion)))
     ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
     ;;:else "Web"))
+
+
+;; Window
+
+(defn remember-ws?
+  "Checks localStorage to see if we should remember window-size is on. It is disabled/enabled in settings."
+  []
+  (let [rws (js/localStorage.getItem "ws/remember-ws")]
+    (if (nil? rws)
+      false
+      (not= "off" rws))))
+
+(defn get-window-size
+  []
+  (let [ws (js/localStorage.getItem "ws/window-size")]
+    (if (nil? ws)
+      '[800 600]
+      (map #(js/parseInt %) (string/split ws ",")))))
