@@ -63,7 +63,7 @@
     "react-highlight.js": "1.0.7"
   },
   "devDependencies": {
-    "electron": "^9.2.0",
+    "electron": "^11.2.3",
     "electron-builder": "22.8.1",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
