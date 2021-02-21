@@ -1,24 +1,24 @@
 (ns athens.core
   (:require
-    ["@sentry/integrations" :as integrations]
-    ["@sentry/react" :as Sentry]
-    ["@sentry/tracing" :as tracing]
-    [athens.coeffects]
-    [athens.config :as config]
-    [athens.effects]
-    [athens.electron]
-    [athens.events]
-    [athens.listeners :as listeners]
-    [athens.router :as router]
-    [athens.style :as style]
-    [athens.subs]
-    [athens.util :as util]
-    [athens.views :as views]
+   ["@sentry/integrations" :as integrations]
+   ["@sentry/react" :as Sentry]
+   ["@sentry/tracing" :as tracing]
+   [athens.coeffects]
+   [athens.config :as config]
+   [athens.effects]
+   [athens.electron]
+   [athens.events]
+   [athens.listeners :as listeners]
+   [athens.router :as router]
+   [athens.style :as style]
+   [athens.subs]
+   [athens.util :as util]
+   [athens.views :as views]
     ;;[athens.ws]
-    [goog.dom :refer [getElement]]
-    [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+   [goog.dom :refer [getElement]]
+   [re-frame.core :as rf]
+   [reagent.dom :as r-dom]
+   [stylefy.core :as stylefy]))
 
 
 (goog-define SENTRY_DSN "")
@@ -75,11 +75,23 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
+(defn init-windowsize
+  []
+  (when (util/electron?)
+    (let [curWindow (.getCurrentWindow athens.electron/remote)
+          size (.getSize curWindow)]
+      (.on ^js curWindow "resize" (fn [e]
+                                    (let [sender (.-sender e)
+                                          [x y] (.getSize ^js sender)]
+                                      (prn (str "Size is - " x ", " y)))))
+      (prn (str "Startup size is - " size)))))
+
 (defn init
   []
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
+  (init-windowsize)
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
