@@ -78,13 +78,18 @@
 (defn init-windowsize
   []
   (when (util/electron?)
-    (let [curWindow (.getCurrentWindow athens.electron/remote)
-          size (.getSize curWindow)]
+    (let [curWindow        (.getCurrentWindow athens.electron/remote)
+          remember-ws?     (util/remember-ws?)
+          [lastx lasty]    (util/get-window-size)]
+      (when remember-ws?
+        (do
+          (prn (str "Window Size on close - " lastx ", " lasty))
+          (.setSize curWindow lastx lasty)))
       (.on ^js curWindow "resize" (fn [e]
                                     (let [sender (.-sender e)
                                           [x y] (.getSize ^js sender)]
-                                      (prn (str "Size is - " x ", " y)))))
-      (prn (str "Startup size is - " size)))))
+                                      (rf/dispatch [:window/set-size [x y]])
+                                      (prn (str "Size is - " x ", " y))))))))
 
 (defn init
   []
