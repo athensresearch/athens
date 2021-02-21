@@ -1,7 +1,7 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+   ["electron" :refer [app BrowserWindow ipcMain shell]]
+   ["electron-updater" :refer [autoUpdater]]))
 
 
 (def log (js/require "electron-log"))
@@ -24,21 +24,24 @@
   (.. log (info text))
   (.. ^js @main-window -webContents (send text)))
 
-
 (defn init-browser
   []
   (reset! main-window (BrowserWindow.
-                        (clj->js {:width 800
-                                  :height 600
-                                  :autoHideMenuBar true
-                                  :enableRemoteModule true
-                                  :webPreferences {:nodeIntegration true
-                                                   :worldSafeExecuteJavaScript true
-                                                   :enableRemoteModule true
-                                                   :nodeIntegrationWorker true}})))
+                       (clj->js {:width 800
+                                 :height 600
+                                 :autoHideMenuBar true
+                                 :enableRemoteModule true
+                                 :webPreferences {:nodeIntegration true
+                                                  :worldSafeExecuteJavaScript true
+                                                  :enableRemoteModule true
+                                                  :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
+  (.on ^js @main-window "resize" (fn [e]
+                                   (let [sender (.-sender e)
+                                         [x y] (.getSize ^js sender)]
+                                     (prn (str "Size is - " x ", " y)))))
   (.. ^js @main-window -webContents (on "new-window" (fn [e url]
                                                        (.. e preventDefault)
                                                        (.. shell (openExternal url))))))
