@@ -275,6 +275,7 @@
       (not= "off" rws))))
 
 (defn get-window-size
+  "Reads window size from local-storage and returns the values as a vector"
   []
   (let [ws (js/localStorage.getItem "ws/window-size")]
     (if (nil? ws)
