@@ -1,10 +1,11 @@
 (ns athens.views.settings-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
-    [athens.electron :as electron]
-    [athens.views.buttons :refer [button]]
-    [goog.functions :as goog-functions]
-    [reagent.core :as r]))
+   ["@material-ui/icons" :as mui-icons]
+   [athens.electron :as electron]
+   [athens.util :refer [remember-ws?]]
+   [athens.views.buttons :refer [button]]
+   [goog.functions :as goog-functions]
+   [reagent.core :as r]))
 
 
 (defn opt-out
@@ -30,6 +31,25 @@
     (opt-out opted-out?)))
 
 
+(defn remember-ws
+  [remember-window-size?]
+  (js/localStorage.setItem "ws/remember-ws" "on")
+  (reset! remember-window-size? true))
+
+
+(defn dont-remember-ws
+  [remember-window-size?]
+  (js/localStorage.setItem "ws/remember-ws" "off")
+  (reset! remember-window-size? false))
+
+
+(defn handle-ws
+  [remember-window-size?]
+  (if @remember-window-size?
+    (dont-remember-ws remember-window-size?)
+    (remember-ws remember-window-size?)))
+
+
 (defn handle-debounce-save-input
   [value debounce-time]
   (when (and (<= 0 value) (<= value 1000))
@@ -40,8 +60,9 @@
 
 (defn settings-page
   []
-  (let [opted-out?          (r/atom (.. js/window -posthog has_opted_out_capturing))
-        debounce-save-time! (r/atom (js/Number (js/localStorage.getItem "debounce-save-time")))]
+  (let [opted-out?            (r/atom (.. js/window -posthog has_opted_out_capturing))
+        debounce-save-time!   (r/atom (js/Number (js/localStorage.getItem "debounce-save-time")))
+        remember-window-size? (r/atom (remember-ws?))]
     (fn []
       [:div {:style {:display        "flex"
                      :margin         "0vh 5vw"
@@ -79,5 +100,18 @@
          (case @debounce-save-time!
            0 [:span (str "Athens will save and create a backup after each edit.")]
            1 [:span (str "Athens will save and create a backup " @debounce-save-time! " second after your last edit.")]
-           [:span (str "Athens will save and create a backup " @debounce-save-time! " seconds after your last edit.")])]]])))
+           [:span (str "Athens will save and create a backup " @debounce-save-time! " seconds after your last edit.")])]]
+
+       ;; Remember Window Size
+       [:h5 "Remember the last Window Size on Athens Startup"]
+       [:div {:style {:margin "10px 0"}}
+        [button {:primary (true? @remember-window-size?)
+                 :on-click #(handle-ws remember-window-size?)}
+         (if @remember-window-size?
+           [:div {:style {:display "flex"}}
+            [:> mui-icons/ToggleOff]
+            [:span "\uD83D\uDE00 Yes!"]]
+           [:div {:style {:display "flex"}}
+            [:> mui-icons/ToggleOn]
+            [:span "\uD83D\uDE41 No."]])]]])))
 
