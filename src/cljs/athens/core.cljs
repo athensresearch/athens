@@ -83,12 +83,12 @@
           remember-ws?     (util/remember-ws?)
           [lastx lasty]    (util/get-window-size)]
       (when remember-ws?
-        ((.setSize curWindow lastx lasty)
-         (.center curWindow)))
-      (.on ^js curWindow "resized" (fn [e]
-                                     (let [sender (.-sender e)
-                                           [x y] (.getSize ^js sender)]
-                                       (rf/dispatch [:window/set-size [x y]])))))))
+        (.setSize curWindow lastx lasty)
+        (.center curWindow))
+      (.on ^js curWindow "close" (fn [e]
+                                   (let [sender (.-sender e)
+                                         [x y] (.getSize ^js sender)]
+                                     (rf/dispatch [:window/set-size [x y]])))))))
 
 
 (defn init
