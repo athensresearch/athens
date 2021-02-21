@@ -242,6 +242,7 @@
     (fn []
       {:dispatch [:transact athens-datoms/datoms]}))
 
+  (declare write-bkp)
 
   (defn sync-db-from-fs
     "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
@@ -251,8 +252,9 @@
           newer?     (< prev-mtime curr-mtime)]
       (when newer?
         (let [block-text js/document.activeElement.value
-              _ (.. js/navigator -clipboard (writeText block-text))
-              confirm    (js/window.confirm (str "New file found. Copying your current block to the clipboard."
+              _          (.. js/navigator -clipboard (writeText block-text))
+              _          (write-bkp)
+              confirm    (js/window.confirm (str "New file found. Copying your current block to the clipboard, and saving your current db."
                                                  "\n\n"
                                                  "Accept changes?"))]
           (when confirm
@@ -386,13 +388,15 @@
     (.. (js/require "os") userInfo -username))
 
 
-  (defn write-file
+  (defn write-db
     "Tries to create a write stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
     If the write operation fails, the backup file is corrupted and no copy is attempted, thus index.transit is assumed to be untouched.
     If the write operation succeeds, a backup is created and index.transit is overwritten.
     User should eventually have MANY backups files. It's their job to manage these backups :)"
-    [filepath data]
-    (let [r            (.. stream -Readable (from data))
+    [copy?]
+    (let [filepath     @(subscribe [:db/filepath])
+          data         (dt/write-transit-str @db/dsdb)
+          r            (.. stream -Readable (from data))
           dirname      (.dirname path filepath)
           time         (.. (js/Date.) getTime)
           bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
@@ -408,16 +412,23 @@
       (.on w "finish" (fn []
                         ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
                         ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
-                        (.. fs (copyFileSync bkp-filepath filepath))
-                        (dispatch [:db/sync])
-                        (dispatch [:db/update-mtime (js/Date.)])))
+                        (when copy?
+                          (.. fs (copyFileSync bkp-filepath filepath))
+                          (dispatch [:db/sync])
+                          (dispatch [:db/update-mtime (js/Date.)]))))
       (.pipe r w)))
 
 
-  (def debounce-write (debounce write-file 1000))
+  ;; parameterize this
+  (def debounce-write-db (debounce write-db 1000))
+
+
+  (defn write-bkp
+    []
+    (write-db false))
 
 
   (reg-fx
     :fs/write!
-    (fn [[filepath data]]
-      (debounce-write filepath data))))
+    (fn []
+      (debounce-write-db true))))
