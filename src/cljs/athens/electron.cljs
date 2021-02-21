@@ -251,11 +251,11 @@
           newer?     (< prev-mtime curr-mtime)]
       (when newer?
         (let [block-text js/document.activeElement.value
-              confirm    (js/window.confirm (str "New file found. Copying your current block's text to your clipboard."
-                                                 "\n"
+              _ (.. js/navigator -clipboard (writeText block-text))
+              confirm    (js/window.confirm (str "New file found. Copying your current block to the clipboard."
+                                                 "\n\n"
                                                  "Accept changes?"))]
           (when confirm
-            (.. js/navigator -clipboard (writeText block-text))
             (dispatch [:db/update-mtime curr-mtime])
             (let [read-db (.readFileSync fs filepath)
                   db      (dt/read-transit-str read-db)]
@@ -381,6 +381,10 @@
 
   ;;; Effects
 
+  (defn os-username
+    []
+    (.. (js/require "os") userInfo -username))
+
 
   (defn write-file
     "Tries to create a write stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
@@ -391,7 +395,7 @@
     (let [r            (.. stream -Readable (from data))
           dirname      (.dirname path filepath)
           time         (.. (js/Date.) getTime)
-          bkp-filename (str time "-" "index.transit.bkp")
+          bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
           bkp-filepath (.resolve path dirname bkp-filename)
           w            (.createWriteStream fs bkp-filepath)
           error-cb     (fn [err]
