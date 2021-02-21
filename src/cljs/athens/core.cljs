@@ -76,6 +76,7 @@
 
 
 (defn init-windowsize
+  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
   []
   (when (util/electron?)
     (let [curWindow        (.getCurrentWindow athens.electron/remote)
@@ -85,11 +86,10 @@
         (do
           (prn (str "Window Size on close - " lastx ", " lasty))
           (.setSize curWindow lastx lasty)))
-      (.on ^js curWindow "resize" (fn [e]
-                                    (let [sender (.-sender e)
-                                          [x y] (.getSize ^js sender)]
-                                      (rf/dispatch [:window/set-size [x y]])
-                                      (prn (str "Size is - " x ", " y))))))))
+      (.on ^js curWindow "resized" (fn [e]
+                                     (let [sender (.-sender e)
+                                           [x y] (.getSize ^js sender)]
+                                       (rf/dispatch [:window/set-size [x y]])))))))
 
 (defn init
   []
