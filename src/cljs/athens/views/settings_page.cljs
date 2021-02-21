@@ -1,11 +1,11 @@
 (ns athens.views.settings-page
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.electron :as electron]
-   [athens.util :refer [remember-ws?]]
-   [athens.views.buttons :refer [button]]
-   [goog.functions :as goog-functions]
-   [reagent.core :as r]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.electron :as electron]
+    [athens.util :refer [remember-ws?]]
+    [athens.views.buttons :refer [button]]
+    [goog.functions :as goog-functions]
+    [reagent.core :as r]))
 
 
 (defn opt-out

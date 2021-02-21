@@ -1,11 +1,11 @@
 (ns athens.util
   (:require
-   ["/textarea" :as getCaretCoordinates]
-   [clojure.string :as string]
-   [goog.dom :refer [getElement setProperties]]
-   [posh.reagent :refer [#_pull]]
-   [tick.alpha.api :as t]
-   [tick.locale-en-us]))
+    ["/textarea" :as getCaretCoordinates]
+    [clojure.string :as string]
+    [goog.dom :refer [getElement setProperties]]
+    [posh.reagent :refer [#_pull]]
+    [tick.alpha.api :as t]
+    [tick.locale-en-us]))
 
 
 (defn gen-block-uid
@@ -182,7 +182,6 @@
   (boolean (uid-to-date uid)))
 
 
-
 ;; -- Regex -----------------------------------------------------------
 
 ;; https://stackoverflow.com/a/11672480
@@ -273,6 +272,7 @@
       false
       (not= "off" rws))))
 
+
 (defn get-window-size
   "Reads window size from local-storage and returns the values as a vector"
   []
@@ -280,3 +280,4 @@
     (if (nil? ws)
       '[800 600]
       (map #(js/parseInt %) (string/split ws ",")))))
+
