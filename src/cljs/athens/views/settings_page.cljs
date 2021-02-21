@@ -1,6 +1,7 @@
 (ns athens.views.settings-page
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.util :refer [remember-ws?]]
     [athens.views.buttons :refer [button]]
     [reagent.core :as r]))
 
@@ -50,7 +51,7 @@
 (defn settings-page
   []
   (let [opted-out? (r/atom (.. js/window -posthog has_opted_out_capturing))
-        remember-window-size? (r/atom false)]
+        remember-window-size? (r/atom (remember-ws?))]
     (fn []
       [:div {:style {:display "flex"
                      :margin "0vh 5vw"
