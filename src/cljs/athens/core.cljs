@@ -84,7 +84,7 @@
           [lastx lasty]    (util/get-window-size)]
       (when remember-ws?
         (do
-          (prn (str "Window Size on close - " lastx ", " lasty))
+          ;; (prn (str "Window Size on close - " lastx ", " lasty))
           (.setSize curWindow lastx lasty)
           (.center curWindow)))
       (.on ^js curWindow "resized" (fn [e]
