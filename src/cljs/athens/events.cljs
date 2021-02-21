@@ -494,8 +494,7 @@
 (reg-event-fx
   :save
   (fn [_ _]
-    (let [db-filepath (subscribe [:db/filepath])]
-      {:fs/write!  [@db-filepath (dt/write-transit-str @db/dsdb)]})))
+    {:fs/write! nil}))
 
 
 (reg-event-fx
