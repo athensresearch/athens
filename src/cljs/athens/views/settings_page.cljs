@@ -1,8 +1,8 @@
 (ns athens.views.settings-page
   (:require
-   ["@material-ui/icons" :as mui-icons]
-   [athens.views.buttons :refer [button]]
-   [reagent.core :as r]))
+    ["@material-ui/icons" :as mui-icons]
+    [athens.views.buttons :refer [button]]
+    [reagent.core :as r]))
 
 
 (defn opt-out
@@ -23,13 +23,13 @@
 
 (defn remember-ws
   [remember-window-size?]
-  (js/localStorage.setItem "rememberws" "on")
+  (js/localStorage.setItem "ws/remember-ws" "on")
   (reset! remember-window-size? true))
 
 
 (defn dont-remember-ws
   [remember-window-size?]
-  (js/localStorage.setItem "rememberws" "off")
+  (js/localStorage.setItem "ws/remember-ws" "off")
   (reset! remember-window-size? false))
 
 
