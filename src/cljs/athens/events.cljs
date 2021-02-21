@@ -293,8 +293,8 @@
 
 (reg-event-fx
   :window/set-size
-  (fn [_ [_ size]]
-    {:local-storage/set! ["ws/window-size" size]}))
+  (fn [_ [_ [x y]]]
+    {:local-storage/set! ["ws/window-size" (str x "," y)]}))
 
 
 ;; Loading
