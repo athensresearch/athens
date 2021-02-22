@@ -91,6 +91,15 @@
     (swap! state assoc :string/local value)))
 
 
+(defn breadcrumb-handle-click
+  "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
+  [e uid breadcrumb-uid]
+  (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
+    (if right-sidebar?
+      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+      (navigate-uid breadcrumb-uid e))))
+
+
 (defn block-page-el
   [_ _ _ _]
   (let [state (r/atom {:string/local    nil
@@ -106,9 +115,10 @@
          [:span {:style {:color "gray"}}
           [breadcrumbs-list {:style {:font-size "1.2rem"}}
            (doall
-             (for [{:keys [node/title block/uid block/string]} parents]
-               ^{:key uid}
-               [breadcrumb {:key (str "breadcrumb-" uid) :on-click #(navigate-uid uid)}
+             (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+               ^{:key breadcrumb-uid}
+               [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
+                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
                 (or title string)]))]]
 
          ;; Header

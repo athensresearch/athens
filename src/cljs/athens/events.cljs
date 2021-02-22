@@ -109,6 +109,17 @@
         (= 1 (count items)) (assoc :right-sidebar/open false)))))
 
 
+(reg-event-db
+  :right-sidebar/navigate-item
+  (fn [db [_ uid breadcrumb-uid]]
+    (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
+          item-index (get-in db [:right-sidebar/items uid :index])
+          new-item   (merge block {:open true :index item-index})]
+      (-> db
+          (update-in [:right-sidebar/items] dissoc uid)
+          (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item)))))
+
+
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
