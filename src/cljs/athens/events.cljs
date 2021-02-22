@@ -139,7 +139,6 @@
         (assoc :dispatch [:right-sidebar/toggle])))))
 
 
-
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
