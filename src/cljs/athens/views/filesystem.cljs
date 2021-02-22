@@ -36,7 +36,7 @@
                   filename                  (.-name file)
                   db                        (edn/read-string {:readers datascript.core/data-readers} edn-data)
                   transformed-dates-roam-db (athens.events/update-roam-db-dates db)]
-              (reset! athens.events/ROAM-DB db)
+              ;;(reset! athens.events/ROAM-DB db)
               (reset! roam-db-filename filename)
               (reset! transformed-db transformed-dates-roam-db))))
     (.readAsText fr file)))
