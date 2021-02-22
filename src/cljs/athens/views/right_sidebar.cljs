@@ -195,7 +195,7 @@
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
        :reagent-render         (fn [open? items _]
                                  [:div (merge (use-style sidebar-style
-                                                         {:class (if open? "is-open" "is-closed")})
+                                                         {:class ["right-sidebar" (if open? "is-open" "is-closed")]})
                                               {:style (cond-> {}
                                                         (:dragging @state) (assoc :transition-duration "0s")
                                                         open? (assoc :width (str (:width @state) "vw")))})
