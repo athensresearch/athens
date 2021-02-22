@@ -118,11 +118,13 @@
 (defn navigate-uid
   "Don't navigate if already on the page."
   ([uid]
-   (let [current-route-uid @(subscribe [:current-route/uid])]
+   (let [[uid _embed-id]   (db/uid-and-embed-id uid)
+         current-route-uid @(subscribe [:current-route/uid])]
      (when (not= current-route-uid uid)
        (dispatch [:navigate :page {:id uid}]))))
   ([uid e]
-   (let [shift (.. e -shiftKey)]
+   (let [[uid _embed-id]   (db/uid-and-embed-id uid)
+         shift             (.. e -shiftKey)]
      (if shift
        (do
          (.. js/window getSelection empty)

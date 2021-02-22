@@ -119,6 +119,7 @@
 
 (def references-group-block-style
   {:border-top [["1px solid " (color :border-color)]]
+   :width      "100%"
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
