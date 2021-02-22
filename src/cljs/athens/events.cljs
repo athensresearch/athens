@@ -100,6 +100,14 @@
   (fn [db _]
     (assoc db :mouse-down false)))
 
+
+;; no ops -- does not do anything
+;; useful in situations where there is no dispatch value
+(reg-event-fx
+  :no-op
+  (fn [_ _]
+    {}))
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
@@ -613,11 +621,10 @@
   "Takes a block uid, its value, and the index to split the value string.
   It sets the value of the block to the head of (subs val 0 index)
   It then creates a new child block with the tail of the string set as its value and sets editing to that block."
-  [uid val index]
+  [uid val index new-uid]
   (let [block (db/get-block [:block/uid uid])
         head (subs val 0 index)
         tail (subs val index)
-        new-uid (gen-block-uid)
         new-block {:db/id        -1
                    :block/order  0
                    :block/uid    new-uid
@@ -633,8 +640,8 @@
 
 (reg-event-fx
   :split-block-to-children
-  (fn [_ [_ uid val index]]
-    (split-block-to-children uid val index)))
+  (fn [_ [_ uid val index new-uid]]
+    (split-block-to-children uid val index (or new-uid (gen-block-uid)))))
 
 
 (defn bump-up
@@ -712,7 +719,12 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [[uid embed-id]   (db/uid-and-embed-id uid)
+  (let [root-embed?      (= (some-> d-key-down :target
+                                    (.. (closest ".block-embed"))
+                                    (. -firstChild)
+                                    (.getAttribute "data-uid"))
+                            uid)
+        [uid embed-id]   (db/uid-and-embed-id uid)
         block            (db/get-block [:block/uid uid])
         parent           (db/get-parent [:block/uid uid])
         root-block?      (boolean (:node/title parent))
@@ -726,6 +738,11 @@
                            [:enter/add-child block new-uid]
 
                            (and (not (:block/open block))
+                                embed-id root-embed?
+                                (= start (count value)))
+                           [:no-op]
+
+                           (and (not (:block/open block))
                                 (not-empty (:block/children block))
                                 (= start (count value)))
                            [:enter/new-block block parent new-uid]
@@ -733,6 +750,19 @@
                            (and (empty? value)
                                 (or (= context-root-uid (:block/uid parent))
                                     root-block?))
+                           [:enter/new-block block parent new-uid]
+
+                           (and (:block/open block)
+                                embed-id root-embed?
+                                (not= start (count value)))
+                           [:split-block-to-children uid value start new-uid]
+
+                           (and (:block/open block)
+                                embed-id root-embed?
+                                (= start (count value)))
+                           [:enter/add-child block new-uid]
+
+                           (and (empty? value) embed-id)
                            [:enter/new-block block parent new-uid]
 
                            (not (zero? start))
@@ -744,8 +774,10 @@
                            (and (zero? start) value)
                            [:enter/bump-up uid new-uid])]
     {:dispatch-later [{:ms 0  :dispatch event}
-                      {:ms 10 :dispatch [:editing/uid (cond-> new-uid
-                                                        embed-id (str "-embed-" embed-id))]}]}))
+                      (if (= event [:no-op])
+                        {:ms 0  :dispatch [:no-op]}
+                        {:ms 10 :dispatch [:editing/uid (cond-> new-uid
+                                                          embed-id (str "-embed-" embed-id))]})]}))
 
 
 (reg-event-fx

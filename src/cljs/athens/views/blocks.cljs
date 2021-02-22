@@ -667,7 +667,7 @@
   "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
   [e uid state]
   (set! (.. e -dataTransfer -effectAllowed) "move")
-  (.. e -dataTransfer (setData "text/plain" uid))
+  (.. e -dataTransfer (setData "text/plain" (-> uid db/uid-and-embed-id first)))
   (swap! state assoc :dragging true))
 
 
@@ -777,6 +777,7 @@
   [e block state]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
+        [target-uid _]          (db/uid-and-embed-id target-uid)
         {:keys [drag-target]} @state
         source-uid     (.. e -dataTransfer (getData "text/plain"))
         effect-allowed (.. e -dataTransfer -effectAllowed)
@@ -882,7 +883,7 @@
 
            [toggle-el uid-sanitized-block state linked-ref]
            [context-menu-el uid-sanitized-block state]
-           [bullet-el uid-sanitized-block state linked-ref]
+           [bullet-el block state linked-ref]
            [tooltip-el uid-sanitized-block state]
            [block-content-el block state opts]
            (when-not (:block-embed? opts)

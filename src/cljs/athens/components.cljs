@@ -7,6 +7,7 @@
     [athens.util :refer [now-ts recursively-modify-block-for-embed]]
     [athens.views.blocks :as blocks]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -22,9 +23,13 @@
 
 
 (defn span-click-stop
-  []
+  "Stop clicks from propagating to textarea and thus preventing edit mode
+   TODO() - might be a good idea to keep an edit icon at top right
+     for every component."
+  [children]
   [:span {:on-click (fn [e]
-                      (.. e stopPropagation))}])
+                      (.. e stopPropagation))}
+   children])
 
 
 (defmethod component :todo
@@ -81,19 +86,23 @@
 
 (defmethod component :block-embed
   [content uid]
-  [:div.block-embed (use-style block-embed-adjustments)
-   (let [block (->> (re-find #"\(\((.+)\)\)" content)
-                    last (vector :block/uid) db/get-block-document)]
-     [:<>
-      [blocks/block-el
-       (recursively-modify-block-for-embed block (random-uuid))
-       {:linked-ref false}
-       {:block-embed? true}]
-      (when-not @(subscribe [:editing/is-editing uid])
-        [:> mui-icons/Edit
-         {:on-click (fn [e]
-                      (.. e stopPropagation)
-                      (dispatch [:editing/uid uid]))}])])])
+  ;; bindings are eval only once in with-let
+  ;; which is needed to keep embed integrity else it will update on
+  ;; each re-render. Similar to ref-comp
+  (r/with-let [embed-id (random-uuid)]
+    [:div.block-embed (use-style block-embed-adjustments)
+     (let [block (->> (re-find #"\(\((.+)\)\)" content)
+                      last (vector :block/uid) db/get-block-document)]
+       [:<>
+        [blocks/block-el
+         (recursively-modify-block-for-embed block embed-id)
+         {:linked-ref false}
+         {:block-embed? true}]
+        (when-not @(subscribe [:editing/is-editing uid])
+          [:> mui-icons/Edit
+           {:on-click (fn [e]
+                        (.. e stopPropagation)
+                        (dispatch [:editing/uid uid]))}])])]))
 
 
 
