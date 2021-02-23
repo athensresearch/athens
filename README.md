@@ -37,7 +37,7 @@ Some tips once you've got Athens:
 
 Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUCT.md#values) (especially about Clojure!).
 
-Every Sunday we have a Community Call at 11am Pacific.
+Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c8e4736a28983889102fa70) at 11am Pacific.
 
 We chat about other Tools for Thought, [graph visualizations](https://github.com/athensresearch/athens/issues/21), [graph DBs, decentralized DBs](https://github.com/athensresearch/athens/issues/9), blockchains, [open protocols, knowledge markets](https://github.com/athensresearch/athens/blob/master/VISION.md#a-protocol-for-knowledge-markets), [education](https://github.com/athensresearch/athens/blob/master/doc/ClojureFam.md), philosophy, and governance.
 
