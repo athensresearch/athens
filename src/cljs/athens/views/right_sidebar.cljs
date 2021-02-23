@@ -1,6 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
     ["@material-ui/icons" :as mui-icons]
+    [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
@@ -224,8 +225,8 @@
                                             [:> mui-icons/ChevronRight]]
                                            [:h2
                                             (if title
-                                              [:<> [:> mui-icons/Description] title]
-                                              [:<> [:> mui-icons/FiberManualRecord] string])]
+                                              [:<> [:> mui-icons/Description] [parse-renderer/parse-and-render title uid]]
+                                              [:<> [:> mui-icons/FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
                                            [:div {:class "controls"}
                                             ;;  [button [:> mui-icons/DragIndicator]]
                                             ;;  [:hr]
