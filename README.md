@@ -1,20 +1,14 @@
 [![twitter](https://img.shields.io/twitter/follow/athensresearch?label=Follow&style=social)](https://twitter.com/athensresearch)
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
-[![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens)
-<img src="./doc/yc.png" width="20" height="20" />
-
-[![Contributors](https://opencollective.com/athens/tiers/contributors.svg?avatarHeight=36)](https://opencollective.com/athens)
-
-> I am the wisest man alive, for I know one thing, and that is that I know nothing.
-
-— Socrates
+[![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="50" height="50" />
 
 # What is Athens
 
 Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
 
-**Download the free desktop app and sponsor Athens at https://opencollective.com/athens!**
+**Download the free desktop app and sponsor us for additional features/services at https://opencollective.com/athens!**
 
 Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens
 
@@ -72,6 +66,24 @@ To learn more about this project, please see:
 - [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
+
+# Thank You
+
+Athens is here today because of our Sponsors and Contributors. Thank you.
+
+## Sponsors
+
+[![Contributors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
+
+## Contributors
+
+Developers
+
+![Contributors-Dev](https://athens-assets-1.s3.us-east-2.amazonaws.com/contributor-faces.png)
+
+Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
+
+Plus everyone who's commented on GitHub, Discord, Twitter... the community!
 
 ---
 
