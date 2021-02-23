@@ -40,7 +40,7 @@ Athens lets you take notes with minimal systems, structure, and organization, fr
 
 ![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
 
-# Building Locally / Contributing to Athens
+# [Building Locally or Contributing](CONTRIBUTING.md)
 
 If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](CONTRIBUTING.md). This also contains instructions on how to build Athens on your own computer.
 
