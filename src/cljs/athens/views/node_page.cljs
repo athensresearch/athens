@@ -507,7 +507,9 @@
                           :class    "page-header"
                           :on-click (fn [e]
                                       (.. e preventDefault)
-                                      (dispatch [:editing/uid uid]))})
+                                      (if timeline-page?
+                                        (navigate-uid uid e)
+                                        (dispatch [:editing/uid uid])))})
           ;; Prevent editable textarea if a node/title is a date
           ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
           [button {:class    [(when show "active")]
