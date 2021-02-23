@@ -14,7 +14,9 @@
 
 Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
 
-**Download the free desktop at and sponsor Athens at https://opencollective.com/athens!**
+**Download the free desktop app and sponsor Athens at https://opencollective.com/athens!**
+
+Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens
 
 ![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
 
@@ -39,13 +41,9 @@ Athens lets you take notes with minimal systems, structure, and organization, fr
 
 ![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
 
-# How to Use Athens
+# Building Locally / Contributing to Athens
 
-If you want to try Athens, you have a few options:
-
-1. Build yourself locally via the directions in [Contributing](CONTRIBUTING.md) (and consider contributing!).
-1. Sponsor the project on [OpenCollective](https://opencollective.com/athens) to receive the beta today.
-1. Join the [Waitlist](https://forms.gle/9L1D1T7R3G7pvh1e7) to get in line to use Athens.
+If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](CONTRIBUTING.md). This also contains instructions on how to build Athens on your own computer.
 
 Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
