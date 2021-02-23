@@ -57,7 +57,7 @@ Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c
 
 # [Pricing](https://opencollective.com/athens)
 
-Athens is free to self-host, with additional features and services for our paid sponsors. We are also working a commercial version for enterprise companies to self-host. Please see our [OpenCollective](https://opencollective.com/athens) for more details.
+Athens is free to self-host, with additional features and services for our paid sponsors. We are also working on an enterprise offering for companies to self-host. Please see our [Open Collective](https://opencollective.com/athens) for more details.
 
 ### Download the free desktop app
 
