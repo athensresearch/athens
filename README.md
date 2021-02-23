@@ -2,7 +2,7 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
-<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="50" height="50" />
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="40" height="40" />
 
 # What is Athens
 
