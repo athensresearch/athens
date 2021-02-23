@@ -8,12 +8,17 @@
 
 Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
 
-**Download the free desktop app and sponsor us for additional features/services at https://opencollective.com/athens!**
+### Download the free desktop app
 
-Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens
+- Mac: https://tinyurl.com/athens-mac
+- Windows: https://tinyurl.com/athens-windows
+- Linux: https://tinyurl.com/athens-linux
+
+**Sponsor us for additional features/services at https://opencollective.com/athens!**
+
+**Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
 
 ![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
-
 
 ### Open-Source
 
@@ -53,6 +58,14 @@ Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c
 # [Pricing](https://opencollective.com/athens)
 
 Athens is free to self-host, with additional features and services for our paid sponsors. We are also working a commercial version for enterprise companies to self-host. Please see our [OpenCollective](https://opencollective.com/athens) for more details.
+
+### Download the free desktop app
+
+- Mac: https://tinyurl.com/athens-mac
+- Windows: https://tinyurl.com/athens-windows
+- Linux: https://tinyurl.com/athens-linux
+
+**Sponsor us for additional features/services at https://opencollective.com/athens!**
 
 # Links
 
