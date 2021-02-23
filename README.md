@@ -12,13 +12,32 @@
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
 
-Athens is a desktop app that stores all your data locally and privately on your local filesystem.
+**Download the free desktop at and sponsor Athens at https://opencollective.com/athens!**
 
-Athens is free for individuals to self-host.
+![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
 
-<img src="./doc/product-dark.png" width="auto" />
+
+### Open-Source
+
+- The freedom to self-host
+- The freedom to use any previous version of Athens for the rest of time
+- Insurance against vendor lock-in
+- Transparency and direct feedback loops in the [development](https://loom.com/share/folder/5582cfd8099a4dbda63b61213d5d9152) [process](https://github.com/athensresearch/athens/issues)
+
+### Local-First
+
+- 0% data loss
+- 0% downtime
+- 100% availability
+- 100% local and fast unlike server-first apps (*cough* Notion and Roam)
+
+## Knowledge Base
+
+Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
+
+![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
 
 # How to Use Athens
 
@@ -28,7 +47,7 @@ If you want to try Athens, you have a few options:
 1. Sponsor the project on [OpenCollective](https://opencollective.com/athens) to receive the beta today.
 1. Join the [Waitlist](https://forms.gle/9L1D1T7R3G7pvh1e7) to get in line to use Athens.
 
-Some tips once you've got Athens:
+Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
 - [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
