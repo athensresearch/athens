@@ -50,19 +50,16 @@ Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUC
 
 Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c8e4736a28983889102fa70) at 11am Pacific.
 
-We chat about other Tools for Thought, [graph visualizations](https://github.com/athensresearch/athens/issues/21), [graph DBs, decentralized DBs](https://github.com/athensresearch/athens/issues/9), blockchains, [open protocols, knowledge markets](https://github.com/athensresearch/athens/blob/master/VISION.md#a-protocol-for-knowledge-markets), [education](https://github.com/athensresearch/athens/blob/master/doc/ClojureFam.md), philosophy, and governance.
+# [Pricing](https://opencollective.com/athens)
 
-We also love [Future of Coding topics](https://futureofcoding.org/episodes/046#question-thirteen-what-foc-topics-interest-you-most) such as visual programming, live programming, [local first apps](https://www.inkandswitch.com/local-first.html), [end-user programming](https://www.inkandswitch.com/end-user-programming.html), programming language theory, HCI, AR / VR / spatial software, AI / ML, and so on and so forth.
-
-Ultimately, however, we recognize technology does not exist in a vaccum. Technology shapes society as much as vice versa. There are never no externalities. If you are interested in "**sensemaking**" towards a better world, please join us!
+Athens is free to self-host, with additional features and services for our paid sponsors. We are also working a commercial version for enterprise companies to self-host. Please see our [OpenCollective](https://opencollective.com/athens) for more details.
 
 # Links
 
 To learn more about this project, please see:
 
-- [Our Notion](https://www.notion.so/athensresearch/Athens-Research-67e1c6068cb449ff935d10e882fd9b05) — helpful docs like tutorials, updates, meeting notes
-    - [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
-    - [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
+- [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
+- [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
 - [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
 - [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
@@ -84,7 +81,3 @@ Developers
 Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
 
 Plus everyone who's commented on GitHub, Discord, Twitter... the community!
-
----
-
-![Athens](doc/athens-logo-1065x600.png)
