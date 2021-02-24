@@ -47,9 +47,6 @@
   (reset! email value))
 
 
-(def a (atom nil))
-
-
 (defn handle-click-email
   [email authed? sending-request]
   (let [api       "https://dhx9n94ty5.execute-api.us-east-1.amazonaws.com/Prod/hello"
