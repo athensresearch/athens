@@ -328,36 +328,36 @@
                                           (not (.. @ref (contains (.. e -target)))))
                                  (swap! state assoc :menu/show false)))]
     (r/create-class
-      {:display-name "node-page-menu"
-       :component-did-mount (fn [_this] (listen js/document "mousedown" handle-click-outside))
+      {:display-name           "node-page-menu"
+       :component-did-mount    (fn [_this] (listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render   (fn [node state daily-note?]
-                           (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                 {:menu/keys [show x y]} @state]
-                             (when show
-                               [:div (merge (use-style dropdown-style
-                                                       {:ref #(reset! ref %)})
-                                            {:style {:font-size "14px"
-                                                     :position "fixed"
-                                                     :left (str x "px")
-                                                     :top (str y "px")}})
-                                [:div (use-style menu-style)
-                                 (if sidebar
-                                   [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/BookmarkBorder]
-                                     [:span "Remove Shortcut"]]]
-                                   [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/Bookmark]
-                                     [:span "Add Shortcut"]]])
-                                 [:hr (use-style menu-separator-style)]
-                                 [button {:on-click #(if daily-note?
-                                                       (dispatch [:daily-note/delete uid title])
-                                                       (do
-                                                         (navigate :pages)
-                                                         (dispatch [:page/delete uid title])))}
-                                  [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
+       :reagent-render         (fn [node state daily-note?]
+                                 (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
+                                       {:menu/keys [show x y]} @state]
+                                   (when show
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref #(reset! ref %)})
+                                                  {:style {:font-size "14px"
+                                                           :position  "fixed"
+                                                           :left      (str x "px")
+                                                           :top       (str y "px")}})
+                                      [:div (use-style menu-style)
+                                       (if sidebar
+                                         [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                          [:<>
+                                           [:> mui-icons/BookmarkBorder]
+                                           [:span "Remove Shortcut"]]]
+                                         [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                          [:<>
+                                           [:> mui-icons/Bookmark]
+                                           [:span "Add Shortcut"]]])
+                                       [:hr (use-style menu-separator-style)]
+                                       [button {:on-click #(if daily-note?
+                                                             (dispatch [:daily-note/delete uid title])
+                                                             (do
+                                                               (navigate :pages)
+                                                               (dispatch [:page/delete uid title])))}
+                                        [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
 (defn ref-comp
@@ -533,7 +533,7 @@
           [parse-renderer/parse-and-render (:title/local @state) uid]]
 
          ;; Dropdown
-         [menu-dropdown node state]
+         [menu-dropdown node state daily-note?]
 
          ;; Children
          (if (empty? children)
