@@ -93,7 +93,6 @@
         (dispatch [:daily-note/next (get-day)])
         (let [notes (safe-pull-many @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
-           (prn "N" notes)
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}

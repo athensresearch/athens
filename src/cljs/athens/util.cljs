@@ -177,7 +177,7 @@
     (catch js/Object _ nil)))
 
 
-(defn is-timeline-page
+(defn is-daily-note
   [uid]
   (boolean (uid-to-date uid)))
 

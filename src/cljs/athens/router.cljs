@@ -109,7 +109,7 @@
   "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
   []
   (let [route-uid @(subscribe [:current-route/uid])]
-    (if (util/is-timeline-page route-uid)
+    (if (util/is-daily-note route-uid)
       (dispatch [:daily-notes/add route-uid])
       (dispatch [:daily-notes/reset]))
     (navigate :home)))
