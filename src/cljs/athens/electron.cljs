@@ -278,7 +278,7 @@
         (.. fs (watch dirpath (fn [_event filename]
                                 ;; when filename matches last part of filepath
                                 ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                                (when (re-find #"conflict" filename)
+                                (when (re-find #"conflict" (or filename ""))
                                   (throw "Conflict file created by Dropbox"))
                                 (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
                                   (debounce-sync-db-from-fs filepath filename))))))
