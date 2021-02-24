@@ -36,6 +36,8 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 ## Knowledge Base
 
+The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
+
 Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
 
 ![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
