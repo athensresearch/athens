@@ -27,14 +27,16 @@
 
                      :compiler-options {:closure-warnings {:global-this :off}
                                         :infer-externs :auto
-                                        :closure-defines {re-frame.trace.trace-enabled? true}}
+                                        :closure-defines {re-frame.trace.trace-enabled? true}
+                                        :output-feature-set :es8}
 
                      :devtools {:preloads [devtools.preload
                                            day8.re-frame-10x.preload]}}
 
           :main {:target :node-script
                  :output-to "resources/main.js"
-                 :main athens.main.core/main}
+                 :main athens.main.core/main
+                 :compiler-options {:output-feature-set :es8}}
 
           :devcards         {:asset-path "js/devcards"
                              :modules {:main {:init-fn athens.devcards/main}}
