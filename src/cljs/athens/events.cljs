@@ -301,6 +301,13 @@
     (update db :modal not)))
 
 
+;; Window Size
+
+(reg-event-fx
+  :window/set-size
+  (fn [_ [_ [x y]]]
+    {:local-storage/set! ["ws/window-size" (str x "," y)]}))
+
 ;; Loading
 
 (reg-event-db

@@ -262,3 +262,14 @@
     (electron?) (.. (js/require "electron") -remote -app getVersion)))
     ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
     ;;:else "Web"))
+
+
+;; Window
+
+(defn get-window-size
+  "Reads window size from local-storage and returns the values as a vector"
+  []
+  (let [ws (js/localStorage.getItem "ws/window-size")]
+    (if (nil? ws)
+      '[800 600]
+      (map #(js/parseInt %) (string/split ws ",")))))
