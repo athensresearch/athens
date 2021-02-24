@@ -1153,27 +1153,27 @@
 
 
 (reg-event-fx
- :drop-multi/child
- (fn [_ [_ source-uid target]]
-   {:dispatch [:transact (drop-multi-child source-uid target)]}))
+  :drop-multi/child
+  (fn [_ [_ source-uid target]]
+    {:dispatch [:transact (drop-multi-child source-uid target)]}))
 
 
 (reg-event-fx
- :drop-multi/same-all
- (fn [_ [_ kind source-uids parent target]]
-   {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
+  :drop-multi/same-all
+  (fn [_ [_ kind source-uids parent target]]
+    {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
 
 
 (reg-event-fx
- :drop-multi/diff-source
- (fn [_ [_ kind source-uids target target-parent]]
-   {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
+  :drop-multi/diff-source
+  (fn [_ [_ kind source-uids target target-parent]]
+    {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
 
 
 (reg-event-fx
- :drop-multi/same-source
- (fn [_ [_ kind source-uids first-source-parent target target-parent]]
-   {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
+  :drop-multi/same-source
+  (fn [_ [_ kind source-uids first-source-parent target target-parent]]
+    {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
 
 
 (defn drop-bullet-multi
@@ -1198,9 +1198,9 @@
 
 
 (reg-event-fx
- :drop-multi
- (fn [_ [_ uids target-uid kind]]
-   (drop-bullet-multi uids target-uid kind)))
+  :drop-multi
+  (fn [_ [_ uids target-uid kind]]
+    (drop-bullet-multi uids target-uid kind)))
 
 
 (defn text-to-blocks
@@ -1273,44 +1273,44 @@
 ;; - Otherwise append after current block.
 
 (reg-event-fx
- :paste
- (fn [_ [_ uid text]]
-   (let [block         (db/get-block [:block/uid uid])
-         {:block/keys [order children open]} block
-         {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
-         empty-block?  (and (string/blank? value)
-                            (empty? children))
-         block-start?  (zero? start)
-         parent?       (and children open)
-         start-idx     (cond
-                         empty-block? order
-                         block-start? order
-                         parent? 0
-                         :else (inc order))
-         root-order    (atom start-idx)
-         parent        (cond
-                         parent? block
-                         :else (db/get-parent [:block/uid uid]))
-         paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
+  :paste
+  (fn [_ [_ uid text]]
+    (let [block         (db/get-block [:block/uid uid])
+          {:block/keys [order children open]} block
+          {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
+          empty-block?  (and (string/blank? value)
+                             (empty? children))
+          block-start?  (zero? start)
+          parent?       (and children open)
+          start-idx     (cond
+                          empty-block? order
+                          block-start? order
+                          parent? 0
+                          :else (inc order))
+          root-order    (atom start-idx)
+          parent        (cond
+                          parent? block
+                          :else (db/get-parent [:block/uid uid]))
+          paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
           ;; the delta between root-order and start-idx is how many root blocks were added
-         n             (- @root-order start-idx)
-         start-reindex (cond
-                         block-start? (dec order)
-                         parent? -1
-                         :else order)
-         amount        (cond
-                         empty-block? (dec n)
-                         :else n)
-         reindex       (plus-after (:db/id parent) start-reindex amount)
-         tx-data       (concat reindex
-                               paste-tx-data
-                               (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
-     {:dispatch-n [[:transact tx-data]
-                   (when block-start?
-                     (let [block (-> paste-tx-data first :block/children)
-                           {:block/keys [uid string]} block
-                           n     (count string)]
-                       [:editing/uid uid n]))]})))
+          n             (- @root-order start-idx)
+          start-reindex (cond
+                          block-start? (dec order)
+                          parent? -1
+                          :else order)
+          amount        (cond
+                          empty-block? (dec n)
+                          :else n)
+          reindex       (plus-after (:db/id parent) start-reindex amount)
+          tx-data       (concat reindex
+                                paste-tx-data
+                                (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
+      {:dispatch-n [[:transact tx-data]
+                    (when block-start?
+                      (let [block (-> paste-tx-data first :block/children)
+                            {:block/keys [uid string]} block
+                            n     (count string)]
+                        [:editing/uid uid n]))]})))
 
 
 (defn left-sidebar-drop-above
@@ -1339,9 +1339,9 @@
 
 
 (reg-event-fx
- :left-sidebar/drop-above
- (fn-traced [_ [_ source-order target-order]]
-            {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
+  :left-sidebar/drop-above
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
 
 
 (defn left-sidebar-drop-below
@@ -1364,9 +1364,9 @@
 
 
 (reg-event-fx
- :left-sidebar/drop-below
- (fn-traced [_ [_ source-order target-order]]
-            {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
+  :left-sidebar/drop-below
+  (fn-traced [_ [_ source-order target-order]]
+             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
 
 
 (defn link-unlinked-reference
@@ -1381,19 +1381,19 @@
 
 
 (reg-event-fx
- :unlinked-references/link
- (fn [_ [_ block title]]
-   (let [{:block/keys [string uid]} block
-         new-str (link-unlinked-reference string title)]
-     {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
+  :unlinked-references/link
+  (fn [_ [_ block title]]
+    (let [{:block/keys [string uid]} block
+          new-str (link-unlinked-reference string title)]
+      {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
 
 
 (reg-event-fx
- :unlinked-references/link-all
- (fn [_ [_ unlinked-refs title]]
-   (let [new-str-tx-data (->> unlinked-refs
-                              (mapcat second unlinked-refs)
-                              (map (fn [{:block/keys [string uid]}]
-                                     (let [new-str (link-unlinked-reference string title)]
-                                       {:db/id [:block/uid uid] :block/string new-str}))))]
-     {:dispatch [:transact new-str-tx-data]})))
+  :unlinked-references/link-all
+  (fn [_ [_ unlinked-refs title]]
+    (let [new-str-tx-data (->> unlinked-refs
+                               (mapcat second unlinked-refs)
+                               (map (fn [{:block/keys [string uid]}]
+                                      (let [new-str (link-unlinked-reference string title)]
+                                        {:db/id [:block/uid uid] :block/string new-str}))))]
+      {:dispatch [:transact new-str-tx-data]})))
