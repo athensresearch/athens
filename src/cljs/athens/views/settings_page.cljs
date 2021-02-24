@@ -7,7 +7,8 @@
     [cljs.core.async :refer [<!]]
     [goog.functions :as goog-functions]
     [reagent.core :as r])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros
+    [cljs.core.async.macros :refer [go]]))
 
 
 (defn opt-out
@@ -48,6 +49,7 @@
 
 (def a (atom nil))
 
+
 (defn handle-click-email
   [email authed? sending-request]
   (let [api       "https://dhx9n94ty5.execute-api.us-east-1.amazonaws.com/Prod/hello"
@@ -72,8 +74,8 @@
   []
   (let [email (js/localStorage.getItem "auth/email")]
     (if (= email "null")
-       ""
-       email)))
+      ""
+      email)))
 
 
 (defn settings-page
