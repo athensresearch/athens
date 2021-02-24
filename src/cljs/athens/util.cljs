@@ -61,8 +61,8 @@
   (let [el-box (.. element getBoundingClientRect)
         cont-box (.. container getBoundingClientRect)]
     (or
-     (> (.. el-box -bottom) (.. cont-box -bottom))
-     (< (.. el-box -top) (.. cont-box -top)))))
+      (> (.. el-box -bottom) (.. cont-box -bottom))
+      (< (.. el-box -top) (.. cont-box -top)))))
 
 
 (defn scroll-into-view [element container align-top?]
@@ -144,14 +144,14 @@
   ([] (get-day 0))
   ([offset]
    (let [day (t/-
-              (t/date-time)
-              (t/new-duration offset :days))]
+               (t/date-time)
+               (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)}))
   ([date offset]
    (let [day (t/-
-              (-> date (t/at "0"))
-              (t/new-duration offset :days))]
+               (-> date (t/at "0"))
+               (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)})))
 
@@ -161,7 +161,7 @@
   (if (not ts)
     [:span "(unknown date)"]
     (as->
-     (t/instant ts) x
+      (t/instant ts) x
       (t/date-time x)
       (t/format date-col-format x)
       (string/replace x #"AM" "am")
@@ -180,6 +180,7 @@
 (defn is-daily-note
   [uid]
   (boolean (uid-to-date uid)))
+
 
 
 ;; -- Regex -----------------------------------------------------------
@@ -262,6 +263,7 @@
     ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
     ;;:else "Web"))
 
+
 ;; Window
 
 (defn get-window-size
@@ -271,4 +273,3 @@
     (if (nil? ws)
       '[800 600]
       (map #(js/parseInt %) (string/split ws ",")))))
-
