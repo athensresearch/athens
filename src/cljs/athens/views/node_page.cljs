@@ -7,7 +7,7 @@
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-timeline-page get-caret-position]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -321,44 +321,43 @@
 
 
 (defn menu-dropdown
-  [_node state]
+  [_node state _daily-note?]
   (let [ref                  (atom nil)
         handle-click-outside (fn [e]
                                (when (and (:menu/show @state)
                                           (not (.. @ref (contains (.. e -target)))))
                                  (swap! state assoc :menu/show false)))]
     (r/create-class
-      {:display-name "node-page-menu"
-       :component-did-mount (fn [_this] (listen js/document "mousedown" handle-click-outside))
+      {:display-name           "node-page-menu"
+       :component-did-mount    (fn [_this] (listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render   (fn [node state]
-                           (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                 {:menu/keys [show x y]} @state
-                                 timeline-page? (is-timeline-page uid)]
-                             (when show
-                               [:div (merge (use-style dropdown-style
-                                                       {:ref #(reset! ref %)})
-                                            {:style {:font-size "14px"
-                                                     :position "fixed"
-                                                     :left (str x "px")
-                                                     :top (str y "px")}})
-                                [:div (use-style menu-style)
-                                 (if sidebar
-                                   [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/BookmarkBorder]
-                                     [:span "Remove Shortcut"]]]
-                                   [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                    [:<>
-                                     [:> mui-icons/Bookmark]
-                                     [:span "Add Shortcut"]]])
-                                 (when-not timeline-page?
-                                   [:hr (use-style menu-separator-style)])
-                                 (when-not timeline-page?
-                                   [button {:on-click #(do
-                                                         (navigate :pages)
-                                                         (dispatch [:page/delete uid title]))}
-                                    [:<> [:> mui-icons/Delete] [:span "Delete Page"]]])]])))})))
+       :reagent-render         (fn [node state daily-note?]
+                                 (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
+                                       {:menu/keys [show x y]} @state]
+                                   (when show
+                                     [:div (merge (use-style dropdown-style
+                                                             {:ref #(reset! ref %)})
+                                                  {:style {:font-size "14px"
+                                                           :position  "fixed"
+                                                           :left      (str x "px")
+                                                           :top       (str y "px")}})
+                                      [:div (use-style menu-style)
+                                       (if sidebar
+                                         [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                          [:<>
+                                           [:> mui-icons/BookmarkBorder]
+                                           [:span "Remove Shortcut"]]]
+                                         [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                          [:<>
+                                           [:> mui-icons/Bookmark]
+                                           [:span "Add Shortcut"]]])
+                                       [:hr (use-style menu-separator-style)]
+                                       [button {:on-click #(if daily-note?
+                                                             (dispatch [:daily-note/delete uid title])
+                                                             (do
+                                                               (navigate :pages)
+                                                               (dispatch [:page/delete uid title])))}
+                                        [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
 
 
 (defn ref-comp
@@ -486,19 +485,19 @@
     (fn [node editing-uid linked-refs]
       (let [{:block/keys [children uid] title :node/title} node
             {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            timeline-page? (is-timeline-page uid)
-            daily-notes?   (= :home @(subscribe [:current-route/name]))]
+            daily-note?  (is-daily-note uid)
+            on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
 
         (sync-title title state)
 
-        [:div (use-style page-style {:class ["node-page"]
+        [:div (use-style page-style {:class    ["node-page"]
                                      :data-uid uid})
 
          (when alert-show
            [:div (use-style {:position "absolute"
-                             :top "50px"
-                             :left "35%"})
+                             :top      "50px"
+                             :left     "35%"})
             [alert-component message confirm-fn cancel-fn]])
 
          ;; Header
@@ -507,7 +506,7 @@
                           :class    "page-header"
                           :on-click (fn [e]
                                       (.. e preventDefault)
-                                      (if timeline-page?
+                                      (if daily-note?
                                         (navigate-uid uid e)
                                         (dispatch [:editing/uid uid])))})
           ;; Prevent editable textarea if a node/title is a date
@@ -523,18 +522,18 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-          (when-not timeline-page?
+          (when-not daily-note?
             [autosize/textarea
-             {:value         (:title/local @state)
-              :id            (str "editable-uid-" uid)
-              :class         (when (= editing-uid uid) "is-editing")
-              :on-blur       (fn [_] (handle-blur node state linked-refs))
-              :on-key-down   (fn [e] (handle-key-down e uid state children))
-              :on-change     (fn [e] (handle-change e state))}])
+             {:value       (:title/local @state)
+              :id          (str "editable-uid-" uid)
+              :class       (when (= editing-uid uid) "is-editing")
+              :on-blur     (fn [_] (handle-blur node state linked-refs))
+              :on-key-down (fn [e] (handle-key-down e uid state children))
+              :on-change   (fn [e] (handle-change e state))}])
           [parse-renderer/parse-and-render (:title/local @state) uid]]
 
          ;; Dropdown
-         [menu-dropdown node state]
+         [menu-dropdown node state daily-note?]
 
          ;; Children
          (if (empty? children)
@@ -545,8 +544,8 @@
               [block-el child])])
 
          ;; References
-         [linked-ref-el state daily-notes? linked-refs]
-         [unlinked-ref-el state daily-notes? unlinked-refs title]]))))
+         [linked-ref-el state on-daily-notes? linked-refs]
+         [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
 
 
 (defn node-page-component

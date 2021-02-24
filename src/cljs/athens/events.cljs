@@ -356,6 +356,14 @@
          :dispatch [:page/create title uid]}))))
 
 
+(reg-event-fx
+  :daily-note/delete
+  (fn [{:keys [db]} [_ uid title]]
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+          new-db (assoc db :daily-notes/items filtered-dn)]
+      {:fx [[:dispatch [:page/delete uid title]]]
+       :db new-db})))
+
 ;; -- event-fx and Datascript Transactions -------------------------------
 
 ;; Import/Export

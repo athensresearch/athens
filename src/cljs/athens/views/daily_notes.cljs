@@ -8,7 +8,7 @@
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [q pull-many]]
+    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -65,6 +65,23 @@
 (def db-scroll-daily-notes (debounce scroll-daily-notes 500))
 
 
+(defn safe-pull-many
+  "Need a safe pull because block/uid doesn't exist yet in datascript, but is found in :daily-notes/items.
+  This happens because (dispatch [:daily-note/next (get-day)]) updates re-frame faster than the datascript tx can happen
+
+  Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
+  [ids]
+  (->> ids
+       (map (fn [x] [:block/uid x]))
+       (map (fn [x]
+              (try
+                @(pull db/dsdb '[*] x)
+                (catch js/Error _e
+                  nil))))
+       (filter (fn [x]
+                 (not (nil? x))))))
+
+
 ;;; Components
 
 
@@ -74,21 +91,8 @@
     (fn []
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (get-day)])
-        (let [notes (some->> @(q '[:find [?uid ...]
-                                   :in $ [?uid ...]
-                                   :where [?e :block/uid ?uid]]
-                                 db/dsdb @note-refs)
-                             not-empty
-                             sort
-                             reverse
-                             (map (fn [x] [:block/uid x]))
-                             (pull-many db/dsdb '[*])
-                             deref)]
+        (let [notes (safe-pull-many @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
-           #_[:div (use-style (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
-                                                             :opacity "0.5"
-                                                             :min-height "10vh"}))
-              [:h1 "Later"]]
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}
