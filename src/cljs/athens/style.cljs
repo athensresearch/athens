@@ -157,4 +157,5 @@
     (stylefy/tag ":root" (merge permute-light
                                 {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
-  (util/hide-10x))
+  (when athens.config/debug?
+    (util/hide-10x)))

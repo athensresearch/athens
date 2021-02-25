@@ -222,29 +222,33 @@
 
 (defn re-frame-10x-open?
   []
-  (let [el-10x      (getElement "--re-frame-10x--")
-        display-10x (.. el-10x -style -display)]
-    (not (= "none" display-10x))))
+  (when athens.config/debug?
+    (let [el-10x (getElement "--re-frame-10x--")
+          display-10x (.. el-10x -style -display)]
+      (not (= "none" display-10x)))))
 
 
 (defn open-10x
   []
-  (let [el (js/document.querySelector "#--re-frame-10x--")]
-    (setProperties el (clj->js {"style" "display: block"}))))
+  (when athens.config/debug?
+    (let [el (js/document.querySelector "#--re-frame-10x--")]
+      (setProperties el (clj->js {"style" "display: block"})))))
 
 
 (defn hide-10x
   []
-  (let [el (js/document.querySelector "#--re-frame-10x--")]
-    (setProperties el (clj->js {"style" "display: none"}))))
+  (when athens.config/debug?
+    (let [el (js/document.querySelector "#--re-frame-10x--")]
+      (setProperties el (clj->js {"style" "display: none"})))))
 
 
 (defn toggle-10x
   []
-  (let [open? (re-frame-10x-open?)]
-    (if open?
-      (hide-10x)
-      (open-10x))))
+  (when athens.config/debug?
+    (let [open? (re-frame-10x-open?)]
+      (if open?
+        (hide-10x)
+        (open-10x)))))
 
 
 (defn electron?
