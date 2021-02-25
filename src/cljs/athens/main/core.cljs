@@ -22,7 +22,8 @@
 (defn send-status-to-window
   [text]
   (.. log (info text))
-  (.. ^js @main-window -webContents (send text)))
+  (when @main-window
+    (.. ^js @main-window -webContents (send text))))
 
 
 (defn init-browser
