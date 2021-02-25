@@ -16,19 +16,28 @@
   <body>
     <div id="app">
     </div>
-    <script>localStorage.setItem("day8.re-frame-10x.show-panel","\"false\"")</script>
-    <script>localStorage.setItem("day8.re-frame-10x.using-trace?","\"false\"")</script>
     <script>
-       var userAgent = navigator.userAgent.toLowerCase();
-       var src = "";
-       if (userAgent.indexOf("electron/") > -1) {
-          src = "js/compiled/renderer.js"
-       } else {
-          src = "js/compiled/app.js"
-       }
-       var script = document.createElement("script");
-       script.setAttribute("src", src);
-       document.getElementsByTagName("head")[0].appendChild(script);
+      function isElectron() {
+        var userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.indexOf("electron/") > -1
+      }
+      function hide10x() {
+        localStorage.setItem("day8.re-frame-10x.show-panel","\"false\"")
+        localStorage.setItem("day8.re-frame-10x.using-trace?","\"false\"")
+      }
+    </script>
+    <script>
+      var electron = isElectron()
+      var src = ""
+      if (electron) {
+         src = "js/compiled/renderer.js"
+         hide10x() // hide10x by default. To stop, remove relevant localStorage key-vals and comment this out
+      } else {
+         src = "js/compiled/app.js"
+      }
+      var script = document.createElement("script");
+      script.setAttribute("src", src);
+      document.getElementsByTagName("head")[0].appendChild(script);
     </script>
   </body>
 </html>
