@@ -1,7 +1,7 @@
 ^:cljstyle/ignore
 (ns athens.views.graph-page
   (:require
-    ["react-force-graph" :as rfg]
+    ["react-force-graph-2d" :as ForceGraph2D]
     [athens.db :as db]
     [athens.style :as styles]
     [clojure.set :as set]
@@ -65,7 +65,7 @@
           theme (if dark? styles/THEME-DARK
                     styles/THEME-LIGHT)]
 
-      [:> rfg/ForceGraph2D
+      [:> ForceGraph2D
        {:graphData        {:nodes nodes
                            :links links}
         ;; example data
