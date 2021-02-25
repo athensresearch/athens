@@ -1,5 +1,6 @@
 (ns athens.views
   (:require
+    [athens.config]
     [athens.db :as db]
     [athens.subs]
     [athens.views.all-pages :refer [table]]

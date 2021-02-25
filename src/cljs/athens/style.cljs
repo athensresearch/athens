@@ -1,5 +1,6 @@
 (ns athens.style
   (:require
+    [athens.config :as config]
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
     [stylefy.core :as stylefy]))
@@ -157,5 +158,5 @@
     (stylefy/tag ":root" (merge permute-light
                                 {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
-  (when athens.config/debug?
+  (when config/debug?
     (util/hide-10x)))
