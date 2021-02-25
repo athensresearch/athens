@@ -56,7 +56,7 @@
     "nedb": "^1.8.0",
     "react": "16.9.0",
     "react-dom": "16.9.0",
-    "react-force-graph": "1.37.2",
+    "react-force-graph-2d": "^1.19.0",
     "react-highlight.js": "1.0.7"
   },
   "devDependencies": {
