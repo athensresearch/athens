@@ -1,14 +1,14 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.45",
+  "version": "1.0.0-beta.46",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
     "url": "https://github.com/athensresearch/athens/"
   },
   "scripts": {
-    "update:dry": "standard-version --dry-release -p --releaseCommitMessageFormat v{{currentTag}}",
+    "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
     "dev": "shadow-cljs watch main renderer",
     "compile": "shadow-cljs compile main renderer",
