@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.45](https://github.com/athensresearch/athens/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2021-02-26)
+
+
+### Bug Fixes
+
+* **electron:** make sure main-window exists before sending ([#699](https://github.com/athensresearch/athens/issues/699)) ([68eb2d8](https://github.com/athensresearch/athens/commit/68eb2d8e9364caf6392aa2edef91e19f4c12b903))
+
+
+### Documentation
+
+* added calva jack-in command for windows ([#701](https://github.com/athensresearch/athens/issues/701)) ([49dbddf](https://github.com/athensresearch/athens/commit/49dbddfe19bd0124fea12e472cd08238b7fc57b0))
+
 ## [1.0.0-beta.40](https://github.com/athensresearch/athens/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2021-02-16)
 
 
