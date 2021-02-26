@@ -8,6 +8,8 @@
     "url": "https://github.com/athensresearch/athens/"
   },
   "scripts": {
+    "update:dry": "standard-version --dry-release -p --releaseCommitMessageFormat v{{currentTag}}",
+    "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
     "dev": "shadow-cljs watch main renderer",
     "compile": "shadow-cljs compile main renderer",
     "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs",
@@ -96,6 +98,10 @@
       {
         "type": "wip",
         "section": "Work in Progress"
+      },
+      {
+        "type": "perf",
+        "section": "Performance"
       },
       {
         "type": "style",
