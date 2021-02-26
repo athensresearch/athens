@@ -620,7 +620,19 @@
        [autosize/textarea {:value          (:string/local @state)
                            ;; todo(abhinav)
                            ;; events are not getting captured when z-index given through class(specificity checked)
-                           :style          (when block-embed? {:z-index "5"})
+                           :style          (cond
+                                             ;; if editing always show original block
+                                             is-editing
+                                             {:z-index "3"}
+
+                                             ;; decrease z-index for embed textarea so click is taken by embed block
+                                             (and local (re-matches #"\{\{\[\[embed\]\]: \(\(.+\)\)\}\}" local))
+                                             {:z-index "1"}
+
+                                             ;; embed items
+                                             block-embed?
+                                             {:z-index "3"})
+
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            ;;:auto-focus     true
                            :id             (str "editable-uid-" uid)

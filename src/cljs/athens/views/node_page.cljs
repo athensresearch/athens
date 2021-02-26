@@ -382,10 +382,11 @@
                                                 new-P (drop-last parents)]
                                             (swap! state assoc :block new-B :parents new-P)))}
                [parse-and-render (or title string) (:block/uid block)]]))]
-         [block-el
-          (recursively-modify-block-for-embed block embed-id)
-          linked-ref-data
-          {:block-embed? true}]]))))
+         [:div.block-embed
+          [block-el
+           (recursively-modify-block-for-embed block embed-id)
+           linked-ref-data
+           {:block-embed? true}]]]))))
 
 
 (defn linked-ref-el
@@ -527,7 +528,7 @@
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
            [:> mui-icons/MoreHoriz]]
-          (when-not timeline-page?
+          (when-not daily-note?
             [autosize/textarea
              {:value       (:title/local @state)
               :id          (str "editable-uid-" uid)

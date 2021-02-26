@@ -307,13 +307,15 @@
                              html-id         (str "editable-uid-" uid)
                              ;;targets (js/document.querySelectorAll html-id)
                              ;;n       (count (array-seq targets))
-                             el              (or
-                                               ;; find exact embed block
-                                               (js/document.querySelector (str "textarea[id^='" html-id "-embed-" embed-id "']"))
-                                               ;; take default
-                                               (js/document.querySelector (str "#" html-id))
-                                               ;; find embedded that starts with (embed id changed due to re-render)
-                                               (js/document.querySelector (str "textarea[id^='" html-id "-embed-']")))]
+                             el              (js/document.querySelector
+                                               (if embed-id
+                                                 (or
+                                                   ;; find exact embed block
+                                                   (str "textarea[id='" html-id "-embed-" embed-id "']")
+                                                   ;; find embedded that starts with current html id (embed id changed due to re-render)
+                                                   (str "textarea[id^='" html-id "-embed-']"))
+                                                 ;; take default
+                                                 (str "#" html-id)))]
                          #_(cond
                              (zero? n) (prn "No targets")
                              (= 1 n) (prn "One target")

@@ -326,7 +326,8 @@
       ctrl (cond
              left? nil
              right? nil
-             (or up? down?) (let [new-open-state (cond
+             (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
+                                  new-open-state (cond
                                                    up? false
                                                    down? true)
                                   event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
@@ -365,12 +366,12 @@
   [e uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items @(subscribe [:selected/items])
-        [uid _embed-id] (db/uid-and-embed-id uid)]
+        selected-items                 @(subscribe [:selected/items])
+        [o-uid _embed-id]              (db/uid-and-embed-id uid)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent uid d-key-down])
-        (dispatch [:indent uid d-key-down])))))
+        (dispatch [:indent o-uid d-key-down])))))
 
 
 (defn handle-escape
@@ -624,7 +625,7 @@
 (defn write-char
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
-  [e _ state]
+  [e uid state]
   (let [{:keys [head key]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (cond
@@ -648,10 +649,11 @@
   "Delete has the same behavior as pressing backspace on the next block."
   [e uid _state]
   (let [{:keys [start end value]} (destruct-key-down e)
-        no-selection?   (= start end)
-        end?            (= end (count value))
-        [uid _embed-id] (db/uid-and-embed-id uid)
-        next-block-uid  (db/next-block-uid uid)]
+        no-selection?             (= start end)
+        end?                      (= end (count value))
+        ;; using original block uid(o-uid) data to get next block
+        [o-uid _embed-id]         (db/uid-and-embed-id uid)
+        next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
       (let [next-block (db/get-block [:block/uid next-block-uid])]
         (dispatch [:backspace next-block-uid (:block/string next-block)])))))
@@ -671,13 +673,16 @@
         (swap! state assoc :caret-position caret-position)))
 
     ;; dispatch center
-    (cond
-      (arrow-key-direction e)         (handle-arrow-key e uid state)
-      (pair-char? e)                  (handle-pair-char e uid state)
-      (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-      (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-      (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-      (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
-      (= key-code KeyCodes.ESC)       (handle-escape e state)
-      (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-      (is-character-key? e)           (write-char e uid state))))
+    ;; only when nothing is selected or duplicate/events dispatched
+    ;; after some ops(like delete) can cause errors
+    (when (empty? @(subscribe [:selected/items]))
+      (cond
+        (arrow-key-direction e)         (handle-arrow-key e uid state)
+        (pair-char? e)                  (handle-pair-char e uid state)
+        (= key-code KeyCodes.TAB)       (handle-tab e uid state)
+        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+        (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+        (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+        (= key-code KeyCodes.ESC)       (handle-escape e state)
+        (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+        (is-character-key? e)           (write-char e uid state)))))
