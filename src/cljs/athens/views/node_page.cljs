@@ -185,10 +185,10 @@
     (cond
       (or (and up? top-row?)
           (and left? start?)) (do (.. e preventDefault)
-                                  (dispatch [:up uid]))
+                                  (dispatch [:up uid e]))
       (or (and down? bottom-row?)
           (and right? end?)) (do (.. e preventDefault)
-                                 (dispatch [:down uid])))))
+                                 (dispatch [:down uid e])))))
 
 
 (defn handle-key-down

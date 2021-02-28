@@ -327,6 +327,10 @@
                      100))))
 
 
+;; todo(abhinav)
+;; think of this + up/down + editing/focus for common up down press
+;; and cursor goes to apt position rather than last visited point in the block(current)
+;; inspirations - intelli-j's up/down
 (reg-fx
   :set-cursor-position
   (fn [[uid start end]]

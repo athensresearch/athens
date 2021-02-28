@@ -190,38 +190,38 @@
 
 (defn select-up
   [selected-items]
-  (let [first-item        (first selected-items)
-        [_ o-embed]       (db/uid-and-embed-id first-item)
-        prev-block-uid    (db/prev-block-uid first-item)
-        prev-block-o-uid  (-> prev-block-uid db/uid-and-embed-id first)
-        prev-block        (db/get-block [:block/uid prev-block-o-uid])
-        parent            (db/get-parent [:block/uid (-> first-item db/uid-and-embed-id first)])
-        editing-uid       @(subscribe [:editing/uid])
-        editing-idx       (first (keep-indexed (fn [idx x]
-                                                 (when (= x editing-uid)
-                                                   idx))
-                                               selected-items))
-        n                 (count selected-items)
-        new-items (cond
-                    ;; if prev-block is root node TODO: (OR context root), don't do anything
-                    (and (zero? editing-idx) (> n 1)) (pop selected-items)
-                    (:node/title prev-block) selected-items
-                    ;; if prev block is parent, replace editing/uid and first item w parent; remove children
-                    (= (:block/uid parent) prev-block-uid) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
-                                                                                     set)
-                                                                 to-keep         (filter (fn [x] (not (contains? parent-children x)))
-                                                                                         selected-items)
-                                                                 new-vec         (into [prev-block-uid] to-keep)]
-                                                             new-vec)
+  (let [first-item       (first selected-items)
+        [_ o-embed]      (db/uid-and-embed-id first-item)
+        prev-block-uid   (db/prev-block-uid first-item)
+        prev-block-o-uid (-> prev-block-uid db/uid-and-embed-id first)
+        prev-block       (db/get-block [:block/uid prev-block-o-uid])
+        parent           (db/get-parent [:block/uid (-> first-item db/uid-and-embed-id first)])
+        editing-uid      @(subscribe [:editing/uid])
+        editing-idx      (first (keep-indexed (fn [idx x]
+                                                (when (= x editing-uid)
+                                                  idx))
+                                              selected-items))
+        n                (count selected-items)
+        new-items        (cond
+                           ;; if prev-block is root node TODO: (OR context root), don't do anything
+                           (and (zero? editing-idx) (> n 1)) (pop selected-items)
+                           (:node/title prev-block) selected-items
+                           ;; if prev block is parent, replace editing/uid and first item w parent; remove children
+                           (= (:block/uid parent) prev-block-o-uid) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                                                                                              set)
+                                                                          to-keep         (filter (fn [x] (not (contains? parent-children x)))
+                                                                                                  selected-items)
+                                                                          new-vec         (into [prev-block-uid] to-keep)]
+                                                                      new-vec)
 
-                    ;; shift up started from inside the embed should not go outside embed block
-                    o-embed (let [selected-uid (str prev-block-o-uid "-embed-" o-embed)
-                                  html-el      (js/document.querySelector (str "#editable-uid-" prev-block-o-uid "-embed-" o-embed))]
-                              (if html-el
-                                (into [selected-uid] selected-items)
-                                selected-items))
+                           ;; shift up started from inside the embed should not go outside embed block
+                           o-embed (let [selected-uid (str prev-block-o-uid "-embed-" o-embed)
+                                         html-el      (js/document.querySelector (str "#editable-uid-" prev-block-o-uid "-embed-" o-embed))]
+                                     (if html-el
+                                       (into [selected-uid] selected-items)
+                                       selected-items))
 
-                    :else   (into [prev-block-uid] selected-items))]
+                           :else (into [prev-block-uid] selected-items))]
     new-items))
 
 
@@ -568,14 +568,28 @@
 
 (reg-event-fx
   :up
-  (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (or (db/prev-block-uid uid) uid)]}))
+  (fn [_ [_ uid d-key-up]]
+    {:dispatch [:editing/uid
+                (or (when (= (some-> d-key-up :target
+                                     (.. (closest ".block-embed"))
+                                     (. -firstChild)
+                                     (.getAttribute "data-uid"))
+                             uid)
+                      uid)
+                    (db/prev-block-uid uid)
+                    uid)]}))
 
 
 (reg-event-fx
   :down
-  (fn [_ [_ uid]]
-    {:dispatch [:editing/uid (or (db/next-block-uid uid) uid)]}))
+  (fn [_ [_ uid _d-key-down]]
+    (let [[_o-uid o-embed-id] (db/uid-and-embed-id uid)
+          n-uid (or (db/next-block-uid uid) uid)]
+      {:dispatch [:editing/uid
+                  ;; down arrow from inside an embed(do no navigate away)
+                  (or (when (and o-embed-id (not= o-embed-id (-> n-uid db/uid-and-embed-id second)))
+                        uid)
+                      n-uid)]})))
 
 
 (defn backspace
@@ -586,7 +600,13 @@
   Otherwise delete block and join with previous block
   If prev-block has children"
   [uid value]
-  (let [[uid embed-id]  (db/uid-and-embed-id uid)
+  (let [root-embed?     (= (some-> (str "#editable-uid-" uid)
+                                   js/document.querySelector
+                                   (.. (closest ".block-embed"))
+                                   (. -firstChild)
+                                   (.getAttribute "data-uid"))
+                           uid)
+        [uid embed-id]  (db/uid-and-embed-id uid)
         block           (db/get-block [:block/uid uid])
         {:block/keys    [children order] :or {children []}} block
         parent          (db/get-parent [:block/uid uid])
@@ -607,6 +627,7 @@
         new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
       (not parent) nil
+      root-embed? nil
       (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
                                                                                                  {:dispatch-n [[:transact tx-data]
                                                                                                                [:editing/uid nil]]})
@@ -834,11 +855,12 @@
   is reset to original value, since it has not been unfocused yet (which is currently the transaction that updates the string)."
   [uid d-key-down]
   (let [{:keys [value start end]} d-key-down
-        block       (db/get-block [:block/uid uid])
-        block-zero? (zero? (:block/order block))]
+        [o-uid _embed-id] (db/uid-and-embed-id uid)
+        block             (db/get-block [:block/uid o-uid])
+        block-zero?       (zero? (:block/order block))]
     (when-not block-zero?
-      (let [parent        (db/get-parent [:block/uid uid])
-            older-sib     (db/get-older-sib uid)
+      (let [parent        (db/get-parent [:block/uid o-uid])
+            older-sib     (db/get-older-sib o-uid)
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       (dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
@@ -895,8 +917,8 @@
    - inc-after for grandparent
    - dec-after for parent"
   [uid d-key-down context-root-uid]
-  (let [[uid embed-id]        (db/uid-and-embed-id uid)
-        parent                (db/get-parent [:block/uid uid])
+  (let [[o-uid embed-id]      (db/uid-and-embed-id uid)
+        parent                (db/get-parent [:block/uid o-uid])
         is-parent-root-embed? (= (some-> d-key-down :target
                                          (.. (closest ".block-embed"))
                                          (. -firstChild)
@@ -907,14 +929,14 @@
       is-parent-root-embed? nil
       (:node/title parent) nil
       (= (:block/uid parent) context-root-uid) nil
-      :else (let [block           (db/get-block [:block/uid uid])
+      :else (let [block           (db/get-block [:block/uid o-uid])
                   grandpa         (db/get-parent (:db/id parent))
-                  new-block       {:block/uid uid :block/order (inc (:block/order parent)) :block/string value}
+                  new-block       {:block/uid o-uid :block/order (inc (:block/order parent)) :block/string value}
                   reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
                                        (concat [new-block]))
                   reindex-parent  (dec-after (:db/id parent) (:block/order block))
                   new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
-                  retract         [:db/retract (:db/id parent) :block/children [:block/uid uid]]
+                  retract         [:db/retract (:db/id parent) :block/children [:block/uid o-uid]]
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
                   tx-data         [retract new-parent new-grandpa]]
               {:dispatch            [:transact tx-data]

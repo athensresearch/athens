@@ -371,7 +371,7 @@
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent uid d-key-down])
-        (dispatch [:indent o-uid d-key-down])))))
+        (dispatch [:indent uid d-key-down])))))
 
 
 (defn handle-escape
@@ -647,16 +647,18 @@
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid _state]
+  [e uid state]
   (let [{:keys [start end value]} (destruct-key-down e)
         no-selection?             (= start end)
         end?                      (= end (count value))
         ;; using original block uid(o-uid) data to get next block
-        [o-uid _embed-id]         (db/uid-and-embed-id uid)
+        [o-uid embed-id]          (db/uid-and-embed-id uid)
         next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
-      (let [next-block (db/get-block [:block/uid next-block-uid])]
-        (dispatch [:backspace next-block-uid (:block/string next-block)])))))
+      (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+        (dispatch [:backspace (cond-> next-block-uid
+                                embed-id (str "-embed-" embed-id))
+                   (str (:block/string state) (:block/string next-block))])))))
 
 
 (defn textarea-key-down

@@ -48,8 +48,8 @@
                            (.preventDefault e)
                            (dispatch [:selected/clear-items])
                            (if up?
-                             (dispatch [:up (first selected-items)])
-                             (dispatch [:down (last selected-items)]))))))))
+                             (dispatch [:up (first selected-items) e])
+                             (dispatch [:down (last selected-items) e]))))))))
 
 
 (defn unfocus
