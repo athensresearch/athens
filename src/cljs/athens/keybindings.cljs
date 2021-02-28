@@ -366,8 +366,7 @@
   [e uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])
-        [o-uid _embed-id]              (db/uid-and-embed-id uid)]
+        selected-items                 @(subscribe [:selected/items])]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent uid d-key-down])
@@ -625,7 +624,7 @@
 (defn write-char
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
-  [e uid state]
+  [e _uid state]
   (let [{:keys [head key]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (cond

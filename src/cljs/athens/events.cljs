@@ -209,8 +209,9 @@
                            ;; if prev block is parent, replace editing/uid and first item w parent; remove children
                            (= (:block/uid parent) prev-block-o-uid) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
                                                                                               set)
-                                                                          to-keep         (filter (fn [x] (not (contains? parent-children x)))
-                                                                                                  selected-items)
+                                                                          to-keep         (->> selected-items
+                                                                                               (map #(-> % db/uid-and-embed-id first))
+                                                                                               (filter (fn [x] (not (contains? parent-children x)))))
                                                                           new-vec         (into [prev-block-uid] to-keep)]
                                                                       new-vec)
 
@@ -645,6 +646,9 @@
                                                    (count (:block/string prev-block))]}]}))))
 
 
+;; todo(abhinav) -- stateless backspace
+;; will pick db value of backspace/delete instead of current state
+  ;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
