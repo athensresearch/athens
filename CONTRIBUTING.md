@@ -162,7 +162,7 @@ Calva plugin: v2.0.126 Built on: 2020-07-09
 OS - Windows 10, MacOS Catalina v10.15.6
 ```
 
-1. In VS Code, run `ctrl+shift+c` and `ctrl+shift+j` to jack into a repl session.
+1. In VS Code, run `ctrl+shift+c` and `ctrl+shift+j` (`ctrl+alt+c ctrl+alt+j` in Windows 10) to jack into a repl session.
 2. Pick shadow-cljs.
 3. Select `:main` and `:renderer` profile for shadow-cljs to watch.
 4. Select the `:renderer` build to connect to.
