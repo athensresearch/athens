@@ -787,58 +787,66 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [root-embed?      (= (some-> d-key-down :target
-                                    (.. (closest ".block-embed"))
-                                    (. -firstChild)
-                                    (.getAttribute "data-uid"))
-                            uid)
-        [uid embed-id]   (db/uid-and-embed-id uid)
-        block            (db/get-block [:block/uid uid])
-        parent           (db/get-parent [:block/uid uid])
-        root-block?      (boolean (:node/title parent))
-        context-root-uid (get-in rfdb [:current-route :path-params :id])
-        new-uid          (gen-block-uid)
+  (let [root-embed?           (= (some-> d-key-down :target
+                                         (.. (closest ".block-embed"))
+                                         (. -firstChild)
+                                         (.getAttribute "data-uid"))
+                                 uid)
+        [uid embed-id]        (db/uid-and-embed-id uid)
+        block                 (db/get-block [:block/uid uid])
+        parent                (db/get-parent [:block/uid uid])
+        is-parent-root-embed? (= (some-> d-key-down :target
+                                         (.. (closest ".block-embed"))
+                                         (. -firstChild)
+                                         (.getAttribute "data-uid"))
+                                 (str (:block/uid parent) "-embed-" embed-id))
+        root-block?           (boolean (:node/title parent))
+        context-root-uid      (get-in rfdb [:current-route :path-params :id])
+        new-uid               (gen-block-uid)
         {:keys [value start]} d-key-down
-        event            (cond
-                           (and (:block/open block)
-                                (not-empty (:block/children block))
-                                (= start (count value)))
-                           [:enter/add-child block new-uid]
+        event                 (cond
+                                (and (:block/open block)
+                                     (not-empty (:block/children block))
+                                     (= start (count value)))
+                                [:enter/add-child block new-uid]
 
-                           (and embed-id root-embed?
-                                (= start (count value)))
-                           [:enter/open-block-and-child block new-uid]
+                                (and embed-id root-embed?
+                                     (= start (count value)))
+                                [:enter/open-block-and-child block new-uid]
 
-                           (and (not (:block/open block))
-                                (not-empty (:block/children block))
-                                (= start (count value)))
-                           [:enter/new-block block parent new-uid]
+                                (and (not (:block/open block))
+                                     (not-empty (:block/children block))
+                                     (= start (count value)))
+                                [:enter/new-block block parent new-uid]
 
-                           (and (empty? value)
-                                (or (= context-root-uid (:block/uid parent))
-                                    root-block?))
-                           [:enter/new-block block parent new-uid]
+                                (and (empty? value)
+                                     (or (= context-root-uid (:block/uid parent))
+                                         root-block?))
+                                [:enter/new-block block parent new-uid]
 
-                           (and (:block/open block)
-                                embed-id root-embed?
-                                (not= start (count value)))
-                           [:split-block-to-children uid value start new-uid]
+                                (and (:block/open block)
+                                     embed-id root-embed?
+                                     (not= start (count value)))
+                                [:split-block-to-children uid value start new-uid]
 
-                           (and (empty? value) embed-id)
-                           [:enter/new-block block parent new-uid]
+                                (and (empty? value) embed-id (not is-parent-root-embed?))
+                                [:unindent uid d-key-down context-root-uid]
 
-                           (not (zero? start))
-                           [:enter/split-block uid value start new-uid]
+                                (and (empty? value) embed-id is-parent-root-embed?)
+                                [:enter/new-block block parent new-uid]
 
-                           (empty? value)
-                           [:unindent uid d-key-down context-root-uid]
+                                (not (zero? start))
+                                [:enter/split-block uid value start new-uid]
 
-                           (and (zero? start) value)
-                           [:enter/bump-up uid new-uid])]
+                                (empty? value)
+                                [:unindent uid d-key-down context-root-uid]
+
+                                (and (zero? start) value)
+                                [:enter/bump-up uid new-uid])]
     {:dispatch-later [{:ms 0  :dispatch event}
                       (if (= event [:no-op])
                         {:ms 0  :dispatch [:no-op]}
-                        {:ms 10 :dispatch [:editing/uid (cond-> new-uid
+                        {:ms 10 :dispatch [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
                                                           embed-id (str "-embed-" embed-id))]})]}))
 
 

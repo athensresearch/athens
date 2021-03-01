@@ -6,6 +6,7 @@
     [athens.style :refer [color]]
     [athens.util :refer [now-ts recursively-modify-block-for-embed]]
     [athens.views.blocks :as blocks]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -89,20 +90,25 @@
   ;; bindings are eval only once in with-let
   ;; which is needed to keep embed integrity else it will update on
   ;; each re-render. Similar to ref-comp
-  (r/with-let [embed-id (random-uuid)]
-    [:div.block-embed (use-style block-embed-adjustments)
-     (let [block (->> (re-find #"\(\((.+)\)\)" content)
-                      last (vector :block/uid) db/get-block-document)]
-       [:<>
-        [blocks/block-el
-         (recursively-modify-block-for-embed block embed-id)
-         {:linked-ref false}
-         {:block-embed? true}]
-        (when-not @(subscribe [:editing/is-editing uid])
-          [:> mui-icons/Edit
-           {:on-click (fn [e]
-                        (.. e stopPropagation)
-                        (dispatch [:editing/uid uid]))}])])]))
+  (let [block-uid (last (re-find #"\(\((.+)\)\)" content))]
+    ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
+    (if (db/e-by-av :block/uid block-uid)
+      (r/with-let [embed-id (random-uuid)]
+        [:div.block-embed (use-style block-embed-adjustments)
+         (let [block (db/get-block-document [:block/uid block-uid])]
+           [:<>
+            [blocks/block-el
+             (recursively-modify-block-for-embed block embed-id)
+             {:linked-ref false}
+             {:block-embed? true}]
+            (when-not @(subscribe [:editing/is-editing uid])
+              [:> mui-icons/Edit
+               {:on-click (fn [e]
+                            (.. e stopPropagation)
+                            (dispatch [:editing/uid uid]))}])])])
+      ;; roam actually hides the brackets around [[embed]]
+      [:span "{{" (str/replace content block-uid "invalid") "}}"])))
+
 
 
 
