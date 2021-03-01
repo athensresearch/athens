@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :as router]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
@@ -201,6 +201,7 @@
          expansion    (or title uid)
          block?       (= type :block)
          page?        (= type :page)
+         query        (escape-str query)
          ;; rewrite this more cleanly
          head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
                             page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
@@ -224,6 +225,7 @@
          {:keys [start head tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
+         query        (escape-str query)
          ;; rewrite this more cleanly
          head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
                             page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
@@ -456,12 +458,12 @@
 
       #_ (and (not shift) (= key-code KeyCodes.I))
       #_(let [new-str (str head (surround selection "__") tail)]
-        (swap! state assoc :string/local new-str)
-        (set! (.-value target) new-str)
-        (if selection?
-          (do (setStart target (+ 2 start))
-              (setEnd target (+ 2 end)))
-          (set-cursor-position target (+ 2 start))))
+          (swap! state assoc :string/local new-str)
+          (set! (.-value target) new-str)
+          (if selection?
+            (do (setStart target (+ 2 start))
+                (setEnd target (+ 2 end)))
+            (set-cursor-position target (+ 2 start))))
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
