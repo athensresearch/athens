@@ -3,7 +3,7 @@
     ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.router :as router]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key?]]
+    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank?]]
@@ -205,6 +205,7 @@
          expansion    (or title uid)
          block?       (= type :block)
          page?        (= type :page)
+         query        (escape-str query)
          ;; rewrite this more cleanly
          head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
                             page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
@@ -228,6 +229,7 @@
          {:keys [start head tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
+         query        (escape-str query)
          ;; rewrite this more cleanly
          head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
                             page? (re-pattern (str "(?s)(.*)\\[\\[" query)))

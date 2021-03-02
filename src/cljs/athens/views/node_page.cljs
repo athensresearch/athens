@@ -201,6 +201,18 @@
       (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state children))))
 
 
+(defn auto-inc-untitled
+  ([] (auto-inc-untitled nil))
+  ([n]
+   (if (empty? (d/q '[:find [?e ...]
+                      :in $ ?t
+                      :where
+                      [?e :node/title ?t]]
+                    @db/dsdb (str "Untitled" (when n (str "-" n)))))
+     (str "Untitled" (when n (str "-" n)))
+     (auto-inc-untitled (+ n 1)))))
+
+
 (defn handle-change
   [e state]
   (let [value (.. e -target -value)]
@@ -533,10 +545,17 @@
              {:value       (:title/local @state)
               :id          (str "editable-uid-" uid)
               :class       (when (= editing-uid uid) "is-editing")
-              :on-blur     (fn [_] (handle-blur node state linked-refs))
+              :on-blur     (fn [_]
+                             ;; add title Untitled-n for empty titles
+                             (when (empty? (:title/local @state))
+                               (swap! state assoc :title/local (auto-inc-untitled)))
+                             (handle-blur node state linked-refs))
               :on-key-down (fn [e] (handle-key-down e uid state children))
               :on-change   (fn [e] (handle-change e state))}])
-          [parse-renderer/parse-and-render (:title/local @state) uid]]
+          ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+          (if (str/blank? (:title/local @state))
+            [:wbr]
+            [parse-renderer/parse-and-render (:title/local @state) uid])]
 
          ;; Dropdown
          [menu-dropdown node state daily-note?]
