@@ -4,6 +4,7 @@
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
     [athens.coeffects]
+    [athens.components]
     [athens.config :as config]
     [athens.effects]
     [athens.electron]

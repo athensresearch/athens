@@ -29,7 +29,8 @@
                  [borkdude/sci "0.0.13-alpha.22"]
                  [garden "1.3.10"]
                  [stylefy "2.2.0"]
-                 [tick "0.4.26-alpha"]]
+                 [tick "0.4.26-alpha"]
+                 [com.rpl/specter "1.1.3"]]
 
   :plugins [[lein-shell "0.5.0"]]
 

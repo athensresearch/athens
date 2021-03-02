@@ -303,10 +303,19 @@
       (when-let [active-el (.-activeElement js/document)]
         (.blur active-el))
       (js/setTimeout (fn []
-                       (let [html-id (str "#editable-uid-" uid)
+                       (let [[uid embed-id]  (db/uid-and-embed-id uid)
+                             html-id         (str "editable-uid-" uid)
                              ;;targets (js/document.querySelectorAll html-id)
                              ;;n       (count (array-seq targets))
-                             el      (js/document.querySelector html-id)]
+                             el              (js/document.querySelector
+                                               (if embed-id
+                                                 (or
+                                                   ;; find exact embed block
+                                                   (str "textarea[id='" html-id "-embed-" embed-id "']")
+                                                   ;; find embedded that starts with current html id (embed id changed due to re-render)
+                                                   (str "textarea[id^='" html-id "-embed-']"))
+                                                 ;; take default
+                                                 (str "#" html-id)))]
                          #_(cond
                              (zero? n) (prn "No targets")
                              (= 1 n) (prn "One target")
@@ -318,6 +327,10 @@
                      100))))
 
 
+;; todo(abhinav)
+;; think of this + up/down + editing/focus for common up down press
+;; and cursor goes to apt position rather than last visited point in the block(current)
+;; inspirations - intelli-j's up/down
 (reg-fx
   :set-cursor-position
   (fn [[uid start end]]

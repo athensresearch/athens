@@ -88,7 +88,8 @@
    ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
    ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
    ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]])
+   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]
+   ["Block Embed"   mui-icons/ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
 ;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
 ;;[mui-icons/DateRange "Date Picker"]
@@ -139,7 +140,7 @@
   ([state e]
    (let [{:search/keys [index results]} @state
          {:keys [value head tail target]} (destruct-key-down e)
-         [_ _ expansion _ pos] (nth results index)
+         [n _ expansion _ pos] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
          start-idx (dec (count (re-find #"(?s).*/" head)))
          new-head  (subs value 0 start-idx)
@@ -150,7 +151,10 @@
      (set! (.-value target) new-str)
      (when pos
        (let [new-idx (- (count (str new-head expand)) pos)]
-         (set-cursor-position target new-idx)))))
+         (set-cursor-position target new-idx)
+         (when (= n "Block Embed")
+           (swap! state assoc :search/type :block
+                  :search/query "" :search/results []))))))
   ([state target item]
    (let [{:keys [value head tail]} (destruct-target target)
          [_ _ expansion _ pos] item
@@ -322,7 +326,8 @@
       ctrl (cond
              left? nil
              right? nil
-             (or up? down?) (let [new-open-state (cond
+             (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
+                                  new-open-state (cond
                                                    up? false
                                                    down? true)
                                   event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
@@ -361,7 +366,7 @@
   [e uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items @(subscribe [:selected/items])]
+        selected-items                 @(subscribe [:selected/items])]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent uid d-key-down])
@@ -456,19 +461,20 @@
 
       #_ (and (not shift) (= key-code KeyCodes.I))
       #_(let [new-str (str head (surround selection "__") tail)]
-        (swap! state assoc :string/local new-str)
-        (set! (.-value target) new-str)
-        (if selection?
-          (do (setStart target (+ 2 start))
-              (setEnd target (+ 2 end)))
-          (set-cursor-position target (+ 2 start))))
+          (swap! state assoc :string/local new-str)
+          (set! (.-value target) new-str)
+          (if selection?
+            (do (setStart target (+ 2 start))
+                (setEnd target (+ 2 end)))
+            (set-cursor-position target (+ 2 start))))
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
       ;; if caret within ((uid)), navigate to that uid
       ;; otherwise zoom into current block
 
-      (= key-code KeyCodes.O) (let [link      (str (replace-first head #"(?s)(.*)\[\[" "")
+      (= key-code KeyCodes.O) (let [[uid _]   (db/uid-and-embed-id uid)
+                                    link      (str (replace-first head #"(?s)(.*)\[\[" "")
                                                    (replace-first tail #"(?s)\]\](.*)" ""))
                                     hashtag   (str (replace-first head #"(?s).*#" "")
                                                    (replace-first tail #"(?s)\s(.*)" ""))
@@ -618,7 +624,7 @@
 (defn write-char
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
-  [e _ state]
+  [e _uid state]
   (let [{:keys [head key]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (cond
@@ -640,14 +646,18 @@
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid _state]
+  [e uid state]
   (let [{:keys [start end value]} (destruct-key-down e)
-        no-selection?  (= start end)
-        end?           (= end (count value))
-        next-block-uid (db/next-block-uid uid)]
+        no-selection?             (= start end)
+        end?                      (= end (count value))
+        ;; using original block uid(o-uid) data to get next block
+        [o-uid embed-id]          (db/uid-and-embed-id uid)
+        next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
-      (let [next-block (db/get-block [:block/uid next-block-uid])]
-        (dispatch [:backspace next-block-uid (:block/string next-block)])))))
+      (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+        (dispatch [:backspace (cond-> next-block-uid
+                                embed-id (str "-embed-" embed-id))
+                   (str (:block/string state) (:block/string next-block))])))))
 
 
 (defn textarea-key-down
@@ -664,13 +674,16 @@
         (swap! state assoc :caret-position caret-position)))
 
     ;; dispatch center
-    (cond
-      (arrow-key-direction e)         (handle-arrow-key e uid state)
-      (pair-char? e)                  (handle-pair-char e uid state)
-      (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-      (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-      (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-      (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
-      (= key-code KeyCodes.ESC)       (handle-escape e state)
-      (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-      (is-character-key? e)           (write-char e uid state))))
+    ;; only when nothing is selected or duplicate/events dispatched
+    ;; after some ops(like delete) can cause errors
+    (when (empty? @(subscribe [:selected/items]))
+      (cond
+        (arrow-key-direction e)         (handle-arrow-key e uid state)
+        (pair-char? e)                  (handle-pair-char e uid state)
+        (= key-code KeyCodes.TAB)       (handle-tab e uid state)
+        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+        (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+        (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+        (= key-code KeyCodes.ESC)       (handle-escape e state)
+        (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+        (is-character-key? e)           (write-char e uid state)))))

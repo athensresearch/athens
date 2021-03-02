@@ -8,12 +8,13 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
-    [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center]]
+    [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center specter-recursive-path]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [com.rpl.specter :as s]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
     [goog.events :as events]
@@ -567,7 +568,8 @@
 (defn textarea-click
   "If shift key is held when user clicks across multiple blocks, select the blocks."
   [e target-uid _state]
-  (let [source-uid @(subscribe [:editing/uid])]
+  (let [[target-uid _] (db/uid-and-embed-id target-uid)
+        source-uid @(subscribe [:editing/uid])]
     (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
       (find-selected-items e source-uid target-uid))))
 
@@ -608,21 +610,36 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [_ _]
-  (fn [block state]
-    (let [{:block/keys [uid]} block
+  [_ _ _]
+  (fn [block state {:keys [block-embed?]}]
+    (let [{:block/keys [uid original-uid]} block
           {:string/keys [local]} @state
           is-editing @(subscribe [:editing/is-editing uid])
           selected-items @(subscribe [:selected/items])]
       [:div {:class "block-content"}
        [autosize/textarea {:value          (:string/local @state)
+                           ;; todo(abhinav)
+                           ;; events are not getting captured when z-index given through class(specificity checked)
+                           :style          (cond
+                                             ;; if editing always show original block
+                                             is-editing
+                                             {:z-index "3"}
+
+                                             ;; decrease z-index for embed textarea so click is taken by embed block
+                                             (and local (re-matches #"\{\{\[\[embed\]\]: \(\(.+\)\)\}\}" local))
+                                             {:z-index "1"}
+
+                                             ;; embed items
+                                             block-embed?
+                                             {:z-index "3"})
+
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            ;;:auto-focus     true
                            :id             (str "editable-uid-" uid)
                            :on-change      (fn [e] (textarea-change e uid state))
                            :on-paste       (fn [e] (textarea-paste e uid state))
                            :on-key-down    (fn [e] (textarea-key-down e uid state))
-                           :on-blur        (fn [_e] (db/transact-state-for-uid uid state))
+                           :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
                            :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
@@ -662,7 +679,7 @@
   "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
   [e uid state]
   (set! (.. e -dataTransfer -effectAllowed) "move")
-  (.. e -dataTransfer (setData "text/plain" uid))
+  (.. e -dataTransfer (setData "text/plain" (-> uid db/uid-and-embed-id first)))
   (swap! state assoc :dragging true))
 
 
@@ -772,6 +789,7 @@
   [e block state]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
+        [target-uid _]          (db/uid-and-embed-id target-uid)
         {:keys [drag-target]} @state
         source-uid     (.. e -dataTransfer (getData "text/plain"))
         effect-allowed (.. e -dataTransfer -effectAllowed)
@@ -816,8 +834,10 @@
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
-   [block-el block {:linked-ref false}])
-  ([_block linked-ref-data]
+   [block-el block {:linked-ref false} {}])
+  ([block linked-ref-data]
+   [block-el block linked-ref-data {}])
+  ([_block linked-ref-data _opts]
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
@@ -834,8 +854,13 @@
                         :caret-position    nil
                         :linked-ref/open (or (false? linked-ref) initial-open)})]
 
-     (fn [block linked-ref-data]
+     (fn [block linked-ref-data opts]
        (let [{:block/keys [uid string open children _refs]} block
+             uid-sanitized-block (s/transform
+                                   (specter-recursive-path #(contains? % :block/uid))
+                                   (fn [{:block/keys [original-uid uid] :as block}]
+                                     (assoc block :block/uid (or original-uid uid)))
+                                   block)
              {:search/keys [] :keys [dragging drag-target]} @state
              is-editing  @(subscribe [:editing/is-editing uid])
              is-selected @(subscribe [:selected/is-selected uid])]
@@ -868,12 +893,13 @@
                          (when (false? (.. e -shiftKey))
                            (dispatch [:editing/uid uid])))}]
 
-           [toggle-el block state linked-ref]
-           [context-menu-el block state]
+           [toggle-el uid-sanitized-block state linked-ref]
+           [context-menu-el uid-sanitized-block state]
            [bullet-el block state linked-ref]
-           [tooltip-el block state]
-           [block-content-el block state]
-           [block-refs-count-el (count _refs) uid]]
+           [tooltip-el uid-sanitized-block state]
+           [block-content-el block state opts]
+           (when-not (:block-embed? opts)
+             [block-refs-count-el (count _refs) uid])]
 
           [inline-search-el block state]
           [slash-menu-el block state]
@@ -885,7 +911,9 @@
                          (and (false? linked-ref) open)))
             (for [child children]
               [:div {:key (:db/id child)}
-               [block-el child (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))]]))
+               [block-el child
+                (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
+                opts]]))
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :below) {;;:color "red"
                                                                                     :opacity "1"})))]])))))

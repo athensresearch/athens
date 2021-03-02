@@ -7,7 +7,7 @@
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks :refer [block-el bullet-style]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -119,6 +119,7 @@
 
 (def references-group-block-style
   {:border-top [["1px solid " (color :border-color)]]
+   :width      "100%"
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
@@ -184,10 +185,10 @@
     (cond
       (or (and up? top-row?)
           (and left? start?)) (do (.. e preventDefault)
-                                  (dispatch [:up uid]))
+                                  (dispatch [:up uid e]))
       (or (and down? bottom-row?)
           (and right? end?)) (do (.. e preventDefault)
-                                 (dispatch [:down uid])))))
+                                 (dispatch [:down uid e])))))
 
 
 (defn handle-key-down
@@ -362,25 +363,30 @@
 
 (defn ref-comp
   [block]
-  (let [state           (r/atom {:block   block
-                                 :parents (rest (:block/parents block))})
+  (let [state           (r/atom {:block     block
+                                 :embed-id  (random-uuid)
+                                 :parents   (rest (:block/parents block))})
         linked-ref-data {:linked-ref     true
                          :initial-open   true
                          :linked-ref-uid (:block/uid block)
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
-      (let [{:keys [block parents]} @state
+      (let [{:keys [block parents embed-id]} @state
             block (db/get-block-document (:db/id block))]
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
-              [breadcrumb {:key      (str "breadcrumb-" uid)
+              [breadcrumb {:key       (str "breadcrumb-" uid)
                            :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
                                                 new-P (drop-last parents)]
                                             (swap! state assoc :block new-B :parents new-P)))}
                [parse-and-render (or title string) (:block/uid block)]]))]
-         [block-el block linked-ref-data]]))))
+         [:div.block-embed
+          [block-el
+           (recursively-modify-block-for-embed block embed-id)
+           linked-ref-data
+           {:block-embed? true}]]]))))
 
 
 (defn linked-ref-el

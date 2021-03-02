@@ -1,6 +1,5 @@
 (ns athens.parse-renderer
   (:require
-    [athens.components :as components]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -80,6 +79,29 @@
            title)
      [:span {:class "formatting"} "]]"]]))
 
+;; -- Component ---
+
+(def components
+  {#"\[\[TODO\]\]"                :todo
+   #"\[\[DONE\]\]"                :done
+   #"\[\[youtube\]\]\:.*"         :youtube
+   #"iframe\:.*"                  :iframe
+   #"SELF"                        :self
+   #"\[\[embed\]\]: \(\(.+\)\)"   :block-embed})
+
+
+(defmulti component
+  (fn [content _uid]
+    (some (fn [[pattern render]]
+            (when (re-matches pattern content)
+              render))
+          components)))
+
+
+(defmethod component :default
+  [content _]
+  [:button content])
+
 
 ;;; Components
 
@@ -93,7 +115,7 @@
                       (concat [:span {:class "block"}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
-                      (components/render-component (first contents) uid))
+                      (component (first contents) uid))
      :page-link     (fn [& title-coll] (render-page-link title-coll))
      :hashtag       (fn [& title-coll]
                       (let [node (pull-node-from-string title-coll)]
