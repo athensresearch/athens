@@ -142,3 +142,8 @@
 
     [{:a 1 :b 2} 3 ["leave" "intact"]]
     [{:a 1 :b 2} 3 ["leave" "intact"]]))
+
+(deftest parse-latex-tests
+  (are [x y] (= x (parse-to-ast y))
+    [:block [:latex "text"]]
+    "$$text$$"))
