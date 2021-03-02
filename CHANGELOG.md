@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.47](https://github.com/athensresearch/athens/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2021-03-02)
+
+
+### Features
+
+* **block-embed:** block-embed and component refactor [#584](https://github.com/athensresearch/athens/issues/584) ([#719](https://github.com/athensresearch/athens/issues/719)) ([7b65099](https://github.com/athensresearch/athens/commit/7b65099a1116caad7d873791ddd294e52f068c1b))
+
+
+### Bug Fixes
+
+* **title:** Empty title and regex in block query ([#720](https://github.com/athensresearch/athens/issues/720)) ([785ee38](https://github.com/athensresearch/athens/commit/785ee3834b66315d56c865e5c10879a620f337b6))
+
 ## [1.0.0-beta.46](https://github.com/athensresearch/athens/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2021-02-26)
 
 
