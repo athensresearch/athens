@@ -213,7 +213,6 @@
      (auto-inc-untitled (+ n 1)))))
 
 
-
 (defn handle-change
   [e state]
   (let [value (.. e -target -value)]
@@ -553,13 +552,12 @@
                              (handle-blur node state linked-refs))
               :on-key-down (fn [e] (handle-key-down e uid state children))
               :on-change   (fn [e] (handle-change e state))}])
-          [parse-renderer/parse-and-render
-           (or (and (not (empty? (:title/local @state)))
-                    (:title/local @state))
-               ;; empty char to keep span on full height
-               ;; else it will collapse to 0 height (weird ui)
-               "&#8203;")
-           uid]]
+          ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+          (if (str/blank? (:title/local @state))
+            [:wbr]
+            [parse-renderer/parse-and-render
+             (:title/local @state)
+             uid])]
 
          ;; Dropdown
          [menu-dropdown node state daily-note?]

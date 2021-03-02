@@ -135,7 +135,9 @@
             :on-blur     (fn [_] (persist-textarea-string @state block))
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
-          [:span [parse-renderer/parse-and-render (:string/local @state) uid]]]
+          (if (clojure.string/blank? (:string/local @state))
+            [:wbr]
+            [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]
 
          ;; Children
          [:div (for [child children]
