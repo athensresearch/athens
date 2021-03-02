@@ -555,9 +555,7 @@
           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
           (if (str/blank? (:title/local @state))
             [:wbr]
-            [parse-renderer/parse-and-render
-             (:title/local @state)
-             uid])]
+            [parse-renderer/parse-and-render (:title/local @state) uid])]
 
          ;; Dropdown
          [menu-dropdown node state daily-note?]
