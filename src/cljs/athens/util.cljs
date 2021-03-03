@@ -203,7 +203,6 @@
   (boolean (uid-to-date uid)))
 
 
-
 ;; -- Regex -----------------------------------------------------------
 
 ;; https://stackoverflow.com/a/11672480
