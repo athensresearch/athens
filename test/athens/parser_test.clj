@@ -143,6 +143,7 @@
     [{:a 1 :b 2} 3 ["leave" "intact"]]
     [{:a 1 :b 2} 3 ["leave" "intact"]]))
 
+
 (deftest parse-latex-tests
   (testing "that LaTeX syntax is detected"
     (are [x y] (= x (parse-to-ast y))

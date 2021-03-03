@@ -1,12 +1,12 @@
 (ns athens.parse-renderer
   (:require
-    ["katex" :as katex]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
+    ["katex" :as katex]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
