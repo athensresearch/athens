@@ -1,5 +1,6 @@
 (ns athens.parse-renderer
   (:require
+    ["katex" :as katex]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -144,8 +145,12 @@
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])
      :pre-formatted (fn [text]
-                      [:code text])}
-   tree))
+                      [:code text])
+     :latex         (fn [text]
+                      [:span {:ref (fn [el]
+                                     (when el
+                                       (katex/render text el {})))}])}
+    tree))
 
 
 (defn parse-and-render

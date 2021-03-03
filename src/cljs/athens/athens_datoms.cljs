@@ -101,7 +101,35 @@
                                                            #:block{:uid "d04604730",
                                                                    :string "images with `![]()` ![athens-splash](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)",
                                                                    :open true,
-                                                                   :order 7}]}
+                                                                   :order 7}
+                                                           #:block{:uid "dd1e080f4"
+                                                                   :string "LaTeX support"
+                                                                   :open true
+                                                                   :order 8
+                                                                   :children [#:block{:uid "dd1e080f5"
+                                                                                      :string "$$c = \\pm\\sqrt{a^2 + b^2}$$"
+                                                                                      :open true
+                                                                                      :order 0}
+                                                                              #:block{:uid "dd1e080f6"
+                                                                                      :string "$$E=mc^2$$"
+                                                                                      :open true
+                                                                                      :order 0}
+                                                                              #:block{:uid "dd1e080f7"
+                                                                                      :string "$$\\int_{a}^{b} x^2 \\,dx$$"
+                                                                                      :open true
+                                                                                      :order 0}
+                                                                              #:block{:uid "dd1e080f8"
+                                                                                      :string "$$\\sum_{n=1}^{\\infty} 2^{-n} = 1$$"
+                                                                                      :open true
+                                                                                      :order 0}
+                                                                              #:block{:uid "dd1e080f9"
+                                                                                      :string "$$\\prod_{i=a}^{b} f(i)$$"
+                                                                                      :open true
+                                                                                      :order 0}
+                                                                              #:block{:uid "dd1e080fa"
+                                                                                      :string "$$\\lim_{x\\to\\infty} f(x)$$"
+                                                                                      :open true
+                                                                                      :order 0}]}]}
                                         #:block{:uid "94272f778",
                                                 :string "All Keybindings",
                                                 :open false,
