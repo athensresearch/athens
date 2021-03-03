@@ -149,7 +149,8 @@
      :latex         (fn [text]
                       [:span {:ref (fn [el]
                                      (when el
-                                       (katex/render text el {})))}])}
+                                       (katex/render text el (clj->js
+                                                              {:throwOnError false}))))}])}
     tree))
 
 

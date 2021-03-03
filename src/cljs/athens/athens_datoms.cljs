@@ -113,23 +113,27 @@
                                                                               #:block{:uid "dd1e080f6"
                                                                                       :string "$$E=mc^2$$"
                                                                                       :open true
-                                                                                      :order 0}
+                                                                                      :order 1}
                                                                               #:block{:uid "dd1e080f7"
                                                                                       :string "$$\\int_{a}^{b} x^2 \\,dx$$"
                                                                                       :open true
-                                                                                      :order 0}
+                                                                                      :order 2}
                                                                               #:block{:uid "dd1e080f8"
                                                                                       :string "$$\\sum_{n=1}^{\\infty} 2^{-n} = 1$$"
                                                                                       :open true
-                                                                                      :order 0}
+                                                                                      :order 3}
                                                                               #:block{:uid "dd1e080f9"
                                                                                       :string "$$\\prod_{i=a}^{b} f(i)$$"
                                                                                       :open true
-                                                                                      :order 0}
+                                                                                      :order 4}
                                                                               #:block{:uid "dd1e080fa"
                                                                                       :string "$$\\lim_{x\\to\\infty} f(x)$$"
                                                                                       :open true
-                                                                                      :order 0}]}]}
+                                                                                      :order 5}
+                                                                              #:block{:uid "dd1e080fb"
+                                                                                      :string "Highlights invalid $$\\LaTeX$$ in red, like this $$\\Latex$$"
+                                                                                      :open true
+                                                                                      :order 6}]}]}
                                         #:block{:uid "94272f778",
                                                 :string "All Keybindings",
                                                 :open false,
