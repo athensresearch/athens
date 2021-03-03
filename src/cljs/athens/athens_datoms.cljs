@@ -103,7 +103,7 @@
                                                                    :open true,
                                                                    :order 7}
                                                            #:block{:uid "dd1e080f4"
-                                                                   :string "LaTeX support"
+                                                                   :string "$$\\LaTeX$$ support"
                                                                    :open true
                                                                    :order 8
                                                                    :children [#:block{:uid "dd1e080f5"
