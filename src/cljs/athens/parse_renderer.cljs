@@ -1,5 +1,6 @@
 (ns athens.parse-renderer
   (:require
+    ^:cljstyle/ignore
     ["katex" :as katex]
     [athens.db :as db]
     [athens.parser :as parser]
