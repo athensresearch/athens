@@ -2,6 +2,7 @@
 (ns athens.parse-renderer
   (:require
     ["katex" :as katex]
+    ["katex/dist/contrib/mhchem"]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]

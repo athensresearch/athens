@@ -164,4 +164,8 @@
   (testing "that LaTeX is not embedded in "
     (are [x y] (= x (parse-to-ast y))
       [:block [:url-link {:url "https://example.com/"} "an $$\textLaTeX$$ example"]]
-      "[an $$\textLaTeX$$ example](https://example.com/)")))
+      "[an $$\textLaTeX$$ example](https://example.com/)"))
+
+  (testing "that LaTeX expressions can have $ in them"
+    (is (= [:block [:latex "a b $ c"]]
+           (parse-to-ast "$$a b $ c$$")))))
