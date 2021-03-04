@@ -54,16 +54,26 @@
         query-url (str api email-qs email)]
     (reset! sending-request true)
     (go (let [resp (<! (http/get query-url))]
-          (if (and (:success resp) (:email_exists (:body resp)))
+          (cond
+
+            ;; Open Collective Lambda finds email associated with Athens
+            (and (:success resp) (true? (:email_exists (:body resp))))
             (do
               (js/localStorage.setItem "auth/email" email)
               (js/localStorage.setItem "auth/authed?" (str true))
               (reset! authed? true))
+
+            ;; Open Collective Lambda doesn't find email
+            (and (:success resp) (false? (:email_exists (:body resp))))
             (do
               (js/localStorage.setItem "auth/email" nil)
               (js/localStorage.setItem "auth/authed?" (str false))
               (reset! authed? false)
-              (js/alert "No OpenCollective account was found with this email address.")))
+              (js/alert "No OpenCollective account was found with this email address."))
+
+            ;; Something else, e.g. networking error
+            :else
+            (js/alert (str "Unexpected error" resp)))
           (reset! sending-request false)))))
 
 
