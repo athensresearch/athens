@@ -133,7 +133,15 @@
                                                                               #:block{:uid "dd1e080fb"
                                                                                       :string "Highlights invalid $$\\LaTeX$$ in red, like this $$\\Latex$$"
                                                                                       :open true
-                                                                                      :order 6}]}]}
+                                                                                      :order 6}
+                                                                              #:block{:uid "dd1e080fc"
+                                                                                      :string "Also `mhchem` extension is available:"
+                                                                                      :open true
+                                                                                      :order 7
+                                                                                      :children [#:block{:uid "dd1e080fd"
+                                                                                                         :string "$$\\ce{Zn^2+  <=>[+ 2OH-][+ 2H+]  $\\underset{\\text{amphoteres Hydroxid}}{\\ce{Zn(OH)2 v}}$  <=>[+ 2OH-][+ 2H+]  $\\underset{\\text{Hydroxozikat}}{\\ce{[Zn(OH)4]^2-}}$}$$"
+                                                                                                         :open true
+                                                                                                         :order 0}]}]}]}
                                         #:block{:uid "94272f778",
                                                 :string "All Keybindings",
                                                 :open false,
