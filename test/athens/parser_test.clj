@@ -1,7 +1,7 @@
 (ns athens.parser-test
   (:require
     [athens.parser :refer [parse-to-ast combine-adjacent-strings]]
-    [clojure.test :refer [deftest is are]]))
+    [clojure.test :refer [deftest is are testing]]))
 
 
 (deftest parser-general-tests
@@ -142,3 +142,26 @@
 
     [{:a 1 :b 2} 3 ["leave" "intact"]]
     [{:a 1 :b 2} 3 ["leave" "intact"]]))
+
+
+(deftest parse-latex-tests
+  (testing "that LaTeX syntax is detected"
+    (are [x y] (= x (parse-to-ast y))
+      [:block [:latex "text"]]
+      "$$text$$"
+
+      [:block [:latex "text with space"]]
+      "$$text with space$$"))
+
+  (testing "that other syntax is escaped when in LaTeX"
+    (are [x y] (= x (parse-to-ast y))
+      [:block [:latex "[[  ]]"]]
+      "$$[[  ]]$$"
+
+      [:block [:latex "[an example](https://example.com/)"]]
+      "$$[an example](https://example.com/)$$"))
+
+  (testing "that LaTeX is not embedded in "
+    (are [x y] (= x (parse-to-ast y))
+      [:block [:url-link {:url "https://example.com/"} "an $$\textLaTeX$$ example"]]
+      "[an $$\textLaTeX$$ example](https://example.com/)")))

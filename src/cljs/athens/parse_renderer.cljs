@@ -1,5 +1,7 @@
+^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
+    ["katex" :as katex]
     [athens.db :as db]
     [athens.parser :as parser]
     [athens.router :refer [navigate-uid]]
@@ -15,36 +17,40 @@
 
 ;;; Styles
 
-(def page-link {:cursor "pointer"
-                :text-decoration "none"
-                :color (color :link-color)
-                :display "inline"
-                :border-radius "0.25rem"
-                ::stylefy/manual [[:.formatting {:color (color :body-text-color)
-                                                 :opacity (:opacity-low OPACITIES)}]
-                                  [:&:hover {:z-index 1
-                                             :background (color :link-color :opacity-lower)
-                                             :box-shadow (str "0px 0px 0px 1px " (color :link-color :opacity-lower))}]]})
+(def page-link
+  {:cursor "pointer"
+   :text-decoration "none"
+   :color (color :link-color)
+   :display "inline"
+   :border-radius "0.25rem"
+   ::stylefy/manual [[:.formatting {:color (color :body-text-color)
+                                    :opacity (:opacity-low OPACITIES)}]
+                     [:&:hover {:z-index 1
+                                :background (color :link-color :opacity-lower)
+                                :box-shadow (str "0px 0px 0px 1px " (color :link-color :opacity-lower))}]]})
 
 
-(def hashtag {::stylefy/mode [[:hover {:text-decoration "underline" :cursor "pointer"}]]
-              ::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
+(def hashtag
+  {::stylefy/mode [[:hover {:text-decoration "underline" :cursor "pointer"}]]
+   ::stylefy/manual [[:.formatting {:opacity (:opacity-low OPACITIES)}]]})
 
 
 (def image {:border-radius "0.125rem"})
 
 
-(def url-link {:cursor "pointer"
-               :text-decoration "none"
-               :color (color :link-color)
-               ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
+(def url-link
+  {:cursor "pointer"
+   :text-decoration "none"
+   :color (color :link-color)
+   ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
 
 
-(def block-ref {:font-size "0.9em"
-                :transition "background 0.05s ease"
-                :border-bottom [["1px" "solid" (color :highlight-color)]]
-                ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
-                                         :cursor "alias"}]]})
+(def block-ref
+  {:font-size "0.9em"
+   :transition "background 0.05s ease"
+   :border-bottom [["1px" "solid" (color :highlight-color)]]
+   ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
+                            :cursor "alias"}]]})
 
 
 (defn parse-title
@@ -56,7 +62,6 @@
                 el
                 (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title-coll)
        (str/join "")))
-
 
 
 ;;; Helper functions for recursive link rendering
@@ -144,8 +149,13 @@
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])
      :pre-formatted (fn [text]
-                      [:code text])}
-   tree))
+                      [:code text])
+     :latex         (fn [text]
+                      [:span {:ref (fn [el]
+                                     (when el
+                                       (katex/render text el (clj->js
+                                                               {:throwOnError false}))))}])}
+    tree))
 
 
 (defn parse-and-render
