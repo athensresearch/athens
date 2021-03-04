@@ -105,7 +105,7 @@
       },
       {
         "type": "style",
-        "hiddren": true
+        "hidden": true
       },
       {
         "type": "chore",
