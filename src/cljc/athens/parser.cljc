@@ -63,7 +63,7 @@
    bold = <'**'> non-bold-chars <'**'>
    
    (* LaTeX *)
-   <not-dollars> = #'[^\\$]*'
+   <not-dollars> = #'.*?(?=\\$\\$)'
    latex = <'$$'> not-dollars <'$$'>
 
    (* -- It’s useful to extract this rule because its transform joins the individual characters everywhere it’s used. *)
