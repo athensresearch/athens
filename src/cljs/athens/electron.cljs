@@ -414,8 +414,9 @@
                         ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
                         (when copy?
                           (.. fs (copyFileSync bkp-filepath filepath))
-                          (dispatch [:db/sync])
-                          (dispatch [:db/update-mtime (js/Date.)]))))
+                          (let [mtime (.-mtime (.statSync fs filepath))]
+                            (dispatch-sync [:db/update-mtime mtime])
+                            (dispatch [:db/sync])))))
       (.pipe r w)))
 
 
