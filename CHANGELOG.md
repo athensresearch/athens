@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.48](https://github.com/athensresearch/athens/compare/v1.0.0-beta.47...v1.0.0-beta.48) (2021-03-04)
+
+
+### Bug Fixes
+
+* **typo:**  package.json hiddren->hidden ([#725](https://github.com/athensresearch/athens/issues/725)) ([148d02e](https://github.com/athensresearch/athens/commit/148d02ebad8b5ac949ca47b39f4ec2c27937b1c1))
+
+
+### Enhancements
+
+* **auth:** have another cond in case networking or other error ([#721](https://github.com/athensresearch/athens/issues/721)) ([bdae4ec](https://github.com/athensresearch/athens/commit/bdae4ec56381f3d46619b17be2dc568e2d06b5c3))
+* **graph:** clicking on node navigates to page ([#731](https://github.com/athensresearch/athens/issues/731)) ([94fbd64](https://github.com/athensresearch/athens/commit/94fbd64192b36726f68e5b366fd5c487af7d9c5e))
+* **parser:** Add LaTeX support ([#726](https://github.com/athensresearch/athens/issues/726)) ([3a3fb1f](https://github.com/athensresearch/athens/commit/3a3fb1f28cad0038e3e11a4d7c5418233cb519d2))
+
 ## [1.0.0-beta.47](https://github.com/athensresearch/athens/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2021-03-02)
 
 
