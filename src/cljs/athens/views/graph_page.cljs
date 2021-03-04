@@ -3,6 +3,7 @@
   (:require
     ["react-force-graph-2d" :as ForceGraph2D]
     [athens.db :as db]
+    [athens.router :as router]
     [athens.style :as styles]
     [clojure.set :as set]
     [datascript.core :as d]
@@ -21,20 +22,23 @@
                                   [_ :block/refs ?e]]
                                 @db/dsdb)
         nodes-without-refs (set/difference (set all-nodes) (set nodes-with-refs))
-        nodes-with-refs    (d/q '[:find ?e ?t (count ?r)
+        nodes-with-refs    (d/q '[:find ?e ?u ?t (count ?r)
                                   :in $ [?e ...]
                                   :where
                                   [?e :node/title ?t]
+                                  [?e :block/uid ?u]
                                   [?r :block/refs ?e]]
                                 @db/dsdb nodes-with-refs)
-        nodes-without-refs (d/q '[:find ?e ?t ?c
+        nodes-without-refs (d/q '[:find ?e ?u ?t ?c
                                   :in $ [?e ...]
                                   :where
                                   [?e :node/title ?t]
+                                  [?e :block/uid ?u]
                                   [(get-else $ ?e :always-nil-value 1) ?c]]
                                 @db/dsdb nodes-without-refs)
-        all-nodes          (map (fn [[e t val]]
+        all-nodes          (map (fn [[e u t val]]
                                   {"id"   e
+                                   "uid"  u
                                    "name" t
                                    "val"  val})
                                 (concat nodes-with-refs nodes-without-refs))]
@@ -68,6 +72,8 @@
       [:> ForceGraph2D
        {:graphData        {:nodes nodes
                            :links links}
+        :onNodeClick (fn [^js node ^js event]
+                       (router/navigate-uid (.. node -uid) event))
         ;; example data
         #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
                    {"id" "bar", "name" "name2", "val" 10}]
