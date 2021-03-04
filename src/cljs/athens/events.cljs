@@ -1295,7 +1295,9 @@
   - the same 4 cases from drop-bullet
   - but also if blocks span across multiple parent levels"
   [source-uids target-uid kind]
-  (let [same-parent-all?     (db/same-parent? (conj source-uids target-uid))
+  (let [source-uids          (map (comp first db/uid-and-embed-id) source-uids)
+        target-uid           (first (db/uid-and-embed-id target-uid))
+        same-parent-all?     (db/same-parent? (conj source-uids target-uid))
         same-parent-source?  (db/same-parent? source-uids)
         diff-parents-source? (not same-parent-source?)
         target               (db/get-block [:block/uid target-uid])
