@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.50](https://github.com/athensresearch/athens/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2021-03-05)
+
+### Chore
+
+* update electron and electron-builder ~> darwin-arm64 for M1 Mac
+
+
+### Bug Fixes
+
+* **linked-refs/block-embed:** drag & drop multiple blocks ([#743](https://github.com/athensresearch/athens/issues/743)) ([6f7407d](https://github.com/athensresearch/athens/commit/6f7407d723a4d7638d65475a9ae2398326059166))
+
 ## [1.0.0-beta.49](https://github.com/athensresearch/athens/compare/v1.0.0-beta.48...v1.0.0-beta.49) (2021-03-04)
 
 
