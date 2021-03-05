@@ -21,10 +21,10 @@
     "generateUpdatesFilesForAllChannels": true,
     "afterSign": "electron-builder-notarize",
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
+      "target": {
+        "target": "dmg",
+        "arch": ["arm64", "x64"]
+      },
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "electron": "^11.2.3",
-    "electron-builder": "22.8.1",
+    "electron-builder": "22.10",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
     "karma": "^4.4.1",
