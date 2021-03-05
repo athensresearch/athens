@@ -36,13 +36,13 @@
 
 (deftest parser-pre-formatted-tests
   (are [x y] (= x (parse-to-ast y))
-    [:block "Hello " [:pre-formatted "world"]]
+    [:block "Hello " [:inline-pre-formatted "world"]]
     "Hello `world`"
 
-    [:block "Hello " [:pre-formatted "Mars"]]
+    [:block "Hello " [:block-pre-formatted "Mars"]]
     "Hello ```Mars```"
 
-    [:block "Hello " [:pre-formatted "world"] " and " [:pre-formatted "Mars"]]
+    [:block "Hello " [:inline-pre-formatted "world"] " and " [:inline-pre-formatted "Mars"]]
     "Hello `world` and `Mars`"))
 
 
