@@ -661,7 +661,8 @@
 (def blocked-enter? (atom false))
 
 
-(defn unblock-enter! []
+(defn unblock-enter!
+  []
   (reset! blocked-enter? false))
 
 
