@@ -230,7 +230,6 @@
 
 (defn expansion-panel
   [{:keys [heading controls]} local-node-eid]
-  #_:clj-kondo/ignore
   (r/with-let [is-open? (r/atom false)]
               (let [graph-conf @(subscribe [:graph/conf])
                     graph-ref  (get @graph-ref-map (or local-node-eid :global))]
