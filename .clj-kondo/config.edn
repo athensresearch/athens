@@ -6,7 +6,8 @@
                       random-uuid
                       goog.DEBUG
                       embed-id
-                      p]}
+                      p
+                      is-open?]}
            :unused-referred-var
            {:exclude {clojure.test [is deftest testing]}}
            :unsorted-required-namespaces {:level :warning}}
