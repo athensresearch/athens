@@ -10,8 +10,7 @@
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [throttle]]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -365,14 +364,15 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e uid _state]
+  [e _uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])]
+        selected-items                 @(subscribe [:selected/items])
+        editing-uid                    @(subscribe [:editing/uid])]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent uid d-key-down])
-        (dispatch [:indent uid d-key-down])))))
+        (dispatch [:unindent editing-uid d-key-down])
+        (dispatch [:indent editing-uid d-key-down])))))
 
 
 (defn handle-escape
@@ -381,10 +381,6 @@
   (.. e preventDefault)
   (swap! state assoc :search/type nil)
   (dispatch [:editing/uid nil]))
-
-;;; Enter
-
-(def throttle-dispatch (throttle #(dispatch %) 100))
 
 
 (defn handle-enter
@@ -407,8 +403,8 @@
                                                      (= first "{{[[DONE]]}} ") new-tail
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
-      ;; default: may mutate blocks
-      :else (throttle-dispatch [:enter uid d-key-down]))))
+      ;; default: may mutate blocks, important action, no delay
+      :else (dispatch-sync [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -662,10 +658,17 @@
                    (str (:block/string state) (:block/string next-block))])))))
 
 
+(def blocked-enter? (atom false))
+
+
+(defn unblock-enter! []
+  (reset! blocked-enter? false))
+
+
 (defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-key-down e)
-        {:keys [meta ctrl key-code]} d-event]
+        {:keys [meta ctrl shift key-code]} d-event]
 
     ;; used for paste, to determine if shift key was held down
     (swap! state assoc :last-keydown d-event)
@@ -683,7 +686,10 @@
         (arrow-key-direction e)         (handle-arrow-key e uid state)
         (pair-char? e)                  (handle-pair-char e uid state)
         (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+        (= key-code KeyCodes.ENTER)     (when-not @blocked-enter?
+                                          (when-not shift ;; block when Enter w/o Shift
+                                            (reset! blocked-enter? true))
+                                          (handle-enter e uid state))
         (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
         (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
         (= key-code KeyCodes.ESC)       (handle-escape e state)

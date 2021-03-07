@@ -843,11 +843,10 @@
 
                                 (and (zero? start) value)
                                 [:enter/bump-up uid new-uid])]
-    {:dispatch-later [{:ms 0  :dispatch event}
-                      (if (= event [:no-op])
-                        {:ms 0  :dispatch [:no-op]}
-                        {:ms 10 :dispatch [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
-                                                          embed-id (str "-embed-" embed-id))]})]}))
+    {:dispatch-n [event
+                  (when-not (= event [:no-op])
+                    [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
+                                    embed-id (str "-embed-" embed-id))])]}))
 
 
 (reg-event-fx
