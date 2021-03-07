@@ -131,9 +131,9 @@
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
-  (fn [{:keys [db]} [_ uid]]
+  (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-          new-item  (merge block {:open true :index -1})
+          new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
           new-items (assoc (:right-sidebar/items db) uid new-item)
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
