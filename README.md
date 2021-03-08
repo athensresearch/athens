@@ -2,7 +2,8 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
-<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="40" height="40" />
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="30" height="30" />
+<a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
 # What is Athens
 
