@@ -598,7 +598,7 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
-       (sort-by :block/id)
+       (sort-by :db/id)
        vec
        rseq))
 
