@@ -452,8 +452,8 @@
            [:> mui-icons/ChevronRight])]
         [(r/adapt-react-class mui-icons/Link)]
         [:div {:style {:display         "flex"
-                       :flex            "1 1 100%"
-                       :justify-content "space-between"}}
+                       :justify-content "space-between"
+                       :width "100%"}}
          [:span unlinked?]
          (when (and unlinked? (not-empty @unlinked-refs))
            [button {:style    {:font-size "14px"}
@@ -473,10 +473,11 @@
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
                    [:div {:style {:display         "flex"
-                                  :flex            "1 1 100%"
                                   :justify-content "space-between"
                                   :align-items     "flex-start"}}
-                    [:div (use-style references-group-block-style)
+                    [:div (merge
+                            (use-style references-group-block-style)
+                            {:style {:max-width "90%"}})
                      [ref-comp block]]
                     (when unlinked?
                       [button {:style    {:margin-top "1.5em"}
