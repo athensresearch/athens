@@ -2,11 +2,12 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
-<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="40" height="40" />
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="30" height="30" />
+<a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
 
 ### Download the free desktop app
 
@@ -18,7 +19,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 **Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
 
-![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
+![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero-2.png)
 
 ### Open-Source
 
@@ -34,7 +35,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 - 100% availability
 - 100% local and fast unlike server-first apps (*cough* Notion and Roam)
 
-## Knowledge Base
+## Knowledge Graph
 
 The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
