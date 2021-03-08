@@ -19,7 +19,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 **Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
 
-![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
+![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero-2.png)
 
 ### Open-Source
 
