@@ -41,7 +41,7 @@ The problem with notetaking apps like Evernote or Apple Notes is that once you w
 
 Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
 
-![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
+![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools-2.png)
 
 # [Building Locally or Contributing](CONTRIBUTING.md)
 
