@@ -7,7 +7,7 @@
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is community-driven, and the most private and extensible knowledge graph.
 
 ### Download the free desktop app
 
