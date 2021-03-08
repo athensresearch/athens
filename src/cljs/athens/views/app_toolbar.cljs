@@ -110,7 +110,7 @@
           [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
-         (when electron?
+         (if electron?
            [:<>
             [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
              {:style {:color      (color (if @(subscribe [:db/synced])
@@ -122,7 +122,8 @@
              [:> mui-icons/Settings]]
             [button {:on-click #(dispatch [:modal/toggle])}
              [:> mui-icons/FolderOpen]]
-            [separator]])
+            [separator]]
+           [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])}
           (if @theme-dark
             [:> mui-icons/ToggleOff]

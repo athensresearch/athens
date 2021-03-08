@@ -5,11 +5,10 @@
                       (devcards.core/defcard-rg)
                       random-uuid
                       goog.DEBUG
-                      embed-id
-                      p
-                      is-open?]}
+                      (com.rpl.specter/recursive-path)]}
            :unused-referred-var
            {:exclude {clojure.test [is deftest testing]}}
            :unsorted-required-namespaces {:level :warning}}
  :lint-as {day8.re-frame.tracing/fn-traced clojure.core/fn
-           day8.re-frame.tracing/defn-traced clojure.core/defn}}
+           day8.re-frame.tracing/defn-traced clojure.core/defn
+           reagent.core/with-let clojure.core/let}}
