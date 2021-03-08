@@ -12,6 +12,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 ### Download the free desktop app
 
 - Mac: https://tinyurl.com/athens-mac
+- Mac M1: https://tinyurl.com/athens-mac-m1
 - Windows: https://tinyurl.com/athens-windows
 - Linux: https://tinyurl.com/athens-linux
 
@@ -65,6 +66,7 @@ Athens is free to self-host, with additional features and services for our paid 
 ### Download the free desktop app
 
 - Mac: https://tinyurl.com/athens-mac
+- Mac M1: https://tinyurl.com/athens-mac-m1
 - Windows: https://tinyurl.com/athens-windows
 - Linux: https://tinyurl.com/athens-linux
 
