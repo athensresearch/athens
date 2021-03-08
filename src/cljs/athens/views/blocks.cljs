@@ -7,8 +7,7 @@
     [athens.keybindings :refer [auto-complete-hashtag
                                 auto-complete-inline
                                 auto-complete-slash
-                                textarea-key-down
-                                unblock-enter!]]
+                                textarea-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -645,9 +644,7 @@
                              :on-change      (fn [e] (textarea-change e uid state))
                              :on-paste       (fn [e] (textarea-paste e uid state))
                              :on-key-down    (fn [e] (textarea-key-down e uid state))
-                             :on-blur        (fn [_]
-                                               (unblock-enter!)
-                                               (db/transact-state-for-uid (or original-uid uid) state))
+                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
                              :on-click       (fn [e] (textarea-click e uid state))
                              :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                              :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]

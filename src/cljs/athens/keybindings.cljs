@@ -10,6 +10,7 @@
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
+    [goog.functions :refer [throttle]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
@@ -383,6 +384,10 @@
   (dispatch [:editing/uid nil]))
 
 
+(def throttled-dispatch-sync
+  (throttle #(dispatch-sync %) 50))
+
+
 (defn handle-enter
   [e uid state]
   (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
@@ -403,8 +408,8 @@
                                                      (= first "{{[[DONE]]}} ") new-tail
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
-      ;; default: may mutate blocks, important action, no delay
-      :else (dispatch-sync [:enter uid d-key-down]))))
+      ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
+      :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -658,14 +663,6 @@
                    (str (:block/string state) (:block/string next-block))])))))
 
 
-(def blocked-enter? (atom false))
-
-
-(defn unblock-enter!
-  []
-  (reset! blocked-enter? false))
-
-
 (defn textarea-key-down
   [e uid state]
   (let [d-event (destruct-key-down e)
@@ -687,10 +684,7 @@
         (arrow-key-direction e)         (handle-arrow-key e uid state)
         (pair-char? e)                  (handle-pair-char e uid state)
         (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-        (= key-code KeyCodes.ENTER)     (when-not @blocked-enter?
-                                          (when-not shift ;; block when Enter w/o Shift
-                                            (reset! blocked-enter? true))
-                                          (handle-enter e uid state))
+        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
         (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
         (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
         (= key-code KeyCodes.ESC)       (handle-escape e state)
