@@ -665,28 +665,31 @@
 
 (defn textarea-key-down
   [e uid state]
-  (let [d-event (destruct-key-down e)
-        {:keys [meta ctrl shift key-code]} d-event]
+  ;; don't process key events from block that lost focus (quick Enter & Tab)
+  (when (= uid @(subscribe [:editing/uid]))
+    (let [d-event (destruct-key-down e)
+          {:keys [meta ctrl key-code]} d-event]
 
-    ;; used for paste, to determine if shift key was held down
-    (swap! state assoc :last-keydown d-event)
+      ;; used for paste, to determine if shift key was held down
+      (swap! state assoc :last-keydown d-event)
 
-    ;; update caret position for search dropdowns and for up/down
-    (when (nil? (:search/type @state))
-      (let [caret-position (get-caret-position (.. e -target))]
-        (swap! state assoc :caret-position caret-position)))
+      ;; update caret position for search dropdowns and for up/down
+      (when (nil? (:search/type @state))
+        (let [caret-position (get-caret-position (.. e -target))]
+          (swap! state assoc :caret-position caret-position)))
 
-    ;; dispatch center
-    ;; only when nothing is selected or duplicate/events dispatched
-    ;; after some ops(like delete) can cause errors
-    (when (empty? @(subscribe [:selected/items]))
-      (cond
-        (arrow-key-direction e)         (handle-arrow-key e uid state)
-        (pair-char? e)                  (handle-pair-char e uid state)
-        (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-        (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-        (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
-        (= key-code KeyCodes.ESC)       (handle-escape e state)
-        (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-        (is-character-key? e)           (write-char e uid state)))))
+      ;; dispatch center
+      ;; only when nothing is selected or duplicate/events dispatched
+      ;; after some ops(like delete) can cause errors
+      (when (empty? @(subscribe [:selected/items]))
+        (cond
+          (arrow-key-direction e)         (handle-arrow-key e uid state)
+          (pair-char? e)                  (handle-pair-char e uid state)
+          (= key-code KeyCodes.TAB)       (handle-tab e uid state)
+          (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+          (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+          (= key-code KeyCodes.ESC)       (handle-escape e state)
+          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+          (is-character-key? e)           (write-char e uid state))))))
+
