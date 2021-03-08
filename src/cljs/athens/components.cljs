@@ -93,7 +93,6 @@
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))]
     ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
     (if (db/e-by-av :block/uid block-uid)
-      #_:clj-kondo/ignore
       (r/with-let [embed-id (random-uuid)]
                   [:div.block-embed (use-style block-embed-adjustments)
                    (let [block (db/get-block-document [:block/uid block-uid])]
