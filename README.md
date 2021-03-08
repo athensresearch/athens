@@ -7,7 +7,7 @@
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is community-driven, and the most private and extensible knowledge graph.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
 
 ### Download the free desktop app
 
@@ -35,7 +35,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 - 100% availability
 - 100% local and fast unlike server-first apps (*cough* Notion and Roam)
 
-## Knowledge Base
+## Knowledge Graph
 
 The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
