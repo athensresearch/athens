@@ -5,6 +5,7 @@
     [athens.style :refer [color OPACITIES ZINDICES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
+    [athens.views.graph-page :refer [graph-page]]
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -215,7 +216,7 @@
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [open node/title block/string]}] items]
+                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
                                          ^{:key uid}
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
@@ -224,9 +225,10 @@
                                                     :class    (when open "is-open")}
                                             [:> mui-icons/ChevronRight]]
                                            [:h2
-                                            (if title
-                                              [:<> [:> mui-icons/Description] [parse-renderer/parse-and-render title uid]]
-                                              [:<> [:> mui-icons/FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
+                                            (cond
+                                              is-graph? [:<> [:> mui-icons/BubbleChart] [parse-renderer/parse-and-render title uid]]
+                                              title     [:<> [:> mui-icons/Description] [parse-renderer/parse-and-render title uid]]
+                                              :else     [:<> [:> mui-icons/FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
                                            [:div {:class "controls"}
                                             ;;  [button [:> mui-icons/DragIndicator]]
                                             ;;  [:hr]
@@ -234,9 +236,10 @@
                                              [:> mui-icons/Close]]]]
                                           (when open
                                             [:div (use-style sidebar-item-container-style)
-                                             (if title
-                                               [node-page-component [:block/uid uid]]
-                                               [block-page-component [:block/uid uid]])])])))]])})))
+                                             (cond
+                                               is-graph? [graph-page uid]
+                                               title     [node-page-component [:block/uid uid]]
+                                               :else     [block-page-component [:block/uid uid]])])])))]])})))
 
 
 (defn right-sidebar-component

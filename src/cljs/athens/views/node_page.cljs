@@ -355,15 +355,20 @@
                                                            :left      (str x "px")
                                                            :top       (str y "px")}})
                                       [:div (use-style menu-style)
-                                       (if sidebar
-                                         [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                          [:<>
-                                           [:> mui-icons/BookmarkBorder]
-                                           [:span "Remove Shortcut"]]]
-                                         [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                          [:<>
-                                           [:> mui-icons/Bookmark]
-                                           [:span "Add Shortcut"]]])
+                                       [:<>
+                                        (if sidebar
+                                          [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                                           [:<>
+                                            [:> mui-icons/BookmarkBorder]
+                                            [:span "Remove Shortcut"]]]
+                                          [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                                           [:<>
+                                            [:> mui-icons/Bookmark]
+                                            [:span "Add Shortcut"]]])
+                                        [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                                         [:<>
+                                          [:> mui-icons/BubbleChart]
+                                          [:span "Show Local Graph"]]]]
                                        [:hr (use-style menu-separator-style)]
                                        [button {:on-click #(if daily-note?
                                                              (dispatch [:daily-note/delete uid title])
