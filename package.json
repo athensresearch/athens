@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.52",
+  "version": "1.0.0-beta.53",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -23,20 +23,20 @@
     "mac": {
       "target": [
         {
-           "target": "dmg",
-           "arch": [
-              "arm64",
-              "x64"
-           ]
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         },
         {
           "target": "zip",
-           "arch": [
-              "arm64",
-              "x64"
-           ]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
-     ],
+      ],
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
