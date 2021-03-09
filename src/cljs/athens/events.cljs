@@ -18,7 +18,8 @@
   :boot/web
   (fn [_ _]
     {:db         db/rfdb
-     :dispatch-n [[:loading/unset]]}))
+     :dispatch-n [[:loading/unset]
+                  [:local-storage/set-theme]]}))
 
 
 (reg-event-db
@@ -408,8 +409,12 @@
 (reg-event-fx
   :get-db/init
   (fn [{rfdb :db} _]
-    {:db (-> db/rfdb
-             (assoc :loading? true))
+    {:db (cond-> db/rfdb
+           true (assoc :loading? true)
+
+           (= (js/localStorage.getItem "theme/dark") "true")
+           (assoc :theme/dark true))
+
      :async-flow {:first-dispatch (if false
                                     [:local-storage/get-db]
                                     [:http/get-db])
