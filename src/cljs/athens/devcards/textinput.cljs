@@ -1,6 +1,6 @@
 (ns athens.devcards.textinput
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Face" :as Face]
     [athens.views.textinput :refer [textinput]]
     [devcards.core :refer-macros [defcard-rg]]))
 
@@ -10,4 +10,4 @@
 
 
 (defcard-rg Input-with-icon
-  [textinput {:placeholder "pink" :icon [:> mui-icons/Face]}])
+  [textinput {:placeholder "pink" :icon [:> Face]}])

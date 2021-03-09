@@ -1,6 +1,13 @@
 (ns athens.views.node-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Bookmark" :as Bookmark]
+    ["@material-ui/icons/BookmarkBorder" :as BookmarkBorder]
+    ["@material-ui/icons/BubbleChart" :as BubbleChart]
+    ["@material-ui/icons/ChevronRight" :as ChevronRight]
+    ["@material-ui/icons/Delete" :as Delete]
+    ["@material-ui/icons/KeyboardArrowDown" :as KeyboardArrowDown]
+    ["@material-ui/icons/Link" :as Link]
+    ["@material-ui/icons/MoreHoriz" :as MoreHoriz]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
@@ -359,15 +366,15 @@
                                         (if sidebar
                                           [button {:on-click #(dispatch [:page/remove-shortcut uid])}
                                            [:<>
-                                            [:> mui-icons/BookmarkBorder]
+                                            [:> BookmarkBorder]
                                             [:span "Remove Shortcut"]]]
                                           [button {:on-click #(dispatch [:page/add-shortcut uid])}
                                            [:<>
-                                            [:> mui-icons/Bookmark]
+                                            [:> Bookmark]
                                             [:span "Add Shortcut"]]])
                                         [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
                                          [:<>
-                                          [:> mui-icons/BubbleChart]
+                                          [:> BubbleChart]
                                           [:span "Show Local Graph"]]]]
                                        [:hr (use-style menu-separator-style)]
                                        [button {:on-click #(if daily-note?
@@ -375,7 +382,7 @@
                                                              (do
                                                                (navigate :pages)
                                                                (dispatch [:page/delete uid title])))}
-                                        [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
+                                        [:<> [:> Delete] [:span "Delete Page"]]]]])))})))
 
 
 (defn ref-comp
@@ -415,9 +422,9 @@
        [:h4 (use-style references-heading-style)
         [button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
-           [:> mui-icons/KeyboardArrowDown]
-           [:> mui-icons/ChevronRight])]
-        [(r/adapt-react-class mui-icons/Link)]
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
         [:div {:style {:display "flex"
                        :flex "1 1 100%"
                        :justify-content "space-between"}}
@@ -453,9 +460,9 @@
                                  (swap! state assoc unlinked? true)
                                  (reset! unlinked-refs un-refs))))}
          (if (get @state unlinked?)
-           [:> mui-icons/KeyboardArrowDown]
-           [:> mui-icons/ChevronRight])]
-        [(r/adapt-react-class mui-icons/Link)]
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
         [:div {:style {:display         "flex"
                        :justify-content "space-between"
                        :width "100%"}}
@@ -545,7 +552,7 @@
                                                        :menu/x    (.. rect -left)
                                                        :menu/y    (.. rect -bottom)}))))
                    :style    page-menu-toggle-style}
-           [:> mui-icons/MoreHoriz]]
+           [:> MoreHoriz]]
           (when-not daily-note?
             [autosize/textarea
              {:value       (:title/local @state)

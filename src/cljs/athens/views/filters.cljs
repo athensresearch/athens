@@ -1,6 +1,10 @@
 (ns athens.views.filters
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/ArrowDownward" :as ArrowDownward]
+    ["@material-ui/icons/Block" :as Block]
+    ["@material-ui/icons/Check" :as Check]
+    ["@material-ui/icons/FilterList" :as FilterList]
+    ["@material-ui/icons/Sort" :as Sort]
     [athens.style :refer [color OPACITIES]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :refer [textinput]]
@@ -166,7 +170,7 @@
                                {:type        "search"
                                 :autoFocus  true
                                 :placeholder "Type to find filters"
-                                :icon [:> mui-icons/FilterList]
+                                :icon [:> FilterList]
                                 :value (:search @s)
                                 :on-change   (fn [e]
                                                (swap! s assoc-in [:search] (.. e -target -value)))})]
@@ -178,8 +182,8 @@
                                (swap! s assoc :sort (if (= sort_ :lex)
                                                       :count
                                                       :lex)))}
-           [:> mui-icons/Sort]]
-          [:span (use-style sort-indicator-style) [:<> [:> mui-icons/ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
+           [:> Sort]]
+          [:span (use-style sort-indicator-style) [:<> [:> ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
           [:span (str num-filters " Active")]
           [button {:style reset-control-style
                    :on-click (fn [_]
@@ -219,6 +223,6 @@
                 (when (or added? excluded?)
                   [:span (use-style state-style) state
                    (if added?
-                     [:> mui-icons/Check]
-                     [:> mui-icons/Block])])]))
+                     [:> Check]
+                     [:> Block])])]))
             [:p (use-style no-items-message-style) "No filters found"])]]))))
