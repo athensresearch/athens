@@ -29,7 +29,8 @@
                                         :closure-defines {re-frame.trace.trace-enabled? true}
                                         :output-feature-set :es-next}
                      :devtools {:preloads [devtools.preload
-                                           day8.re-frame-10x.preload]}}
+                                           day8.re-frame-10x.preload
+                                           #_athens.tracing]}}
 
           ;; backend for electron (node.js)
           :main {:target :node-script
