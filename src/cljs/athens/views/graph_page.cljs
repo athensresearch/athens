@@ -92,21 +92,11 @@
       (assoc db :graph-conf n-gc))))
 
 
-(def default-graph-conf
-  {:hlt-link-levels  1
-   :link-distance    50
-   :charge-strength  -15
-   :local-depth      1
-   :root-links-only? false
-   :orphans?         true
-   :daily-notes?     true})
-
-
 (rf/reg-event-db
   :graph/load-graph-conf
   (fn [db _]
     (let [conf (or (some->> "graph-conf" js/localStorage.getItem read-string)
-                   default-graph-conf)]
+                   db/default-graph-conf)]
       (js/localStorage.setItem "graph-conf" conf)
       (assoc db :graph-conf conf))))
 
@@ -245,7 +235,7 @@
                        [comp
                         (merge
                           props
-                          {:value    (or (key graph-conf) (key default-graph-conf))
+                          {:value    (or (key graph-conf) (key db/default-graph-conf))
                            :color    "primary"
                            :onChange (fn [_ n-val]
                                        (and onChange (onChange n-val))
