@@ -1,6 +1,7 @@
 (ns athens.views.daily-notes
   (:require
     [athens.db :as db]
+    [athens.posh :refer [pull]]
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day uid-to-date]]
     [athens.views.node-page :refer [node-page-component]]
@@ -8,7 +9,6 @@
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 

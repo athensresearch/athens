@@ -1,13 +1,13 @@
 (ns athens.views.left-sidebar
   (:require
     [athens.db :as db]
+    [athens.posh :refer [q]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
     ;;[athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [posh.reagent :refer [q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))

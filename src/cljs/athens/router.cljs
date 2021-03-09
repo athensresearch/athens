@@ -1,10 +1,10 @@
 (ns athens.router
   (:require
     [athens.db :as db]
+    [athens.posh :refer [pull]]
     [athens.util :as util]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :as rf :refer [subscribe dispatch reg-sub reg-event-fx reg-fx]]
     [reitit.coercion.spec :as rss]
     [reitit.frontend :as rfe]

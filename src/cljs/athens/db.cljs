@@ -1,11 +1,11 @@
 (ns athens.db
   (:require
     [athens.patterns :as patterns]
+    [athens.posh :as posh :refer [pull q]]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
     [re-frame.core :refer [dispatch]]))
 
 
@@ -132,11 +132,7 @@
                     :db/valueType :db.type/ref}})
 
 
-(defonce dsdb (d/create-conn schema))
-
-
-;; todo: turn into an effect
-(posh! dsdb)
+(defonce dsdb (posh/create-conn schema))
 
 
 (defn e-by-av

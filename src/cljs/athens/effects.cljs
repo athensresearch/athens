@@ -1,6 +1,7 @@
 (ns athens.effects
   (:require
     [athens.db :as db]
+    [athens.posh :refer [transact!]]
     [athens.util :as util]
     [athens.walk :as walk]
     [cljs-http.client :as http]
@@ -11,7 +12,6 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
-    [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [stylefy.core :as stylefy]))
 

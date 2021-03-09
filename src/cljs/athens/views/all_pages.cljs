@@ -1,6 +1,7 @@
 (ns athens.views.all-pages
   (:require
     [athens.db :as db]
+    [athens.posh :as p]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
     [athens.util :refer [date-string]]
@@ -9,7 +10,6 @@
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [posh.reagent :as p]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 

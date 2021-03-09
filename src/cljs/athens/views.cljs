@@ -2,6 +2,7 @@
   (:require
     [athens.config]
     [athens.db :as db]
+    [athens.posh :refer [pull]]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
     [athens.views.app-toolbar :refer [app-toolbar]]
@@ -16,7 +17,6 @@
     [athens.views.right-sidebar :refer [right-sidebar-component]]
     [athens.views.settings-page :as settings-page]
     [athens.views.spinner :refer [initial-spinner-component]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch]]
     [stylefy.core :as stylefy :refer [use-style]]))
 

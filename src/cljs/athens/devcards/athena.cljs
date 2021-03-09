@@ -2,10 +2,10 @@
   (:require
     [athens.db :as db]
     [athens.devcards.db :refer [load-real-db-button]]
+    [athens.posh :refer [transact!]]
     [athens.subs]
     [athens.views.athena :refer [athena-prompt-el athena-component]]
     [athens.views.buttons :refer [button]]
-    [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]))
 
 
@@ -14,7 +14,7 @@
   [button {:on-click (fn []
                        (let [n       (inc (:max-eid @db/dsdb))
                              n-child (inc n)]
-                         (d/transact! db/dsdb [{:node/title     (str "Test Page " n)
+                         (transact! db/dsdb [{:node/title     (str "Test Page " n)
                                                 :block/uid      (str "uid-" n)
                                                 :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))} "Create Test Pages and Blocks"])
 

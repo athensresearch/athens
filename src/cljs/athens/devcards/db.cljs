@@ -1,6 +1,7 @@
 (ns athens.devcards.db
   (:require
     [athens.db :as db]
+    [athens.posh :refer [transact!]]
     [athens.views.buttons :refer [button]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
@@ -8,7 +9,6 @@
     [cljsjs.react.dom]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
-    [posh.reagent :refer [transact!]]
     [reagent.core :as r]))
 
 

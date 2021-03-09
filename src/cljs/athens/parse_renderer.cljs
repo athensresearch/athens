@@ -5,11 +5,11 @@
     ["katex/dist/contrib/mhchem"]
     [athens.db :as db]
     [athens.parser :as parser]
+    [athens.posh :refer [pull]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
-    [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
