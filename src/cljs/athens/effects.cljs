@@ -13,7 +13,8 @@
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [re-frame.core :refer [dispatch reg-fx]]
-    [stylefy.core :as stylefy]))
+    [stylefy.core :as stylefy]
+    [taoensso.tufte :as tufte]))
 
 
 ;;; Effects
@@ -237,7 +238,7 @@
 (reg-fx
   :transact!
   (fn [tx-data]
-    (walk-transact tx-data)))
+    (tufte/profile {} (walk-transact tx-data))))
 
 
 (reg-fx
