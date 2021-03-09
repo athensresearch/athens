@@ -38,7 +38,8 @@
      :local-storage/set! ["current-route/uid" (-> route second :id)]}))
 
 
-(defn page-title [nav-match]
+(defn page-title
+  [nav-match]
   (let [prefix #(str % " | Athens")]
     (if-some [block-id (get-in nav-match [:path-params :id])]
       (let [node (pull db/dsdb '[*] [:block/uid block-id])

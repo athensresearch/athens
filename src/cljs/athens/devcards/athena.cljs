@@ -15,8 +15,8 @@
                        (let [n       (inc (:max-eid @db/dsdb))
                              n-child (inc n)]
                          (transact! db/dsdb [{:node/title     (str "Test Page " n)
-                                                :block/uid      (str "uid-" n)
-                                                :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))} "Create Test Pages and Blocks"])
+                                              :block/uid      (str "uid-" n)
+                                              :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))} "Create Test Pages and Blocks"])
 
 
 (defcard-rg Load-Real-DB

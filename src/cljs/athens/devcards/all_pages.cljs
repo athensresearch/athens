@@ -22,10 +22,10 @@
   [button {:on-click (fn []
                        (let [n (:max-eid @db/dsdb)]
                          (transact! db/dsdb [{:node/title     (str "Test Title " n)
-                                                :block/uid      (str "uid" n)
-                                                :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
-                                                :create/time    (.getTime (js/Date.))
-                                                :edit/time      (.getTime (js/Date.))}])))}
+                                              :block/uid      (str "uid" n)
+                                              :block/children [{:block/string "a block string" :block/uid (str "uid-" n "-" (rand))}]
+                                              :create/time    (.getTime (js/Date.))
+                                              :edit/time      (.getTime (js/Date.))}])))}
    "Create Page"])
 
 
