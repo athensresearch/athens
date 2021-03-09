@@ -38,21 +38,26 @@
      :local-storage/set! ["current-route/uid" (-> route second :id)]}))
 
 
+(defn page-title [nav-match]
+  (let [prefix #(str % " | Athens")]
+    (if-some [block-id (get-in nav-match [:path-params :id])]
+      (let [node (pull db/dsdb '[*] [:block/uid block-id])
+            node-title (:node/title @node)]
+        ;; TODO make the page title query work when zoomed in on a block
+        (prefix node-title))
+      (let [route-name (get-in nav-match [:data :name])]
+        (case route-name
+          :pages (prefix "All Pages")
+          :home  (prefix "Daily Notes")
+          "Athens")))))
+
+
 (reg-event-fx
   :navigated
   (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
-          node-title (:node/title @node)
-          route-name (-> new-match :data :name)
-          html-title-prefix (cond
-                              node-title node-title
-                              (= route-name :pages) "All Pages"
-                              (= route-name :home) "Daily Notes")
-          html-title (if html-title-prefix
-                       (str html-title-prefix " | Athens")
-                       "Athens")]
+          html-title (page-title new-match)]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
