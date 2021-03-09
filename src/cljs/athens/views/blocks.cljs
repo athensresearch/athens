@@ -757,11 +757,10 @@
 
 (defn block-refs-count-el
   [count uid]
-  (when (pos? count)
-    [:div (use-style {:position "absolute"
-                      :right "0px"
-                      :z-index (:zindex-tooltip ZINDICES)})
-     [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
+  [:div (use-style {:margin-left "1em"
+                    :z-index (:zindex-dropdown ZINDICES)
+                    :visibility (when-not (pos? count) "hidden")})
+    [button {:primary true :on-click #(dispatch [:right-sidebar/open-item uid])} count]])
 
 
 (defn block-drag-over
