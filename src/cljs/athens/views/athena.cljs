@@ -1,9 +1,6 @@
 (ns athens.views.athena
   (:require
-    ["@material-ui/icons/ArrowForward" :as ArrowForward]
-    ["@material-ui/icons/Close" :as Close]
-    ["@material-ui/icons/Create" :as Create]
-    ["@material-ui/icons/Search" :as Search]
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -241,7 +238,7 @@
            :primary true
            :style {:font-size "11px"}}
    [:<>
-    [:> Search]
+    [:> mui-icons/Search]
     [:span "Find or Create a Page"]]])
 
 
@@ -266,7 +263,7 @@
                  [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                  (when string
                    [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
-                 [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]]))))])]))
+                 [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]]))))])]))
 
 
 (defn athena-component
@@ -300,7 +297,7 @@
                                                            :on-key-down (fn [e] (key-down-handler e s))})]
                                        [:button (use-style search-cancel-button-style
                                                            {:on-click #(set! (.-value (getElement "athena-input")))})
-                                        [:> Close]]]
+                                        [:> mui-icons/Close]]]
                                       [results-el s]
                                       [(fn []
                                          (let [{:keys [results query index]} @s]
@@ -324,7 +321,7 @@
                                                     [:h4.title (use-sub-style result-style :title)
                                                      [:b "Create Page: "]
                                                      query]]
-                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class Create)]]]
+                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/Create)]]]
 
                                                   [:div (use-style result-style {:key      i
                                                                                  :on-click (fn []
@@ -341,4 +338,4 @@
                                                     [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                                                     (when string
                                                       [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
-                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]])))]))]])))})))
+                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class mui-icons/ArrowForward)]]])))]))]])))})))

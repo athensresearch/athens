@@ -1,10 +1,6 @@
 (ns athens.views.devtool
   (:require
-    ["@material-ui/icons/Build" :as Build]
-    ["@material-ui/icons/ChevronLeft" :as ChevronLeft]
-    ["@material-ui/icons/Clear" :as Clear]
-    ["@material-ui/icons/History" :as History]
-    ["@material-ui/icons/ShortText" :as ShortText]
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
     [athens.views.buttons :refer [button]]
@@ -336,7 +332,7 @@
                                                     (-> s
                                                         (update :navs subvec 0 i)
                                                         (dissoc :viewer))))}
-                  [:<> [:> ChevronLeft] [:span (first nav)]]])))
+                  [:<> [:> mui-icons/ChevronLeft] [:span (first nav)]]])))
            [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
            [:div (use-style current-location-controls-style)
             [:span "View as "]
@@ -463,14 +459,14 @@
            :primary true
            :style {:font-size "11px"}}
    [:<>
-    [:> Build]
+    [:> mui-icons/Build]
     [:span "Toggle devtool"]]])
 
 
 (defn devtool-close-el
   []
   [button {:on-click #(dispatch [:devtool/toggle])}
-   [:> Clear]])
+   [:> mui-icons/Clear]])
 
 
 (defn devtool-el
@@ -483,10 +479,10 @@
         [:div (use-style tabs-section-style)
          [button {:on-click #(switch-panel :query)
                   :active (= active-panel :query)}
-          [:<> [:> ShortText] [:span "Query"]]]
+          [:<> [:> mui-icons/ShortText] [:span "Query"]]]
          [button {:on-click #(switch-panel :txes)
                   :active (= active-panel :txes)}]
-         [:<> [:> History] [:span "Transactions"]]]
+         [:<> [:> mui-icons/History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)
         (case active-panel

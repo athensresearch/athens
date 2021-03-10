@@ -1,8 +1,6 @@
 (ns athens.views.alerts
   (:require
-    ["@material-ui/icons/Announcement" :as Announcement]
-    ["@material-ui/icons/Check" :as Check]
-    ["@material-ui/icons/Close" :as Close]
+    ["@material-ui/icons" :as mui-icons]
     [athens.style :refer [color]]
     [athens.views.buttons :refer [button]]
     [cljsjs.react]
@@ -34,9 +32,9 @@
   [message confirm-fn close-fn]
   [:div (use-style alert-container-style)
    [button {:style {:color (color :highlight-color)}}
-    [(r/adapt-react-class Announcement)]]
+    [(r/adapt-react-class mui-icons/Announcement)]]
    [:span message]
    [button {:on-click confirm-fn :style {:color (color :header-text-color)}}
-    [(r/adapt-react-class Check)]]
+    [(r/adapt-react-class mui-icons/Check)]]
    [button {:on-click close-fn :style {:color (color :header-text-color)}}
-    [(r/adapt-react-class Close)]]])
+    [(r/adapt-react-class mui-icons/Close)]]])

@@ -1,11 +1,6 @@
 (ns athens.views.right-sidebar
   (:require
-    ["@material-ui/icons/BubbleChart" :as BubbleChart]
-    ["@material-ui/icons/ChevronRight" :as ChevronRight]
-    ["@material-ui/icons/Close" :as Close]
-    ["@material-ui/icons/Description" :as Description]
-    ["@material-ui/icons/FiberManualRecord" :as FiberManualRecord]
-    ["@material-ui/icons/VerticalSplit" :as VerticalSplit]
+    ["@material-ui/icons" :as mui-icons]
     [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
     [athens.views.block-page :refer [block-page-component]]
@@ -169,7 +164,7 @@
 (defn empty-message
   []
   [:div (use-style empty-message-style)
-   [:> VerticalSplit]
+   [:> mui-icons/VerticalSplit]
    [:p
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
@@ -217,7 +212,7 @@
                                   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
-                                   ;;  [button [:> FilterList]]
+                                   ;;  [button [:> mui-icons/FilterList]]
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
@@ -228,17 +223,17 @@
                                            [button {:style    sidebar-item-toggle-style
                                                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
                                                     :class    (when open "is-open")}
-                                            [:> ChevronRight]]
+                                            [:> mui-icons/ChevronRight]]
                                            [:h2
                                             (cond
-                                              is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
-                                              title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
-                                              :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
+                                              is-graph? [:<> [:> mui-icons/BubbleChart] [parse-renderer/parse-and-render title uid]]
+                                              title     [:<> [:> mui-icons/Description] [parse-renderer/parse-and-render title uid]]
+                                              :else     [:<> [:> mui-icons/FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
                                            [:div {:class "controls"}
-                                            ;;  [button [:> DragIndicator]]
+                                            ;;  [button [:> mui-icons/DragIndicator]]
                                             ;;  [:hr]
                                             [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
-                                             [:> Close]]]]
+                                             [:> mui-icons/Close]]]]
                                           (when open
                                             [:div (use-style sidebar-item-container-style)
                                              (cond

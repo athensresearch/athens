@@ -1,18 +1,6 @@
 (ns athens.views.app-toolbar
   (:require
-    ["@material-ui/icons/BubbleChart" :as BubbleChart]
-    ["@material-ui/icons/ChevronLeft" :as ChevronLeft]
-    ["@material-ui/icons/ChevronRight" :as ChevronRight]
-    ["@material-ui/icons/FiberManualRecord" :as FiberManualRecord]
-    ["@material-ui/icons/FileCopy" :as FileCopy]
-    ["@material-ui/icons/FolderOpen" :as FolderOpen]
-    ["@material-ui/icons/Menu" :as Menu]
-    ["@material-ui/icons/Search" :as Search]
-    ["@material-ui/icons/Settings" :as Settings]
-    ["@material-ui/icons/Today" :as Today]
-    ["@material-ui/icons/ToggleOff" :as ToggleOff]
-    ["@material-ui/icons/ToggleOn" :as ToggleOn]
-    ["@material-ui/icons/VerticalSplit" :as VerticalSplit]
+    ["@material-ui/icons" :as mui-icons]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -99,49 +87,49 @@
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
                   :on-click #(dispatch [:left-sidebar/toggle])}
-          [:> Menu]]
+          [:> mui-icons/Menu]]
          [separator]
          ;; TODO: refactor to effects
          (when electron?
            [:<>
-            [button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
-            [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
+            [button {:on-click #(.back js/window.history)} [:> mui-icons/ChevronLeft]]
+            [button {:on-click #(.forward js/window.history)} [:> mui-icons/ChevronRight]]
             [separator]])
          [button {:on-click router/nav-daily-notes
-                  :active   (= @route-name :home)} [:> Today]]
+                  :active   (= @route-name :home)} [:> mui-icons/Today]]
          [button {:on-click #(router/navigate :pages)
-                  :active   (= @route-name :pages)} [:> FileCopy]]
+                  :active   (= @route-name :pages)} [:> mui-icons/FileCopy]]
          [button {:on-click #(router/navigate :graph)
-                  :active   (= @route-name :graph)} [:> BubbleChart]]
+                  :active   (= @route-name :graph)} [:> mui-icons/BubbleChart]]
          ;; below is used for testing error tracking
          #_[button {:on-click #(throw (js/Error "error"))
-                    :style {:border "1px solid red"}} [:> Warning]]
+                    :style {:border "1px solid red"}} [:> mui-icons/Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
                   :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
-          [:<> [:> Search] [:span "Find or Create a Page"]]]]
+          [:<> [:> mui-icons/Search] [:span "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [(reagent.core/adapt-react-class FiberManualRecord)
+            [(reagent.core/adapt-react-class mui-icons/FiberManualRecord)
              {:style {:color      (color (if @(subscribe [:db/synced])
                                            :confirmation-color
                                            :highlight-color))
                       :align-self "center"}}]
             [button {:on-click #(router/navigate :settings)
                      :active   (= @route-name :settings)}
-             [:> Settings]]
+             [:> mui-icons/Settings]]
             [button {:on-click #(dispatch [:modal/toggle])}
-             [:> FolderOpen]]
+             [:> mui-icons/FolderOpen]]
             [separator]]
            [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])}
           (if @theme-dark
-            [:> ToggleOff]
-            [:> ToggleOn])]
+            [:> mui-icons/ToggleOff]
+            [:> mui-icons/ToggleOn])]
          [separator]
          [button {:active   @right-open?
                   :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
+          [:> mui-icons/VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
 
