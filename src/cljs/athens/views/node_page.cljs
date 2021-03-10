@@ -328,8 +328,6 @@
 
 (def init-state
   {:menu/show            false
-   :menu/x               nil
-   :menu/y               nil
    :title/initial        nil
    :title/local          nil
    :alert/show           nil
@@ -353,14 +351,14 @@
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [node state daily-note?]
                                  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                       {:menu/keys [show x y]} @state]
+                                       {:menu/keys [show]} @state]
                                    (when show
                                      [:div (merge (use-style dropdown-style
                                                              {:ref #(reset! ref %)})
                                                   {:style {:font-size "14px"
-                                                           :position  "fixed"
-                                                           :left      (str x "px")
-                                                           :top       (str y "px")}})
+                                                           :position  "absolute"
+                                                           :left      "-3em"
+                                                           :top       "3.5em"}})
                                       [:div (use-style menu-style)
                                        [:<>
                                         (if sidebar
@@ -547,10 +545,7 @@
                                (.. e stopPropagation)
                                (if show
                                  (swap! state assoc :menu/show false)
-                                 (let [rect (.. e -target getBoundingClientRect)]
-                                   (swap! state merge {:menu/show true
-                                                       :menu/x    (.. rect -left)
-                                                       :menu/y    (.. rect -bottom)}))))
+                                 (swap! state merge {:menu/show true})))
                    :style    page-menu-toggle-style}
            [:> MoreHoriz]]
           (when-not daily-note?
@@ -568,10 +563,10 @@
           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
           (if (str/blank? (:title/local @state))
             [:wbr]
-            [parse-renderer/parse-and-render (:title/local @state) uid])]
+            [parse-renderer/parse-and-render (:title/local @state) uid])
 
-         ;; Dropdown
-         [menu-dropdown node state daily-note?]
+          ;; Dropdown
+          [menu-dropdown node state daily-note?]]
 
          ;; Children
          (if (empty? children)

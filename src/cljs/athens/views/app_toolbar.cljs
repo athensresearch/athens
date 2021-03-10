@@ -37,7 +37,7 @@
    :right 0
    :left 0
    :grid-template-columns "auto 1fr auto"
-   :z-index "1000"
+   :z-index "1070"
    :grid-auto-flow "column"
    :padding "0.25rem 0.75rem"
    ::stylefy/manual [[:svg {:font-size "20px"}]
