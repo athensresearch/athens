@@ -171,9 +171,10 @@
                 emphasis /
                 page-link /
                 block-ref /
+                hashtag /
                 paragraph-text
                )+ <#'\n\n'?>
-   <paragraph-text> = #'[^`#*\\[\\]\n{1,2}]+'
+   <paragraph-text> = #'[^`#*\\[\\]\n{2}]+'
    strong = <'**'> strong-text <'**'> 
    <strong-text> = #'[^\\*\\*]+'
    emphasis =  <'*'> emphasis-text <'*'>
@@ -182,6 +183,9 @@
    <page-link-text> = ( #'[^\\[\\]{2}]+' | page-link )+
    block-ref = <'(('> block-ref-text <'))'>
    <block-ref-text> = #'[a-zA-Z0-9_\\-]+'
+   hashtag = hashtag-bare | hashtag-delimited
+   <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'
+   <hashtag-delimited> = <'#[['> page-link-text <']]'>
    unordered-list = unordered-item+ <blankline>
    unordered-item = <'- '> #'[a-zA-Z ]+' <newline>?
    ordered-list = ordered-item+ <blankline>
@@ -190,9 +194,9 @@
    inline-code = <'`'> #'[^`]+' <'`'>
    pre-code = <'```'> lang? <newline?>
               codetext
-              <'\n'? '```'> <blankline?>
+              <newline? '```'> <blankline?>
    lang = <' '?> #'[a-zA-Z]+'
-   codetext = #'[^\\n`{3}]+'
+   codetext = #'.+?(?=\\n?```)'
    anchor = auto-anchor | braced-anchor
    <auto-anchor> = <'<'> url <'>'>
    <braced-anchor> = <'['> text <']'> <'('> url <')'>
@@ -207,7 +211,7 @@
    spaces = space+
    space = ' '
    blankline = #'\n\n'
-   newline = #'\n'
+   newline = #'\r?\n'
    ")
 
 

@@ -226,7 +226,11 @@
 
     ;; mode detection
     [:block [:block-pre-formatted "(ns example)" "clojure"]]
-    "```clojure\n(ns example)```"))
+    "```clojure\n(ns example)```"
+
+    ;; code blocks with backticks
+    [:block [:block-pre-formatted "a`b`c"]]
+    "```a`b`c```"))
 
 
 (deftest parser-new-hashtag-tests
@@ -250,7 +254,10 @@
     "learn #اَلْعَرَبِيَّةُ in a year"))
 
 
-(deftest parser-new-current-test
+(deftest parser-new-component-tests
   (are [x y] (= x (parse-to-ast-new y))
-    [:block "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]
-    "Some [[Nested [[Links]]]] and something"))
+    [:block [:component "[[TODO]]" [:page-link "TODO"]] " Pick up groceries"]
+    "{{[[TODO]]}} Pick up groceries"
+
+    [:block [:component "AnotherComponent" "AnotherComponent"] " Another Content"]
+    "{{AnotherComponent}} Another Content"))
