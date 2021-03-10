@@ -1,6 +1,6 @@
 (ns athens.views.blocks
   (:require
-    ["@material-ui/icons/KeyboardArrowDown" :as KeyboardArrowDown]
+    ["@material-ui/icons" :as mui-icons]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
@@ -367,7 +367,7 @@
                                      (if (true? linked-ref)
                                        (swap! state update :linked-ref/open not)
                                        (toggle [:block/uid uid] open)))})
-     [:> KeyboardArrowDown {:style {:font-size "16px"}}]]
+     [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
 

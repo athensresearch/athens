@@ -89,21 +89,21 @@
 ;;             [menu {:content
 ;;                    [:<>
 ;;                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
-;;                     ;;  [textinput {:icon [:> Face] :placeholder "Type to filter"}]
-;;                     [button [:<> [:> Link] [:span "Copy Page Reference"]]]
-;;                     [button [:<> [:> Star] [:span "Add to Shortcuts"]]]
-;;                     [button [:<> [:> Face] [:span "Add Reaction"] [submenu-indicator]]]
+;;                     ;;  [textinput {:icon [:> mui-icons/Face] :placeholder "Type to filter"}]
+;;                     [button [:<> [:> mui-icons/Link] [:span "Copy Page Reference"]]]
+;;                     [button [:<> [:> mui-icons/Star] [:span "Add to Shortcuts"]]]
+;;                     [button [:<> [:> mui-icons/Face] [:span "Add Reaction"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
-;;                     [button [:<> [:> Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
-;;                     [button [:<> [:> UnfoldMore] [:span "Expand All"]]]
-;;                     [button [:<> [:> UnfoldLess] [:span "Collapse All"]]]
-;;                     [button [:<> [:> Slideshow] [:span "View As"] [submenu-indicator]]]
+;;                     [button [:<> [:> mui-icons/LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
+;;                     [button [:<> [:> mui-icons/Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
+;;                     [button [:<> [:> mui-icons/UnfoldMore] [:span "Expand All"]]]
+;;                     [button [:<> [:> mui-icons/UnfoldLess] [:span "Collapse All"]]]
+;;                     [button [:<> [:> mui-icons/Slideshow] [:span "View As"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> FileCopy] [:span "Duplicate and Break Links"]]]
-;;                     [button [:<> [:> LibraryAdd] [:span "Save as Template"]]]
-;;                     [button [:<> [:> History] [:span "Browse Versions"]]]
-;;                     [button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
+;;                     [button [:<> [:> mui-icons/FileCopy] [:span "Duplicate and Break Links"]]]
+;;                     [button [:<> [:> mui-icons/LibraryAdd] [:span "Save as Template"]]]
+;;                     [button [:<> [:> mui-icons/History] [:span "Browse Versions"]]]
+;;                     [button [:<> [:> mui-icons/CloudDownload] [:span "Export As"]]]]}]}])
 ;;
 ;;
 ;;(def items

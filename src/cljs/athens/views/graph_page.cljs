@@ -21,8 +21,7 @@
     ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
     ["@material-ui/core/Slider" :as Slider]
     ["@material-ui/core/Switch" :as Switch]
-    ["@material-ui/icons/KeyboardArrowRight" :as KeyboardArrowRight]
-    ["@material-ui/icons/KeyboardArrowUp" :as KeyboardArrowUp]
+    ["@material-ui/icons" :as mui-icons]
     ["react-force-graph-2d" :as ForceGraph2D]
     [athens.db :as db]
     [athens.router :as router]
@@ -227,7 +226,7 @@
                 [m-expansion-panel
                  [m-expansion-panel-summary
                   {:onClick #(swap! is-open? not)}
-                  [:<> [:span heading] (if @is-open? [:> KeyboardArrowUp] [:> KeyboardArrowRight])]]
+                  [:<> [:span heading] (if @is-open? [:> mui-icons/KeyboardArrowUp] [:> mui-icons/KeyboardArrowRight])]]
                  [m-expansion-panel-details
                   (doall
                     (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]

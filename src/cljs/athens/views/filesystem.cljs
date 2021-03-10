@@ -1,8 +1,6 @@
 (ns athens.views.filesystem
   (:require
-    ["@material-ui/icons/ArrowBack" :as ArrowBack]
-    ["@material-ui/icons/Close" :as Close]
-    ["@material-ui/icons/FolderOpen" :as FolderOpen]
+    ["@material-ui/icons" :as mui-icons]
     [athens.electron :as electron]
     [athens.subs]
     #_[athens.util :as util]
@@ -40,17 +38,17 @@
       [:div (use-style modal-style)
        [modal/modal
         {:title    [:div.modal__title
-                    [:> FolderOpen]
+                    [:> mui-icons/FolderOpen]
                     [:h4 "Filesystem"]
                     (when-not @loading
-                      [button {:on-click close-modal} [:> Close]])]
+                      [button {:on-click close-modal} [:> mui-icons/Close]])]
          :content  [:div (use-style modal-contents-style)
                     (if (:create @state)
                       [:<>
                        [button {:style    {:align-self "start" :padding "0"}
                                 :on-click #(swap! state update :create not)}
                         [:<>
-                         [:> ArrowBack]
+                         [:> mui-icons/ArrowBack]
                          [:span "Back"]]]
                        [:div {:style {:display         "flex"
                                       :justify-content "space-between"
