@@ -1,6 +1,7 @@
-(ns athens.parser-test
+(ns athens.cljs-parser-test
+  "Testing parsing in CLJS, since our parser can behave differently in CLJ & CLJS."
   (:require
-    [athens.parser :refer [parse-to-ast parse-to-ast-new combine-adjacent-strings]]
+    [athens.parser :refer [parse-to-ast combine-adjacent-strings parse-to-ast-new]]
     [clojure.test :refer [deftest is are testing]]))
 
 
@@ -248,9 +249,3 @@
 
     [:block "learn " [:hashtag "اَلْعَرَبِيَّةُ"] " in a year"]
     "learn #اَلْعَرَبِيَّةُ in a year"))
-
-
-(deftest parser-new-current-test
-  (are [x y] (= x (parse-to-ast-new y))
-    [:block "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]
-    "Some [[Nested [[Links]]]] and something"))
