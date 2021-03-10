@@ -1,6 +1,7 @@
 (ns athens.views.settings-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/ToggleOff" :as ToggleOff]
+    ["@material-ui/icons/ToggleOn" :as ToggleOn]
     [athens.electron :as electron]
     [athens.views.buttons :refer [button]]
     [cljs-http.client :as http]
@@ -127,10 +128,10 @@
                    :on-click #(handle-click opted-out?)}
            (if @opted-out?
              [:div {:style {:display "flex"}}
-              [:> mui-icons/ToggleOn]
+              [:> ToggleOn]
               [:span "\uD83D\uDE41 We understand."]]
              [:div {:style {:display "flex"}}
-              [:> mui-icons/ToggleOff]
+              [:> ToggleOff]
               [:span "\uD83D\uDE00 Thanks for helping make Athens better!"]])]]
 
          [:span "Analytics are delivered by "

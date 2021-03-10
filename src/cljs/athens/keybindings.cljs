@@ -1,6 +1,11 @@
 (ns athens.keybindings
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/DesktopWindows" :as DesktopWindows]
+    ["@material-ui/icons/Done" :as Done]
+    ["@material-ui/icons/Timer" :as Timer]
+    ["@material-ui/icons/Today" :as Today]
+    ["@material-ui/icons/ViewDayRounded" :as ViewDayRounded]
+    ["@material-ui/icons/YouTube" :as YouTube]
     [athens.db :as db]
     [athens.router :as router]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
@@ -82,19 +87,19 @@
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
-   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   mui-icons/ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
+  [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
+   ["Yesterday"     Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
+   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[mui-icons/DateRange "Date Picker"]
-;;[mui-icons/Attachment "Upload Image or File"]
-;;[mui-icons/ExposurePlus1 "Word Count"]
+;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;;[DateRange "Date Picker"]
+;;[Attachment "Upload Image or File"]
+;;[ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
