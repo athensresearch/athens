@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.55](https://github.com/athensresearch/athens/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2021-03-10)
+
+
+### Documentation
+
+* add directions on how to download a specific version of Athens ([6d6e7ac](https://github.com/athensresearch/athens/commit/6d6e7ac245837fef48c5578fdf382f1fd462cad6))
+
 ## [1.0.0-beta.54](https://github.com/athensresearch/athens/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2021-03-10)
 
 
