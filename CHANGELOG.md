@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.53](https://github.com/athensresearch/athens/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2021-03-09)
+
+
+### Bug Fixes
+
+* **block-ref:** better reference number ([#781](https://github.com/athensresearch/athens/issues/781)) ([1c75578](https://github.com/athensresearch/athens/commit/1c75578c8496725c5f7debbad20972c60ea24c97)), closes [#742](https://github.com/athensresearch/athens/issues/742)
+* **electron:** issue updating Mac App ([#777](https://github.com/athensresearch/athens/issues/777)) ([cf259a1](https://github.com/athensresearch/athens/commit/cf259a1de5e98d44f4cf3c8525b793b54a131c72))
+* **enter/tab:** do not apply changes to previous line when fast keystrokes ([#768](https://github.com/athensresearch/athens/issues/768)) ([f449fcb](https://github.com/athensresearch/athens/commit/f449fcb51821ef073b9f666677372863b4826c26))
+
+
+### Documentation
+
+* use gifs ([07dc655](https://github.com/athensresearch/athens/commit/07dc65528059d943531ab14d15e0ce5b53ed5819))
+
+## [1.0.0-beta.52](https://github.com/athensresearch/athens/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2021-03-09)
+
+
+### Bug Fixes
+
+* **clj-kondo:** upgrade CI, with-let, specter, remove #_:clj-kondo/ignore ([#769](https://github.com/athensresearch/athens/issues/769)) ([40dabd7](https://github.com/athensresearch/athens/commit/40dabd71998514b7368a8d73959b4e6e27f5cfd1))
+* **web:** theme and graph conf issue [#773](https://github.com/athensresearch/athens/issues/773) ([#779](https://github.com/athensresearch/athens/issues/779)) ([8c42437](https://github.com/athensresearch/athens/commit/8c424372d9c5f8f15f54f3b9703b1d4196909e4c))
+* unlinked reference overflowing content ([#770](https://github.com/athensresearch/athens/issues/770)) ([defc78d](https://github.com/athensresearch/athens/commit/defc78d3ddfa7faafc585f7e9203d5cdd5c70bb2))
+
+
+### Documentation
+
+* add download links for M1 ([6d33825](https://github.com/athensresearch/athens/commit/6d33825605ce0e09d4a5b37887c318bf6be1d96a))
+* update screenshot url ([b76f45f](https://github.com/athensresearch/athens/commit/b76f45fe76fe89ba6a37764d369b23289cbaa582))
+* **README:** update screenshots, add PH badge ([#774](https://github.com/athensresearch/athens/issues/774)) ([713b4a3](https://github.com/athensresearch/athens/commit/713b4a337b5716306a525d89e353311fa8cbcb7b))
+
 ## [1.0.0-beta.51](https://github.com/athensresearch/athens/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2021-03-07)
 
 

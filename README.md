@@ -20,7 +20,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 **Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
 
-![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero-2.png)
+![writing-demo](https://github.com/tangjeff0/athens-public/blob/main/bret-victor-demo.gif)
 
 ### Open-Source
 
@@ -42,7 +42,7 @@ The problem with notetaking apps like Evernote or Apple Notes is that once you w
 
 Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
 
-![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools-2.png)
+![graph-demo](https://github.com/tangjeff0/athens-public/blob/main/open-source-graph-demo.gif)
 
 # [Building Locally or Contributing](CONTRIBUTING.md)
 

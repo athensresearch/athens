@@ -11,7 +11,7 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle]]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -365,14 +365,15 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e uid _state]
+  [e _uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])]
+        selected-items                 @(subscribe [:selected/items])
+        editing-uid                    @(subscribe [:editing/uid])]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent uid d-key-down])
-        (dispatch [:indent uid d-key-down])))))
+        (dispatch [:unindent editing-uid d-key-down])
+        (dispatch [:indent editing-uid d-key-down])))))
 
 
 (defn handle-escape
@@ -382,9 +383,9 @@
   (swap! state assoc :search/type nil)
   (dispatch [:editing/uid nil]))
 
-;;; Enter
 
-(def throttle-dispatch (throttle #(dispatch %) 100))
+(def throttled-dispatch-sync
+  (throttle #(dispatch-sync %) 50))
 
 
 (defn handle-enter
@@ -407,8 +408,8 @@
                                                      (= first "{{[[DONE]]}} ") new-tail
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
-      ;; default: may mutate blocks
-      :else (throttle-dispatch [:enter uid d-key-down]))))
+      ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
+      :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -664,28 +665,31 @@
 
 (defn textarea-key-down
   [e uid state]
-  (let [d-event (destruct-key-down e)
-        {:keys [meta ctrl key-code]} d-event]
+  ;; don't process key events from block that lost focus (quick Enter & Tab)
+  (when (= uid @(subscribe [:editing/uid]))
+    (let [d-event (destruct-key-down e)
+          {:keys [meta ctrl key-code]} d-event]
 
-    ;; used for paste, to determine if shift key was held down
-    (swap! state assoc :last-keydown d-event)
+      ;; used for paste, to determine if shift key was held down
+      (swap! state assoc :last-keydown d-event)
 
-    ;; update caret position for search dropdowns and for up/down
-    (when (nil? (:search/type @state))
-      (let [caret-position (get-caret-position (.. e -target))]
-        (swap! state assoc :caret-position caret-position)))
+      ;; update caret position for search dropdowns and for up/down
+      (when (nil? (:search/type @state))
+        (let [caret-position (get-caret-position (.. e -target))]
+          (swap! state assoc :caret-position caret-position)))
 
-    ;; dispatch center
-    ;; only when nothing is selected or duplicate/events dispatched
-    ;; after some ops(like delete) can cause errors
-    (when (empty? @(subscribe [:selected/items]))
-      (cond
-        (arrow-key-direction e)         (handle-arrow-key e uid state)
-        (pair-char? e)                  (handle-pair-char e uid state)
-        (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-        (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-        (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
-        (= key-code KeyCodes.ESC)       (handle-escape e state)
-        (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-        (is-character-key? e)           (write-char e uid state)))))
+      ;; dispatch center
+      ;; only when nothing is selected or duplicate/events dispatched
+      ;; after some ops(like delete) can cause errors
+      (when (empty? @(subscribe [:selected/items]))
+        (cond
+          (arrow-key-direction e)         (handle-arrow-key e uid state)
+          (pair-char? e)                  (handle-pair-char e uid state)
+          (= key-code KeyCodes.TAB)       (handle-tab e uid state)
+          (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+          (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+          (= key-code KeyCodes.ESC)       (handle-escape e state)
+          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+          (is-character-key? e)           (write-char e uid state))))))
+
