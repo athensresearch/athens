@@ -52,6 +52,13 @@ Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
 - [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
+- How to download any version of Athens:
+  - Replace `53` with the version number you want.
+  - Mac: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.53.dmg
+  - M1: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.53-arm64.dmg
+  - Windows: https://athens-apps.s3.us-east-2.amazonaws.com/Athens+Setup+1.0.0-beta.53.exe
+  - Linux: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.53.AppImage
+  - `beta.39` and below has a lowercase `a` in `athens`, e.g. https://athens-apps.s3.us-east-2.amazonaws.com/athens-1.0.0-beta.39.AppImage
 
 # [Join Discord](https://discord.gg/GCJaV3V)
 
