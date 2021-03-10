@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.54](https://github.com/athensresearch/athens/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2021-03-10)
+
+
+### Enhancements
+
+* **linked-refs:** sort references by newest first ([#776](https://github.com/athensresearch/athens/issues/776)) ([954da17](https://github.com/athensresearch/athens/commit/954da17da57524fe55a4b25ea3c518a012f803c7))
+
+
+### Performance
+
+* **icons:** optimize size of material-ui/icons ([#790](https://github.com/athensresearch/athens/issues/790)) ([e60d92f](https://github.com/athensresearch/athens/commit/e60d92fb9d1235d205f868d91fbce6935617d254))
+
 ## [1.0.0-beta.53](https://github.com/athensresearch/athens/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2021-03-09)
 
 
