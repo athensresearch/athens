@@ -126,7 +126,9 @@
                 (use-style title-style {:data-uid uid :class "block-header"})
                 {:on-click (fn [e]
                              (.. e preventDefault)
-                             (dispatch [:editing/uid uid]))})
+                             (if (.. e -shiftKey)
+                               (navigate-uid uid e)
+                               (dispatch [:editing/uid uid])))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
             :value       (:string/local @state)
