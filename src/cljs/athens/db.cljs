@@ -612,7 +612,9 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
-       vec))
+       (sort-by :db/id)
+       vec
+       rseq))
 
 
 (defn get-linked-block-references
