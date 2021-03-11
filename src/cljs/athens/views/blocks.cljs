@@ -1,6 +1,6 @@
 (ns athens.views.blocks
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
@@ -221,9 +221,9 @@
                                     :opacity "1"}]
                      [:span
                       {:grid-area "main"}
-                      [:span
-                       :a {:position "relative"
-                           :z-index 2}]]
+                      [:>span
+                       :>a {:position "relative"
+                            :z-index 2}]]
                      ;; May want to refactor specific component styles to somewhere else.
                      ;; Closer to the component perhaps?
                      ;; Code
@@ -367,7 +367,7 @@
                                      (if (true? linked-ref)
                                        (swap! state update :linked-ref/open not)
                                        (toggle [:block/uid uid] open)))})
-     [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+     [:> KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
 
@@ -613,44 +613,28 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block _ _]
-  (let [{:block/keys [uid original-uid]} block
-        editing?                         (subscribe [:editing/is-editing uid])
-        selected-items                   (subscribe [:selected/items])]
-    (fn [_block state {:keys [block-embed?]}]
-      (let [{:string/keys [local]} @state]
-        [:div {:class "block-content"}
-         [autosize/textarea {:value (:string/local @state)
-                             ;; todo(abhinav)
-                             ;; events are not getting captured when z-index given through class(specificity checked)
-                             :style (cond
-                                      ;; if editing always show original block
-                                      @editing?
-                                      {:z-index "3"}
-
-                                      ;; decrease z-index for embed textarea so click is taken by embed block
-                                      (and local (re-matches #"\{\{\[\[embed\]\]: \(\(.+\)\)\}\}" local))
-                                      {:z-index "1"}
-
-                                      ;; embed items
-                                      block-embed?
-                                      {:z-index "3"})
-
-                             :class          ["textarea" (when (and (empty? @selected-items)
-                                                                    @editing?)
-                                                           "is-editing")]
-                             ;;:auto-focus     true
-                             :id             (str "editable-uid-" uid)
-                             :on-change      (fn [e] (textarea-change e uid state))
-                             :on-paste       (fn [e] (textarea-paste e uid state))
-                             :on-key-down    (fn [e] (textarea-key-down e uid state))
-                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
-                             :on-click       (fn [e] (textarea-click e uid state))
-                             :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                             :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
-         [parse-and-render local uid]
-         [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {;;:color "green"
-                                                                                             :opacity 1})))]]))))
+  [_ _]
+  (fn [block state]
+    (let [{:block/keys [uid original-uid]} block
+          {:string/keys [local]} @state
+          is-editing @(subscribe [:editing/is-editing uid])
+          selected-items @(subscribe [:selected/items])]
+      [:div {:class "block-content"}
+       [autosize/textarea {:value          (:string/local @state)
+                           :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
+                           ;;:auto-focus     true
+                           :id             (str "editable-uid-" uid)
+                           :on-change      (fn [e] (textarea-change e uid state))
+                           :on-paste       (fn [e] (textarea-paste e uid state))
+                           :on-key-down    (fn [e] (textarea-key-down e uid state))
+                           :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                           :on-click       (fn [e] (textarea-click e uid state))
+                           :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                           :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+       [parse-and-render local uid]
+       [:div (use-style (merge drop-area-indicator
+                               (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                       :opacity 1})))]])))
 
 
 (defn bullet-mouse-out
@@ -901,7 +885,7 @@
            [context-menu-el uid-sanitized-block state]
            [bullet-el block state linked-ref]
            [tooltip-el uid-sanitized-block state]
-           [block-content-el block state opts]
+           [block-content-el block state]
            (when-not (:block-embed? opts)
              [block-refs-count-el (count _refs) uid])]
 

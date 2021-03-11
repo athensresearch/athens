@@ -1,6 +1,6 @@
 (ns athens.views.block-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
@@ -151,10 +151,10 @@
            [:div (use-style node-page/references-style {:key "Linked References"})
             [:section
              [:h4 (use-style node-page/references-heading-style)
-              [(r/adapt-react-class mui-icons/Link)]
+              [(r/adapt-react-class Link)]
               [:span "Linked References"]]
               ;; Hide button until feature is implemented
-              ;;[button {:disabled true} [(r/adapt-react-class mui-icons/FilterList)]]]
+              ;;[button {:disabled true} [(r/adapt-react-class FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
                 (for [[group-title group] refs]

@@ -1,6 +1,13 @@
 (ns athens.views.node-page
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Bookmark" :default Bookmark]
+    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/Delete" :default Delete]
+    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
+    ["@material-ui/icons/Link" :default Link]
+    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
@@ -321,8 +328,6 @@
 
 (def init-state
   {:menu/show            false
-   :menu/x               nil
-   :menu/y               nil
    :title/initial        nil
    :title/local          nil
    :alert/show           nil
@@ -346,28 +351,28 @@
        :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [node state daily-note?]
                                  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                       {:menu/keys [show x y]} @state]
+                                       {:menu/keys [show]} @state]
                                    (when show
                                      [:div (merge (use-style dropdown-style
                                                              {:ref #(reset! ref %)})
                                                   {:style {:font-size "14px"
-                                                           :position  "fixed"
-                                                           :left      (str x "px")
-                                                           :top       (str y "px")}})
+                                                           :position  "absolute"
+                                                           :left      "-3em"
+                                                           :top       "3.5em"}})
                                       [:div (use-style menu-style)
                                        [:<>
                                         (if sidebar
                                           [button {:on-click #(dispatch [:page/remove-shortcut uid])}
                                            [:<>
-                                            [:> mui-icons/BookmarkBorder]
+                                            [:> BookmarkBorder]
                                             [:span "Remove Shortcut"]]]
                                           [button {:on-click #(dispatch [:page/add-shortcut uid])}
                                            [:<>
-                                            [:> mui-icons/Bookmark]
+                                            [:> Bookmark]
                                             [:span "Add Shortcut"]]])
                                         [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
                                          [:<>
-                                          [:> mui-icons/BubbleChart]
+                                          [:> BubbleChart]
                                           [:span "Show Local Graph"]]]]
                                        [:hr (use-style menu-separator-style)]
                                        [button {:on-click #(if daily-note?
@@ -375,7 +380,7 @@
                                                              (do
                                                                (navigate :pages)
                                                                (dispatch [:page/delete uid title])))}
-                                        [:<> [:> mui-icons/Delete] [:span "Delete Page"]]]]])))})))
+                                        [:<> [:> Delete] [:span "Delete Page"]]]]])))})))
 
 
 (defn ref-comp
@@ -415,9 +420,9 @@
        [:h4 (use-style references-heading-style)
         [button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
-           [:> mui-icons/KeyboardArrowDown]
-           [:> mui-icons/ChevronRight])]
-        [(r/adapt-react-class mui-icons/Link)]
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
         [:div {:style {:display "flex"
                        :flex "1 1 100%"
                        :justify-content "space-between"}}
@@ -453,9 +458,9 @@
                                  (swap! state assoc unlinked? true)
                                  (reset! unlinked-refs un-refs))))}
          (if (get @state unlinked?)
-           [:> mui-icons/KeyboardArrowDown]
-           [:> mui-icons/ChevronRight])]
-        [(r/adapt-react-class mui-icons/Link)]
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
         [:div {:style {:display         "flex"
                        :justify-content "space-between"
                        :width "100%"}}
@@ -540,12 +545,9 @@
                                (.. e stopPropagation)
                                (if show
                                  (swap! state assoc :menu/show false)
-                                 (let [rect (.. e -target getBoundingClientRect)]
-                                   (swap! state merge {:menu/show true
-                                                       :menu/x    (.. rect -left)
-                                                       :menu/y    (.. rect -bottom)}))))
+                                 (swap! state merge {:menu/show true})))
                    :style    page-menu-toggle-style}
-           [:> mui-icons/MoreHoriz]]
+           [:> MoreHoriz]]
           (when-not daily-note?
             [autosize/textarea
              {:value       (:title/local @state)
@@ -561,10 +563,10 @@
           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
           (if (str/blank? (:title/local @state))
             [:wbr]
-            [parse-renderer/parse-and-render (:title/local @state) uid])]
+            [parse-renderer/parse-and-render (:title/local @state) uid])
 
-         ;; Dropdown
-         [menu-dropdown node state daily-note?]
+          ;; Dropdown
+          [menu-dropdown node state daily-note?]]
 
          ;; Children
          (if (empty? children)
