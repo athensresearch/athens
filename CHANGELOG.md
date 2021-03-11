@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.57](https://github.com/athensresearch/athens/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2021-03-11)
+
+
+### Bug Fixes
+
+* **blocks:** links made clickable, z-index clean up [#772](https://github.com/athensresearch/athens/issues/772) ([#778](https://github.com/athensresearch/athens/issues/778)) ([8cabc5f](https://github.com/athensresearch/athens/commit/8cabc5fa38cdcf6624cb84b5826fbb17de628fea))
+* **icons:** fix [#792](https://github.com/athensresearch/athens/issues/792) ([#795](https://github.com/athensresearch/athens/issues/795)) ([3c7368d](https://github.com/athensresearch/athens/commit/3c7368d4e18b21b24ab5fbfda29aa638934d4525))
+
+
+* S3 -> GitHub release ([#799](https://github.com/athensresearch/athens/issues/799)) ([19ceb80](https://github.com/athensresearch/athens/commit/19ceb80cc713112573098cbaf10ae7dddcea5391))
+
 ## [1.0.0-beta.56](https://github.com/athensresearch/athens/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2021-03-10)
 
 
