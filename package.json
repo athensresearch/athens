@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.56",
+  "version": "1.0.0-beta.58",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -48,9 +48,7 @@
       "category": "Office"
     },
     "publish": {
-      "provider": "s3",
-      "bucket": "athens-apps",
-      "region": "us-east-2"
+      "provider": "github"
     }
   },
   "dependencies": {
@@ -117,24 +115,19 @@
         "section": "Performance"
       },
       {
-        "type": "style",
-        "hidden": true
+        "type": "style"
       },
       {
-        "type": "chore",
-        "hidden": true
+        "type": "chore"
       },
       {
-        "type": "test",
-        "hidden": true
+        "type": "test"
       },
       {
-        "type": "build",
-        "hidden": true
+        "type": "build"
       },
       {
-        "type": "ci",
-        "hidden": true
+        "type": "ci"
       }
     ]
   }
