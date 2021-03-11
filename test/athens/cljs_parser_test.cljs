@@ -260,5 +260,8 @@
     [:block [:component "[[TODO]]" [:page-link "TODO"]] " Pick up groceries"]
     "{{[[TODO]]}} Pick up groceries"
 
+    [:block [:component "((block-ref-id))" [:block-ref "block-ref-id"]] " amazing block"]
+    "{{((block-ref-id))}} amazing block"
+
     [:block [:component "AnotherComponent" "AnotherComponent"] " Another Content"]
     "{{AnotherComponent}} Another Content"))

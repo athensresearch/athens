@@ -172,6 +172,7 @@
                 page-link /
                 block-ref /
                 hashtag /
+                component /
                 paragraph-text
                )+ <#'\n\n'?>
    <paragraph-text> = #'[^`#*\\[\\]\n{2}]+'
@@ -186,6 +187,10 @@
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'
    <hashtag-delimited> = <'#[['> page-link-text <']]'>
+   component = <'{{'> component-text <'}}'>
+   <component-text> = #'[^\\{\\}]+'
+   syntax-in-component = (page-link | block-ref)
+   block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
    unordered-list = unordered-item+ <blankline>
    unordered-item = <'- '> #'[a-zA-Z ]+' <newline>?
    ordered-list = ordered-item+ <blankline>
@@ -260,6 +265,17 @@
   str)
 
 
+(defn transform-component [raw-string]
+  (into [:component raw-string]
+        (let [result (insta/parse block-parser-new
+                                  raw-string
+                                  ;; :trace true
+                                  :start :syntax-in-component)]
+          (if-not (insta/failure? result)
+            (rest result)
+            [raw-string]))))
+
+
 (defn transform-to-ast-new
   "Builds AST from `block-parser-new` parse tree."
   [tree]
@@ -269,7 +285,8 @@
                     :inline-code transform-inline-code
                     :pre-code    transform-pre-code
                     :lang        transform-lang
-                    :codetext    transform-codetext}
+                    :codetext    transform-codetext
+                    :component   transform-component}
                    tree))
 
 
