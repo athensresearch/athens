@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.59](https://github.com/athensresearch/athens/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2021-03-11)
+
+
+### Bug Fixes
+
+* **undo/redo:** textarea undo/redo; italics, highlight, underline, strikethrough [#717](https://github.com/athensresearch/athens/issues/717) ([#803](https://github.com/athensresearch/athens/issues/803)) ([2509b9a](https://github.com/athensresearch/athens/commit/2509b9a3cb63bea66f6b44cedf398d7b93dfe825))
+
 ## [1.0.0-beta.58](https://github.com/athensresearch/athens/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2021-03-11)
 
 
