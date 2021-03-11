@@ -441,7 +441,27 @@
 (defn handle-shortcuts
   [e uid state]
   (let [{:keys [key-code head tail selection start end target value]} (destruct-key-down e)
-        selection? (not= start end)]
+        selection?       (not= start end)
+
+        surround-and-set (fn [surround-text]
+                           (.preventDefault e)
+                           (.stopPropagation e)
+                           (let [selection (surround selection surround-text)
+                                 new-str   (str head selection tail)]
+                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+                             ;; textarea setval will lose ability to undo/redo
+
+                             ;; other note: execCommand is probably the simpler way
+                             ;; at least until a new standard comes around
+
+                             ;; be wary before updating electron - as chromium might drop support for execCommand
+                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                             (swap! state assoc :string/local new-str)
+                             (.. js/document (execCommand "insertText" false selection))
+                             (if selection?
+                               (do (setStart target (+ 2 start))
+                                   (setEnd target (+ 2 end)))
+                               (set-cursor-position target (+ start 2)))))]
 
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
@@ -456,25 +476,16 @@
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
                                   (dispatch [:undo])))
-      (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :string/local new-str)
-                                (set! (.-value target) new-str)
-                                (if selection?
-                                  (do (setStart target (+ 2 start))
-                                      (setEnd target (+ 2 end)))
-                                  (set-cursor-position target (+ 2 start))))
 
-      ;; Disabling keybinding for now https://github.com/athensresearch/athens/issues/556
-      ;; TODO fix to make keybinding ("Ctrl-i") change font-style to italic
+      (= key-code KeyCodes.B) (surround-and-set "**")
 
-      #_ (and (not shift) (= key-code KeyCodes.I))
-      #_(let [new-str (str head (surround selection "__") tail)]
-          (swap! state assoc :string/local new-str)
-          (set! (.-value target) new-str)
-          (if selection?
-            (do (setStart target (+ 2 start))
-                (setEnd target (+ 2 end)))
-            (set-cursor-position target (+ 2 start))))
+      (= key-code KeyCodes.I) (surround-and-set "__")
+
+      (= key-code KeyCodes.Y) (surround-and-set "~~")
+
+      (= key-code KeyCodes.U) (surround-and-set "--")
+
+      (= key-code KeyCodes.H) (surround-and-set "^^")
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page

@@ -149,6 +149,14 @@
                        text])
      :bold          (fn [text]
                       [:strong {:class "contents bold"} text])
+     :italic        (fn [text]
+                      [:i {:class "contents italic"} text])
+     :strikethrough (fn [text]
+                      [:del {:class "contents del"} text])
+     :underline     (fn [text]
+                      [:u {:class "contents underline"} text])
+     :highlight     (fn [text]
+                      [:mark {:class "contents highlight"} text])
      :pre-formatted (fn [text]
                       [:code text])
      :latex         (fn [text]
