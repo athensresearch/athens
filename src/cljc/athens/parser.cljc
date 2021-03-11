@@ -167,6 +167,7 @@
    heading = #'[#]+' <space> #'[a-zA-Z0-9 ]+' <blankline>?
    <paragraph> = (inline-code /
                 anchor /
+                url-raw /
                 strong /
                 emphasis /
                 page-link /
@@ -202,11 +203,13 @@
               <newline? '```'> <blankline?>
    lang = <' '?> #'[a-zA-Z]+'
    codetext = #'.+?(?=\\n?```)'
-   anchor = auto-anchor | braced-anchor
-   <auto-anchor> = <'<'> url <'>'>
-   <braced-anchor> = <'['> text <']'> <'('> url <')'>
-   <text> = #'[^\\]]+'
-   <url> = #'[^>)]+'
+   url-raw = #'((https?|ftp):)(//([^/?#]*))([^\\s?#]*)(\\?([^#]*))?(#(.*))?'
+   <anchor> = auto-anchor | braced-anchor
+   auto-anchor = <'<'> #'[^>]+' <'>'>
+   braced-anchor = <'['> (text | strong | emphasis)+ <']'> braced-anchor-url
+   braced-anchor-url =  <'('> (#'[^()]+' | ( '\\\\' ( '(' | ')' ))+ | braced-anchor-url-with-parens)+ <')'>
+   <braced-anchor-url-with-parens> = '(' (#'[^()]+' | braced-anchor-url-with-parens)+ ')'
+   <text> = #'[^\\]\\*]+'
    image = <'!'>
            <'['> alt <']'>
            <'('> path title? <')'>
@@ -276,17 +279,51 @@
             [raw-string]))))
 
 
+(defn transform-anchor [& args]
+  (println :transform-anchor (pr-str args))
+  (let [url (last args)]
+    (into [:url-link {:url url}] (drop-last args))))
+
+
+(defn transform-braced-anchor-url [& strings]
+  (println :transform-braced-anchor-url (pr-str strings))
+  (string/join strings))
+
+
+(defn transform-braced-anchor [& args]
+  (println :transform-braced-anchor (pr-str args))
+  (into [:url-link {:url (last args)}]
+        (drop-last args)))
+
+
+(defn transform-url-raw [url]
+  [:url-link {:url url} url])
+
+
+(defn transform-image
+  ([url]
+   (transform-image nil url))
+  ([text url]
+   [:url-image {:url url
+                :alt text}]))
+
+
 (defn transform-to-ast-new
   "Builds AST from `block-parser-new` parse tree."
   [tree]
-  (insta/transform {:block       transform-block
-                    :paragraph   transform-paragraph
-                    :strong      transform-strong
-                    :inline-code transform-inline-code
-                    :pre-code    transform-pre-code
-                    :lang        transform-lang
-                    :codetext    transform-codetext
-                    :component   transform-component}
+  (insta/transform {:block             transform-block
+                    :paragraph         transform-paragraph
+                    :strong            transform-strong
+                    :inline-code       transform-inline-code
+                    :pre-code          transform-pre-code
+                    :lang              transform-lang
+                    :codetext          transform-codetext
+                    :component         transform-component
+                    :anchor            transform-anchor
+                    :braced-anchor     transform-braced-anchor
+                    :braced-anchor-url transform-braced-anchor-url
+                    :url-raw           transform-url-raw
+                    :image             transform-image}
                    tree))
 
 

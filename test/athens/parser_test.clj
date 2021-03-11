@@ -95,7 +95,7 @@
 
 
 (deftest parser-url-link-tests
-  (are [x y] (= x (parse-to-ast y))
+  (are [x y] (= x (time (parse-to-ast y)))
     [:block [:url-link {:url "https://example.com/"} "an example"]]
     "[an example](https://example.com/)"
 
@@ -267,3 +267,58 @@
 
     [:block [:component "AnotherComponent" "AnotherComponent"] " Another Content"]
     "{{AnotherComponent}} Another Content"))
+
+
+(deftest parser-new-url-image-tests
+  ;; Few tests because this parser largely depends on `url-link`
+  (are [x y] (= x (parse-to-ast-new y))
+    [:block [:url-image {:url "https://example.com/image.png" :alt "an example image"}]]
+    "![an example image](https://example.com/image.png)"))
+
+
+(deftest parser-new-url-link-tests
+  (testing "valid cases"
+    (are [x y] (= x (time (parse-to-ast-new y)))
+      [:block [:url-link {:url "https://example.com/"} "an example"]]
+      "[an example](https://example.com/)"
+
+      [:block [:url-link {:url "https://example.com/"} [:bold "bold"] " inside"]]
+      "[**bold** inside](https://example.com/)"
+
+      [:block [:url-link {:url "https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top"} "example"]]
+      "[example](https://subdomain.example.com/path/page.html?query=very%20**bold**&p=5#top)"
+
+      [:block [:url-link {:url "https://en.wikipedia.org/wiki/(_)_(film)"} "( )"]]
+      "[( )](https://en.wikipedia.org/wiki/(_)_(film))"
+
+      [:block [:url-link {:url "https://example.com/open_paren_'('"} "escaped ("]]
+      "[escaped (](https://example.com/open_paren_'\\(')"
+
+      [:block [:url-link {:url "https://example.com/close)open(close)"} "escaped )()"]]
+      "[escaped )()](https://example.com/close\\)open\\(close\\))"
+
+      [:block [:url-link {:url "https://example.com/close)open(close)"} "combining escaping and nesting"]]
+      "[combining escaping and nesting](https://example.com/close\\)open(close))"
+
+      [:block
+       "Multiple "
+       [:url-link {:url "https://example.com/a"} "links"]
+       " "
+       [:url-link {:url "#b"} "are detected"]
+       " as "
+       [:url-link {:url "https://example.com/c"} "separate"]
+       "."]
+      "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."
+
+      [:block [:url-link {:url "https://raw-link.com"} "https://raw-link.com"]]
+      "https://raw-link.com"))
+
+  (testing "invalid cases"
+    (are [x] (contains? (meta (parse-to-ast-new x)) :parse-error)
+      ;; TODO: it's probably better to return input string with parse error data
+      ;; [:block [:url-link {:url "https://example.com/"} "no #hashtag or [[link]] inside"]]
+      ;; "[no #hashtag or [[link]] inside](https://example.com/)"
+      "[no #hashtag or [[link]] inside](https://example.com/)"
+
+      ;; TODO: do we really want to support escaped `]` inside of `[]` block
+      "[escaped \\](#not-a-link)](https://example.com/)")))
