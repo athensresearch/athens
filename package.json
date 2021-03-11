@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.55",
+  "version": "1.0.0-beta.56",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -25,15 +25,15 @@
         {
           "target": "dmg",
           "arch": [
-            "arm64",
-            "x64"
+            "x64",
+            "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "arm64",
-            "x64"
+            "x64",
+            "arm64"
           ]
         }
       ],

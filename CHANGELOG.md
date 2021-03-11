@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.56](https://github.com/athensresearch/athens/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2021-03-10)
+
+
+### Bug Fixes
+
+* **electron:** issue updating Mac (Intel, not Silicon) ([#796](https://github.com/athensresearch/athens/issues/796)) ([2037a83](https://github.com/athensresearch/athens/commit/2037a83ebf60ca53a1b96be653cd55e82c36d557)), closes [#749](https://github.com/athensresearch/athens/issues/749) [#793](https://github.com/athensresearch/athens/issues/793)
+
+
+### Documentation
+
+* update version number ([60390da](https://github.com/athensresearch/athens/commit/60390daea2ddba084c00ad78d65e6080c062d7ef))
+
 ## [1.0.0-beta.55](https://github.com/athensresearch/athens/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2021-03-10)
 
 
