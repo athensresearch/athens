@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.58](https://github.com/athensresearch/athens/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2021-03-11)
+
+
+### Bug Fixes
+
+* **title:** shift-click on title should open in right sidebar ([#802](https://github.com/athensresearch/athens/issues/802)) ([a51e001](https://github.com/athensresearch/athens/commit/a51e001cd4543b389460b1def17446230f51062c)), closes [#775](https://github.com/athensresearch/athens/issues/775)
+* Persistent Pop-up when scrolling ([#801](https://github.com/athensresearch/athens/issues/801)) ([ce4fe61](https://github.com/athensresearch/athens/commit/ce4fe61e1e73733e22367f1160456ce0829a9e8f))
+
 ## [1.0.0-beta.57](https://github.com/athensresearch/athens/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2021-03-11)
 
 
