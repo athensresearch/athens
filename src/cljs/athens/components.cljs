@@ -1,6 +1,6 @@
 (ns athens.components
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Edit" :default Edit]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.style :refer [color]]
@@ -102,7 +102,7 @@
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                        [:> mui-icons/Edit
+                        [:> Edit
                          {:on-click (fn [e]
                                       (.. e stopPropagation)
                                       (dispatch [:editing/uid uid]))}])])])
