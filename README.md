@@ -101,7 +101,7 @@ Athens is here today because of our Sponsors and Contributors. Thank you.
 
 Developers
 
-![Contributors-Dev](https://athens-assets-1.s3.us-east-2.amazonaws.com/contributor-faces.png)
+![Contributors-Dev](https://user-images.githubusercontent.com/8952138/110916422-a1d61300-82cd-11eb-9e5e-71d78657ed86.png)
 
 Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
 
