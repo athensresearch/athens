@@ -535,7 +535,7 @@
                           :class    "page-header"
                           :on-click (fn [e]
                                       (.. e preventDefault)
-                                      (if (.. e -shiftKey)
+                                      (if (or daily-note? (.. e -shiftKey))
                                         (navigate-uid uid e)
                                         (dispatch [:editing/uid uid])))})
           ;; Prevent editable textarea if a node/title is a date
