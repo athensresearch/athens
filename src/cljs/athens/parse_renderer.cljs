@@ -120,6 +120,7 @@
   [tree uid]
   (insta/transform
     {:block         (fn [& contents]
+                      (println "block contents " (pr-str contents))
                       (concat [:span {:class "block"}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component     (fn [& contents]
@@ -165,14 +166,14 @@
                              (js/console.log "Inline code: " text)
                              [:code text])
      :block-pre-formatted  (fn [text & mode]
-                             (let [cm (atom nil)]
-                               (js/console.log "Block code: " text)
+                             (let [mode (first mode)]
+                               (js/console.log "Block code, mode:" mode ", text:" text)
                                [:> CodeMirror {:value    text
-                                               :options {:mode        (first mode)
+                                               :options {:mode        mode
                                                          :lineNumbers true
                                                          :height      "min-content"}
                                                :on-change (fn [editor data value]
-                                                            (js/console.log :on-change editor (pr-str data) (pr-str value)))}]))
+                                                            (js/console.log "on-change" editor (pr-str data) (pr-str value)))}]))
 
      :latex         (fn [text]
                       [:span {:ref (fn [el]
@@ -185,7 +186,7 @@
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string uid]
-  (let [result (parser/parse-to-ast string)]
+  (let [result (parser/parse-to-ast-new string)]
     (if (insta/failure? result)
       [:span
        {:title (pr-str (insta/get-failure result))

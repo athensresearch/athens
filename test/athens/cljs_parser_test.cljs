@@ -370,3 +370,76 @@
   (testing "that LaTeX expressions can have $ in them"
     (is (= [:block [:latex "a b $ c"]]
            (parse-to-ast "$$a b $ c$$")))))
+
+
+(deftest parser-formatting-tests
+
+  (testing "bold formatting"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:bold "test"]]
+      "**test**"
+
+      [:block "abc " [:bold "def"]]
+      "abc **def**"
+
+      [:block [:bold "abc "] "def"]
+      "**abc **def"
+
+      [:block "abc" [:bold "def"] "ghi"]
+      "abc**def**ghi"))
+
+  (testing "italic formatting"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:italic "test"]]
+      "*test*"
+
+      [:block "abc " [:italic "def"]]
+      "abc *def*"
+
+      [:block [:italic "abc "] "def"]
+      "*abc *def"
+
+      [:block "abc" [:italic "def"] "ghi"]
+      "abc*def*ghi"))
+
+  (testing "strikethrough formatting"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:strikethrough "test"]]
+      "~~test~~"
+
+      [:block "abc " [:strikethrough "def"]]
+      "abc ~~def~~"
+
+      [:block [:strikethrough "abc "] "def"]
+      "~~abc ~~def"
+
+      [:block "abc" [:strikethrough "def"] "ghi"]
+      "abc~~def~~ghi"))
+
+  (testing "underline formatting"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:underline "test"]]
+      "--test--"
+
+      [:block "abc " [:underline "def"]]
+      "abc --def--"
+
+      [:block [:underline "abc "] "def"]
+      "--abc --def"
+
+      [:block "abc" [:underline "def"] "ghi"]
+      "abc--def--ghi"))
+
+  (testing "highlight formatting"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:highlight "test"]]
+      "^^test^^"
+
+      [:block "abc " [:highlight "def"]]
+      "abc ^^def^^"
+
+      [:block [:highlight "abc "] "def"]
+      "^^abc ^^def"
+
+      [:block "abc" [:highlight "def"] "ghi"]
+      "abc^^def^^ghi")))

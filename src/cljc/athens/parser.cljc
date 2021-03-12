@@ -182,10 +182,13 @@
                 block-ref /
                 hashtag /
                 component /
+                strikethrough /
+                underline /
+                highlight /
                 latex /
                 paragraph-text
                )+ <#'\n\n'?>
-   <paragraph-text> = #'[^`#*\\[\\]\n{2}]+'
+   <paragraph-text> = #'[^`#*~\\-\\^\\$\\[\\]\n{2}]+'
    strong = <'**'> strong-text <'**'> 
    <strong-text> = #'[^\\*\\*]+'
    emphasis =  <'*'> emphasis-text <'*'>
@@ -204,17 +207,25 @@
    <component-text> = #'[^\\{\\}]+'
    syntax-in-component = (page-link | block-ref)
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
+   
+   strikethrough = <'~~'> #'.+(?=~~)' <'~~'>
+
+   underline = <'--'> #'.+(?=--)' <'--'>
+
+   highlight = <'^^'> #'.+(?=\\^\\^)' <'^^'>
+
+   (* LaTeX *)
+   <not-dollars> = #'.+?(?=\\$\\$)'
+   latex = <'$$'> not-dollars <'$$'>
+
    unordered-list = unordered-item+ <blankline>
    unordered-item = <'- '> #'[a-zA-Z ]+' <newline>?
    ordered-list = ordered-item+ <blankline>
    ordered-item = <ol-item-token> #'[a-zA-Z0-9 ]+' <newline>?
    ol-item-token = #'[0-9]+\\. '
    inline-code = <'`'> #'[^`]+' <'`'>
-   pre-code = <'```'> lang? <newline?>
-              codetext
-              <newline? '```'> <blankline?>
-   lang = <' '?> #'[a-zA-Z]+'
-   codetext = #'.+?(?=\\n?```)'
+   pre-code = <'```'> (codetext '\\n'?)+ <'\\n'? '```'> <blankline?>
+   codetext = #'.+(?=(```|\\n))'
    url-raw = #'((https?|ftp):)(//([^/?#]*))([^\\s?#]*)(\\?([^#]*))?(#(.*))?'
    <anchor> = auto-anchor | braced-anchor
    auto-anchor = <'<'> #'((https?|ftp):)?(//([^/?#]*))?([^\\s?#]*)(\\?([^#]*))?(#(.*))?(?=>)' <'>'>
@@ -229,8 +240,8 @@
    <title> = <spaces> #'[^)]+'
    spaces = space+
    space = ' '
-   blankline = #'\n\n'
-   newline = #'\r?\n'
+   blankline = #'\\n\\n'
+   newline = #'\\r?\\n'
    ")
 
 
@@ -258,23 +269,29 @@
   [:bold str])
 
 
+(defn transform-emphasis [str]
+  [:italic str])
+
+
 (defn transform-inline-code [str]
   [:inline-pre-formatted str])
 
 
-(defn transform-pre-code
-  ([codetext]
-   [:block-pre-formatted codetext])
-  ([lang codetext]
-   [:block-pre-formatted codetext lang]))
+(defn transform-pre-code [& parts]
+  (let [split    (string/split-lines (string/join parts))
+        lang     (when (< 1 (count split))
+                   (first split))
+        codetext (string/join "\n"
+                              (if (= 1 (count split))
+                                split
+                                (drop 1 split)))]
+    (if-not (string/blank? lang)
+      [:block-pre-formatted codetext lang]
+      [:block-pre-formatted codetext])))
 
 
-(defn transform-lang [lang]
-  lang)
-
-
-(defn transform-codetext [str]
-  str)
+(defn transform-codetext [text]
+  text)
 
 
 (defn transform-component [raw-string]
@@ -320,9 +337,9 @@
   (insta/transform {:block             transform-block
                     :paragraph         transform-paragraph
                     :strong            transform-strong
+                    :emphasis          transform-emphasis
                     :inline-code       transform-inline-code
                     :pre-code          transform-pre-code
-                    :lang              transform-lang
                     :codetext          transform-codetext
                     :component         transform-component
                     :anchor            transform-anchor
