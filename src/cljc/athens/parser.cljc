@@ -182,6 +182,7 @@
                 block-ref /
                 hashtag /
                 component /
+                latex /
                 paragraph-text
                )+ <#'\n\n'?>
    <paragraph-text> = #'[^`#*\\[\\]\n{2}]+'
@@ -193,6 +194,9 @@
    <page-link-text> = ( #'[^\\[\\]{2}]+' | page-link )+
    block-ref = <'(('> block-ref-text <'))'>
    <block-ref-text> = #'[a-zA-Z0-9_\\-]+'
+   (* LaTeX *)
+   <not-dollars> = #'.*?(?=\\$\\$)'
+   latex = <'$$'> not-dollars <'$$'>
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'
    <hashtag-delimited> = <'#[['> page-link-text <']]'>

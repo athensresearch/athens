@@ -99,7 +99,7 @@
 
 
 (deftest parser-url-link-tests
-  (are [x y] (= x (time (parse-to-ast y)))
+  (are [x y] (= x (parse-to-ast y))
     [:block [:url-link {:url "https://example.com/"} "an example"]]
     "[an example](https://example.com/)"
 
@@ -282,7 +282,7 @@
 
 (deftest parser-new-url-link-tests
   (testing "valid cases"
-    (are [x y] (= x (time (parse-to-ast-new y)))
+    (are [x y] (= x (parse-to-ast-new y))
       [:block [:url-link {:url "https://example.com/"} "an example"]]
       "[an example](https://example.com/)"
 
@@ -345,3 +345,30 @@
 
       ;; TODO: do we really want to support escaped `]` inside of `[]` block
       "[escaped \\](#not-a-link)](https://example.com/)")))
+
+
+(deftest parse-new-latex-tests
+  (testing "that LaTeX syntax is detected"
+    (are [x y] (= x (parse-to-ast-new y))
+      [:block [:latex "text"]]
+      "$$text$$"
+
+      [:block [:latex "text with space"]]
+      "$$text with space$$"))
+
+  (testing "that other syntax is escaped when in LaTeX"
+    (are [x y] (= x (parse-to-ast y))
+      [:block [:latex "[[  ]]"]]
+      "$$[[  ]]$$"
+
+      [:block [:latex "[an example](https://example.com/)"]]
+      "$$[an example](https://example.com/)$$"))
+
+  (testing "that LaTeX is not embedded in "
+    (are [x y] (= x (parse-to-ast y))
+      [:block [:url-link {:url "https://example.com/"} "an $$\textLaTeX$$ example"]]
+      "[an $$\textLaTeX$$ example](https://example.com/)"))
+
+  (testing "that LaTeX expressions can have $ in them"
+    (is (= [:block [:latex "a b $ c"]]
+           (parse-to-ast "$$a b $ c$$")))))
