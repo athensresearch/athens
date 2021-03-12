@@ -19,10 +19,10 @@
    
    (* This first rule is the top-level one. *)
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
-   block = (pre-formatted / url-raw / syntax-in-block / reserved-chars / non-reserved-chars) *
+   block = (pre-formatted / url-raw / syntax-in-block / reserved-char / non-reserved-chars) *
 
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
- <any-non-pre-formatted-chars> = #'[^\\`]*'
+   <any-non-pre-formatted-chars> = #'[^\\`]*'
    pre-formatted = block-pre-formatted | inline-pre-formatted
    <block-pre-formatted> = <'```'> any-non-pre-formatted-chars <'```'>
    <inline-pre-formatted> = <'`'> any-non-pre-formatted-chars <'`'>
@@ -213,10 +213,9 @@
    codetext = #'.+?(?=\\n?```)'
    url-raw = #'((https?|ftp):)(//([^/?#]*))([^\\s?#]*)(\\?([^#]*))?(#(.*))?'
    <anchor> = auto-anchor | braced-anchor
-   auto-anchor = <'<'> #'[^>]+' <'>'>
+   auto-anchor = <'<'> #'((https?|ftp):)?(//([^/?#]*))?([^\\s?#]*)(\\?([^#]*))?(#(.*))?(?=>)' <'>'>
    braced-anchor = <'['> (text | strong | emphasis)+ <']'> braced-anchor-url
-   braced-anchor-url =  <'('> (#'[^()]+' | ( '\\\\' ( '(' | ')' ))+ | braced-anchor-url-with-parens)+ <')'>
-   <braced-anchor-url-with-parens> = '(' (#'[^()]+' | braced-anchor-url-with-parens)+ ')'
+   braced-anchor-url =  <'('> #'((https?|ftp):)?(//([^/?#]*))?([^\\s?#]*)(\\?([^#]*))?(#(.*?))?(?=\\))' <')'>
    <text> = #'[^\\]\\*]+'
    image = <'!'>
            <'['> alt <']'>
@@ -236,7 +235,6 @@
                           (rest %)
                           %)
                        coll)]
-    (println :extract-paragraph (pr-str {:in coll :out result}))
     result))
 
 
@@ -249,7 +247,6 @@
 
 (defn transform-paragraph [& args]
   ;; NOTE muted paragraph
-  (println :transform-paragraph (pr-str args))
   (into [:paragraph] (combine-adjacent-strings args)))
 
 
@@ -288,18 +285,15 @@
 
 
 (defn transform-anchor [& args]
-  (println :transform-anchor (pr-str args))
   (let [url (last args)]
     (into [:url-link {:url url}] (drop-last args))))
 
 
 (defn transform-braced-anchor-url [& strings]
-  (println :transform-braced-anchor-url (pr-str strings))
   (string/join strings))
 
 
 (defn transform-braced-anchor [& args]
-  (println :transform-braced-anchor (pr-str args))
   (into [:url-link {:url (last args)}]
         (drop-last args)))
 
