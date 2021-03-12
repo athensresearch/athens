@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.50",
+  "version": "1.0.0-beta.59",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -21,13 +21,22 @@
     "generateUpdatesFilesForAllChannels": true,
     "afterSign": "electron-builder-notarize",
     "mac": {
-      "target": {
-        "target": "dmg",
-        "arch": [
-          "arm64",
-          "x64"
-        ]
-      },
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
@@ -39,9 +48,7 @@
       "category": "Office"
     },
     "publish": {
-      "provider": "s3",
-      "bucket": "athens-apps",
-      "region": "us-east-2"
+      "provider": "github"
     }
   },
   "dependencies": {
@@ -108,24 +115,19 @@
         "section": "Performance"
       },
       {
-        "type": "style",
-        "hidden": true
+        "type": "style"
       },
       {
-        "type": "chore",
-        "hidden": true
+        "type": "chore"
       },
       {
-        "type": "test",
-        "hidden": true
+        "type": "test"
       },
       {
-        "type": "build",
-        "hidden": true
+        "type": "build"
       },
       {
-        "type": "ci",
-        "hidden": true
+        "type": "ci"
       }
     ]
   }

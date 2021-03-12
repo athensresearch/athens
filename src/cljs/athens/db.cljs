@@ -16,6 +16,19 @@
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
 
+;; -- seed data -----------------------------------------------------------
+
+
+(def default-graph-conf
+  {:hlt-link-levels  1
+   :link-distance    50
+   :charge-strength  -15
+   :local-depth      1
+   :root-links-only? false
+   :orphans?         true
+   :daily-notes?     true})
+
+
 ;; -- re-frame -----------------------------------------------------------
 
 (defonce rfdb {:user                "Socrates"
@@ -36,7 +49,8 @@
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      []
-               :theme/dark          false})
+               :theme/dark          false
+               :graph-conf          default-graph-conf})
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -598,7 +612,9 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
-       vec))
+       (sort-by :db/id)
+       vec
+       rseq))
 
 
 (defn get-linked-block-references

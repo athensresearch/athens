@@ -119,38 +119,48 @@
   "Transforms Instaparse output to Hiccup."
   [tree uid]
   (insta/transform
-    {:block                (fn [& contents]
-                             (concat [:span {:class "block"}] contents))
-      ;; for more information regarding how custom components are parsed, see `doc/components.md`
-     :component            (fn [& contents]
-                             (component (first contents) uid))
-     :page-link            (fn [& title-coll] (render-page-link title-coll))
-     :hashtag              (fn [& title-coll]
-                             (let [node (pull-node-from-string title-coll)]
-                               [:span (use-style hashtag {:class    "hashtag"
-                                                          :on-click #(navigate-uid (:block/uid @node) %)})
-                                [:span {:class "formatting"} "#"]
-                                [:span {:class "contents"} title-coll]]))
-     :block-ref            (fn [ref-uid]
-                             (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
-                               (if @block
-                                 [:span (use-style block-ref {:class "block-ref"})
-                                  [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
-                                   (if (= uid ref-uid)
-                                     [parse-and-render "{{SELF}}"]
-                                     [parse-and-render (:block/string @block) ref-uid])]]
-                                 (str "((" ref-uid "))"))))
-     :url-image            (fn [{url :url alt :alt}]
-                             [:img (use-style image {:class "url-image"
-                                                     :alt   alt
-                                                     :src   url})])
-     :url-link             (fn [{url :url} text]
-                             [:a (use-style url-link {:class  "url-link"
-                                                      :href   url
-                                                      :target "_blank"})
-                              text])
-     :bold                 (fn [text]
-                             [:strong {:class "contents bold"} text])
+    {:block         (fn [& contents]
+                      (concat [:span {:class "block"}] contents))
+     ;; for more information regarding how custom components are parsed, see `doc/components.md`
+     :component     (fn [& contents]
+                      (component (first contents) uid))
+     :page-link     (fn [& title-coll] (render-page-link title-coll))
+     :hashtag       (fn [& title-coll]
+                      (let [node (pull-node-from-string title-coll)]
+                        [:span (use-style hashtag {:class    "hashtag"
+                                                   :on-click #(navigate-uid (:block/uid @node) %)})
+                         [:span {:class "formatting"} "#"]
+                         [:span {:class "contents"} title-coll]]))
+     :block-ref     (fn [ref-uid]
+                      (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+                        (if @block
+                          [:span (use-style block-ref {:class "block-ref"})
+                           [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
+                            (if (= uid ref-uid)
+                              [parse-and-render "{{SELF}}"]
+                              [parse-and-render (:block/string @block) ref-uid])]]
+                          (str "((" ref-uid "))"))))
+     :url-image     (fn [{url :url alt :alt}]
+                      [:img (use-style image {:class "url-image"
+                                              :alt   alt
+                                              :src   url})])
+     :url-link      (fn [{url :url} text]
+                      [:a (use-style url-link {:class "url-link"
+                                               :href  url
+                                               :target "_blank"})
+                       text])
+     :bold          (fn [text]
+                      [:strong {:class "contents bold"} text])
+     :italic        (fn [text]
+                      [:i {:class "contents italic"} text])
+     :strikethrough (fn [text]
+                      [:del {:class "contents del"} text])
+     :underline     (fn [text]
+                      [:u {:class "contents underline"} text])
+     :highlight     (fn [text]
+                      [:mark {:class "contents highlight"} text])
+     :pre-formatted (fn [text]
+                      [:code text])
      :inline-pre-formatted (fn [text]
                              (js/console.log "Inline code: " text)
                              [:code text])
@@ -163,11 +173,12 @@
                                                          :height      "min-content"}
                                                :on-change (fn [editor data value]
                                                             (js/console.log :on-change editor (pr-str data) (pr-str value)))}]))
-     :latex                (fn [text]
-                             [:span {:ref (fn [el]
-                                            (when el
-                                              (katex/render text el (clj->js
-                                                                      {:throwOnError false}))))}])}
+
+     :latex         (fn [text]
+                      [:span {:ref (fn [el]
+                                     (when el
+                                       (katex/render text el (clj->js
+                                                               {:throwOnError false}))))}])}
     tree))
 
 

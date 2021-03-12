@@ -1,10 +1,13 @@
 (ns athens.views.blocks
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :refer [select-up select-down]]
-    [athens.keybindings :refer [textarea-key-down auto-complete-slash auto-complete-inline auto-complete-hashtag]]
+    [athens.keybindings :refer [auto-complete-hashtag
+                                auto-complete-inline
+                                auto-complete-slash
+                                textarea-key-down]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -218,9 +221,9 @@
                                     :opacity "1"}]
                      [:span
                       {:grid-area "main"}
-                      [:span
-                       :a {:position "relative"
-                           :z-index 2}]]
+                      [:>span
+                       :>a {:position "relative"
+                            :z-index 2}]]
                      ;; May want to refactor specific component styles to somewhere else.
                      ;; Closer to the component perhaps?
                      ;; Code
@@ -281,7 +284,10 @@
                               [:&:checked {:background (color :link-color)}
                                [:&:after {:opacity 1
                                           :color (color :background-color)}]]
-                              [:&:active {:transform "scale(0.9)"}]]]]})
+                              [:&:active {:transform "scale(0.9)"}]]]
+
+                     [:mark.contents.highlight {:padding "0 2px"
+                                                :background-color "#ffeb7a"}]]})
 
 
 (stylefy/class "block-content" block-content-style)
@@ -364,7 +370,7 @@
                                      (if (true? linked-ref)
                                        (swap! state update :linked-ref/open not)
                                        (toggle [:block/uid uid] open)))})
-     [:> mui-icons/KeyboardArrowDown {:style {:font-size "16px"}}]]
+     [:> KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (use-style block-disclosure-toggle-style)]))
 
 
@@ -610,29 +616,14 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [_ _ _]
-  (fn [block state {:keys [block-embed?]}]
+  [_ _]
+  (fn [block state]
     (let [{:block/keys [uid original-uid]} block
           {:string/keys [local]} @state
           is-editing @(subscribe [:editing/is-editing uid])
           selected-items @(subscribe [:selected/items])]
       [:div {:class "block-content"}
        [autosize/textarea {:value          (:string/local @state)
-                           ;; todo(abhinav)
-                           ;; events are not getting captured when z-index given through class(specificity checked)
-                           :style          (cond
-                                             ;; if editing always show original block
-                                             is-editing
-                                             {:z-index "3"}
-
-                                             ;; decrease z-index for embed textarea so click is taken by embed block
-                                             (and local (re-matches #"\{\{\[\[embed\]\]: \(\(.+\)\)\}\}" local))
-                                             {:z-index "1"}
-
-                                             ;; embed items
-                                             block-embed?
-                                             {:z-index "3"})
-
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            ;;:auto-focus     true
                            :id             (str "editable-uid-" uid)
@@ -644,8 +635,9 @@
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        [parse-and-render local uid]
-       [:div (use-style (merge drop-area-indicator (when (= :child (:drag-target @state)) {;;:color "green"
-                                                                                           :opacity 1})))]])))
+       [:div (use-style (merge drop-area-indicator
+                               (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                       :opacity 1})))]])))
 
 
 (defn bullet-mouse-out
@@ -752,11 +744,10 @@
 
 (defn block-refs-count-el
   [count uid]
-  (when (pos? count)
-    [:div (use-style {:position "absolute"
-                      :right "0px"
-                      :z-index (:zindex-tooltip ZINDICES)})
-     [button {:on-click #(dispatch [:right-sidebar/open-item uid])} count]]))
+  [:div (use-style {:margin-left "1em"
+                    :z-index (:zindex-dropdown ZINDICES)
+                    :visibility (when-not (pos? count) "hidden")})
+    [button {:primary true :on-click #(dispatch [:right-sidebar/open-item uid])} count]])
 
 
 (defn block-drag-over
@@ -897,7 +888,7 @@
            [context-menu-el uid-sanitized-block state]
            [bullet-el block state linked-ref]
            [tooltip-el uid-sanitized-block state]
-           [block-content-el block state opts]
+           [block-content-el block state]
            (when-not (:block-embed? opts)
              [block-refs-count-el (count _refs) uid])]
 

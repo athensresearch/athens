@@ -2,15 +2,17 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
-<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="40" height="40" />
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="30" height="30" />
+<a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most powerful and transparent knowledge base.
+Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
 
 ### Download the free desktop app
 
 - Mac: https://tinyurl.com/athens-mac
+- Mac M1: https://tinyurl.com/athens-mac-m1
 - Windows: https://tinyurl.com/athens-windows
 - Linux: https://tinyurl.com/athens-linux
 
@@ -18,7 +20,7 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 **Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
 
-![graph-viz-gif](https://athens-assets-1.s3.us-east-2.amazonaws.com/hero.png)
+![writing-demo](https://github.com/tangjeff0/athens-public/blob/main/bret-victor-demo.gif)
 
 ### Open-Source
 
@@ -34,13 +36,13 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 - 100% availability
 - 100% local and fast unlike server-first apps (*cough* Notion and Roam)
 
-## Knowledge Base
+## Knowledge Graph
 
 The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
 Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
 
-![tools-demo](https://athens-assets-1.s3.us-east-2.amazonaws.com/tools.png)
+![graph-demo](https://github.com/tangjeff0/athens-public/blob/main/open-source-graph-demo.gif)
 
 # [Building Locally or Contributing](CONTRIBUTING.md)
 
@@ -50,6 +52,13 @@ Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
 - [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
+- How to download any version of Athens:
+  - Replace `55` with the version number you want.
+  - Mac: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55.dmg
+  - M1: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55-arm64.dmg
+  - Windows: https://athens-apps.s3.us-east-2.amazonaws.com/Athens+Setup+1.0.0-beta.55.exe
+  - Linux: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55.AppImage
+  - `beta.39` and below has a lowercase `a` in `athens`, e.g. https://athens-apps.s3.us-east-2.amazonaws.com/athens-1.0.0-beta.39.AppImage
 
 # [Join Discord](https://discord.gg/GCJaV3V)
 
@@ -64,6 +73,7 @@ Athens is free to self-host, with additional features and services for our paid 
 ### Download the free desktop app
 
 - Mac: https://tinyurl.com/athens-mac
+- Mac M1: https://tinyurl.com/athens-mac-m1
 - Windows: https://tinyurl.com/athens-windows
 - Linux: https://tinyurl.com/athens-linux
 

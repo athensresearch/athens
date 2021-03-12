@@ -1,6 +1,11 @@
 (ns athens.keybindings
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
+    ["@material-ui/icons/Done" :default Done]
+    ["@material-ui/icons/Timer" :default Timer]
+    ["@material-ui/icons/Today" :default Today]
+    ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
+    ["@material-ui/icons/YouTube" :default YouTube]
     [athens.db :as db]
     [athens.router :as router]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
@@ -11,7 +16,7 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle]]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -82,19 +87,19 @@
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      mui-icons/Done "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  mui-icons/Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         mui-icons/Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      mui-icons/Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
-   ["Yesterday"     mui-icons/Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" mui-icons/YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  mui-icons/DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   mui-icons/ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
+  [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
+   ["Yesterday"     Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
+   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-;;[mui-icons/ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[mui-icons/DateRange "Date Picker"]
-;;[mui-icons/Attachment "Upload Image or File"]
-;;[mui-icons/ExposurePlus1 "Word Count"]
+;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;;[DateRange "Date Picker"]
+;;[Attachment "Upload Image or File"]
+;;[ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
@@ -365,14 +370,15 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e uid _state]
+  [e _uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])]
+        selected-items                 @(subscribe [:selected/items])
+        editing-uid                    @(subscribe [:editing/uid])]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent uid d-key-down])
-        (dispatch [:indent uid d-key-down])))))
+        (dispatch [:unindent editing-uid d-key-down])
+        (dispatch [:indent editing-uid d-key-down])))))
 
 
 (defn handle-escape
@@ -382,9 +388,9 @@
   (swap! state assoc :search/type nil)
   (dispatch [:editing/uid nil]))
 
-;;; Enter
 
-(def throttle-dispatch (throttle #(dispatch %) 100))
+(def throttled-dispatch-sync
+  (throttle #(dispatch-sync %) 50))
 
 
 (defn handle-enter
@@ -407,8 +413,8 @@
                                                      (= first "{{[[DONE]]}} ") new-tail
                                                      :else (str "{{[[TODO]]}} " value))]
                                   (swap! state assoc :string/local new-str))
-      ;; default: may mutate blocks
-      :else (throttle-dispatch [:enter uid d-key-down]))))
+      ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
+      :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
 ;;; Pair Chars: auto-balance for backspace and writing chars
@@ -435,7 +441,27 @@
 (defn handle-shortcuts
   [e uid state]
   (let [{:keys [key-code head tail selection start end target value]} (destruct-key-down e)
-        selection? (not= start end)]
+        selection?       (not= start end)
+
+        surround-and-set (fn [surround-text]
+                           (.preventDefault e)
+                           (.stopPropagation e)
+                           (let [selection (surround selection surround-text)
+                                 new-str   (str head selection tail)]
+                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+                             ;; textarea setval will lose ability to undo/redo
+
+                             ;; other note: execCommand is probably the simpler way
+                             ;; at least until a new standard comes around
+
+                             ;; be wary before updating electron - as chromium might drop support for execCommand
+                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                             (swap! state assoc :string/local new-str)
+                             (.. js/document (execCommand "insertText" false selection))
+                             (if selection?
+                               (do (setStart target (+ 2 start))
+                                   (setEnd target (+ 2 end)))
+                               (set-cursor-position target (+ start 2)))))]
 
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
@@ -450,25 +476,16 @@
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
                                   (dispatch [:undo])))
-      (= key-code KeyCodes.B) (let [new-str (str head (surround selection "**") tail)]
-                                (swap! state assoc :string/local new-str)
-                                (set! (.-value target) new-str)
-                                (if selection?
-                                  (do (setStart target (+ 2 start))
-                                      (setEnd target (+ 2 end)))
-                                  (set-cursor-position target (+ 2 start))))
 
-      ;; Disabling keybinding for now https://github.com/athensresearch/athens/issues/556
-      ;; TODO fix to make keybinding ("Ctrl-i") change font-style to italic
+      (= key-code KeyCodes.B) (surround-and-set "**")
 
-      #_ (and (not shift) (= key-code KeyCodes.I))
-      #_(let [new-str (str head (surround selection "__") tail)]
-          (swap! state assoc :string/local new-str)
-          (set! (.-value target) new-str)
-          (if selection?
-            (do (setStart target (+ 2 start))
-                (setEnd target (+ 2 end)))
-            (set-cursor-position target (+ 2 start))))
+      (= key-code KeyCodes.I) (surround-and-set "__")
+
+      (= key-code KeyCodes.Y) (surround-and-set "~~")
+
+      (= key-code KeyCodes.U) (surround-and-set "--")
+
+      (= key-code KeyCodes.H) (surround-and-set "^^")
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
@@ -664,28 +681,31 @@
 
 (defn textarea-key-down
   [e uid state]
-  (let [d-event (destruct-key-down e)
-        {:keys [meta ctrl key-code]} d-event]
+  ;; don't process key events from block that lost focus (quick Enter & Tab)
+  (when (= uid @(subscribe [:editing/uid]))
+    (let [d-event (destruct-key-down e)
+          {:keys [meta ctrl key-code]} d-event]
 
-    ;; used for paste, to determine if shift key was held down
-    (swap! state assoc :last-keydown d-event)
+      ;; used for paste, to determine if shift key was held down
+      (swap! state assoc :last-keydown d-event)
 
-    ;; update caret position for search dropdowns and for up/down
-    (when (nil? (:search/type @state))
-      (let [caret-position (get-caret-position (.. e -target))]
-        (swap! state assoc :caret-position caret-position)))
+      ;; update caret position for search dropdowns and for up/down
+      (when (nil? (:search/type @state))
+        (let [caret-position (get-caret-position (.. e -target))]
+          (swap! state assoc :caret-position caret-position)))
 
-    ;; dispatch center
-    ;; only when nothing is selected or duplicate/events dispatched
-    ;; after some ops(like delete) can cause errors
-    (when (empty? @(subscribe [:selected/items]))
-      (cond
-        (arrow-key-direction e)         (handle-arrow-key e uid state)
-        (pair-char? e)                  (handle-pair-char e uid state)
-        (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-        (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-        (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-        (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
-        (= key-code KeyCodes.ESC)       (handle-escape e state)
-        (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-        (is-character-key? e)           (write-char e uid state)))))
+      ;; dispatch center
+      ;; only when nothing is selected or duplicate/events dispatched
+      ;; after some ops(like delete) can cause errors
+      (when (empty? @(subscribe [:selected/items]))
+        (cond
+          (arrow-key-direction e)         (handle-arrow-key e uid state)
+          (pair-char? e)                  (handle-pair-char e uid state)
+          (= key-code KeyCodes.TAB)       (handle-tab e uid state)
+          (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+          (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+          (= key-code KeyCodes.ESC)       (handle-escape e state)
+          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+          (is-character-key? e)           (write-char e uid state))))))
+

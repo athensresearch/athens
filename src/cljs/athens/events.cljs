@@ -18,7 +18,8 @@
   :boot/web
   (fn [_ _]
     {:db         db/rfdb
-     :dispatch-n [[:loading/unset]]}))
+     :dispatch-n [[:loading/unset]
+                  [:local-storage/set-theme]]}))
 
 
 (reg-event-db
@@ -131,9 +132,9 @@
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
-  (fn [{:keys [db]} [_ uid]]
+  (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-          new-item  (merge block {:open true :index -1})
+          new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
           new-items (assoc (:right-sidebar/items db) uid new-item)
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
@@ -408,8 +409,12 @@
 (reg-event-fx
   :get-db/init
   (fn [{rfdb :db} _]
-    {:db (-> db/rfdb
-             (assoc :loading? true))
+    {:db (cond-> db/rfdb
+           true (assoc :loading? true)
+
+           (= (js/localStorage.getItem "theme/dark") "true")
+           (assoc :theme/dark true))
+
      :async-flow {:first-dispatch (if false
                                     [:local-storage/get-db]
                                     [:http/get-db])
@@ -843,11 +848,10 @@
 
                                 (and (zero? start) value)
                                 [:enter/bump-up uid new-uid])]
-    {:dispatch-later [{:ms 0  :dispatch event}
-                      (if (= event [:no-op])
-                        {:ms 0  :dispatch [:no-op]}
-                        {:ms 10 :dispatch [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
-                                                          embed-id (str "-embed-" embed-id))]})]}))
+    {:dispatch-n [event
+                  (when-not (= event [:no-op])
+                    [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
+                                    embed-id (str "-embed-" embed-id))])]}))
 
 
 (reg-event-fx

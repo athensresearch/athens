@@ -1,10 +1,16 @@
 (ns athens.views.right-sidebar
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/Close" :default Close]
+    ["@material-ui/icons/Description" :default Description]
+    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
     [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
+    [athens.views.graph-page :refer [graph-page]]
     [athens.views.node-page :refer [node-page-component]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -163,7 +169,7 @@
 (defn empty-message
   []
   [:div (use-style empty-message-style)
-   [:> mui-icons/VerticalSplit]
+   [:> VerticalSplit]
    [:p
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
@@ -211,32 +217,34 @@
                                   [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
-                                   ;;  [button [:> mui-icons/FilterList]]
+                                   ;;  [button [:> FilterList]]
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [open node/title block/string]}] items]
+                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
                                          ^{:key uid}
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
                                            [button {:style    sidebar-item-toggle-style
                                                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
                                                     :class    (when open "is-open")}
-                                            [:> mui-icons/ChevronRight]]
+                                            [:> ChevronRight]]
                                            [:h2
-                                            (if title
-                                              [:<> [:> mui-icons/Description] [parse-renderer/parse-and-render title uid]]
-                                              [:<> [:> mui-icons/FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
+                                            (cond
+                                              is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
+                                              title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
+                                              :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
                                            [:div {:class "controls"}
-                                            ;;  [button [:> mui-icons/DragIndicator]]
+                                            ;;  [button [:> DragIndicator]]
                                             ;;  [:hr]
                                             [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
-                                             [:> mui-icons/Close]]]]
+                                             [:> Close]]]]
                                           (when open
                                             [:div (use-style sidebar-item-container-style)
-                                             (if title
-                                               [node-page-component [:block/uid uid]]
-                                               [block-page-component [:block/uid uid]])])])))]])})))
+                                             (cond
+                                               is-graph? [graph-page uid]
+                                               title     [node-page-component [:block/uid uid]]
+                                               :else     [block-page-component [:block/uid uid]])])])))]])})))
 
 
 (defn right-sidebar-component
