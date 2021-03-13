@@ -2,6 +2,7 @@
   (:require
     [athens.config]
     [athens.db :as db]
+    [athens.style :refer [color]]
     [athens.subs]
     [athens.views.all-pages :refer [table]]
     [athens.views.app-toolbar :refer [app-toolbar]]
@@ -42,7 +43,12 @@
    :justify-content "stretch"
    :padding-top "2.5rem"
    :display "flex"
-   :overflow-y "auto"})
+   :overflow-y "auto"
+   ::stylefy/mode [["::webkit-scrollbar" {:background (color :background-minus-1)
+                                          :width "0.5rem"
+                                          :height "0.5rem"}]
+                   ["::webkit-scrollbar-thumb" {:background (color :background-minus-2)
+                                                :border-radius "0.5rem"}]]})
 
 
 ;;; Components
