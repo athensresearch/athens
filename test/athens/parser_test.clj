@@ -83,6 +83,19 @@
     "![an example image](https://example.com/image.png)"))
 
 
+;(deftest parser-raw-url-tests
+;  (are [x y] (= x (parse-to-ast y))
+;    [:block [:url-link {:url "https://example.com/"} "https://example.com"]]
+;    "https://example.com/"
+;
+;    [:block
+;     "First URL: "
+;     [:url-link {:url "https://example.com/1"} "https://example.com/1"]
+;     " second URL: "
+;     [:url-link {:url "https://example.com/2"} "https://example.com/2"]]
+;    "First URL: https://example.com/ second URL: https://example.com/2"))
+
+
 (deftest parser-url-link-tests
   (are [x y] (= x (parse-to-ast y))
     [:block [:url-link {:url "https://example.com/"} "an example"]]

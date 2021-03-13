@@ -19,7 +19,10 @@
    
    (* This first rule is the top-level one. *)
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
-   block = (url-raw / non-reserved-chars / pre-formatted / syntax-in-block / reserved-char) *
+   block = (url-raw / non-url-plaintext / pre-formatted / syntax-in-block / reserved-char) *
+
+   (* Sequence of non-reserved chars, but not a URL. *)
+   <non-url-plaintext> = !url-raw non-reserved-chars
 
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
    <any-non-pre-formatted-chars> = #'[^\\`]*'
@@ -90,8 +93,6 @@
    <reserved-char> =      #'[\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]'
    <non-reserved-chars> = #'[^\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]*'
    <any-char> = #'\\w|\\W'
-   <any-chars> = #'[\\w|\\W]+'
-   
    ")
 
 
@@ -126,8 +127,6 @@
      :url-link-text-contents (fn [& raw-contents]
                                (combine-adjacent-strings raw-contents))
      :url-link-url-parts     (fn [& chars]
-                               (string/join chars))
-     :any-chars              (fn [& chars]
                                (string/join chars))
      :component              (fn [raw-content-string]
                                (into [:component raw-content-string] (rest (block-parser raw-content-string))))}
