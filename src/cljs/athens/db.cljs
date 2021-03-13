@@ -431,13 +431,10 @@
    (if (string/blank? query)
      (vector)
      (->>
-       (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-              :in $ ?query-pattern
-              :where
-              [?block :block/string ?txt]
-              [(re-find ?query-pattern ?txt)]]
-            @dsdb
-            (re-case-insensitive query))
+       (d/datoms @dsdb :aevt :block/string)
+       (filter (fn [{:keys [v]}] (re-find (re-case-insensitive query) v)))
+       (mapv :e)
+       (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
        (take n)
        (map get-root-parent-node)
        (remove nil?)
