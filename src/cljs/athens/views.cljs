@@ -44,11 +44,11 @@
    :padding-top "2.5rem"
    :display "flex"
    :overflow-y "auto"
-   ::stylefy/mode [["::webkit-scrollbar" {:background (color :background-minus-1)
+   ::stylefy/mode {"::-webkit-scrollbar" {:background (color :background-minus-1)
                                           :width "0.5rem"
-                                          :height "0.5rem"}]
-                   ["::webkit-scrollbar-thumb" {:background (color :background-minus-2)
-                                                :border-radius "0.5rem"}]]})
+                                          :height "0.5rem"}
+                   "::-webkit-scrollbar-thumb" {:background (color :background-minus-2)
+                                                :border-radius "0.5rem"}}})
 
 
 ;;; Components
