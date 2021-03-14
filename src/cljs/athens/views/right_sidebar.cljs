@@ -38,7 +38,12 @@
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
                      [:&.is-open {:width "32vw"
-                                  :background-color (color :background-minus-1)}]]})
+                                  :background-color (color :background-minus-1)}]
+                     ["::webkit-scrollbar" {:background (color :background-minus-1)
+                                            :width "0.5rem"
+                                            :height "0.5rem"}]
+                     ["::webkit-scrollbar-thumb" {:background (color :background-minus-2)
+                                                  :border-radius "0.5rem"}]]})
 
 
 (def sidebar-content-style

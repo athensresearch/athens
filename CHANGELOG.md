@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.60](https://github.com/athensresearch/athens/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2021-03-13)
+
+
+### Bug Fixes
+
+* clicking the date doesn't open the date page ([#807](https://github.com/athensresearch/athens/issues/807)) ([9fc1a72](https://github.com/athensresearch/athens/commit/9fc1a72d7205b7bba4d4c95fb0887a8c36bf95ce)), closes [#802](https://github.com/athensresearch/athens/issues/802)
+* toolbar overlaps on scrollbar ([#809](https://github.com/athensresearch/athens/issues/809)) ([2657478](https://github.com/athensresearch/athens/commit/2657478db5ef6d77b20085b6a8093c708c974033))
+
+
+### Documentation
+
+* add gitbook config ([7b2c8d7](https://github.com/athensresearch/athens/commit/7b2c8d74122243083fd837ecf344e6f5b45a6090))
+* add more contributor faces ([9b7fdad](https://github.com/athensresearch/athens/commit/9b7fdada18f84e965fecdc1b7713bf78b519dbdc))
+
+
+### Performance
+
+* **undo/redo:** undo by transaction rather than entire db ([#808](https://github.com/athensresearch/athens/issues/808)) ([167804d](https://github.com/athensresearch/athens/commit/167804d07226c2909cc4d5cb8b383afce777bdf8))
+
 ## [1.0.0-beta.59](https://github.com/athensresearch/athens/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2021-03-11)
 
 
