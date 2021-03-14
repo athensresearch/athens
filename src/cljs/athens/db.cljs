@@ -31,7 +31,8 @@
 
 ;; -- re-frame -----------------------------------------------------------
 
-(defonce rfdb {:user                "Socrates"
+(defonce rfdb {:user                {:name (or "Socrates"
+                                               (js/localStorage.getItem "user/name"))}
                :db/filepath         nil
                :db/synced           true
                :db/mtime            nil
