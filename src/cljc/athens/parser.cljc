@@ -167,7 +167,6 @@
             unordered-list |
             ordered-list |
             pre-code |
-            inline-code |
             anchor |
             image |
             paragraph
@@ -194,7 +193,7 @@
    emphasis =  <'*'> emphasis-text <'*'>
    <emphasis-text> = #'[^\\*]+'
    page-link = <'[['> page-link-text <']]'>
-   <page-link-text> = ( #'[^\\[\\]{2}]+' | page-link )+
+   <page-link-text> = ( #'[^\\[\\]]+' | page-link )+
    block-ref = <'(('> block-ref-text <'))'>
    <block-ref-text> = #'[a-zA-Z0-9_\\-]+'
    (* LaTeX *)
@@ -224,7 +223,7 @@
    ordered-item = <ol-item-token> #'[a-zA-Z0-9 ]+' <newline>?
    ol-item-token = #'[0-9]+\\. '
    inline-code = <'`'> #'[^`]+' <'`'>
-   pre-code = <'```'> (codetext '\\n'?)+ <'\\n'? '```'> <blankline?>
+   pre-code = <'```'> '\\n'? (codetext '\\n'?)+ <'\\n'? '```'> <blankline?>
    codetext = #'.+(?=(```|\\n))'
    url-raw = #'((https?|ftp):)(//([^/?#]*))([^\\s?#]*)(\\?([^#]*))?(#(.*))?'
    <anchor> = auto-anchor | braced-anchor
@@ -353,12 +352,6 @@
 (defn parse-to-ast-new
   "Converts a string of block syntax to an abstract syntax tree for Athens markup."
   [string]
-  (transform-to-ast-new (let [result (insta/parse block-parser-new
-                                                  string
-                                                  ;; :trace true
-                                                  )]
-                          (if (insta/failure? result)
-                            ^{:parse-error (insta/get-failure result)}
-                            [:block string]
-
-                            result))))
+  (transform-to-ast-new (block-parser-new string
+                                          ;; :trace true
+                                          )))

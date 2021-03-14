@@ -224,6 +224,12 @@
                       [:>span
                        :>a {:position "relative"
                             :z-index 2}]]
+                     [:abbr
+                      {:grid-area "main"
+                       :z-index   4}
+                      [:>span
+                       :>a {:position "relative"
+                            :z-index 2}]]
                      ;; May want to refactor specific component styles to somewhere else.
                      ;; Closer to the component perhaps?
                      ;; Code
@@ -634,6 +640,7 @@
                            :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+       ;; TODO pass `state` to parse-and-render
        [parse-and-render local uid]
        [:div (use-style (merge drop-area-indicator
                                (when (= :child (:drag-target @state)) {;;:color "green"

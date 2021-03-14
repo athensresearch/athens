@@ -1,7 +1,35 @@
 ^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
+   ["codemirror/addon/edit/closebrackets"]
+   ["codemirror/addon/edit/matchbrackets"]
+   ["codemirror/mode/clike/clike"]
+   ["codemirror/mode/clojure/clojure"]
+   ["codemirror/mode/coffeescript/coffeescript"]
+   ["codemirror/mode/commonlisp/commonlisp"]
+   ["codemirror/mode/css/css"]
+   ["codemirror/mode/dart/dart"]
+   ["codemirror/mode/dockerfile/dockerfile"]
+   ["codemirror/mode/elm/elm"]
+   ["codemirror/mode/erlang/erlang"]
+   ["codemirror/mode/go/go"]
+   ["codemirror/mode/haskell/haskell"]
    ["codemirror/mode/javascript/javascript"]
+   ["codemirror/mode/lua/lua"]
+   ["codemirror/mode/mathematica/mathematica"]
+   ["codemirror/mode/perl/perl"]
+   ["codemirror/mode/php/php"]
+   ["codemirror/mode/powershell/powershell"]
+   ["codemirror/mode/python/python"]
+   ["codemirror/mode/ruby/ruby"]
+   ["codemirror/mode/rust/rust"]
+   ["codemirror/mode/scheme/scheme"]
+   ["codemirror/mode/shell/shell"]
+   ["codemirror/mode/smalltalk/smalltalk"]
+   ["codemirror/mode/sql/sql"]
+   ["codemirror/mode/swift/swift"]
+   ["codemirror/mode/vue/vue"]
+   ["codemirror/mode/xml/xml"]
    ["katex" :as katex]
    ["katex/dist/contrib/mhchem"]
    ["react-codemirror2" :rename {UnControlled CodeMirror}]
@@ -12,6 +40,7 @@
    [clojure.string :as str]
    [instaparse.core :as insta]
    [posh.reagent :refer [pull #_q]]
+   [reagent.core :as reagent]
    [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -119,67 +148,94 @@
   "Transforms Instaparse output to Hiccup."
   [tree uid]
   (insta/transform
-    {:block         (fn [& contents]
-                      (println "block contents " (pr-str contents))
-                      (concat [:span {:class "block"}] contents))
+    {:block                (fn [& contents]
+                             (println "block contents " (pr-str contents))
+                             (concat [:span {:class "block"}] contents))
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
-     :component     (fn [& contents]
-                      (component (first contents) uid))
-     :page-link     (fn [& title-coll] (render-page-link title-coll))
-     :hashtag       (fn [& title-coll]
-                      (let [node (pull-node-from-string title-coll)]
-                        [:span (use-style hashtag {:class    "hashtag"
-                                                   :on-click #(navigate-uid (:block/uid @node) %)})
-                         [:span {:class "formatting"} "#"]
-                         [:span {:class "contents"} title-coll]]))
-     :block-ref     (fn [ref-uid]
-                      (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
-                        (if @block
-                          [:span (use-style block-ref {:class "block-ref"})
-                           [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
-                            (if (= uid ref-uid)
-                              [parse-and-render "{{SELF}}"]
-                              [parse-and-render (:block/string @block) ref-uid])]]
-                          (str "((" ref-uid "))"))))
-     :url-image     (fn [{url :url alt :alt}]
-                      [:img (use-style image {:class "url-image"
-                                              :alt   alt
-                                              :src   url})])
-     :url-link      (fn [{url :url} text]
-                      [:a (use-style url-link {:class "url-link"
-                                               :href  url
-                                               :target "_blank"})
-                       text])
-     :bold          (fn [text]
-                      [:strong {:class "contents bold"} text])
-     :italic        (fn [text]
-                      [:i {:class "contents italic"} text])
-     :strikethrough (fn [text]
-                      [:del {:class "contents del"} text])
-     :underline     (fn [text]
-                      [:u {:class "contents underline"} text])
-     :highlight     (fn [text]
-                      [:mark {:class "contents highlight"} text])
-     :pre-formatted (fn [text]
-                      [:code text])
+     :component            (fn [& contents]
+                             (component (first contents) uid))
+     :page-link            (fn [& title-coll] (render-page-link title-coll))
+     :hashtag              (fn [& title-coll]
+                             (let [node (pull-node-from-string title-coll)]
+                               [:span (use-style hashtag {:class    "hashtag"
+                                                          :on-click #(navigate-uid (:block/uid @node) %)})
+                                [:span {:class "formatting"} "#"]
+                                [:span {:class "contents"} title-coll]]))
+     :block-ref            (fn [ref-uid]
+                             (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+                               (if @block
+                                 [:span (use-style block-ref {:class "block-ref"})
+                                  [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
+                                   (if (= uid ref-uid)
+                                     [parse-and-render "{{SELF}}"]
+                                     [parse-and-render (:block/string @block) ref-uid])]]
+                                 (str "((" ref-uid "))"))))
+     :url-image            (fn [{url :url alt :alt}]
+                             [:img (use-style image {:class "url-image"
+                                                     :alt   alt
+                                                     :src   url})])
+     :url-link             (fn [{url :url} text]
+                             [:a (use-style url-link {:class  "url-link"
+                                                      :href   url
+                                                      :target "_blank"})
+                              text])
+     :bold                 (fn [text]
+                             [:strong {:class "contents bold"} text])
+     :italic               (fn [text]
+                             [:i {:class "contents italic"} text])
+     :strikethrough        (fn [text]
+                             [:del {:class "contents del"} text])
+     :underline            (fn [text]
+                             [:u {:class "contents underline"} text])
+     :highlight            (fn [text]
+                             [:mark {:class "contents highlight"} text])
+     :pre-formatted        (fn [text]
+                             [:code text])
      :inline-pre-formatted (fn [text]
                              (js/console.log "Inline code: " text)
                              [:code text])
      :block-pre-formatted  (fn [text & mode]
-                             (let [mode (first mode)]
-                               (js/console.log "Block code, mode:" mode ", text:" text)
-                               [:> CodeMirror {:value    text
-                                               :options {:mode        mode
-                                                         :lineNumbers true
-                                                         :height      "min-content"}
+                             (let [original-mode (first mode)
+                                   mode          (or original-mode "javascript")
+                                   local-value   (reagent/atom text)]
+                               (js/console.log "Block code, original-mode:" original-mode
+                                               ", mode:" mode
+                                               ", text:" text)
+                               [:> CodeMirror {:value     text
+                                               :options   {:mode              mode
+                                                           :lineNumbers       true
+                                                           :matchBrackets     true
+                                                           :autoCloseBrackets true
+                                                           :extraKeys         #js {"Esc" (fn [editor]
+                                                                                          ;; TODO: save when needed
+                                                                                           (js/console.log "[Esc]")
+                                                                                           (if (= text @local-value)
+                                                                                             (js/console.log "[Esc] no changes")
+                                                                                             (do
+                                                                                              ;; TODO Save
+                                                                                               )))}}
                                                :on-change (fn [editor data value]
-                                                            (js/console.log "on-change" editor (pr-str data) (pr-str value)))}]))
+                                                            (js/console.log "on-change" editor (pr-str data) (pr-str value))
+                                                            (when-not (= @local-value value)
+                                                              (js/console.log "on-change, updating local state" value)
+                                                              (reset! local-value value)))
+                                               :on-blur   (fn [editor event]
+                                                            (js/console.log "on-blur")
+                                                            (if (= text @local-value)
+                                                              (js/console.log "on-blur, content not modified")
+                                                              (do
+                                                                (js/console.log "on-blur, content modified"
+                                                                                (pr-str text)
+                                                                                "=>"
+                                                                                (pr-str @local-value))
+                                                               ;; update value based on `uid`
+                                                                )))}]))
 
-     :latex         (fn [text]
-                      [:span {:ref (fn [el]
-                                     (when el
-                                       (katex/render text el (clj->js
-                                                               {:throwOnError false}))))}])}
+     :latex (fn [text]
+              [:span {:ref (fn [el]
+                             (when el
+                               (katex/render text el (clj->js
+                                                       {:throwOnError false}))))}])}
     tree))
 
 
@@ -188,8 +244,7 @@
   [string uid]
   (let [result (parser/parse-to-ast-new string)]
     (if (insta/failure? result)
-      [:span
-       {:title (pr-str (insta/get-failure result))
-        :style {:color "red"}}
+      [:abbr {:title (pr-str (insta/get-failure result))
+              :style {:color "red"}}
        string]
       [vec (transform result uid)])))

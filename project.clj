@@ -32,14 +32,14 @@
                  [tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]]
 
-  :plugins [[lein-shell "0.5.0"]]
+  :plugins [[lein-auto "0.1.3"]
+            [lein-shell "0.5.0"]]
 
   :min-lein-version "2.5.3"
 
   :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
-
 
   :shell {:commands {"open" {:windows ["cmd" "/c" "start"]
                              :macosx  "open"
@@ -52,7 +52,7 @@
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "prod"         ["with-profile" "prod" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "app"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "app" "main" "renderer"]]
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]

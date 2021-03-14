@@ -206,6 +206,9 @@
     [:block "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]
     "Some [[Nested [[Links]]]] and something"
 
+    [:block [:page-link "January 1, 2021"] " ok"]
+    "[[January 1, 2021]] ok"
+
     [:block "[[text"]
     "[[text"
 
@@ -338,10 +341,16 @@
       "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."
 
       [:block [:url-link {:url "https://raw-link.com"} "https://raw-link.com"]]
-      "https://raw-link.com"))
+      "https://raw-link.com"
+
+      [:block "Something/and-hyphen"]
+      "Something/and-hyphen"))
 
   (testing "invalid cases"
-    (are [x] (contains? (meta (parse-to-ast-new x)) :parse-error)
+    (are [x] (contains? (let [m (meta (parse-to-ast-new x))]
+                          (println "meta:" (pr-str m))
+                          m)
+                        :parse-error)
       ;; TODO: it's probably better to return input string with parse error data
       ;; [:block [:url-link {:url "https://example.com/"} "no #hashtag or [[link]] inside"]]
       ;; "[no #hashtag or [[link]] inside](https://example.com/)"

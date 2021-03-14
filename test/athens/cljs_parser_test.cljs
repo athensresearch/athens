@@ -85,6 +85,9 @@
     [:block [:component "[[TODO]]" [:page-link "TODO"]] " Pick up groceries"]
     "{{[[TODO]]}} Pick up groceries"
 
+    [:block [:component "((block-ref-id))" [:block-ref "block-ref-id"]] " amazing block"]
+    "{{((block-ref-id))}} amazing block"
+
     [:block [:component "AnotherComponent" "AnotherComponent"] " Another Content"]
     "{{AnotherComponent}} Another Content"))
 
@@ -204,6 +207,9 @@
     [:block "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]
     "Some [[Nested [[Links]]]] and something"
 
+    [:block [:page-link "January 1, 2021"] " ok"]
+    "[[January 1, 2021]] ok"
+
     [:block "[[text"]
     "[[text"
 
@@ -232,6 +238,10 @@
     ;; mode detection
     [:block [:block-pre-formatted "(ns example)" "clojure"]]
     "```clojure\n(ns example)```"
+
+    ;; mode detection & multiline
+    [:block [:block-pre-formatted "(ns example)\n(def a 1)" "clojure"]]
+    "```clojure\n(ns example)\n(def a 1)```"
 
     ;; code blocks with backticks
     [:block [:block-pre-formatted "a`b`c"]]
