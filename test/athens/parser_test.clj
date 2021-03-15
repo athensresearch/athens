@@ -83,6 +83,32 @@
     "![an example image](https://example.com/image.png)"))
 
 
+(deftest parser-raw-url-tests
+  (are [x y] (= x (parse-to-ast y))
+    [:block [:url-link {:url "https://example.com"} "https://example.com"]]
+    "https://example.com"
+
+    ; Basic URLs in plain text
+    [:block
+     "First URL: "
+     [:url-link {:url "https://example.com/1"} "https://example.com/1"]
+     " second URL: "
+     [:url-link {:url "https://example.com/2"} "https://example.com/2"]]
+    "First URL: https://example.com/1 second URL: https://example.com/2"
+
+    ; URL following a TODO component
+    [:block [:component "[[TODO]]"
+             [:page-link "TODO"]]
+     " read: " [:url-link {:url "https://www.example.com"} "https://www.example.com"]]
+    "{{[[TODO]]}} read: https://www.example.com"
+
+    ; URL with fragment following a TODO component
+    [:block [:component "[[TODO]]"
+             [:page-link "TODO"]]
+     " " [:url-link {:url "https://example.com#fragment"} "https://example.com#fragment"]]
+    "{{[[TODO]]}} https://example.com#fragment"))
+
+
 (deftest parser-url-link-tests
   (are [x y] (= x (parse-to-ast y))
     [:block [:url-link {:url "https://example.com/"} "an example"]]
