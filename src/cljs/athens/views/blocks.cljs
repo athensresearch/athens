@@ -284,7 +284,10 @@
                               [:&:checked {:background (color :link-color)}
                                [:&:after {:opacity 1
                                           :color (color :background-color)}]]
-                              [:&:active {:transform "scale(0.9)"}]]]]})
+                              [:&:active {:transform "scale(0.9)"}]]]
+
+                     [:mark.contents.highlight {:padding "0 2px"
+                                                :background-color "#ffeb7a"}]]})
 
 
 (stylefy/class "block-content" block-content-style)

@@ -28,7 +28,8 @@
    <inline-pre-formatted> = <'`'> any-non-pre-formatted-chars <'`'>
    
    (* Because code blocks are pre-formatted, we process them before these applied syntaxes. *)
-   <syntax-in-block> = (component | page-link | block-ref | hashtag | url-image | url-link | bold | latex)
+   <basic-text-formats> = (bold | italic | strikethrough | underline | highlight)
+   <syntax-in-block> = (component | page-link | block-ref | hashtag | url-image | url-link | basic-text-formats | latex)
    
    <syntax-in-component> = (page-link | block-ref)
    <any-non-component-reserved-chars> = #'[^\\{\\}]*'
@@ -61,7 +62,19 @@
    (* The following regular expression expresses this: (any character except '*') <- This repeated as many times as possible *)
    <non-bold-chars> = #'[^\\*]*'
    bold = <'**'> non-bold-chars <'**'>
-   
+
+   <non-italic-chars> = #'[^_]*'
+   italic = <'__'> non-italic-chars <'__'>
+
+   <non-strikethrough-chars> = #'[^~]*'
+   strikethrough = <'~~'> non-strikethrough-chars <'~~'>
+
+   <non-underline-chars> = #'[^-]*'
+   underline = <'--'> non-underline-chars <'--'>
+
+   <non-highlight-chars> = #'[^\\^]*'
+   highlight = <'^^'> non-highlight-chars <'^^'>
+
    (* LaTeX *)
    <not-dollars> = #'.*?(?=\\$\\$)'
    latex = <'$$'> not-dollars <'$$'>
@@ -70,13 +83,12 @@
    (* -- However, I think in many cases a more specific rule can be used. So we will migrate away from uses of this rule. *)
    
    (* Here are a list of 'stop characters' we implemented, to get the LL(1) performance. *)
-   (* The current reserved characters are:  ->  ( [ * < ` {  # ! $ <- *)
+   (* The current reserved characters are:  -> ^ ( [ * < ` {  # ! $ <- _ ~ - *)
    (* Note that since our grammar is a left-recursive one, we only use the opening chars in the pair. *)
    (* IMPORTANT: if you are adding new reserved characters to the list, remember to change them all in the following regex & update the list above! *)
    (* Regex could be a thinker at times, but you can use this tool https://regex101.com/ for a visual debugging experience. *)
-   <non-reserved-char> =  #'[^\\(\\[\\*\\<\\`\\{\\#\\!\\$]'
-   <reserved-char> =       #'[\\(\\[\\*\\<\\`\\{\\#\\!\\$]'
-   <non-reserved-chars> = #'[^\\(\\[\\*\\<\\`\\{\\#\\!\\$]*'
+   <reserved-char> =      #'[\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]'
+   <non-reserved-chars> = #'[^\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]*'
    <any-char> = #'\\w|\\W'
    <any-chars> = #'[\\w|\\W]+'
    

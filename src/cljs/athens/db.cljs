@@ -524,45 +524,28 @@
 
 ;; history
 
-(defonce history (atom []))
-(def ^:const history-limit 10)
+(defonce history (atom '()))
+#_(def ^:const history-limit 10)
 
-
-(defn drop-tail
-  [xs pred]
-  (loop [acc []
-         xs  xs]
-    (let [x (first xs)]
-      (cond
-        (nil? x) acc
-        (pred x) (conj acc x)
-        :else  (recur (conj acc x) (next xs))))))
-
-
-(defn trim-head
-  [xs n]
-  (vec (drop (- (count xs) n) xs)))
-
-
-(defn find-prev
-  [xs pred]
-  (last (take-while #(not (pred %)) xs)))
-
-
-(defn find-next
-  [xs pred]
-  (fnext (drop-while #(not (pred %)) xs)))
-
-
+;; this gives us customization options
+;; now if there is a pattern for a tx then the datoms can be
+;; easily modified(mind the order of datoms) to add a custom undo/redo strategy
+;; Not seeing a use case now, but there is an option to do it
 (d/listen! dsdb :history
            (fn [tx-report]
-             (let [{:keys [db-before db-after]} tx-report]
-               (when (and db-before db-after)
-                 (swap! history (fn [h]
-                                  (-> h
-                                      (drop-tail #(identical? % db-before))
-                                      (conj db-after)
-                                      (trim-head history-limit))))))))
+             (when-not (or (->> tx-report :tx-data (some (fn [datom]
+                                                           (= (nth datom 1)
+                                                              :from-undo-redo))))
+                           (->> tx-report :tx-data empty?))
+               (swap! history (fn [buff]
+                                (->> buff (remove (fn [[_ applied? _]]
+                                                    (not applied?)))
+                                     doall)))
+               (swap! history (fn [cur-his]
+                                (cons [(-> tx-report :tx-data first vec (nth 3))
+                                       true
+                                       (:tx-data tx-report)]
+                                      cur-his))))))
 
 ;; -- Linked & Unlinked References ----------
 

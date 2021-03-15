@@ -83,6 +83,7 @@ Athens is here today because of our Sponsors and Contributors. Thank you.
 
 Developers
 
+
 ![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
 
 Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
