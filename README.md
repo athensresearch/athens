@@ -9,7 +9,7 @@
 
 Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
 
-# 🚀 [Download the free desktop app](https://github.com/athensresearch/athens) 🚀
+# 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
 (Do not auto-update with the Mac M1. Right now M1 build auto-updates to Intel. This is a problem with Electron Builder and we are looking into it.)
 
@@ -49,7 +49,7 @@ Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
 - [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
-- If you have trouble with a new version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens).
+- If you have trouble with a new version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens/releases).
 
 # [Join Discord](https://discord.gg/GCJaV3V)
 
@@ -77,13 +77,13 @@ Athens is here today because of our Sponsors and Contributors. Thank you.
 
 ## Sponsors
 
-[![Contributors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
+[![Sponsors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
 
 ## Contributors
 
 Developers
 
-![Contributors-Dev](https://athens-assets-1.s3.us-east-2.amazonaws.com/contributor-faces.png)
+![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
 
 Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
 
