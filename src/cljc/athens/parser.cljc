@@ -19,7 +19,10 @@
    
    (* This first rule is the top-level one. *)
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
-   block = (pre-formatted / url-raw / syntax-in-block / reserved-char / non-reserved-chars) *
+   block = (url-raw / non-url-plaintext / pre-formatted / syntax-in-block / reserved-char) *
+
+   (* Sequence of non-reserved chars, but not a URL. *)
+   <non-url-plaintext> = !url-raw non-reserved-chars
 
    (* The following regular expression expresses this: (any character except '`') <- This repeated as many times as possible *)
    <any-non-pre-formatted-chars> = #'[^\\`]*'
@@ -83,15 +86,13 @@
    (* -- However, I think in many cases a more specific rule can be used. So we will migrate away from uses of this rule. *)
    
    (* Here are a list of 'stop characters' we implemented, to get the LL(1) performance. *)
-   (* The current reserved characters are:  -> ^ ( [ * < ` {  # ! $ <- _ ~ - *)
+   (* The current reserved characters are:  -> ^ ( [ * < ` {  # ! $ <- _ ~ space - *)
    (* Note that since our grammar is a left-recursive one, we only use the opening chars in the pair. *)
    (* IMPORTANT: if you are adding new reserved characters to the list, remember to change them all in the following regex & update the list above! *)
    (* Regex could be a thinker at times, but you can use this tool https://regex101.com/ for a visual debugging experience. *)
-   <reserved-char> =      #'[\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]'
-   <non-reserved-chars> = #'[^\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~-]*'
+   <reserved-char> =      #'[\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~ -]'
+   <non-reserved-chars> = #'[^\\^\\(\\[\\*\\<\\`\\{\\#\\!\\$_~ -]*'
    <any-char> = #'\\w|\\W'
-   <any-chars> = #'[\\w|\\W]+'
-   
    ")
 
 
@@ -127,30 +128,30 @@
                                (combine-adjacent-strings raw-contents))
      :url-link-url-parts     (fn [& chars]
                                (string/join chars))
-     :any-char (fn [char]
-                 char)
-     :any-chars              (fn [& chars]
-                               (string/join chars))
-     :reserved-chars          (fn [& char]
-                                (string/join char))
-     :non-reserved-chars      (fn [& chars]
-                                (string/join chars))
-     :any-non-pre-formatted-chars (fn [& chars]
-                                    (string/join chars))
-     :block-pre-formatted    (fn [code]
-                               (let [split (string/split-lines code)]
-                                 (cond
-                                   (and (< 1 (count split))
-                                        (not (string/blank? (first split))))
-                                   [:block-pre-formatted
-                                    (string/join "\n" (rest split))
-                                    (first split)]
+     ;; :any-char (fn [char]
+     ;;             char)
+     ;; :any-chars              (fn [& chars]
+     ;;                           (string/join chars))
+     ;; :reserved-chars          (fn [& char]
+     ;;                            (string/join char))
+     ;; :non-reserved-chars      (fn [& chars]
+     ;;                            (string/join chars))
+     ;; :any-non-pre-formatted-chars (fn [& chars]
+     ;;                                (string/join chars))
+     ;; :block-pre-formatted    (fn [code]
+     ;;                           (let [split (string/split-lines code)]
+     ;;                             (cond
+     ;;                               (and (< 1 (count split))
+     ;;                                    (not (string/blank? (first split))))
+     ;;                               [:block-pre-formatted
+     ;;                                (string/join "\n" (rest split))
+     ;;                                (first split)]
 
-                                   (and (< 1 (count split))
-                                        (string/blank? (first split)))
-                                   [:block-pre-formatted (string/join "\n" (rest split))]
+     ;;                               (and (< 1 (count split))
+     ;;                                    (string/blank? (first split)))
+     ;;                               [:block-pre-formatted (string/join "\n" (rest split))]
 
-                                   :else [:block-pre-formatted (first split)])))
+     ;;                               :else [:block-pre-formatted (first split)])))
      :component              (fn [raw-content-string]
                                (into [:component raw-content-string] (rest (block-parser raw-content-string))))}
     tree))

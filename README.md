@@ -9,12 +9,9 @@
 
 Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
 
-### Download the free desktop app
+# 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
-- Mac: https://tinyurl.com/athens-mac
-- Mac M1: https://tinyurl.com/athens-mac-m1
-- Windows: https://tinyurl.com/athens-windows
-- Linux: https://tinyurl.com/athens-linux
+(Do not auto-update with the Mac M1. Right now M1 build auto-updates to Intel. This is a problem with Electron Builder and we are looking into it.)
 
 **Sponsor us for additional features/services at https://opencollective.com/athens!**
 
@@ -52,13 +49,7 @@ Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
 - [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
-- How to download any version of Athens:
-  - Replace `55` with the version number you want.
-  - Mac: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55.dmg
-  - M1: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55-arm64.dmg
-  - Windows: https://athens-apps.s3.us-east-2.amazonaws.com/Athens+Setup+1.0.0-beta.55.exe
-  - Linux: https://athens-apps.s3.us-east-2.amazonaws.com/Athens-1.0.0-beta.55.AppImage
-  - `beta.39` and below has a lowercase `a` in `athens`, e.g. https://athens-apps.s3.us-east-2.amazonaws.com/athens-1.0.0-beta.39.AppImage
+- If you have trouble with a new version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens/releases).
 
 # [Join Discord](https://discord.gg/GCJaV3V)
 
@@ -69,15 +60,6 @@ Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c
 # [Pricing](https://opencollective.com/athens)
 
 Athens is free to self-host, with additional features and services for our paid sponsors. We are also working on an enterprise offering for companies to self-host. Please see our [Open Collective](https://opencollective.com/athens) for more details.
-
-### Download the free desktop app
-
-- Mac: https://tinyurl.com/athens-mac
-- Mac M1: https://tinyurl.com/athens-mac-m1
-- Windows: https://tinyurl.com/athens-windows
-- Linux: https://tinyurl.com/athens-linux
-
-**Sponsor us for additional features/services at https://opencollective.com/athens!**
 
 # Links
 
@@ -95,13 +77,14 @@ Athens is here today because of our Sponsors and Contributors. Thank you.
 
 ## Sponsors
 
-[![Contributors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
+[![Sponsors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
 
 ## Contributors
 
 Developers
 
-![Contributors-Dev](https://user-images.githubusercontent.com/8952138/110916422-a1d61300-82cd-11eb-9e5e-71d78657ed86.png)
+
+![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
 
 Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
 
