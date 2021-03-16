@@ -1,7 +1,8 @@
 (ns athens.parser-test
   (:require
     [athens.parser :refer [parse-to-ast parse-to-ast-new combine-adjacent-strings]]
-    [clojure.test :refer [deftest is are testing]]))
+    [clojure.test :refer [deftest is are testing]]
+    [instaparse.core :as insta]))
 
 
 (deftest parser-general-tests
@@ -373,10 +374,7 @@
       "Something/and-hyphen"))
 
   (testing "invalid cases"
-    (are [x] (contains? (let [m (meta (parse-to-ast-new x))]
-                          (println "meta:" (pr-str m))
-                          m)
-                        :parse-error)
+    (are [x] (true? (insta/failure? (parse-to-ast-new x)))
       ;; TODO: it's probably better to return input string with parse error data
       ;; [:block [:url-link {:url "https://example.com/"} "no #hashtag or [[link]] inside"]]
       ;; "[no #hashtag or [[link]] inside](https://example.com/)"

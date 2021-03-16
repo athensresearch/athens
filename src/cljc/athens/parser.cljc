@@ -164,14 +164,27 @@
 
 
 (defparser block-parser-new
-  "block = (heading |
-            unordered-list |
-            ordered-list |
-            pre-code |
-            anchor |
-            image |
-            paragraph
-           )*
+  "block = (heading /
+            unordered-list /
+            ordered-list /
+            pre-code /
+            inline-code /
+            anchor /
+            image /
+            url-raw /
+            strong /
+            emphasis /
+            page-link /
+            block-ref /
+            hashtag /
+            component /
+            strikethrough /
+            underline /
+            highlight /
+            latex /
+            paragraph-text /
+            reserved-char
+           )* <blankline?>
    heading = #'[#]+' <space> #'[a-zA-Z0-9 ]+' <blankline>?
    <paragraph> = (inline-code /
                 anchor /
@@ -186,9 +199,11 @@
                 underline /
                 highlight /
                 latex /
-                paragraph-text
+                paragraph-text /
+                reserved-char
                )+ <#'\n\n'?>
-   <paragraph-text> = #'[^`#*~\\-\\^\\$\\[\\]\n{2}]+'
+   <paragraph-text> = !url-raw #'[^`#*~\\-\\^\\$\\[\\]\\n ]+'
+   <reserved-char> = #'[`#*~\\-\\^\\$\\[\\]\\n ]'
    strong = <'**'> strong-text <'**'> 
    <strong-text> = #'[^\\*\\*]+'
    emphasis =  <'*'> emphasis-text <'*'>
