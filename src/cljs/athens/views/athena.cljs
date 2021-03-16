@@ -180,14 +180,16 @@
   (let [key (.. e -keyCode)
         shift (.. e -shiftKey)
         {:keys [index query results]} @state
-        item (get results index)]
+        item (get results index)
+        has-item? (some? item)
+        any-results? (> (count results) 0)]
     (cond
       (= key KeyCodes.ESC)
       (dispatch [:athena/toggle])
 
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
-                               (and (zero? index) (nil? item))
+                               (and (zero? index) (not has-item?))
                                (let [uid (gen-block-uid)]
                                  (dispatch [:athena/toggle])
                                  (dispatch [:page/create query uid])
@@ -195,11 +197,11 @@
                                    (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500)
                                    (navigate-uid uid)))
                                ;; if shift: open in right-sidebar
-                               shift
+                               (and has-item? shift)
                                (do (dispatch [:athena/toggle])
                                    (dispatch [:right-sidebar/open-item (:block/uid item)]))
                                ;; else open in main view
-                               :else
+                               has-item?
                                (do (dispatch [:athena/toggle])
                                    (navigate-uid (:block/uid item))
                                    (dispatch [:editing/uid (:block/uid item)])))
@@ -207,27 +209,29 @@
       (= key KeyCodes.UP)
       (do
         (.. e preventDefault)
-        (swap! state update :index #(dec (if (zero? %) (count results) %)))
-        (let [cur-index (:index @state)
-              ;; Search input box
-              input-el (.. e -target)
-              ;; Get the result list container which is the last element child
-              ;; of the whole athena component
-              result-el (.. input-el (closest "div.athena") -lastElementChild)
-              ;; Get next element in the result list
-              next-el (nth (array-seq (.. result-el -children)) cur-index)]
-          ;; Check if next el is beyond the bounds of the result list and scroll if so
-          (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
+        (when any-results?
+          (swap! state update :index #(dec (if (zero? %) (count results) %)))
+          (let [cur-index (:index @state)
+                ;; Search input box
+                input-el (.. e -target)
+                ;; Get the result list container which is the last element child
+                ;; of the whole athena component
+                result-el (.. input-el (closest "div.athena") -lastElementChild)
+                ;; Get next element in the result list
+                next-el (nth (array-seq (.. result-el -children)) cur-index)]
+            ;; Check if next el is beyond the bounds of the result list and scroll if so
+            (scroll-into-view next-el result-el (not= cur-index (dec (count results)))))))
 
       (= key KeyCodes.DOWN)
       (do
         (.. e preventDefault)
-        (swap! state update :index #(if (= % (dec (count results))) 0 (inc %)))
-        (let [cur-index (:index @state)
-              input-el (.. e -target)
-              result-el (.. input-el (closest "div.athena") -lastElementChild)
-              next-el (nth (array-seq (.. result-el -children)) cur-index)]
-          (scroll-into-view next-el result-el (zero? cur-index))))
+        (when any-results?
+          (swap! state update :index #(if (= % (dec (count results))) 0 (inc %)))
+          (let [cur-index (:index @state)
+                input-el (.. e -target)
+                result-el (.. input-el (closest "div.athena") -lastElementChild)
+                next-el (nth (array-seq (.. result-el -children)) cur-index)]
+            (scroll-into-view next-el result-el (zero? cur-index)))))
 
       :else nil)))
 
