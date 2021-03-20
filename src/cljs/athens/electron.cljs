@@ -306,6 +306,8 @@
     :boot/desktop
     (fn [_ _]
       {:db         db/rfdb
+
+       #_#_
        :async-flow {:first-dispatch [:local-storage/get-db-filepath]
                     :rules          [{:when        :seen?
                                       :events      :db/update-filepath
@@ -439,4 +441,5 @@
   (reg-fx
     :fs/write!
     (fn []
+      #_
       (debounce-write-db true))))

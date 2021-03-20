@@ -90,7 +90,7 @@
   (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
       (if (empty? @note-refs)
-        (dispatch [:daily-note/next (get-day)])
+        nil #_(dispatch [:daily-note/next (get-day)])
         (let [notes (safe-pull-many @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
            (doall

@@ -214,4 +214,4 @@
   (events/listen js/window EventType.KEYDOWN key-down)
   (events/listen js/window EventType.COPY copy)
   (events/listen js/window EventType.CUT cut)
-  (prevent-save))
+  #_(prevent-save))

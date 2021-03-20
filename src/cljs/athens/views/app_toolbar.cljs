@@ -133,7 +133,7 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [presence/presence-popover-info]
+            #_[presence/presence-popover-info]
             [(reagent.core/adapt-react-class FiberManualRecord)
              {:style {:color      (color (if @(subscribe [:db/synced])
                                            :confirmation-color

@@ -1,5 +1,5 @@
 {:lein   true
- :nrepl {:port 8777}
+ :nrepl {:port 8778}
  :builds {
 
           ;; pure browser https://athensresearch.github.io/athens
@@ -17,7 +17,7 @@
                 :devtools        {:preloads [devtools.preload
                                              day8.re-frame-10x.preload]
                                   :http-root    "resources/public"
-                                  :http-port    3000}}
+                                  :http-port    3001}}
 
           ;; frontend for electron
           :renderer {:target :browser

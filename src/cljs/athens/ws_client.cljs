@@ -1,7 +1,10 @@
 (ns athens.ws-client
   (:require
-    [re-frame.core :as rf :refer [subscribe dispatch]]
-    [taoensso.sente :as sente]))
+    [athens.db :as db]
+    [dat.sync.client]
+    [re-frame.core :as rf :refer [subscribe dispatch dispatch-sync]]
+    [taoensso.sente :as sente]
+    [datascript.core :as d]))
 
 
 (rf/reg-sub
@@ -67,18 +70,24 @@
   (start-router!))
 
 
-(defmulti event-msg-handler :id)
+(defmulti event-msg-handler
+  (fn [msg]
+    (if (contains? #{:dat.sync.client/bootstrap :dat.sync.client/recv-remote-tx}
+                   (->> msg :event second first))
+      (->> msg :event second first)
+      (:id msg))))
 
 
 (defmethod event-msg-handler :default
   [{:keys [event]}]
-  (println "Unhandled event: %s" event))
+  (println "Unhandled event: " (:id event)))
 
 
 (defmethod event-msg-handler :chsk/state
   [{:keys [?data]}]
-  (if (= ?data {:first-open? true})
-    (println "Channel socket successfully established!")
+  (if (->> ?data second :first-open?)
+    (do (println "Channel socket successfully established!")
+        ((:send-fn channel-socket) [:dat.sync.client/request-bootstrap true]))
     (println "Channel socket state change:" ?data)))
 
 
@@ -96,9 +105,8 @@
 
 (defmethod event-msg-handler :chsk/handshake
   [{:keys [?data]}]
-  (let [_ ?data]
-    (println "Handshake:" ?data)
-    (send-user-details)))
+  (println "Handshake:" ?data)
+  (send-user-details))
 
 
 (defn start-router! []
@@ -110,3 +118,30 @@
 (defn send-presence! []
   (send-user-details)
   (js/setTimeout (fn [] (send-presence!)) 5000))
+
+;; txn
+(def x (atom nil))
+(defmethod event-msg-handler :dat.sync.client/recv-remote-tx
+  [{:keys [?data]}]
+  (let [remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
+    (dat.sync.client/transact-with-middleware!
+      db/dsdb dat.sync.client/wrap-remote-tx
+      (second ?data) remote-tx-meta)))
+
+
+(def x2 (atom nil))
+(defmethod event-msg-handler :dat.sync.client/bootstrap
+  [{:keys [?data]}]
+  (let [remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
+    (dat.sync.client/transact-with-middleware!
+      db/dsdb dat.sync.client/wrap-remote-tx
+      (second ?data) remote-tx-meta))
+  #_(let [normalized-tx (dat.sync.client/normalize-tx (second ?data))
+          translated-tx (dat.sync.client/translate-eids @db/dsdb normalized-tx)
+          remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
+      (d/transact db/dsdb translated-tx remote-tx-meta)
+
+      #_(d/with @db/dsdb translated-tx remote-tx-meta))
+  #_(dat.sync.client/transact-with-middleware!
+      db/dsdb dat.sync.client/wrap-remote-tx
+      (second ?data) {:dat.sync.prov/agent :dat.sync/remote}))
