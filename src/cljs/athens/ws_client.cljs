@@ -1,11 +1,16 @@
 (ns athens.ws-client
   (:require
-    [athens.db :as db]
+    [athens.datsync-utils :as dat-s]
     [dat.sync.client]
     [re-frame.core :as rf :refer [subscribe dispatch dispatch-sync]]
-    [taoensso.sente :as sente]
-    [datascript.core :as d]))
+    [taoensso.sente :as sente]))
 
+
+
+;;-------------------------------------------------------------------
+;;--- re-frame ---
+
+(declare start-socket!)
 
 (rf/reg-sub
   :presence/current
@@ -37,6 +42,15 @@
     (assoc db :user new)))
 
 
+(rf/reg-fx
+  :start-socket
+  (fn [_]
+    (start-socket!)))
+
+
+
+;;-------------------------------------------------------------------
+;;--- socket ---
 
 (declare channel-socket)
 (declare chsk)
@@ -117,31 +131,19 @@
 
 (defn send-presence! []
   (send-user-details)
-  (js/setTimeout (fn [] (send-presence!)) 5000))
+  (js/setTimeout (fn [] (send-presence!)) 500))
 
-;; txn
-(def x (atom nil))
+;;-------------------------------------------------------------------
+;;--- transactions ---
+
+
 (defmethod event-msg-handler :dat.sync.client/recv-remote-tx
   [{:keys [?data]}]
-  (let [remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
-    (dat.sync.client/transact-with-middleware!
-      db/dsdb dat.sync.client/wrap-remote-tx
-      (second ?data) remote-tx-meta)))
+  (dat-s/apply-remote-tx! (second ?data)))
 
 
-(def x2 (atom nil))
 (defmethod event-msg-handler :dat.sync.client/bootstrap
   [{:keys [?data]}]
-  (let [remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
-    (dat.sync.client/transact-with-middleware!
-      db/dsdb dat.sync.client/wrap-remote-tx
-      (second ?data) remote-tx-meta))
-  #_(let [normalized-tx (dat.sync.client/normalize-tx (second ?data))
-          translated-tx (dat.sync.client/translate-eids @db/dsdb normalized-tx)
-          remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
-      (d/transact db/dsdb translated-tx remote-tx-meta)
-
-      #_(d/with @db/dsdb translated-tx remote-tx-meta))
-  #_(dat.sync.client/transact-with-middleware!
-      db/dsdb dat.sync.client/wrap-remote-tx
-      (second ?data) {:dat.sync.prov/agent :dat.sync/remote}))
+  (dat-s/apply-remote-tx! (second ?data))
+  (send-presence!)
+  (dispatch-sync [:loading/unset]))

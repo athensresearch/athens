@@ -901,7 +901,7 @@
            :on-drag-leave (fn [e] (block-drag-leave e block state))
            :on-drop       (fn [e] (block-drop e block state))}
 
-          #_[presence/presence-popover-info uid {:inline? true}]
+          [presence/presence-popover-info uid {:inline? true}]
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 

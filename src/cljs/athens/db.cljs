@@ -37,7 +37,7 @@
                :db/synced           true
                :db/mtime            nil
                :current-route       nil
-               :loading?            false
+               :loading?            true
                :modal               false
                :alert               nil
                :athena/open         false

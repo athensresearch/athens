@@ -2,7 +2,7 @@
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
-    [athens.patterns :as patterns]
+    #_[athens.patterns :as patterns]
     [athens.util :as util]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -113,7 +113,7 @@
      (save-image "" "" item extension))
     ([head tail item extension]
      (let [curr-db-filepath @(subscribe [:db/filepath])
-           _ (prn head tail curr-db-filepath item extension)
+           _                (prn head tail curr-db-filepath item extension)
            curr-db-dir      @(subscribe [:db/filepath-dir])
            img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
            base-dir         (.dirname path curr-db-filepath)
@@ -143,8 +143,8 @@
           block     (db/get-block [:block/uid target-uid])
           new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
           tx-data   (if (= drag-target :child)
-                      (let [reindex   (db/inc-after (:db/id block) -1)
-                            new-children (conj reindex new-block)
+                      (let [reindex          (db/inc-after (:db/id block) -1)
+                            new-children     (conj reindex new-block)
                             new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
                         new-target-block)
                       (let [index        (case drag-target
@@ -305,82 +305,8 @@
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
-      {:db         db/rfdb
-
-       #_#_
-       :async-flow {:first-dispatch [:local-storage/get-db-filepath]
-                    :rules          [{:when        :seen?
-                                      :events      :db/update-filepath
-                                      :dispatch-fn (fn [[_ filepath]]
-                                                     (cond
-                                                       ;; No database path found in localStorage. Creating new one
-                                                       (nil? filepath) (dispatch [:fs/create-new-db])
-                                                       ;; Database found in local storage and filesystem:
-                                                       (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                       db      (dt/read-transit-str read-db)]
-                                                                                   (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
-                                                       ;; Database found in localStorage but not on filesystem
-                                                       :else (dispatch [:fs/open-dialog])))}
-
-                                     ;; if first time, go to Daily Pages and open left-sidebar
-                                     {:when       :seen?
-                                      :events     :fs/create-new-db
-                                      :dispatch-n [[:navigate :home]
-                                                   [:left-sidebar/toggle]]}
-
-                                     ;; if nth time, remember dark/light theme and last page
-                                     {:when       :seen?
-                                      :events     :reset-conn
-                                      :dispatch-n [[:local-storage/set-theme]
-                                                   #_[:local-storage/navigate]]}
-
-                                     ;; whether first or nth time, update athens pages
-                                     #_{:when       :seen-any-of?
-                                        :events     [:fs/create-new-db :reset-conn]
-                                        :dispatch-n [[:db/retract-athens-pages]
-                                                     [:db/transact-athens-pages]]}
-
-                                     {:when        :seen-any-of?
-                                      :events      [:fs/create-new-db :reset-conn]
-                                      ;; if schema is nil, update to 1 and reparse all block/string's for links
-                                      :dispatch-fn (fn [_]
-                                                     (let [schemas    (d/q '[:find ?e ?v
-                                                                             :where [?e :schema/version ?v]]
-                                                                          @db/dsdb)
-                                                           schema-cnt (count schemas)]
-                                                       (cond
-                                                         (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
-                                                                                blocks-with-plain-links (d/q '[:find ?u ?s
-                                                                                                               :keys block/uid block/string
-                                                                                                               :in $ ?pattern
-                                                                                                               :where
-                                                                                                               [?e :block/uid ?u]
-                                                                                                               [?e :block/string ?s]
-                                                                                                               [(re-find ?pattern ?s)]]
-                                                                                                             @db/dsdb
-                                                                                                             linked-ref-pattern)
-                                                                                blocks-orig             (map (fn [{:block/keys [uid string]}]
-                                                                                                               {:db/id [:block/uid uid] :block/string string})
-                                                                                                             blocks-with-plain-links)
-                                                                                blocks-temp             (map (fn [{:block/keys [uid]}]
-                                                                                                               {:db/id [:block/uid uid] :block/string ""})
-                                                                                                             blocks-with-plain-links)]
-                                                                            ;; give all blocks empty string - clears refs
-                                                                            ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
-                                                                            ;; update schema version, so this doesn't need to happen again
-                                                                            (dispatch [:transact blocks-temp])
-                                                                            (dispatch [:transact blocks-orig])
-                                                                            (dispatch [:transact [[:db/add -1 :schema/version 1]]]))
-                                                         (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
-                                                                            (case schema-version
-                                                                              1 (prn (str "Schema version " schema-version))
-                                                                              (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
-                                                         (< 1 schema-cnt)
-                                                         (js/alert (js/Error (str "Multiple schema versions: " schemas))))
-
-                                                       (dispatch [:loading/unset])))
-                                      :halt?       true}]}}))
+      {:db           db/rfdb
+       :start-socket nil}))
 
 
   ;;; Effects
@@ -441,5 +367,4 @@
   (reg-fx
     :fs/write!
     (fn []
-      #_
-      (debounce-write-db true))))
+      #_(debounce-write-db true))))
