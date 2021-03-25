@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.61](https://github.com/athensresearch/athens/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2021-03-25)
+
+
+### Bug Fixes
+
+* **parser:** parse multiple raw URLs in a single block ([#830](https://github.com/athensresearch/athens/issues/830)) ([92b766a](https://github.com/athensresearch/athens/commit/92b766a8628b95b0c136677b74d2df9fdcfaa042))
+* toolbar overlaps on scrollbar ([#818](https://github.com/athensresearch/athens/issues/818)) ([8aa6790](https://github.com/athensresearch/athens/commit/8aa6790876cd31a85f4e7e02352d028620cba932))
+
+
+### Documentation
+
+* update download links ([#804](https://github.com/athensresearch/athens/issues/804)) ([1c4aa1a](https://github.com/athensresearch/athens/commit/1c4aa1ada5e325388bc874a7aeb023760ccad64a))
+
 ## [1.0.0-beta.60](https://github.com/athensresearch/athens/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2021-03-13)
 
 
