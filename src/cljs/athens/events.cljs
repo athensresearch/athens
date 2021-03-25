@@ -1064,7 +1064,7 @@
 
 (defn drop-link-child
   "Create a new block with the reference to the source block, as a child"
-  [source source-parent target]
+  [source target]
   (let [new-uid               (gen-block-uid)
         new-string            (str "((" (source :block/uid) "))")
         new-source-block      {:block/uid new-uid :block/string new-string :block/order 0 :block/open true}
@@ -1077,8 +1077,8 @@
 
 (reg-event-fx
   :drop-link/child
-  (fn [_ [_ source source-parent target]]
-    {:dispatch [:transact (drop-link-child source source-parent target)]}))
+  (fn [_ [_ source target]]
+    {:dispatch [:transact (drop-link-child source target)]}))
 
 
 (defn drop-link-same-parent
@@ -1127,7 +1127,7 @@
 
 (defn drop-link-diff-parent
   "Add a link to the source block and reorder the target"
-  [kind source source-parent target target-parent]
+  [kind source target target-parent]
   (let [new-uid             (gen-block-uid)
         new-string          (str "((" (source :block/uid) "))")
         t-order               (:block/order target)
@@ -1144,8 +1144,8 @@
 
 (reg-event-fx
   :drop-link/diff
-  (fn [_ [_ kind source source-parent target target-parent]]
-    {:dispatch [:transact (drop-link-diff-parent kind source source-parent target target-parent)]}))
+  (fn [_ [_ kind source target target-parent]]
+    {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
 
 
 (defn drop-child
@@ -1257,9 +1257,9 @@
                         (and (= effect-allowed "move") (= kind :child)) [:drop/child source source-parent target]
                         (and (= effect-allowed "move") same-parent?) [:drop/same kind source source-parent target]
                         (and (= effect-allowed "move") (not same-parent?)) [:drop/diff kind source source-parent target target-parent]
-                        (and (= effect-allowed "link") (= kind :child)) [:drop-link/child source source-parent target]
+                        (and (= effect-allowed "link") (= kind :child)) [:drop-link/child source target]
                         (and (= effect-allowed "link") same-parent?) [:drop-link/same kind source source-parent target]
-                        (and (= effect-allowed "link") (not same-parent?)) [:drop-link/diff kind source source-parent target target-parent])]
+                        (and (= effect-allowed "link") (not same-parent?)) [:drop-link/diff kind source target target-parent])]
     {:dispatch event}))
 
 
