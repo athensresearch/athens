@@ -1076,9 +1076,9 @@
 
 
 (reg-event-fx
- :drop-link/child
- (fn [_ [_ source source-parent target]]
-   {:dispatch [:transact (drop-link-child source source-parent target)]}))
+  :drop-link/child
+  (fn [_ [_ source source-parent target]]
+    {:dispatch [:transact (drop-link-child source source-parent target)]}))
 
 
 (defn drop-link-same-parent
@@ -1120,9 +1120,9 @@
 
 
 (reg-event-fx
- :drop-link/same
- (fn [_ [_ kind source parent target]]
-   {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
+  :drop-link/same
+  (fn [_ [_ kind source parent target]]
+    {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
 
 
 (defn drop-link-diff-parent
@@ -1143,9 +1143,9 @@
 
 
 (reg-event-fx
- :drop-link/diff
- (fn [_ [_ kind source source-parent target target-parent]]
-   {:dispatch [:transact (drop-link-diff-parent kind source source-parent target target-parent)]}))
+  :drop-link/diff
+  (fn [_ [_ kind source source-parent target target-parent]]
+    {:dispatch [:transact (drop-link-diff-parent kind source source-parent target target-parent)]}))
 
 
 (defn drop-child
