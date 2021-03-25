@@ -162,8 +162,12 @@
      :latex         (fn [text]
                       [:span {:ref (fn [el]
                                      (when el
-                                       (katex/render text el (clj->js
-                                                               {:throwOnError false}))))}])}
+                                       (try
+                                         (katex/render text el (clj->js
+                                                                 {:throwOnError false}))
+                                         (catch :default e
+                                           (js/console.warn "Unexpected KaTeX error" e)
+                                           (aset el "innerHTML" text)))))}])}
     tree))
 
 
