@@ -101,9 +101,6 @@
 
 (deftest parser-raw-url-tests
   (are [x y] (= x (parse-to-ast y))
-    [:block [:url-link {:url "https://example.com"} "https://example.com"]]
-    "https://example.com"
-
     ; Basic URLs in plain text
     [:block
      "First URL: "
@@ -123,6 +120,46 @@
              [:page-link "TODO"]]
      " " [:url-link {:url "https://example.com#fragment"} "https://example.com#fragment"]]
     "{{[[TODO]]}} https://example.com#fragment"))
+
+
+; Test cases for blocks that only contain a single raw URL that should be parsed
+; as a link. Those mostly test the URL parser.
+(deftest parser-lone-raw-url-tests
+  (are [url] (= [:block [:url-link {:url url} url]] (parse-to-ast url))
+    "https://example.com"
+    ; URL with path set to /.
+    "https://example.com/"
+    ; URL with text fragment (see https://web.dev/text-fragments/) that ends with a period.
+    "https://www.glassdoor.com/Interview/Would-you-rather-fight-1-horse-sized-duck-or-100-duck-sized-horses-QTN_1182586.htm#:~:text=I%20would%20rather%20fight%20100,would%20give%20you%20the%20advantage."
+    ; URL with fragment with slashes. Taken from https://github.com/athensresearch/athens/issues/650.
+    "https://roamresearch.com/#/app/Joihn_Morabito/page/vICT-WSGC"
+    ; Non-lowercase URLs. Taken from
+    ; https://en.wikipedia.org/wiki/Template:URL/testcases.
+    "HTTPS://www.EXAMPLE.cOm/"
+    "https://www.EXAMPLE.cOm"
+    "http://www.example.com?foo=BaR"
+    ; URL with port.
+    "http://www.example.com:8080"
+    ; URL with port, path and fragment.
+    "http://www.example.com:8080/test123#foobar"
+    ; URL with IP address.
+    "http://127.0.0.1"
+    ; URL with username and password.
+    "http://a:b@example.com"))
+
+; Tests for strings that should not be parsed as URLs.
+(deftest parser-lone-invalid-raw-url-tests
+  (are [text] (= [:block text] (parse-to-ast text))
+    ; URLs without host.
+    "http:///a"
+    "http://#"
+    "http://?"
+    "http://12345"
+    ; TODO(agentydragon): Also should not pass:
+    ;   http://0.0.0.0
+    ;   http://999.999.999.999
+    ; See https://mathiasbynens.be/demo/url-regex for more.
+    ))
 
 
 (deftest parser-url-link-tests
