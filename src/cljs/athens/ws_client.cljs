@@ -67,7 +67,7 @@
 (def config {:type     :auto
              :packer   :edn
              :protocol :http
-             :host     "localhost"
+             :host     "23.92.29.18"
              :port     3010})
 
 #_:clj-kondo/ignore
