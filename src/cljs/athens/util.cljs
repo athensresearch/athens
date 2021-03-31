@@ -45,16 +45,17 @@
 (defn scroll-if-needed
   ;; https://stackoverflow.com/a/45851497
   [element container]
-  (let [e-top (.. element -offsetTop)
-        e-height (.. element -offsetHeight)
-        e-bottom (+ e-top e-height)
-        cs-top (.. container -scrollTop)
-        c-height (.. container -offsetHeight)
-        cs-bottom (+ cs-top c-height)]
-    (->> (cond
-           (< e-top cs-top)       e-top
-           (< cs-bottom e-bottom) (- e-bottom c-height))
-         (scroll-top! container))))
+  (when (and element container)
+    (let [e-top (.. element -offsetTop)
+          e-height (.. element -offsetHeight)
+          e-bottom (+ e-top e-height)
+          cs-top (.. container -scrollTop)
+          c-height (.. container -offsetHeight)
+          cs-bottom (+ cs-top c-height)]
+      (->> (cond
+             (< e-top cs-top)       e-top
+             (< cs-bottom e-bottom) (- e-bottom c-height))
+           (scroll-top! container)))))
 
 
 (defn mouse-offset
@@ -79,11 +80,12 @@
 (defn is-beyond-rect?
   "Checks if any part of the element is above or below the container's bounding rect"
   [element container]
-  (let [el-box (.. element getBoundingClientRect)
-        cont-box (.. container getBoundingClientRect)]
-    (or
-      (> (.. el-box -bottom) (.. cont-box -bottom))
-      (< (.. el-box -top) (.. cont-box -top)))))
+  (when (and element container)
+    (let [el-box (.. element getBoundingClientRect)
+          cont-box (.. container getBoundingClientRect)]
+      (or
+        (> (.. el-box -bottom) (.. cont-box -bottom))
+        (< (.. el-box -top) (.. cont-box -top))))))
 
 
 (defn scroll-into-view [element container align-top?]
