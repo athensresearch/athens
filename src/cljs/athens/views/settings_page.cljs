@@ -124,7 +124,6 @@
            [:h5 "Opted Into Analytics"])
          [:div {:style {:margin "10px 0"}}
           [button {:primary  (false? @opted-out?)
-                   :disabled (not @authed?)
                    :on-click #(handle-click opted-out?)}
            (if @opted-out?
              [:div {:style {:display "flex"}}
