@@ -235,7 +235,7 @@
 
 
 (def roam-node-document-pull-vector
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :create/time :edit/time :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
 (defn get-block-document
@@ -632,4 +632,3 @@
     (d/pull db selector id)
     (catch js/Error _e
       nil)))
-
