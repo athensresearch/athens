@@ -17,6 +17,7 @@
 .idea/
 
 .clj-kondo/.cache
+.lsp/
 
 # cache directory for dependencies installed with deps.edn
 .cpcache

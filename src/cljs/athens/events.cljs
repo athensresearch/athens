@@ -1062,6 +1062,92 @@
       (unindent-multi uids context-root-uid))))
 
 
+(defn drop-link-child
+  "Create a new block with the reference to the source block, as a child"
+  [source target]
+  (let [new-uid               (gen-block-uid)
+        new-string            (str "((" (source :block/uid) "))")
+        new-source-block      {:block/uid new-uid :block/string new-string :block/order 0 :block/open true}
+        reindex-target-parent (inc-after (:db/id target) -1)
+        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
+        tx-data               [new-source-block
+                               new-target-parent]]
+    tx-data))
+
+
+(reg-event-fx
+  :drop-link/child
+  (fn [_ [_ source target]]
+    {:dispatch [:transact (drop-link-child source target)]}))
+
+
+(defn drop-link-same-parent
+  "Create a new block with the reference to the source block, under the same parent as the source"
+  [kind source parent target]
+  (let [new-uid             (gen-block-uid)
+        new-string          (str "((" (source :block/uid) "))")
+        s-order             (:block/order source)
+        t-order             (:block/order target)
+        target-above?       (< t-order s-order)
+        +or-                (if target-above? + -)
+        above?                (= kind :above)
+        below?                (= kind :below)
+        lower-bound         (cond
+                              (and above? target-above?) (dec t-order)
+                              (and below? target-above?) t-order
+                              :else s-order)
+        upper-bound         (cond
+                              (and above? (not target-above?)) t-order
+                              (and below? (not target-above?)) (inc t-order)
+                              :else s-order)
+        reindex             (d/q '[:find ?ch ?new-order
+                                   :keys db/id block/order
+                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
+                                   :where
+                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+                                   [(?+or- ?order 1) ?new-order]]
+                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
+        new-source-order    (cond
+                              (and above? target-above?) t-order
+                              (and above? (not target-above?)) (dec t-order)
+                              (and below? target-above?) (inc t-order)
+                              (and below? (not target-above?)) t-order)
+        new-source-block      {:block/uid new-uid :block/string new-string :block/order new-source-order}
+        new-parent-children (concat [new-source-block] reindex)
+        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
+        tx-data             [new-parent]]
+    tx-data))
+
+
+(reg-event-fx
+  :drop-link/same
+  (fn [_ [_ kind source parent target]]
+    {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
+
+
+(defn drop-link-diff-parent
+  "Add a link to the source block and reorder the target"
+  [kind source target target-parent]
+  (let [new-uid             (gen-block-uid)
+        new-string          (str "((" (source :block/uid) "))")
+        t-order               (:block/order target)
+        new-block             {:block/uid new-uid :block/string new-string :block/order (if (= kind :above)
+                                                                                          t-order
+                                                                                          (inc t-order))}
+        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
+                                                                       (dec t-order)
+                                                                       t-order))
+                                   (concat [new-block]))
+        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
+    [new-target-parent]))
+
+
+(reg-event-fx
+  :drop-link/diff
+  (fn [_ [_ kind source target target-parent]]
+    {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
+
+
 (defn drop-child
   "Order will always be 0"
   [source source-parent target]
@@ -1161,23 +1247,26 @@
 
 
 (defn drop-bullet
-  [source-uid target-uid kind]
+  [source-uid target-uid kind effect-allowed]
   (let [source        (db/get-block [:block/uid source-uid])
         target        (db/get-block [:block/uid target-uid])
         source-parent (db/get-parent [:block/uid source-uid])
         target-parent (db/get-parent [:block/uid target-uid])
         same-parent?  (= source-parent target-parent)
         event         (cond
-                        (= kind :child) [:drop/child source source-parent target]
-                        same-parent? [:drop/same kind source source-parent target]
-                        (not same-parent?) [:drop/diff kind source source-parent target target-parent])]
+                        (and (= effect-allowed "move") (= kind :child)) [:drop/child source source-parent target]
+                        (and (= effect-allowed "move") same-parent?) [:drop/same kind source source-parent target]
+                        (and (= effect-allowed "move") (not same-parent?)) [:drop/diff kind source source-parent target target-parent]
+                        (and (= effect-allowed "link") (= kind :child)) [:drop-link/child source target]
+                        (and (= effect-allowed "link") same-parent?) [:drop-link/same kind source source-parent target]
+                        (and (= effect-allowed "link") (not same-parent?)) [:drop-link/diff kind source target target-parent])]
     {:dispatch event}))
 
 
 (reg-event-fx
   :drop
-  (fn [_ [_ source-uid target-uid kind]]
-    (drop-bullet source-uid target-uid kind)))
+  (fn [_ [_ source-uid target-uid kind effect-allowed]]
+    (drop-bullet source-uid target-uid kind effect-allowed)))
 
 
 (defn drop-multi-same-parent-all

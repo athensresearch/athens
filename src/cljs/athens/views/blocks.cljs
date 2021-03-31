@@ -670,7 +670,8 @@
 (defn bullet-drag-start
   "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
   [e uid state]
-  (set! (.. e -dataTransfer -effectAllowed) "move")
+  (let [effect-allowed (if (.. e -shiftKey) "link" "move")]
+    (set! (.. e -dataTransfer -effectAllowed) effect-allowed))
   (.. e -dataTransfer (setData "text/plain" (-> uid db/uid-and-embed-id first)))
   (swap! state assoc :dragging true))
 
@@ -793,7 +794,8 @@
 
         valid-text-drop     (and (not (nil? drag-target))
                                  (not= source-uid target-uid)
-                                 (= effect-allowed "move"))
+                                 (or (= effect-allowed "link")
+                                     (= effect-allowed "move")))
         selected-items @(subscribe [:selected/items])]
 
     (cond
@@ -801,7 +803,7 @@
                                      (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
-                                           (dispatch [:drop source-uid target-uid drag-target])
+                                           (dispatch [:drop source-uid target-uid drag-target effect-allowed])
                                            (dispatch [:drop-multi selected-items target-uid drag-target]))))
 
     (dispatch [:mouse-down/unset])
