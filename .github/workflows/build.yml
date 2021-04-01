@@ -198,7 +198,7 @@ jobs:
              ${{ runner.os }}-yarn-
 
        - name: Fetch yarn
-         run: yarn install --frozen-lockfile
+         run: yarn install --frozen-lockfile --network-timeout 100000
 
        - name: Prepare for app notarization (macOS)
          if: startsWith(matrix.os, 'macos')
