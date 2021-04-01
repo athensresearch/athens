@@ -116,6 +116,10 @@ Datahike in Solid but it would nullify the linked data benefit of Solid because
 then we'd not store the semantic structure of data in Athens, rather the DAG
 structure of the DB. so just keep eye open for potential future integration.
 
+TODO: benefit of Solid is that there's already a bunch of pod hosting services;
+if backed by Solid, Athens would not have to maintain any infrastructure, just
+let users run on whatever pod they want (including self-hosted)
+
 ### TODO: fill more alternatives
 
 TODO: create overall table of alternatives considered X criteria
@@ -125,3 +129,7 @@ Rai's ideas:
 * Replikativ
   * Replikativ backed by IPFS (should be possible, there's at least one demo of
     it)
+
+## Decision
+
+TODO: we decided to implement it [this way] because [these reasons]
