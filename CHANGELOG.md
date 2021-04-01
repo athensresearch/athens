@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.62](https://github.com/athensresearch/athens/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2021-04-01)
+
+
+### Features
+
+* **block-ref:** shift + "Drag'n'Drop" to copy block uid ([#876](https://github.com/athensresearch/athens/issues/876)) ([613b244](https://github.com/athensresearch/athens/commit/613b244a1ecc696d5fbd6e885f7e47f0c4e69ff4))
+
+
+### Bug Fixes
+
+* url to changelog ([#896](https://github.com/athensresearch/athens/issues/896)) ([241f1fd](https://github.com/athensresearch/athens/commit/241f1fdfa2d56726d3d87eb95193ffc9e9858858))
+* **athena:** make sure element exists before scroll ([#877](https://github.com/athensresearch/athens/issues/877)) ([32ae526](https://github.com/athensresearch/athens/commit/32ae52623841ebd499f4106167c24535005e5f4a))
+* catch all KaTeX errors ([#871](https://github.com/athensresearch/athens/issues/871)) ([e37a50c](https://github.com/athensresearch/athens/commit/e37a50cc436e108d9317160b835cb9a02d95844b))
+* **parser:** parse some edge case URLs ([#838](https://github.com/athensresearch/athens/issues/838)) ([1d20057](https://github.com/athensresearch/athens/commit/1d200577f61702dc31a85f582be28899beaf7da2))
+
 ## [1.0.0-beta.61](https://github.com/athensresearch/athens/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2021-03-25)
 
 
