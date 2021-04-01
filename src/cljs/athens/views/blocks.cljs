@@ -17,6 +17,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
+    [clojure.string :as string]
     [com.rpl.specter :as s]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
@@ -24,8 +25,7 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [clojure.string :as string])
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       EventType)))
@@ -719,8 +719,8 @@
   "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
   [s]
   (-> s
-      (clojure.string/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
-      (clojure.string/replace #"\[\[([^\[\]]+)\]\]" "$1")))
+      (string/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
+      (string/replace #"\[\[([^\[\]]+)\]\]" "$1")))
 
 
 (defn block-refs-to-plain-text
@@ -742,29 +742,32 @@
         (if (empty? replacements)
           s
           (recur (rest replacements)
-                 (clojure.string/replace s fir sec)))))))
+                 (string/replace s fir sec)))))))
 
 
-(defn walk-str
-  "Four spaces per depth level."
+(defn unformat-walk-str
+  "Same as walk-str in athens.listeners, except unformats double brackets, turns block refs into plain text, and does not add hyphens."
   [depth node]
   (let [{:block/keys [string children]} node
-        left-offset   (apply str (repeat depth "    "))
-        walk-children (apply str (map #(walk-str (inc depth) %) children))
+        left-offset        (apply str (repeat depth "    "))
+        walk-children      (apply str (map #(unformat-walk-str (inc depth) %) children))
         unformatted-string (-> string unformat-double-brackets block-refs-to-plain-text)]
     (str left-offset unformatted-string "\n" walk-children)))
 
 
 (defn handle-copy-unformatted
-  [^js e _uid state]
+  [^js e uid state]
   (let [uids @(subscribe [:selected/items])]
-    (when (not-empty uids)
+    (if (empty? uids)
+      (let [block (db/get-block-document [:block/uid uid])
+            data (unformat-walk-str 0 block)]
+        (.. js/navigator -clipboard (writeText data)))
       (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                      (map #(walk-str 0 %))
+                      (map #(unformat-walk-str 0 %))
                       (apply str))]
-        (.. e preventDefault)
-        (.. js/navigator -clipboard (writeText data))
-        (swap! state assoc :context-menu/show false)))))
+        (.. js/navigator -clipboard (writeText data)))))
+  (.. e preventDefault)
+  (swap! state assoc :context-menu/show false))
 
 
 (defn context-menu-el
