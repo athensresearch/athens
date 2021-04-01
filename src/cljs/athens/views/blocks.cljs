@@ -659,13 +659,11 @@
   "Handle right click. If no blocks are selected, just give option for copying current block's uid."
   [e _uid state]
   (.. e preventDefault)
-  (let [selected-blocks @(subscribe [:selected/items])
-        rect (.. e -target getBoundingClientRect)
-        show-type (if (empty? selected-blocks) :one :many)]
+  (let [rect (.. e -target getBoundingClientRect)]
     (swap! state assoc
-           :context-menu/x    (.. rect -left)
-           :context-menu/y    (.. rect -bottom)
-           :context-menu/show show-type)))
+           :context-menu/x (.. rect -left)
+           :context-menu/y (.. rect -bottom)
+           :context-menu/show true)))
 
 
 (defn bullet-drag-start
@@ -702,15 +700,14 @@
 
 (defn copy-refs-mouse-down
   [_ uid state]
-  (let [{:context-menu/keys [show]} @state
-        selected-items @(subscribe [:selected/items])
+  (let [selected-items @(subscribe [:selected/items])
         ;; use this when using datascript-transit
         ;uids (map (fn [x] [:block/uid x]) selected-items)
         ;blocks (d/pull-many @db/dsdb '[*] ids)
-        data (case show
-               :one (str "((" uid "))")
-               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                          (str/join "")))]
+        data           (if (empty? selected-items)
+                         (str "((" uid "))")
+                         (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                              (str/join "")))]
     (.. js/navigator -clipboard (writeText data))
     (swap! state assoc :context-menu/show false)))
 
@@ -726,23 +723,23 @@
 (defn block-refs-to-plain-text
   "If there is a valid ((uid)), find the original block's string.
   If invalid ((uid)), no-op.
-  If deep block ref, does not convert deep block ref to plain-text."
+  TODO: If deep block ref, convert deep block ref to plain-text."
   [s]
-  (let [replacements (->>
-                       (re-seq #"\(\(([^\(\)]+)\)\)" s)
-                       (map (fn [[orig-str match-str]]
-                              (let [eid (db/e-by-av :block/uid match-str)]
-                                (if eid
-                                  [orig-str (db/v-by-ea eid :block/string)]
-                                  [orig-str (str "((" match-str "))")])))))]
+  (let [replacements (->> s
+                          (re-seq #"\(\(([^\(\)]+)\)\)")
+                          (map (fn [[orig-str match-str]]
+                                 (let [eid (db/e-by-av :block/uid match-str)]
+                                   (if eid
+                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]
-      (let [fir (first (first replacements))
-            sec (second (first replacements))]
+      (let [orig-str    (first (first replacements))
+            replace-str (second (first replacements))]
         (if (empty? replacements)
           s
           (recur (rest replacements)
-                 (string/replace s fir sec)))))))
+                 (string/replace s orig-str replace-str)))))))
 
 
 (defn unformat-walk-str
@@ -784,7 +781,8 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
                                  (let [{:block/keys [uid]} block
-                                       {:context-menu/keys [show x y]} @state]
+                                       {:context-menu/keys [x y show]} @state
+                                       selected-items @(subscribe [:selected/items])]
                                    (when show
                                      [:div (merge (use-style dropdown-style
                                                              {:ref #(reset! ref %)})
@@ -793,9 +791,9 @@
                                                            :top      (str y "px")}})
                                       [:div (use-style menu-style)
                                        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-                                        (case show
-                                          :one "Copy block ref"
-                                          :many "Copy block refs")]
+                                        (if (empty? selected-items)
+                                          "Copy block ref"
+                                          "Copy block refs")]
                                        [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
                                         "Copy unformatted"]]])))})))
 
