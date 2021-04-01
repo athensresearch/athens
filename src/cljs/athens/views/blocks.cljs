@@ -658,13 +658,11 @@
   "Handle right click. If no blocks are selected, just give option for copying current block's uid."
   [e _uid state]
   (.. e preventDefault)
-  (let [selected-blocks @(subscribe [:selected/items])
-        rect (.. e -target getBoundingClientRect)
-        show-type (if (empty? selected-blocks) :one :many)]
+  (let [rect (.. e -target getBoundingClientRect)]
     (swap! state assoc
-           :context-menu/x    (.. rect -left)
-           :context-menu/y    (.. rect -bottom)
-           :context-menu/show show-type)))
+           :context-menu/x (.. rect -left)
+           :context-menu/y (.. rect -bottom)
+           :context-menu/show true)))
 
 
 (defn bullet-drag-start
@@ -701,17 +699,71 @@
 
 (defn copy-refs-mouse-down
   [_ uid state]
-  (let [{:context-menu/keys [show]} @state
-        selected-items @(subscribe [:selected/items])
+  (let [selected-items @(subscribe [:selected/items])
         ;; use this when using datascript-transit
         ;uids (map (fn [x] [:block/uid x]) selected-items)
         ;blocks (d/pull-many @db/dsdb '[*] ids)
-        data (case show
-               :one (str "((" uid "))")
-               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                          (str/join "")))]
+        data           (if (empty? selected-items)
+                         (str "((" uid "))")
+                         (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                              (str/join "")))]
     (.. js/navigator -clipboard (writeText data))
     (swap! state assoc :context-menu/show false)))
+
+
+(defn unformat-double-brackets
+  "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
+  [s]
+  (-> s
+      (str/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
+      (str/replace #"\[\[([^\[\]]+)\]\]" "$1")))
+
+
+(defn block-refs-to-plain-text
+  "If there is a valid ((uid)), find the original block's string.
+  If invalid ((uid)), no-op.
+  TODO: If deep block ref, convert deep block ref to plain-text."
+  [s]
+  (let [replacements (->> s
+                          (re-seq #"\(\(([^\(\)]+)\)\)")
+                          (map (fn [[orig-str match-str]]
+                                 (let [eid (db/e-by-av :block/uid match-str)]
+                                   (if eid
+                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" match-str "))")])))))]
+    (loop [replacements replacements
+           s            s]
+      (let [orig-str    (first (first replacements))
+            replace-str (second (first replacements))]
+        (if (empty? replacements)
+          s
+          (recur (rest replacements)
+                 (str/replace s orig-str replace-str)))))))
+
+
+(defn unformat-walk-str
+  "Same as walk-str in athens.listeners, except unformats double brackets, turns block refs into plain text, and does not add hyphens."
+  [depth node]
+  (let [{:block/keys [string children]} node
+        left-offset        (apply str (repeat depth "    "))
+        walk-children      (apply str (map #(unformat-walk-str (inc depth) %) children))
+        unformatted-string (-> string unformat-double-brackets block-refs-to-plain-text)]
+    (str left-offset unformatted-string "\n" walk-children)))
+
+
+(defn handle-copy-unformatted
+  [^js e uid state]
+  (let [uids @(subscribe [:selected/items])]
+    (if (empty? uids)
+      (let [block (db/get-block-document [:block/uid uid])
+            data (unformat-walk-str 0 block)]
+        (.. js/navigator -clipboard (writeText data)))
+      (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                      (map #(unformat-walk-str 0 %))
+                      (apply str))]
+        (.. js/navigator -clipboard (writeText data)))))
+  (.. e preventDefault)
+  (swap! state assoc :context-menu/show false))
 
 
 (defn context-menu-el
@@ -728,7 +780,8 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
                                  (let [{:block/keys [uid]} block
-                                       {:context-menu/keys [show x y]} @state]
+                                       {:context-menu/keys [x y show]} @state
+                                       selected-items @(subscribe [:selected/items])]
                                    (when show
                                      [:div (merge (use-style dropdown-style
                                                              {:ref #(reset! ref %)})
@@ -736,11 +789,12 @@
                                                            :left     (str x "px")
                                                            :top      (str y "px")}})
                                       [:div (use-style menu-style)
-                                       ;; TODO: create listener that lets user exit context menu if click outside
                                        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-                                        (case show
-                                          :one "Copy block ref"
-                                          :many "Copy block refs")]]])))})))
+                                        (if (empty? selected-items)
+                                          "Copy block ref"
+                                          "Copy block refs")]
+                                       [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
+                                        "Copy unformatted"]]])))})))
 
 
 (defn block-refs-count-el
