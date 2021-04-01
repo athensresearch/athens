@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.63](https://github.com/athensresearch/athens/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2021-04-01)
+
+
+### Features
+
+* **copy:** right-click to copy without formatting ([#897](https://github.com/athensresearch/athens/issues/897)) ([d994f66](https://github.com/athensresearch/athens/commit/d994f664032a0ac5e1643f1974a6504a8e2f9211))
+
+
+* increase network request timeout ([#899](https://github.com/athensresearch/athens/issues/899)) ([a224c23](https://github.com/athensresearch/athens/commit/a224c23791f8d5b5f03507e8fac5917a34608130))
+
 ## [1.0.0-beta.62](https://github.com/athensresearch/athens/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2021-04-01)
 
 
