@@ -210,7 +210,7 @@ If all goes well, now you can see documentation of symbols (binding: K), go to d
 
 # Using re-frame-10x
 
-The right sidebar has [`re-frame-10x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `ctrl-h`, but you must not be focused on a block (ctrl-h has a specific action in some operating systems).
+The right sidebar has [`re-frame-10x`](https://github.com/day8/re-frame-10x/tree/master/src/day8) developer tools. You can toggle it open and close with `Ctrl+T`, but you must not be focused on a block.
 
 Once you have 10x open, you can hover over blocks' bullets to see some of their datascript data.
 
