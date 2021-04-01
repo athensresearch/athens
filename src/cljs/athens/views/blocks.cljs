@@ -17,7 +17,6 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
-    [clojure.string :as string]
     [com.rpl.specter :as s]
     [garden.selectors :as selectors]
     [goog.dom.classlist :refer [contains]]
@@ -716,8 +715,8 @@
   "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
   [s]
   (-> s
-      (string/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
-      (string/replace #"\[\[([^\[\]]+)\]\]" "$1")))
+      (str/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
+      (str/replace #"\[\[([^\[\]]+)\]\]" "$1")))
 
 
 (defn block-refs-to-plain-text
@@ -739,7 +738,7 @@
         (if (empty? replacements)
           s
           (recur (rest replacements)
-                 (string/replace s orig-str replace-str)))))))
+                 (str/replace s orig-str replace-str)))))))
 
 
 (defn unformat-walk-str
