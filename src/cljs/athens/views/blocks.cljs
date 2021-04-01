@@ -24,7 +24,8 @@
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+    [stylefy.core :as stylefy :refer [use-style]]
+    [clojure.string :as string])
   (:import
     (goog.events
       EventType)))
@@ -714,6 +715,58 @@
     (swap! state assoc :context-menu/show false)))
 
 
+(defn unformat-double-brackets
+  "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
+  [s]
+  (-> s
+      (clojure.string/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
+      (clojure.string/replace #"\[\[([^\[\]]+)\]\]" "$1")))
+
+
+(defn block-refs-to-plain-text
+  "If there is a valid ((uid)), find the original block's string.
+  If invalid ((uid)), no-op.
+  If deep block ref, does not convert deep block ref to plain-text."
+  [s]
+  (let [replacements (->>
+                       (re-seq #"\(\(([^\(\)]+)\)\)" s)
+                       (map (fn [[orig-str match-str]]
+                              (let [eid (db/e-by-av :block/uid match-str)]
+                                (if eid
+                                  [orig-str (db/v-by-ea eid :block/string)]
+                                  [orig-str (str "((" match-str "))")])))))]
+    (loop [replacements replacements
+           s            s]
+      (let [fir (first (first replacements))
+            sec (second (first replacements))]
+        (if (empty? replacements)
+          s
+          (recur (rest replacements)
+                 (clojure.string/replace s fir sec)))))))
+
+
+(defn walk-str
+  "Four spaces per depth level."
+  [depth node]
+  (let [{:block/keys [string children]} node
+        left-offset   (apply str (repeat depth "    "))
+        walk-children (apply str (map #(walk-str (inc depth) %) children))
+        unformatted-string (-> string unformat-double-brackets block-refs-to-plain-text)]
+    (str left-offset unformatted-string "\n" walk-children)))
+
+
+(defn handle-copy-unformatted
+  [^js e _uid state]
+  (let [uids @(subscribe [:selected/items])]
+    (when (not-empty uids)
+      (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                      (map #(walk-str 0 %))
+                      (apply str))]
+        (.. e preventDefault)
+        (.. js/navigator -clipboard (writeText data))
+        (swap! state assoc :context-menu/show false)))))
+
+
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
   [_block state]
@@ -736,11 +789,12 @@
                                                            :left     (str x "px")
                                                            :top      (str y "px")}})
                                       [:div (use-style menu-style)
-                                       ;; TODO: create listener that lets user exit context menu if click outside
                                        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
                                         (case show
                                           :one "Copy block ref"
-                                          :many "Copy block refs")]]])))})))
+                                          :many "Copy block refs")]
+                                       [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
+                                        "Copy unformatted"]]])))})))
 
 
 (defn block-refs-count-el
