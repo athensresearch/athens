@@ -36,15 +36,22 @@ backend.
 
 ### Self-hostable
 
-TODO: we want to continue allowing anyone to use Athens
+The backend should not depend on closed-source software or code whose license is
+incompatible with the [Eclipse Public License version 1](https://en.wikipedia.org/wiki/Eclipse_Public_License) (which Athens uses).
+The easier the backend is to self-host, the better. Some backends might not even
+require a running server, which is a point in their favor.
 
 ### Scaling
 
 TODO: needs to scale to O(1000) pages, no need to scale to O(1 million) pages
 
-### Datascript-like interface
+### Datomic-like interface
 
-TODO: it's good to have because Clojurists know it
+Athens currently uses [DataScript](https://github.com/tonsky/datascript) as its
+database. Its philosophy is based on Datomic, which is a major Clojure project
+and many Clojurists are familiar with it. Backends that provide a Datomic-like
+interface get bonus points, because they don't ask existing Clojurists familiar
+with Datomic to learn a new language to talk to the database.
 
 ### Offline editing
 
@@ -56,8 +63,24 @@ access, even if we start out only supporting online writing.
 
 ### Bandwidth
 
-TODO: would be nice if it does not require you to download whole db on each
-open; Roam is kind of slowed down by this, Rai believes.
+If the system needs to download the whole graph before working, it's probably
+not going to scale well to larger graphs - especially on phones. Currently,
+Athens database stores all history. As a data point, [Rai][rai]'s
+`index.transit` with 1 month of usage has ~800 kB. [Rai][rai] believes this is
+a scaling bottleneck Roam Research has hit at some point.
+
+In terms of saving bandwidth:
+
+* (1) "downloading whole database on client start" is worse than
+* (2) "downloading changes since last sync on client start", which is worse than
+* (3) "downloading chunks of database as they are needed".
+
+(2) would imply that the first start of each client would be slow, but
+subsequent starts might be faster. The client would also need to store the whole
+database locally, which might become an issue with really big databases.
+
+Compared to (2), (3) would let clients have a faster first start, and
+potentially store less data locally.
 
 ### Decision reversibility
 
@@ -191,3 +214,5 @@ Rai's ideas:
 ## Decision
 
 TODO: we decided to implement it [this way] because [these reasons]
+
+[rai]: http://agentydragon.com/about.html
