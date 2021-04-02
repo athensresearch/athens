@@ -13,13 +13,24 @@ backend.
 
 ## Design goals
 
-* Allowing one user to use a database on multiple devices
+* Allowing one user to use a graph on multiple devices
+  * Potentially: small group of trusted users on one graph
+* One graph per server
 
 ## Design non-goals
 
-* Multiplayer; TODO: clarify
-* Hosting a backend for multiple users (i.e., "Athens as a service"); not
-  included as a goal due to extra privacy/security considerations.
+* SaaS
+  * We assume that the user trusts the server (i.e., runs the server for their
+    graph, or trust whoever runs the server). The database does not have to be
+    opaque/secret to the server. It's OK if the server can read or alter the
+    database.
+  * Eventual SaaS design will need to solve this and other security/privacy
+    considerations.
+* Massive multiplayer
+  * We are not designing for more than, say, 10 users on a graph.
+* Fine-grained authorization
+  * An authenticated user will have read/write access to the whole database. We
+    will not, for example, have ACLs.
 
 ## Requirements
 
