@@ -5,6 +5,7 @@
     [athens.util :as util]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch subscribe]])
   (:import
@@ -110,13 +111,57 @@
 
 ;; -- Clipboard ----------------------------------------------------------
 
-(defn walk-str
+(defn unformat-double-brackets
+  "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
+  [s]
+  (-> s
+      (string/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
+      (string/replace #"\[\[([^\[\]]+)\]\]" "$1")))
+
+
+(defn block-refs-to-plain-text
+  "If there is a valid ((uid)), find the original block's string.
+  If invalid ((uid)), no-op.
+  TODO: If deep block ref, convert deep block ref to plain-text.
+
+  Want to put this in athens.util, but circular dependency from athens.db"
+  [s]
+  (let [replacements (->> s
+                          (re-seq #"\(\(([^\(\)]+)\)\)")
+                          (map (fn [[orig-str match-str]]
+                                 (let [eid (db/e-by-av :block/uid match-str)]
+                                   (if eid
+                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" match-str "))")])))))]
+    (loop [replacements replacements
+           s            s]
+      (let [orig-str    (first (first replacements))
+            replace-str (second (first replacements))]
+        (if (empty? replacements)
+          s
+          (recur (rest replacements)
+                 (clojure.string/replace s orig-str replace-str)))))))
+
+
+(defn blocks-to-clipboard-data
   "Four spaces per depth level."
-  [depth node]
-  (let [{:block/keys [string children]} node
-        left-offset   (apply str (repeat depth "    "))
-        walk-children (apply str (map #(walk-str (inc depth) %) children))]
-    (str left-offset "- " string "\n" walk-children)))
+  ([depth node]
+   (blocks-to-clipboard-data depth node false))
+  ([depth node unformat?]
+   (let [{:block/keys [string children header]} node
+         left-offset   (apply str (repeat depth "    "))
+         walk-children (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?) children))
+         string (let [header-to-str (case header
+                                      1 "# "
+                                      2 "## "
+                                      3 "### "
+                                      "")]
+                  (str header-to-str string))
+         string (if unformat?
+                  (-> string unformat-double-brackets athens.listeners/block-refs-to-plain-text)
+                  string)
+         dash (if unformat? "" "- ")]
+     (str left-offset dash string "\n" walk-children))))
 
 
 (defn copy
@@ -126,7 +171,7 @@
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
       (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                           (map #(walk-str 0 %))
+                           (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
         (.. e -event_ -clipboardData (setData "text/plain" copy-data))))))
@@ -138,7 +183,7 @@
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
       (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                           (map #(walk-str 0 %))
+                           (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
         (.. e -event_ -clipboardData (setData "text/plain" copy-data))

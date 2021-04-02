@@ -308,7 +308,7 @@
         start?          (block-start? e)
         end?            (block-end? e)
         {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight)
+        textarea-height (.. target -offsetHeight) ;; this height is accurate, but caret-position height is not updating
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
         row             (js/Math.ceil (/ top height))
@@ -317,7 +317,8 @@
         up?             (= key-code KeyCodes.UP)
         down?           (= key-code KeyCodes.DOWN)
         left?           (= key-code KeyCodes.LEFT)
-        right?          (= key-code KeyCodes.RIGHT)]
+        right?          (= key-code KeyCodes.RIGHT)
+        header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -357,12 +358,15 @@
       selection? nil
 
       ;; Else: navigate across blocks
+      ;; FIX: always navigates up or down for header because get-caret-position for some reason returns the wrong value for top
       (or (and up? top-row?)
-          (and left? start?)) (do (.. e preventDefault)
-                                  (dispatch [:up uid]))
+          (and left? start?)
+          (and up? header)) (do (.. e preventDefault)
+                                (dispatch [:up uid]))
       (or (and down? bottom-row?)
-          (and right? end?)) (do (.. e preventDefault)
-                                 (dispatch [:down uid])))))
+          (and right? end?)
+          (and down? header)) (do (.. e preventDefault)
+                                  (dispatch [:down uid])))))
 
 
 ;;; Tab

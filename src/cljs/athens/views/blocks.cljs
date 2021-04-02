@@ -8,6 +8,7 @@
                                 auto-complete-inline
                                 auto-complete-slash
                                 textarea-key-down]]
+    [athens.listeners :as listeners]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -624,11 +625,16 @@
   is-editing can be used for shift up/down, so it is used in both editing and selection."
   [_ _]
   (fn [block state]
-    (let [{:block/keys [uid original-uid]} block
+    (let [{:block/keys [uid original-uid header]} block
           {:string/keys [local]} @state
           is-editing @(subscribe [:editing/is-editing uid])
-          selected-items @(subscribe [:selected/items])]
-      [:div {:class "block-content"}
+          selected-items @(subscribe [:selected/items])
+          font-size (case header
+                      1 "2.1em"
+                      2 "1.7em"
+                      3 "1.3em"
+                      "1em")]
+      [:div {:class "block-content" :style {:font-size font-size}}
        [autosize/textarea {:value          (:string/local @state)
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            ;;:auto-focus     true
@@ -665,19 +671,18 @@
   "Handle right click. If no blocks are selected, just give option for copying current block's uid."
   [e _uid state]
   (.. e preventDefault)
-  (let [selected-blocks @(subscribe [:selected/items])
-        rect (.. e -target getBoundingClientRect)
-        show-type (if (empty? selected-blocks) :one :many)]
+  (let [rect (.. e -target getBoundingClientRect)]
     (swap! state assoc
-           :context-menu/x    (.. rect -left)
-           :context-menu/y    (.. rect -bottom)
-           :context-menu/show show-type)))
+           :context-menu/x (.. rect -left)
+           :context-menu/y (.. rect -bottom)
+           :context-menu/show true)))
 
 
 (defn bullet-drag-start
   "Begin drag event: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_the_drags_data"
   [e uid state]
-  (set! (.. e -dataTransfer -effectAllowed) "move")
+  (let [effect-allowed (if (.. e -shiftKey) "link" "move")]
+    (set! (.. e -dataTransfer -effectAllowed) effect-allowed))
   (.. e -dataTransfer (setData "text/plain" (-> uid db/uid-and-embed-id first)))
   (swap! state assoc :dragging true))
 
@@ -707,17 +712,32 @@
 
 (defn copy-refs-mouse-down
   [_ uid state]
-  (let [{:context-menu/keys [show]} @state
-        selected-items @(subscribe [:selected/items])
+  (let [selected-items @(subscribe [:selected/items])
         ;; use this when using datascript-transit
         ;uids (map (fn [x] [:block/uid x]) selected-items)
         ;blocks (d/pull-many @db/dsdb '[*] ids)
-        data (case show
-               :one (str "((" uid "))")
-               :many (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
-                          (str/join "")))]
+        data           (if (empty? selected-items)
+                         (str "((" uid "))")
+                         (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
+                              (str/join "")))]
     (.. js/navigator -clipboard (writeText data))
     (swap! state assoc :context-menu/show false)))
+
+
+(defn handle-copy-unformatted
+  "If copying only a single block, dissoc children to not copy subtree."
+  [^js e uid state]
+  (let [uids @(subscribe [:selected/items])]
+    (if (empty? uids)
+      (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
+            data  (listeners/blocks-to-clipboard-data 0 block true)]
+        (.. js/navigator -clipboard (writeText data)))
+      (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
+                      (map #(listeners/blocks-to-clipboard-data 0 % true))
+                      (apply str))]
+        (.. js/navigator -clipboard (writeText data)))))
+  (.. e preventDefault)
+  (swap! state assoc :context-menu/show false))
 
 
 (defn context-menu-el
@@ -734,7 +754,8 @@
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
                                  (let [{:block/keys [uid]} block
-                                       {:context-menu/keys [show x y]} @state]
+                                       {:context-menu/keys [x y show]} @state
+                                       selected-items @(subscribe [:selected/items])]
                                    (when show
                                      [:div (merge (use-style dropdown-style
                                                              {:ref #(reset! ref %)})
@@ -742,11 +763,12 @@
                                                            :left     (str x "px")
                                                            :top      (str y "px")}})
                                       [:div (use-style menu-style)
-                                       ;; TODO: create listener that lets user exit context menu if click outside
                                        [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-                                        (case show
-                                          :one "Copy block ref"
-                                          :many "Copy block refs")]]])))})))
+                                        (if (empty? selected-items)
+                                          "Copy block ref"
+                                          "Copy block refs")]
+                                       [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
+                                        "Copy unformatted"]]])))})))
 
 
 (defn block-refs-count-el
@@ -800,7 +822,8 @@
 
         valid-text-drop     (and (not (nil? drag-target))
                                  (not= source-uid target-uid)
-                                 (= effect-allowed "move"))
+                                 (or (= effect-allowed "link")
+                                     (= effect-allowed "move")))
         selected-items @(subscribe [:selected/items])]
 
     (cond
@@ -808,7 +831,7 @@
                                      (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
-                                           (dispatch [:drop source-uid target-uid drag-target])
+                                           (dispatch [:drop source-uid target-uid drag-target effect-allowed])
                                            (dispatch [:drop-multi selected-items target-uid drag-target]))))
 
     (dispatch [:mouse-down/unset])
