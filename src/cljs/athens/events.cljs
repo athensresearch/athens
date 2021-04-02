@@ -1458,7 +1458,8 @@
 (defn text-to-blocks
   [text uid root-order]
   (let [;; Split raw text by line
-        lines       (clojure.string/split-lines text)
+        lines       (->> (clojure.string/split-lines text)
+                         (filter (comp not clojure.string/blank?)))
         ;; Count left offset
         left-counts (->> lines
                          (map #(re-find #"^\s*(-|\*)?" %))
@@ -1468,10 +1469,18 @@
                          lines)
         ;; Generate blocks with tempids
         blocks      (map-indexed (fn [idx x]
-                                   {:db/id        (dec (* -1 idx))
-                                    :block/string x
-                                    :block/open   true
-                                    :block/uid    (gen-block-uid)}) sanitize)
+                                   (let [h1-re #"^#{1}\s"
+                                         h2-re #"^#{2}\s"
+                                         h3-re #"^#{3}\s"]
+                                     (cond->
+                                       {:db/id        (dec (* -1 idx))
+                                        :block/string x
+                                        :block/open   true
+                                        :block/uid    (gen-block-uid)}
+                                       (re-find h1-re x) (assoc :block/header 1 :block/string (string/replace x h1-re ""))
+                                       (re-find h2-re x) (assoc :block/header 2 :block/string (string/replace x h2-re ""))
+                                       (re-find h3-re x) (assoc :block/header 3 :block/string (string/replace x h3-re "")))))
+                                 sanitize)
         ;; Count blocks
         n           (count blocks)
         ;; Assign parents

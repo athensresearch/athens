@@ -8,6 +8,7 @@
                                 auto-complete-inline
                                 auto-complete-slash
                                 textarea-key-down]]
+    [athens.listeners :as listeners]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -618,11 +619,16 @@
   is-editing can be used for shift up/down, so it is used in both editing and selection."
   [_ _]
   (fn [block state]
-    (let [{:block/keys [uid original-uid]} block
+    (let [{:block/keys [uid original-uid header]} block
           {:string/keys [local]} @state
           is-editing @(subscribe [:editing/is-editing uid])
-          selected-items @(subscribe [:selected/items])]
-      [:div {:class "block-content"}
+          selected-items @(subscribe [:selected/items])
+          font-size (case header
+                      1 "2.1em"
+                      2 "1.7em"
+                      3 "1.3em"
+                      "1em")]
+      [:div {:class "block-content" :style {:font-size font-size}}
        [autosize/textarea {:value          (:string/local @state)
                            :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
                            ;;:auto-focus     true
@@ -711,55 +717,16 @@
     (swap! state assoc :context-menu/show false)))
 
 
-(defn unformat-double-brackets
-  "https://github.com/ryanguill/roam-tools/blob/eda72040622555b52e40f7a28a14744bce0496e5/src/index.js#L336-L345"
-  [s]
-  (-> s
-      (str/replace #"\[([^\[\]]+)\]\((\[\[|\(\()([^\[\]]+)(\]\]|\)\))\)" "$1")
-      (str/replace #"\[\[([^\[\]]+)\]\]" "$1")))
-
-
-(defn block-refs-to-plain-text
-  "If there is a valid ((uid)), find the original block's string.
-  If invalid ((uid)), no-op.
-  TODO: If deep block ref, convert deep block ref to plain-text."
-  [s]
-  (let [replacements (->> s
-                          (re-seq #"\(\(([^\(\)]+)\)\)")
-                          (map (fn [[orig-str match-str]]
-                                 (let [eid (db/e-by-av :block/uid match-str)]
-                                   (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
-                                     [orig-str (str "((" match-str "))")])))))]
-    (loop [replacements replacements
-           s            s]
-      (let [orig-str    (first (first replacements))
-            replace-str (second (first replacements))]
-        (if (empty? replacements)
-          s
-          (recur (rest replacements)
-                 (str/replace s orig-str replace-str)))))))
-
-
-(defn unformat-walk-str
-  "Same as walk-str in athens.listeners, except unformats double brackets, turns block refs into plain text, and does not add hyphens."
-  [depth node]
-  (let [{:block/keys [string children]} node
-        left-offset        (apply str (repeat depth "    "))
-        walk-children      (apply str (map #(unformat-walk-str (inc depth) %) children))
-        unformatted-string (-> string unformat-double-brackets block-refs-to-plain-text)]
-    (str left-offset unformatted-string "\n" walk-children)))
-
-
 (defn handle-copy-unformatted
+  "If copying only a single block, dissoc children to not copy subtree."
   [^js e uid state]
   (let [uids @(subscribe [:selected/items])]
     (if (empty? uids)
-      (let [block (db/get-block-document [:block/uid uid])
-            data (unformat-walk-str 0 block)]
+      (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
+            data  (listeners/blocks-to-clipboard-data 0 block true)]
         (.. js/navigator -clipboard (writeText data)))
       (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                      (map #(unformat-walk-str 0 %))
+                      (map #(listeners/blocks-to-clipboard-data 0 % true))
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
   (.. e preventDefault)
