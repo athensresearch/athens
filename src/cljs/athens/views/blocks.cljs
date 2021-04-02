@@ -8,6 +8,7 @@
                                 auto-complete-inline
                                 auto-complete-slash
                                 textarea-key-down]]
+    [athens.listeners :as listeners]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -717,14 +718,15 @@
 
 
 (defn handle-copy-unformatted
+  "If copying only a single block, dissoc children to not copy subtree."
   [^js e uid state]
   (let [uids @(subscribe [:selected/items])]
     (if (empty? uids)
-      (let [block (db/get-block-document [:block/uid uid])
-            data (athens.listeners/walk-str 0 block true)]
+      (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
+            data  (listeners/blocks-to-clipboard-data 0 block true)]
         (.. js/navigator -clipboard (writeText data)))
       (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                      (map #(athens.listeners/walk-str 0 % true))
+                      (map #(listeners/blocks-to-clipboard-data 0 % true))
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
   (.. e preventDefault)
