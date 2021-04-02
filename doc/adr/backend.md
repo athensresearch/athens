@@ -17,7 +17,7 @@ backend.
 
 ## Design non-goals
 
-* Multiplayer
+* Multiplayer; TODO: clarify
 * Hosting a backend for multiple users (i.e., "Athens as a service"); not
   included as a goal due to extra privacy/security considerations.
 
@@ -89,10 +89,57 @@ Task", "find all people on which my tasks are blocked" etc.
 
 ### Security
 
-TODO: data needs to be encrypted in transit; because we're not trying yet to
-have a backend shared between users, it's OK to not encrypt the data at rest and
-just tell the user to take care. if we use a technology like IPFS, we'll also
-need encryption at rest.
+#### Authentication
+
+The backend needs to have some form of authentication, and only allow
+authenticated users to read/write the database.
+
+One option to implement this would be to assume that there is a trusted secure
+network between the server and clients, but nowadays, it's better to assume that
+[the network is hostile](https://blog.cryptographyengineering.com/2015/08/16/the-network-is-hostile/).
+Corporate networks can be penetrated. If we ask users to ensure they run over
+VPN, we make security their responsibility, and we invite misconfiguration and
+insecurity.
+
+So, let's implement at least a minimum form of security, like a shared secret.
+For such a secret, we should ensure it's secure enough (i.e., not easily
+guessable). We also need to prevent replay attacks. One way to prevent them
+would be a challenge-response protocol.
+
+OAuth might be also a good option. With OAuth, a resource server (i.e., Athens
+backend) can just receive a request from the user, check against the identity
+provider (e.g., Google, GitHub, etc.) that the user is authenticated, and allow
+the user in if the user is on an "allowed users" list for the graph/Athens
+database. Compared to the shared secret option, its security would not depend
+on the user choosing a strong enough shared secret.
+
+#### Authorization
+
+We are not addressing the SaaS use case, and we are assuming that users want
+to share their whole graph. So when a user is authenticated, there will be no
+further authorization - any user that is allowed to access the backend can be
+allowed to read/write any of it.
+
+If the backend supports or is easily extensible with per-entity authorization,
+it's a point in favor, because it would be helpful for eventual Athens SaaS.
+
+#### Encryption in transit
+
+Data needs to be encrypted in transit (e.g., by SSL, or other solutions) to
+prevent eavesdropping on the connection.
+
+#### Encryption at rest
+
+If the backend database is publicly readable (like with IPFS), the data will
+also need to be encrypted at rest. With such systems, data published once can be
+potentially stored by anyone forever, so we would also need to design to make
+it unlikely that a user could make their whole graph accidentally publicly
+readable, like by having their password involved in a security leak.
+
+If the backend database is stored on the server (and not publicly readable,
+like with IPFS), it does not have to be encrypted at rest, because we assume a
+model where the user runs their server and trusts it with their data. We are
+explicitly *not* addressing the SaaS use case.
 
 ## Alternatives considered
 
