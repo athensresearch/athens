@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.64](https://github.com/athensresearch/athens/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2021-04-02)
+
+
+### Features
+
+* **copy+paste:** respect h1/h2/h3 markdown ([#901](https://github.com/athensresearch/athens/issues/901)) ([a2bcef5](https://github.com/athensresearch/athens/commit/a2bcef5c0862dcc88af5ff73ad4b0f044ad2c1d6))
+
 ## [1.0.0-beta.63](https://github.com/athensresearch/athens/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2021-04-01)
 
 
