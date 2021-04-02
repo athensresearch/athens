@@ -38,8 +38,15 @@ backend.
 
 The backend should not depend on closed-source software or code whose license is
 incompatible with the [Eclipse Public License version 1](https://en.wikipedia.org/wiki/Eclipse_Public_License) (which Athens uses).
-The easier the backend is to self-host, the better. Some backends might not even
-require a running server, which is a point in their favor.
+This is a hard requirement.
+
+### Ease of hosting
+
+The easier the backend is to self-host, the better. Some backends (like IPFS)
+might not even require running server, which is a point in their favor.
+Some backends (like [Solid](#solid)) already have general-purpose servers
+which we can hook into without needing to even code an Athens-specific server.
+The less code we have to maintain, the better.
 
 ### Scaling
 
@@ -52,6 +59,10 @@ database. Its philosophy is based on Datomic, which is a major Clojure project
 and many Clojurists are familiar with it. Backends that provide a Datomic-like
 interface get bonus points, because they don't ask existing Clojurists familiar
 with Datomic to learn a new language to talk to the database.
+
+### History
+
+TODO: DataScript supports history; would be better to have it than not to.
 
 ### Offline editing
 
@@ -71,7 +82,8 @@ a scaling bottleneck Roam Research has hit at some point.
 
 In terms of saving bandwidth:
 
-* (1) "downloading whole database on client start" is worse than
+* (1) "downloading whole database on client start, then sync changes" is worse
+  than
 * (2) "downloading changes since last sync on client start", which is worse than
 * (3) "downloading chunks of database as they are needed".
 
@@ -82,6 +94,11 @@ database locally, which might become an issue with really big databases.
 Compared to (2), (3) would let clients have a faster first start, and
 potentially store less data locally.
 
+If clients can do (1), they should also be able to do (2) without too many
+changes. If they can keep their state in-memory and apply updates from server on
+top, the difference is just persisting that in-memory state on client shutdown
+and requesting new changes since shutdown from the server on next client start.
+
 ### Decision reversibility
 
 TODO: the less we have to change Athens to fit a particular backend, the better;
@@ -90,8 +107,8 @@ more opinionated, the less good".
 
 ### Modularity
 
-TODO: it's good to keep backend options open; would be good to make it easy to
-switch backend or storage if needed. would be nice to keep around option to use
+TODO:
+. would be nice to keep around option to use
 local storage, especially if it takes a bunch of time to get the backend to be
 stable & non-buggy.
 
@@ -179,11 +196,21 @@ explicitly *not* addressing the SaaS use case.
 
 ### Datahike server
 
-TODO: basically abhinav@'s current WIP. one backend that maintains Datahike DB,
-and clients are connected to it via WebSocket 100% of the time; requires full
-sync on first open. benefits: Datahike has a bunch of backends including IPFS.
-drawbacks: needs clients to be online for writing; could we handle offline client
-writes?
+[Abhinav][abhinav] has been working on this [his Athens
+fork `presence` branch](https://github.com/arkRedM/athens/tree/feat/presence),
+and a private [`athens-sync` repo for the server](https://github.com/arkRedM/athens-sync).
+
+TODO: one backend that maintains Datahike DB, and clients are connected to it
+via WebSocket 100% of the time; requires full sync on first open. benefits:
+Datahike has a bunch of backends including IPFS. drawbacks: needs clients to be
+online for writing; could we handle offline client writes?
+
+TODO: describe presence features (display names, etc.)
+
+Since [Abhinav][abhinav] has already put in a lot of work towards this, it might
+make sense to use it as an interim solution. Even though it has drawbacks, it
+can be used by users to get some version of multi-device Athens for their graph,
+while we can continue thinking about a long-term backend that patches those.
 
 ### Fluree
 
@@ -203,16 +230,24 @@ let users run on whatever pod they want (including self-hosted)
 
 ### TODO: fill more alternatives
 
-TODO: create overall table of alternatives considered X criteria
-
 Rai's ideas:
 
 * Replikativ
   * Replikativ backed by IPFS (should be possible, there's at least one demo of
     it)
 
+## Summary table
+
+TODO: add history support column
+
+|                                       | [Ease of hosting](#ease-of-hosting) | [Scaling](#scaling) | [Datomic-like](#datomic-like-interface) | [Offline editing](#offline-editing) | [Bandwidth](#bandwidth)  | [Ease of hosting](#ease-of-hosting) | [Maturity](#maturity) | [Linked data compatibility](#linked-data-compatibility) |
+|---------------------------------------|-------------------------------------|---------------------|-----------------------------------------|-------------------------------------|--------------------------|-------------------------------------|-----------------------|---------------------------------------------------------|
+| [Datahike server](#datahike-server)   | Run public server                   | TODO                | Yes (Datahike)                          | No, must be online to edit          | Client maintains full DB | Run public server                   | TODO                  | Graph database, non-RDF                                 |
+
+
 ## Decision
 
-TODO: we decided to implement it [this way] because [these reasons]
+TODO: we decided to implement it (this way) because (these reasons)
 
 [rai]: http://agentydragon.com/about.html
+[abhinav]: https://github.com/arkRedM
