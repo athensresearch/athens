@@ -236,7 +236,7 @@
                              (when el
                                (try
                                  (katex/render text el (clj->js
-                                                        {:throwOnError false}))
+                                                         {:throwOnError false}))
                                  (catch :default e
                                    (js/console.warn "Unexpected KaTeX error" e)
                                    (aset el "innerHTML" text)))))}])}
