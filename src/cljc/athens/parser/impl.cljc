@@ -5,9 +5,9 @@
   2nd pass: inline structure
   3rd pass: raw urls"
   (:require
-    [clojure.string :as string]
-    #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
-       :clj  [instaparse.core :as insta :refer [defparser]])))
+   [clojure.string :as string]
+   #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
+      :clj  [instaparse.core :as insta :refer [defparser]])))
 
 
 (defparser block-parser
@@ -72,9 +72,7 @@
 (defn- transform-block-quote
   [& strings]
   (into [:block-quote]
-        (rest (block-parser->ast (->> strings
-                                      (map string/trim)
-                                      (string/join "\n"))))))
+        (rest (block-parser->ast (string/join "\n" strings)))))
 
 
 (defn block-parser->ast

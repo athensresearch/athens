@@ -152,4 +152,26 @@
 > bbb"
                [:block [:block-quote
                         [:paragraph-text "aaa"]
-                        [:paragraph-text "bbb"]]])))
+                        [:paragraph-text "bbb"]]]
+
+               ;; nested block quotes
+               "> > aaa
+> > bbb
+> > ccc"
+               [:block
+                [:block-quote
+                 [:block-quote
+                  [:paragraph-text "aaa\nbbb\nccc"]]]]
+
+               ">> aa\n>> bb"
+               [:block
+                [:block-quote
+                 [:block-quote
+                  [:paragraph-text "aa\nbb"]]]]
+
+               ">     code
+
+>    not code"
+               [:block
+                [:block-quote [:indented-code-block [:code-text "code"]]]
+                [:block-quote [:paragraph-text "not code"]]])))
