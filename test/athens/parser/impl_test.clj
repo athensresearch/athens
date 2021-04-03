@@ -111,4 +111,48 @@
                 [:paragraph-text "bbb"]]
 
                "aaa    \nbbb    " ;; final spaces are stripped
-               [:block [:paragraph-text "aaa\nbbb"]])))
+               [:block [:paragraph-text "aaa\nbbb"]]))
+
+  (t/testing "that block-quote is parsed"
+
+    (parses-to sut/block-parser->ast
+
+               "> # Foo
+> bar
+> baz"
+               [:block [:block-quote
+                        [:paragraph-text "# Foo\nbar\nbaz"]]]
+
+               ;; spaces after `>` can be omitted
+               "># Foo
+>bar
+> baz"
+               [:block [:block-quote
+                        [:paragraph-text "# Foo\nbar\nbaz"]]]
+
+               ;; The > characters can be indented 1-3 spaces
+               "   > # Foo
+   > bar
+ > baz"
+               [:block [:block-quote
+                        [:paragraph-text "# Foo\nbar\nbaz"]]]
+
+               ;; Four spaces gives us a code block:
+               "    > # Foo
+    > bar
+    > baz"
+               [:block [:indented-code-block [:code-text "> # Foo\n> bar\n> baz"]]]
+
+               ;; The Laziness clause allows us to omit the > before paragraph continuation text
+               "> # Foo
+> bar
+baz"
+               [:block [:block-quote
+                        [:paragraph-text "# Foo\nbar\nbaz"]]]
+
+               ;; A block quote can contain some lazy and some non-lazy continuation lines
+               "> bar
+baz
+> foo"
+               [:block [:block-quote
+                        [:paragraph-text "bar\nbaz\nfoo"]]])))

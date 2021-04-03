@@ -15,13 +15,16 @@
             heading / 
             indented-code-block /
             fenced-code-block /
+            block-quote /
             paragraph-text)*
    thematic-break = #'[*_-]{3}'
    heading = #'[#]+' <space> paragraph-text
    indented-code-block = (<'    '> code-text)+
    fenced-code-block = <'```'> #'(?s).+(?=(```|\\n))'+ <'```'>
+   block-quote = (<#' {0,3}' #'> ?'> #'.+' <newline>?) block-quote-lazy-cont* <blankline>?
+   block-quote-lazy-cont = (<#' {0,3}' #'>? ?'> #'.+' <newline>?)
 
-   paragraph-text = (<#' *'> #'.+' <newline>?)+ <blankline>?
+   paragraph-text = (<#' {0,3}'> #'.+' <newline>?)+ <blankline>?
    code-text = #'.+' <newline>?
    space = ' '
    blankline = #'\\n\\n'
@@ -64,6 +67,21 @@
                         (string/join "\n"))])
 
 
+(defn- transform-block-quote
+  [& strings]
+  [:block-quote
+   [:paragraph-text (->> strings
+                         (map string/trim)
+                         (string/join "\n"))]])
+
+
+(defn- transform-block-quote-lazy-cont
+  [& strings]
+  (->> strings
+       (map string/trim)
+       (string/join "\n")))
+
+
 (defn block-parser->ast
   "Parse `in` string with `block-parser`."
   [in]
@@ -72,4 +90,6 @@
        (insta/transform {:heading             transform-heading
                          :indented-code-block transform-indented-code-block
                          :fenced-code-block   transform-fenced-code-block
-                         :paragraph-text      transform-paragraph-text})))
+                         :paragraph-text      transform-paragraph-text
+                         :block-quote         transform-block-quote
+                         :block-quote-lazy-cont transform-block-quote-lazy-cont})))
