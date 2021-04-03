@@ -11,18 +11,17 @@
 
 
 (defparser block-parser
-  "block = (thematic-break / 
-            heading / 
+  "block = (thematic-break /
+            heading /
             indented-code-block /
             fenced-code-block /
             block-quote /
             paragraph-text)*
    thematic-break = #'[*_-]{3}'
-   heading = #'[#]+' <space> paragraph-text
+   heading = #'[#]+' <space> #'.+' <newline>*
    indented-code-block = (<'    '> code-text)+
    fenced-code-block = <'```'> #'(?s).+(?=(```|\\n))'+ <'```'>
-   block-quote = (<#' {0,3}' #'> ?'> #'.+' <newline>?) block-quote-lazy-cont* <blankline>?
-   block-quote-lazy-cont = (<#' {0,3}' #'>? ?'> #'.+' <newline>?)
+   block-quote = (<#' {0,3}' #'> ?'> #'.*' <newline>?)+ <blankline>?
 
    paragraph-text = (<#' {0,3}'> #'.+' <newline>?)+ <blankline>?
    code-text = #'.+' <newline>?
@@ -34,7 +33,7 @@
 (defn- transform-heading
   [atx p-text]
   [:heading {:n (count atx)}
-   p-text])
+   [:paragraph-text p-text]])
 
 
 (defn- transform-indented-code-block
@@ -67,29 +66,24 @@
                         (string/join "\n"))])
 
 
+(declare block-parser->ast)
+
+
 (defn- transform-block-quote
   [& strings]
-  [:block-quote
-   [:paragraph-text (->> strings
-                         (map string/trim)
-                         (string/join "\n"))]])
-
-
-(defn- transform-block-quote-lazy-cont
-  [& strings]
-  (->> strings
-       (map string/trim)
-       (string/join "\n")))
+  (into [:block-quote]
+        (rest (block-parser->ast (->> strings
+                                      (map string/trim)
+                                      (string/join "\n"))))))
 
 
 (defn block-parser->ast
   "Parse `in` string with `block-parser`."
   [in]
   (->> in
-       block-parser
+       (insta/parse block-parser)
        (insta/transform {:heading             transform-heading
                          :indented-code-block transform-indented-code-block
                          :fenced-code-block   transform-fenced-code-block
                          :paragraph-text      transform-paragraph-text
-                         :block-quote         transform-block-quote
-                         :block-quote-lazy-cont transform-block-quote-lazy-cont})))
+                         :block-quote         transform-block-quote})))
