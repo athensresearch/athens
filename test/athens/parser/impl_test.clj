@@ -174,4 +174,12 @@
 >    not code"
                [:block
                 [:block-quote [:indented-code-block [:code-text "code"]]]
+                [:block-quote [:paragraph-text "not code"]]]
+
+               "> ```code\n> more```
+
+>    not code"
+               [:block
+                [:block-quote
+                 [:fenced-code-block {:lang "code"} [:code-text "more"]]]
                 [:block-quote [:paragraph-text "not code"]]])))

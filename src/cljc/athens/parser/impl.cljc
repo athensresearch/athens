@@ -5,9 +5,9 @@
   2nd pass: inline structure
   3rd pass: raw urls"
   (:require
-   [clojure.string :as string]
-   #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
-      :clj  [instaparse.core :as insta :refer [defparser]])))
+    [clojure.string :as string]
+    #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
+       :clj  [instaparse.core :as insta :refer [defparser]])))
 
 
 (defparser block-parser
@@ -54,9 +54,10 @@
                (-> code-text
                    (string/split #"\n")
                    rest))]
-    (println "fenced:" (pr-str code-text) :-> (pr-str lang) (pr-str text))
-    [:fenced-code-block {:lang lang}
-     [:code-text text]]))
+    (if (string/blank? text)
+      [:fenced-code-block {:lang ""} lang]
+      [:fenced-code-block {:lang lang}
+       [:code-text text]])))
 
 
 (defn- transform-paragraph-text
