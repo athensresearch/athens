@@ -22,9 +22,9 @@
         var userAgent = navigator.userAgent.toLowerCase();
         return userAgent.indexOf("electron/") > -1
       }
-      function hide10x() {
-        localStorage.setItem("day8.re-frame-10x.show-panel","\"false\"")
-        localStorage.setItem("day8.re-frame-10x.using-trace?","\"false\"")
+      function show10x() {
+        localStorage.setItem("day8.re-frame-10x.show-panel","\"true\"")
+        localStorage.setItem("day8.re-frame-10x.using-trace?","\"true\"")
       }
     </script>
     <script>
@@ -32,7 +32,7 @@
       var src = ""
       if (electron) {
          src = "js/compiled/renderer.js"
-         hide10x() // hide10x by default. To stop, remove relevant localStorage key-vals and comment this out
+         show10x() // 10x exists on DOM by default, but athens.style hides via CSS
       } else {
          src = "js/compiled/app.js"
       }
