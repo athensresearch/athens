@@ -120,29 +120,18 @@
          ;; Analytics
 
          (if @opted-out?
-           [:h5 "Opted Out of Analytics"]
-           [:h5 "Opted Into Analytics"])
+           [:h5 "Opted Out of Product Usage and Error Monitoring"]
+           [:h5 "Opted Into Product Usage and Error Monitoring"])
          [:div {:style {:margin "10px 0"}}
           [button {:primary  (false? @opted-out?)
-                   :disabled (not @authed?)
                    :on-click #(handle-click opted-out?)}
            (if @opted-out?
              [:div {:style {:display "flex"}}
               [:> ToggleOn]
-              [:span "\uD83D\uDE41 We understand."]]
+              [:span "\uD83D\uDE41 Opting out makes it harder to improve Athens, and for us to become sustainable."]]
              [:div {:style {:display "flex"}}
               [:> ToggleOff]
-              [:span "\uD83D\uDE00 Thanks for helping make Athens better!"]])]]
-
-         [:span "Analytics are delivered by "
-          [:a {:href "https://posthog.com" :target "_blank"} "Posthog"]
-          " and " [:a {:href "https://sentry.io" :target "_blank"} "Sentry"]
-          "." (when (false? @authed?)
-                [:span
-                 " In order to opt-out of analytics, please become a User or Sponsor through "
-                 [:a {:href "https://opencollective.com/athens" :target "_blank"}
-                  "OpenCollective."]])]
-
+              [:span "\uD83D\uDD12 Athens will never sell your data. Athens has never and will never look at the contents of your database and what you are writing."]])]]
          [:div {:style {:margin-top "15px"}}
           [:h5 "Remote Backups"]
           [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
