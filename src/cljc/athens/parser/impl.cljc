@@ -30,6 +30,25 @@
    newline = #'\\n'")
 
 
+(defparser inline-parser
+  "inline = (backslash-escapes /
+             code-span /
+             strong-emphasis /
+             emphasis /
+             text-run)*
+
+   backslash-escapes = #'\\\\\\p{Punct}'
+
+   code-span = <backtick> #'(?s).*(?=`)' <backtick>
+
+   strong-emphasis = (<'**'> #'.*(?=\\*\\*)' <'**'>) | (<'__'> #'.*(?=__)' <'__'>)
+   emphasis = (<'*'> #'.*(?=\\*)' <'*'>) | (<'_'> #'.*(?=_)' <'_'>)
+
+   text-run = #'.*'
+
+   backtick = #'(?<!`)`(?!`)'")
+
+
 (defn- transform-heading
   [atx p-text]
   [:heading {:n (count atx)}
@@ -76,32 +95,39 @@
         (rest (block-parser->ast (string/join "\n" strings)))))
 
 
+(def stage-1-transformations
+  {:heading             transform-heading
+   :indented-code-block transform-indented-code-block
+   :fenced-code-block   transform-fenced-code-block
+   :paragraph-text      transform-paragraph-text
+   :block-quote         transform-block-quote})
+
+
 (defn block-parser->ast
-  "Parse `in` string with `block-parser`."
+  "Stage 1. Parse `in` string with `block-parser`."
   [in]
   (->> in
        (insta/parse block-parser)
-       (insta/transform {:heading             transform-heading
-                         :indented-code-block transform-indented-code-block
-                         :fenced-code-block   transform-fenced-code-block
-                         :paragraph-text      transform-paragraph-text
-                         :block-quote         transform-block-quote})))
+       (insta/transform stage-1-transformations)))
 
 
-(defparser inline-parser
-  "inline = (backslash-escapes /
-             code-span /
-             strong-emphasis /
-             emphasis /
-             text-run)*
+(defn inline-parser->ast
+  [in]
+  (->> in
+       (insta/parse inline-parser)
+       (insta/transform {:inline (fn [& contents]
+                                   (if (= 1 (count contents))
+                                     (first contents)
+                                     (apply conj [] contents)))})))
 
-   backslash-escapes = #'\\\\\\p{Punct}'
 
-   code-span = <backtick> #'(?s).*(?=`)' <backtick>
+(def stage-2-transformations
+  {:paragraph-text inline-parser->ast})
 
-   strong-emphasis = (<'**'> #'.*(?=\\*\\*)' <'**'>) | (<'__'> #'.*(?=__)' <'__'>)
-   emphasis = (<'*'> #'.*(?=\\*)' <'*'>) | (<'_'> #'.*(?=_)' <'_'>)
 
-   text-run = #'.*'
-
-   backtick = #'(?<!`)`(?!`)'")
+(defn staged-parser->ast
+  [in]
+  (->> in
+       (insta/parse block-parser)
+       (insta/transform stage-1-transformations)
+       (insta/transform stage-2-transformations)))
