@@ -7,7 +7,9 @@
 
 (defmacro parses-to
   [parser & tests]
-  `(t/are [in# out#] (= out# (~parser in#))
+  `(t/are [in# out#] (= out# (do
+                               (println in#)
+                               (time (~parser in#))))
      ~@tests))
 
 
@@ -183,3 +185,74 @@
                 [:block-quote
                  [:fenced-code-block {:lang "code"} [:code-text "more"]]]
                 [:block-quote [:paragraph-text "not code"]]])))
+
+
+(t/deftest inline-structure
+
+  (t/testing "backslash escapes"
+
+    (parses-to sut/inline-parser
+
+               ;; Any ASCII punctuation character may be backslash-escaped
+               "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
+               [:inline
+                [:backslash-escapes "\\!"]
+                [:backslash-escapes "\\\""]
+                [:backslash-escapes "\\#"]
+                [:backslash-escapes "\\$"]
+                [:backslash-escapes "\\%"]
+                [:backslash-escapes "\\&"]
+                [:backslash-escapes "\\'"]
+                [:backslash-escapes "\\("]
+                [:backslash-escapes "\\)"]
+                [:backslash-escapes "\\*"]
+                [:backslash-escapes "\\+"]
+                [:backslash-escapes "\\,"]
+                [:backslash-escapes "\\-"]
+                [:backslash-escapes "\\."]
+                [:backslash-escapes "\\/"]
+                [:backslash-escapes "\\:"]
+                [:backslash-escapes "\\;"]
+                [:backslash-escapes "\\<"]
+                [:backslash-escapes "\\="]
+                [:backslash-escapes "\\>"]
+                [:backslash-escapes "\\?"]
+                [:backslash-escapes "\\@"]
+                [:backslash-escapes "\\["]
+                [:backslash-escapes "\\\\"]
+                [:backslash-escapes "\\]"]
+                [:backslash-escapes "\\^"]
+                [:backslash-escapes "\\_"]
+                [:backslash-escapes "\\`"]
+                [:backslash-escapes "\\{"]
+                [:backslash-escapes "\\|"]
+                [:backslash-escapes "\\}"]
+                [:backslash-escapes "\\~"]]
+
+               ;; Backslashes before other characters are treated as literal backslashes:
+               "\\→\\A\\a\\ \\3\\φ\\«"
+               [:inline [:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]
+
+               ;; code spans
+               "`abc`"
+               [:inline [:code-span "abc"]]
+
+               "` foo ` bar `"
+               [:inline [:code-span " foo ` bar "]]
+
+               ;; emphasis & strong emphasis
+               "*emphasis*"
+               [:inline [:emphasis "emphasis"]]
+
+               "**strong**"
+               [:inline [:strong-emphasis "strong"]]
+
+               "_also emphasis_"
+               [:inline [:emphasis "also emphasis"]]
+
+               "__very strong__"
+               [:inline [:strong-emphasis "very strong"]]
+
+               ;; but you can't mix `*` with `_`
+               "_so wrong*"
+               [:inline [:text-run "_so wrong*"]])))

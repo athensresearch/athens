@@ -86,3 +86,22 @@
                          :fenced-code-block   transform-fenced-code-block
                          :paragraph-text      transform-paragraph-text
                          :block-quote         transform-block-quote})))
+
+
+(defparser inline-parser
+  "inline = (backslash-escapes /
+             code-span /
+             strong-emphasis /
+             emphasis /
+             text-run)*
+
+   backslash-escapes = #'\\\\\\p{Punct}'
+
+   code-span = <backtick> #'(?s).*(?=`)' <backtick>
+
+   strong-emphasis = (<'**'> #'.*(?=\\*\\*)' <'**'>) | (<'__'> #'.*(?=__)' <'__'>)
+   emphasis = (<'*'> #'.*(?=\\*)' <'*'>) | (<'_'> #'.*(?=_)' <'_'>)
+
+   text-run = #'.*'
+
+   backtick = #'(?<!`)`(?!`)'")

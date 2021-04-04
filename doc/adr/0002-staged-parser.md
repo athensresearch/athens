@@ -40,8 +40,8 @@ Each Phase parser is smaller, so it can run faster and is easier to maintain and
 
 List of block elements specified by MD spec:
 * Leaf blocks
-  * Thematic breaks
-  * Headers (only AXT headings for now)
+  * Thematic breaks (like `---`)
+  * Headers (only AXT headings for now, that is headers starting with run of `#`)
   * Indented code (contents doesn't get parsed with inline parser)
   * Fenced code (contents doesn't get parsed with inline parser)
   * HTML blocks (let's stay away from that if we can)
