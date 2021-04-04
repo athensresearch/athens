@@ -44,7 +44,7 @@
    strong-emphasis = (<'**'> #'.*(?=\\*\\*)' <'**'>) | (<'__'> #'.*(?=__)' <'__'>)
    emphasis = (<'*'> #'.*(?=\\*)' <'*'>) | (<'_'> #'.*(?=_)' <'_'>)
 
-   text-run = #'.*'
+   text-run = #'[^\\*_`]*' (* anything but special chars *)
 
    backtick = #'(?<!`)`(?!`)'")
 
@@ -111,14 +111,33 @@
        (insta/transform stage-1-transformations)))
 
 
+(declare inline-parser->ast)
+
+
+(defn- transform-inline-formatting
+  "Recursively descend parsing inline blocks"
+  [container-type text]
+  (println container-type (pr-str text))
+  (apply conj
+         [container-type]
+         (inline-parser->ast text)))
+
+
+(def stage-2-internal-transformations
+  {:strong-emphasis #(transform-inline-formatting :strong-emphasis %)
+   :emphasis        #(transform-inline-formatting :emphasis %)
+   :inline          (fn [& contents]
+                      ;; hide `[:inline ]`, leaving only contents
+                      (apply conj [] contents))})
+
+
 (defn inline-parser->ast
   [in]
-  (->> in
-       (insta/parse inline-parser)
-       (insta/transform {:inline (fn [& contents]
-                                   (if (= 1 (count contents))
-                                     (first contents)
-                                     (apply conj [] contents)))})))
+  (let [parse-result (insta/parse inline-parser in)]
+    (if-not (insta/failure? parse-result)
+      (insta/transform stage-2-internal-transformations parse-result)
+      [^{:parse-error (insta/get-failure parse-result)}
+       [:text-run in]])))
 
 
 (def stage-2-transformations

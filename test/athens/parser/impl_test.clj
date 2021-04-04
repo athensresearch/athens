@@ -191,12 +191,11 @@
 
   (t/testing "backslash escapes"
 
-    (parses-to sut/inline-parser
+    (parses-to sut/inline-parser->ast
 
                ;; Any ASCII punctuation character may be backslash-escaped
                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
-               [:inline
-                [:backslash-escapes "\\!"]
+               [[:backslash-escapes "\\!"]
                 [:backslash-escapes "\\\""]
                 [:backslash-escapes "\\#"]
                 [:backslash-escapes "\\$"]
@@ -231,28 +230,46 @@
 
                ;; Backslashes before other characters are treated as literal backslashes:
                "\\→\\A\\a\\ \\3\\φ\\«"
-               [:inline [:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]
+               [[:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]))
 
+  (t/testing "code spans"
+    (parses-to sut/inline-parser->ast
                ;; code spans
                "`abc`"
-               [:inline [:code-span "abc"]]
+               [[:code-span "abc"]]
 
                "` foo ` bar `"
-               [:inline [:code-span " foo ` bar "]]
+               [[:code-span " foo ` bar "]]))
 
+  (t/testing "all sorts of emphasis"
+    (parses-to sut/inline-parser->ast
                ;; emphasis & strong emphasis
                "*emphasis*"
-               [:inline [:emphasis "emphasis"]]
+               [[:emphasis [:text-run "emphasis"]]]
 
                "**strong**"
-               [:inline [:strong-emphasis "strong"]]
+               [[:strong-emphasis [:text-run "strong"]]]
 
                "_also emphasis_"
-               [:inline [:emphasis "also emphasis"]]
+               [[:emphasis [:text-run "also emphasis"]]]
 
                "__very strong__"
-               [:inline [:strong-emphasis "very strong"]]
+               [[:strong-emphasis [:text-run "very strong"]]]
 
-               ;; but you can't mix `*` with `_`
-               "_so wrong*"
-               [:inline [:text-run "_so wrong*"]])))
+               ;; mix and match different emphasis
+               "**bold and *italic***"
+               [[:strong-emphasis
+                 [:text-run "bold and "]
+                 [:emphasis
+                  [:text-run "italic"]]]]
+
+               "*italic and **bold***"
+               [[:emphasis
+                 [:text-run "italic and "]
+                 [:strong-emphasis
+                  [:text-run "bold"]]]])
+
+    (t/is (contains? (-> (sut/inline-parser->ast "_so wrong*")
+                         first
+                         meta)
+                     :parse-error))))
