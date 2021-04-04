@@ -55,11 +55,13 @@ List of block elements specified by MD spec:
   * Task list items (extension, since we have `{{[[TODO]]}}` it's not needed)
   * Lists
 
+Only some contents of block elements should be parsed for *Inline elements*.  
+We communicate that with `paragraph-text` AST element, which will be processed in Phase 2.
 
 ### Inline elements
 
 List of inline elements specified by MD spec:
-* Backslash escapes
+
 * Entity and numeric character references
 * Code spans
 * Emphasis and strong emphasis
