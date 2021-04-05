@@ -44,6 +44,7 @@ inline = recur
            strong-emphasis /
            emphasis /
            highlight /
+           strikethrough /
            text-run /
            special-char)*
 
@@ -77,10 +78,18 @@ highlight = <#'(?<!\\w)\\^\\^(?!\\s)'>
             recur
             <#'(?<!\\s)\\^\\^(?!\\w)'>
 
-(* anything but special chars *)
-text-run = #'[^\\*_`^]*'
+strikethrough = <#'(?<!\\w)~~(?!\\s)'>
+                recur
+                <#'(?<!\\s)~~(?!\\w)'>
 
-<special-char> = #'[\\*_`^]'
+(* characters with meaning (special chars) *)
+(* every delimiter used as inline span boundary has to be added below *)
+
+(* anything but special chars *)
+text-run = #'[^\\*_`^~]*'
+
+(* any special char *)
+<special-char> = #'[\\*_`^~]'
 
 <backtick> = #'(?<!`)`(?!`)'")
 

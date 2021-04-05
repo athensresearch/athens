@@ -307,4 +307,18 @@
                  [:text-run "highlight "]
                  [:strong-emphasis
                   [:text-run "has "]
-                  [:emphasis [:text-run "nested emphasis"]]]]])))
+                  [:emphasis [:text-run "nested emphasis"]]]]]))
+
+  (t/testing "strikethrough (GFM extension)"
+    (parses-to sut/inline-parser->ast
+               "~~Hi~~ Hello, world!"
+               [[:strikethrough [:text-run "Hi"]]
+                [:text-run " Hello, world!"]]
+
+               ;; not in the middle of the word
+               "T~~hi~~s"
+               [[:text-run "T"] "~" "~" [:text-run "hi"] "~" "~" [:text-run "s"]]
+
+               ;; no spaces inside
+               "Ain't ~~ working ~~"
+               [[:text-run "Ain't "] "~" "~" [:text-run " working "] "~" "~"])))
