@@ -195,38 +195,38 @@
 
                ;; Any ASCII punctuation character may be backslash-escaped
                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
-               [[:backslash-escapes "\\!"]
-                [:backslash-escapes "\\\""]
-                [:backslash-escapes "\\#"]
-                [:backslash-escapes "\\$"]
-                [:backslash-escapes "\\%"]
-                [:backslash-escapes "\\&"]
-                [:backslash-escapes "\\'"]
-                [:backslash-escapes "\\("]
-                [:backslash-escapes "\\)"]
-                [:backslash-escapes "\\*"]
-                [:backslash-escapes "\\+"]
-                [:backslash-escapes "\\,"]
-                [:backslash-escapes "\\-"]
-                [:backslash-escapes "\\."]
-                [:backslash-escapes "\\/"]
-                [:backslash-escapes "\\:"]
-                [:backslash-escapes "\\;"]
-                [:backslash-escapes "\\<"]
-                [:backslash-escapes "\\="]
-                [:backslash-escapes "\\>"]
-                [:backslash-escapes "\\?"]
-                [:backslash-escapes "\\@"]
-                [:backslash-escapes "\\["]
-                [:backslash-escapes "\\\\"]
-                [:backslash-escapes "\\]"]
-                [:backslash-escapes "\\^"]
-                [:backslash-escapes "\\_"]
-                [:backslash-escapes "\\`"]
-                [:backslash-escapes "\\{"]
-                [:backslash-escapes "\\|"]
-                [:backslash-escapes "\\}"]
-                [:backslash-escapes "\\~"]]
+               ["\\!"
+                "\\\""
+                "\\#"
+                "\\$"
+                "\\%"
+                "\\&"
+                "\\'"
+                "\\("
+                "\\)"
+                "\\*"
+                "\\+"
+                "\\,"
+                "\\-"
+                "\\."
+                "\\/"
+                "\\:"
+                "\\;"
+                "\\<"
+                "\\="
+                "\\>"
+                "\\?"
+                "\\@"
+                "\\["
+                "\\\\"
+                "\\]"
+                "\\^"
+                "\\_"
+                "\\`"
+                "\\{"
+                "\\|"
+                "\\}"
+                "\\~"]
 
                ;; Backslashes before other characters are treated as literal backslashes:
                "\\→\\A\\a\\ \\3\\φ\\«"
@@ -247,6 +247,9 @@
                "*emphasis*"
                [[:emphasis [:text-run "emphasis"]]]
 
+               "* not em *"
+               ["*" [:text-run " not em "] "*"]
+
                "**strong**"
                [[:strong-emphasis [:text-run "strong"]]]
 
@@ -263,13 +266,45 @@
                  [:emphasis
                   [:text-run "italic"]]]]
 
-               "*italic and **bold***"
-               [[:emphasis
-                 [:text-run "italic and "]
-                 [:strong-emphasis
-                  [:text-run "bold"]]]])
+               ;; next to each other
+               "normal *italic* **bold**"
+               [[:text-run "normal "]
+                [:emphasis [:text-run "italic"]]
+                [:text-run " "]
+                [:strong-emphasis [:text-run "bold"]]]
 
-    (t/is (contains? (-> (sut/inline-parser->ast "_so wrong*")
-                         first
-                         meta)
-                     :parse-error))))
+               "_so wrong*"
+               ["_" [:text-run "so wrong"] "*"]))
+
+  (t/testing "highlights (local Athens extension `^^...^^`)"
+    (parses-to sut/inline-parser->ast
+               ;; just a highlight
+               "^^NEW^^"
+               [[:highlight [:text-run "NEW"]]]
+
+               ;; in a middle
+               "something ^^completely^^ different"
+               [[:text-run "something "]
+                [:highlight [:text-run "completely"]]
+                [:text-run " different"]]
+
+               ;; with spaces
+               "^^a b c^^"
+               [[:highlight [:text-run "a b c"]]]
+
+               ;; mixing with emphasis
+               "this ^^highlight *has* **emphasis**^^"
+               [[:text-run "this "]
+                [:highlight
+                 [:text-run "highlight "]
+                 [:emphasis [:text-run "has"]]
+                 [:text-run " "]
+                 [:strong-emphasis [:text-run "emphasis"]]]]
+
+               "this ^^highlight **has *nested emphasis***^^"
+               [[:text-run "this "]
+                [:highlight
+                 [:text-run "highlight "]
+                 [:strong-emphasis
+                  [:text-run "has "]
+                  [:emphasis [:text-run "nested emphasis"]]]]])))

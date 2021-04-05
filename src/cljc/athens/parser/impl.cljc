@@ -11,42 +11,78 @@
 
 
 (defparser block-parser
-  "block = (thematic-break /
-            heading /
-            indented-code-block /
-            fenced-code-block /
-            block-quote /
-            paragraph-text)*
-   thematic-break = #'[*_-]{3}'
-   heading = #'[#]+' <space> #'.+' <newline>*
-   indented-code-block = (<'    '> code-text)+
-   fenced-code-block = <'```'> #'(?s).+(?=(```|\\n))'+ <'```'>
-   block-quote = (<#' {0,3}' #'> ?'> #'.*' <newline>?)+ <blankline>?
+  "
+block = (thematic-break /
+         heading /
+         indented-code-block /
+         fenced-code-block /
+         block-quote /
+         paragraph-text)*
+thematic-break = #'[*_-]{3}'
+heading = #'[#]+' <space> #'.+' <newline>*
+indented-code-block = (<'    '> code-text)+
+fenced-code-block = <'```'> #'(?s).+(?=(```|\\n))'+ <'```'>
+block-quote = (<#' {0,3}' #'> ?'> #'.*' <newline>?)+ <blankline>?
 
-   paragraph-text = (<#' {0,3}'> #'.+' <newline>?)+ <blankline>?
-   code-text = #'.+' <newline>?
-   space = ' '
-   blankline = #'\\n\\n'
-   newline = #'\\n'")
+paragraph-text = (<#' {0,3}'> #'.+' <newline>?)+ <blankline>?
+code-text = #'.+' <newline>?
+space = ' '
+blankline = #'\\n\\n'
+newline = #'\\n'")
 
 
 (defparser inline-parser
-  "inline = (backslash-escapes /
-             code-span /
-             strong-emphasis /
-             emphasis /
-             text-run)*
+  "
+(* inline spans parser, processes `:paragraph-text` from phase 1 *)
 
-   backslash-escapes = #'\\\\\\p{Punct}'
+(* root of parse tree *)
+inline = recur
 
-   code-span = <backtick> #'(?s).*(?=`)' <backtick>
+(* `recur` so we can recursively parse inline formatting w/o bringing `:inline`. *)
+<recur> = (backslash-escapes /
+           code-span /
+           strong-emphasis /
+           emphasis /
+           highlight /
+           text-run /
+           special-char)*
 
-   strong-emphasis = (<'**'> #'.*(?=\\*\\*)' <'**'>) | (<'__'> #'.*(?=__)' <'__'>)
-   emphasis = (<'*'> #'.*(?=\\*)' <'*'>) | (<'_'> #'.*(?=_)' <'_'>)
+<backslash-escapes> = #'\\\\\\p{Punct}'
 
-   text-run = #'[^\\*_`]*' (* anything but special chars *)
+code-span = <backtick> #'(?s).*(?=`)' <backtick>
 
-   backtick = #'(?<!`)`(?!`)'")
+(* all inline-spans have `x` character (or pair) that is a boundary for this span *)
+(* opening `x` has: *)
+(* - `(?<!\\w)`: it can't be preceded by a word character *)
+(* - `(?!\\s)`: it can't be followed by a white space *)
+(* closing `x` has: *)
+(* - `(?<!\\s)`: it can't be preceded by a white space *)
+(* - `(?!\\w)`: it can't be followed by a word character *)
+   
+strong-emphasis = (<#'(?<!\\w)\\*\\*(?!\\s)'>
+                   recur
+                   <#'(?<!\\s)\\*\\*(?!\\w)'>)
+                | (<#'(?<!\\w)__(?!\\s)'>
+                   recur
+                   <#'(?<!\\s)__(?!\\w)'>)
+
+emphasis = (<#'(?<!\\w)\\*(?!\\s)'>
+            recur
+            <#'(?<!\\s)\\*(?!\\w)'>)
+         | (<#'(?<!\\w)_(?!\\s)'>
+            recur
+            <#'(?<!\\s)_(?!\\w)'>)
+
+highlight = <#'(?<!\\w)\\^\\^(?!\\s)'>
+            recur
+            <#'(?<!\\s)\\^\\^(?!\\w)'>
+
+(* anything but special chars *)
+text-run = #'[^\\*_`^]*'
+
+<special-char> = #'[\\*_`^]'
+
+<backtick> = #'(?<!`)`(?!`)'")
 
 
 (defn- transform-heading
@@ -114,21 +150,10 @@
 (declare inline-parser->ast)
 
 
-(defn- transform-inline-formatting
-  "Recursively descend parsing inline blocks"
-  [container-type text]
-  (println container-type (pr-str text))
-  (apply conj
-         [container-type]
-         (inline-parser->ast text)))
-
-
 (def stage-2-internal-transformations
-  {:strong-emphasis #(transform-inline-formatting :strong-emphasis %)
-   :emphasis        #(transform-inline-formatting :emphasis %)
-   :inline          (fn [& contents]
-                      ;; hide `[:inline ]`, leaving only contents
-                      (apply conj [] contents))})
+  {:inline (fn [& contents]
+             ;; hide `[:inline ]`, leaving only contents
+             (apply conj [] contents))})
 
 
 (defn inline-parser->ast
