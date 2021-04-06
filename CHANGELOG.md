@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.65](https://github.com/athensresearch/athens/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2021-04-06)
+
+
+### Bug Fixes
+
+* **10x:** ctrl/cmd-t always works to toggle 10x ([#907](https://github.com/athensresearch/athens/issues/907)) ([460fdbd](https://github.com/athensresearch/athens/commit/460fdbd017aafe04d82259e2f1edc455259a1d00))
+
+
+* **db:** add Karma test for node search by title ([#903](https://github.com/athensresearch/athens/issues/903)) ([2876194](https://github.com/athensresearch/athens/commit/2876194a0c68da33f8dd0eadd3a5534f2b811148))
+* **settings:** allow any user to opt-out; improve copy ([#908](https://github.com/athensresearch/athens/issues/908)) ([98a1fca](https://github.com/athensresearch/athens/commit/98a1fca13aed2bead6dd3ec9ee41d7c0078e0a53))
+
 ## [1.0.0-beta.64](https://github.com/athensresearch/athens/compare/v1.0.0-beta.63...v1.0.0-beta.64) (2021-04-02)
 
 
