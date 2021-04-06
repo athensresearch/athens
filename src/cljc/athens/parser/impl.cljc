@@ -47,6 +47,7 @@ inline = recur
            highlight /
            strikethrough /
            link /
+           image /
            special-char)*
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
@@ -83,12 +84,16 @@ strikethrough = <#'(?<!\\w)~~(?!\\s)'>
                 recur
                 <#'(?<!\\s)~~(?!\\w)'>
 
-link = <#'(?<!\\w)\\[(?!\\s)'>
-       link-text
-       <#'(?<!\\s)\\]\\((?!\\s)'>
-       link-target
-       (<' '> link-title)?
-       <#'(?<!\\s)\\)(?!\\w)'>
+link = md-link
+image = <'!'> md-link
+
+<md-link> = <#'(?<!\\w)\\[(?!\\s)'>
+            link-text
+            <#'(?<!\\s)\\]\\((?!\\s)'>
+            link-target
+            (<' '> link-title)?
+            <#'(?<!\\s)\\)(?!\\w)'>
+
 link-text = #'[^\\]]+'
 link-target = #'[^\\s\\)]+'
 link-title = <'\"'> #'[^\"]+' <'\"'>
@@ -99,10 +104,10 @@ link-title = <'\"'> #'[^\"]+' <'\"'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[]*'
+text-run = #'[^\\*_`^~\\[!]*'
 
 (* any special char *)
-<special-char> = #'[\\*_`^~\\[]'
+<special-char> = #'[\\*_`^~\\[!]'
 
 <backtick> = #'(?<!`)`(?!`)'")
 
@@ -172,17 +177,28 @@ text-run = #'[^\\*_`^~\\[]*'
 (declare inline-parser->ast)
 
 
-(defn- link-transform [& link-parts]
+(defn- link-transform
+  [& link-parts]
   (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
     [:link (cond-> {:text   link-text
                     :target link-target}
              link-title (assoc :title link-title))]))
 
+
+(defn- image-transform
+  [& link-parts]
+  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
+    [:image (cond-> {:alt link-text
+                     :src link-target}
+              link-title (assoc :title link-title))]))
+
+
 (def stage-2-internal-transformations
   {:inline (fn [& contents]
              ;; hide `[:inline ]`, leaving only contents
              (apply conj [] contents))
-   :link link-transform})
+   :link   link-transform
+   :image  image-transform})
 
 
 (defn inline-parser->ast

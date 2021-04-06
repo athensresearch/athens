@@ -356,4 +356,39 @@
                ;; but no emphasis in a link
                "[*em*](/link)"
                [[:link {:text   "*em*"
-                        :target "/link"}]])))
+                        :target "/link"}]]))
+
+  (t/testing "images"
+    (parses-to sut/inline-parser->ast
+               "![link text](/some/url)"
+               [[:image {:alt "link text"
+                         :src "/some/url"}]]
+
+               ;; 3 sorts of link title
+               "![link text](/some/url \"title\")"
+               [[:image {:alt   "link text"
+                         :src   "/some/url"
+                         :title "title"}]]
+
+               "![link text](/some/url 'title')"
+               [[:image {:alt   "link text"
+                         :src   "/some/url"
+                         :title "title"}]]
+
+               "![link text](/some/url (title))"
+               [[:image {:alt   "link text"
+                         :src   "/some/url"
+                         :title "title"}]]
+
+               ;; link in an emphasis
+               "this **![link](/example) is bold**"
+               [[:text-run "this "]
+                [:strong-emphasis
+                 [:image {:alt "link"
+                          :src "/example"}]
+                 [:text-run " is bold"]]]
+
+               ;; but no emphasis in a link
+               "![*em*](/link)"
+               [[:image {:alt "*em*"
+                         :src "/link"}]])))
