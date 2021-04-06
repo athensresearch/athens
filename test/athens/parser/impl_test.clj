@@ -313,7 +313,7 @@
     (parses-to sut/inline-parser->ast
                "~~Hi~~ Hello, world!"
                [[:strikethrough [:text-run "Hi"]]
-                [:text-run " Hello, world!"]]
+                [:text-run " Hello, world"] "!"]
 
                ;; not in the middle of the word
                "T~~hi~~s"
@@ -391,4 +391,19 @@
                ;; but no emphasis in a link
                "![*em*](/link)"
                [[:image {:alt "*em*"
-                         :src "/link"}]])))
+                         :src "/link"}]]))
+
+  (t/testing "autolinks"
+    (parses-to sut/inline-parser->ast
+               "<http://example.com>"
+               [[:link {:text   "http://example.com"
+                        :target "http://example.com"}]]
+
+               ;; no white space in autolinks
+               "<http://example.com and>"
+               ["<" [:text-run "http://example.com and>"]]
+
+               ;; emails are recognized
+               "<root@example.com>"
+               [[:link {:text "root@example.com"
+                        :target "mailto:root@example.com"}]])))

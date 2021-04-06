@@ -48,6 +48,7 @@ inline = recur
            strikethrough /
            link /
            image /
+           autolink /
            special-char)*
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
@@ -100,14 +101,18 @@ link-title = <'\"'> #'[^\"]+' <'\"'>
            | <'\\''> #'[^\\']+' <'\\''>
            | <'('> #'[^\\)]+' <')'>
 
+autolink = <#'(?<!\\w)<(?!\\s)'>
+           #'[^>\\s]+'
+           <#'(?<!\\s)>(?!\\w)'>
+
 (* characters with meaning (special chars) *)
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!]*'
+text-run = #'[^\\*_`^~\\[!<]*'
 
 (* any special char *)
-<special-char> = #'[\\*_`^~\\[!]'
+<special-char> = #'[\\*_`^~\\[!<]'
 
 <backtick> = #'(?<!`)`(?!`)'")
 
@@ -193,12 +198,21 @@ text-run = #'[^\\*_`^~\\[!]*'
               link-title (assoc :title link-title))]))
 
 
+(defn- autolink-transform
+  [url]
+  [:link {:text   url
+          :target (if (string/includes? url "@")
+                    (str "mailto:" url)
+                    url)}])
+
+
 (def stage-2-internal-transformations
-  {:inline (fn [& contents]
+  {:inline   (fn [& contents]
              ;; hide `[:inline ]`, leaving only contents
-             (apply conj [] contents))
-   :link   link-transform
-   :image  image-transform})
+               (apply conj [] contents))
+   :link     link-transform
+   :image    image-transform
+   :autolink autolink-transform})
 
 
 (defn inline-parser->ast
