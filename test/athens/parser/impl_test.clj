@@ -321,4 +321,39 @@
 
                ;; no spaces inside
                "Ain't ~~ working ~~"
-               [[:text-run "Ain't "] "~" "~" [:text-run " working "] "~" "~"])))
+               [[:text-run "Ain't "] "~" "~" [:text-run " working "] "~" "~"]))
+
+  (t/testing "links"
+    (parses-to sut/inline-parser->ast
+               "[link text](/some/url)"
+               [[:link {:text   "link text"
+                        :target "/some/url"}]]
+
+               ;; 3 sorts of link title
+               "[link text](/some/url \"title\")"
+               [[:link {:text   "link text"
+                        :target "/some/url"
+                        :title  "title"}]]
+
+               "[link text](/some/url 'title')"
+               [[:link {:text   "link text"
+                        :target "/some/url"
+                        :title  "title"}]]
+
+               "[link text](/some/url (title))"
+               [[:link {:text   "link text"
+                        :target "/some/url"
+                        :title  "title"}]]
+
+               ;; link in an emphasis
+               "this **[link](/example) is bold**"
+               [[:text-run "this "]
+                [:strong-emphasis
+                 [:link {:text   "link"
+                         :target "/example"}]
+                 [:text-run " is bold"]]]
+
+               ;; but no emphasis in a link
+               "[*em*](/link)"
+               [[:link {:text   "*em*"
+                        :target "/link"}]])))
