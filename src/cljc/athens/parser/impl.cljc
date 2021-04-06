@@ -49,6 +49,7 @@ inline = recur
            link /
            image /
            autolink /
+           block-ref /
            special-char)*
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
@@ -105,14 +106,18 @@ autolink = <#'(?<!\\w)<(?!\\s)'>
            #'[^>\\s]+'
            <#'(?<!\\s)>(?!\\w)'>
 
+block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
+            #'.+(?=\\)\\))'
+            <#'(?<!\\s)\\)\\)(?!\\w)'>
+
 (* characters with meaning (special chars) *)
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!<]*'
+text-run = #'[^\\*_`^~\\[!<\\(]*'
 
 (* any special char *)
-<special-char> = #'[\\*_`^~\\[!<]'
+<special-char> = #'[\\*_`^~\\[!<\\(]'
 
 <backtick> = #'(?<!`)`(?!`)'")
 

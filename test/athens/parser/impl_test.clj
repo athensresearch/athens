@@ -190,7 +190,6 @@
 (t/deftest inline-structure
 
   (t/testing "backslash escapes"
-
     (parses-to sut/inline-parser->ast
 
                ;; Any ASCII punctuation character may be backslash-escaped
@@ -234,6 +233,7 @@
 
   (t/testing "code spans"
     (parses-to sut/inline-parser->ast
+
                ;; code spans
                "`abc`"
                [[:code-span "abc"]]
@@ -243,6 +243,7 @@
 
   (t/testing "all sorts of emphasis"
     (parses-to sut/inline-parser->ast
+
                ;; emphasis & strong emphasis
                "*emphasis*"
                [[:emphasis [:text-run "emphasis"]]]
@@ -278,6 +279,7 @@
 
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (parses-to sut/inline-parser->ast
+
                ;; just a highlight
                "^^NEW^^"
                [[:highlight [:text-run "NEW"]]]
@@ -311,6 +313,7 @@
 
   (t/testing "strikethrough (GFM extension)"
     (parses-to sut/inline-parser->ast
+
                "~~Hi~~ Hello, world!"
                [[:strikethrough [:text-run "Hi"]]
                 [:text-run " Hello, world"] "!"]
@@ -325,6 +328,7 @@
 
   (t/testing "links"
     (parses-to sut/inline-parser->ast
+
                "[link text](/some/url)"
                [[:link {:text   "link text"
                         :target "/some/url"}]]
@@ -360,6 +364,7 @@
 
   (t/testing "images"
     (parses-to sut/inline-parser->ast
+
                "![link text](/some/url)"
                [[:image {:alt "link text"
                          :src "/some/url"}]]
@@ -395,6 +400,7 @@
 
   (t/testing "autolinks"
     (parses-to sut/inline-parser->ast
+
                "<http://example.com>"
                [[:link {:text   "http://example.com"
                         :target "http://example.com"}]]
@@ -406,4 +412,17 @@
                ;; emails are recognized
                "<root@example.com>"
                [[:link {:text "root@example.com"
-                        :target "mailto:root@example.com"}]])))
+                        :target "mailto:root@example.com"}]]))
+
+  (t/testing "block references (Athens extension)"
+    (parses-to sut/inline-parser->ast
+
+               ;; just a block-ref
+               "((block-id))"
+               [[:block-ref "block-id"]]
+
+               ;; in a middle of text-run
+               "Text with ((block-id)) a block"
+               [[:text-run "Text with "]
+                [:block-ref "block-id"]
+                [:text-run " a block"]])))
