@@ -8,4 +8,6 @@
 * [Datascript Attribute Table](datascript-attribute-table.md)
 * [Athens Components Documentation](components.md)
 * [Development](development.md)
+* [Contributing](contributing.md)
+* [Code of Conduct](code-of-conduct.md)
 
