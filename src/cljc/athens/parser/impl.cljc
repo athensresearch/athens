@@ -40,12 +40,12 @@ inline = recur
 
 (* `recur` so we can recursively parse inline formatting w/o bringing `:inline`. *)
 <recur> = (backslash-escapes /
+           text-run /
            code-span /
            strong-emphasis /
            emphasis /
            highlight /
            strikethrough /
-           text-run /
            special-char)*
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
