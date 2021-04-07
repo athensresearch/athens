@@ -109,10 +109,7 @@
                "    aaa\nbbb" ;; or code block is triggered
                [:block
                 [:indented-code-block [:code-text "aaa"]]
-                [:paragraph-text "bbb"]]
-
-               "aaa    \nbbb    " ;; final spaces are stripped
-               [:block [:paragraph-text "aaa\nbbb"]]))
+                [:paragraph-text "bbb"]]))
 
   (t/testing "that block-quote is parsed"
 
@@ -431,6 +428,19 @@
 
                ;; hard line break can be only at the end of a line
                "abc  \ndef"
-               [[:text-run "abc"]
+               [[:text-run "abc  "]
+                [:hard-line-break]
+                [:text-run "def"]]
+
+               "abc  \n\ndef"
+               [[:text-run "abc  "]
+                [:hard-line-break]
+                [:newline "\n"]
+                [:text-run "def"]]
+
+               "abc  \n\n\ndef"
+               [[:text-run "abc  "]
+                [:hard-line-break]
+                [:newline "\n"]
                 [:hard-line-break]
                 [:text-run "def"]])))

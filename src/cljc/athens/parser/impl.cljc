@@ -6,6 +6,7 @@
   3rd pass: raw urls"
   (:require
     [clojure.string :as string]
+    [clojure.walk :as walk]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
        :clj  [instaparse.core :as insta :refer [defparser]])))
 
@@ -32,8 +33,7 @@ newline = #'\\n'")
 
 
 (defparser inline-parser
-  "
-(* inline spans parser, processes `:paragraph-text` from phase 1 *)
+  "(* inline spans parser, processes `:paragraph-text` from phase 1 *)
 
 (* root of parse tree *)
 inline = recur
@@ -50,7 +50,8 @@ inline = recur
            image /
            autolink /
            block-ref /
-           special-char)*
+           special-char /
+           newline)*
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
 
@@ -114,18 +115,21 @@ block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!<\\(]*'
+text-run = #'[^\\*_`^~\\[!<\\(\\r\\n]*'
 
 (* any special char *)
 <special-char> = #'[\\*_`^~\\[!<\\(]'
 
-<backtick> = #'(?<!`)`(?!`)'")
+<backtick> = #'(?<!`)`(?!`)'
+
+newline = #'\\n'
+")
 
 
 (defn- transform-heading
   [atx p-text]
   [:heading {:n (count atx)}
-   [:paragraph-text p-text]])
+   [:paragraph-text (string/trim p-text)]])
 
 
 (defn- transform-indented-code-block
@@ -155,7 +159,7 @@ text-run = #'[^\\*_`^~\\[!<\\(]*'
 (defn- transform-paragraph-text
   [& strings]
   [:paragraph-text (->> strings
-                        (map string/trim)
+                        (map string/triml)
                         (string/join "\n"))])
 
 
@@ -187,6 +191,44 @@ text-run = #'[^\\*_`^~\\[!<\\(]*'
 (declare inline-parser->ast)
 
 
+(defn- walker-hlb-candidate
+  [candidate?]
+  (fn [x]
+    (if (and (vector? x)
+             (= 2 (count x)))
+      (let [[t s] x]
+        (cond
+          (and (= :text-run t) (string/ends-with? s "  "))
+          (do
+            (reset! candidate? true)
+            x)
+
+          (and (= :newline t) @candidate?)
+          (do
+            (reset! candidate? false)
+            [:hard-line-break])
+
+          (and (= :newline t) (not @candidate?))
+          (do
+            (reset! candidate? true)
+            x)
+
+          :else
+          (do
+            (reset! candidate? false)
+            x)))
+      x)))
+
+
+(defn- inline-transform
+  [& contents]
+  (let [hlb-candidate? (atom false)]
+    (apply conj []
+           (map #(walk/postwalk (walker-hlb-candidate hlb-candidate?)
+                                %)
+                contents))))
+
+
 (defn- link-transform
   [& link-parts]
   (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
@@ -212,9 +254,7 @@ text-run = #'[^\\*_`^~\\[!<\\(]*'
 
 
 (def stage-2-internal-transformations
-  {:inline   (fn [& contents]
-             ;; hide `[:inline ]`, leaving only contents
-               (apply conj [] contents))
+  {:inline   inline-transform
    :link     link-transform
    :image    image-transform
    :autolink autolink-transform})
