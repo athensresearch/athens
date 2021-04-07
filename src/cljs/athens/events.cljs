@@ -47,6 +47,133 @@
     (assoc db :db/synced false)))
 
 
+(defn shared-blocks-excl-date-pages
+  [roam-db]
+  (->> (d/q '[:find [?blocks ...]
+              :in $athens $roam
+              :where
+              [$athens _ :block/uid ?blocks]
+              [$roam _ :block/uid ?blocks]
+              [$roam ?e :block/uid ?blocks]
+              [(missing? $roam ?e :node/title)]]
+            @athens.db/dsdb
+            roam-db)))
+
+
+(defn merge-shared-page
+  "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
+  [shared-page roam-db roam-db-filename]
+  (let [page-athens              (db/get-node-document shared-page)
+        page-roam                (db/get-roam-node-document shared-page roam-db)
+        athens-child-count       (-> page-athens :block/children count)
+        roam-child-count         (-> page-roam :block/children count)
+        new-uid                  (gen-block-uid)
+        today-date-page          (:title (athens.util/get-day))
+        new-children             (conj (:block/children page-athens)
+                                       {:block/string   (str "[[Roam Import]] "
+                                                             "[[" today-date-page "]] "
+                                                             "[[" roam-db-filename "]]")
+                                        :block/uid      new-uid
+                                        :block/children (:block/children page-roam)
+                                        :block/order    athens-child-count
+                                        :block/open     true})
+        merge-pages              (merge page-roam page-athens)
+        final-page-with-children (assoc merge-pages :block/children new-children)]
+    (if (zero? roam-child-count)
+      merge-pages
+      final-page-with-children)))
+
+
+(defn get-shared-pages
+  [roam-db]
+  (->> (d/q '[:find [?pages ...]
+              :in $athens $roam
+              :where
+              [$athens _ :node/title ?pages]
+              [$roam _ :node/title ?pages]]
+            @athens.db/dsdb
+            roam-db)
+       sort))
+
+
+(defn pages
+  [roam-db]
+  (->> (d/q '[:find [?pages ...]
+              :in $
+              :where
+              [_ :node/title ?pages]]
+            roam-db)
+       sort))
+
+
+(defn gett
+  [s x]
+  (not ((set s) x)))
+
+
+(defn not-shared-pages
+  [roam-db shared-pages]
+  (->> (d/q '[:find [?pages ...]
+              :in $ ?fn ?shared
+              :where
+              [_ :node/title ?pages]
+              [(?fn ?shared ?pages)]]
+            roam-db
+            athens.events/gett
+            shared-pages)
+       sort))
+
+
+(defn update-roam-db-dates
+  "Strips the ordinal suffixes of Roam dates from block strings and dates.
+  e.g. January 18th, 2021 -> January 18, 2021"
+  [db]
+  (let [date-pages         (d/q '[:find ?t ?u
+                                  :keys node/title block/uid
+                                  :in $ ?date
+                                  :where
+                                  [?e :node/title ?t]
+                                  [(?date ?t)]
+                                  [?e :block/uid ?u]]
+                                db
+                                athens.patterns/date-block-string)
+        date-block-strings (d/q '[:find ?s ?u
+                                  :keys block/string block/uid
+                                  :in $ ?date
+                                  :where
+                                  [?e :block/string ?s]
+                                  [(?date ?s)]
+                                  [?e :block/uid ?u]]
+                                db
+                                athens.patterns/date-block-string)
+        date-concat        (concat date-pages date-block-strings)
+        tx-data            (map (fn [{:keys [block/string node/title block/uid]}]
+                                  (cond-> {:db/id [:block/uid uid]}
+                                          string (assoc :block/string (athens.patterns/replace-roam-date string))
+                                          title (assoc :node/title (athens.patterns/replace-roam-date title))))
+                                date-concat)]
+    ;;tx-data))
+    (d/db-with db tx-data)))
+
+;;(/ 3736 3842) 97% clean
+;;(-> (- 1056 2)
+;;    (+ (- 3088 406))))
+;;(defonce ROAM-DB (atom nil))
+;; 1056 pages, 2 shared
+;; 3088 pages, 406 shared
+;; 3736 math, 3842 actual count
+(reg-event-fx
+  :upload/roam-edn
+  (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
+    (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
+          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
+                               shared-pages)
+          merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
+                              (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
+          tx-data        (concat merge-shared merge-unshared)]
+      {:dispatch [:transact tx-data]})))
+
+
 (reg-event-db
   :athena/toggle
   (fn [db _]

@@ -86,15 +86,26 @@
   [:hr (use-style separator-style)])
 
 
+
+
+
+
 (defn app-toolbar
   []
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
         theme-dark  (subscribe [:theme/dark])
-        electron? (util/electron?)]
+        electron? (util/electron?)
+        theme-dark  (subscribe [:theme/dark])
+        merge-open? (reagent.core/atom false)]
     (fn []
       [:<>
+
+
+       (when @merge-open?
+         [filesystem/merge-modal merge-open?])
+
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
@@ -124,6 +135,8 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
+            [button {:on-click #(swap! merge-open? not)}
+             [:> mui-icons/MergeType]]
             [(reagent.core/adapt-react-class FiberManualRecord)
              {:style {:color      (color (if @(subscribe [:db/synced])
                                            :confirmation-color
