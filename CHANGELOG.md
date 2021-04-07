@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.66](https://github.com/athensresearch/athens/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2021-04-07)
+
+
+### Features
+
+* import from Roam ([#918](https://github.com/athensresearch/athens/issues/918)) ([1a3ee32](https://github.com/athensresearch/athens/commit/1a3ee3205a9ddfed54c3f40705d9ec2daca22e5d))
+
+
+### Documentation
+
+* describe collapse/expand shortcut in Welcome ([#913](https://github.com/athensresearch/athens/issues/913)) ([0bc7bc3](https://github.com/athensresearch/athens/commit/0bc7bc30b3ed342b98b8724f6f77d1ba2c7402ec))
+
 ## [1.0.0-beta.65](https://github.com/athensresearch/athens/compare/v1.0.0-beta.64...v1.0.0-beta.65) (2021-04-06)
 
 
