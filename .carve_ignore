@@ -23,3 +23,6 @@ athens.main.core/main
 ;; used when updating athens-datoms (don't pull :db/id)
 athens.db/get-athens-datoms
 athens.util/common-ancestor
+athens.events/shared-blocks-excl-date-pages
+athens.events/pages
+athens.patterns/date
