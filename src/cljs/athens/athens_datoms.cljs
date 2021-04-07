@@ -181,7 +181,11 @@
                                                                               #:block{:uid "7379f541a",
                                                                                       :string "`ctrl-shift-z`: redo",
                                                                                       :open true,
-                                                                                      :order 7}]}
+                                                                                      :order 7}
+                                                                              #:block{:uid "0c11c0416",
+                                                                                      :string "`ctrl-up` or `ctrl-down`: collapse or expand blocks",
+                                                                                      :open true,
+                                                                                      :order 8}]}
                                                            #:block{:uid "311b96eb2",
                                                                    :string "global shortcuts (can use anywhere)",
                                                                    :open true,
