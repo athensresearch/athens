@@ -1,8 +1,7 @@
 (ns athens.parser.impl-test
   (:require
     [athens.parser.impl :as sut]
-    [clojure.test :as t :refer [deftest is are testing]]
-    [instaparse.core :as insta]))
+    [clojure.test :as t :refer [deftest is are testing]]))
 
 
 (defmacro parses-to
@@ -425,4 +424,13 @@
                "Text with ((block-id)) a block"
                [[:text-run "Text with "]
                 [:block-ref "block-id"]
-                [:text-run " a block"]])))
+                [:text-run " a block"]]))
+
+  (t/testing "hard line breaks"
+    (parses-to sut/inline-parser->ast
+
+               ;; hard line break can be only at the end of a line
+               "abc  \ndef"
+               [[:text-run "abc"]
+                [:hard-line-break]
+                [:text-run "def"]])))
