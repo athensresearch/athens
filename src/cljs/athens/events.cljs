@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.keybindings :as keybindings]
+    [athens.patterns :as patterns]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
     [clojure.string :as string]
@@ -136,7 +137,7 @@
                                   [(?date ?t)]
                                   [?e :block/uid ?u]]
                                 db
-                                athens.patterns/date-block-string)
+                                patterns/date-block-string)
         date-block-strings (d/q '[:find ?s ?u
                                   :keys block/string block/uid
                                   :in $ ?date
@@ -145,23 +146,17 @@
                                   [(?date ?s)]
                                   [?e :block/uid ?u]]
                                 db
-                                athens.patterns/date-block-string)
+                                patterns/date-block-string)
         date-concat        (concat date-pages date-block-strings)
         tx-data            (map (fn [{:keys [block/string node/title block/uid]}]
                                   (cond-> {:db/id [:block/uid uid]}
-                                          string (assoc :block/string (athens.patterns/replace-roam-date string))
-                                          title (assoc :node/title (athens.patterns/replace-roam-date title))))
+                                    string (assoc :block/string (patterns/replace-roam-date string))
+                                    title (assoc :node/title (patterns/replace-roam-date title))))
                                 date-concat)]
     ;;tx-data))
     (d/db-with db tx-data)))
 
-;;(/ 3736 3842) 97% clean
-;;(-> (- 1056 2)
-;;    (+ (- 3088 406))))
-;;(defonce ROAM-DB (atom nil))
-;; 1056 pages, 2 shared
-;; 3088 pages, 406 shared
-;; 3736 math, 3842 actual count
+
 (reg-event-fx
   :upload/roam-edn
   (fn [_ [_ transformed-dates-roam-db roam-db-filename]]

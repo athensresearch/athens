@@ -3,6 +3,7 @@
     ["@material-ui/icons/ArrowBack" :default ArrowBack]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
+    ["@material-ui/icons/MergeType" :default MergeType]
     [athens.electron :as electron]
     [athens.events :as events]
     [athens.subs]
@@ -38,7 +39,6 @@
                   filename                  (.-name file)
                   db                        (edn/read-string {:readers datascript.core/data-readers} edn-data)
                   transformed-dates-roam-db (athens.events/update-roam-db-dates db)]
-              ;;(reset! athens.events/ROAM-DB db)
               (reset! roam-db-filename filename)
               (reset! transformed-db transformed-dates-roam-db))))
     (.readAsText fr file)))
@@ -63,10 +63,10 @@
        [modal/modal
 
         {:title    [:div.modal__title
-                    [:> mui-icons/MergeType]
+                    [:> MergeType]
                     [:h4 "Merge Roam DB"]
                     [button {:on-click close-modal}
-                     [:> mui-icons/Close]]]
+                     [:> Close]]]
 
          :content  [:div (use-style modal-contents-style)
                     (if (nil? @transformed-roam-db)

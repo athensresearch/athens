@@ -7,6 +7,7 @@
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
     ["@material-ui/icons/Menu" :default Menu]
+    ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Today" :default Today]
@@ -18,6 +19,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views.buttons :refer [button]]
+    [athens.views.filesystem :as filesystem]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -86,16 +88,11 @@
   [:hr (use-style separator-style)])
 
 
-
-
-
-
 (defn app-toolbar
   []
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
-        theme-dark  (subscribe [:theme/dark])
         electron? (util/electron?)
         theme-dark  (subscribe [:theme/dark])
         merge-open? (reagent.core/atom false)]
@@ -135,13 +132,13 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [button {:on-click #(swap! merge-open? not)}
-             [:> mui-icons/MergeType]]
             [(reagent.core/adapt-react-class FiberManualRecord)
              {:style {:color      (color (if @(subscribe [:db/synced])
                                            :confirmation-color
                                            :highlight-color))
                       :align-self "center"}}]
+            [button {:on-click #(swap! merge-open? not)}
+             [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
                      :active   (= @route-name :settings)}
              [:> Settings]]

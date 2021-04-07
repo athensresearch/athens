@@ -25,9 +25,8 @@
                           (str "$1$3$4" new-title "$2$5")))
 
 
-
 ;; Positive Lookbehind: between 1 and 2 digits
-;; One of an oridinal suffix, e.g. -st, -nd, -rd, -th, see https://en.wikipedia.org/wiki/Ordinal_indicator
+;; One of an ordinal suffix, e.g. -st, -nd, -rd, -th, see https://en.wikipedia.org/wiki/Ordinal_indicator
 ;; Comma
 ;; Positive Lookahead: whitespace and 4 digits
 (def roam-date #"(?<=\d{1,2})(st|nd|rd|th),(?=\s\d{4})")
