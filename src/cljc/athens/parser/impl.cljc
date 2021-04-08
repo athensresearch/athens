@@ -51,6 +51,7 @@ inline = recur
            autolink /
            block-ref /
            page-link /
+           hashtag /
            special-char /
            newline)*
 
@@ -112,19 +113,21 @@ block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
             #'.+(?=\\)\\))'
             <#'(?<!\\s)\\)\\)(?!\\w)'>
 
-page-link = page-link-part
-<page-link-part> = <#'(?<!\\w)\\[\\[(?!\\s)'>
-                   #'[^\\]\\n]+'
-                   <#'(?<!\\s)\\]\\](?!\\w)'>
+page-link = <#'(?<!\\w)\\[\\[(?!\\s)'>
+            #'[^\\]\\n]+'
+            <#'(?<!\\s)\\]\\](?!\\w)'>
 
+hashtag = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
+          #'[^\\]\\n]+'
+          <#'(?<!\\s)\\]\\](?!\\w)'>
 (* characters with meaning (special chars) *)
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!<\\(\\r\\n]*'
+text-run = #'[^\\*_`^~\\[!<\\(\\#\\r\\n]*'
 
 (* any special char *)
-<special-char> = #'[\\*_`^~\\[!<\\(]'
+<special-char> = #'[\\*_`^~\\[!<\\(\\#]'
 
 <backtick> = #'(?<!`)`(?!`)'
 

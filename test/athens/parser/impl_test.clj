@@ -466,4 +466,28 @@
                 "["
                 [:text-run "def"]
                 [:newline "\n"]
+                [:text-run "ghil]] jkl"]]))
+
+  (t/testing "hashtags (Athens extension)"
+    (parses-to sut/inline-parser->ast
+               "#[[Page Title]]"
+               [[:hashtag "Page Title"]]
+
+               "In a middle #[[Page Title]] of text"
+               [[:text-run "In a middle "]
+                [:hashtag "Page Title"]
+                [:text-run " of text"]]
+
+               ;; But not when surrounded by word
+               "abc#[[def]]ghi"
+               [[:text-run "abc"] "#" "[" "[" [:text-run "def]]ghi"]]
+
+               ;; also can't span newline
+               "abc #[[def\nghil]] jkl"
+               [[:text-run "abc "]
+                "#"
+                "["
+                "["
+                [:text-run "def"]
+                [:newline "\n"]
                 [:text-run "ghil]] jkl"]])))
