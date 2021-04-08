@@ -33,8 +33,15 @@ jobs:
          if: steps.cache-deps.outputs.cache-hit != 'true'
          run: lein deps
 
-       - name: Run tests
+       - name: Run JVM tests
          run: script/test/jvm
+
+       # TODO(agentydragon): cache JS deps
+       - name: Fetch JS deps
+         run: yarn
+
+       - name: Run Karma tests
+         run: script/test/karma
 
    lint:
      runs-on: ubuntu-18.04

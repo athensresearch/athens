@@ -61,7 +61,7 @@
             "gh-pages"     ["shell" "yarn" "gh-pages" "-d" "resources/public"]
             "karma"        ["do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "karma-test"]
-                            ["shell" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
+                            ["shell" "yarn" "run" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
 
   :profiles
   {:dev

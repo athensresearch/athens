@@ -7,6 +7,7 @@
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
     ["@material-ui/icons/Menu" :default Menu]
+    ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Today" :default Today]
@@ -18,6 +19,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views.buttons :refer [button]]
+    [athens.views.filesystem :as filesystem]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -91,10 +93,16 @@
   (let [left-open?  (subscribe [:left-sidebar/open])
         right-open? (subscribe [:right-sidebar/open])
         route-name  (subscribe [:current-route/name])
+        electron? (util/electron?)
         theme-dark  (subscribe [:theme/dark])
-        electron? (util/electron?)]
+        merge-open? (reagent.core/atom false)]
     (fn []
       [:<>
+
+
+       (when @merge-open?
+         [filesystem/merge-modal merge-open?])
+
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
@@ -129,6 +137,8 @@
                                            :confirmation-color
                                            :highlight-color))
                       :align-self "center"}}]
+            [button {:on-click #(swap! merge-open? not)}
+             [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
                      :active   (= @route-name :settings)}
              [:> Settings]]
