@@ -443,4 +443,27 @@
                 [:hard-line-break]
                 [:newline "\n"]
                 [:hard-line-break]
-                [:text-run "def"]])))
+                [:text-run "def"]]))
+
+  (t/testing "page links (Athens extension)"
+    (parses-to sut/inline-parser->ast
+               "[[Page Title]]"
+               [[:page-link "Page Title"]]
+
+               "In a middle [[Page Title]] of text"
+               [[:text-run "In a middle "]
+                [:page-link "Page Title"]
+                [:text-run " of text"]]
+
+               ;; But not when surrounded by word
+               "abc[[def]]ghi"
+               [[:text-run "abc"] "[" "[" [:text-run "def]]ghi"]]
+
+               ;; also can't span newline
+               "abc [[def\nghil]] jkl"
+               [[:text-run "abc "]
+                "["
+                "["
+                [:text-run "def"]
+                [:newline "\n"]
+                [:text-run "ghil]] jkl"]])))

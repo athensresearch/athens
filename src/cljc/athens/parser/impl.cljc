@@ -50,6 +50,7 @@ inline = recur
            image /
            autolink /
            block-ref /
+           page-link /
            special-char /
            newline)*
 
@@ -110,6 +111,11 @@ autolink = <#'(?<!\\w)<(?!\\s)'>
 block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
             #'.+(?=\\)\\))'
             <#'(?<!\\s)\\)\\)(?!\\w)'>
+
+page-link = page-link-part
+<page-link-part> = <#'(?<!\\w)\\[\\[(?!\\s)'>
+                   #'[^\\]\\n]+'
+                   <#'(?<!\\s)\\]\\](?!\\w)'>
 
 (* characters with meaning (special chars) *)
 (* every delimiter used as inline span boundary has to be added below *)
