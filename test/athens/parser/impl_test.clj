@@ -490,4 +490,30 @@
                 "["
                 [:text-run "def"]
                 [:newline "\n"]
-                [:text-run "ghil]] jkl"]])))
+                [:text-run "ghil]] jkl"]]))
+
+  (t/testing "LaTeX (Athens extension)"
+    (parses-to sut/inline-parser->ast
+
+               "$$\\LaTeX$$"
+               [[:latex "\\LaTeX"]]
+
+               ;; can have newlines inside
+               "$$abc\ndef$$"
+               [[:latex "abc\ndef"]]
+
+               ;; can have $ inside
+               "$$abc $ d$$"
+               [[:latex "abc $ d"]]
+
+               ;; also $$ is allowed
+               "$$abc $$def$$"
+               [[:latex "abc $$def"]]
+
+               ;; also like this
+               "$$abc$$ def$$"
+               [[:latex "abc$$ def"]]
+
+               ;; and surrounded by spaces
+               "$$abc $$ def$$"
+               [[:latex "abc $$ def"]])))
