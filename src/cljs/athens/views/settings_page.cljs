@@ -7,6 +7,7 @@
     [athens.electron :as electron]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
+    [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [garden.selectors :as selectors]
@@ -91,72 +92,11 @@
       email)))
 
 
-#_(defn settings-page
-    []
-    (let [opted-out?          (r/atom (.. js/window -posthog has_opted_out_capturing))
-          ;; pretty easy to get around this auth. Lol
-          authed?             (r/atom (= (js/localStorage.getItem "auth/authed?") "true"))
-          email               (r/atom (init-email))
-          sending-request     (r/atom false)
-          debounce-save-time! (r/atom (js/Number (js/localStorage.getItem "debounce-save-time")))]
 
-      (fn []
-        (let [submit-disabled     (or @sending-request @authed?)]
 
-          [:div {:style {:display        "flex"
-                         :margin         "0vh 5vw"
-                         :width          "90vw"
-                         :flex-direction "column"}}
-           [:h2 "Settings"]
 
-           (if @authed?
-             [:span (str "Thank you for using and backing us, " @email " ❤️")]
-             [:span "You are using the free version of Athens. You are hosting your own data. Please be careful!"])
 
-           [:div {:style {:margin "10px 0"}}
-            [:h5 "Email"]
-            [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
-             [:input {:style {:width "15em"} :type "email" :value @email :placeholder "Open Collective Email"
-                      :on-change #(handle-change-email email (.. % -target -value))}]
-             [button {:on-click #(handle-click-email @email authed? sending-request)
-                      :disabled submit-disabled
-                      :primary  true} "Submit"]]]
-
-           ;; Analytics
-
-           (if @opted-out?
-             [:h5 "Opted Out of Product Usage and Error Monitoring"]
-             [:h5 "Opted Into Product Usage and Error Monitoring"])
-           [:div {:style {:margin "10px 0"}}
-            [button {:primary  (false? @opted-out?)
-                     :on-click #(handle-click opted-out?)}
-             (if @opted-out?
-               [:div {:style {:display "flex"}}
-                [:> ToggleOn]
-                [:span "\uD83D\uDE41 Opting out makes it harder to improve Athens, and for us to become sustainable."]]
-               [:div {:style {:display "flex"}}
-                [:> ToggleOff]
-                [:span "\uD83D\uDD12 Athens will never sell your data. Athens has never and will never look at the contents of your database and what you are writing."]])]]
-           [:div {:style {:margin-top "15px"}}
-            [:h5 "Remote Backups"]
-            [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
-             [button {:disabled true}
-              "Backup my DB to the cloud"]
-             [:span "Coming soon to " [:a {:href "https://opencollective.com/athens" :target "_blank"}
-                                       "paid Users and Sponsors"]]]]
-
-           ;; Auto-save
-           [:div {:style {:margin "20px 0"}}
-            [:h5 "Auto-save"]
-            [:div {:style {:display "flex" :justify-content "space-between"
-                           :margin "10px 0"}}
-             [:input {:style {:width "4em"}
-                      :type  "number" :value @debounce-save-time! :on-change #(handle-debounce-save-input (js/Number (.. % -target -value)) debounce-save-time!)}]
-             (case @debounce-save-time!
-               0 [:span (str "Athens will save and create a local backup after each edit.")]
-               1 [:span (str "Athens will save and create a local backup " @debounce-save-time! " second after your last edit.")]
-               [:span (str "Athens will save and create a local backup " @debounce-save-time! " seconds after your last edit.")])]]]))))
-
+;; Styles
 
 (def settings-wrap-style
   {:border-top "1px solid var(--border-color)"
@@ -164,8 +104,8 @@
    :padding-bottom "2rem"
    :padding "2rem 0.75rem"
    :line-height "1.25"
-
-   ::stylefy/manual [[:&.disabled {:opacity 0.5}]
+   ::stylefy/manual [[:h3 {:margin 0}]
+                     [:&.disabled {:opacity 0.5}]
                      [:header {:padding-bottom "1rem"}]
                      [:span.glance {:font-weight "normal"
                                     :opacity 0.7
@@ -183,31 +123,48 @@
                               :align-items "center"
                               :font-weight "bold"
                               :cursor "pointer"}]]
-
-
    ::stylefy/media {{:min-width "40em"}
                     {:display "grid"
                      :grid-template-columns "10rem 1fr"
                      :grid-gap "1rem"}}})
 
 
-(defn settings-wrap
+(def settings-page-styles
+  {:width "50em"
+   :max-width "100%"
+   :margin "2rem auto"})
+
+
+;; Components
+
+
+(defn setting-wrapper
   ([children]
-   [settings-wrap {} children])
+   [setting-wrapper {} children])
   ([config children]
-   (let [{:keys [disabled] :as props} config]
+   (let [{:keys [disabled] :as _props} config]
      [:div (stylefy/use-style settings-wrap-style
                               {:class [(when disabled "disabled")]}) children])))
 
 
+;; TODO
+(defn handle-reset-email
+  [s]
+  ())
+
+;; TODO
+(defn handle-submit-email
+  [s]
+  ())
+
 (defn email-comp
   [s]
-  [settings-wrap
+  [setting-wrapper
    [:<>
     [:header
      [:h3 "Email"]
      [:span.glance (if (clojure.string/blank? (:email @s))
-                     " Not set "
+                     "Not set"
                      (:email @s))]]
     [:main
      [:div
@@ -222,36 +179,36 @@
        "Reset"]]
      [:aside
       [:p (if (clojure.string/blank? (:email @s))
-            "Your data is backed up. Thank you for helping support Athens!"
-            "You are using the free version of Athens. You are hosting your own data. Please be careful!")]]]]])
+            "You are using the free version of Athens. You are hosting your own data. Please be careful!"
+            "Your data is backed up. Thank you for helping support Athens!")]]]]])
 
 
-(defn toggleswitch
-  [props]
-  [:input (stylefy/use-style {:appearance      "none"
-                              :border-radius   "10em"
-                              :height          "1em"
-                              :width           "1.615em"
-                              :display         "flex"
-                              :transition      "all 0.3s ease"
-                              :border          "1px solid"
-                              :position        "relative"
-                              :outline         "none"
-                              :box-sizing      "content-box"
-                              :background      "var(--link-color)"
-                              ::stylefy/manual [[:&:before {:background "white"
-                                                            :content       "''" :position "absolute" :top 0 :bottom 0 :left "37%" :right 0 :box-shadow "0 0 0 1px var(--border-color)"
-                                                            :border-radius "inherit" :transition "all 0.15s ease" :z-index 2}]
-                                                [:&:checked {:background "gray"}
-                                                 [:&:before {:left 0 :right "37%"}]]]}
-                             (merge {:type "checkbox"}
-                                    props))])
+(defn monitoring-off
+  [s]
+  (.. js/posthog (capture "opt-out"))
+  (.. js/window -posthog opt_out_capturing)
+  (js/localStorage.setItem "sentry" "off")
+  (swap! s update :monitoring not))
 
+
+(defn monitoring-on
+  [s]
+  (.. js/window -posthog opt_in_capturing)
+  (.. js/posthog (capture "opt-in"))
+  (js/localStorage.setItem "sentry" "on")
+  (swap! s update :monitoring not))
+
+
+(defn handle-monitoring-click
+  [s]
+  (if (:monitoring @s)
+    (monitoring-off s)
+    (monitoring-on s)))
 
 
 (defn monitoring-comp
   [s]
-  [settings-wrap
+  [setting-wrapper
    [:<>
     [:header
      [:h3 "Usage and Diagnostics"]
@@ -264,36 +221,45 @@
                       [:span "Not sending usage data"]])]]
     [:main
      [:label
-      [toggleswitch {:defaultValue (:monitoring @s)
-                     :on-change    #(swap! s update :monitoring not)}]
-      "Send usage data and diagnostics to Athens Research"]
+      [toggle-switch/toggle-switch {:defaultValue (:monitoring @s)
+                                    :on-change     #(handle-monitoring-click s)}]
+      "Send usage data and diagnostics to Athens"]
      [:aside
-      [:p "Athens Research has never and will never look at the contents of your database. Athens Research will never ever sell your data."]]]]])
+      [:p "Athens has never and will never look at the contents of your database."]
+      [:p "Athens will never ever sell your data."]]]]])
+
+
+(defn handle-blur-autosave-input
+  [e s]
+  (let [value (.. e -target -value)]
+    (swap! s assoc :autosave-time value)
+    (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
+    (js/localStorage.setItem "debounce-save-time" value)))
 
 
 (defn autosave-comp
   [s]
-  [settings-wrap
+  [setting-wrapper
    [:<>
     [:header
      [:h3 "AutoSave"]
-     [:span.glance (str (:auto-save-frequency @s) " seconds")]]
+     [:span.glance (str (:autosave-time @s) " seconds")]]
     [:main
      [:label
       [textinput/textinput {:type         "number"
-                            :defaultValue (:auto-save-frequency @s)
+                            :defaultValue (:autosave-time @s)
                             :min 0
                             :step 15
                             :max 100
-                            :on-blur    #(swap! s assoc :auto-save-frequency (.. % -target -value))}]
+                            :on-blur    #(handle-blur-autosave-input % s)}]
       " seconds"]
      [:aside
-      [:p (str "Athens will save and create a local backup " (:auto-save-frequency @s) " seconds after your last edit.")]]]]])
+      [:p (str "Athens will save and create a local backup " (:autosave-time @s) " seconds after your last edit.")]]]]])
 
 
 (defn backups-comp
-  [s]
-  [settings-wrap
+  [_s]
+  [setting-wrapper
    {:disabled true}
    [:<>
     [:header
@@ -307,32 +273,108 @@
      [button {:disabled true} "Backup my DB to the cloud"]]]])
 
 
-
-(def init-state
-  {:email "jeff@athens.com"
-   :monitoring true
-   :auto-save-frequency 15})
-
-
-(def settings-page-styles
-  {:width "50em"
-   :max-width "100%"
-   :margin "2rem auto"})
-
-
-
-(defn settings-page-wrapper
+(defn settings-container
   [comp]
-  [:div (stylefy/use-style settings-page-styles)
-   comp])
+  [:div (stylefy/use-style settings-page-styles) comp])
+
+
+
+(defn init-monitoring
+  "Returns true if opted-out
+  Monitoring = true if opted-in"
+  []
+  (not (.. js/window -posthog has_opted_out_capturing)))
+
+(defn init-autosave-time
+  []
+  (js/Number (js/localStorage.getItem "debounce-save-time")))
+
+
+(defn init-state
+  []
+  {:email (init-email)
+   :monitoring (init-monitoring)
+   :autosave-time (init-autosave-time)})
+
+
+;; DONE: initial value <- read localStorage
+;; TODO: change value -> write to localStorage
+
+;; TODO: the toggle switch left-right keeps on getting messed up
 
 (defn settings-page
   []
-  (let [s (r/atom init-state)]
-    [settings-page-wrapper
+  (let [s (r/atom (init-state))]
+    [settings-container
      [:<>
       [:h1 "Settings"]
       [email-comp s]
       [monitoring-comp s]
       [autosave-comp s]
       [backups-comp s]]]))
+
+;;(defn settings-page
+;;  []
+;;  (let [opted-out?          (r/atom (.. js/window -posthog has_opted_out_capturing))
+;;        ;; pretty easy to get around this auth. Lol
+;;        authed?             (r/atom (= (js/localStorage.getItem "auth/authed?") "true"))
+;;        email               (r/atom (init-email))
+;;        sending-request     (r/atom false)
+;;        debounce-save-time! (r/atom (init-autosave-time))]
+;;
+;;    (fn []
+;;      (let [submit-disabled     (or @sending-request @authed?)]
+;;
+;;        [:div {:style {:display        "flex"
+;;                       :margin         "0vh 5vw"
+;;                       :width          "90vw"
+;;                       :flex-direction "column"}}
+;;         [:h2 "Settings"]
+;;
+;;         (if @authed?
+;;           [:span (str "Thank you for using and backing us, " @email " ❤️")]
+;;           [:span "You are using the free version of Athens. You are hosting your own data. Please be careful!"])
+;;
+;;         [:div {:style {:margin "10px 0"}}
+;;          [:h5 "Email"]
+;;          [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
+;;           [:input {:style {:width "15em"} :type "email" :value @email :placeholder "Open Collective Email"
+;;                    :on-change #(handle-change-email email (.. % -target -value))}]
+;;           [button {:on-click #(handle-click-email @email authed? sending-request)
+;;                    :disabled submit-disabled
+;;                    :primary  true} "Submit"]]]
+;;
+;;         ;; Analytics
+;;
+;;         (if @opted-out?
+;;           [:h5 "Opted Out of Product Usage and Error Monitoring"]
+;;           [:h5 "Opted Into Product Usage and Error Monitoring"])
+;;         [:div {:style {:margin "10px 0"}}
+;;          [button {:primary  (false? @opted-out?)
+;;                   :on-click #(handle-click opted-out?)}
+;;           (if @opted-out?
+;;             [:div {:style {:display "flex"}}
+;;              [:> ToggleOn]
+;;              [:span "\uD83D\uDE41 Opting out makes it harder to improve Athens, and for us to become sustainable."]]
+;;             [:div {:style {:display "flex"}}
+;;              [:> ToggleOff]
+;;              [:span "\uD83D\uDD12 Athens will never sell your data. Athens has never and will never look at the contents of your database and what you are writing."]])]]
+;;         [:div {:style {:margin-top "15px"}}
+;;          [:h5 "Remote Backups"]
+;;          [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
+;;           [button {:disabled true}
+;;            "Backup my DB to the cloud"]
+;;           [:span "Coming soon to " [:a {:href "https://opencollective.com/athens" :target "_blank"}
+;;                                     "paid Users and Sponsors"]]]]
+;;
+;;         ;; Auto-save
+;;         [:div {:style {:margin "20px 0"}}
+;;          [:h5 "Auto-save"]
+;;          [:div {:style {:display "flex" :justify-content "space-between"
+;;                         :margin "10px 0"}}
+;;           [:input {:style {:width "4em"}
+;;                    :type  "number" :value @debounce-save-time! :on-change #(handle-debounce-save-input (js/Number (.. % -target -value)) debounce-save-time!)}]
+;;           (case @debounce-save-time!
+;;             0 [:span (str "Athens will save and create a local backup after each edit.")]
+;;             1 [:span (str "Athens will save and create a local backup " @debounce-save-time! " second after your last edit.")]
+;;             [:span (str "Athens will save and create a local backup " @debounce-save-time! " seconds after your last edit.")])]]]))))
