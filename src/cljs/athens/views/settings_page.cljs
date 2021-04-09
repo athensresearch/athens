@@ -225,7 +225,6 @@
             "Your data is backed up. Thank you for helping support Athens!"
             "You are using the free version of Athens. You are hosting your own data. Please be careful!")]]]]])
 
-                                                                    :z-index 1}]]]
 
 (defn toggleswitch
   [props]
