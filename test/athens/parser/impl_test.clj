@@ -508,6 +508,11 @@
                [[:text-run "abc"]
                 [:hashtag "simple"]]))
 
+  (t/testing "components (Athens extension)"
+    (parses-to sut/inline-parser->ast
+               "{{component}}"
+               [[:component "component"]]))
+
   (t/testing "LaTeX (Athens extension)"
     (parses-to sut/inline-parser->ast
 

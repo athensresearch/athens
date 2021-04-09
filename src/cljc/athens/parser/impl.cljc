@@ -52,6 +52,7 @@ inline = recur
            block-ref /
            page-link /
            hashtag /
+           component /
            latex /
            special-char /
            newline)*
@@ -124,6 +125,10 @@ hashtag = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
         | <#'(?<!\\w)\\#(?!\\s)'>
           #'\\w+(?!\\w)'
 
+component = <#'(?<!\\w)\\{\\{(?!\\s)'>
+            (page-link / block-ref / #'.+(?=\\}\\})')
+            <#'(?<!\\s)\\}\\}(?!\\w)'>
+
 latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
         #'(?s).+(?=\\$\\$)'
         <#'(?<!\\s)\\$\\$(?!\\w)'>
@@ -132,10 +137,10 @@ latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!<\\(\\#\\$\\r\\n]*'
+text-run = #'[^\\*_`^~\\[!<\\(\\#\\$\\{\\r\\n]*'
 
 (* any special char *)
-<special-char> = #'(?<!\\w)[\\*_`^~\\[!<\\(\\#\\$\\#]'
+<special-char> = #'(?<!\\w)[\\*_`^~\\[!<\\(\\#\\$\\{]'
 
 <backtick> = #'(?<!`)`(?!`)'
 
