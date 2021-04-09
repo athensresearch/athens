@@ -9,6 +9,7 @@
     [athens.views.textinput :as textinput]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
+    [garden.selectors :as selectors]
     [goog.functions :as goog-functions]
     [reagent.core :as r]
     [stylefy.core :as stylefy])
@@ -177,7 +178,7 @@
                      [:p {:margin "0.25rem 0"}]
                      [:p:first-child {:margin-top 0}]
                      [:p:last-child {:margin-bottom 0}]
-                     [:label {:dispatch "flex"
+                     [:label {:display "flex"
                               :gap "0.5rem"
                               :align-items "center"
                               :font-weight "bold"
@@ -224,6 +225,30 @@
             "Your data is backed up. Thank you for helping support Athens!"
             "You are using the free version of Athens. You are hosting your own data. Please be careful!")]]]]])
 
+                                                                    :z-index 1}]]]
+
+(defn toggleswitch
+  [props]
+  [:input (stylefy/use-style {:appearance      "none"
+                              :border-radius   "10em"
+                              :height          "1em"
+                              :width           "1.615em"
+                              :display         "flex"
+                              :transition      "all 0.3s ease"
+                              :border          "1px solid"
+                              :position        "relative"
+                              :outline         "none"
+                              :box-sizing      "content-box"
+                              :background      "var(--link-color)"
+                              ::stylefy/manual [[:&:before {:background "white"
+                                                            :content       "''" :position "absolute" :top 0 :bottom 0 :left "37%" :right 0 :box-shadow "0 0 0 1px var(--border-color)"
+                                                            :border-radius "inherit" :transition "all 0.15s ease" :z-index 2}]
+                                                [:&:checked {:background "gray"}
+                                                 [:&:before {:left 0 :right "37%"}]]]}
+                             (merge {:type "checkbox"}
+                                    props))])
+
+
 
 (defn monitoring-comp
   [s]
@@ -240,9 +265,8 @@
                       [:span "Not sending usage data"]])]]
     [:main
      [:label
-      [:input {:type         "checkbox"
-               :defaultValue (:monitoring @s)
-               :on-change    #(swap! s update :monitoring not)}]
+      [toggleswitch {:defaultValue (:monitoring @s)
+                     :on-change    #(swap! s update :monitoring not)}]
       "Send usage data and diagnostics to Athens Research"]
      [:aside
       [:p "Athens Research has never and will never look at the contents of your database. Athens Research will never ever sell your data."]]]]])
@@ -260,6 +284,7 @@
       [textinput/textinput {:type         "number"
                             :defaultValue (:auto-save-frequency @s)
                             :min 0
+                            :step 15
                             :max 100
                             :on-blur    #(swap! s assoc :auto-save-frequency (.. % -target -value))}]
       " seconds"]
@@ -280,9 +305,8 @@
            :rel "noreferrer"}
          " paid users and sponsors"]]]
     [:main
-     [button {:disabled true} "Backup my DB to the cloud"]
-     [:aside
-      [:p (str "Athens will save and create a local backup " (:auto-save-frequency @s) " seconds after your last edit.")]]]]])
+     [button {:disabled true} "Backup my DB to the cloud"]]]])
+
 
 
 (def init-state
