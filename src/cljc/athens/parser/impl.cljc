@@ -245,7 +245,7 @@ newline = #'\\n'
 (defn- inline-transform
   [& contents]
   (let [hlb-candidate? (atom false)]
-    (apply conj []
+    (apply conj [:paragraph]
            (map #(walk/postwalk (walker-hlb-candidate hlb-candidate?)
                                 %)
                 contents))))
@@ -275,11 +275,29 @@ newline = #'\\n'
                     url)}])
 
 
+(defn- component-transform
+  [contents]
+  [:component (if (vector? contents)
+                (let [[tag text] contents]
+                  (cond
+                    (= :page-link tag)
+                    (str "[[" text "]]")
+
+                    (= :block-ref tag)
+                    (str "((" text "))")
+
+                    :else
+                    text))
+                contents)
+   contents])
+
+
 (def stage-2-internal-transformations
-  {:inline   inline-transform
-   :link     link-transform
-   :image    image-transform
-   :autolink autolink-transform})
+  {:inline    inline-transform
+   :link      link-transform
+   :image     image-transform
+   :autolink  autolink-transform
+   :component component-transform})
 
 
 (defn inline-parser->ast
@@ -287,7 +305,8 @@ newline = #'\\n'
   (let [parse-result (insta/parse inline-parser in)]
     (if-not (insta/failure? parse-result)
       (insta/transform stage-2-internal-transformations parse-result)
-      [^{:parse-error (insta/get-failure parse-result)}
+      ^{:parse-error (insta/get-failure parse-result)}
+      [:paragraph
        [:text-run in]])))
 
 
@@ -295,9 +314,52 @@ newline = #'\\n'
   {:paragraph-text inline-parser->ast})
 
 
+(def uri-pattern
+  #"(?<!\w)(([^:/?#\s]+):)?(//([^/?#\s]*))([^?#\s]*)(\?([^#\s]*))?(#(.*))?")
+
+
+(defn- text-run-transform
+  [text-run]
+  (let [matches (re-seq uri-pattern text-run)]
+    (if (seq matches)
+      (into [:span]
+            (loop [t   text-run
+                   m   matches
+                   acc []]
+              (let [uri            (ffirst m)
+                    rr             (string/split t (re-pattern uri))
+                    [before after] rr]
+                (if (seq (rest m))
+                  (recur after
+                         (rest m)
+                         (cond-> acc
+                           (string? before)
+                           (conj before)
+
+                           :true
+                           (conj [:link {:text   uri
+                                         :target uri}])))
+                  (cond-> acc
+                    (string? before)
+                    (conj before)
+
+                    :true
+                    (conj [:link {:text   uri
+                                  :target uri}])
+
+                    (string? after)
+                    (conj after))))))
+      text-run)))
+
+
+(def stage-3-transformations
+  {:text-run text-run-transform})
+
+
 (defn staged-parser->ast
   [in]
   (->> in
        (insta/parse block-parser)
        (insta/transform stage-1-transformations)
-       (insta/transform stage-2-transformations)))
+       (insta/transform stage-2-transformations)
+       (insta/transform stage-3-transformations)))

@@ -190,7 +190,8 @@
 
                ;; Any ASCII punctuation character may be backslash-escaped
                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
-               ["\\!"
+               [:paragraph
+                "\\!"
                 "\\\""
                 "\\#"
                 "\\$"
@@ -225,74 +226,99 @@
 
                ;; Backslashes before other characters are treated as literal backslashes:
                "\\→\\A\\a\\ \\3\\φ\\«"
-               [[:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]))
+               [:paragraph
+                [:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]))
 
   (t/testing "code spans"
     (parses-to sut/inline-parser->ast
 
                ;; code spans
                "`abc`"
-               [[:code-span "abc"]]
+               [:paragraph
+                [:code-span "abc"]]
 
                "` foo ` bar `"
-               [[:code-span " foo ` bar "]]))
+               [:paragraph
+                [:code-span " foo ` bar "]]))
 
   (t/testing "all sorts of emphasis"
     (parses-to sut/inline-parser->ast
 
                ;; emphasis & strong emphasis
                "*emphasis*"
-               [[:emphasis [:text-run "emphasis"]]]
+               [:paragraph
+                [:emphasis
+                 [:text-run "emphasis"]]]
 
                "* not em *"
-               ["*" [:text-run " not em "] "*"]
+               [:paragraph
+                "*"
+                [:text-run " not em "]
+                "*"]
 
                "**strong**"
-               [[:strong-emphasis [:text-run "strong"]]]
+               [:paragraph
+                [:strong-emphasis
+                 [:text-run "strong"]]]
 
                "_also emphasis_"
-               [[:emphasis [:text-run "also emphasis"]]]
+               [:paragraph
+                [:emphasis
+                 [:text-run "also emphasis"]]]
 
                "__very strong__"
-               [[:strong-emphasis [:text-run "very strong"]]]
+               [:paragraph
+                [:strong-emphasis
+                 [:text-run "very strong"]]]
 
                ;; mix and match different emphasis
                "**bold and *italic***"
-               [[:strong-emphasis
+               [:paragraph
+                [:strong-emphasis
                  [:text-run "bold and "]
                  [:emphasis
                   [:text-run "italic"]]]]
 
                ;; next to each other
                "normal *italic* **bold**"
-               [[:text-run "normal "]
+               [:paragraph
+                [:text-run "normal "]
                 [:emphasis [:text-run "italic"]]
                 [:text-run " "]
                 [:strong-emphasis [:text-run "bold"]]]
 
                "_so wrong*"
-               ["_" [:text-run "so wrong"] "*"]))
+               [:paragraph
+                "_"
+                [:text-run "so wrong"]
+                "*"]))
 
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (parses-to sut/inline-parser->ast
 
                ;; just a highlight
                "^^NEW^^"
-               [[:highlight [:text-run "NEW"]]]
+               [:paragraph
+                [:highlight
+                 [:text-run "NEW"]]]
 
                ;; in a middle
                "something ^^completely^^ different"
-               [[:text-run "something "]
+               [:paragraph
+                [:text-run "something "]
                 [:highlight [:text-run "completely"]]
                 [:text-run " different"]]
 
                ;; with spaces
                "^^a b c^^"
-               [[:highlight [:text-run "a b c"]]]
+               [:paragraph
+                [:highlight
+                 [:text-run "a b c"]]]
 
                ;; mixing with emphasis
                "this ^^highlight *has* **emphasis**^^"
-               [[:text-run "this "]
+               [:paragraph
+                [:text-run "this "]
                 [:highlight
                  [:text-run "highlight "]
                  [:emphasis [:text-run "has"]]
@@ -300,7 +326,8 @@
                  [:strong-emphasis [:text-run "emphasis"]]]]
 
                "this ^^highlight **has *nested emphasis***^^"
-               [[:text-run "this "]
+               [:paragraph
+                [:text-run "this "]
                 [:highlight
                  [:text-run "highlight "]
                  [:strong-emphasis
@@ -311,43 +338,58 @@
     (parses-to sut/inline-parser->ast
 
                "~~Hi~~ Hello, world!"
-               [[:strikethrough [:text-run "Hi"]]
+               [:paragraph
+                [:strikethrough [:text-run "Hi"]]
                 [:text-run " Hello, world"] "!"]
 
                ;; not in the middle of the word
                "T~~hi~~s"
-               [[:text-run "T"] "~" "~" [:text-run "hi"] "~" "~" [:text-run "s"]]
+               [:paragraph
+                [:text-run "T"]
+                "~" "~"
+                [:text-run "hi"]
+                "~" "~"
+                [:text-run "s"]]
 
                ;; no spaces inside
                "Ain't ~~ working ~~"
-               [[:text-run "Ain't "] "~" "~" [:text-run " working "] "~" "~"]))
+               [:paragraph
+                [:text-run "Ain't "]
+                "~" "~"
+                [:text-run " working "]
+                "~" "~"]))
 
   (t/testing "links"
     (parses-to sut/inline-parser->ast
 
                "[link text](/some/url)"
-               [[:link {:text   "link text"
+               [:paragraph
+                [:link {:text   "link text"
                         :target "/some/url"}]]
 
                ;; 3 sorts of link title
                "[link text](/some/url \"title\")"
-               [[:link {:text   "link text"
+               [:paragraph
+                [:link {:text   "link text"
                         :target "/some/url"
                         :title  "title"}]]
 
                "[link text](/some/url 'title')"
-               [[:link {:text   "link text"
+               [:paragraph
+                [:link {:text   "link text"
                         :target "/some/url"
                         :title  "title"}]]
 
                "[link text](/some/url (title))"
-               [[:link {:text   "link text"
+               [:paragraph
+                [:link {:text   "link text"
                         :target "/some/url"
                         :title  "title"}]]
 
                ;; link in an emphasis
                "this **[link](/example) is bold**"
-               [[:text-run "this "]
+               [:paragraph
+                [:text-run "this "]
                 [:strong-emphasis
                  [:link {:text   "link"
                          :target "/example"}]
@@ -355,35 +397,41 @@
 
                ;; but no emphasis in a link
                "[*em*](/link)"
-               [[:link {:text   "*em*"
+               [:paragraph
+                [:link {:text   "*em*"
                         :target "/link"}]]))
 
   (t/testing "images"
     (parses-to sut/inline-parser->ast
 
                "![link text](/some/url)"
-               [[:image {:alt "link text"
+               [:paragraph
+                [:image {:alt "link text"
                          :src "/some/url"}]]
 
                ;; 3 sorts of link title
                "![link text](/some/url \"title\")"
-               [[:image {:alt   "link text"
+               [:paragraph
+                [:image {:alt   "link text"
                          :src   "/some/url"
                          :title "title"}]]
 
                "![link text](/some/url 'title')"
-               [[:image {:alt   "link text"
+               [:paragraph
+                [:image {:alt   "link text"
                          :src   "/some/url"
                          :title "title"}]]
 
                "![link text](/some/url (title))"
-               [[:image {:alt   "link text"
+               [:paragraph
+                [:image {:alt   "link text"
                          :src   "/some/url"
                          :title "title"}]]
 
                ;; link in an emphasis
                "this **![link](/example) is bold**"
-               [[:text-run "this "]
+               [:paragraph
+                [:text-run "this "]
                 [:strong-emphasis
                  [:image {:alt "link"
                           :src "/example"}]
@@ -391,23 +439,28 @@
 
                ;; but no emphasis in a link
                "![*em*](/link)"
-               [[:image {:alt "*em*"
+               [:paragraph
+                [:image {:alt "*em*"
                          :src "/link"}]]))
 
   (t/testing "autolinks"
     (parses-to sut/inline-parser->ast
 
                "<http://example.com>"
-               [[:link {:text   "http://example.com"
+               [:paragraph
+                [:link {:text   "http://example.com"
                         :target "http://example.com"}]]
 
                ;; no white space in autolinks
                "<http://example.com and>"
-               ["<" [:text-run "http://example.com and>"]]
+               [:paragraph
+                "<"
+                [:text-run "http://example.com and>"]]
 
                ;; emails are recognized
                "<root@example.com>"
-               [[:link {:text "root@example.com"
+               [:paragraph
+                [:link {:text "root@example.com"
                         :target "mailto:root@example.com"}]]))
 
   (t/testing "block references (Athens extension)"
@@ -415,11 +468,13 @@
 
                ;; just a block-ref
                "((block-id))"
-               [[:block-ref "block-id"]]
+               [:paragraph
+                [:block-ref "block-id"]]
 
                ;; in a middle of text-run
                "Text with ((block-id)) a block"
-               [[:text-run "Text with "]
+               [:paragraph
+                [:text-run "Text with "]
                 [:block-ref "block-id"]
                 [:text-run " a block"]]))
 
@@ -428,18 +483,21 @@
 
                ;; hard line break can be only at the end of a line
                "abc  \ndef"
-               [[:text-run "abc  "]
+               [:paragraph
+                [:text-run "abc  "]
                 [:hard-line-break]
                 [:text-run "def"]]
 
                "abc  \n\ndef"
-               [[:text-run "abc  "]
+               [:paragraph
+                [:text-run "abc  "]
                 [:hard-line-break]
                 [:newline "\n"]
                 [:text-run "def"]]
 
                "abc  \n\n\ndef"
-               [[:text-run "abc  "]
+               [:paragraph
+                [:text-run "abc  "]
                 [:hard-line-break]
                 [:newline "\n"]
                 [:hard-line-break]
@@ -448,20 +506,24 @@
   (t/testing "page links (Athens extension)"
     (parses-to sut/inline-parser->ast
                "[[Page Title]]"
-               [[:page-link "Page Title"]]
+               [:paragraph
+                [:page-link "Page Title"]]
 
                "In a middle [[Page Title]] of text"
-               [[:text-run "In a middle "]
+               [:paragraph
+                [:text-run "In a middle "]
                 [:page-link "Page Title"]
                 [:text-run " of text"]]
 
                ;; But not when surrounded by word
                "abc[[def]]ghi"
-               [[:text-run "abc"] "[" "[" [:text-run "def]]ghi"]]
+               [:paragraph
+                [:text-run "abc"] "[" "[" [:text-run "def]]ghi"]]
 
                ;; also can't span newline
                "abc [[def\nghil]] jkl"
-               [[:text-run "abc "]
+               [:paragraph
+                [:text-run "abc "]
                 "["
                 "["
                 [:text-run "def"]
@@ -471,20 +533,26 @@
   (t/testing "hashtags (Athens extension)"
     (parses-to sut/inline-parser->ast
                "#[[Page Title]]"
-               [[:hashtag "Page Title"]]
+               [:paragraph
+                [:hashtag "Page Title"]]
 
                "In a middle #[[Page Title]] of text"
-               [[:text-run "In a middle "]
+               [:paragraph
+                [:text-run "In a middle "]
                 [:hashtag "Page Title"]
                 [:text-run " of text"]]
 
                ;; But not when surrounded by word
                "abc#[[def]]ghi"
-               [[:text-run "abc"] "#" "[" "[" [:text-run "def]]ghi"]]
+               [:paragraph
+                [:text-run "abc"]
+                "#" "[" "["
+                [:text-run "def]]ghi"]]
 
                ;; also can't span newline
                "abc #[[def\nghil]] jkl"
-               [[:text-run "abc "]
+               [:paragraph
+                [:text-run "abc "]
                 "#"
                 "["
                 "["
@@ -494,47 +562,222 @@
 
                ;; hashtags can also be without `[[]]`
                "#simple"
-               [[:hashtag "simple"]]
+               [:paragraph
+                [:hashtag "simple"]]
 
                ;; can be in a middle of a text run
                "abc #simple def"
-               [[:text-run "abc "]
+               [:paragraph
+                [:text-run "abc "]
                 [:hashtag "simple"]
                 [:text-run " def"]]
 
                ;; also in a word (which maybe should not be the case)
                ;; but making it invalid is makes inline-parser very complex
                "abc#simple"
-               [[:text-run "abc"]
+               [:paragraph
+                [:text-run "abc"]
                 [:hashtag "simple"]]))
 
   (t/testing "components (Athens extension)"
     (parses-to sut/inline-parser->ast
+
+               ;; plain text component
                "{{component}}"
-               [[:component "component"]]))
+               [:paragraph
+                [:component "component" "component"]]
+
+               ;; page link component
+               "{{[[DONE]]}} components"
+               [:paragraph
+                [:component "[[DONE]]" [:page-link "DONE"]]
+                [:text-run " components"]]
+
+               ;; block ref in component
+               "{{((abc))}}"
+               [:paragraph
+                [:component "((abc))" [:block-ref "abc"]]]))
 
   (t/testing "LaTeX (Athens extension)"
     (parses-to sut/inline-parser->ast
 
                "$$\\LaTeX$$"
-               [[:latex "\\LaTeX"]]
+               [:paragraph
+                [:latex "\\LaTeX"]]
 
                ;; can have newlines inside
                "$$abc\ndef$$"
-               [[:latex "abc\ndef"]]
+               [:paragraph
+                [:latex "abc\ndef"]]
 
                ;; can have $ inside
                "$$abc $ d$$"
-               [[:latex "abc $ d"]]
+               [:paragraph
+                [:latex "abc $ d"]]
 
                ;; also $$ is allowed
                "$$abc $$def$$"
-               [[:latex "abc $$def"]]
+               [:paragraph
+                [:latex "abc $$def"]]
 
                ;; also like this
                "$$abc$$ def$$"
-               [[:latex "abc$$ def"]]
+               [:paragraph
+                [:latex "abc$$ def"]]
 
                ;; and surrounded by spaces
                "$$abc $$ def$$"
-               [[:latex "abc $$ def"]])))
+               [:paragraph
+                [:latex "abc $$ def"]])))
+
+
+(t/deftest staged-parser-tests
+
+  (t/testing "Some random MD contents"
+    (parses-to sut/staged-parser->ast
+               "# Defluxere caelesti omnia
+
+## Vixque acrior praedelassat vixque iussit quam speciem
+
+Lorem [markdownum deserto](http://est.com/mihicessasse) tamen, puellae annis
+quaesitae medio ego, et felix, ingestoque ante, Chariclo torum. Epaphi quod qui
+maternaque concava nunc artes sortita, nam isto. Corpore nitebant fero. Telo
+[caesus](http://audaci-terris.com/per.html), ait aliquid non ipse *cum omine*,
+lacerare gaudia mittere sermonibus. Tuta [auspicio admiremur
+murmura](http://www.vires-remittit.net/alcmene-potitur.php) Troades lilia places
+incubuit carinae, palustres excipit.
+
+- Licet contendere admovit saevae ictus pervidet Tyrios
+- Opacas antiqua capitis corpore silentia portasque haec
+- Quoque tertius avidamque victorem iners
+- Umbra sinuosa femina agitavit regia
+- Ventisque sortibus
+
+## Agam sed tantum levavit nimiumque bellum recondidit
+
+Praeconsumere illuc et dixi iubet risisse: colunt *Iuno* auribus clara: loca
+utero sine prolisque in sui et in. Pelagi Aurora Actaeon, silva plenissima
+omnia, armentaque et quid ponto, tu. Odium litoream Iulius et sorte mutatus
+instabilis prohibete nunc pestifera? Iunone vos vident, ovis gratissime misceri
+et adiuvet conplevit Chromin coniunx congeriem.
+
+Non sequitur tenuique. Hinc Miletum hospitio adeo omnia medius Theseus locus
+menti meminisse Phoebe meumque **armenta**. Quae undas morsa seu iubas
+dimittere? Ab se certaminis exitus lacertis [obsisto
+dicenda](http://postquamaeratae.io/ferar.html) sagitta iugulum.
+
+## Non flamma hic armorum dulces nec purpureas
+
+Mea suas vos Troiae non claro satis, illa non. Spectatrix habes; nec has
+Emathides cantatas, submovit puer pumice ipse, proles innumeris an parem et
+quam.
+
+## Quos superat voluptas
+
+Aquas in coniuge cornua. Quem dixit Nelei, tibi preces inplicat undis, seu nisi
+nubes, in terrae [contenta mihi tum](http://www.monstravit.org/) fatus tectis.
+
+> Neptis albenti urbes aether nostro pigeat frons: iacet latis vobis; potest
+> facta Charopem et oscula. Mihi sunt fateri; heu plenum ova!
+
+Nondum supero in vocavit adspicit nec sine prodidit. Insula fugit alterno
+praeterea cadentem [iacebas Lucifer
+nostris](http://oconcipit.io/tamen-vestibus). Et et quandoquidem pavens, fiat
+specie Achivi suus publica Marte extimuit. Ferro domos suras."
+               [:block
+                [:heading {:n 1} [:paragraph "Defluxere caelesti omnia"]]
+                [:heading
+                 {:n 2}
+                 [:paragraph "Vixque acrior praedelassat vixque iussit quam speciem"]]
+                [:paragraph
+                 "Lorem "
+                 [:link
+                  {:text "markdownum deserto", :target "http://est.com/mihicessasse"}]
+                 " tamen, puellae annis"
+                 [:newline "\n"]
+                 "quaesitae medio ego, et felix, ingestoque ante, Chariclo torum. Epaphi quod qui"
+                 [:newline "\n"]
+                 "maternaque concava nunc artes sortita, nam isto. Corpore nitebant fero. Telo"
+                 [:newline "\n"]
+                 [:link {:text "caesus", :target "http://audaci-terris.com/per.html"}]
+                 ", ait aliquid non ipse "
+                 [:emphasis "cum omine"]
+                 ","
+                 [:newline "\n"]
+                 "lacerare gaudia mittere sermonibus. Tuta "
+                 [:link
+                  {:text "auspicio admiremur\nmurmura",
+                   :target "http://www.vires-remittit.net/alcmene-potitur.php"}]
+                 " Troades lilia places"
+                 [:newline "\n"]
+                 "incubuit carinae, palustres excipit."]
+                [:paragraph
+                 "- Licet contendere admovit saevae ictus pervidet Tyrios"
+                 [:newline "\n"]
+                 "- Opacas antiqua capitis corpore silentia portasque haec"
+                 [:newline "\n"]
+                 "- Quoque tertius avidamque victorem iners"
+                 [:newline "\n"]
+                 "- Umbra sinuosa femina agitavit regia"
+                 [:newline "\n"]
+                 "- Ventisque sortibus"]
+                [:heading
+                 {:n 2}
+                 [:paragraph "Agam sed tantum levavit nimiumque bellum recondidit"]]
+                [:paragraph
+                 "Praeconsumere illuc et dixi iubet risisse: colunt "
+                 [:emphasis "Iuno"]
+                 " auribus clara: loca"
+                 [:newline "\n"]
+                 "utero sine prolisque in sui et in. Pelagi Aurora Actaeon, silva plenissima"
+                 [:newline "\n"]
+                 "omnia, armentaque et quid ponto, tu. Odium litoream Iulius et sorte mutatus"
+                 [:newline "\n"]
+                 "instabilis prohibete nunc pestifera? Iunone vos vident, ovis gratissime misceri"
+                 [:newline "\n"]
+                 "et adiuvet conplevit Chromin coniunx congeriem."]
+                [:paragraph
+                 "Non sequitur tenuique. Hinc Miletum hospitio adeo omnia medius Theseus locus"
+                 [:newline "\n"]
+                 "menti meminisse Phoebe meumque "
+                 [:strong-emphasis "armenta"]
+                 ". Quae undas morsa seu iubas"
+                 [:newline "\n"]
+                 "dimittere? Ab se certaminis exitus lacertis "
+                 [:link
+                  {:text "obsisto\ndicenda",
+                   :target "http://postquamaeratae.io/ferar.html"}]
+                 " sagitta iugulum."]
+                [:heading
+                 {:n 2}
+                 [:paragraph "Non flamma hic armorum dulces nec purpureas"]]
+                [:paragraph
+                 "Mea suas vos Troiae non claro satis, illa non. Spectatrix habes; nec has"
+                 [:newline "\n"]
+                 "Emathides cantatas, submovit puer pumice ipse, proles innumeris an parem et"
+                 [:newline "\n"]
+                 "quam."]
+                [:heading {:n 2} [:paragraph "Quos superat voluptas"]]
+                [:paragraph
+                 "Aquas in coniuge cornua. Quem dixit Nelei, tibi preces inplicat undis, seu nisi"
+                 [:newline "\n"]
+                 "nubes, in terrae "
+                 [:link
+                  {:text "contenta mihi tum", :target "http://www.monstravit.org/"}]
+                 " fatus tectis."]
+                [:block-quote
+                 [:paragraph
+                  "Neptis albenti urbes aether nostro pigeat frons: iacet latis vobis; potest"
+                  [:newline "\n"]
+                  "facta Charopem et oscula. Mihi sunt fateri; heu plenum ova"
+                  "!"]]
+                [:paragraph
+                 "Nondum supero in vocavit adspicit nec sine prodidit. Insula fugit alterno"
+                 [:newline "\n"]
+                 "praeterea cadentem "
+                 [:link
+                  {:text "iacebas Lucifer\nnostris",
+                   :target "http://oconcipit.io/tamen-vestibus"}]
+                 ". Et et quandoquidem pavens, fiat"
+                 [:newline "\n"]
+                 "specie Achivi suus publica Marte extimuit. Ferro domos suras."]])))
