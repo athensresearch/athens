@@ -490,7 +490,23 @@
                 "["
                 [:text-run "def"]
                 [:newline "\n"]
-                [:text-run "ghil]] jkl"]]))
+                [:text-run "ghil]] jkl"]]
+
+               ;; hashtags can also be without `[[]]`
+               "#simple"
+               [[:hashtag "simple"]]
+
+               ;; can be in a middle of a text run
+               "abc #simple def"
+               [[:text-run "abc "]
+                [:hashtag "simple"]
+                [:text-run " def"]]
+
+               ;; also in a word (which maybe should not be the case)
+               ;; but making it invalid is makes inline-parser very complex
+               "abc#simple"
+               [[:text-run "abc"]
+                [:hashtag "simple"]]))
 
   (t/testing "LaTeX (Athens extension)"
     (parses-to sut/inline-parser->ast
