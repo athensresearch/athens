@@ -179,6 +179,14 @@
                                                       :href   url
                                                       :target "_blank"})
                               text])
+     :link                 (fn [{:keys [text target title]}]
+                             [:a (cond-> (use-style url-link {:class  "url-link"
+                                                              :href target
+                                                              :target "_blank"})
+                                   (string? title)
+                                   (assoc :title title))
+                              text])
+    ;; TODO add :paragraph
      :bold                 (fn [text]
                              [:strong {:class "contents bold"} text])
      :italic               (fn [text]

@@ -116,14 +116,14 @@ block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
             <#'(?<!\\s)\\)\\)(?!\\w)'>
 
 page-link = <#'(?<!\\w)\\[\\[(?!\\s)'>
-            #'[^\\]\\n]+'
+            (#'[^\\[\\]\\n]+' | page-link)+
             <#'(?<!\\s)\\]\\](?!\\w)'>
 
 hashtag = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
-          #'[^\\]\\n]+'
+          (#'[^\\[\\]\\n]+' | page-link)+
           <#'(?<!\\s)\\]\\](?!\\w)'>
         | <#'(?<!\\w)\\#(?!\\s)'>
-          #'\\w+(?!\\w)'
+          #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+(?!\\w)'
 
 component = <#'(?<!\\w)\\{\\{(?!\\s)'>
             (page-link / block-ref / #'.+(?=\\}\\})')
@@ -353,7 +353,9 @@ newline = #'\\n'
 
 
 (def stage-3-transformations
-  {:text-run text-run-transform})
+  {:text-run        text-run-transform
+   :strong-emphasis (fn [& contents]
+                      (apply conj [:bold] contents))})
 
 
 (defn staged-parser->ast

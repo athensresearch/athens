@@ -528,7 +528,13 @@
                 "["
                 [:text-run "def"]
                 [:newline "\n"]
-                [:text-run "ghil]] jkl"]]))
+                [:text-run "ghil]] jkl"]]
+
+               ;; apparently nesting page links is a thing
+               "[[nesting [[nested]]]]"
+               [:paragraph
+                [:page-link "nesting "
+                 [:page-link "nested"]]]))
 
   (t/testing "hashtags (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -740,7 +746,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  "Non sequitur tenuique. Hinc Miletum hospitio adeo omnia medius Theseus locus"
                  [:newline "\n"]
                  "menti meminisse Phoebe meumque "
-                 [:strong-emphasis "armenta"]
+                 [:bold "armenta"]
                  ". Quae undas morsa seu iubas"
                  [:newline "\n"]
                  "dimittere? Ab se certaminis exitus lacertis "
