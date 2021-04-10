@@ -2,7 +2,13 @@
   "Testing parsing in CLJS, since our parser can behave differently in CLJ & CLJS."
   (:require
     [athens.parser :refer [parse-to-ast combine-adjacent-strings parse-to-ast-new]]
+    [athens.parser.impl :as parser-impl]
     [clojure.test :refer [deftest is are testing]]))
+
+
+(deftest staged-parser-loaded
+  (is (= [] (parser-impl/staged-parser->ast "some **bold**")))
+  (is (= [] (parser-impl/staged-parser->ast "# heading 1"))))
 
 
 (deftest parser-general-tests

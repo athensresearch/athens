@@ -34,7 +34,8 @@
    ["katex/dist/contrib/mhchem"]
    ["react-codemirror2" :rename {UnControlled CodeMirror}]
    [athens.db :as db]
-   [athens.parser :as parser]
+   #_[athens.parser :as parser]
+   [athens.parser.impl :as parser-impl]
    [athens.router :refer [navigate-uid]]
    [athens.style :refer [color OPACITIES]]
    [clojure.string :as str]
@@ -143,6 +144,14 @@
 ;;; Components
 
 
+(defn- clean-single-p-appending
+  [parent contents]
+  (if (and (= 1 (count contents))
+           (= :p (ffirst contents)))
+    (let [rest-of-p (-> contents first rest)]
+      (apply conj parent rest-of-p))
+    (apply conj parent contents)))
+
 ;; Instaparse transforming docs: https://github.com/Engelberg/instaparse#transforming-the-tree
 (defn transform
   "Transforms Instaparse output to Hiccup."
@@ -150,7 +159,17 @@
   (insta/transform
     {:block                (fn [& contents]
                              (println "block contents " (pr-str contents))
-                             (concat [:span {:class "block"}] contents))
+                             (clean-single-p-appending [:span {:class "block"}] contents))
+     :heading              (fn [{n :n} & contents]
+                             (println "heading" n (pr-str contents))
+                             (clean-single-p-appending [({1 :h1
+                                                          2 :h2
+                                                          3 :h3
+                                                          4 :h4
+                                                          5 :h5
+                                                          6 :h6} n)]
+                                                       contents))
+
      ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component            (fn [& contents]
                              (component (first contents) uid))
@@ -186,17 +205,22 @@
                                    (string? title)
                                    (assoc :title title))
                               text])
-    ;; TODO add :paragraph
-     :bold                 (fn [text]
-                             [:strong {:class "contents bold"} text])
-     :italic               (fn [text]
-                             [:i {:class "contents italic"} text])
-     :strikethrough        (fn [text]
-                             [:del {:class "contents del"} text])
-     :underline            (fn [text]
-                             [:u {:class "contents underline"} text])
-     :highlight            (fn [text]
-                             [:mark {:class "contents highlight"} text])
+     ;; TODO add :paragraph
+     :paragraph            (fn [& contents]
+                             (println "paragraph contents " (pr-str contents))
+                             (apply conj [:p] (if (= 1 (count contents))
+                                                [contents]
+                                                contents)))
+     :bold                 (fn [& contents]
+                             (apply conj [:strong {:class "contents bold"}] contents))
+     :italic               (fn [& contents]
+                             (apply conj [:i {:class "contents italic"}] contents))
+     :strikethrough        (fn [& contents]
+                             (apply conj  [:del {:class "contents del"}] contents))
+     :underline            (fn [& contents]
+                             (apply conj  [:u {:class "contents underline"}] contents))
+     :highlight            (fn [& contents]
+                             (apply conj [:mark {:class "contents highlight"}] contents))
      :pre-formatted        (fn [text]
                              [:code text])
      :inline-pre-formatted (fn [text]
@@ -254,7 +278,8 @@
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string uid]
-  (let [result (parser/parse-to-ast-new string)]
+  (let [result (parser-impl/staged-parser->ast string)
+        #_(parser/parse-to-ast-new string)]
     (if (insta/failure? result)
       [:abbr {:title (pr-str (insta/get-failure result))
               :style {:color "red"}}

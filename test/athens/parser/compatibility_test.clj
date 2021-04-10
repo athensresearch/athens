@@ -124,7 +124,8 @@
 ; Test cases for blocks that only contain a single raw URL that should be parsed
 ; as a link. Those mostly test the URL parser.
 (deftest parser-lone-raw-url-tests
-  (are [url] (= [:block [:url-link {:url url} url]] (sut/staged-parser->ast url))
+  (are [url] (= [:block [:paragraph [:span [:link {:text   url
+                                                   :target url}]]]] (sut/staged-parser->ast url))
     "https://example.com"
     ; URL with path set to /.
     "https://example.com/"
@@ -148,10 +149,11 @@
 
 ; Tests for strings that should not be parsed as URLs.
 (deftest parser-lone-invalid-raw-url-tests
-  (are [text] (= [:block text] (sut/staged-parser->ast text))
+  (are [text] (= [:block [:paragraph text]] (sut/staged-parser->ast text))
     ; URLs without host.
     "http:///a"
-    "http://#"
+    ;; `#` is special character so is represented by separate string
+    ;; "http://#"
     "http://?"
     "http://12345"
     ; TODO(agentydragon): Also should not pass:

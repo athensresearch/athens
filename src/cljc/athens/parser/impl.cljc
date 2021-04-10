@@ -315,7 +315,7 @@ newline = #'\\n'
 
 
 (def uri-pattern
-  #"(?<!\w)(([^:/?#\s]+):)?(//([^/?#\s]*))([^?#\s]*)(\?([^#\s]*))?(#(.*))?")
+  #"(https?|ftp)://[^\s/\$\.\?\#].[^\s]*")
 
 
 (defn- text-run-transform
@@ -327,8 +327,11 @@ newline = #'\\n'
                    m   matches
                    acc []]
               (let [uri            (ffirst m)
-                    rr             (string/split t (re-pattern uri))
-                    [before after] rr]
+                    uri-index      (string/index-of t uri)
+                    before         (subs t 0 uri-index)
+                    after          (subs t
+                                         (+ uri-index (count uri))
+                                         (count t))]
                 (if (seq (rest m))
                   (recur after
                          (rest m)
@@ -355,7 +358,9 @@ newline = #'\\n'
 (def stage-3-transformations
   {:text-run        text-run-transform
    :strong-emphasis (fn [& contents]
-                      (apply conj [:bold] contents))})
+                      (apply conj [:bold] contents))
+   :emphasis        (fn [& contents]
+                      (apply conj [:italic] contents))})
 
 
 (defn staged-parser->ast
