@@ -22,7 +22,7 @@ block = (thematic-break /
 thematic-break = #'[*_-]{3}'
 heading = #'[#]+' <space> #'.+' <newline>*
 indented-code-block = (<'    '> code-text)+
-fenced-code-block = <'```'> #'(?s).+(?=(```|\\n))'+ <'```'>
+fenced-code-block = <'```'> #'(?s)(.+(?=(```|\\n))|\\n)+' <'```'>
 block-quote = (<#' {0,3}' #'> ?'> #'.*' <newline>?)+ <blankline>?
 
 paragraph-text = (<#' {0,3}'> #'.+' <newline>?)+ <blankline>?
@@ -59,7 +59,7 @@ inline = recur
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
 
-code-span = <backtick> #'(?s).*(?=`)' <backtick>
+code-span = <backtick> #'(?s).*?(?=`)' <backtick>
 
 (* all inline-spans have `x` character (or pair) that is a boundary for this span *)
 (* opening `x` has: *)
@@ -210,9 +210,6 @@ newline = #'\\n'
        (insta/transform stage-1-transformations)))
 
 
-(declare inline-parser->ast)
-
-
 (defn- walker-hlb-candidate
   [candidate?]
   (fn [x]
@@ -261,18 +258,20 @@ newline = #'\\n'
 
 (defn- image-transform
   [& link-parts]
-  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
-    [:image (cond-> {:alt link-text
-                     :src link-target}
-              link-title (assoc :title link-title))]))
+  (let [{:keys [link-text link-target link-title] :as input} (into {} link-parts)]
+    (when-not link-target
+      (println (pr-str link-parts) (pr-str input)))
+    [:url-image (cond-> {:alt link-text
+                         :src link-target}
+                  link-title (assoc :title link-title))]))
 
 
 (defn- autolink-transform
   [url]
-  [:link {:text   url
-          :target (if (string/includes? url "@")
-                    (str "mailto:" url)
-                    url)}])
+  [:autolink {:text   url
+              :target (if (string/includes? url "@")
+                        (str "mailto:" url)
+                        url)}])
 
 
 (defn- component-transform
@@ -357,10 +356,17 @@ newline = #'\\n'
 
 (def stage-3-transformations
   {:text-run        text-run-transform
+   ;; TODO move below transformations to rendering when we're sure to use this parser
    :strong-emphasis (fn [& contents]
                       (apply conj [:bold] contents))
    :emphasis        (fn [& contents]
-                      (apply conj [:italic] contents))})
+                      (apply conj [:italic] contents))
+   :hard-line-break (fn []
+                      [:br])
+   :block-quote     (fn [& contents]
+                      (apply conj [:blockquote] contents))
+   :code-span       (fn [text]
+                      [:inline-pre-formatted text])})
 
 
 (defn staged-parser->ast

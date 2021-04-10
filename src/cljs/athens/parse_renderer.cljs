@@ -157,20 +157,20 @@
   "Transforms Instaparse output to Hiccup."
   [tree uid]
   (insta/transform
-    {:block                (fn [& contents]
-                             (println "block contents " (pr-str contents))
-                             (clean-single-p-appending [:span {:class "block"}] contents))
-     :heading              (fn [{n :n} & contents]
-                             (println "heading" n (pr-str contents))
-                             (clean-single-p-appending [({1 :h1
-                                                          2 :h2
-                                                          3 :h3
-                                                          4 :h4
-                                                          5 :h5
-                                                          6 :h6} n)]
-                                                       contents))
+    {:block   (fn [& contents]
+                (println "block contents " (pr-str contents))
+                (clean-single-p-appending [:span {:class "block"}] contents))
+     :heading (fn [{n :n} & contents]
+                (println "heading" n (pr-str contents))
+                (clean-single-p-appending [({1 :h1
+                                             2 :h2
+                                             3 :h3
+                                             4 :h4
+                                             5 :h5
+                                             6 :h6} n)]
+                                          contents))
 
-     ;; for more information regarding how custom components are parsed, see `doc/components.md`
+    ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component            (fn [& contents]
                              (component (first contents) uid))
      :page-link            (fn [& title-coll] (render-page-link title-coll))
@@ -189,7 +189,7 @@
                                      [parse-and-render "{{SELF}}"]
                                      [parse-and-render (:block/string @block) ref-uid])]]
                                  (str "((" ref-uid "))"))))
-     :url-image            (fn [{url :url alt :alt}]
+     :url-image            (fn [{url :src alt :alt}]
                              [:img (use-style image {:class "url-image"
                                                      :alt   alt
                                                      :src   url})])
@@ -198,6 +198,14 @@
                                                       :href   url
                                                       :target "_blank"})
                               text])
+     :autolink             (fn [{:keys [text target]}]
+                             [:span
+                              [:span {:class "formatting"} "<"]
+                              [:a (use-style url-link {:class  "url-link"
+                                                       :href target
+                                                       :target "_blank"})
+                               text]
+                              [:span {:class "formatting"} ">"]])
      :link                 (fn [{:keys [text target title]}]
                              [:a (cond-> (use-style url-link {:class  "url-link"
                                                               :href target
@@ -205,7 +213,7 @@
                                    (string? title)
                                    (assoc :title title))
                               text])
-     ;; TODO add :paragraph
+    ;; TODO add :paragraph
      :paragraph            (fn [& contents]
                              (println "paragraph contents " (pr-str contents))
                              (apply conj [:p] (if (= 1 (count contents))
@@ -226,11 +234,15 @@
      :inline-pre-formatted (fn [text]
                              (js/console.log "Inline code: " text)
                              [:code text])
-     :block-pre-formatted  (fn [text & mode]
-                             (let [original-mode (first mode)
-                                   mode          (or original-mode "javascript")
-                                   local-value   (reagent/atom text)]
-                               (js/console.log "Block code, original-mode:" original-mode
+     :indented-code-block (fn [code-text]
+                            (let [text (second code-text)]
+                              [:pre
+                               [:code text]]))
+     :fenced-code-block    (fn [{lang :lang} code-text]
+                             (let [mode        (or lang "javascript")
+                                   text        (second code-text)
+                                   local-value (reagent/atom text)]
+                               (js/console.log "Block code, original-mode:" lang
                                                ", mode:" mode
                                                ", text:" text)
                                [:> CodeMirror {:value     text

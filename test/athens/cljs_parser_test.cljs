@@ -7,8 +7,19 @@
 
 
 (deftest staged-parser-loaded
-  (is (= [] (parser-impl/staged-parser->ast "some **bold**")))
-  (is (= [] (parser-impl/staged-parser->ast "# heading 1"))))
+  (is (= [:block
+          [:paragraph
+           "some "
+           [:bold "bold"]]]
+         (parser-impl/staged-parser->ast "some **bold**")))
+  (is (= [:block
+          [:heading {:n 1}
+           [:paragraph "heading 1"]]]
+         (parser-impl/staged-parser->ast "# heading 1")))
+
+  (is (= []
+         (parser-impl/block-parser
+           "``` clojure\n(def a 1)\n```"))))
 
 
 (deftest parser-general-tests
