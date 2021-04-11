@@ -407,7 +407,7 @@
                            :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
                                                 new-P (drop-last parents)]
                                             (swap! state assoc :block new-B :parents new-P)))}
-               [parse-and-render (or title string) (:block/uid block)]]))]
+               [parse-and-render (or title string) uid]]))]
          [:div.block-embed
           [block-el
            (recursively-modify-block-for-embed block embed-id)

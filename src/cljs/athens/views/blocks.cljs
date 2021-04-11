@@ -197,6 +197,7 @@
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
+                                 :outline "none"
                                  :overflow "hidden"
                                  :padding "0"
                                  :background (color :background-minus-1)
@@ -212,8 +213,7 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
-                     [:.is-editing {:outline "none"
-                                    :z-index 3
+                     [:.is-editing {:z-index 3
                                     :display "block"
                                     :opacity "1"}]
                      [:span
@@ -414,6 +414,7 @@
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
+                                                           :z-index    (:zindex-popover ZINDICES)
                                                            :max-block-size "20rem"
                                                            :inset-block-start        (+ 24 top)
                                                            :inset-inline-start       (+ 24 left)}})
@@ -632,7 +633,7 @@
                            :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
-       [parse-and-render local uid]
+       [parse-and-render local (or original-uid uid)]
        [:div (use-style (merge drop-area-indicator
                                (when (= :child (:drag-target @state)) {;;:color "green"
                                                                        :opacity 1})))]])))
