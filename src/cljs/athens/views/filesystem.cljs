@@ -85,7 +85,7 @@
                                                           :inset-inline-start 0
                                                           :inset-block-start 0
                                                           :inline-size "100%"
-                                                          :block-size"100%"}}]]]
+                                                          :block-size "100%"}}]]]
                       (let [roam-pages   (roam-pages @transformed-roam-db)
                             shared-pages (events/get-shared-pages @transformed-roam-db)]
                         [:div {:style {:display "flex" :flex-direction "column"}}

@@ -41,7 +41,7 @@
    :max-height    "60vh"
    :z-index       (:zindex-modal ZINDICES)
    :inset-block-start           "40%"
-:inset-inline-start          "50%"
+   :inset-inline-start          "50%"
    :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
    ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
@@ -61,8 +61,8 @@
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
    :padding-block "1.5rem"
-:padding-inline-start "1.5rem"
-:padding-inline-end "4rem"
+   :padding-inline-start "1.5rem"
+   :padding-inline-end "4rem"
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
@@ -78,9 +78,9 @@
    :cursor "pointer"
    :border 0
    :block-size "2.5rem"
-:inline-size "2.5rem"
-:inset-inline-end "2rem"
-:inset-block-start "50%"
+   :inline-size "2.5rem"
+   :inset-inline-end "2rem"
+   :inset-block-start "50%"
    :place-items "center"
    :place-content "center"
    :border-radius "1000px"
@@ -113,7 +113,7 @@
 (def result-style
   {:display "flex"
    :padding-block "0.75rem"
-:padding-inline "2rem"
+   :padding-inline "2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"

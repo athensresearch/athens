@@ -43,9 +43,9 @@
                :athena/recent-items '()
                :devtool/open        false
                :nav-sidebar/open   false
-:ref-sidebar/open  false
-:ref-sidebar/items {}
-:ref-sidebar/width 32
+               :ref-sidebar/open  false
+               :ref-sidebar/items {}
+               :ref-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      []

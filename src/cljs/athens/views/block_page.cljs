@@ -43,9 +43,9 @@
                                  :letter-spacing     "inherit"
                                  :position           "absolute"
                                  :inset-block-start  "0"
-:inset-inline  "0"
-:inline-size "100%"
-:min-block-size         "100%"
+                                 :inset-inline  "0"
+                                 :inline-size "100%"
+                                 :min-block-size         "100%"
                                  :caret-color        (color :link-color)
                                  :background         "transparent"
                                  :margin             "0"

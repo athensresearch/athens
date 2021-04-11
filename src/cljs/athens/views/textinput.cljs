@@ -17,7 +17,7 @@
    :border-radius "0.25rem"
    :background (color :background-minus-1)
    :padding-inline "0.5rem"
-:padding-block "0.125rem"
+   :padding-block "0.125rem"
    :flex-basis "100%"
    :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
@@ -41,7 +41,7 @@
 (def input-icon
   {:position "absolute"
    :inset-block-start "50%"
-:inset-inline-start "0.375rem"
+   :inset-inline-start "0.375rem"
    :display "flex"
    :pointer-events "none"
    :transform "translateY(-50%)"

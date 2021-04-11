@@ -49,8 +49,8 @@
                                                      :position "absolute"
                                                      :inline-size "1px"
                                                      :inset-inline-start "calc(1.25em + 1px)"
-:inset-block-start "2em"
-:inset-block-end "0"
+                                                     :inset-block-start "2em"
+                                                     :inset-block-end "0"
                                                      :transform "translateX(50%)"
                                                      :background (color :border-color)}]
                      [:&:after {:content "''"
@@ -58,7 +58,7 @@
                                 :position "absolute"
                                 :top "0.75px"
                                 :inset-inline 0
-:inset-block "0.75px"
+                                :inset-block "0.75px"
                                 :opacity 0
                                 :pointer-events "none"
                                 :border-radius "0.25rem"
@@ -117,8 +117,8 @@
    :z-index 2
    :cursor "pointer"
    :inline-size "0.75em"
-:block-size "2em"
-:margin-block-end "0.25em"
+   :block-size "2em"
+   :margin-block-end "0.25em"
    :transition "all 0.05s ease"
    :color (color :body-text-color :opacity-low)
    ::stylefy/mode [[:after {:content "''"
@@ -128,7 +128,7 @@
                             :box-shadow "0 0 0 0.125rem transparent"
                             :display "inline-flex"
                             :margin-inline-start "50%"
-:margin-block-start "50%"
+                            :margin-block-start "50%"
                             :transform "translate(-50%, -50%)"
                             :block-size "0.3125em"
                             :inline-size "0.3125em"}]
@@ -162,7 +162,7 @@
 (def drop-area-indicator
   {:display "block"
    :inline-size "100%"
-:block-size "1px"
+   :block-size "1px"
    :pointer-events "none"
    :margin-block-end "-1px"
    :color (color :link-color :opacity-high)
@@ -172,9 +172,9 @@
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
                                 :inline-size "100%"
-:block-size "2px"
-:inset-inline "-0.5px"
-:inset-block-start "2em"
+                                :block-size "2px"
+                                :inset-inline "-0.5px"
+                                :inset-block-start "2em"
                                 :border-radius "100px"
                                 :background "currentColor"}]]})
 
@@ -258,17 +258,17 @@
                                                                     :margin-inline-end "0.25rem"
                                                                     :position "relative"
                                                                     :inset-block-start "0.13em"
-:inline-size "1rem"
-:block-size "1rem"
+                                                                    :inline-size "1rem"
+                                                                    :block-size "1rem"
                                                                     :transition "all 0.05s ease"
                                                                     :transform "scale(1)"
                                                                     :box-shadow "inset 0 0 0 1px"}
                               [:&:after {:content "''"
                                          :position "absolute"
                                          :inset-block-start "45%"
-:inset-inline-start "20%"
-:inline-size "30%"
-:block-size "60%"
+                                         :inset-inline-start "20%"
+                                         :inline-size "30%"
+                                         :block-size "60%"
                                          :border-width "0 1.5px 1.5px 0"
                                          :border-style "solid"
                                          :opacity 0

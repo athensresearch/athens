@@ -1,9 +1,9 @@
 (ns athens.views.devtool
   (:require
     ["@material-ui/icons/Build" :default Build]
-    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
+    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
     ["@material-ui/icons/ShortText" :default ShortText]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
@@ -97,7 +97,7 @@
                      [:th {:text-align "start" :padding "0.125rem" :white-space "nowrap"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-inline-start "0.5rem"}]
-[:td:last-child :th-last-child {:padding-inline-end "0.5rem"}]
+                     [:td:last-child :th-last-child {:padding-inline-end "0.5rem"}]
                      [:tbody [:tr:hover {:cursor     "pointer"
                                          :background (color :background-minus-1)
                                          :color (color :header-text-color)}]]
@@ -107,7 +107,7 @@
                      [:td [:li {:margin-block-end "0.25rem"
                                 :padding-block-start "0.25rem" ;
                                 :border-block-start  (str "1px solid " (color :border-color))}]]
-[:td [:li:first-child {:border-block-start "none" :margin-block-start "0" :padding-block-start "0"}]]
+                     [:td [:li:first-child {:border-block-start "none" :margin-block-start "0" :padding-block-start "0"}]]
                      [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})
 

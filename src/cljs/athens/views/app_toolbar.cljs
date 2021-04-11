@@ -1,13 +1,13 @@
 (ns athens.views.app-toolbar
   (:require
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
-["@material-ui/icons/NavigateNext" :default NavigateNext]
     ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
+    ["@material-ui/icons/NavigateNext" :default NavigateNext]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Today" :default Today]
@@ -36,13 +36,13 @@
    :display "grid"
    :position "absolute"
    :inset-block-start "-0.25rem"
-:inset-inline-end "0"
-:inset-inline-start "0"
+   :inset-inline-end "0"
+   :inset-inline-start "0"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
    :padding-block "0.25rem"
-:padding-inline "0.75rem"
+   :padding-inline "0.75rem"
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"}]]})
 
@@ -113,7 +113,7 @@
          (when electron?
            [:<>
             [button {:on-click #(.back js/window.history)} [:> NavigateBefore]]
-[button {:on-click #(.forward js/window.history)} [:> NavigateNext]]
+            [button {:on-click #(.forward js/window.history)} [:> NavigateNext]]
             [separator]])
          [button {:on-click router/nav-daily-notes
                   :active   (= @route-name :home)} [:> Today]]

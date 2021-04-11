@@ -66,12 +66,12 @@
    :min-block-size "2.75rem"
    :padding "0.5rem 1rem 0.25rem 1.5rem"
    :padding-block-start "0.5rem"
-:padding-block-end "0.25rem"
-:padding-inline-start "1.5rem"
-:padding-inline-end "1rem"
+   :padding-block-end "0.25rem"
+   :padding-inline-start "1.5rem"
+   :padding-inline-end "1rem"
    ::stylefy/manual [[:h1 {:font-size "inherit"
                            :margin "0"
-:margin-block-end "auto"
+                           :margin-block-end "auto"
                            :line-height "1"
                            :color (color :body-text-color :opacity-med)}]]})
 
@@ -120,7 +120,7 @@
    :flex "0 0 auto"
    :align-items "center"
    :padding-inline "0.5rem"
-:padding-block "0.25rem"
+   :padding-block "0.25rem"
    :position "sticky"
    :inset-block "0"
    :z-index 2

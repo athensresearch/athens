@@ -92,7 +92,7 @@
   {:font-weight "normal"
    :display "flex"
    :padding 0
-:padding-inline-end "0.5rem"
+   :padding-inline-end "0.5rem"
    :align-items "center"
    ::stylefy/manual [[:svg {:margin-inline-end "0.25em"
                             :font-size "1rem"}]]})
@@ -105,7 +105,7 @@
 (def references-group-title-style
   {:color (color :link-color)
    :margin 0
-:margin-inline "1.5rem"
+   :margin-inline "1.5rem"
    :font-weight "500"
    ::stylefy/manual [[:a:hover {:cursor "pointer"
                                 :text-decoration "underline"}]]})
@@ -114,9 +114,9 @@
 (def references-group-style
   {:background (color :background-minus-2 :opacity-med)
    :padding-block "1rem"
-:padding-inline "0.5rem"
-:margin-block "0.5rem"
-:margin-inline "0"
+   :padding-inline "0.5rem"
+   :margin-block "0.5rem"
+   :margin-inline "0"
    :border-radius "0.25rem"
    :margin "0.5em 0"})
 
@@ -139,10 +139,10 @@
 (def page-menu-toggle-style
   {:position "absolute"
    :inset-inline-start "-0.5rem"
-:inset-block-start "50%"
+   :inset-block-start "50%"
    :border-radius "1000px"
    :padding-block "0.375rem"
-:padding-inline "0.5rem"
+   :padding-inline "0.5rem"
    :color (color :body-text-color :opacity-high)
    :transform "translate(-100%, -50%)"})
 

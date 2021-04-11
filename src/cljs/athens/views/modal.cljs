@@ -27,7 +27,7 @@
                      [(selectors/> :.modal__header :button) {:display "none"}] ;; Hide default close button
                      [:.modal__title :.modal__footer {:flex "0 0 auto"
                                                       :padding-block "0.25rem"
-:padding-inline "1rem"
+                                                      :padding-inline "1rem"
                                                       :display "flex"
                                                       :align-items "center"}
                       [:&:empty {:display "none"}]]
