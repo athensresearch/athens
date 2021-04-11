@@ -103,7 +103,7 @@ image = <'!'> md-link
             (<' '> link-title)?
             <#'(?<!\\s)\\)(?!\\w)'>
 
-link-text = #'(.|\\\\\\])+(?=\\]\\()'
+link-text = #'([^\\]]|\\\\\\])+?(?=\\]\\()'
 link-target = ( #'[^\\s\\(\\)]+' | '(' #'[^\\s\\)]*' ')' | '\\\\' ( '(' | ')' ) )+
 link-title = <'\"'> #'[^\"]+' <'\"'>
            | <'\\''> #'[^\\']+' <'\\''>
@@ -139,7 +139,7 @@ latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'[^\\*_`^~\\[!<\\(\\#\\$\\{\\r\\n]*'
+text-run = #'(?:[^\\*_`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\(\\#\\$\\{])+'
 
 (* any special char *)
 <special-char> = #'(?<!\\w)[\\*_`^~\\[!<\\(\\#\\$\\{]'
@@ -243,11 +243,33 @@ newline = #'\\n'
 
 (defn- inline-transform
   [& contents]
-  (let [hlb-candidate? (atom false)]
-    (apply conj [:paragraph]
-           (map #(walk/postwalk (walker-hlb-candidate hlb-candidate?)
-                                %)
-                contents))))
+  (let [hlb-candidate? (atom false)
+        result (apply conj [:paragraph]
+                      (->> contents
+                           (map #(walk/postwalk (walker-hlb-candidate hlb-candidate?) %))
+                           (reduce (fn [acc el]
+                                     (let [last-el (last acc)
+                                           new-val (cond
+                                                     (string? el)
+                                                     el
+
+                                                     (and (vector? el)
+                                                          (< 1 (count el))
+                                                          (= :text-run (first el)))
+                                                     (string/join (rest el))
+
+                                                     :else
+                                                     el)]
+                                       (if (and (string? new-val)
+                                                (or (nil? last-el)
+                                                    (= :text-run (first last-el))))
+                                         (conj (if (nil? last-el)
+                                                 acc
+                                                 (pop acc))
+                                               [:text-run (string/join [(or (second last-el) "") new-val])])
+                                         (conj acc el))))
+                                   [])))]
+    result))
 
 
 (defn- link-transform
@@ -267,9 +289,7 @@ newline = #'\\n'
 
 (defn- image-transform
   [& link-parts]
-  (let [{:keys [link-text link-target link-title] :as input} (into {} link-parts)]
-    (when-not link-target
-      (println (pr-str link-parts) (pr-str input)))
+  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
     [:url-image (cond-> {:alt link-text
                          :src link-target}
                   link-title (assoc :title link-title))]))
@@ -334,12 +354,12 @@ newline = #'\\n'
             (loop [t   text-run
                    m   matches
                    acc []]
-              (let [uri            (ffirst m)
-                    uri-index      (string/index-of t uri)
-                    before         (subs t 0 uri-index)
-                    after          (subs t
-                                         (+ uri-index (count uri))
-                                         (count t))]
+              (let [uri       (ffirst m)
+                    uri-index (string/index-of t uri)
+                    before    (subs t 0 uri-index)
+                    after     (subs t
+                                    (+ uri-index (count uri))
+                                    (count t))]
                 (if (seq (rest m))
                   (recur after
                          (rest m)

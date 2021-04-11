@@ -191,38 +191,8 @@
                ;; Any ASCII punctuation character may be backslash-escaped
                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
                [:paragraph
-                "\\!"
-                "\\\""
-                "\\#"
-                "\\$"
-                "\\%"
-                "\\&"
-                "\\'"
-                "\\("
-                "\\)"
-                "\\*"
-                "\\+"
-                "\\,"
-                "\\-"
-                "\\."
-                "\\/"
-                "\\:"
-                "\\;"
-                "\\<"
-                "\\="
-                "\\>"
-                "\\?"
-                "\\@"
-                "\\["
-                "\\\\"
-                "\\]"
-                "\\^"
-                "\\_"
-                "\\`"
-                "\\{"
-                "\\|"
-                "\\}"
-                "\\~"]
+                [:text-run
+                 "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
 
                ;; Backslashes before other characters are treated as literal backslashes:
                "\\→\\A\\a\\ \\3\\φ\\«"
@@ -252,9 +222,7 @@
 
                "* not em *"
                [:paragraph
-                "*"
-                [:text-run " not em "]
-                "*"]
+                [:text-run "* not em *"]]
 
                "**strong**"
                [:paragraph
@@ -289,9 +257,7 @@
 
                "_so wrong*"
                [:paragraph
-                "_"
-                [:text-run "so wrong"]
-                "*"]))
+                [:text-run "_so wrong*"]]))
 
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (parses-to sut/inline-parser->ast
@@ -340,24 +306,17 @@
                "~~Hi~~ Hello, world!"
                [:paragraph
                 [:strikethrough [:text-run "Hi"]]
-                [:text-run " Hello, world"] "!"]
+                [:text-run " Hello, world!"]]
 
                ;; not in the middle of the word
                "T~~hi~~s"
                [:paragraph
-                [:text-run "T"]
-                "~" "~"
-                [:text-run "hi"]
-                "~" "~"
-                [:text-run "s"]]
+                [:text-run "T~~hi~~s"]]
 
                ;; no spaces inside
                "Ain't ~~ working ~~"
                [:paragraph
-                [:text-run "Ain't "]
-                "~" "~"
-                [:text-run " working "]
-                "~" "~"]))
+                [:text-run "Ain't ~~ working ~~"]]))
 
   (t/testing "links"
     (parses-to sut/inline-parser->ast
@@ -454,8 +413,7 @@
                ;; no white space in autolinks
                "<http://example.com and>"
                [:paragraph
-                "<"
-                [:text-run "http://example.com and>"]]
+                [:text-run "<http://example.com and>"]]
 
                ;; emails are recognized
                "<root@example.com>"
@@ -518,15 +476,12 @@
                ;; But not when surrounded by word
                "abc[[def]]ghi"
                [:paragraph
-                [:text-run "abc"] "[" "[" [:text-run "def]]ghi"]]
+                [:text-run "abc[[def]]ghi"]]
 
                ;; also can't span newline
                "abc [[def\nghil]] jkl"
                [:paragraph
-                [:text-run "abc "]
-                "["
-                "["
-                [:text-run "def"]
+                [:text-run "abc [[def"]
                 [:newline "\n"]
                 [:text-run "ghil]] jkl"]]
 
@@ -551,18 +506,12 @@
                ;; But not when surrounded by word
                "abc#[[def]]ghi"
                [:paragraph
-                [:text-run "abc"]
-                "#" "[" "["
-                [:text-run "def]]ghi"]]
+                [:text-run "abc#[[def]]ghi"]]
 
                ;; also can't span newline
                "abc #[[def\nghil]] jkl"
                [:paragraph
-                [:text-run "abc "]
-                "#"
-                "["
-                "["
-                [:text-run "def"]
+                [:text-run "abc #[[def"]
                 [:newline "\n"]
                 [:text-run "ghil]] jkl"]]
 
@@ -578,12 +527,10 @@
                 [:hashtag "simple"]
                 [:text-run " def"]]
 
-               ;; also in a word (which maybe should not be the case)
-               ;; but making it invalid is makes inline-parser very complex
-               "abc#simple"
+               ;; but not in a word run
+               "abc#not-hashtag"
                [:paragraph
-                [:text-run "abc"]
-                [:hashtag "simple"]]))
+                [:text-run "abc#not-hashtag"]]))
 
   (t/testing "components (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -775,8 +722,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  [:paragraph
                   "Neptis albenti urbes aether nostro pigeat frons: iacet latis vobis; potest"
                   [:newline "\n"]
-                  "facta Charopem et oscula. Mihi sunt fateri; heu plenum ova"
-                  "!"]]
+                  "facta Charopem et oscula. Mihi sunt fateri; heu plenum ova!"]]
                 [:paragraph
                  "Nondum supero in vocavit adspicit nec sine prodidit. Insula fugit alterno"
                  [:newline "\n"]

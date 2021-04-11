@@ -24,7 +24,7 @@
     [:block [:paragraph "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]]
     "Some [[Nested [[Links]]]] and something"
 
-    [:block [:paragraph "[" "[" "text"]]
+    [:block [:paragraph "[[text"]]
     "[[text"
 
     [:block [:paragraph [:block-ref "V8_jUYc-k"]]]
@@ -40,7 +40,7 @@
     "Hello `world`"
 
     ;; NOTE: broken in old parser
-    [:block [:paragraph "Hello " "`" "`" [:inline-pre-formatted "Mars"] "`" "`"]]
+    [:block [:paragraph "Hello ``" [:inline-pre-formatted "Mars"] "`" "`"]]
     "Hello ```Mars```"
 
     [:block [:paragraph
@@ -67,7 +67,13 @@
     [:block [:paragraph "that’s " [:hashtag "very cool"] ", yeah"]]
     "that’s #[[very cool]], yeah"
 
-    [:block [:paragraph "also here's " [:hashtag "nested " [:page-link "links"]] " in hashtags" "!"]]
+    [:block
+     [:paragraph
+      "also here's "
+      [:hashtag
+       "nested "
+       [:page-link "links"]]
+      " in hashtags!"]]
     "also here's #[[nested [[links]]]] in hashtags!"
 
     [:block [:paragraph "Ends after " [:hashtag "words_are_over"] "!"]]
@@ -199,6 +205,7 @@
                      :text   "no #hashtag or [[link]] inside"}]]]
     "[no #hashtag or [[link]] inside](https://example.com/)"
 
+    ;; TODO this one fails
     [:block
      [:paragraph
       [:link {:text   "escaped \\](#not-a-link)"
@@ -238,11 +245,14 @@
     [:block
      [:paragraph
       "Multiple "
-      [:url-link {:url "https://example.com/a"} "links"]
+      [:link {:target "https://example.com/a"
+              :text   "links"}]
       " "
-      [:url-link {:url "#b"} "are detected"]
+      [:link {:target "#b"
+              :text   "are detected"}]
       " as "
-      [:url-link {:url "https://example.com/c"} "separate"]
+      [:link {:target "https://example.com/c"
+              :text   "separate"}]
       "."]]
     "Multiple [links](https://example.com/a) [are detected](#b) as [separate](https://example.com/c)."
 
