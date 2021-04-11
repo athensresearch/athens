@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.67](https://github.com/athensresearch/athens/compare/v1.0.0-beta.66...v1.0.0-beta.67) (2021-04-11)
+
+
+### Bug Fixes
+
+* add missing toolbar background color ([#941](https://github.com/athensresearch/athens/issues/941)) ([e17c2c1](https://github.com/athensresearch/athens/commit/e17c2c10842c40383dbccb6afca0005ea8c270f7))
+* athena should stay within viewport bounds ([#943](https://github.com/athensresearch/athens/issues/943)) ([8593b58](https://github.com/athensresearch/athens/commit/8593b58dcf6b4511eb8ff1c5013d23e61a48548e))
+* block ref count is above the search dropdown ([#940](https://github.com/athensresearch/athens/issues/940)) ([d94e5fd](https://github.com/athensresearch/athens/commit/d94e5fdcbfacbfb9327faec0a996cbe971d3544e))
+* Checking a TODO item in block embed results to error ([#939](https://github.com/athensresearch/athens/issues/939)) ([dc393d4](https://github.com/athensresearch/athens/commit/dc393d45bb855e1e48c2bf34c8e0122f43dbf9ce))
+
+
+### Documentation
+
+* remove all docs ([#919](https://github.com/athensresearch/athens/issues/919)) ([b5f2887](https://github.com/athensresearch/athens/commit/b5f2887a3434c4a63a924cb6157a393939356752))
+
 ## [1.0.0-beta.66](https://github.com/athensresearch/athens/compare/v1.0.0-beta.65...v1.0.0-beta.66) (2021-04-07)
 
 
