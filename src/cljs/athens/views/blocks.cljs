@@ -641,7 +641,7 @@
                            :on-click       (fn [e] (textarea-click e uid state))
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
-       [parse-and-render local uid]
+       [parse-and-render local (or original-uid uid)]
        [:div (use-style (merge drop-area-indicator
                                (when (= :child (:drag-target @state)) {;;:color "green"
                                                                        :opacity 1})))]])))
