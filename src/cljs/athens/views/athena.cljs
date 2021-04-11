@@ -30,6 +30,7 @@
 
 (def container-style
   {:width         "49rem"
+   :max-width "calc(100vw - 1rem)"
    :border-radius "0.25rem"
    :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
    :display       "flex"
@@ -97,6 +98,8 @@
    :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
+   :flex-wrap "wrap"
+   :gap "0.5rem"
    :align-items "center"
    :top "0"
    :justify-content "space-between"

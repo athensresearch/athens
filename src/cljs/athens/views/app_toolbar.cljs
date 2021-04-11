@@ -49,7 +49,7 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :background (:color :background-color :opacity-med)
+   :background (color :background-color :opacity-high)
    :backdrop-filter "blur(0.375rem)"
    :padding "0.25rem"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
