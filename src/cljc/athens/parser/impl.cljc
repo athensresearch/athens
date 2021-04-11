@@ -59,8 +59,6 @@ inline = recur
 
 <backslash-escapes> = #'\\\\\\p{Punct}'
 
-code-span = <backtick> #'(?s).*?(?=`)' <backtick>
-
 (* all inline-spans have `x` character (or pair) that is a boundary for this span *)
 (* opening `x` has: *)
 (* - `(?<!\\w)`: it can't be preceded by a word character *)
@@ -69,6 +67,10 @@ code-span = <backtick> #'(?s).*?(?=`)' <backtick>
 (* - `(?<!\\s)`: it can't be preceded by a white space *)
 (* - `(?!\\w)`: it can't be followed by a word character *)
    
+code-span = <#'(?<!\\w)`'>
+            #'(?s)([^`]|(?<=\\s)`(?=\\s))+'
+            <#'`(?!\\w)'>
+
 strong-emphasis = (<#'(?<!\\w)\\*\\*(?!\\s)'>
                    recur
                    <#'(?<!\\s)\\*\\*(?!\\w)'>)
@@ -101,8 +103,8 @@ image = <'!'> md-link
             (<' '> link-title)?
             <#'(?<!\\s)\\)(?!\\w)'>
 
-link-text = #'[^\\]]+'
-link-target = #'[^\\s\\)]+'
+link-text = #'(.|\\\\\\])+(?=\\]\\()'
+link-target = ( #'[^\\s\\(\\)]+' | '(' #'[^\\s\\)]*' ')' | '\\\\' ( '(' | ')' ) )+
 link-title = <'\"'> #'[^\"]+' <'\"'>
            | <'\\''> #'[^\\']+' <'\\''>
            | <'('> #'[^\\)]+' <')'>
@@ -250,7 +252,14 @@ newline = #'\\n'
 
 (defn- link-transform
   [& link-parts]
-  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
+  (let [{:keys [link-text link-title]} (into {} (remove #(= :link-target (first %)) link-parts))
+        link-target-rest (->> link-parts
+                              (filter #(= :link-target (first %)))
+                              first
+                              rest)
+        link-target (if (= 1 (count link-target-rest))
+                      (first link-target-rest)
+                      (string/join link-target-rest))]
     [:link (cond-> {:text   link-text
                     :target link-target}
              link-title (assoc :title link-title))]))
@@ -314,7 +323,7 @@ newline = #'\\n'
 
 
 (def uri-pattern
-  #"(https?|ftp)://[^\s/\$\.\?\#].[^\s]*")
+  #"(?i)(https?|ftp)://[^\s/\$\.\?\#].[^\s]*")
 
 
 (defn- text-run-transform
@@ -335,21 +344,21 @@ newline = #'\\n'
                   (recur after
                          (rest m)
                          (cond-> acc
-                           (string? before)
+                           (pos? (count before))
                            (conj before)
 
                            :true
                            (conj [:link {:text   uri
                                          :target uri}])))
                   (cond-> acc
-                    (string? before)
+                    (pos? (count before))
                     (conj before)
 
                     :true
                     (conj [:link {:text   uri
                                   :target uri}])
 
-                    (string? after)
+                    (pos? (count after))
                     (conj after))))))
       text-run)))
 

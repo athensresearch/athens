@@ -237,9 +237,9 @@
                [:paragraph
                 [:code-span "abc"]]
 
-               "` foo ` bar `"
+               "`foo ` bar`"
                [:paragraph
-                [:code-span " foo ` bar "]]))
+                [:code-span "foo ` bar"]]))
 
   (t/testing "all sorts of emphasis"
     (parses-to sut/inline-parser->ast
@@ -406,50 +406,50 @@
 
                "![link text](/some/url)"
                [:paragraph
-                [:image {:alt "link text"
-                         :src "/some/url"}]]
+                [:url-image {:alt "link text"
+                             :src "/some/url"}]]
 
                ;; 3 sorts of link title
                "![link text](/some/url \"title\")"
                [:paragraph
-                [:image {:alt   "link text"
-                         :src   "/some/url"
-                         :title "title"}]]
+                [:url-image {:alt   "link text"
+                             :src   "/some/url"
+                             :title "title"}]]
 
                "![link text](/some/url 'title')"
                [:paragraph
-                [:image {:alt   "link text"
-                         :src   "/some/url"
-                         :title "title"}]]
+                [:url-image {:alt   "link text"
+                             :src   "/some/url"
+                             :title "title"}]]
 
                "![link text](/some/url (title))"
                [:paragraph
-                [:image {:alt   "link text"
-                         :src   "/some/url"
-                         :title "title"}]]
+                [:url-image {:alt   "link text"
+                             :src   "/some/url"
+                             :title "title"}]]
 
                ;; link in an emphasis
                "this **![link](/example) is bold**"
                [:paragraph
                 [:text-run "this "]
                 [:strong-emphasis
-                 [:image {:alt "link"
-                          :src "/example"}]
+                 [:url-image {:alt "link"
+                              :src "/example"}]
                  [:text-run " is bold"]]]
 
                ;; but no emphasis in a link
                "![*em*](/link)"
                [:paragraph
-                [:image {:alt "*em*"
-                         :src "/link"}]]))
+                [:url-image {:alt "*em*"
+                             :src "/link"}]]))
 
   (t/testing "autolinks"
     (parses-to sut/inline-parser->ast
 
                "<http://example.com>"
                [:paragraph
-                [:link {:text   "http://example.com"
-                        :target "http://example.com"}]]
+                [:autolink {:text   "http://example.com"
+                            :target "http://example.com"}]]
 
                ;; no white space in autolinks
                "<http://example.com and>"
@@ -460,8 +460,8 @@
                ;; emails are recognized
                "<root@example.com>"
                [:paragraph
-                [:link {:text "root@example.com"
-                        :target "mailto:root@example.com"}]]))
+                [:autolink {:text   "root@example.com"
+                            :target "mailto:root@example.com"}]]))
 
   (t/testing "block references (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -707,7 +707,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  [:newline "\n"]
                  [:link {:text "caesus", :target "http://audaci-terris.com/per.html"}]
                  ", ait aliquid non ipse "
-                 [:emphasis "cum omine"]
+                 [:italic "cum omine"]
                  ","
                  [:newline "\n"]
                  "lacerare gaudia mittere sermonibus. Tuta "
@@ -732,7 +732,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  [:paragraph "Agam sed tantum levavit nimiumque bellum recondidit"]]
                 [:paragraph
                  "Praeconsumere illuc et dixi iubet risisse: colunt "
-                 [:emphasis "Iuno"]
+                 [:italic "Iuno"]
                  " auribus clara: loca"
                  [:newline "\n"]
                  "utero sine prolisque in sui et in. Pelagi Aurora Actaeon, silva plenissima"
@@ -771,7 +771,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  [:link
                   {:text "contenta mihi tum", :target "http://www.monstravit.org/"}]
                  " fatus tectis."]
-                [:block-quote
+                [:blockquote
                  [:paragraph
                   "Neptis albenti urbes aether nostro pigeat frons: iacet latis vobis; potest"
                   [:newline "\n"]

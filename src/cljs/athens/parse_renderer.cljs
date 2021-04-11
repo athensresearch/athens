@@ -213,7 +213,6 @@
                                    (string? title)
                                    (assoc :title title))
                               text])
-    ;; TODO add :paragraph
      :paragraph            (fn [& contents]
                              (println "paragraph contents " (pr-str contents))
                              (apply conj [:p] (if (= 1 (count contents))
