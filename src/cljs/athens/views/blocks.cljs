@@ -201,6 +201,7 @@
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
+                                 :outline "none"
                                  :overflow "hidden"
                                  :padding "0"
                                  :background (color :background-minus-1)
@@ -216,8 +217,7 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
-                     [:.is-editing {:outline "none"
-                                    :z-index 3
+                     [:.is-editing {:z-index 3
                                     :display "block"
                                     :opacity "1"}]
                      [:span
