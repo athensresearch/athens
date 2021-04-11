@@ -129,7 +129,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (dispatch [:right-sidebar/open-item uid]))
+         (dispatch [:ref-sidebar/open-item uid]))
        (navigate-uid uid)))))
 
 

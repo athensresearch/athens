@@ -39,8 +39,8 @@
    :overflow      "hidden"
    :max-height    "60vh"
    :z-index       (:zindex-modal ZINDICES)
-   :top           "40%"
-   :left          "50%"
+   :inset-block-start           "40%"
+:inset-inline-start          "50%"
    :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
    ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
@@ -49,7 +49,7 @@
 
 
 (def athena-input-style
-  {:width "100%"
+  {:inline-size "100%"
    :border 0
    :font-size      "2.375rem"
    :font-weight    "300"
@@ -59,7 +59,9 @@
    :background     (color :background-plus-2)
    :color          (color :body-text-color)
    :caret-color    (color :link-color)
-   :padding        "1.5rem 4rem 1.5rem 1.5rem"
+   :padding-block "1.5rem"
+:padding-inline-start "1.5rem"
+:padding-inline-end "4rem"
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
@@ -74,31 +76,32 @@
    :transition "opacity 0.1s ease, background 0.1s ease"
    :cursor "pointer"
    :border 0
-   :right "2rem"
+   :block-size "2.5rem"
+:inline-size "2.5rem"
+:inset-inline-end "2rem"
+:inset-block-start "50%"
    :place-items "center"
    :place-content "center"
-   :height "2.5rem"
-   :width "2.5rem"
    :border-radius "1000px"
    :display "flex"
    :transform "translate(0%, -50%)"
-   :top "50%"
    ::stylefy/manual [[:&:hover :&:focus {:background (color :background-plus-1)}]]})
 
 
 (def results-list-style
   {:background    (color :background-color)
    :overflow-y "auto"
-   :max-height "100%"})
+   :max-block-size "100%"})
 
 
 (def results-heading-style
-  {:padding "0.25rem 1.125rem"
+  {:padding-block "0.25rem"
+   :padding-inline "1.125rem"
    :background (color :background-plus-2)
    :display "flex"
    :position "sticky"
    :align-items "center"
-   :top "0"
+   :inset-block-start "0"
    :justify-content "space-between"
    :box-shadow [["0 1px 0 0 " (color :border-color)]]
    :border-top [["1px solid" (color :border-color)]]})
@@ -106,7 +109,8 @@
 
 (def result-style
   {:display "flex"
-   :padding "0.75rem 2rem"
+   :padding-block "0.75rem"
+:padding-inline "2rem"
    :background (color :background-plus-1)
    :color (color :body-text-color)
    :transition "all .05s ease"
@@ -192,12 +196,12 @@
                                  (dispatch [:athena/toggle])
                                  (dispatch [:page/create query uid])
                                  (if shift
-                                   (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500)
+                                   (js/setTimeout #(dispatch [:ref-sidebar/open-item uid]) 500)
                                    (navigate-uid uid)))
-                               ;; if shift: open in right-sidebar
+                               ;; if shift: open in ref-sidebar
                                shift
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                                   (dispatch [:ref-sidebar/open-item (:block/uid item)]))
                                ;; else open in main view
                                :else
                                (do (dispatch [:athena/toggle])

@@ -1,8 +1,8 @@
 (ns athens.views.app-toolbar
   (:require
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
+["@material-ui/icons/NavigateNext" :default NavigateNext]
     ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
@@ -90,8 +90,8 @@
 
 (defn app-toolbar
   []
-  (let [left-open?  (subscribe [:left-sidebar/open])
-        right-open? (subscribe [:right-sidebar/open])
+  (let [left-open?  (subscribe [:nav-sidebar/open])
+        right-open? (subscribe [:ref-sidebar/open])
         route-name  (subscribe [:current-route/name])
         electron? (util/electron?)
         theme-dark  (subscribe [:theme/dark])
@@ -106,14 +106,14 @@
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
-                  :on-click #(dispatch [:left-sidebar/toggle])}
+                  :on-click #(dispatch [:nav-sidebar/toggle])}
           [:> Menu]]
          [separator]
          ;; TODO: refactor to effects
          (when electron?
            [:<>
-            [button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
-            [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
+            [button {:on-click #(.back js/window.history)} [:> NavigateBefore]]
+[button {:on-click #(.forward js/window.history)} [:> NavigateNext]]
             [separator]])
          [button {:on-click router/nav-daily-notes
                   :active   (= @route-name :home)} [:> Today]]
@@ -152,6 +152,6 @@
             [:> ToggleOn])]
          [separator]
          [button {:active   @right-open?
-                  :on-click #(dispatch [:right-sidebar/toggle])}
+                  :on-click #(dispatch [:ref-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
 

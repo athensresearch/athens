@@ -49,7 +49,7 @@
                                                       :background (color :body-text-color :opacity-lower)
                                                       :cursor "default"}]
                      [:span {:flex "1 0 auto"
-                             :text-align "left"}]
+                             :text-align "start"}]
                      [:kbd {:margin-inline-start "1rem"
                             :font-size "85%"}]
                      [:svg button-icons-style

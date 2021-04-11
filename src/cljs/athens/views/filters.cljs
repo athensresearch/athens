@@ -36,7 +36,7 @@
    :flex "0 0 auto"
    :font-size "12px"
    :align-items "center"
-   :text-align "right"
+   :text-align "end"
    :border-bottom (str "1px solid " (color :background-minus-1))
    :margin "0.25rem 0 0"
    :padding-bottom "0.25rem"
@@ -104,14 +104,14 @@
    :color (color :body-text-currentColor)
    :font-weight "bold"
    :font-size "11px"
-   :text-align "right"
+   :text-align "end"
    :flex "0 0 3em"})
 
 
 (def filter-name-style
   {:flex "1 1 100%"
    :color (color :body-text-currentColor)
-   :text-align "left"})
+   :text-align "start"})
 
 
 (def state-style

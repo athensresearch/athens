@@ -53,27 +53,27 @@
 
 
 (re-frame/reg-sub
-  :left-sidebar/open
+  :nav-sidebar/open
   (fn-traced [db _]
-             (:left-sidebar/open db)))
+             (:nav-sidebar/open db)))
 
 
 (re-frame/reg-sub
-  :right-sidebar/open
+  :ref-sidebar/open
   (fn-traced [db _]
-             (:right-sidebar/open db)))
+             (:ref-sidebar/open db)))
 
 
 (re-frame/reg-sub
-  :right-sidebar/items
+  :ref-sidebar/items
   (fn-traced [db _]
-             (:right-sidebar/items db)))
+             (:ref-sidebar/items db)))
 
 
 (re-frame/reg-sub
-  :right-sidebar/width
+  :ref-sidebar/width
   (fn [db _]
-    (:right-sidebar/width db)))
+    (:ref-sidebar/width db)))
 
 
 (re-frame/reg-sub

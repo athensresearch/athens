@@ -42,11 +42,10 @@
                                  :padding            "0"
                                  :letter-spacing     "inherit"
                                  :position           "absolute"
-                                 :top                "0"
-                                 :left               "0"
-                                 :right              "0"
-                                 :width              "100%"
-                                 :min-height         "100%"
+                                 :inset-block-start  "0"
+:inset-inline  "0"
+:inline-size "100%"
+:min-block-size         "100%"
                                  :caret-color        (color :link-color)
                                  :background         "transparent"
                                  :margin             "0"
@@ -94,9 +93,9 @@
 (defn breadcrumb-handle-click
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
   [e uid breadcrumb-uid]
-  (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
-    (if right-sidebar?
-      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+  (let [ref-sidebar? (.. e -target (closest ".ref-sidebar"))]
+    (if ref-sidebar?
+      (dispatch [:ref-sidebar/navigate-item uid breadcrumb-uid])
       (navigate-uid breadcrumb-uid e))))
 
 

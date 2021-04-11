@@ -98,8 +98,8 @@
                                                         (dispatch [:undo]))))
 
                                        KeyCodes.BACKSLASH (if shift
-                                                            (dispatch [:right-sidebar/toggle])
-                                                            (dispatch [:left-sidebar/toggle]))
+                                                            (dispatch [:ref-sidebar/toggle])
+                                                            (dispatch [:nav-sidebar/toggle]))
                                        KeyCodes.T (util/toggle-10x)
                                        nil)
       alt (condp = key-code

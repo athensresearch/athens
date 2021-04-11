@@ -321,11 +321,11 @@
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
-                                     ;; if first time, go to Daily Pages and open left-sidebar
+                                     ;; if first time, go to Daily Pages and open nav-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-new-db
                                       :dispatch-n [[:navigate :home]
-                                                   [:left-sidebar/toggle]]}
+                                                   [:nav-sidebar/toggle]]}
 
                                      ;; if nth time, remember dark/light theme and last page
                                      {:when       :seen?

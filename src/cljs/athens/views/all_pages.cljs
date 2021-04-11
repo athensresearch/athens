@@ -27,9 +27,9 @@
 (def table-style
   {:flex "1 1 100%"
    :margin "0 2rem"
-   :text-align "left"
+   :text-align "start"
    :border-collapse "collapse"
-   ::stylefy/sub-styles {:th-date {:text-align "right"}
+   ::stylefy/sub-styles {:th-date {:text-align "end"}
                          :td-title {:color (color :link-color)
                                     :width "15vw"
                                     :cursor "pointer"
@@ -47,7 +47,7 @@
                                         :display "-webkit-box"
                                         :-webkit-line-clamp "3"
                                         :-webkit-box-orient "vertical"}
-                         :td-date {:text-align "right"
+                         :td-date {:text-align "end"
                                    :opacity (:opacity-high OPACITIES)
                                    :font-size "0.75em"
                                    :min-width "9em"}}

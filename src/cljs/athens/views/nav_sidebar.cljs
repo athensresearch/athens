@@ -1,4 +1,4 @@
-(ns athens.views.left-sidebar
+(ns athens.views.nav-sidebar
   (:require
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
@@ -16,9 +16,9 @@
 ;;; Styles
 
 
-(def left-sidebar-style
+(def nav-sidebar-style
   {:width 0
-   :grid-area "left-sidebar"
+   :grid-area "nav-sidebar"
    :height "100%"
    :display "flex"
    :flex-direction "column"
@@ -42,7 +42,7 @@
                      [:&.is-closed {:width "0"}]]})
 
 
-(def left-sidebar-content-style
+(def nav-sidebar-content-style
   {:width "18rem"
    :height "100%"
    :display "flex"
@@ -137,15 +137,15 @@
                                           (cond
                                             (= source-order order) nil
                                             (and (= source-order (dec order)) (= @drag :above)) nil
-                                            (= @drag :below) (dispatch [:left-sidebar/drop-below source-order order])
-                                            :else (dispatch [:left-sidebar/drop-above source-order order])))
+                                            (= @drag :below) (dispatch [:nav-sidebar/drop-below source-order order])
+                                            :else (dispatch [:nav-sidebar/drop-above source-order order])))
                                         (reset! drag nil))})
         title]])))
 
 
-(defn left-sidebar
+(defn nav-sidebar
   []
-  (let [open? (subscribe [:left-sidebar/open])
+  (let [open? (subscribe [:nav-sidebar/open])
         shortcuts (->> @(q '[:find ?order ?title ?uid
                              :where
                              [?e :page/sidebar ?order]
@@ -156,19 +156,19 @@
     ;; (when @open?
 
       ;; IF EXPANDED
-    [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
-     [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
+    [:div (use-style nav-sidebar-style {:class (if @open? "is-open" "is-closed")})
+     [:div (use-style nav-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
 
        ;; SHORTCUTS
       [:ol (use-style shortcuts-list-style)
        [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
        (doall
          (for [sh shortcuts]
-           ^{:key (str "left-sidebar-" (second sh))}
+           ^{:key (str "nav-sidebar-" (second sh))}
            [shortcut-component sh]))]
 
        ;; LOGO + BOTTOM BUTTONS
-      [:footer (use-sub-style left-sidebar-style :footer)
+      [:footer (use-sub-style nav-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
        [:h5 (use-style {:align-self "center"})
         [:a (use-style version-style {:href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"

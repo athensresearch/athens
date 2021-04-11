@@ -191,11 +191,11 @@
                                                                    :open true,
                                                                    :order 1,
                                                                    :children [#:block{:uid "55ea160af",
-                                                                                      :string "`ctrl-\\`: open left sidebar",
+                                                                                      :string "`ctrl-\\`: open navigation sidebar"
                                                                                       :open true,
                                                                                       :order 0}
                                                                               #:block{:uid "13efc72bd",
-                                                                                      :string "`ctrl-shift-\\`: open right sidebar",
+                                                                                      :string "`ctrl-shift-\\`: open reference sidebar"
                                                                                       :open true,
                                                                                       :order 1}
                                                                               #:block{:uid "bb0e8a187",
@@ -203,7 +203,7 @@
                                                                                       :open true,
                                                                                       :order 2}]}]}
                                         #:block{:uid "1002528bd",
-                                                :string "Left Sidebar",
+                                                :string "Navigation Sidebar"
                                                 :open false,
                                                 :order 3,
                                                 :children [#:block{:uid "574973f5c",
@@ -211,11 +211,11 @@
                                                                    :open true,
                                                                    :order 0}]}
                                         #:block{:uid "72538ef7f",
-                                                :string "Right Sidebar",
+                                                :string "Reference Sidebar"
                                                 :open false,
                                                 :order 4,
                                                 :children [#:block{:uid "9d6e1fd07",
-                                                                   :string "Open a block or page in the right sidebar by shift clicking on the link, title, or bullet.",
+                                                                   :string "Open a block or page in the reference sidebar by shift-clicking on the link, title, or bullet."
                                                                    :open true,
                                                                    :order 0}]}]}
                      #:block{:uid "21785e1a9",
@@ -251,7 +251,7 @@
                                                                    :open true,
                                                                    :order 0}
                                                            #:block{:uid "bf257cc8e",
-                                                                   :string "You can see the version at the bottom of the left sidebar when it is opened. Click on the version to go to our [release notes on Notion](https://www.notion.so/athensresearch/Weekly-Updates-e18afa006cfd4fec9c462940ac3b84da).",
+                                                                   :string "You can see the version at the bottom of the navigation sidebar when it is opened. Click on the version to go to our [release notes on Notion](https://www.notion.so/athensresearch/Weekly-Updates-e18afa006cfd4fec9c462940ac3b84da)."
                                                                    :open true,
                                                                    :order 1}]}
                                         #:block{:uid "2464d4538",

@@ -42,10 +42,10 @@
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false
-               :left-sidebar/open   false
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :right-sidebar/width 32
+               :nav-sidebar/open   false
+:ref-sidebar/open  false
+:ref-sidebar/items {}
+:ref-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      []

@@ -370,7 +370,7 @@
                                            [:<>
                                             [:> Bookmark]
                                             [:span "Add Shortcut"]]])
-                                        [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                                        [button {:on-click #(dispatch [:ref-sidebar/open-item uid true])}
                                          [:<>
                                           [:> BubbleChart]
                                           [:span "Show Local Graph"]]]]

@@ -164,7 +164,7 @@
    ::stylefy/manual [[:td {:border-top (str "1px solid " (color :border-color))
                            :padding "0.125rem"}]
                      [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "0.125rem 0.125rem"}]
+                     [:th {:text-align "start" :padding "0.125rem 0.125rem"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "0.5rem"}]
                      [:td:last-child :th-last-child {:padding-right "0.5rem"}]

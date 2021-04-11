@@ -1,4 +1,4 @@
-(ns athens.views.right-sidebar
+(ns athens.views.ref-sidebar
   (:require
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
@@ -179,7 +179,7 @@
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
 
-(defn right-sidebar-el
+(defn ref-sidebar-el
   "Resizable: use local atom for width, but dispatch value to re-frame on mouse up. Instantiate local value with re-frame width too."
   [_ _ rf-width]
   (let [state (r/atom {:dragging false
@@ -196,9 +196,9 @@
         mouse-up-handler (fn []
                            (when (:dragging @state)
                              (swap! state assoc :dragging false)
-                             (dispatch [:right-sidebar/set-width (:width @state)])))]
+                             (dispatch [:ref-sidebar/set-width (:width @state)])))]
     (r/create-class
-      {:display-name           "right-sidebar"
+      {:display-name           "ref-sidebar"
        :component-did-mount    (fn []
                                  (js/document.addEventListener "mousemove" move-handler)
                                  (js/document.addEventListener "mouseup" mouse-up-handler))
@@ -207,7 +207,7 @@
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
        :reagent-render         (fn [open? items _]
                                  [:div (merge (use-style sidebar-style
-                                                         {:class ["right-sidebar" (if open? "is-open" "is-closed")]})
+                                                         {:class ["ref-sidebar" (if open? "is-open" "is-closed")]})
                                               {:style (cond-> {}
                                                         (:dragging @state) (assoc :transition-duration "0s")
                                                         open? (assoc :width (str (:width @state) "vw")))})
@@ -231,7 +231,7 @@
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
                                            [button {:style    sidebar-item-toggle-style
-                                                    :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                    :on-click #(dispatch [:ref-sidebar/toggle-item uid])
                                                     :class    (when open "is-open")}
                                             [:> ChevronRight]]
                                            [:h2
@@ -242,7 +242,7 @@
                                            [:div {:class "controls"}
                                             ;;  [button [:> DragIndicator]]
                                             ;;  [:hr]
-                                            [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+                                            [button {:on-click #(dispatch [:ref-sidebar/close-item uid])}
                                              [:> Close]]]]
                                           (when open
                                             [:div (use-style sidebar-item-container-style)
@@ -252,9 +252,9 @@
                                                :else     [block-page-component [:block/uid uid]])])])))]])})))
 
 
-(defn right-sidebar-component
+(defn ref-sidebar-component
   []
-  (let [open? @(subscribe [:right-sidebar/open])
-        items @(subscribe [:right-sidebar/items])
-        width @(subscribe [:right-sidebar/width])]
-    [right-sidebar-el open? items width]))
+  (let [open? @(subscribe [:ref-sidebar/open])
+        items @(subscribe [:ref-sidebar/items])
+        width @(subscribe [:ref-sidebar/width])]
+    [ref-sidebar-el open? items width]))

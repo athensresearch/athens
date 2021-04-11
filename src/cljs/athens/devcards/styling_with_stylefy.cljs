@@ -47,7 +47,7 @@
   Create styles for inner components with Stylefy's \"sub-styles\". Use these when creating sub-components that won't be used separately.
 
   ```clojure
-  (def left-sidebar-style
+  (def nav-sidebar-style
     {:display \"flex\"
      ::stylefy/sub-styles {:footer {:margin-top \"auto\"}}})
   ```

@@ -12,9 +12,9 @@
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
     [athens.views.graph-page :as graph-page]
-    [athens.views.left-sidebar :refer [left-sidebar]]
+    [athens.views.nav-sidebar :refer [nav-sidebar]]
     [athens.views.node-page :refer [node-page-component]]
-    [athens.views.right-sidebar :refer [right-sidebar-component]]
+    [athens.views.ref-sidebar :refer [ref-sidebar-component]]
     [athens.views.settings-page :as settings-page]
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
@@ -29,7 +29,7 @@
   {:display "grid"
    :grid-template-areas
    "'app-header app-header app-header'
-    'left-sidebar main-content secondary-content'
+    'nav-sidebar main-content secondary-content'
    'devtool devtool devtool'"
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows "auto 1fr auto"
@@ -112,10 +112,10 @@
                 (when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style)
                  [app-toolbar]
-                 [left-sidebar]
+                 [nav-sidebar]
                  [:div (use-style main-content-style
                                   {:on-scroll (when (= @route-name :home)
                                                 #(db-scroll-daily-notes %))})
                   [match-panel @route-name]]
-                 [right-sidebar-component]
+                 [ref-sidebar-component]
                  [devtool-component]]])])))

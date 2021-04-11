@@ -189,27 +189,27 @@
 
 
 (reg-event-db
-  :left-sidebar/toggle
+  :nav-sidebar/toggle
   (fn [db _]
-    (update db :left-sidebar/open not)))
+    (update db :nav-sidebar/open not)))
 
 
 (reg-event-db
-  :right-sidebar/toggle
+  :ref-sidebar/toggle
   (fn [db _]
-    (update db :right-sidebar/open not)))
+    (update db :ref-sidebar/open not)))
 
 
 (reg-event-db
-  :right-sidebar/toggle-item
+  :ref-sidebar/toggle-item
   (fn [db [_ item]]
-    (update-in db [:right-sidebar/items item :open] not)))
+    (update-in db [:ref-sidebar/items item :open] not)))
 
 
 (reg-event-db
-  :right-sidebar/set-width
+  :ref-sidebar/set-width
   (fn [db [_ width]]
-    (assoc db :right-sidebar/width width)))
+    (assoc db :ref-sidebar/width width)))
 
 
 (reg-event-db
@@ -233,31 +233,31 @@
 
 ;; TODO: dec all indices > closed item
 (reg-event-db
-  :right-sidebar/close-item
+  :ref-sidebar/close-item
   (fn [db [_ uid]]
-    (let [{:right-sidebar/keys [items]} db]
-      (cond-> (update db :right-sidebar/items dissoc uid)
-        (= 1 (count items)) (assoc :right-sidebar/open false)))))
+    (let [{:ref-sidebar/keys [items]} db]
+      (cond-> (update db :ref-sidebar/items dissoc uid)
+        (= 1 (count items)) (assoc :ref-sidebar/open false)))))
 
 
 (reg-event-db
-  :right-sidebar/navigate-item
+  :ref-sidebar/navigate-item
   (fn [db [_ uid breadcrumb-uid]]
     (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
-          item-index (get-in db [:right-sidebar/items uid :index])
+          item-index (get-in db [:ref-sidebar/items uid :index])
           new-item   (merge block {:open true :index item-index})]
       (-> db
-          (update-in [:right-sidebar/items] dissoc uid)
-          (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item)))))
+          (update-in [:ref-sidebar/items] dissoc uid)
+          (update-in [:ref-sidebar/items] assoc breadcrumb-uid new-item)))))
 
 
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
-  :right-sidebar/open-item
+  :ref-sidebar/open-item
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
+          new-items (assoc (:ref-sidebar/items db) uid new-item)
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
                                new-items)
@@ -265,9 +265,9 @@
                                               (compare
                                                 [(get-in new-items [k1 :index]) k2]
                                                 [(get-in new-items [k2 :index]) k1]))) inc-items)]
-      (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
-        (not (:right-sidebar/open db))
-        (assoc :dispatch [:right-sidebar/toggle])))))
+      (cond-> {:db (assoc db :ref-sidebar/items sorted-items)}
+        (not (:ref-sidebar/open db))
+        (assoc :dispatch [:ref-sidebar/toggle])))))
 
 
 (reg-event-fx
@@ -643,9 +643,9 @@
 
 
 (reg-event-fx
-  :page/reindex-left-sidebar
+  :page/reindex-nav-sidebar
   (fn [_ _]
-    {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
+    {:doc "This is used in the `nav-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
     (let [sidebar-ents (->> (d/q '[:find [(pull ?e [*]) ...]
                                    :where
                                    [?e :page/sidebar _]]
@@ -664,14 +664,14 @@
                                         [?e :page/sidebar _]]
                                       @db/dsdb) 1)]
       {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar sidebar-ents-count}]]]
-            [:dispatch [:page/reindex-left-sidebar]]]})))
+            [:dispatch [:page/reindex-nav-sidebar]]]})))
 
 
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
     {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]
-          [:dispatch [:page/reindex-left-sidebar]]]}))
+          [:dispatch [:page/reindex-nav-sidebar]]]}))
 
 
 (reg-event-fx
@@ -1698,7 +1698,7 @@
                                         embed-id (str "-embed-" embed-id)) n]))]})))
 
 
-(defn left-sidebar-drop-above
+(defn nav-sidebar-drop-above
   [s-order t-order]
   (let [source-eid (d/q '[:find ?e .
                           :in $ ?s-order
@@ -1724,12 +1724,12 @@
 
 
 (reg-event-fx
-  :left-sidebar/drop-above
+  :nav-sidebar/drop-above
   (fn-traced [_ [_ source-order target-order]]
-             {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
+             {:dispatch [:transact (nav-sidebar-drop-above source-order target-order)]}))
 
 
-(defn left-sidebar-drop-below
+(defn nav-sidebar-drop-below
   [s-order t-order]
   (let [source-eid (d/q '[:find ?e .
                           :in $ ?s-order
@@ -1749,9 +1749,9 @@
 
 
 (reg-event-fx
-  :left-sidebar/drop-below
+  :nav-sidebar/drop-below
   (fn-traced [_ [_ source-order target-order]]
-             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
+             {:dispatch [:transact (nav-sidebar-drop-below source-order target-order)]}))
 
 
 (defn link-unlinked-reference

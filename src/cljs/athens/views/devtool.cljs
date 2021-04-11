@@ -1,7 +1,7 @@
 (ns athens.views.devtool
   (:require
     ["@material-ui/icons/Build" :default Build]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+    ["@material-ui/icons/NavigateBefore" :default NavigateBefore]
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
     ["@material-ui/icons/ShortText" :default ShortText]
@@ -94,7 +94,7 @@
    ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
                            :padding    "0.125rem"}]
                      [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "0.125rem 0.125rem" :white-space "nowrap"}]
+                     [:th {:text-align "start" :padding "0.125rem 0.125rem" :white-space "nowrap"}]
                      [:tr {:transition "all 0.05s ease"}]
                      [:td:first-child :th:first-child {:padding-left "0.5rem"}]
                      [:td:last-child :th-last-child {:padding-right "0.5rem"}]
@@ -336,7 +336,7 @@
                                                     (-> s
                                                         (update :navs subvec 0 i)
                                                         (dissoc :viewer))))}
-                  [:<> [:> ChevronLeft] [:span (first nav)]]])))
+                  [:<> [:> NavigateBefore] [:span (first nav)]]])))
            [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
            [:div (use-style current-location-controls-style)
             [:span "View as "]

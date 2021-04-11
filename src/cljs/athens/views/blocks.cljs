@@ -47,9 +47,10 @@
    :flex-direction "column"
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
                                                      :position "absolute"
-                                                     :width "1px"
+                                                     :inline-size "1px"
                                                      :left "calc(1.25em + 1px)"
                                                      :top "2em"
+                                                    ;;  :inset-block-start "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
                                                      :background (color :border-color)}]
@@ -73,22 +74,19 @@
                                     :position "relative"}
                       [:button.block-edit-toggle {:position "absolute"
                                                   :appearance "none"
-                                                  :width "100%"
+                                                  :block-size "100%"
                                                   :background "none"
                                                   :border 0
                                                   :cursor "text"
                                                   :display "block"
                                                   :z-index 1
-                                                  :top 0
-                                                  :right 0
-                                                  :bottom 0
-                                                  :left 0}]]
+                                                  :inset 0}]]
                       ;;[:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing,
                      [:&.is-linked-ref {:background-color (color :background-plus-2)}]
                      ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
-                     [:.block-container {:margin-left "2rem"}]]})
+                     [:.block-container {:margin-blocks-start "2rem"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -324,7 +322,7 @@
    ::stylefy/manual [[:div {:display "table-row"}]
                      [:b {:display "table-cell"
                           :user-select "none"
-                          :text-align "right"
+                          :text-align "end"
                           :text-transform "uppercase"
                           :font-size "12px"
                           :letter-spacing "0.1em"
@@ -437,7 +435,7 @@
                                                       :active   (= index i)
                                                       ;; if page link, expand to title. otherwise expand to uid for a block ref
                                                       :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                                                      :style    {:text-align "left"}}
+                                                      :style    {:text-align "start"}}
                                               (or title string)])))]])))})))
 
 
@@ -769,7 +767,7 @@
   [:div (use-style {:margin-left "1em"
                     :z-index (:zindex-dropdown ZINDICES)
                     :visibility (when-not (pos? count) "hidden")})
-    [button {:primary true :on-click #(dispatch [:right-sidebar/open-item uid])} count]])
+    [button {:primary true :on-click #(dispatch [:ref-sidebar/open-item uid])} count]])
 
 
 (defn block-drag-over
