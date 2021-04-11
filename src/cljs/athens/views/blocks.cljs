@@ -423,6 +423,7 @@
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
                                                            :max-height "20rem"
+                                                           :z-index    (:zindex-popover ZINDICES)
                                                            :top        (+ 24 top)
                                                            :left       (+ 24 left)}})
                                       [:div#dropdown-menu (use-style menu-style)
