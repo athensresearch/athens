@@ -48,19 +48,17 @@
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
                                                      :position "absolute"
                                                      :inline-size "1px"
-                                                     :left "calc(1.25em + 1px)"
-                                                     :top "2em"
-                                                    ;;  :inset-block-start "2em"
-                                                     :bottom "0"
+                                                     :inset-inline-start "calc(1.25em + 1px)"
+:inset-block-start "2em"
+:inset-block-end "0"
                                                      :transform "translateX(50%)"
                                                      :background (color :border-color)}]
                      [:&:after {:content "''"
                                 :z-index -1
                                 :position "absolute"
                                 :top "0.75px"
-                                :right 0
-                                :bottom "0.75px"
-                                :left 0
+                                :inset-inline 0
+:inset-block "0.75px"
                                 :opacity 0
                                 :pointer-events "none"
                                 :border-radius "0.25rem"
@@ -86,15 +84,15 @@
                      [:&.is-linked-ref {:background-color (color :background-plus-2)}]
                      ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
-                     [:.block-container {:margin-blocks-start "2rem"}]]})
+                     [:.block-container {:margin-inline-start "2rem"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
 
 
 (def block-disclosure-toggle-style
-  {:width "1em"
-   :height "2em"
+  {:inline-size "1em"
+   :block-size "2em"
    :position "relative"
    :z-index 2
    :flex-shrink "0"
@@ -118,10 +116,10 @@
    :position "relative"
    :z-index 2
    :cursor "pointer"
-   :width "0.75em"
-   :margin-right "0.25em"
+   :inline-size "0.75em"
+:block-size "2em"
+:margin-block-end "0.25em"
    :transition "all 0.05s ease"
-   :height "2em"
    :color (color :body-text-color :opacity-low)
    ::stylefy/mode [[:after {:content "''"
                             :background "currentColor"
@@ -129,10 +127,11 @@
                             :border-radius "100px"
                             :box-shadow "0 0 0 0.125rem transparent"
                             :display "inline-flex"
-                            :margin "50% 0 0 50%"
+                            :margin-inline-start "50%"
+:margin-block-start "50%"
                             :transform "translate(-50%, -50%)"
-                            :height "0.3125em"
-                            :width "0.3125em"}]
+                            :block-size "0.3125em"
+                            :inline-size "0.3125em"}]
                    [:hover {:color (color :link-color)}]]
    ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 0.125rem " (color :body-text-color))
                                                                                 :opacity (:opacity-med OPACITIES)}]]
@@ -162,21 +161,20 @@
 
 (def drop-area-indicator
   {:display "block"
-   :height "1px"
+   :inline-size "100%"
+:block-size "1px"
    :pointer-events "none"
-   :margin-bottom "-1px"
+   :margin-block-end "-1px"
    :color (color :link-color :opacity-high)
    :position "relative"
-   :transform-origin "left"
    :z-index 3
-   :width "100%"
    :opacity 0
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
-                                :top "-0.5px"
-                                :right "0"
-                                :bottom "-0.5px"
-                                :left "2em"
+                                :inline-size "100%"
+:block-size "2px"
+:inset-inline "-0.5px"
+:inset-block-start "2em"
                                 :border-radius "100px"
                                 :background "currentColor"}]]})
 
@@ -244,17 +242,12 @@
                      [:iframe {:border 0
                                :box-shadow [["inset 0 0 0 0.125rem" (color :background-minus-1)]]
                                :position "absolute"
-                               :height "100%"
-                               :width "100%"
                                :cursor "default"
-                               :top 0
-                               :right 0
-                               :left 0
-                               :bottom 0
+                               :inset 0
                                :border-radius "0.25rem"}]
                      ;; Images
                      [:img {:border-radius "0.25rem"
-                            :max-width "calc(100% - 0.25rem)"}]
+                            :max-block-size "calc(100% - 0.25rem)"}]
                      ;; Checkboxes
                      ;; TODO: Refactor these complicated styles into clip paths or SVGs
                      ;; or something nicer than this
@@ -264,18 +257,18 @@
                                                                     :color (color :link-color)
                                                                     :margin-inline-end "0.25rem"
                                                                     :position "relative"
-                                                                    :top "0.13em"
-                                                                    :width "1rem"
-                                                                    :height "1rem"
+                                                                    :inset-block-start "0.13em"
+:inline-size "1rem"
+:block-size "1rem"
                                                                     :transition "all 0.05s ease"
                                                                     :transform "scale(1)"
                                                                     :box-shadow "inset 0 0 0 1px"}
                               [:&:after {:content "''"
                                          :position "absolute"
-                                         :top "45%" ;; How are the top and left values calculated?
-                                         :left "20%" ;;
-                                         :width "30%"
-                                         :height "60%"
+                                         :inset-block-start "45%"
+:inset-inline-start "20%"
+:inline-size "30%"
+:block-size "60%"
                                          :border-width "0 1.5px 1.5px 0"
                                          :border-style "solid"
                                          :opacity 0
@@ -285,7 +278,8 @@
                                           :color (color :background-color)}]]
                               [:&:active {:transform "scale(0.9)"}]]]
 
-                     [:mark.contents.highlight {:padding "0 2px"
+                     [:mark.contents.highlight {:padding-inline "2px"
+                                                :border-radius "0.125rem"
                                                 :background-color "#ffeb7a"}]]})
 
 
@@ -420,9 +414,9 @@
                                                               ;; don't blur textarea when clicking to auto-complete
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
-                                                           :max-height "20rem"
-                                                           :top        (+ 24 top)
-                                                           :left       (+ 24 left)}})
+                                                           :max-block-size "20rem"
+                                                           :inset-block-start        (+ 24 top)
+                                                           :inset-inline-start       (+ 24 left)}})
                                       [:div#dropdown-menu (use-style menu-style)
                                        (if (or (str/blank? query)
                                                (empty? results))
@@ -764,7 +758,7 @@
 
 (defn block-refs-count-el
   [count uid]
-  [:div (use-style {:margin-left "1em"
+  [:div (use-style {:margin-inline-start "1em"
                     :z-index (:zindex-dropdown ZINDICES)
                     :visibility (when-not (pos? count) "hidden")})
     [button {:primary true :on-click #(dispatch [:ref-sidebar/open-item uid])} count]])

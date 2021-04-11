@@ -166,23 +166,24 @@
                      [:tbody {:vertical-align "top"}]
                      [:th {:text-align "start" :padding "0.125rem 0.125rem"}]
                      [:tr {:transition "all 0.05s ease"}]
-                     [:td:first-child :th:first-child {:padding-left "0.5rem"}]
-                     [:td:last-child :th-last-child {:padding-right "0.5rem"}]
+                     [:td:first-child :th:first-child {:padding-inline-start "0.5rem"}]
+[:td:last-child :th-last-child {:padding-inline-end "0.5rem"}]
                      [:tbody [:tr:hover {:background (color :background-minus-1 :opacity-low)
                                          :color (color :header-text-color)}]]
                      [:td>ul {:padding "0"
                               :margin "0"
                               :list-style "none"}]
-                     [:td [:li {:margin "0 0 0.25rem"
-                                :padding-top "0.25rem";
-                                :border-top (str "1px solid " (color :border-color))}]]
-                     [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
+                     [:td [:li {:margin 0
+                                :margin-block-end "0.25rem"
+                                :padding-block-start "0.25rem"
+                                :border-block-start (str "1px solid " (color :border-color))}]]
+[:td [:li:first-child {:border-block-start "none" :margin-block-start "0" :padding-block-start "0"}]]
                      [:a {:color (color :link-color)}]
                      [:a:hover {:text-decoration "underline"}]]})
 
 
 (def footer-style
-  {:margin "0.5rem 0"
+  {:margin-block "0.5rem"
    ::stylefy/manual [[:a {:color (color :link-color)}]]})
 
 

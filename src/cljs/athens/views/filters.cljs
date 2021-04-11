@@ -50,16 +50,16 @@
                          ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
 
 
-(def reset-control-style {:margin-left "0.5em"})
+(def reset-control-style {:margin-inline-start "0.5em"})
 
 
-(def sort-indicator-style {:margin-right "auto"
+(def sort-indicator-style {:margin-inline-end "auto"
                            :transition "all 0.2s ease"
                            :opacity 0
                            :display "flex"
                            :flex-direction "row"
                            :align-items "center"
-                           :margin-left "0.5em"})
+                           :margin-inline-start "0.5em"})
 
 
 (def filter-list-style
@@ -75,7 +75,8 @@
   {:width           "100%"
    :display         "flex"
    :justify-content "space-between"
-   :padding         "0.125rem 0.5rem"
+   :padding-inline "0.5rem"
+:padding-block "0.125rem"
    :align-items     "center"
    :border-radius   "0.25rem"
    :margin-block-end "1px"
@@ -122,9 +123,9 @@
    :align-items "center"
    :letter-spacing "0.1em"
    :text-transform "uppercase"
-   :margin-right "0.2em"
-   ::stylefy/manual [[:svg {:margin-left "0.2em"
-                            :margin-right "0.2em"
+   :margin-inline-end "0.2em"
+   ::stylefy/manual [[:svg {:margin-inline-start "0.2em"
+                            :margin-inline-end "0.2em"
                             :font-size "18px"}]]})
 
 

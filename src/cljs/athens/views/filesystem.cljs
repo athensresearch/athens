@@ -82,17 +82,18 @@
                                   :mozallowfullscreen    "true"
                                   :allowFullScreen       true
                                   :style                 {:position "absolute"
-                                                          :top      0
-                                                          :left     0
-                                                          :width    "100%"
-                                                          :height   "100%"}}]]]
+                                                          :inset-inline-start 0
+                                                          :inset-block-start 0
+                                                          :inline-size "100%"
+                                                          :block-size"100%"}}]]]
                       (let [roam-pages   (roam-pages @transformed-roam-db)
                             shared-pages (events/get-shared-pages @transformed-roam-db)]
                         [:div {:style {:display "flex" :flex-direction "column"}}
                          [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
-                         [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]
-                         [:ol {:style {:max-height "400px"
-                                       :width      "100%"
+                         [:p {:style {:margin-block-start "10px"
+                                      :margin-block-end "0"}} "Shared Pages"]
+                         [:ol {:style {:max-block-size "400px"
+                                       :inline-size      "100%"
                                        :overflow-y "auto"}}
                           (for [x shared-pages]
                             ^{:key x}

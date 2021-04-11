@@ -26,11 +26,12 @@
                      [:modal__header {:display "contents"}] ;; Deactivate layout on the default header
                      [(selectors/> :.modal__header :button) {:display "none"}] ;; Hide default close button
                      [:.modal__title :.modal__footer {:flex "0 0 auto"
-                                                      :padding "0.25rem 1rem"
+                                                      :padding-block "0.25rem"
+:padding-inline "1rem"
                                                       :display "flex"
                                                       :align-items "center"}
                       [:&:empty {:display "none"}]]
-                     [:.modal__title {:padding-right "0.25rem"}
+                     [:.modal__title {:padding-inline-end "0.25rem"}
                       [(selectors/+ :svg :h4) {:margin-inline-start "0.5rem"}]
                       [:button {:margin-inline-start "auto"
                                 :align-self "flex-start"

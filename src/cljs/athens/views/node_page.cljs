@@ -65,10 +65,7 @@
                                  :padding "0"
                                  :letter-spacing "inherit"
                                  :position "absolute"
-                                 :top "0"
-                                 :left "0"
-                                 :right "0"
-                                 :width "100%"
+                                 :inset "0"
                                  :min-height "100%"
                                  :caret-color (color :link-color)
                                  :background "transparent"
@@ -94,9 +91,10 @@
 (def references-heading-style
   {:font-weight "normal"
    :display "flex"
-   :padding "0 0.5rem 0 0"
+   :padding 0
+:padding-inline-end "0.5rem"
    :align-items "center"
-   ::stylefy/manual [[:svg {:margin-right "0.25em"
+   ::stylefy/manual [[:svg {:margin-inline-end "0.25em"
                             :font-size "1rem"}]]})
 
 
@@ -106,7 +104,8 @@
 
 (def references-group-title-style
   {:color (color :link-color)
-   :margin "0 1.5rem"
+   :margin 0
+:margin-inline "1.5rem"
    :font-weight "500"
    ::stylefy/manual [[:a:hover {:cursor "pointer"
                                 :text-decoration "underline"}]]})
@@ -114,32 +113,37 @@
 
 (def references-group-style
   {:background (color :background-minus-2 :opacity-med)
-   :padding "1rem 0.5rem"
+   :padding-block "1rem"
+:padding-inline "0.5rem"
+:margin-block "0.5rem"
+:margin-inline "0"
    :border-radius "0.25rem"
    :margin "0.5em 0"})
 
 
 (def reference-breadcrumbs-style
   {:font-size "12px"
-   :padding "0.25rem calc(2rem - 0.5em)"})
+   :padding-inline "calc(2rem - 0.5em)"
+   :padding-block "0.25rem"})
 
 
 (def references-group-block-style
-  {:border-top [["1px solid " (color :border-color)]]
-   :width      "100%"
+  {:border-block-start [["1px solid " (color :border-color)]]
+   :inline-size      "100%"
    :padding-block-start "1em"
    :margin-block-start "1em"
-   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+   ::stylefy/manual [[:&:first-of-type {:border-block-start "0"
                                         :margin-block-start "0"}]]})
 
 
 (def page-menu-toggle-style
   {:position "absolute"
-   :left "-0.5rem"
+   :inset-inline-start "-0.5rem"
+:inset-block-start "50%"
    :border-radius "1000px"
-   :padding "0.375rem 0.5rem"
+   :padding-block "0.375rem"
+:padding-inline "0.5rem"
    :color (color :body-text-color :opacity-high)
-   :top "50%"
    :transform "translate(-100%, -50%)"})
 
 
@@ -357,8 +361,8 @@
                                                              {:ref #(reset! ref %)})
                                                   {:style {:font-size "14px"
                                                            :position  "absolute"
-                                                           :left      "-3em"
-                                                           :top       "3.5em"}})
+                                                           :inset-inline-start "-3em"
+                                                           :inset-block-start "3.5em"}})
                                       [:div (use-style menu-style)
                                        [:<>
                                         (if sidebar
@@ -525,8 +529,8 @@
 
          (when alert-show
            [:div (use-style {:position "absolute"
-                             :top      "50px"
-                             :left     "35%"})
+                             :inset-block-start      "50px"
+                             :inset-inline-start     "35%"})
             [alert-component message confirm-fn cancel-fn]])
 
          ;; Header

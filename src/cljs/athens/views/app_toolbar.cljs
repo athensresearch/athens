@@ -35,13 +35,14 @@
    :align-items "center"
    :display "grid"
    :position "absolute"
-   :top "-0.25rem"
-   :right 0
-   :left 0
+   :inset-block-start "-0.25rem"
+:inset-inline-end "0"
+:inset-inline-start "0"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
-   :padding "0.25rem 0.75rem"
+   :padding-block "0.25rem"
+:padding-inline "0.75rem"
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"}]]})
 
@@ -59,8 +60,7 @@
 (def app-header-secondary-controls-style
   (merge app-header-control-section-style
          {:color (color :body-text-color :opacity-med)
-          :justify-self "flex-end"
-          :margin-left "auto"
+          :margin-inline-start "auto"
           ::stylefy/manual [[:button {:color "inherit"}]]}))
 
 
@@ -90,8 +90,8 @@
 
 (defn app-toolbar
   []
-  (let [left-open?  (subscribe [:nav-sidebar/open])
-        right-open? (subscribe [:ref-sidebar/open])
+  (let [nav-sidebar-open?  (subscribe [:nav-sidebar/open])
+        ref-sidebar-open? (subscribe [:ref-sidebar/open])
         route-name  (subscribe [:current-route/name])
         electron? (util/electron?)
         theme-dark  (subscribe [:theme/dark])
@@ -105,7 +105,7 @@
 
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
-         [button {:active   @left-open?
+         [button {:active   @nav-sidebar-open?
                   :on-click #(dispatch [:nav-sidebar/toggle])}
           [:> Menu]]
          [separator]
@@ -125,7 +125,7 @@
          #_[button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
-                  :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                  :style    {:inline-size "14rem" :margin-block-start "1rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
           [:<> [:> Search] [:span "Find or Create a Page"]]]]
 
@@ -151,7 +151,7 @@
             [:> ToggleOff]
             [:> ToggleOn])]
          [separator]
-         [button {:active   @right-open?
+         [button {:active   @ref-sidebar-open?
                   :on-click #(dispatch [:ref-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
 
