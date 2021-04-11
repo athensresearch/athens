@@ -50,10 +50,10 @@
   {:display "flex"
    :flex "1 1 32vw"
    :flex-direction "column"
-   :margin-left "0"
+   :margin-inline-start "0"
    :transition "all 0.35s ease-out"
    :overflow-y "auto"
-   ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
+   ::stylefy/manual [[:&.is-closed {:margin-inline-start "-32vw"
                                     :opacity 0}]
                      [:&.is-open {:opacity 1}]]})
 
@@ -63,10 +63,15 @@
    :display "flex"
    :flex-direction "row"
    :align-items "center"
-   :min-height "2.75rem"
+   :min-block-size "2.75rem"
    :padding "0.5rem 1rem 0.25rem 1.5rem"
+   :padding-block-start "0.5rem"
+:padding-block-end "0.25rem"
+:padding-inline-start "1.5rem"
+:padding-inline-end "1rem"
    ::stylefy/manual [[:h1 {:font-size "inherit"
-                           :margin "0 auto 0 0"
+                           :margin "0"
+:margin-block-end "auto"
                            :line-height "1"
                            :color (color :body-text-color :opacity-med)}]]})
 
@@ -93,8 +98,7 @@
 
 
 (def sidebar-item-container-style
-  {:padding "0 2rem 1.25rem"
-   :line-height "1.5rem"
+  {:line-height "1.5rem"
    :font-size "15px"
    :position "relative"
    :z-index 1
@@ -105,7 +109,9 @@
                            :line-clamp 1
                            :overflow "hidden"
                            :text-overflow "ellipsis"}]
-                     [:.node-page :.block-page {:margin-top 0}]]})
+                     [:.node-page :.block-page {:margin-block-start 0
+                                                :padding-block "0.5rem"
+                                                :padding-inline "1.5rem"}]]})
 
 
 (def sidebar-item-heading-style
@@ -113,12 +119,12 @@
    :display "flex"
    :flex "0 0 auto"
    :align-items "center"
-   :padding "0.25rem 1rem"
+   :padding-inline "0.5rem"
+:padding-block "0.25rem"
    :position "sticky"
+   :inset-block "0"
    :z-index 2
    :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
-   :top "0"
-   :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
                            :flex "1 1 100%"
                            :line-height "1"
@@ -126,14 +132,14 @@
                            :white-space "nowrap"
                            :text-overflow "ellipsis"
                            :font-weight "normal"
-                           :max-width "100%"
+                           :max-inline-size "100%"
                            :overflow "hidden"
                            :align-items "center"
                            :color (color :body-text-color)}
                       [:svg {:opacity (:opacity-med OPACITIES)
                              :display "inline"
                              :vertical-align "-4px"
-                             :margin-right "0.2em"}]]
+                             :margin-inline-end "0.2em"}]]
                      [:.controls {:display "flex"
                                   :flex "0 0 auto"
                                   :align-items "stretch"
@@ -142,12 +148,12 @@
                                   :opacity "0.25"}]
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
-                     [:hr {:width "1px"
+                     [:hr {:inline-size "1px"
                            :background (color :background-minus-1)
                            :border "0"
                            :margin "0.25rem"
                            :flex "0 0 1px"
-                           :height "1em"
+                           :block-size "1em"
                            :justify-self "stretch"}]
                      [:&.is-open [:h2 {:font-weight "500"}]]]})
 
