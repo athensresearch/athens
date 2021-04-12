@@ -1,8 +1,10 @@
 (ns athens.ws-client
   (:require
     [athens.datsync-utils :as dat-s]
+    [cljs.reader :refer [read-string]]
     [dat.sync.client]
     [re-frame.core :as rf :refer [subscribe dispatch dispatch-sync]]
+    [reagent.core :as r]
     [taoensso.sente :as sente]))
 
 
@@ -48,6 +50,23 @@
     (start-socket!)))
 
 
+(rf/reg-event-fx
+  :start-socket
+  (fn [_]
+    {:start-socket nil}))
+
+
+(rf/reg-sub
+  :socket-status
+  (fn [db]
+    (:socket-status db)))
+
+
+(rf/reg-event-db
+  :set-socket-status
+  (fn [db [_ curr]]
+    (assoc db :socket-status curr)))
+
 
 ;;-------------------------------------------------------------------
 ;;--- socket ---
@@ -60,36 +79,52 @@
 (declare router)
 (declare start-router!)
 (defonce cur-random (str (random-uuid)))
+(declare require-reload?)
 
 
 ;; ADDRESS BEFORE MERGE
 ;; host and port
-(def config {:type     :auto
-             :packer   :edn
-             :protocol :http
-             :host     "23.92.29.18"
-             :port     3010})
+(def base-config {:type     :auto
+                  :packer   :edn
+                  :protocol :http})
 
 #_:clj-kondo/ignore
-(defn start-socket! []
-  ;; ADDRESS BEFORE MERGE
-  ;; x - is the csrf-token, since we don't have much user info
-  ;; simple strategy here is to keep a baked in csrf token and build pipeline
-  ;; for each enterprise app and deploy to them separately
-  (defonce channel-socket (sente/make-channel-socket! "/chsk" "x" config))
-  (defonce chsk (:chsk channel-socket))
-  (defonce ch-chsk (:ch-recv channel-socket))
-  (defonce chsk-send! (:send-fn channel-socket))
-  (defonce chsk-state (:state channel-socket))
-  (start-router!))
+(defn start-socket!
+  ([] (let [{:keys [address token] :as conf}
+            (some->> "db/remote-graph-conf"
+                     js/localStorage.getItem
+                     read-string)]
+
+        (when (and address token)
+          (start-socket! conf))))
+  ([{:keys [address token reload-on-init?]}]
+   (try
+     ;; ADDRESS BEFORE MERGE
+     ;; x - is the csrf-token, since we don't have much user info
+     ;; simple strategy here is to keep a baked in csrf token and build pipeline
+     ;; for each enterprise app and deploy to them separately
+     (def channel-socket (sente/make-channel-socket!
+                           "/chsk" token (merge base-config
+                                                {:host address})))
+     (def chsk (:chsk channel-socket))
+     (def ch-chsk (:ch-recv channel-socket))
+     (def chsk-send! (:send-fn channel-socket))
+     (def chsk-state (:state channel-socket))
+     (def require-reload? reload-on-init?)
+     (start-router!)
+     (dispatch [:set-socket-status :running])
+     (catch js/Error _
+       (dispatch [:set-socket-status :closed])))))
 
 
 (defmulti event-msg-handler
   (fn [msg]
-    (if (contains? #{:dat.sync.client/bootstrap :dat.sync.client/recv-remote-tx}
+    (if (contains? #{:dat.sync.client/bootstrap
+                     :dat.sync.client/recv-remote-tx}
                    (->> msg :event second first))
       (->> msg :event second first)
-      (:id msg))))
+      (and (keyword? (:id msg))
+           (:id msg)))))
 
 
 (defmethod event-msg-handler :default
@@ -102,7 +137,17 @@
   (if (->> ?data second :first-open?)
     (do (println "Channel socket successfully established!")
         ((:send-fn channel-socket) [:dat.sync.client/request-bootstrap true]))
-    (println "Channel socket state change:" ?data)))
+    (do (println "Channel socket state change:" ?data)
+        (when (and (->> ?data second :last-ws-close)
+                   (not (->> ?data second :last-ws-close :clean?)))
+          (dispatch [:show-snack-msg {:msg "Connection failed"
+                                      :type :fail}])
+          (when (:default? @(subscribe [:db/remote-graph-conf])
+                  (rf/dispatch-sync [:remote-graph/set-conf
+                                     :default? false])))
+          (sente/chsk-disconnect! chsk)
+          (when router (router))
+          (dispatch [:set-socket-status :closed])))))
 
 
 (defmethod event-msg-handler :chsk/recv
@@ -111,27 +156,38 @@
 
 
 (defn send-user-details []
-  (chsk-send! [:user/details (merge @(subscribe [:user/current])
-                                    {:editing/uid @(subscribe [:editing/uid])
-                                     :current/uid @(subscribe [:current-route/uid])
-                                     :random/id   cur-random})]))
+  (if (= @(subscribe [:socket-status]) :running)
+    (when-not (chsk-send! [:user/details
+                           (merge @(subscribe [:user/current])
+                                  {:editing/uid @(subscribe [:editing/uid])
+                                   :current/uid @(subscribe [:current-route/uid])
+                                   :random/id   cur-random})])
+      (dispatch [:set-socket-status :closed]))))
 
 
 (defmethod event-msg-handler :chsk/handshake
   [{:keys [?data]}]
   (println "Handshake:" ?data)
-  (send-user-details))
+  (if require-reload?
+    (do (dispatch [:show-snack-msg {:msg "Connection established. Reloading ..."
+                                    :type :success}])
+        (rf/dispatch-sync [:remote-graph/set-conf
+                           :default? true])
+        (.reload js/location))
+    (send-user-details)))
 
 
 (defn start-router! []
   #_:clj-kondo/ignore
-  (defonce router
+  (when router (router))
+  (def router
     (sente/start-client-chsk-router! ch-chsk event-msg-handler)))
 
 
 (defn send-presence! []
   (send-user-details)
-  (js/setTimeout (fn [] (send-presence!)) 500))
+  (when (= @(subscribe [:socket-status]) :running)
+    (js/setTimeout (fn [] (send-presence!)) 500)))
 
 ;;-------------------------------------------------------------------
 ;;--- transactions ---

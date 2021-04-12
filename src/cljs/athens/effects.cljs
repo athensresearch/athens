@@ -15,7 +15,7 @@
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [posh.reagent :as p :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx]]
+    [re-frame.core :refer [dispatch reg-fx subscribe]]
     [stylefy.core :as stylefy]))
 
 
@@ -215,32 +215,37 @@
 
 (defn walk-transact
   [tx-data]
-  (prn "TX RAW INPUTS")                                     ;; event tx-data
-  (pprint tx-data)
-  (try
-    (let [with-tx (d/with @db/dsdb tx-data)]
-      (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
-      (pprint (:tx-data with-tx))
-      (let [more-tx-data  (parse-for-links with-tx)
-            final-tx-data (vec (concat tx-data more-tx-data))]
-        (prn "TX MORE")                                     ;; parsed tx-data, e.g. asserting/retracting pages and references
-        (pprint more-tx-data)
-        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-        (pprint final-tx-data)
-        (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
-          ;; check remote data against previous db
-          ((:send-fn ws/channel-socket)
-           [:dat.sync.client/tx (dat-s/remote-tx db-before
-                                                 (mapv (fn [[e a v _t sig?]]
-                                                         [(if sig? :db/add :db/retract) e a v])
-                                                       tx-data))])
-          (ph-link-created! tx-data)
-          (prn "TX OUTPUTS")
-          (pprint tx-data))))
+  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
+        socket-status @(subscribe [:socket-status])]
+    (if (= socket-status :closed)
+      (dispatch [:show-snack-msg
+                 {:msg "Graph is now read only"}])
+      (do (prn "TX RAW INPUTS")                                   ;; event tx-data
+          (pprint tx-data)
+          (try
+            (let [with-tx (d/with @db/dsdb tx-data)]
+              (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
+              (pprint (:tx-data with-tx))
+              (let [more-tx-data  (parse-for-links with-tx)
+                    final-tx-data (vec (concat tx-data more-tx-data))]
+                (prn "TX MORE")                                     ;; parsed tx-data, e.g. asserting/retracting pages and references
+                (pprint more-tx-data)
+                (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+                (pprint final-tx-data)
+                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
+                  ;; check remote data against previous db
+                  ((:send-fn ws/channel-socket)
+                   [:dat.sync.client/tx (dat-s/remote-tx db-before
+                                                         (mapv (fn [[e a v _t sig?]]
+                                                                 [(if sig? :db/add :db/retract) e a v])
+                                                               tx-data))])
+                  (ph-link-created! tx-data)
+                  (prn "TX OUTPUTS")
+                  (pprint tx-data))))
 
-    (catch js/Error e
-      (js/alert (str e))
-      (prn "EXCEPTION" e))))
+            (catch js/Error e
+              (js/alert (str e))
+              (prn "EXCEPTION" e)))))))
 
 
 (reg-fx

@@ -24,7 +24,9 @@
    :graph-control-color "white"
    :graph-node-normal   "#909090"
    :graph-node-hlt      "#FBBE63"
-   :graph-link-normal   "#323232"})
+   :graph-link-normal   "#323232"
+
+   :error-color         "#fd5243"})
 
 
 (def THEME-LIGHT
@@ -45,7 +47,9 @@
    :graph-control-color "black"
    :graph-node-normal   "#909090"
    :graph-node-hlt      "#0075E1"
-   :graph-link-normal   "#cfcfcf"})
+   :graph-link-normal   "#cfcfcf"
+
+   :error-color         "#fd5243"})
 
 
 (def DEPTH-SHADOWS

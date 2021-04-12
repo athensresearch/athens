@@ -96,6 +96,8 @@
         route-name  (subscribe [:current-route/name])
         electron?   (util/electron?)
         theme-dark  (subscribe [:theme/dark])
+        remote-graph-conf (subscribe [:db/remote-graph-conf])
+        socket-status     (subscribe [:socket-status])
         merge-open? (reagent.core/atom false)]
     (fn []
       [:<>
@@ -135,9 +137,16 @@
            [:<>
             [presence/presence-popover-info]
             [(reagent.core/adapt-react-class FiberManualRecord)
-             {:style {:color      (color (if @(subscribe [:db/synced])
+             {:style {:color      (color (cond
+                                           (= @socket-status :closed)
+                                           :error-color
+
+                                           (or (and (:default? @remote-graph-conf)
+                                                    (= @socket-status :running))
+                                               @(subscribe [:db/synced]))
                                            :confirmation-color
-                                           :highlight-color))
+
+                                           :else :highlight-color))
                       :align-self "center"}}]
             [button {:on-click #(swap! merge-open? not)}
              [:> MergeType]]
