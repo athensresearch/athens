@@ -18,39 +18,39 @@
 ;; Styles
 
 (def settings-wrap-style
-  {:border-top "1px solid var(--border-color)"
-   :padding-top "2rem"
-   :padding-bottom "2rem"
-   :padding "2rem 0.75rem"
-   :line-height "1.25"
+  {:border-top      "1px solid var(--border-color)"
+   :padding-top     "2rem"
+   :padding-bottom  "2rem"
+   :padding         "2rem 0.75rem"
+   :line-height     "1.25"
    ::stylefy/manual [[:h3 {:margin 0}]
                      [:&.disabled {:opacity 0.5}]
                      [:header {:padding-bottom "1rem"}]
                      [:span.glance {:font-weight "normal"
-                                    :opacity 0.7
-                                    :font-size "0.8em"
-                                    :gap "0.25em"}
+                                    :opacity     0.7
+                                    :font-size   "0.8em"
+                                    :gap         "0.25em"}
                       [:svg {:vertical-align "-0.25em"
-                             :font-size "1.5em"}]]
-                     [:aside {:font-size "0.8em"
+                             :font-size      "1.5em"}]]
+                     [:aside {:font-size   "0.8em"
                               :padding-top "0.5rem"}]
                      [:p {:margin "0.25rem 0"}]
                      [:p:first-child {:margin-top 0}]
                      [:p:last-child {:margin-bottom 0}]
-                     [:label {:display "flex"
-                              :gap "0.5rem"
+                     [:label {:display     "flex"
+                              :gap         "0.5rem"
                               :align-items "center"
                               :font-weight "bold"}]]
-   ::stylefy/media {{:min-width "40em"}
-                    {:display "grid"
-                     :grid-template-columns "10rem 1fr"
-                     :grid-gap "1rem"}}})
+   ::stylefy/media  {{:min-width "40em"}
+                     {:display               "grid"
+                      :grid-template-columns "10rem 1fr"
+                      :grid-gap              "1rem"}}})
 
 
 (def settings-page-styles
-  {:width "50em"
+  {:width     "50em"
    :max-width "100%"
-   :margin "2rem auto"})
+   :margin    "2rem auto"})
 
 
 ;; Helpers
@@ -78,8 +78,8 @@
 
 (defn init-state
   []
-  {:email (init-email)
-   :monitoring (init-monitoring)
+  {:email         (init-email)
+   :monitoring    (init-monitoring)
    :autosave-time (init-autosave-time)})
 
 
@@ -223,10 +223,10 @@
      [:label
       [textinput/textinput {:type         "number"
                             :defaultValue (:autosave-time @s)
-                            :min 0
-                            :step 15
-                            :max 100
-                            :on-blur    #(handle-blur-autosave-input % s)}]
+                            :min          0
+                            :step         15
+                            :max          100
+                            :on-blur      #(handle-blur-autosave-input % s)}]
       " seconds"]
      [:aside
       [:p (str "Athens will save and create a local backup " (:autosave-time @s) " seconds after your last edit.")]]]]])
@@ -240,9 +240,9 @@
     [:header
      [:h3 "Remote Backups"]
      [:span.glance "Coming soon to "
-      [:a {:href "https://opencollective.com/athens"
+      [:a {:href   "https://opencollective.com/athens"
            :target "_blank"
-           :rel "noreferrer"}
+           :rel    "noreferrer"}
        " paid users and sponsors"]]]
     [:main
      [button {:disabled true} "Backup my DB to the cloud"]]]])
