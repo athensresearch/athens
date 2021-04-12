@@ -53,7 +53,6 @@
    :margin "2rem auto"})
 
 
-
 ;; Helpers
 
 
@@ -82,7 +81,6 @@
   {:email (init-email)
    :monitoring (init-monitoring)
    :autosave-time (init-autosave-time)})
-
 
 
 (defn handle-reset-email
@@ -159,7 +157,6 @@
    (let [{:keys [disabled] :as _props} config]
      [:div (stylefy/use-style settings-wrap-style
                               {:class [(when disabled "disabled")]}) children])))
-
 
 
 (defn email-comp
@@ -252,8 +249,8 @@
 
 
 (defn settings-container
-  [comp]
-  [:div (stylefy/use-style settings-page-styles) comp])
+  [child]
+  [:div (stylefy/use-style settings-page-styles) child])
 
 
 (defn settings-page
