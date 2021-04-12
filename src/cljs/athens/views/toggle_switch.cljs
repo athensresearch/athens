@@ -4,6 +4,8 @@
 
 
 (defn toggle-switch
+  "Styles largely borrowed from https://codesandbox.io/s/athens-settings-page-forked-14432?file=/src/components/ToggleSwitch.jsx
+  Thank you Shanberg"
   [props]
   [:input (stylefy/use-style {:appearance      "none"
                               :border-radius   "10em"
