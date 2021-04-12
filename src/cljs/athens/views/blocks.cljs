@@ -274,11 +274,11 @@
                                                                     :box-shadow "inset 0 0 0 1px"}
                               [:&:after {:content "''"
                                          :position "absolute"
-                                         :top "45%" ;; How are the top and left values calculated?
-                                         :left "20%" ;;
+                                         :top "45%"
+                                         :left "20%"
                                          :width "30%"
-                                         :height "60%"
-                                         :border-width "0 1.5px 1.5px 0"
+                                         :height "50%"
+                                         :border-width "0 2px 2px 0"
                                          :border-style "solid"
                                          :opacity 0
                                          :transform "rotate(45deg) translate(-40%, -50%)"}]
