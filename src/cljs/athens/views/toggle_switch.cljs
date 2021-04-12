@@ -15,11 +15,11 @@
                               :position        "relative"
                               :outline         "none"
                               :box-sizing      "content-box"
-                              :background      "var(--link-color)"
-                              ::stylefy/manual [[:&:before {:background "white"
-                                                            :content       "''" :position "absolute" :top 0 :bottom 0 :left "37%" :right 0 :box-shadow "0 0 0 1px var(--border-color)"
+                              :background      "var(--background-minus-2)"
+                              ::stylefy/manual [[:&:before {:background    "white"
+                                                            :content       "''" :position "absolute" :top 0 :bottom 0 :left 0 :right "37%" :box-shadow "0 0 0 1px var(--border-color)"
                                                             :border-radius "inherit" :transition "all 0.15s ease" :z-index 2}]
-                                                [:&:checked {:background "gray"}
-                                                 [:&:before {:left 0 :right "37%"}]]]}
+                                                [:&:checked {:background "var(--link-color)"}
+                                                 [:&:before {:left "37%" :right 0}]]]}
                              (merge {:type "checkbox"}
                                     props))])
