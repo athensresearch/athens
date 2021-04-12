@@ -2,7 +2,7 @@
 [![build-status](https://img.shields.io/github/workflow/status/athensresearch/athens/build)](https://github.com/athensresearch/athens/actions)
 [![discord](https://img.shields.io/discord/708122962422792194?label=discord&logo=Discord)](https://discord.gg/GCJaV3V)
 [![total](https://opencollective.com/athens/tiers/badge.svg)](https://opencollective.com/athens) 
-<img alt="Athens is proudly backed by Y Combinator (W21)" src="./doc/yc.png" width="30" height="30" />
+<img alt="Athens is proudly backed by Y Combinator (W21)" src="https://github.com/athensresearch/handbook/blob/main/.gitbook/assets/yc.png" width="30" height="30" />
 <a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
 # What is Athens
@@ -41,9 +41,9 @@ Athens lets you take notes with minimal systems, structure, and organization, fr
 
 ![graph-demo](https://github.com/tangjeff0/athens-public/blob/main/open-source-graph-demo.gif)
 
-# [Building Locally or Contributing](CONTRIBUTING.md)
+# [Building Locally or Contributing](https://athensresearch.gitbook.io/handbook/contributing)
 
-If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](CONTRIBUTING.md). This also contains instructions on how to build Athens on your own computer.
+If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](https://athensresearch.gitbook.io/handbook/contributing). This also contains instructions on how to build Athens on your own computer.
 
 Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
@@ -53,7 +53,7 @@ Some tips once you've gotten Athens:
 
 # [Join Discord](https://discord.gg/GCJaV3V)
 
-Our Discord community is a space for [collaboration and learning](CODE_OF_CONDUCT.md#values) (especially about Clojure!).
+Our Discord community is a space for [collaboration and learning](https://athensresearch.gitbook.io/handbook/code-of-conduct#values) (especially about Clojure!).
 
 Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c8e4736a28983889102fa70) at 11am Pacific.
 
@@ -67,9 +67,9 @@ To learn more about this project, please see:
 
 - [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
 - [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
-- [Vision](VISION.md) — individual and collective memexes — computing and the Web as originally promised
-- [Governance](GOVERNANCE.md) — BD + Core Team + Guardians + Athenians
-- [Code of Conduct](CODE_OF_CONDUCT.md) — our values and guidelines, AKA how to be an awesome Athenian
+- [Vision](https://athensresearch.gitbook.io/handbook/vision) — individual and collective memexes — computing and the Web as originally promised
+- [Governance](https://athensresearch.gitbook.io/handbook/governance) — BD + Core Team + Guardians + Athenians
+- [Code of Conduct](https://athensresearch.gitbook.io/handbook/code-of-conduct) — our values and guidelines, AKA how to be an awesome Athenian
 
 # Thank You
 
