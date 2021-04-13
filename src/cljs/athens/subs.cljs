@@ -1,17 +1,25 @@
 (ns athens.subs
   (:require
-    [athens.blocks :as blocks]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :as re-frame]
-    [re-posh.core :as re-posh :refer [subscribe reg-query-sub reg-pull-sub]])) ;; reg-pull-many-sub
+    [re-frame.core :as re-frame :refer [subscribe]]))
 
-;; note: not refering reg-sub because re-posh and re-frame have different reg-subs
 
-;; re-frame subscriptions
 (re-frame/reg-sub
   :user
   (fn [db _]
     (:user db)))
+
+
+(re-frame/reg-sub
+  :db/synced
+  (fn [db _]
+    (:db/synced db)))
+
+
+(re-frame/reg-sub
+  :theme/dark
+  (fn [db _]
+    (:theme/dark db)))
 
 
 (re-frame/reg-sub
@@ -21,21 +29,57 @@
 
 
 (re-frame/reg-sub
-  :errors
+  :alert
   (fn [db _]
-    (:errors db)))
+    (:alert db)))
 
 
 (re-frame/reg-sub
-  :loading
+  :loading?
   (fn [db _]
-    (:loading db)))
+    (:loading? db)))
 
 
 (re-frame/reg-sub
-  :athena
+  :athena/open
+  (fn-traced [db _]
+             (:athena/open db)))
+
+
+(re-frame/reg-sub
+  :devtool/open
+  (fn-traced [db _]
+             (:devtool/open db)))
+
+
+(re-frame/reg-sub
+  :left-sidebar/open
+  (fn-traced [db _]
+             (:left-sidebar/open db)))
+
+
+(re-frame/reg-sub
+  :right-sidebar/open
+  (fn-traced [db _]
+             (:right-sidebar/open db)))
+
+
+(re-frame/reg-sub
+  :right-sidebar/items
+  (fn-traced [db _]
+             (:right-sidebar/items db)))
+
+
+(re-frame/reg-sub
+  :right-sidebar/width
   (fn [db _]
-    (:athena db)))
+    (:right-sidebar/width db)))
+
+
+(re-frame/reg-sub
+  :mouse-down
+  (fn [db _]
+    (:mouse-down db)))
 
 
 (re-frame/reg-sub
@@ -43,131 +87,48 @@
   (fn [db _]
     (:merge-prompt db)))
 
-;; datascript queries
-(reg-query-sub
-  :nodes
-  '[:find [?e ...]
-    :where
-    [?e :node/title ?t]])
 
-
-(reg-query-sub
-  :node/refs
-  '[:find ?id
-    :in $ ?regex
-    :where
-    [?e :block/string ?s]
-    [(re-find ?regex ?s)]
-    [?e :block/uid ?id]])
-
-
-(reg-query-sub
-  :page/sidebar
-  '[:find ?order ?title ?bid
-    :where
-    [?e :page/sidebar ?order]
-    [?e :node/title ?title]
-    [?e :block/uid ?bid]])
-
-;; datascript pulls
-(reg-pull-sub
-  :node
-  '[*])
-
-
-(reg-pull-sub
-  :block/uid
-  '[:block/uid])
-
-
-(reg-pull-sub
-  :block/string
-  '[:block/string])
-
-
-(reg-pull-sub
-  :blocks
-  '[:block/string {:block/children ...}])
-
-
-(reg-pull-sub
-  :block/children
-  '[:block/uid :block/string :block/order :block/open :db/id {:block/children ...}])
+(re-frame/reg-sub
+  :editing/uid
+  (fn-traced [db _]
+             (:editing/uid db)))
 
 
 (re-frame/reg-sub
-  :block/children-sorted
-  (fn [[_ id] _]
-    (subscribe [:block/children id]))
-  (fn [block _]
-    (blocks/sort-block block)))
-
-
-(reg-pull-sub
-  :block/_children
-  '[:block/uid :block/string :node/title {:block/_children ...}])
-
-;; layer 3 subscriptions
-
-(re-frame/reg-sub
-  :block/_children2
-  (fn [[_ id] _]
-    (subscribe [:block/_children id]))
-  (fn [block _]
-; find path from nested block to origin node
-    (reverse
-      (rest
-        (loop [b block
-               res []]
-          (if (:node/title b)
-            (conj res b)
-            (recur (first (:block/_children b))
-                   (conj res (dissoc b :block/_children)))))))))
-
-
-(re-posh/reg-sub
-  :pull-nodes
-  :<- [:nodes]
-  (fn-traced [nodes _]
-             {:type :pull-many
-              :pattern '[*]
-              :ids nodes}))
+  :editing/is-editing
+  (fn [_]
+    [(subscribe [:editing/uid])])
+  (fn [[editing-uid] [_ uid]]
+    (= editing-uid uid)))
 
 
 (re-frame/reg-sub
-  :favorites
-  :<- [:page/sidebar]
-  (fn-traced [nodes _]
-             (->> nodes
-                  (into [])
-                  (sort-by first))))
+  :selected/items
+  (fn [db _]
+    (:selected/items db)))
 
-;; (rp/reg-sub
-;;  :node/refs2
-;;  (fn [[_ regex]]
-;;    (subscribe [:node/refs regex]))
-;;  (fn [ids _] ; for all refs, find their parents with reverse lookup
-;;    {:type :pull-many
-;;     :pattern '[:node/title :block/uid :block/string {:block/_children ...}]
-;;     :ids (reduce into [] ids)}))
 
-;; (rf/reg-sub
-;;  :node/refs3
-;;  (fn [[_ regex]]
-;;    (subscribe [:node/refs2 regex]))
-;;  (fn [blocks _]
-;;    ;; flatten paths like in :block/_children2 (except keep node/title)
-;;    ;; then normalize refs through group by :node/title
-;;    (->> blocks
-;;         (map (fn [block]
-;;                (reverse
-;;                 (loop [b block
-;;                        res []]
-;;                   (if (:node/title b)
-;;                     (conj res (dissoc b :block/children))
-;;                     (recur (first (:block/_children b))
-;;                            (conj res (dissoc b :block/_children))))))))
-;;         (group-by #(:node/title (first %)))
-;;         (reduce-kv (fn [m k v]
-;;                      (assoc m k (map rest v))) {} ))
-;;    ))
+(re-frame/reg-sub
+  :selected/is-selected
+  (fn [_]
+    [(subscribe [:selected/items])])
+  (fn [[selected-items] [_ uid]]
+    (contains? (set selected-items) uid)))
+
+
+(re-frame/reg-sub
+  :daily-notes/items
+  (fn-traced [db _]
+             (:daily-notes/items db)))
+
+
+(re-frame/reg-sub
+  :athena/get-recent
+  (fn-traced [db _]
+             (:athena/recent-items db)))
+
+
+(re-frame/reg-sub
+  :modal
+  (fn [db _]
+    (:modal db)))

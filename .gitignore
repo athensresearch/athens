@@ -1,5 +1,6 @@
 /out/
 /resources/public/js/
+/resources/*.js
 /target/
 /*-init.clj
 /*.log
@@ -16,6 +17,7 @@
 .idea/
 
 .clj-kondo/.cache
+.lsp/
 
 # cache directory for dependencies installed with deps.edn
 .cpcache
@@ -25,3 +27,7 @@
 
 # Emacs files
 .#*
+.calva
+
+# electron build
+dist

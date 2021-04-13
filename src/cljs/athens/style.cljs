@@ -1,161 +1,174 @@
 (ns athens.style
   (:require
-    [athens.lib.dom.attributes :refer [with-styles]]
+    [athens.config :as config]
+    [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
-    [garden.core :refer [css]]
-    [garden.selectors]))
+    [stylefy.core :as stylefy]))
 
 
-(def COLORS
-  {:link-color         "#0075E1"
-   :highlight-color    "#F9A132"
-   :warning-color      "#D20000"
-   :confirmation-color "#009E23"
-   :header-text-color  "#322F38"
-   :body-text-color    "#433F38"
-   :panel-color        "#EFEDEB"
-   :app-bg-color       "#FFFFFF"})
+(def THEME-DARK
+  {:link-color          "#2399E7"
+   :highlight-color     "#FBBE63"
+   :warning-color       "#DE3C21"
+   :confirmation-color  "#189E36"
+   :header-text-color   "#BABABA"
+   :body-text-color     "#AAA"
+   :border-color        "hsla(32, 81%, 90%, 0.08)"
+   :background-minus-1  "#151515"
+   :background-minus-2  "#111"
+   :background-color    "#1A1A1A"
+   :background-plus-1   "#222"
+   :background-plus-2   "#333"
+
+   :graph-control-bg    "#272727"
+   :graph-control-color "white"
+   :graph-node-normal   "#909090"
+   :graph-node-hlt      "#FBBE63"
+   :graph-link-normal   "#323232"})
 
 
-(def HSL-COLORS
-  (reduce-kv #(assoc %1 %2 (hex->hsl %3)) {} COLORS))
+(def THEME-LIGHT
+  {:link-color          "#0075E1"
+   :highlight-color     "#F9A132"
+   :warning-color       "#D20000"
+   :confirmation-color  "#009E23"
+   :header-text-color   "#322F38"
+   :body-text-color     "#433F38"
+   :border-color        "hsla(32, 81%, 10%, 0.08)"
+   :background-plus-2   "#FFFFFF"
+   :background-plus-1   "#FFFFFF"
+   :background-color    "#FFFFFF"
+   :background-minus-1  "#FAF8F6"
+   :background-minus-2  "#EFEDEB"
+
+   :graph-control-bg    "#f9f9f9"
+   :graph-control-color "black"
+   :graph-node-normal   "#909090"
+   :graph-node-hlt      "#0075E1"
+   :graph-link-normal   "#cfcfcf"})
 
 
-(def OPACITIES [0.1 0.25 0.5 0.75 1])
+(def DEPTH-SHADOWS
+  {:4  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
+   :8  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
+   :16 "0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.1)"
+   :64 "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"})
 
 
-;; Functions that add styles to an element. Prefer to directly add styles when possible, otherwise
-;; use classes, and style above.
-
-;; Color Functions
-
-(def +link-bg
-  (with-styles {:background-color (:link-color COLORS)}))
-
-
-(def +link
-  (with-styles {:color (:link-color COLORS) :cursor "pointer"}))
-
-;; Shadow Functions
-
-(def +text-shadow
-  (with-styles {:text-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
+(def OPACITIES
+  {:opacity-lower  0.10
+   :opacity-low    0.25
+   :opacity-med    0.50
+   :opacity-high   0.75
+   :opacity-higher 0.85})
 
 
-(def +box-shadow
-  (with-styles {:box-shadow "0px 8px 20px rgba(0, 0, 0, 0.1)"}))
+;; Based on Bootstrap's excellent Z-index set
+(def ZINDICES
+  {:zindex-dropdown       1000
+   :zindex-sticky         1020
+   :zindex-fixed          1030
+   :zindex-modal-backdrop 1040
+   :zindex-modal          1050
+   :zindex-popover        1060
+   :zindex-tooltip        1070})
 
 
-(def +depth-64
-  (with-styles {:box-shadow "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"}))
+;; Color
+(defn color
+  "Turns a color and optional opacity into a CSS variable.
+  Only accepts keywords."
+  ([variable]
+   (when (keyword? variable)
+     (str "var(--"
+          (symbol variable)
+          ")")))
+  ([variable alpha]
+   (when (and (keyword? variable) (keyword? alpha))
+     (str "var(--"
+          (symbol variable)
+          "---"
+          (symbol alpha)
+          ")"))))
 
 
-;; Flex Functions
+;; Base Styles
+
+(def base-styles
+  {:background-color (color :background-color)
+   :font-family      "IBM Plex Sans, Sans-Serif"
+   :color            (color :body-text-color)
+   :font-size        "16px"                                 ;; Sets the Rem unit to 16px
+   :line-height      "1.5"
+   ::stylefy/manual  [[:a {:color (color :link-color)}]
+                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"
+                                                :line-height "1.3"
+                                                :color       (color :header-text-color)}]
+                      [:h1 {:font-size      "3.125em"
+                            :font-weight    600
+                            :letter-spacing "-0.03em"}]
+                      [:h2 {:font-size      "2.375em"
+                            :font-weight    500
+                            :letter-spacing "-0.03em"}]
+                      [:h3 {:font-size      "1.75em"
+                            :font-weight    500
+                            :letter-spacing "-0.02em"}]
+                      [:h4 {:font-size "1.3125em"}]
+                      [:h5 {:font-size      "0.75em"
+                            :font-weight    500
+                            :line-height    "1em"
+                            :letter-spacing "0.08em"
+                            :text-transform "uppercase"}]
+                      [:.MuiSvgIcon-root {:font-size "1.5rem"}]
+                      [:input {:font-family "inherit"}]
+                      [:kbd {:text-transform "uppercase"
+                             :font-family    "inherit"
+                             :font-size      "0.85em"
+                             :letter-spacing "0.05em"
+                             :font-weight    600
+                             :display        "inline-flex"
+                             :background     (color :body-text-color :opacity-lower)
+                             :border-radius  "0.25rem"
+                             :padding        "0.25em 0.5em"}]
+                      [:img {:max-width "100%"
+                             :height    "auto"}]
+                      [":focus" {:outline-width 0}]
+                      [":focus-visible" {:outline-width "1px"}]]})
 
 
-(def +flex
-  (with-styles {:display "flex"}))
+(def app-styles
+  {:overflow "hidden"
+   :height   "100vh"
+   :width    "100vw"})
 
 
-(def +flex-center
-  (with-styles {:display "flex" :justify-content "center" :align-items "center"}))
+(defn permute-color-opacities
+  "Permutes all colors and opacities.
+  There are 5 opacities and 12 colors. There are 72 keys (includes default opacity, 1.0)"
+  [theme]
+  (->> theme
+       (mapcat (fn [[color-k color-v]]
+                 (concat [(keyword (str "--" (symbol color-k)))
+                          color-v]
+                         (mapcat (fn [[opacity-k opacity-v]]
+                                   [(keyword (str "--"
+                                                  (symbol color-k)
+                                                  "---"
+                                                  (symbol opacity-k)))
+                                    (opacify (hex->hsl color-v) opacity-v)])
+                                 OPACITIES))))
+       (apply hash-map)))
 
 
-(def +flex-space-between
-  (with-styles {:display "flex" :justify-content "space-between" :align-items "center"}))
-
-
-(def +flex-space-around
-  (with-styles {:display "flex" :justify-content "space-around" :align-items "center"}))
-
-
-(def +flex-wrap
-  (with-styles {:display "flex" :flex-wrap "wrap"}))
-
-
-(def +flex-column
-  (with-styles {:display "flex" :flex-direction "column"}))
-
-
-;; Text Align
-
-(def +text-align-left
-  (with-styles {:text-align "left"}))
-
-
-(def +text-align-right
-  (with-styles {:text-align "right"}))
-
-
-;; Width and Height
-
-
-(def +width-100
-  (with-styles {:width "100%"}))
-
-
-;; Class Functions
-
-;; Style Guide
-
-
-(defn style-guide-css
+(defn init
   []
-  [:style (css
-            [:body {:margin 0}]
-            [:* {:font-family "IBM Plex Sans, Sans-Serif"
-                 :box-sizing "border-box"}]
-            [:p :span {:color (:body-text-color COLORS)}]
-            [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0.2em 0"
-                                      :color (:header-text-color COLORS)}]
-            [:h1 {:font-size "50px"
-                  :font-weight 600
-                  :line-height "65px"
-                  :line-spacing "-0.03em"}]
-            [:h2 {:font-size "38px"
-                  :font-weight 500
-                  :line-height "49px"
-                  :line-spacing "-0.03em"}]
-            [:h3 {:font-size "28px"
-                  :font-weight 500
-                  :line-height "36px"
-                  :line-spacing "-0.02em"}]
-            [:h4 {:font-size "21px"
-                  :line-height "27px"}]
-            [:h5 {:font-size "12px"
-                  :font-weight 500
-                  :line-height "16px"
-                  :line-spacing "0.08em"
-                  :text-transform "uppercase"}]
-            [:span {:font-size   "16px"
-                    :line-height "32px"}
-             [:.block-ref {:border-bottom [["1px" "solid" (:highlight-color COLORS)]]}
-              [:&:hover {:background-color (opacify (:highlight-color HSL-COLORS) (first OPACITIES))
-                         :cursor           "alias"}]]]
-            [:tbody
-             [:tr
-              [:&:hover {:background-color (opacify (:panel-color HSL-COLORS) (first OPACITIES))}]]]
-            [:button :.input-file {:cursor           "pointer"
-                                   :padding          "6px 10px"
-                                   :border-radius    "4px"
-                                   :font-weight      "500"
-                                   :border           "none"
-                                   :color            "rgba(50, 47, 56, 1)"
-                                   :background-color "transparent"}
-             [:&:disabled {:color "rgba(0, 0, 0, 0.3)"
-                           :background-color "#EFEDEB"
-                           :cursor "default"}]
-             [:&:hover {:background-color "#EFEDEB"}]
-             [:&:active {:color            "rgba(0, 117, 225)"
-                         :background-color "rgba(0, 117, 225, 0.1)"}]
-             [:&.primary {:color            "rgba(0, 117, 225)"
-                          :background-color "rgba(0, 117, 225, 0.1)"}
-              [:&:hover {:background-color "rgba(0, 117, 225, 0.25)"}]
-              [:&:active {:color "white"
-                          :background-color "rgba(0, 117, 225, 1)"}]]]
-            [:.athena-result {:display "flex"
-                              :padding "12px 32px 12px 32px"
-                              :border-top "1px solid rgba(67, 63, 56, 0.2)"}
-             [:&:hover {:background-color (:link-color COLORS) :cursor "pointer"}
-              [:h4 {:color "rgba(255, 255, 255, 1)"}]
-              [:span {:color "rgba(255, 255, 255, .9)"}]]])])
+  (stylefy/init)
+  (stylefy/tag "html" base-styles)
+  (stylefy/tag "*" {:box-sizing "border-box"})
+  (let [permute-light (permute-color-opacities THEME-LIGHT)
+        permute-dark  (permute-color-opacities THEME-DARK)]
+    (stylefy/tag ":root" (merge permute-light
+                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+  ;; hide re-frame-10x by default
+  (when config/debug?
+    (util/hide-10x)))

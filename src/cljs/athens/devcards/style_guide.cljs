@@ -1,48 +1,41 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.lib.dom.attributes :refer [with-styles]]
-    [athens.style :refer [+flex-center +flex-space-between +flex-space-around +flex-column +flex-wrap
-                          +text-shadow +box-shadow
-                          +link-bg
-                          style-guide-css COLORS OPACITIES]]
+    [athens.style :refer [color THEME-LIGHT THEME-DARK OPACITIES]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [devcards.core :refer-macros [defcard-rg]]))
+    [devcards.core :refer-macros [defcard-rg]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(def +circle
-  (with-styles {:width 80
-                :height 80
-                :border-radius 40}))
+;;; Styles
 
 
-(defcard-rg Import-Styles
-  "CSS is imported here"
-  [style-guide-css])
+(def color-group-style
+  {:display "grid"
+   :padding "1rem"
+   :grid-template-columns "repeat( auto-fit, minmax(9rem, 1fr))"
+   :grid-gap "3rem 1rem"
+   :text-align "center"
+   :align-items "center"})
 
 
-(defcard-rg Colors
-  "`+box-shadow` and `+text-shadow` used on the circles and text, respectively."
-  [:div (with-styles +flex-space-around +flex-wrap
-          {:background-color "#E5E5E5" :padding 20 :border-radius 5})
-   (for [c (keys COLORS)]
-     ^{:key c}
-     [:div (with-styles +flex-center +flex-column {:width 200 :padding "15px 0px"})
-      [:div (with-styles +box-shadow +circle {:background-color (c COLORS)})]
-      [:span c]
-      [:span (with-styles +text-shadow {:color (c COLORS)}) (c COLORS)]])]
-  {}
-  {})
+(def color-item-style
+  {:display "grid"
+   :grid-gap "0.25rem"
+   ::stylefy/manual [[:div {:border-radius "1000px"
+                            :background (color :link-color)
+                            :height "4rem"
+                            :margin "auto"
+                            :width "4rem"}]]})
 
 
-(defcard-rg Opacities
-  [:div +flex-space-around
-   (for [o OPACITIES]
-     ^{:key o}
-     [:div (with-styles +flex-center +flex-column)
-      [:div (with-styles +circle +link-bg {:opacity o})]
-      [:span o]])])
+(def text-item-style
+  {:display "flex"
+   :justify-content "space-between"})
+
+
+;;; Components
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
@@ -54,36 +47,70 @@
    ["IBM Plex Mono" "monospace"]])
 
 
+;;; Devcards
+
+
+(defcard-rg Light-Theme
+  [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
+   (doall
+     (for [c (keys THEME-LIGHT)]
+       ^{:key c}
+       [:div (use-style color-item-style)
+        [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+        [:span c]
+        [:span {:style {:color (color c)}} (color c)]]))]
+  {}
+  {:padding false})
+
+
+(defcard-rg Dark-Theme
+  [:div (use-style (merge color-group-style {:background (color :body-text-color :opacity-low)}))
+   (doall
+     (for [c (keys THEME-DARK)]
+       ^{:key c}
+       [:div (use-style color-item-style)
+        [:div {:style {:background (color c) :box-shadow "0 0 0 1px rgba(0,0,0,0.15)"}}]
+        [:span c]
+        [:span {:style {:color (color c)}} (color c)]]))]
+  {}
+  {:padding false})
+
+
+(defcard-rg Opacities
+  [:div (use-style color-group-style)
+   (doall
+     (for [o (keys OPACITIES)]
+       ^{:key o}
+       [:div (use-style color-item-style)
+        [:div {:style {:opacity (o OPACITIES)}}]
+        [:span o]]))])
+
+
 (defcard-rg Sans-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div +flex-space-between
-      [:span t]
-      [t (with-styles {:font-family (second fonts)}) "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (second fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Serif-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div +flex-space-between
-      [:span t]
-      [t (with-styles {:font-family (first fonts)}) "Welcome to Athens"]])])
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (first fonts)}} "Welcome to Athens"]]))])
 
 
 (defcard-rg Monospace-Types
   [:div
-   (for [t types]
-     ^{:key t}
-     [:div +flex-space-between
-      [:span t]
-      [t (with-styles {:font-family (last fonts)}) "Welcome to Athens"]])])
-
-
-(defcard-rg Material-UI-Icons
-  "Not sure how to import Material UI Icons
-  resources
-  - https://shadow-cljs.github.io/docs/UsersGuide.html#cljsjs
-  - https://github.com/cljsjs/packages/tree/master/material-ui-icons
-  ")
+   (doall
+     (for [t types]
+       ^{:key t}
+       [:div (use-style text-item-style)
+        [:span t]
+        [t {:style {:font-family (last fonts)}} "Welcome to Athens"]]))])
