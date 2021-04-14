@@ -1,8 +1,7 @@
 (ns athens.parser-test
   (:require
-    [athens.parser :refer [parse-to-ast parse-to-ast-new combine-adjacent-strings]]
-    [clojure.test :refer [deftest is are testing]]
-    [instaparse.core :as insta]))
+    [athens.parser :refer [parse-to-ast combine-adjacent-strings]]
+    [clojure.test :refer [deftest is are testing]]))
 
 
 (deftest parser-general-tests

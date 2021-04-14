@@ -346,6 +346,23 @@ newline = #'\\n'
   #"(?i)(https?|ftp)://[^\s/\$\.\?\#].[^\s]*")
 
 
+(defn- append-link
+  ([acc before uri] (append-link acc before uri nil))
+  ([acc before uri after]
+   (cond-> acc
+     (and (seq before)
+          (pos? (count before)))
+     (conj before)
+
+     :true
+     (conj [:link {:text   uri
+                   :target uri}])
+
+     (and (seq after)
+          (pos? (count after)))
+     (conj after))))
+
+
 (defn- text-run-transform
   [text-run]
   (let [matches (re-seq uri-pattern text-run)]
@@ -363,23 +380,8 @@ newline = #'\\n'
                 (if (seq (rest m))
                   (recur after
                          (rest m)
-                         (cond-> acc
-                           (pos? (count before))
-                           (conj before)
-
-                           :true
-                           (conj [:link {:text   uri
-                                         :target uri}])))
-                  (cond-> acc
-                    (pos? (count before))
-                    (conj before)
-
-                    :true
-                    (conj [:link {:text   uri
-                                  :target uri}])
-
-                    (pos? (count after))
-                    (conj after))))))
+                         (append-link acc before uri))
+                  (append-link acc before uri after)))))
       text-run)))
 
 
