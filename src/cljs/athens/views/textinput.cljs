@@ -17,7 +17,6 @@
    :border-radius "0.25rem"
    :background (color :background-minus-1)
    :padding "0.125rem 0.5rem"
-   :flex-basis "100%"
    :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
    :transition-duration "0.1s"

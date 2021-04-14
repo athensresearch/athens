@@ -201,6 +201,7 @@
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
                                  :color "inherit"
+                                 :outline "none"
                                  :overflow "hidden"
                                  :padding "0"
                                  :background (color :background-minus-1)
@@ -216,8 +217,7 @@
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
-                     [:.is-editing {:outline "none"
-                                    :z-index 3
+                     [:.is-editing {:z-index 3
                                     :display "block"
                                     :opacity "1"}]
                      [:span
@@ -280,11 +280,11 @@
                                                                     :box-shadow "inset 0 0 0 1px"}
                               [:&:after {:content "''"
                                          :position "absolute"
-                                         :top "45%" ;; How are the top and left values calculated?
-                                         :left "20%" ;;
+                                         :top "45%"
+                                         :left "20%"
                                          :width "30%"
-                                         :height "60%"
-                                         :border-width "0 1.5px 1.5px 0"
+                                         :height "50%"
+                                         :border-width "0 2px 2px 0"
                                          :border-style "solid"
                                          :opacity 0
                                          :transform "rotate(45deg) translate(-40%, -50%)"}]
@@ -429,6 +429,7 @@
                                                               :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position   "absolute"
                                                            :max-height "20rem"
+                                                           :z-index    (:zindex-popover ZINDICES)
                                                            :top        (+ 24 top)
                                                            :left       (+ 24 left)}})
                                       [:div#dropdown-menu (use-style menu-style)
@@ -647,7 +648,7 @@
                            :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                            :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        ;; TODO pass `state` to parse-and-render
-       [parse-and-render local uid]
+       [parse-and-render local (or original-uid uid)]
        [:div (use-style (merge drop-area-indicator
                                (when (= :child (:drag-target @state)) {;;:color "green"
                                                                        :opacity 1})))]])))
