@@ -16,7 +16,7 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
     [goog.events :as events]
-    ;;[goog.functions :refer [debounce]]
+    [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
@@ -165,17 +165,18 @@
 
 (defn create-search-handler
   [state]
-  (fn [query]
-    (if (str/blank? query)
-      (reset! state {:index   0
-                     :query   nil
-                     :results []})
-      (reset! state {:index   0
-                     :query   query
-                     :results (->> (concat [(search-exact-node-title query)]
-                                           (search-in-node-title query 20 true)
-                                           (search-in-block-content query))
-                                   vec)}))))
+  (debounce (fn [query]
+              (if (str/blank? query)
+                (reset! state {:index   0
+                               :query   nil
+                               :results []})
+                (reset! state {:index   0
+                               :query   query
+                               :results (->> (concat [(search-exact-node-title query)]
+                                                     (search-in-node-title query 20 true)
+                                                     (search-in-block-content query))
+                                             vec)})))
+            1000))
 
 
 (defn key-down-handler

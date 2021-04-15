@@ -5,6 +5,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
+    [goog.functions :refer [debounce]]
     [posh.reagent :refer [posh! pull q]]
     [re-frame.core :refer [dispatch]]))
 
@@ -436,7 +437,6 @@
       (:block/_children b)  (recur (first (:block/_children b)))
       ;; protect against orphaned nodes
       :else                 nil)))
-
 
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))
