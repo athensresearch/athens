@@ -293,8 +293,24 @@
                                           :color (color :background-color)}]]
                               [:&:active {:transform "scale(0.9)"}]]]
 
-                     [:mark.contents.highlight {:padding "0 2px"
-                                                :background-color "#ffeb7a"}]]})
+                     [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0"
+                                               :color (color :body-text-color :opacity-higher)
+                                               :font-weight "500"}]
+                     [:h1 {:padding "0"
+                           :margin-block-start "-0.1em"}]
+                     [:h2 {:padding "0"}]
+                     [:h3 {:padding "0"}]
+                     [:h4 {:padding "0.25em 0"}]
+                     [:h5 {:padding "1em 0"}]
+                     [:h6 {:text-transform "uppercase"
+                           :letter-spacing "0.06em"
+                           :padding "1em 0"}]
+                     [.katex {}]
+[.codemirror {}]
+
+                     [:mark.contents.highlight {:padding "0 0.2em"
+                                                :border-radius "0.125rem"
+                                                :background-color (color :highlight-color)}]]})
 
 
 (stylefy/class "block-content" block-content-style)
