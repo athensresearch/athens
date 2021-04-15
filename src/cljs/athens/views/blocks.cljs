@@ -306,7 +306,7 @@
                            :letter-spacing "0.06em"
                            :padding "1em 0"}]
                      [.katex {}]
-[.codemirror {}]
+                     [.codemirror {}]
 
                      [:mark.contents.highlight {:padding "0 0.2em"
                                                 :border-radius "0.125rem"
