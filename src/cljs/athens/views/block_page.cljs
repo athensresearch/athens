@@ -119,7 +119,7 @@
                ^{:key breadcrumb-uid}
                [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
                             :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
-                (or title string)]))]]
+                [parse-renderer/parse-and-render (or title string)]]))]]
 
          ;; Header
          [:h1 (merge
