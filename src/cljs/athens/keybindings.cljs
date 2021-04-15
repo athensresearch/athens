@@ -15,7 +15,7 @@
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [throttle debounce]]
+    [goog.functions :refer [throttle #_debounce]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
@@ -118,7 +118,7 @@
   Head goes up to the text caret position."
   [state head key type]
   (let [query-fn        (case type
-                          :block (debounce db/search-in-block-content 1000)
+                          :block db/search-in-block-content
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :slash filter-slash-options)
