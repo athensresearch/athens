@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color]]
+    [athens.style :refer [color ZINDICES]]
     [athens.util :refer [now-ts]]
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -119,7 +119,12 @@
                ^{:key breadcrumb-uid}
                [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
                             :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
-                [parse-renderer/parse-and-render (or title string)]]))]]
+                [:span {:style {:position "relative"}}
+                 [:span {:style {:opacity 0
+                                 :width "100%"
+                                 :position "absolute"
+                                 :z-index (:zindex-dropdown ZINDICES)}} (or title string)]
+                 [parse-renderer/parse-and-render (or title string)]]]))]]
 
          ;; Header
          [:h1 (merge
