@@ -76,15 +76,16 @@
    :text-decoration "none"
    :color (color :link-color)
    ::stylefy/manual [[:.formatting {:color (color :body-text-color :opacity-low)}]
-                   [:&:hover {:text-decoration "underline"}]]})
+                     [:&:hover {:text-decoration "underline"}]]})
 
 
-(def autolink {:cursor "pointer"
-               :text-decoration "none"
-               ::stylefy/manual [[:.formatting {:color (color :body-text-color :opacity-low)}]
-                                 [:.contents {:color (color :link-color)
-                                              :text-decoration "none"}]
-                                 [:&:hover [:.contents {:text-decoration "underline"}]]]})
+(def autolink
+  {:cursor "pointer"
+   :text-decoration "none"
+   ::stylefy/manual [[:.formatting {:color (color :body-text-color :opacity-low)}]
+                     [:.contents {:color (color :link-color)
+                                  :text-decoration "none"}]
+                     [:&:hover [:.contents {:text-decoration "underline"}]]]})
 
 
 (def block-ref
