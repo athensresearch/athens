@@ -305,8 +305,19 @@
                      [:h6 {:text-transform "uppercase"
                            :letter-spacing "0.06em"
                            :padding "1em 0"}]
-                     [.katex {}]
-                     [.codemirror {}]
+                     [:p {:margin "0"
+                          :padding-bottom "1em"}]
+                     [:blockquote {:margin-block-end "1em"
+                                   :margin-inline "0.5em"
+                                   :margin-block "1em"
+                                   :padding-block "0.5em"
+                                   :padding-inline "1.5em"
+                                   :border-radius "0.25em"
+                                   :background (color :background-plus-1)
+                                   :border-inline-start [["0.25em solid" (color :body-text-color :opacity-lower)]]
+                                   :color (color :body-text-color :opacity-high)}
+                      [:p {:padding-bottom "1em"}]
+                      [:p:last-child {:padding-bottom "0"}]]
 
                      [:mark.contents.highlight {:padding "0 0.2em"
                                                 :border-radius "0.125rem"
