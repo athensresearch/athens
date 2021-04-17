@@ -307,25 +307,24 @@
                            :padding "1em 0"}]
                      [:p {:margin "0"
                           :padding-bottom "1em"}]
-                     [:blockquote {:margin-block-end "1em"
-                                   :margin-inline "0.5em"
-                                   :margin-block "1em"
-                                   :padding-block "0.5em"
+                     [:blockquote {:margin-inline "0.5em"
+                                   :margin-block "0.125rem"
+                                   :padding-block "calc(0.5em - 0.125rem - 0.125rem)"
                                    :padding-inline "1.5em"
                                    :border-radius "0.25em"
-                                   :background (color :background-plus-1)
+                                   :background (color :background-minus-1)
                                    :border-inline-start [["0.25em solid" (color :body-text-color :opacity-lower)]]
                                    :color (color :body-text-color :opacity-high)}
                       [:p {:padding-bottom "1em"}]
                       [:p:last-child {:padding-bottom "0"}]]
-                     [:.CodeMirror {:background (color :background-plus-1)
-                                    :margin "0.25rem 0"
+                     [:.CodeMirror {:background (color :background-minus-1)
+                                    :margin "0.125rem 0.5rem"
                                     :border-radius "0.25rem"
                                     :font-size "85%"
                                     :color (color :body-text-color)
                                     :font-family "IBM Plex Mono"}]
                      [:.CodeMirror-gutters {:border-right "1px solid transparent"
-                                            :background (color :background-plus-2)}]
+                                            :background (color :background-minus-1)}]
                      [:.CodeMirror-cursor {:border-left-color (color :link-color)}]
                      [:.CodeMirror-lines {:padding 0}]
                      [:.CodeMirror-linenumber {:color (color :body-text-color :opacity-med)}]
