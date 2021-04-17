@@ -318,6 +318,17 @@
                                    :color (color :body-text-color :opacity-high)}
                       [:p {:padding-bottom "1em"}]
                       [:p:last-child {:padding-bottom "0"}]]
+                     [:.CodeMirror {:background (color :background-plus-1)
+                                    :margin "0.25rem 0"
+                                    :border-radius "0.25rem"
+                                    :font-size "85%"
+                                    :color (color :body-text-color)
+                                    :font-family "IBM Plex Mono"}]
+                     [:.CodeMirror-gutters {:border-right "1px solid transparent"
+                                            :background (color :background-plus-2)}]
+                     [:.CodeMirror-cursor {:border-left-color (color :link-color)}]
+                     [:.CodeMirror-lines {:padding 0}]
+                     [:.CodeMirror-linenumber {:color (color :body-text-color :opacity-med)}]
 
                      [:mark.contents.highlight {:padding "0 0.2em"
                                                 :border-radius "0.125rem"
