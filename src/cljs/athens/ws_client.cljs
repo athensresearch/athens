@@ -74,7 +74,6 @@
 (declare chsk)
 (declare ch-chsk)
 (declare chsk-send!)
-(declare chsk-state)
 (declare router)
 (declare start-router!)
 (defonce cur-random (str (random-uuid)))
@@ -86,6 +85,8 @@
    :packer   :edn
    :protocol :http})
 
+
+^:cljstyle/ignore
 #_:clj-kondo/ignore
 (defn start-socket!
   ([] (let [{:keys [address token] :as conf}
@@ -108,7 +109,6 @@
      (def chsk (:chsk channel-socket))
      (def ch-chsk (:ch-recv channel-socket))
      (def chsk-send! (:send-fn channel-socket))
-     (def chsk-state (:state channel-socket))
      (def require-reload? reload-on-init?)
      (start-router!)
      (dispatch [:set-socket-status :running])
@@ -142,8 +142,8 @@
           (dispatch [:show-snack-msg {:msg "Connection failed"
                                       :type :fail}])
           (when (:default? @(subscribe [:db/remote-graph-conf]))
-                (rf/dispatch-sync [:remote-graph/set-conf
-                                   :default? false]))
+            (rf/dispatch-sync [:remote-graph/set-conf
+                               :default? false]))
           (sente/chsk-disconnect! chsk)
           (when router (router))
           (dispatch [:set-socket-status :closed])))))

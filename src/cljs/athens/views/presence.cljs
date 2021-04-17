@@ -34,6 +34,7 @@
    ::stylefy/manual [[:svg {:margin "auto 10px"}]]})
 
 
+^:cljstyle/ignore
 (defn presence-popover-info
   ([] [presence-popover-info @(subscribe [:current-route/uid]) {}])
   ([ctx-uid] [presence-popover-info ctx-uid {}])

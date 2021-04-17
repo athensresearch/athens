@@ -154,7 +154,7 @@
               [button
                {:onClick #(ws/start-socket!
                             (assoc @remote-graph-conf
-                              :reload-on-init? true))}
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
