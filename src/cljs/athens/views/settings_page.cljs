@@ -10,13 +10,9 @@
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [goog.functions :as goog-functions]
-<<<<<<< HEAD
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy])
-=======
-    [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r])
->>>>>>> init
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
@@ -260,9 +256,26 @@
   [:div (stylefy/use-style settings-page-styles) child])
 
 
+(defn name-comp
+  []
+  (fn []
+    [setting-wrapper
+     [:<>
+      [:header
+       [:h3 "Your name"]]
+      [:main
+       [:div
+        [textinput/textinput
+         {:on-change #(do (dispatch [:user/set :name (js-event->val %)])
+                          (js/localStorage.setItem
+                            "user/name" (js-event->val %)))
+          :value     (:name @(subscribe [:user/current]))}]]
+       [:aside
+        [:p "This name will be be displayed to other people in you org while using athens"]]]]]))
+
+
 (defn settings-page
   []
-<<<<<<< HEAD
   (let [s (r/atom (init-state))]
     [settings-container
      [:<>
@@ -270,99 +283,5 @@
       [email-comp s]
       [monitoring-comp s]
       [autosave-comp s]
+      [name-comp]
       [backups-comp s]]]))
-=======
-  (let [opted-out?          (r/atom (.. js/window -posthog has_opted_out_capturing))
-        ;; pretty easy to get around this auth. Lol
-        authed?             (r/atom (= (js/localStorage.getItem "auth/authed?") "true"))
-        email               (r/atom (init-email))
-        sending-request     (r/atom false)
-        debounce-save-time! (r/atom (js/Number (js/localStorage.getItem "debounce-save-time")))]
-
-    (fn []
-      (let [submit-disabled     (or @sending-request @authed?)]
-
-        [:div {:style {:display        "flex"
-                       :margin         "0vh 5vw"
-                       :width          "90vw"
-                       :flex-direction "column"}}
-         [:h2 "Settings"]
-
-         (if @authed?
-           [:span (str "Thank you for using and backing us, " @email " ❤️")]
-           [:span "You are using the free version of Athens. You are hosting your own data. Please be careful!"])
-
-         [:div {:style {:margin "10px 0"}}
-          [:h5 "Email"]
-          [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
-           [:input {:style {:width "15em"} :type "email" :value @email :placeholder "Open Collective Email"
-                    :on-change #(handle-change-email email (js-event->val %))}]
-           [button {:on-click #(handle-click-email @email authed? sending-request)
-                    :disabled submit-disabled
-                    :primary  true} "Submit"]]]
-
-         ;; Analytics
-
-         (if @opted-out?
-           [:h5 "Opted Out of Analytics"]
-           [:h5 "Opted Into Analytics"])
-         [:div {:style {:margin "10px 0"}}
-          [button {:primary  (false? @opted-out?)
-                   :disabled (not @authed?)
-                   :on-click #(handle-click opted-out?)}
-           (if @opted-out?
-             [:div {:style {:display "flex"}}
-              [:> ToggleOn]
-              [:span "\uD83D\uDE41 We understand."]]
-             [:div {:style {:display "flex"}}
-              [:> ToggleOff]
-              [:span "\uD83D\uDE00 Thanks for helping make Athens better!"]])]]
-
-         [:span "Analytics are delivered by "
-          [:a {:href "https://posthog.com" :target "_blank"} "Posthog"]
-          " and " [:a {:href "https://sentry.io" :target "_blank"} "Sentry"]
-          "." (when (false? @authed?)
-                [:span
-                 " In order to opt-out of analytics, please become a User or Sponsor through "
-                 [:a {:href "https://opencollective.com/athens" :target "_blank"}
-                  "OpenCollective."]])]
-
-         [:div {:style {:margin-top "15px"}}
-          [:h5 "Remote Backups"]
-          [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
-           [button {:disabled true}
-            "Backup my DB to the cloud"]
-           [:span "Coming soon to " [:a {:href "https://opencollective.com/athens" :target "_blank"}
-                                     "paid Users and Sponsors"]]]]
-
-         ;; Auto-save
-         [:div {:style {:margin "20px 0"}}
-          [:h5 "Auto-save"]
-          [:div {:style {:display "flex" :justify-content "space-between"
-                         :margin "10px 0"}}
-           [:input {:style {:width "4em"}
-                    :type  "number" :value @debounce-save-time!
-
-                    :on-change
-                    #(handle-debounce-save-input
-                       (js/Number (js-event->val %))
-                       debounce-save-time!)}]
-           (case @debounce-save-time!
-             0 [:span (str "Athens will save and create a local backup after each edit.")]
-             1 [:span (str "Athens will save and create a local backup " @debounce-save-time! " second after your last edit.")]
-             [:span (str "Athens will save and create a local backup " @debounce-save-time! " seconds after your last edit.")])]]
-
-         [:div {:style {:margin "20px 0"}}
-          [:h5 "Your Name"]
-          [:div {:style {:display "flex" :justify-content "space-between"
-                         :margin "10px 0"}}
-           [:input {:style {:width "12em"}
-                    :value (:name @(subscribe [:user/current]))
-
-                    :on-change
-                    #(do (dispatch [:user/set :name (js-event->val %)])
-                         (js/localStorage.setItem
-                          "user/name" (js-event->val %)))}]
-           "This name will be be displayed to other people in you org while using athens"]]]))))
-
->>>>>>> init
