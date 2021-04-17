@@ -9,7 +9,7 @@
     [athens.electron :as electron]
     [athens.events :as events]
     [athens.subs]
-    #_[athens.util :as util]
+    [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [athens.ws-client :as ws-client]
@@ -191,7 +191,8 @@
                                               :type        (or input-type "text")
                                               :value       (key @remote-graph-conf)
                                               :placeholder placeholder
-                                              :on-change   #(rf/dispatch [:remote-graph/set-conf key (.. % -target -value)])}]]]))
+                                              :on-change   #(rf/dispatch [:remote-graph/set-conf
+                                                                          key (js-event->val %)])}]]]))
                             doall)
                        [button {:primary  true
                                 :style    {:margin-top "1.5rem"}
