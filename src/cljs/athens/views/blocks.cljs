@@ -624,34 +624,34 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [_ _]
-  (fn [block state]
-    (let [{:block/keys [uid original-uid header]} block
-          {:string/keys [local]} @state
-          is-editing @(subscribe [:editing/is-editing uid])
-          selected-items @(subscribe [:selected/items])
-          font-size (case header
-                      1 "2.1em"
-                      2 "1.7em"
-                      3 "1.3em"
-                      "1em")]
-      [:div {:class "block-content" :style {:font-size font-size}}
-       [autosize/textarea {:value          (:string/local @state)
-                           :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
+  [block state]
+  (let [{:block/keys [uid original-uid header]} block
+        editing? (subscribe [:editing/is-editing uid])
+        selected-items (subscribe [:selected/items])]
+    (fn [block _state]
+      (let [font-size (case header
+                        1 "2.1em"
+                        2 "1.7em"
+                        3 "1.3em"
+                        "1em")]
+        [:div {:class "block-content" :style {:font-size font-size}}
+       ;; NOTE: komponentit forces reflow, likely a performance bottle neck
+         [autosize/textarea {:value          (:string/local @state)
+                             :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                            ;;:auto-focus     true
-                           :id             (str "editable-uid-" uid)
-                           :on-change      (fn [e] (textarea-change e uid state))
-                           :on-paste       (fn [e] (textarea-paste e uid state))
-                           :on-key-down    (fn [e] (textarea-key-down e uid state))
-                           :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
-                           :on-click       (fn [e] (textarea-click e uid state))
-                           :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                           :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+                             :id             (str "editable-uid-" uid)
+                             :on-change      (fn [e] (textarea-change e uid state))
+                             :on-paste       (fn [e] (textarea-paste e uid state))
+                             :on-key-down    (fn [e] (textarea-key-down e uid state))
+                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                             :on-click       (fn [e] (textarea-click e uid state))
+                             :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                             :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
        ;; TODO pass `state` to parse-and-render
-       [parse-and-render local (or original-uid uid)]
-       [:div (use-style (merge drop-area-indicator
-                               (when (= :child (:drag-target @state)) {;;:color "green"
-                                                                       :opacity 1})))]])))
+         [parse-and-render (:string/local @state) (or original-uid uid)]
+         [:div (use-style (merge drop-area-indicator
+                                 (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                         :opacity 1})))]]))))
 
 
 (defn bullet-mouse-out

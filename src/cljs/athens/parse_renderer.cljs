@@ -34,7 +34,8 @@
    ["katex/dist/contrib/mhchem"]
    ["react-codemirror2" :rename {UnControlled CodeMirror}]
    [athens.db :as db]
-   #_[athens.parser :as parser]
+   [athens.config :as config]
+   [athens.parser :as old-parser]
    [athens.parser.impl :as parser-impl]
    [athens.router :refer [navigate-uid]]
    [athens.style :refer [color OPACITIES]]
@@ -145,7 +146,7 @@
 
 
 (defn- clean-single-p-appending
-  [parent contents]
+  [parent & contents]
   (if (and (= 1 (count contents))
            (= :p (ffirst contents)))
     (let [rest-of-p (-> contents first rest)]
@@ -158,10 +159,8 @@
   [tree uid]
   (insta/transform
     {:block   (fn [& contents]
-                (println "block contents " (pr-str contents))
-                (clean-single-p-appending [:span {:class "block"}] contents))
+                (apply clean-single-p-appending [:span {:class "block"}] contents))
      :heading (fn [{n :n} & contents]
-                (println "heading" n (pr-str contents))
                 (clean-single-p-appending [({1 :h1
                                              2 :h2
                                              3 :h3
@@ -214,10 +213,7 @@
                                    (assoc :title title))
                               text])
      :paragraph            (fn [& contents]
-                             (println "paragraph contents " (pr-str contents))
-                             (apply conj [:p] (if (= 1 (count contents))
-                                                [contents]
-                                                contents)))
+                             (apply conj [:p] contents))
      :bold                 (fn [& contents]
                              (apply conj [:strong {:class "contents bold"}] contents))
      :italic               (fn [& contents]
@@ -231,7 +227,6 @@
      :pre-formatted        (fn [text]
                              [:code text])
      :inline-pre-formatted (fn [text]
-                             (js/console.log "Inline code: " text)
                              [:code text])
      :indented-code-block (fn [code-text]
                             (let [text (second code-text)]
@@ -239,60 +234,81 @@
                                [:code text]]))
      :fenced-code-block    (fn [{lang :lang} code-text]
                              (let [mode        (or lang "javascript")
-                                   text        (second code-text)
-                                   local-value (reagent/atom text)]
-                               (js/console.log "Block code, original-mode:" lang
-                                               ", mode:" mode
-                                               ", text:" text)
-                               [:> CodeMirror {:value     text
-                                               :options   {:mode              mode
-                                                           :lineNumbers       true
-                                                           :matchBrackets     true
-                                                           :autoCloseBrackets true
-                                                           :extraKeys         #js {"Esc" (fn [editor]
+                                   text        (second code-text)]
+                               (when config/debug?
+                                 (js/console.log "Block code, original-mode:" lang
+                                                 ", mode:" mode
+                                                 ", text:" text))
+                               [:pre
+                                [:code text]]
+                               #_[:> CodeMirror {:value     text
+                                                :options   {:mode              mode
+                                                            :lineNumbers       true
+                                                            :matchBrackets     true
+                                                            :autoCloseBrackets true
+                                                            :extraKeys         #js {"Esc" (fn [editor]
                                                                                           ;; TODO: save when needed
-                                                                                           (js/console.log "[Esc]")
-                                                                                           (if (= text @local-value)
-                                                                                             (js/console.log "[Esc] no changes")
-                                                                                             (do
+                                                                                            (js/console.log "[Esc]")
+                                                                                            (if (= text @local-value)
+                                                                                              (js/console.log "[Esc] no changes")
+                                                                                              (do
                                                                                               ;; TODO Save
-                                                                                               )))}}
-                                               :on-change (fn [editor data value]
-                                                            (js/console.log "on-change" editor (pr-str data) (pr-str value))
-                                                            (when-not (= @local-value value)
-                                                              (js/console.log "on-change, updating local state" value)
-                                                              (reset! local-value value)))
-                                               :on-blur   (fn [editor event]
-                                                            (js/console.log "on-blur")
-                                                            (if (= text @local-value)
-                                                              (js/console.log "on-blur, content not modified")
-                                                              (do
-                                                                (js/console.log "on-blur, content modified"
-                                                                                (pr-str text)
-                                                                                "=>"
-                                                                                (pr-str @local-value))
+                                                                                                )))}}
+                                                :on-change (fn [editor data value]
+                                                             (js/console.log "on-change" editor (pr-str data) (pr-str value))
+                                                             (when-not (= @local-value value)
+                                                               (js/console.log "on-change, updating local state" value)
+                                                               (reset! local-value value)))
+                                                :on-blur   (fn [editor event]
+                                                             (js/console.log "on-blur")
+                                                             (if (= text @local-value)
+                                                               (js/console.log "on-blur, content not modified")
+                                                               (do
+                                                                 (js/console.log "on-blur, content modified"
+                                                                                 (pr-str text)
+                                                                                 "=>"
+                                                                                 (pr-str @local-value))
                                                                ;; update value based on `uid`
-                                                                )))}]))
+                                                                 )))}]))
 
-     :latex (fn [text]
-              [:span {:ref (fn [el]
-                             (when el
-                               (try
-                                 (katex/render text el (clj->js
-                                                         {:throwOnError false}))
-                                 (catch :default e
-                                   (js/console.warn "Unexpected KaTeX error" e)
-                                   (aset el "innerHTML" text)))))}])}
-    tree))
+    :latex (fn [text]
+             [:span {:ref (fn [el]
+                            (when el
+                              (try
+                                (katex/render text el (clj->js
+                                                       {:throwOnError false}))
+                                (catch :default e
+                                  (js/console.warn "Unexpected KaTeX error" e)
+                                  (aset el "innerHTML" text)))))}])}
+   tree))
 
 
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string uid]
-  (let [result (parser-impl/staged-parser->ast string)
-        #_(parser/parse-to-ast-new string)]
+  (js/console.group string)
+  (let [pt-n-1     (js/performance.now)
+        result     (parser-impl/staged-parser->ast string)
+        pt-n-2     (js/performance.now)
+        pt-n-total (- pt-n-2 pt-n-1)
+        pt-o-1     (js/performance.now)
+        tmp        (old-parser/parse-to-ast string)
+        pt-o-2     (js/performance.now)
+        pt-o-total (- pt-o-2 pt-o-1)
+        pt-ratio   (/ pt-n-total pt-o-total)]
+    (if (< 1 pt-ratio)
+      (js/console.warn "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio)
+      (js/console.log "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio))
     (if (insta/failure? result)
-      [:abbr {:title (pr-str (insta/get-failure result))
-              :style {:color "red"}}
-       string]
-      [vec (transform result uid)])))
+      (do
+        (js/console.groupEnd)
+        [:abbr {:title (pr-str (insta/get-failure result))
+                :style {:color "red"}}
+         string])
+      (let [vt-1     (js/performance.now)
+            view     (transform result uid)
+            vt-2     (js/performance.now)
+            vt-total (- vt-2 vt-1)]
+        (js/console.log "view creation:" vt-total)
+        (js/console.groupEnd)
+        view))))

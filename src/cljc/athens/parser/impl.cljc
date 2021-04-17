@@ -8,7 +8,11 @@
     [clojure.string :as string]
     [clojure.walk :as walk]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
-       :clj  [instaparse.core :as insta :refer [defparser]])))
+       :clj  [instaparse.core :as insta :refer [defparser]]))
+  #?(:clj
+     (:import
+       (java.time
+         LocalDateTime))))
 
 
 (defparser block-parser
@@ -103,7 +107,7 @@ image = <'!'> md-link
             (<' '> link-title)?
             <#'(?<!\\s)\\)(?!\\w)'>
 
-link-text = #'([^\\]]|\\\\\\])+?(?=\\]\\()'
+link-text = #'([^\\]]|\\\\\\])*?(?=\\]\\()'
 link-target = ( #'[^\\s\\(\\)]+' | '(' #'[^\\s\\)]*' ')' | '\\\\' ( '(' | ')' ) )+
 link-title = <'\"'> #'[^\"]+' <'\"'>
            | <'\\''> #'[^\\']+' <'\\''>
@@ -400,10 +404,28 @@ newline = #'\\n'
                       [:inline-pre-formatted text])})
 
 
+(defn- timed
+  [name fn-to-time]
+  (fn [arg]
+    #?(:cljs
+       (let [t-0 (js/performance.now)
+             result (fn-to-time arg)
+             t-1 (js/performance.now)]
+         (js/console.log name ", time:" (- t-1 t-0))
+         result)
+       :clj
+       (let [t-0 (.getNano (LocalDateTime/now))
+             result (fn-to-time arg)
+             t-1 (.getNano (LocalDateTime/now))]
+         (println name ", time:" (/ (- t-1 t-0)
+                                    1000000) "milliseconds")
+         result))))
+
+
 (defn staged-parser->ast
   [in]
   (->> in
-       (insta/parse block-parser)
-       (insta/transform stage-1-transformations)
-       (insta/transform stage-2-transformations)
-       (insta/transform stage-3-transformations)))
+       ((timed :block #(insta/parse block-parser %)))
+       ((timed :stage-1 #(insta/transform stage-1-transformations %)))
+       ((timed :stage-2 #(insta/transform stage-2-transformations %)))
+       ((timed :stage-3 #(insta/transform stage-3-transformations %)))))
