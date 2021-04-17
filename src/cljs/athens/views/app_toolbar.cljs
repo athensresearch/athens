@@ -8,6 +8,7 @@
     ["@material-ui/icons/FolderOpen" :default FolderOpen]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Today" :default Today]
@@ -21,6 +22,7 @@
     [athens.views.buttons :refer [button]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
+    [athens.ws-client :as ws]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -91,14 +93,14 @@
 
 (defn app-toolbar
   []
-  (let [left-open?  (subscribe [:left-sidebar/open])
-        right-open? (subscribe [:right-sidebar/open])
-        route-name  (subscribe [:current-route/name])
-        electron?   (util/electron?)
-        theme-dark  (subscribe [:theme/dark])
+  (let [left-open?        (subscribe [:left-sidebar/open])
+        right-open?       (subscribe [:right-sidebar/open])
+        route-name        (subscribe [:current-route/name])
+        electron?         (util/electron?)
+        theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
-        merge-open? (reagent.core/atom false)]
+        merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
 
@@ -148,6 +150,14 @@
 
                                            :else :highlight-color))
                       :align-self "center"}}]
+            (when (= @socket-status :closed)
+              [button
+               {:onClick #(ws/start-socket!
+                            (assoc @remote-graph-conf
+                              :reload-on-init? true))}
+               [:<>
+                [:> Replay]
+                [:span "Re-connect with remote"]]])
             [button {:on-click #(swap! merge-open? not)}
              [:> MergeType]]
             [button {:on-click #(router/navigate :settings)

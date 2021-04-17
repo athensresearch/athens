@@ -198,7 +198,9 @@
 
 (defmethod event-msg-handler :dat.sync.client/recv-remote-tx
   [{:keys [?data]}]
-  (dat-s/apply-remote-tx! (second ?data)))
+  (let [[uid tx-data] (second ?data)]
+    (when (not= cur-random uid)
+      (dat-s/apply-remote-tx! tx-data))))
 
 
 (defmethod event-msg-handler :dat.sync.client/bootstrap

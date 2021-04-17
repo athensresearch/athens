@@ -41,11 +41,10 @@
    (when (:default? @(subscribe [:db/remote-graph-conf]))
      (let [curr-presence         @(subscribe [:presence/current])
            users-in-cur-uid      (->> curr-presence vals
-                                      (filter
-                                        #(and ctx-uid
-                                              (contains?
-                                                #{:current/uid :editing/uid}
-                                                ctx-uid))))
+                                      (filter (fn [u-presence]
+                                                (some #(= (% u-presence)
+                                                          ctx-uid)
+                                                      [:current/uid :editing/uid]))))
            others-in-cur-uid     (filter #(not= (:random/id %)
                                                 ws/cur-random)
                                          users-in-cur-uid)
