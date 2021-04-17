@@ -3,6 +3,7 @@
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
     [athens.electron :as electron]
+    [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
@@ -295,7 +296,7 @@
           [:h5 "Email"]
           [:div {:style {:margin "5px 0" :display "flex" :justify-content "space-between"}}
            [:input {:style {:width "15em"} :type "email" :value @email :placeholder "Open Collective Email"
-                    :on-change #(handle-change-email email (.. % -target -value))}]
+                    :on-change #(handle-change-email email (js-event->val %))}]
            [button {:on-click #(handle-click-email @email authed? sending-request)
                     :disabled submit-disabled
                     :primary  true} "Submit"]]]
@@ -340,7 +341,12 @@
           [:div {:style {:display "flex" :justify-content "space-between"
                          :margin "10px 0"}}
            [:input {:style {:width "4em"}
-                    :type  "number" :value @debounce-save-time! :on-change #(handle-debounce-save-input (js/Number (.. % -target -value)) debounce-save-time!)}]
+                    :type  "number" :value @debounce-save-time!
+
+                    :on-change
+                    #(handle-debounce-save-input
+                       (js/Number (js-event->val %))
+                       debounce-save-time!)}]
            (case @debounce-save-time!
              0 [:span (str "Athens will save and create a local backup after each edit.")]
              1 [:span (str "Athens will save and create a local backup " @debounce-save-time! " second after your last edit.")]
@@ -352,8 +358,11 @@
                          :margin "10px 0"}}
            [:input {:style {:width "12em"}
                     :value (:name @(subscribe [:user/current]))
-                    :on-change #(do (dispatch [:user/set :name (.. % -target -value)])
-                                    (js/localStorage.setItem "user/name" (.. % -target -value)))}]
+
+                    :on-change
+                    #(do (dispatch [:user/set :name (js-event->val %)])
+                         (js/localStorage.setItem
+                          "user/name" (js-event->val %)))}]
            "This name will be be displayed to other people in you org while using athens"]]]))))
 
 >>>>>>> init

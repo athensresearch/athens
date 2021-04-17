@@ -39,39 +39,41 @@
   ([ctx-uid] [presence-popover-info ctx-uid {}])
   ([ctx-uid {:keys [inline?]}]
    (when (:default? @(subscribe [:db/remote-graph-conf]))
-     (let [curr-presence           @(subscribe [:presence/current])
-           others-in-cur-uid       (->> curr-presence vals
-                                        (filter #(and ctx-uid
-                                                      (or (= (:current/uid %) ctx-uid)
-                                                          (= (:editing/uid %) ctx-uid))
-                                                      (not= (:random/id %)
-                                                            ws/cur-random))))
-           others-in-cur-uid-count (count others-in-cur-uid)
-           total-in-cur-uid        (->> curr-presence vals
-                                        (filter #(and ctx-uid
-                                                      (or (= (:current/uid %) ctx-uid)
-                                                          (= (:editing/uid %) ctx-uid))))
-                                        count)]
+     (let [curr-presence         @(subscribe [:presence/current])
+           users-in-cur-uid      (->> curr-presence vals
+                                      (filter
+                                        #(and ctx-uid
+                                              (contains?
+                                                #{:current/uid :editing/uid}
+                                                ctx-uid))))
+           others-in-cur-uid     (filter #(not= (:random/id %)
+                                                ws/cur-random)
+                                         users-in-cur-uid)
+           n-others-in-cur-uid   (count others-in-cur-uid)
+           n-users-in-cur-uid    (count users-in-cur-uid)
+           show-inline-presence? (pos? n-others-in-cur-uid)]
        (r/with-let [ele (r/atom nil)]
          (when (or (not inline?)
-                   (and inline? (>= others-in-cur-uid-count 1)))
+                   (and inline? show-inline-presence?))
            [:<>
             [button
              {:onClick #(reset! ele (.-currentTarget %))
               :style   (when inline?
-                         {:position "absolute"
-                          :left "-1.5rem"
-                          :padding-top "0.5rem"
+                         {:position        "absolute"
+                          :left            "-1.5rem"
+                          :padding-top     "0.5rem"
                           ::stylefy/manual [[:>svg {:font-size "1rem"}]]})}
              (if inline?
                [:> Group]
                [:<>
                 [:> Visibility]
                 [:span
-                 (cond-> (str "You")
-                   (> others-in-cur-uid-count 0) (str " and " others-in-cur-uid-count " others"))]])]
+                 (cond-> "You"
+
+                   show-inline-presence?
+                   (str " and " n-others-in-cur-uid " others"))]])]
             [m-popover
-             {:open            (and (> others-in-cur-uid-count 0) @ele)
+             {:open            (and show-inline-presence? @ele)
               :anchorEl        @ele
               :onClose         #(reset! ele nil)
               :anchorOrigin    #js{:vertical   "bottom"
@@ -85,7 +87,8 @@
                 (cond-> ""
                   (or (not inline?)
                       (and inline?
-                           (= (get-in curr-presence [ws/cur-random :editing/uid])
+                           (= (get-in curr-presence
+                                      [ws/cur-random :editing/uid])
                               ctx-uid)))
                   (str "You, ")
 
@@ -93,11 +96,11 @@
                                  (map :name)
                                  (str/join ", ")))
 
-                  (not inline?) (str " are here")
+                  (or (not inline?)
+                      (and inline? (> n-users-in-cur-uid 1)))
+                  (str " are here")
 
                   (and inline?
-                       (> total-in-cur-uid 1)) (str " are here")
-
-                  (and inline?
-                       (= total-in-cur-uid 1)) (str " is here"))]]]]]))))))
+                       (= n-users-in-cur-uid 1))
+                  (str " is here"))]]]]]))))))
 

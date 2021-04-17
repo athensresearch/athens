@@ -1,7 +1,8 @@
 (ns athens.datsync-utils
-  (:require [athens.db :as db]
-            [dat.sync.client]
-            [datascript.core :as d]))
+  (:require
+    [athens.db :as db]
+    [dat.sync.client]
+    [datascript.core :as d]))
 
 
 (defn apply-remote-tx!
@@ -35,9 +36,11 @@
                     (#{:dat.sync.remote.db/id :db/id} a))))
         translated-tx (d/q '[:find ?op ?dat-e ?a ?dat-v
                              :in % ?is-ref ?c-is-ref ?new-id $ [[?op ?e ?a ?v]]
-                             :where [(?new-id ?e) ?new]
-                                    [(get-else $ ?e :dat.sync.remote.db/id ?new) ?dat-e]
-                                    (remote-value-trans ?is-ref ?c-is-ref ?new-id ?v ?a ?dat-v)]
+                             :where
+                             [(?new-id ?e) ?new]
+                             [(get-else $ ?e :dat.sync.remote.db/id ?new) ?dat-e]
+                             (remote-value-trans ?is-ref ?c-is-ref ?new-id ?v ?a ?dat-v)]
+
                            '[[(remote-value-trans ?is-ref ?c-is-ref ?new-id ?ds-v ?attr-ident ?remote-v)
                               [(?is-ref ?attr-ident)]
                               [?ds-v :dat.sync.remote.db/id ?remote-v]]

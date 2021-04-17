@@ -195,8 +195,9 @@
                             doall)
                        [button {:primary  true
                                 :style    {:margin-top "1.5rem"}
-                                :on-click #(ws-client/start-socket! (assoc @remote-graph-conf
-                                                                      :reload-on-init? true))}
+                                :on-click #(ws-client/start-socket!
+                                             (assoc @remote-graph-conf
+                                                    :reload-on-init? true))}
                         "Open"]]
 
                       (and (not (:remote? @state))

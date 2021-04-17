@@ -4,6 +4,7 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.util :as util]
+    [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -211,7 +212,7 @@
      (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
                                       :key :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
-      (if (some-> remote-graph-conf cljs.reader/read-string
+      (if (some-> remote-graph-conf read-string
                   :default?)
         {:dispatch [:start-socket]}
         {:dispatch [:db/update-filepath local-storage]})))

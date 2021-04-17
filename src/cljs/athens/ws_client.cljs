@@ -4,15 +4,14 @@
     [cljs.reader :refer [read-string]]
     [dat.sync.client]
     [re-frame.core :as rf :refer [subscribe dispatch dispatch-sync]]
-    [reagent.core :as r]
     [taoensso.sente :as sente]))
-
 
 
 ;;-------------------------------------------------------------------
 ;;--- re-frame ---
 
 (declare start-socket!)
+
 
 (rf/reg-sub
   :presence/current
@@ -82,11 +81,10 @@
 (declare require-reload?)
 
 
-;; ADDRESS BEFORE MERGE
-;; host and port
-(def base-config {:type     :auto
-                  :packer   :edn
-                  :protocol :http})
+(def base-config
+  {:type     :auto
+   :packer   :edn
+   :protocol :http})
 
 #_:clj-kondo/ignore
 (defn start-socket!
@@ -103,9 +101,10 @@
      ;; x - is the csrf-token, since we don't have much user info
      ;; simple strategy here is to keep a baked in csrf token and build pipeline
      ;; for each enterprise app and deploy to them separately
-     (def channel-socket (sente/make-channel-socket!
-                           "/chsk" token (merge base-config
-                                                {:host address})))
+     (def channel-socket
+       (sente/make-channel-socket!
+         "/chsk" token (merge base-config
+                              {:host address})))
      (def chsk (:chsk channel-socket))
      (def ch-chsk (:ch-recv channel-socket))
      (def chsk-send! (:send-fn channel-socket))
@@ -142,9 +141,9 @@
                    (not (->> ?data second :last-ws-close :clean?)))
           (dispatch [:show-snack-msg {:msg "Connection failed"
                                       :type :fail}])
-          (when (:default? @(subscribe [:db/remote-graph-conf])
-                  (rf/dispatch-sync [:remote-graph/set-conf
-                                     :default? false])))
+          (when (:default? @(subscribe [:db/remote-graph-conf]))
+                (rf/dispatch-sync [:remote-graph/set-conf
+                                   :default? false]))
           (sente/chsk-disconnect! chsk)
           (when router (router))
           (dispatch [:set-socket-status :closed])))))
@@ -155,14 +154,16 @@
   (dispatch [:presence/new (second ?data)]))
 
 
-(defn send-user-details []
-  (if (= @(subscribe [:socket-status]) :running)
-    (when-not (chsk-send! [:user/details
-                           (merge @(subscribe [:user/current])
-                                  {:editing/uid @(subscribe [:editing/uid])
-                                   :current/uid @(subscribe [:current-route/uid])
-                                   :random/id   cur-random})])
-      (dispatch [:set-socket-status :closed]))))
+(defn send-user-details
+  []
+  (when (and (= @(subscribe [:socket-status]) :running)
+             (not (chsk-send!
+                    [:user/details
+                     (merge @(subscribe [:user/current])
+                            {:editing/uid @(subscribe [:editing/uid])
+                             :current/uid @(subscribe [:current-route/uid])
+                             :random/id   cur-random})])))
+    (dispatch [:set-socket-status :closed])))
 
 
 (defmethod event-msg-handler :chsk/handshake
@@ -177,14 +178,16 @@
     (send-user-details)))
 
 
-(defn start-router! []
-  #_:clj-kondo/ignore
+(defn start-router!
+  []
   (when router (router))
+  #_:clj-kondo/ignore
   (def router
     (sente/start-client-chsk-router! ch-chsk event-msg-handler)))
 
 
-(defn send-presence! []
+(defn send-presence!
+  []
   (send-user-details)
   (when (= @(subscribe [:socket-status]) :running)
     (js/setTimeout (fn [] (send-presence!)) 500)))

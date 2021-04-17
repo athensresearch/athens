@@ -15,7 +15,6 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
-    [athens.ws-client :as ws]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]

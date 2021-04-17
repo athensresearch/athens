@@ -215,8 +215,7 @@
 
 (defn walk-transact
   [tx-data]
-  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
-        socket-status @(subscribe [:socket-status])]
+  (let [socket-status @(subscribe [:socket-status])]
     (if (= socket-status :closed)
       (dispatch [:show-snack-msg
                  {:msg "Graph is now read only"}])
