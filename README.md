@@ -7,7 +7,7 @@
 
 # What is Athens
 
-Athens is an open-source and local-first alternative to [Roam Research](https://roamresearch.com/). Athens is the most community-driven, private, and extensible knowledge graph.
+Athens is an open-source knowledge graph for research and notetaking. Open-source makes Athens private, extensible, and community-driven.
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
@@ -19,7 +19,13 @@ Athens is an open-source and local-first alternative to [Roam Research](https://
 
 ![writing-demo](https://github.com/tangjeff0/athens-public/blob/main/bret-victor-demo.gif)
 
-### Open-Source
+# Private
+
+You can self-host Athens as a desktop app on your filesystem or with your own server.
+
+
+# Extensible
+# Community-Driven
 
 - The freedom to self-host
 - The freedom to use any previous version of Athens for the rest of time
