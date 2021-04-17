@@ -5,7 +5,7 @@
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
     ["@material-ui/icons/FileCopy" :default FileCopy]
-    ["@material-ui/icons/FolderOpen" :default FolderOpen]
+    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
@@ -164,7 +164,7 @@
                      :active   (= @route-name :settings)}
              [:> Settings]]
             [button {:on-click #(dispatch [:modal/toggle])}
-             [:> FolderOpen]]
+             [:> LibraryBooks]]
             [separator]]
            [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])}

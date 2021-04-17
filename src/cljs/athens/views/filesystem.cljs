@@ -1,17 +1,17 @@
 (ns athens.views.filesystem
   (:require
-    ["@material-ui/icons/ArrowBack" :default ArrowBack]
+    ["@material-ui/core/Tab" :default Tab]
+    ["@material-ui/core/Tabs" :default Tabs]
     ["@material-ui/icons/Close" :default Close]
-    ["@material-ui/icons/FolderOpen" :default FolderOpen]
+    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/MergeType" :default MergeType]
-    ["@material-ui/icons/ToggleOff" :default ToggleOff]
-    ["@material-ui/icons/ToggleOn" :default ToggleOn]
     [athens.electron :as electron]
     [athens.events :as events]
     [athens.subs]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
+    [athens.views.textinput :as textinput]
     [athens.ws-client :as ws-client]
     [cljs.reader :refer [read-string]]
     [clojure.edn :as edn]
@@ -27,14 +27,15 @@
    :padding         "0 1rem 1.5rem 1rem"
    :flex-direction  "column"
    :align-items     "center"
-   :width           "400px"
+   :width           "500px"
    ::stylefy/manual [[:p {:max-width  "24rem"
                           :text-align "center"}]
                      [:button.toggle-button {:font-size     "18px"
                                              :align-self    "flex-start"
                                              :padding-left  "0"
                                              :margin-bottom "1rem"}]
-                     [:code {:word-break "break-all"}]]})
+                     [:code {:word-break "break-all"}]
+                     [:.MuiTabs-indicator {:background-color "var(--link-color)"}]]})
 
 
 (rf/reg-event-db
@@ -134,6 +135,80 @@
          :on-close close-modal}]])))
 
 
+(defn open-local-comp
+  [loading db-filepath]
+  [:<>
+   [:h5 {:style {:align-self "flex-start"
+                 :margin-top "2em"}}
+    (if @loading
+      "No DB Found At"
+      "Current Location")]
+   [:code {:style {:margin "1rem 0 2rem 0"}} @db-filepath]
+   [:div (use-style {:display         "flex"
+                     :justify-content "space-between"
+                     :align-items     "center"
+                     :width           "80%"})
+    [button {:primary  true
+             :on-click #(electron/open-dialog!)}
+     "Open"]
+    [button {:disabled @loading
+             :primary  true
+             :on-click #(electron/move-dialog!)}
+     "Move"]]])
+
+
+(defn create-new-local
+  [state]
+  [:<>
+   [:div {:style {:display         "flex"
+                  :justify-content "space-between"
+                  :width           "100%"
+                  :margin-top      "2em"
+                  :margin-bottom   "1em"}}
+    [:h5 "Database Name"]
+    [textinput/textinput {:value       (:input @state)
+                          :placeholder "DB Name"
+                          :on-change   #(swap! state assoc :input (js-event->val %))}]]
+   [:div {:style {:display         "flex"
+                  :justify-content "space-between"
+                  :width           "100%"}}
+    [:h5 "New Location"]
+    [button {:primary  true
+             :on-click #(electron/create-dialog! (:input @state))}
+     "Browse"]]])
+
+
+(defn join-remote-comp
+  [remote-graph-conf]
+  [:<>
+   (->> [{:label       "Remote address"
+          :key         :address
+          :placeholder "Remote server address"}
+         {:label       "Token"
+          :input-type  "password"
+          :key         :token
+          :placeholder "Secret token"}]
+        (map (fn [{:keys [label key placeholder input-type]}]
+               ^{:key key}
+               [:div {:style {:width  "100%" :margin-top "10px"}}
+                [:h5 label]
+                [:div {:style {:margin          "5px 0"
+                               :display         "flex"
+                               :justify-content "space-between"}}
+                 [textinput/textinput {:style       {:flex-grow 1
+                                                     :padding   "5px"}
+                                       :type        (or input-type "text")
+                                       :value       (key @remote-graph-conf)
+                                       :placeholder placeholder
+                                       :on-change   #(rf/dispatch [:remote-graph/set-conf key (js-event->val %)])}]]]))
+        doall)
+   [button {:primary  true
+            :style    {:margin-top "0.5rem"}
+            :on-click #(ws-client/start-socket! (assoc @remote-graph-conf
+                                                       :reload-on-init? true))}
+    "Join"]])
+
+
 (defn window
   "If loading is true, then that means the user has opened the modal and the db was not found on the filesystem.
   If loading is false, do not allow user to exit modal, and show slightly different UI."
@@ -144,107 +219,31 @@
                               (dispatch [:modal/toggle])))
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         db-filepath       (subscribe [:db/filepath])
-        state             (r/atom {:create  false
-                                   :input   ""
-                                   :remote? (:default? @remote-graph-conf)})]
+        state             (r/atom {:input     ""
+                                   :remote?   (:default? @remote-graph-conf)
+                                   :tab-value 0})]
     (fn []
       [:div (use-style modal-style)
        [modal/modal
         {:title    [:div.modal__title
-                    [:> FolderOpen]
-                    [:h4 "Filesystem"]
+                    [:> LibraryBooks]
+                    [:h4 "Database"]
                     (when-not @loading
                       [button {:on-click close-modal} [:> Close]])]
          :content  [:div (use-style modal-contents-style)
-                    [button {:primary  false
-                             :class    "toggle-button"
-                             :disabled false
-                             :on-click #(swap! state update :remote? not)}
-                     (if (:remote? @state)
-                       [:div {:style {:display "flex"}}
-                        [:> ToggleOn
-                         {:color "red"}]
-                        [:span "Remote"]]
-                       [:div {:style {:display "flex"}}
-                        [:> ToggleOff]
-                        [:span "Local"]])]
+                    [:> Tabs {:on-change (fn [_x y] (swap! state assoc :tab-value y))
+                              :value     (:tab-value @state)}
+                     [:> Tab {:label "Open Local"}]
+                     [:> Tab {:label "Create Local"}]
+                     [:> Tab {:label "Join Remote"}]]
                     (cond
-                      (:remote? @state)
-                      [:<>
-                       (->> [{:label       "Remote address"
-                              :key         :address
-                              :placeholder "Remote server address"}
-                             {:label       "Token"
-                              :input-type  "password"
-                              :key         :token
-                              :placeholder "Secret token"}]
-                            (map (fn [{:keys [label key placeholder input-type]}]
-                                   ^{:key key}
-                                   [:div {:style {:margin "10px 0"
-                                                  :width  "100%"}}
-                                    [:h5 label]
-                                    [:div {:style {:margin          "5px 0"
-                                                   :display         "flex"
-                                                   :justify-content "space-between"}}
-                                     [:input {:style       {:width   "100%"
-                                                            :padding "5px"}
-                                              :type        (or input-type "text")
-                                              :value       (key @remote-graph-conf)
-                                              :placeholder placeholder
-                                              :on-change   #(rf/dispatch [:remote-graph/set-conf
-                                                                          key (js-event->val %)])}]]]))
-                            doall)
-                       [button {:primary  true
-                                :style    {:margin-top "1.5rem"}
-                                :on-click #(ws-client/start-socket!
-                                             (assoc @remote-graph-conf
-                                                    :reload-on-init? true))}
-                        "Open"]]
+                      (or (= 2 (:tab-value @state))
+                          (:remote? @state))
+                      [join-remote-comp remote-graph-conf]
 
-                      (and (not (:remote? @state))
-                           (:create @state))
-                      [:<>
-                       [button {:style    {:align-self "start" :padding "0"}
-                                :on-click #(swap! state update :create not)}
-                        [:<>
-                         [:> ArrowBack]
-                         [:span "Back"]]]
-                       [:div {:style {:display         "flex"
-                                      :justify-content "space-between"
-                                      :width           "100%"
-                                      :margin-top      "2em"
-                                      :margin-bottom   "1em"}}
-                        [:label "Database Name"]
-                        [:input {:value       (:input @state)
-                                 :placeholder "DB Name"
-                                 :on-change   #(swap! state assoc :input (.. % -target -value))}]]
-                       [:div {:style {:display         "flex"
-                                      :justify-content "space-between"
-                                      :width           "100%"}}
-                        [:label "Location"]
-                        [button {:primary  true
-                                 :on-click #(electron/create-dialog! (:input @state))}
-                         "Browse"]]]
+                      (= 1 (:tab-value @state))
+                      [create-new-local state]
 
-                      :else
-                      [:<>
-                       [:b {:style {:align-self "flex-start"}}
-                        (if @loading
-                          "No DB Found At"
-                          "Current Location")]
-                       [:code {:style {:margin "1rem 0 2rem 0"}} @db-filepath]
-                       [:div (use-style {:display         "flex"
-                                         :justify-content "space-between"
-                                         :align-items     "center"
-                                         :width           "80%"})
-                        [button {:primary  true
-                                 :on-click #(electron/open-dialog!)}
-                         "Open"]
-                        [button {:disabled @loading
-                                 :primary  true
-                                 :on-click #(electron/move-dialog!)}
-                         "Move"]
-                        [button {:primary  true
-                                 :on-click #(swap! state update :create not)}
-                         "Create"]]])]
+                      (= 0 (:tab-value @state))
+                      [open-local-comp loading db-filepath])]
          :on-close close-modal}]])))

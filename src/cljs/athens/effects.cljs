@@ -1,5 +1,6 @@
 (ns athens.effects
   (:require
+    [athens.config :as config]
     [athens.datsync-utils :as dat-s]
     [athens.db :as db]
     [athens.util :as util]
@@ -213,6 +214,11 @@
                      (.. js/posthog (capture "link-created", (clj->js x))))))))
 
 
+(defn dev-pprint
+  [data]
+  (when config/debug? (pprint data)))
+
+
 (defn walk-transact
   [tx-data]
   (let [socket-status     (subscribe [:socket-status])
@@ -220,20 +226,19 @@
     (if (= @socket-status :closed)
       (dispatch [:show-snack-msg
                  {:msg "Graph is now read only"}])
-      (do (prn "TX RAW INPUTS")                             ;; event tx-data
-          (pprint tx-data)
+      (do (dev-pprint "TX RAW INPUTS")                             ;; event tx-data
+          (dev-pprint tx-data)
           (try
             (let [with-tx (d/with @db/dsdb tx-data)]
-              (prn "TX WITH")                               ;; tx-data normalized by datascript to flat datoms
-              (pprint (:tx-data with-tx))
+              (dev-pprint "TX WITH")                               ;; tx-data normalized by datascript to flat datoms
+              (dev-pprint (:tx-data with-tx))
               (let [more-tx-data  (parse-for-links with-tx)
                     final-tx-data (vec (concat tx-data more-tx-data))]
-                (prn "TX MORE")                             ;; parsed tx-data, e.g. asserting/retracting pages and references
-                (pprint more-tx-data)
-                (prn "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-                (pprint final-tx-data)
-                (let [{:keys [db-before tx-data]}
-                      (transact! db/dsdb final-tx-data)]
+                (dev-pprint "TX MORE")                             ;; parsed tx-data, e.g. asserting/retracting pages and references
+                (dev-pprint more-tx-data)
+                (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+                (dev-pprint final-tx-data)
+                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
 
                   ;; check remote data against previous db
                   (when (and (:default? @remote-graph-conf)
@@ -248,12 +253,12 @@
                                tx-data))]]))
 
                   (ph-link-created! tx-data)
-                  (prn "TX OUTPUTS")
-                  (pprint tx-data))))
+                  (dev-pprint "TX OUTPUTS")
+                  (dev-pprint tx-data))))
 
             (catch js/Error e
               (js/alert (str e))
-              (prn "EXCEPTION" e)))))))
+              (js/console.log "EXCEPTION" e)))))))
 
 
 (reg-fx

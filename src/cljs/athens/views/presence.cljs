@@ -57,12 +57,13 @@
                    (and inline? show-inline-presence?))
            [:<>
             [button
-             {:onClick #(reset! ele (.-currentTarget %))
-              :style   (when inline?
-                         {:position        "absolute"
-                          :left            "-1.5rem"
-                          :padding-top     "0.5rem"
-                          ::stylefy/manual [[:>svg {:font-size "1rem"}]]})}
+             {:on-mouse-enter #(reset! ele (.-currentTarget %))
+              :on-mouse-leave (fn [] (js/setTimeout #(reset! ele nil) 1500))
+              :style          (when inline?
+                                {:position        "absolute"
+                                 :left            "-1.5rem"
+                                 :padding-top     "0.5rem"
+                                 ::stylefy/manual [[:>svg {:font-size "1rem"}]]})}
              (if inline?
                [:> Group]
                [:<>
@@ -73,7 +74,7 @@
                    show-inline-presence?
                    (str " and " n-others-in-cur-uid " others"))]])]
             [m-popover
-             {:open            (and show-inline-presence? @ele)
+             {:open            (boolean (and show-inline-presence? @ele))
               :anchorEl        @ele
               :onClose         #(reset! ele nil)
               :anchorOrigin    #js{:vertical   "bottom"

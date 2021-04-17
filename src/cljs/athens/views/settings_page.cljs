@@ -256,22 +256,30 @@
   [:div (stylefy/use-style settings-page-styles) child])
 
 
-(defn name-comp
+(defn handle-user-name-change
+  [e]
+  (dispatch [:user/set :name (js-event->val e)])
+  (js/localStorage.setItem "user/name" (js-event->val e)))
+
+
+(defn remote-username-comp
   []
-  (fn []
+  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
+        remote?           (:default? remote-graph-conf)]
     [setting-wrapper
+     (when (not remote?) {:disabled true})
      [:<>
       [:header
-       [:h3 "Your name"]]
+       [:h3 "Username"]
+       [:span.glance (:name @(subscribe [:user/current]))]]
       [:main
-       [:div
-        [textinput/textinput
-         {:on-change #(do (dispatch [:user/set :name (js-event->val %)])
-                          (js/localStorage.setItem
-                            "user/name" (js-event->val %)))
-          :value     (:name @(subscribe [:user/current]))}]]
+       [textinput/textinput {:type         "text"
+                             :placeholder  "Username"
+                             :disabled     (not remote?)
+                             :on-blur      handle-user-name-change
+                             :defaultValue (:name @(subscribe [:user/current]))}]
        [:aside
-        [:p "This name will be be displayed to other people in you org while using athens"]]]]]))
+        [:p "For now, a username is only needed if you are connected to a server."]]]]]))
 
 
 (defn settings-page
@@ -283,5 +291,5 @@
       [email-comp s]
       [monitoring-comp s]
       [autosave-comp s]
-      [name-comp]
-      [backups-comp s]]]))
+      [backups-comp s]
+      [remote-username-comp]]]))
