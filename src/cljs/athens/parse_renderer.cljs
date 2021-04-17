@@ -76,7 +76,17 @@
   {:cursor "pointer"
    :text-decoration "none"
    :color (color :link-color)
-   ::stylefy/mode [[:hover {:text-decoration "underline"}]]})
+   ::stylefy/manual [[:.formatting {:color (color :body-text-color :opacity-low)}]
+                     [:&:hover {:text-decoration "underline"}]]})
+
+
+(def autolink
+  {:cursor "pointer"
+   :text-decoration "none"
+   ::stylefy/manual [[:.formatting {:color (color :body-text-color :opacity-low)}]
+                     [:.contents {:color (color :link-color)
+                                  :text-decoration "none"}]
+                     [:&:hover [:.contents {:text-decoration "underline"}]]]})
 
 
 (def block-ref
@@ -197,21 +207,21 @@
                                                       :href   url
                                                       :target "_blank"})
                               text])
-     :autolink             (fn [{:keys [text target]}]
-                             [:span
-                              [:span {:class "formatting"} "<"]
-                              [:a (use-style url-link {:class  "url-link"
-                                                       :href target
-                                                       :target "_blank"})
-                               text]
-                              [:span {:class "formatting"} ">"]])
      :link                 (fn [{:keys [text target title]}]
-                             [:a (cond-> (use-style url-link {:class  "url-link"
+                             [:a (cond-> (use-style url-link {:class  "url-link contents"
                                                               :href target
                                                               :target "_blank"})
                                    (string? title)
                                    (assoc :title title))
                               text])
+     :autolink             (fn [{:keys [text target]}]
+                             [:span (use-style autolink)
+                              [:span {:class "formatting"} "<"]
+                              [:a {:class  "autolink contents"
+                                   :href target
+                                   :target "_blank"}
+                               text]
+                              [:span {:class "formatting"} ">"]])
      :paragraph            (fn [& contents]
                              (apply conj [:p] contents))
      :bold                 (fn [& contents]

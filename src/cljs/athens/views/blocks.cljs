@@ -293,8 +293,45 @@
                                           :color (color :background-color)}]]
                               [:&:active {:transform "scale(0.9)"}]]]
 
-                     [:mark.contents.highlight {:padding "0 2px"
-                                                :background-color "#ffeb7a"}]]})
+                     [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0"
+                                               :color (color :body-text-color :opacity-higher)
+                                               :font-weight "500"}]
+                     [:h1 {:padding "0"
+                           :margin-block-start "-0.1em"}]
+                     [:h2 {:padding "0"}]
+                     [:h3 {:padding "0"}]
+                     [:h4 {:padding "0.25em 0"}]
+                     [:h5 {:padding "1em 0"}]
+                     [:h6 {:text-transform "uppercase"
+                           :letter-spacing "0.06em"
+                           :padding "1em 0"}]
+                     [:p {:margin "0"
+                          :padding-bottom "1em"}]
+                     [:blockquote {:margin-inline "0.5em"
+                                   :margin-block "0.125rem"
+                                   :padding-block "calc(0.5em - 0.125rem - 0.125rem)"
+                                   :padding-inline "1.5em"
+                                   :border-radius "0.25em"
+                                   :background (color :background-minus-1)
+                                   :border-inline-start [["0.25em solid" (color :body-text-color :opacity-lower)]]
+                                   :color (color :body-text-color :opacity-high)}
+                      [:p {:padding-bottom "1em"}]
+                      [:p:last-child {:padding-bottom "0"}]]
+                     [:.CodeMirror {:background (color :background-minus-1)
+                                    :margin "0.125rem 0.5rem"
+                                    :border-radius "0.25rem"
+                                    :font-size "85%"
+                                    :color (color :body-text-color)
+                                    :font-family "IBM Plex Mono"}]
+                     [:.CodeMirror-gutters {:border-right "1px solid transparent"
+                                            :background (color :background-minus-1)}]
+                     [:.CodeMirror-cursor {:border-left-color (color :link-color)}]
+                     [:.CodeMirror-lines {:padding 0}]
+                     [:.CodeMirror-linenumber {:color (color :body-text-color :opacity-med)}]
+
+                     [:mark.contents.highlight {:padding "0 0.2em"
+                                                :border-radius "0.125rem"
+                                                :background-color (color :highlight-color)}]]})
 
 
 (stylefy/class "block-content" block-content-style)
