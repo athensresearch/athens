@@ -1698,6 +1698,14 @@
                                         embed-id (str "-embed-" embed-id)) n]))]})))
 
 
+(reg-event-fx
+ :paste-verbatim
+ (fn [_ [_ uid text]]
+   (let [tx-data [{:db/id        [:block/uid uid]
+                   :block/string text}]]
+     {:dispatch [:transact tx-data]})))
+
+
 (defn left-sidebar-drop-above
   [s-order t-order]
   (let [source-eid (d/q '[:find ?e .

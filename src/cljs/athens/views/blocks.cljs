@@ -560,10 +560,21 @@
                                                    (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
             items)
-      :else
-      (when (and line-breaks no-shift)
+
+      (and line-breaks no-shift)
+      (do
         (.. e preventDefault)
-        (dispatch [:paste uid text-data])))))
+        (dispatch [:paste uid text-data]))
+
+      ;; NOTE this unfortunately rarely work, because Cmd+Shift+V is not triggering paste event
+      ;; To get this to work you'll need to hold Shift and then paste from edit menu.
+      (not no-shift)
+      (do
+        (.. e preventDefault)
+        (dispatch [:paste-verbatim uid text-data]))
+
+      :else
+      nil)))
 
 
 (defn textarea-change
