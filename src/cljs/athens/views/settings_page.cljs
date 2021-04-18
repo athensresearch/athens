@@ -3,12 +3,14 @@
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
     [athens.electron :as electron]
+    [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [goog.functions :as goog-functions]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy])
   (:require-macros
@@ -254,6 +256,32 @@
   [:div (stylefy/use-style settings-page-styles) child])
 
 
+(defn handle-user-name-change
+  [e]
+  (dispatch [:user/set :name (js-event->val e)])
+  (js/localStorage.setItem "user/name" (js-event->val e)))
+
+
+(defn remote-username-comp
+  []
+  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
+        remote?           (:default? remote-graph-conf)]
+    [setting-wrapper
+     (when (not remote?) {:disabled true})
+     [:<>
+      [:header
+       [:h3 "Username"]
+       [:span.glance (:name @(subscribe [:user/current]))]]
+      [:main
+       [textinput/textinput {:type         "text"
+                             :placeholder  "Username"
+                             :disabled     (not remote?)
+                             :on-blur      handle-user-name-change
+                             :defaultValue (:name @(subscribe [:user/current]))}]
+       [:aside
+        [:p "For now, a username is only needed if you are connected to a server."]]]]]))
+
+
 (defn settings-page
   []
   (let [s (r/atom (init-state))]
@@ -263,4 +291,5 @@
       [email-comp s]
       [monitoring-comp s]
       [autosave-comp s]
-      [backups-comp s]]]))
+      [backups-comp s]
+      [remote-username-comp]]]))

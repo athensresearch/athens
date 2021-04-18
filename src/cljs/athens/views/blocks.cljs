@@ -15,6 +15,7 @@
     [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center specter-recursive-path]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [athens.views.presence :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -899,6 +900,8 @@
            :on-drag-over  (fn [e] (block-drag-over e block state))
            :on-drag-leave (fn [e] (block-drag-leave e block state))
            :on-drop       (fn [e] (block-drop e block state))}
+
+          [presence/presence-popover-info uid {:inline? true}]
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
