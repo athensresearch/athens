@@ -199,8 +199,16 @@
 (defmethod event-msg-handler :dat.sync.client/recv-remote-tx
   [{:keys [?data]}]
   (let [[uid tx-data] (second ?data)]
-    (when (not= cur-random uid)
-      (dat-s/apply-remote-tx! tx-data))))
+    ;; If the current user sent the retract txn we don't
+    ;; want that same information re-transacted as this is already
+    ;; done locally and synced. Ent might be completely retracted
+    ;; already and will throw error
+    (cond->> tx-data
+      (= cur-random uid)
+      (remove #(contains? #{:db/retract :db/retractEntity}
+                          (first %)))
+
+      true dat-s/apply-remote-tx!)))
 
 
 (defmethod event-msg-handler :dat.sync.client/bootstrap
