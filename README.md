@@ -87,11 +87,7 @@ Athens is here today because of our Sponsors and Contributors. Thank you.
 
 ## Contributors
 
-Developers
-
-
 ![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
 
-Designers: https://www.figma.com/file/iCXP6z7H5IAQ6xyFr5AbZ7/Product-Design-Sandbox?node-id=0%3A1
+# [Athens is Hiring](https://www.notion.so/athensresearch/Athens-is-Hiring-Job-Descriptions-7f52ac86e1e1406f93624503e226dfe6#2a769f1161d043e2a8ccb90fe4828654)
 
-Plus everyone who's commented on GitHub, Discord, Twitter... the community!
