@@ -237,8 +237,7 @@
                      [:> Tab {:label "Create Local"}]
                      [:> Tab {:label "Join Remote"}]]
                     (cond
-                      (or (= 2 (:tab-value @state))
-                          (:remote? @state))
+                      (= 2 (:tab-value @state))
                       [join-remote-comp remote-graph-conf]
 
                       (= 1 (:tab-value @state))
