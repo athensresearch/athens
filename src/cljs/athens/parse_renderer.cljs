@@ -301,22 +301,25 @@
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string uid]
-  (js/console.group string)
+  (when config/measure-parser?
+    (js/console.group string))
   (let [pt-n-1     (js/performance.now)
         result     (parser-impl/staged-parser->ast string)
         pt-n-2     (js/performance.now)
-        pt-n-total (- pt-n-2 pt-n-1)
-        pt-o-1     (js/performance.now)
-        tmp        (old-parser/parse-to-ast string)
-        pt-o-2     (js/performance.now)
-        pt-o-total (- pt-o-2 pt-o-1)
-        pt-ratio   (/ pt-n-total pt-o-total)]
-    (if (< 1 pt-ratio)
-      (js/console.warn "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio)
-      (js/console.log "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio))
+        pt-n-total (- pt-n-2 pt-n-1)]
+    (when config/measure-parser?
+      (let [pt-o-1     (js/performance.now)
+            _tmp       (old-parser/parse-to-ast string)
+            pt-o-2     (js/performance.now)
+            pt-o-total (- pt-o-2 pt-o-1)
+            pt-ratio   (/ pt-n-total pt-o-total)]
+        (if (< 1 pt-ratio)
+          (js/console.warn "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio)
+          (js/console.log "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio))))
     (if (insta/failure? result)
       (do
-        (js/console.groupEnd)
+        (when config/measure-parser?
+          (js/console.groupEnd))
         [:abbr {:title (pr-str (insta/get-failure result))
                 :style {:color "red"}}
          string])
@@ -324,6 +327,7 @@
             view     (transform result uid)
             vt-2     (js/performance.now)
             vt-total (- vt-2 vt-1)]
-        (js/console.log "view creation:" vt-total)
-        (js/console.groupEnd)
+        (when config/measure-parser?
+          (js/console.log "view creation:" vt-total)
+          (js/console.groupEnd))
         view))))

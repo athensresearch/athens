@@ -5,10 +5,11 @@
   2nd pass: inline structure
   3rd pass: raw urls"
   (:require
+    #?(:cljs [athens.config :as config])
     [clojure.string :as string]
     [clojure.walk :as walk]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
-       :clj  [instaparse.core :as insta :refer [defparser]]))
+       :clj [instaparse.core :as insta :refer [defparser]]))
   #?(:clj
      (:import
        (java.time
@@ -411,7 +412,8 @@ newline = #'\\n'
        (let [t-0 (js/performance.now)
              result (fn-to-time arg)
              t-1 (js/performance.now)]
-         (js/console.log name ", time:" (- t-1 t-0))
+         (when config/measure-parser?
+           (js/console.log name ", time:" (- t-1 t-0)))
          result)
        :clj
        (let [t-0 (.getNano (LocalDateTime/now))
