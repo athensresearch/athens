@@ -1,6 +1,6 @@
 (ns athens.views
   (:require
-    ["@material-ui/core/SnackBar" :as SnackBar]
+    ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.db :as db]
     [athens.style :refer [color]]
@@ -96,7 +96,7 @@
      daily-notes-panel)])
 
 
-(def m-snackbar (r/adapt-react-class (.-default SnackBar)))
+(def m-snackbar (r/adapt-react-class (.-default Snackbar)))
 
 
 (rf/reg-sub
