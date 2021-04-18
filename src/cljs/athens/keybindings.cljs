@@ -15,7 +15,7 @@
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [throttle]]
+    [goog.functions :refer [throttle #_debounce]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
