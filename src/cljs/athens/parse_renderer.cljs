@@ -292,7 +292,9 @@
                                                        {:throwOnError false}))
                                 (catch :default e
                                   (js/console.warn "Unexpected KaTeX error" e)
-                                  (aset el "innerHTML" text)))))}])}
+                                  (aset el "innerHTML" text)))))}])
+     :newline (fn [_]
+                " ")}
    tree))
 
 

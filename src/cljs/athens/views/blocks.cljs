@@ -566,8 +566,6 @@
         (.. e preventDefault)
         (dispatch [:paste uid text-data]))
 
-      ;; NOTE this unfortunately rarely work, because Cmd+Shift+V is not triggering paste event
-      ;; To get this to work you'll need to hold Shift and then paste from edit menu.
       (not no-shift)
       (do
         (.. e preventDefault)
