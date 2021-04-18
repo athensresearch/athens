@@ -169,15 +169,18 @@
   [tree uid]
   (insta/transform
     {:block   (fn [& contents]
-                (apply clean-single-p-appending [:span {:class "block"}] contents))
+                (apply clean-single-p-appending
+                       [:span {:class "block"}]
+                       contents))
      :heading (fn [{n :n} & contents]
-                (clean-single-p-appending [({1 :h1
-                                             2 :h2
-                                             3 :h3
-                                             4 :h4
-                                             5 :h5
-                                             6 :h6} n)]
-                                          contents))
+                (apply clean-single-p-appending
+                       [({1 :h1
+                          2 :h2
+                          3 :h3
+                          4 :h4
+                          5 :h5
+                          6 :h6} n)]
+                       contents))
 
     ;; for more information regarding how custom components are parsed, see `doc/components.md`
      :component            (fn [& contents]
