@@ -35,14 +35,12 @@
    ["react-codemirror2" :rename {UnControlled CodeMirror}]
    [athens.db :as db]
    [athens.config :as config]
-   [athens.parser :as old-parser]
    [athens.parser.impl :as parser-impl]
    [athens.router :refer [navigate-uid]]
    [athens.style :refer [color OPACITIES]]
    [clojure.string :as str]
    [instaparse.core :as insta]
    [posh.reagent :refer [pull #_q]]
-   [reagent.core :as reagent]
    [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -182,7 +180,8 @@
                           6 :h6} n)]
                        contents))
 
-    ;; for more information regarding how custom components are parsed, see `doc/components.md`
+     ;; for more information regarding how custom components are parsed, see
+     ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (component (first contents) uid))
      :page-link            (fn [& title-coll] (render-page-link title-coll))
@@ -254,6 +253,7 @@
                                                  ", text:" text))
                                [:pre
                                 [:code text]]
+                               ;; TODO: Followup issue: #989 "Integrate with CodeMirror for code blocks"
                                #_[:> CodeMirror {:value     text
                                                 :options   {:mode              mode
                                                             :lineNumbers       true
@@ -308,14 +308,7 @@
         pt-n-2     (js/performance.now)
         pt-n-total (- pt-n-2 pt-n-1)]
     (when config/measure-parser?
-      (let [pt-o-1     (js/performance.now)
-            _tmp       (old-parser/parse-to-ast string)
-            pt-o-2     (js/performance.now)
-            pt-o-total (- pt-o-2 pt-o-1)
-            pt-ratio   (/ pt-n-total pt-o-total)]
-        (if (< 1 pt-ratio)
-          (js/console.warn "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio)
-          (js/console.log "perf new:" pt-n-total ", old:" pt-o-total ", ratio:" pt-ratio))))
+      (js/console.log "parsing time:" pt-n-total))
     (if (insta/failure? result)
       (do
         (when config/measure-parser?
