@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.69](https://github.com/athensresearch/athens/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2021-04-18)
+
+
+### Features
+
+* self-hosted real-time collab and presence ([#930](https://github.com/athensresearch/athens/issues/930)) ([8393c47](https://github.com/athensresearch/athens/commit/8393c4764d7866cf1fb8b2651c9bac8263077e7c))
+
+
+### Bug Fixes
+
+* expand the breadcrumb when [[link]], don't navigate ([#976](https://github.com/athensresearch/athens/issues/976)) ([2d3c086](https://github.com/athensresearch/athens/commit/2d3c08624340494040e268cce4ae0688fda16422))
+* non-formatted breadcrumb on page block ([#972](https://github.com/athensresearch/athens/issues/972)) ([c875b3d](https://github.com/athensresearch/athens/commit/c875b3d6b02256e949c0e105388eff79849403cc)), closes [#970](https://github.com/athensresearch/athens/issues/970)
+
+
+### Performance
+
+* **athena:** debounce athena search ([#975](https://github.com/athensresearch/athens/issues/975)) ([0eef6e2](https://github.com/athensresearch/athens/commit/0eef6e234aa50c9c1d56a0f6c808006eb6093e5c))
+
 ## [1.0.0-beta.68](https://github.com/athensresearch/athens/compare/v1.0.0-beta.66...v1.0.0-beta.68) (2021-04-12)
 
 

@@ -149,6 +149,11 @@
      :alt      alt}))
 
 
+(defn js-event->val
+  [event]
+  (.. event -target -value))
+
+
 ;; -- Date and Time ------------------------------------------------------
 
 
