@@ -258,7 +258,9 @@
 
     [:block
      [:paragraph
-      [:url-link {:url "https://raw-link.com"} "https://raw-link.com"]]]
+      [:span
+       [:link {:target "https://raw-link.com"
+               :text   "https://raw-link.com"}]]]]
     "https://raw-link.com"))
 
 
