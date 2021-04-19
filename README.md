@@ -21,25 +21,17 @@ Athens is an open-source knowledge graph for research and notetaking. Open-sourc
 
 # Private
 
-You can self-host Athens as a desktop app on your filesystem or with your own server.
-
+You can Athens as a local desktop app on your filesystem or with a [self-hosted server](https://github.com/athensresearch/athens-backend).
 
 # Extensible
+
+You can modify Athens's source code. A plugin system with custom themes, keybdindings, and integrations is also planned.
+
 # Community-Driven
 
-- The freedom to self-host
-- The freedom to use any previous version of Athens for the rest of time
-- Insurance against vendor lock-in
-- Transparency and direct feedback loops in the [development](https://loom.com/share/folder/5582cfd8099a4dbda63b61213d5d9152) [process](https://github.com/athensresearch/athens/issues)
+Athens has a Discord with over 2,200 members, sharing workflows and ideas for knowledge management. We also have an active contributor community and are open to contributions from the public.
 
-### Local-First
-
-- 0% data loss
-- 0% downtime
-- 100% availability
-- 100% local and fast unlike server-first apps (*cough* Notion and Roam)
-
-## Knowledge Graph
+# Problem and Solution
 
 The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
