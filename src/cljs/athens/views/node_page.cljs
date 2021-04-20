@@ -85,6 +85,7 @@
                                     :z-index 3
                                     :display "block"
                                     :opacity "1"}]
+                     [:abbr {:z-index 4}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 

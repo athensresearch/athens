@@ -1598,17 +1598,10 @@
                          lines)
         ;; Generate blocks with tempids
         blocks      (map-indexed (fn [idx x]
-                                   (let [h1-re #"^#{1}\s"
-                                         h2-re #"^#{2}\s"
-                                         h3-re #"^#{3}\s"]
-                                     (cond->
-                                       {:db/id        (dec (* -1 idx))
-                                        :block/string x
-                                        :block/open   true
-                                        :block/uid    (gen-block-uid)}
-                                       (re-find h1-re x) (assoc :block/header 1 :block/string (string/replace x h1-re ""))
-                                       (re-find h2-re x) (assoc :block/header 2 :block/string (string/replace x h2-re ""))
-                                       (re-find h3-re x) (assoc :block/header 3 :block/string (string/replace x h3-re "")))))
+                                   {:db/id        (dec (* -1 idx))
+                                    :block/string x
+                                    :block/open   true
+                                    :block/uid    (gen-block-uid)})
                                  sanitize)
         ;; Count blocks
         n           (count blocks)
@@ -1703,6 +1696,30 @@
                             n     (count string)]
                         [:editing/uid (cond-> uid
                                         embed-id (str "-embed-" embed-id)) n]))]})))
+
+
+(reg-event-fx
+ :paste-verbatim
+ (fn [_ [_ uid text]]
+   (let [{:keys [start value]} (keybindings/destruct-target js/document.activeElement)
+         block-empty?          (string/blank? value)
+         block-start?          (zero? start)
+         new-string            (cond
+
+                                 block-empty?
+                                 text
+
+                                 (and (not block-empty?)
+                                      block-start?)
+                                 (str text value)
+
+                                 :else
+                                 (str (subs value 0 start)
+                                      text
+                                      (subs value start)))
+         tx-data [{:db/id        [:block/uid uid]
+                   :block/string new-string}]]
+     {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above

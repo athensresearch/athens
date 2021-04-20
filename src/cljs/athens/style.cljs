@@ -150,6 +150,11 @@
    :width    "100vw"})
 
 
+(def codemirror-styles
+  {:z-index 10
+   :height  "min-content"})
+
+
 (defn permute-color-opacities
   "Permutes all colors and opacities.
   There are 5 opacities and 12 colors. There are 72 keys (includes default opacity, 1.0)"
@@ -173,6 +178,7 @@
   (stylefy/init)
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
+  (stylefy/class "CodeMirror" codemirror-styles)
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
