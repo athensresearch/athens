@@ -4,6 +4,7 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.util :as util]
+    [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -73,10 +74,12 @@
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
               db      (dt/read-transit-str read-db)]
+          (dispatch-sync [:remote-graph/set-conf :default? false])
           (dispatch-sync [:init-rfdb])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
           (dispatch [:db/update-filepath open-file])
+          (dispatch [:remote-graph-conf/load])
           (dispatch [:loading/unset])))))
 
 
@@ -113,7 +116,7 @@
      (save-image "" "" item extension))
     ([head tail item extension]
      (let [curr-db-filepath @(subscribe [:db/filepath])
-           _ (prn head tail curr-db-filepath item extension)
+           _                (prn head tail curr-db-filepath item extension)
            curr-db-dir      @(subscribe [:db/filepath-dir])
            img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
            base-dir         (.dirname path curr-db-filepath)
@@ -143,8 +146,8 @@
           block     (db/get-block [:block/uid target-uid])
           new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
           tx-data   (if (= drag-target :child)
-                      (let [reindex   (db/inc-after (:db/id block) -1)
-                            new-children (conj reindex new-block)
+                      (let [reindex          (db/inc-after (:db/id block) -1)
+                            new-children     (conj reindex new-block)
                             new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
                         new-target-block)
                       (let [index        (case drag-target
@@ -180,6 +183,18 @@
       (.dirname path (:db/filepath db))))
 
 
+  (reg-sub
+    :db/remote-graph-conf
+    (fn [db _]
+      (:db/remote-graph-conf db)))
+
+
+  (reg-sub
+    :db/remote-graph
+    (fn [db _]
+      (:db/remote-graph db)))
+
+
   ;;; Events
 
 
@@ -193,9 +208,14 @@
 
   (reg-event-fx
     :local-storage/get-db-filepath
-    [(inject-cofx :local-storage "db/filepath")]
-    (fn [{:keys [local-storage]} _]
-      {:dispatch [:db/update-filepath local-storage]}))
+    [(inject-cofx :local-storage "db/filepath")
+     (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
+                                      :key :remote-graph-conf})]
+    (fn [{:keys [local-storage remote-graph-conf]} _]
+      (if (some-> remote-graph-conf read-string
+                  :default?)
+        {:dispatch [:start-socket]}
+        {:dispatch [:db/update-filepath local-storage]})))
 
 
   (reg-event-fx
@@ -321,6 +341,10 @@
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
+                                     ;; remote graph
+                                     {:when        :seen?
+                                      :events      :start-socket}
+
                                      ;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-new-db
@@ -345,7 +369,7 @@
                                       :dispatch-fn (fn [_]
                                                      (let [schemas    (d/q '[:find ?e ?v
                                                                              :where [?e :schema/version ?v]]
-                                                                          @db/dsdb)
+                                                                           @db/dsdb)
                                                            schema-cnt (count schemas)]
                                                        (cond
                                                          (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
@@ -394,30 +418,31 @@
     If the write operation succeeds, a backup is created and index.transit is overwritten.
     User should eventually have MANY backups files. It's their job to manage these backups :)"
     [copy?]
-    (let [filepath     @(subscribe [:db/filepath])
-          data         (dt/write-transit-str @db/dsdb)
-          r            (.. stream -Readable (from data))
-          dirname      (.dirname path filepath)
-          time         (.. (js/Date.) getTime)
-          bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
-          bkp-filepath (.resolve path dirname bkp-filename)
-          w            (.createWriteStream fs bkp-filepath)
-          error-cb     (fn [err]
-                         (when err
-                           (js/alert (js/Error. err))
-                           (js/console.error (js/Error. err))))]
-      (.setEncoding r "utf8")
-      (.on r "error" error-cb)
-      (.on w "error" error-cb)
-      (.on w "finish" (fn []
-                        ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
-                        ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
-                        (when copy?
-                          (.. fs (copyFileSync bkp-filepath filepath))
-                          (let [mtime (.-mtime (.statSync fs filepath))]
-                            (dispatch-sync [:db/update-mtime mtime])
-                            (dispatch [:db/sync])))))
-      (.pipe r w)))
+    (when-not @(subscribe [:socket-status])
+      (let [filepath     @(subscribe [:db/filepath])
+            data         (dt/write-transit-str @db/dsdb)
+            r            (.. stream -Readable (from data))
+            dirname      (.dirname path filepath)
+            time         (.. (js/Date.) getTime)
+            bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
+            bkp-filepath (.resolve path dirname bkp-filename)
+            w            (.createWriteStream fs bkp-filepath)
+            error-cb     (fn [err]
+                           (when err
+                             (js/alert (js/Error. err))
+                             (js/console.error (js/Error. err))))]
+        (.setEncoding r "utf8")
+        (.on r "error" error-cb)
+        (.on w "error" error-cb)
+        (.on w "finish" (fn []
+                          ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
+                          ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
+                          (when copy?
+                            (.. fs (copyFileSync bkp-filepath filepath))
+                            (let [mtime (.-mtime (.statSync fs filepath))]
+                              (dispatch-sync [:db/update-mtime mtime])
+                              (dispatch [:db/sync])))))
+        (.pipe r w))))
 
 
   (def debounce-write-db

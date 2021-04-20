@@ -1,18 +1,22 @@
 (ns athens.effects
   (:require
+    [athens.config :as config]
+    [athens.datsync-utils :as dat-s]
     [athens.db :as db]
     [athens.util :as util]
     [athens.walk :as walk]
+    [athens.ws-client :as ws]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
     [clojure.string :as str]
+    [dat.sync.client]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [posh.reagent :as p :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx]]
+    [re-frame.core :refer [dispatch reg-fx subscribe]]
     [stylefy.core :as stylefy]))
 
 
@@ -210,28 +214,51 @@
                      (.. js/posthog (capture "link-created", (clj->js x))))))))
 
 
+(defn dev-pprint
+  [data]
+  (when config/debug? (pprint data)))
+
+
 (defn walk-transact
   [tx-data]
-  (prn "TX RAW INPUTS")                                     ;; event tx-data
-  (pprint tx-data)
-  (try
-    (let [with-tx (d/with @db/dsdb tx-data)]
-      (prn "TX WITH")                                       ;; tx-data normalized by datascript to flat datoms
-      (pprint (:tx-data with-tx))
-      (let [more-tx-data  (parse-for-links with-tx)
-            final-tx-data (vec (concat tx-data more-tx-data))]
-        (prn "TX MORE")                                     ;; parsed tx-data, e.g. asserting/retracting pages and references
-        (pprint more-tx-data)
-        (prn "TX FINAL INPUTS")                             ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-        (pprint final-tx-data)
-        (let [outputs (:tx-data (transact! db/dsdb final-tx-data))]
-          (ph-link-created! outputs)
-          (prn "TX OUTPUTS")
-          (pprint outputs))))
+  (let [socket-status     (subscribe [:socket-status])
+        remote-graph-conf (subscribe [:db/remote-graph-conf])]
+    (if (= @socket-status :closed)
+      (dispatch [:show-snack-msg
+                 {:msg "Graph is now read only"}])
+      (do (dev-pprint "TX RAW INPUTS")                             ;; event tx-data
+          (dev-pprint tx-data)
+          (try
+            (let [with-tx (d/with @db/dsdb tx-data)]
+              (dev-pprint "TX WITH")                               ;; tx-data normalized by datascript to flat datoms
+              (dev-pprint (:tx-data with-tx))
+              (let [more-tx-data  (parse-for-links with-tx)
+                    final-tx-data (vec (concat tx-data more-tx-data))]
+                (dev-pprint "TX MORE")                             ;; parsed tx-data, e.g. asserting/retracting pages and references
+                (dev-pprint more-tx-data)
+                (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+                (dev-pprint final-tx-data)
+                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
 
-    (catch js/Error e
-      (js/alert (str e))
-      (prn "EXCEPTION" e))))
+                  ;; check remote data against previous db
+                  (when (and (:default? @remote-graph-conf)
+                             (= @socket-status :running))
+                    ((:send-fn ws/channel-socket)
+                     [:dat.sync.client/tx
+                      [ws/cur-random
+                       (dat-s/remote-tx
+                         db-before
+                         (mapv (fn [[e a v _t sig?]]
+                                 [(if sig? :db/add :db/retract) e a v])
+                               tx-data))]]))
+
+                  (ph-link-created! tx-data)
+                  (dev-pprint "TX OUTPUTS")
+                  (dev-pprint tx-data))))
+
+            (catch js/Error e
+              (js/alert (str e))
+              (js/console.log "EXCEPTION" e)))))))
 
 
 (reg-fx
@@ -352,3 +379,11 @@
   :alert/js!
   (fn [message]
     (js/alert message)))
+
+
+(reg-fx
+  :right-sidebar/scroll-top
+  (fn []
+    (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
+      (when right-sidebar
+        (set! (.. right-sidebar -scrollTop) 0)))))

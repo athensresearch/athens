@@ -265,9 +265,15 @@
                                               (compare
                                                 [(get-in new-items [k1 :index]) k2]
                                                 [(get-in new-items [k2 :index]) k1]))) inc-items)]
-      (cond-> {:db (assoc db :right-sidebar/items sorted-items)}
-        (not (:right-sidebar/open db))
-        (assoc :dispatch [:right-sidebar/toggle])))))
+      {:db         (assoc db :right-sidebar/items sorted-items)
+       :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]]})))
+
+
+(reg-event-fx
+  :right-sidebar/scroll-top
+  (fn []
+    {:right-sidebar/scroll-top nil}))
 
 
 (reg-event-fx
@@ -420,8 +426,9 @@
           retract-vecs      (mapcat #(retract-uid-recursively %) sanitize-selected)
           reindex-last-selected-parent (delete-selected sanitize-selected)
           tx-data           (concat retract-vecs reindex-last-selected-parent)]
-      {:dispatch [:transact tx-data]
-       :db       (assoc db :selected/items [])})))
+      {:fx [[:dispatch [:transact tx-data]]
+            [:dispatch [:editing/uid nil]]]
+       :db (assoc db :selected/items [])})))
 
 
 ;; Alerts

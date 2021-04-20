@@ -30,7 +30,9 @@
                  [garden "1.3.10"]
                  [stylefy "2.2.0"]
                  [tick "0.4.26-alpha"]
-                 [com.rpl/specter "1.1.3"]]
+                 [com.rpl/specter "1.1.3"]
+                 [com.taoensso/sente "1.16.2"]
+                 [datsync "0.0.1-alpha2-SNAPSHOT"]]
 
   :plugins [[lein-shell "0.5.0"]]
 
