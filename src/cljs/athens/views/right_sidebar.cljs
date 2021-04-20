@@ -219,7 +219,7 @@
                                                     :z-index          (:zindex-fixed ZINDICES)
                                                     :background-color (color :border-color)}
                                                    {:on-mouse-down #(swap! state assoc :dragging true)})]
-                                  [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
+                                  [:div (use-style sidebar-content-style {:class [(if open? "is-open" "is-closed") "right-sidebar-content"]})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
                                    ;;  [button [:> FilterList]]
