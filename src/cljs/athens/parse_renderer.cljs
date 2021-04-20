@@ -1,13 +1,8 @@
+^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
     ["katex" :as katex]
     ["katex/dist/contrib/mhchem"]
-    [athens.config :as config]
-    [athens.db :as db]
-    [athens.parser.impl :as parser-impl]
-    [athens.router :refer [navigate-uid]]
-    [athens.style :refer [color OPACITIES]]
-    [clojure.string :as str]
     #_["codemirror/addon/edit/closebrackets"]
     #_["codemirror/addon/edit/matchbrackets"]
     #_["codemirror/mode/clike/clike"]
@@ -37,9 +32,15 @@
     #_["codemirror/mode/swift/swift"]
     #_["codemirror/mode/vue/vue"]
     #_["codemirror/mode/xml/xml"]
+    #_["react-codemirror2" :rename {UnControlled CodeMirror}]
+    [athens.config :as config]
+    [athens.db :as db]
+    [athens.parser.impl :as parser-impl]
+    [athens.router :refer [navigate-uid]]
+    [athens.style :refer [color OPACITIES]]
+    [clojure.string :as str]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
-    #_["react-codemirror2" :rename {UnControlled CodeMirror}]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
