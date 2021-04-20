@@ -379,3 +379,11 @@
   :alert/js!
   (fn [message]
     (js/alert message)))
+
+
+(reg-fx
+  :right-sidebar/scroll-top
+  (fn []
+    (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
+      (when right-sidebar
+        (set! (.. right-sidebar -scrollTop) 0)))))
