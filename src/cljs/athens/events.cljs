@@ -420,8 +420,9 @@
           retract-vecs      (mapcat #(retract-uid-recursively %) sanitize-selected)
           reindex-last-selected-parent (delete-selected sanitize-selected)
           tx-data           (concat retract-vecs reindex-last-selected-parent)]
-      {:dispatch [:transact tx-data]
-       :db       (assoc db :selected/items [])})))
+      {:fx [[:dispatch [:transact tx-data]]
+            [:dispatch [:editing/uid nil]]]
+       :db (assoc db :selected/items [])})))
 
 
 ;; Alerts
