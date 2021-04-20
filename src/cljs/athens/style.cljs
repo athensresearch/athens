@@ -20,6 +20,8 @@
    :background-plus-1   "#222"
    :background-plus-2   "#333"
 
+   :shadow-color  "rgba(0,0,0,0.16)"
+
    :graph-control-bg    "#272727"
    :graph-control-color "white"
    :graph-node-normal   "#909090"
@@ -42,6 +44,8 @@
    :background-color    "#FFFFFF"
    :background-minus-1  "#FAF8F6"
    :background-minus-2  "#EFEDEB"
+
+   :shadow-color  "rgba(0,0,0,0.16)"
 
    :graph-control-bg    "#f9f9f9"
    :graph-control-color "black"

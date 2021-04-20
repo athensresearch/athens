@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.70](https://github.com/athensresearch/athens/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2021-04-20)
+
+
+### Bug Fixes
+
+* Delete a block and "undo" cannot bring it back ([#991](https://github.com/athensresearch/athens/issues/991)) ([a7958fc](https://github.com/athensresearch/athens/commit/a7958fcfbfcb326cdaa16e6a0391dbd1a0a2dc65))
+* **right-sidebar:** scroll to top if open another page on right ([#992](https://github.com/athensresearch/athens/issues/992)) ([4fff704](https://github.com/athensresearch/athens/commit/4fff7048c9a295f69be0debaa8a657f12961b573))
+
+
+### Enhancements
+
+* **db-picker:** Polish db dialog ([#993](https://github.com/athensresearch/athens/issues/993)) ([a104161](https://github.com/athensresearch/athens/commit/a10416180597bada4752229421427069637bb604))
+
 ## [1.0.0-beta.69](https://github.com/athensresearch/athens/compare/v1.0.0-beta.68...v1.0.0-beta.69) (2021-04-18)
 
 
