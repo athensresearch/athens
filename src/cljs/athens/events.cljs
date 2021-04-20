@@ -1701,8 +1701,24 @@
 (reg-event-fx
  :paste-verbatim
  (fn [_ [_ uid text]]
-   (let [tx-data [{:db/id        [:block/uid uid]
-                   :block/string text}]]
+   (let [{:keys [start value]} (keybindings/destruct-target js/document.activeElement)
+         block-empty?          (string/blank? value)
+         block-start?          (zero? start)
+         new-string            (cond
+
+                                 block-empty?
+                                 text
+
+                                 (and (not block-empty?)
+                                      block-start?)
+                                 (str text value)
+
+                                 :else
+                                 (str (subs value 0 start)
+                                      text
+                                      (subs value start)))
+         tx-data [{:db/id        [:block/uid uid]
+                   :block/string new-string}]]
      {:dispatch [:transact tx-data]})))
 
 
