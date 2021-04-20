@@ -1,5 +1,7 @@
 (ns athens.parse-renderer
   (:require
+    ["katex" :as katex]
+    ["katex/dist/contrib/mhchem"]
     [athens.config :as config]
     [athens.db :as db]
     [athens.parser.impl :as parser-impl]
@@ -36,8 +38,6 @@
     #_["codemirror/mode/vue/vue"]
     #_["codemirror/mode/xml/xml"]
     [instaparse.core :as insta]
-    ["katex" :as katex]
-    ["katex/dist/contrib/mhchem"]
     [posh.reagent :refer [pull #_q]]
     #_["react-codemirror2" :rename {UnControlled CodeMirror}]
     [stylefy.core :as stylefy :refer [use-style]]))

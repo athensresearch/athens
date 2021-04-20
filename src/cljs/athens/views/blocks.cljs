@@ -675,7 +675,7 @@
   (let [{:block/keys [uid original-uid header]} block
         editing? (subscribe [:editing/is-editing uid])
         selected-items (subscribe [:selected/items])]
-    (fn [block _state]
+    (fn [_block _state]
       (let [font-size (case header
                         1 "2.1em"
                         2 "1.7em"
