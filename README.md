@@ -31,7 +31,7 @@ You can modify Athens's source code. A plugin system with custom themes, keybdin
 
 Athens has a Discord with over 2,200 members, sharing workflows and ideas for knowledge management. We also have an active contributor community and are open to contributions from the public.
 
-# Problem and Solution
+# Problem
 
 The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
