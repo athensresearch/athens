@@ -16,6 +16,8 @@
     [athens.views.textinput :as textinput]
     [athens.ws-client :as ws-client]
     [cljs.reader :refer [read-string]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [komponentit.modal :as modal]
@@ -53,7 +55,7 @@
    :align-self "stretch"
    :overflow "hidden"
    :transition "box-shadow 0.2s ease, filter 0.2s ease;"
-   :background (color :background-plus-1)
+   :background (color :background-color)
    :padding "1px"
    ::stylefy/manual [[:&:hover {}]
                      [:button {:text-align "center"
@@ -255,40 +257,43 @@
         close-modal       (fn []
                             (when-not @loading
                               (dispatch [:modal/toggle])))
+        el (.. js/document (querySelector "#app"))
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         db-filepath       (subscribe [:db/filepath])
         state             (r/atom {:input     ""
                                    :remote?   (:default? @remote-graph-conf)
                                    :tab-value 0})]
     (fn []
-      [:div (use-style modal-style)
-       [modal/modal
-        {:title    [:div.modal__title
-                    [:> LibraryBooks]
-                    [:h4 "Database"]
-                    (when-not @loading
-                      [button {:on-click close-modal} [:> Close]])]
-         :content  [:div (use-style modal-contents-style)
-                    [:div (use-style picker-style)
-                     [:button {:class (when (= 0 (:tab-value @state)) "active")
-                               :on-click (fn [] (swap! state assoc :tab-value 0))}
-                      [:> Folder]
-                      [:span "Open"]]
-                     [:button {:class (when (= 1 (:tab-value @state)) "active")
-                               :on-click (fn [] (swap! state assoc :tab-value 1))}
-                      [:> AddBox]
-                      [:span "New"]]
-                     [:button {:class (when (= 2 (:tab-value @state)) "active")
-                               :on-click (fn [] (swap! state assoc :tab-value 2))}
-                      [:> Group]
-                      [:span "Join"]]]
-                    (cond
-                      (= 2 (:tab-value @state))
-                      [join-remote-comp remote-graph-conf]
+      (js/ReactDOM.createPortal
+        (r/as-element [:div (use-style modal-style)
+                       [modal/modal
+                        {:title    [:div.modal__title
+                                    [:> LibraryBooks]
+                                    [:h4 "Database"]
+                                    (when-not @loading
+                                      [button {:on-click close-modal} [:> Close]])]
+                         :content  [:div (use-style modal-contents-style)
+                                    [:div (use-style picker-style)
+                                     [:button {:class (when (= 0 (:tab-value @state)) "active")
+                                               :on-click (fn [] (swap! state assoc :tab-value 0))}
+                                      [:> Folder]
+                                      [:span "Open"]]
+                                     [:button {:class (when (= 1 (:tab-value @state)) "active")
+                                               :on-click (fn [] (swap! state assoc :tab-value 1))}
+                                      [:> AddBox]
+                                      [:span "New"]]
+                                     [:button {:class (when (= 2 (:tab-value @state)) "active")
+                                               :on-click (fn [] (swap! state assoc :tab-value 2))}
+                                      [:> Group]
+                                      [:span "Join"]]]
+                                    (cond
+                                      (= 2 (:tab-value @state))
+                                      [join-remote-comp remote-graph-conf]
 
-                      (= 1 (:tab-value @state))
-                      [create-new-local state]
+                                      (= 1 (:tab-value @state))
+                                      [create-new-local state]
 
-                      (= 0 (:tab-value @state))
-                      [open-local-comp loading db-filepath])]
-         :on-close close-modal}]])))
+                                      (= 0 (:tab-value @state))
+                                      [open-local-comp loading db-filepath])]
+                         :on-close close-modal}]])
+        el))))
