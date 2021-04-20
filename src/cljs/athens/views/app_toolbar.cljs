@@ -111,6 +111,7 @@
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
+                  :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
          [separator]
@@ -121,10 +122,13 @@
             [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
             [separator]])
          [button {:on-click router/nav-daily-notes
+                  :title "Open Today's Daily Note"
                   :active   (= @route-name :home)} [:> Today]]
          [button {:on-click #(router/navigate :pages)
+                  :title "Open All Pages"
                   :active   (= @route-name :pages)} [:> FileCopy]]
          [button {:on-click #(router/navigate :graph)
+                  :title "Open Graph"
                   :active   (= @route-name :graph)} [:> BubbleChart]]
          ;; below is used for testing error tracking
          #_[button {:on-click #(throw (js/Error "error"))
@@ -139,17 +143,27 @@
            [:<>
             [presence/presence-popover-info]
             [(reagent.core/adapt-react-class FiberManualRecord)
-             {:style {:color      (color (cond
-                                           (= @socket-status :closed)
-                                           :error-color
+             {:style {:color (color (cond
+                                      (= @socket-status :closed)
+                                      :error-color
 
-                                           (or (and (:default? @remote-graph-conf)
-                                                    (= @socket-status :running))
-                                               @(subscribe [:db/synced]))
-                                           :confirmation-color
+                                      (or (and (:default? @remote-graph-conf)
+                                               (= @socket-status :running))
+                                          @(subscribe [:db/synced]))
+                                      :confirmation-color
 
-                                           :else :highlight-color))
-                      :align-self "center"}}]
+                                      :else :highlight-color))
+                      :align-self "center"}
+              :title (cond
+                       (= @socket-status :closed)
+                       "Disconnected"
+
+                       (or (and (:default? @remote-graph-conf)
+                                (= @socket-status :running))
+                           @(subscribe [:db/synced]))
+                       "Synced"
+
+                       :else "Synchronizing...")}]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
@@ -158,21 +172,26 @@
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
-            [button {:on-click #(swap! merge-open? not)}
+            [button {:on-click #(swap! merge-open? not)
+                     :title "Merge Roam Database"}
              [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
+                     :title "Open Settings"
                      :active   (= @route-name :settings)}
              [:> Settings]]
-            [button {:on-click #(dispatch [:modal/toggle])}
+            [button {:on-click #(dispatch [:modal/toggle])
+                     :title "Choose Database"}
              [:> LibraryBooks]]
             [separator]]
            [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
-         [button {:on-click #(dispatch [:theme/toggle])}
+         [button {:on-click #(dispatch [:theme/toggle])
+                  :title "Toggle Color Scheme"}
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
          [separator]
          [button {:active   @right-open?
+                  :title "Toggle Sidebar"
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
 
