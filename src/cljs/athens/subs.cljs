@@ -135,6 +135,6 @@
 
 
 (re-frame/reg-sub
- :db/remote-graph-conf
- (fn [_ _]
-   nil))
+  :db/remote-graph-conf
+  (fn [_ _]
+    nil))
