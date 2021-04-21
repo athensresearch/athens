@@ -89,8 +89,8 @@
          :else [:<>
                 (when @modal [filesystem/window])
                 [:div (stylefy/use-style app-wrapper-style)
-                 [app-toolbar/view]
-                 [left-sidebar/view]
+                 [app-toolbar/app-toolbar]
+                 [left-sidebar/left-sidebar]
                  [pages/view]
-                 [right-sidebar/view]
+                 [right-sidebar/right-sidebar]
                  [devtool-component]]])])))

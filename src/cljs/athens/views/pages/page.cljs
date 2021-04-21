@@ -8,6 +8,7 @@
 
 
 (defn page
+  "Can be a block or a node page."
   []
   (let [uid (subscribe [:current-route/uid])
         {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]

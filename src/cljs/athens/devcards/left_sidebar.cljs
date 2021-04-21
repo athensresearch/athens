@@ -2,7 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.views.buttons :refer [button]]
-    [athens.views.left-sidebar :refer [view]]
+    [athens.views.left-sidebar :refer [left-sidebar]]
     [devcards.core :refer [defcard-rg]]
     [posh.reagent :refer [transact!]]))
 
@@ -17,5 +17,5 @@
 
 (defcard-rg Left-Sidebar
   [:div {:style {:display "flex" :height "60vh"}}
-   [view]]
+   [left-sidebar]]
   {:padding false})
