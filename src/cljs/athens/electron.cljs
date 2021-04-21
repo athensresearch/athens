@@ -9,6 +9,7 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
+    [cljs.test :refer-macros [is deftest]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 
 
@@ -322,6 +323,59 @@
   ;; open or create a new starter db
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
+  
+  (def schemaTest
+  {:schema/version {}
+   :block/uid      {:db/unique :db.unique/identity}
+   :node/title     {:db/unique :db.unique/identity}
+   :attrs/lookup   {:db/cardinality :db.cardinality/many}
+   :block/children {:db/cardinality :db.cardinality/many
+                    :db/valueType :db.type/ref}
+   :block/refs     {:db/cardinality :db.cardinality/many
+                    :db/valueType :db.type/ref}}
+  )
+  
+  ;; create an empty Db for test 
+  (def test-db
+    (-> (d/empty-db schemaTest))
+  )
+  
+  ;; Update index.transit
+  (defn writeDbIndex [file filepath]
+    (let [w  (.. fs (writeFile filepath file (fn [e](dispatch [:boot/desktop]))))])
+  )
+  
+  
+  (defn open-dialog-index
+    "Allow user to open a Backfile."
+    [filepath]
+    (js/alert "Your Data file is corrupted or incorrect, Please select a Backup file")
+
+    (let [res  (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
+                                                          :filters    [{:name "Transit" :extensions ["bkp"]}]}))
+          open-file (first res)]
+      (when (and open-file (.existsSync fs open-file))
+        (let [read-db (.readFileSync fs open-file)
+              db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath) ))              
+              ]
+  
+           (if (is (= (:schema db)  (:schema test-db))) 
+              ((writeDbIndex read-db filepath))((open-dialog-index filepath))  
+             ))))
+  ) 
+
+  ;; handle index.transit 
+  (defn handleIndexTransit [filepath]
+  
+    (let [read-db (.readFileSync fs filepath)
+          db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath) ))    
+          ]
+             
+          (if (is (= (:schema db)  (:schema test-db))) 
+            ()(open-dialog-index filepath))       
+         (dispatch [:fs/watch filepath])
+         (dispatch [:reset-conn db]))
+  )
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
@@ -334,10 +388,7 @@
                                                        ;; No database path found in localStorage. Creating new one
                                                        (nil? filepath) (dispatch [:fs/create-new-db])
                                                        ;; Database found in local storage and filesystem:
-                                                       (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                       db      (dt/read-transit-str read-db)]
-                                                                                   (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
+                                                       (.existsSync fs filepath) (handleIndexTransit filepath)
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
