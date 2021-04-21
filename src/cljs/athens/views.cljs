@@ -1,9 +1,7 @@
 (ns athens.views
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
-    [athens.views.right-sidebar :as right-sidebar]
     [athens.config]
-    [athens.db :as db]
     [athens.style]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
@@ -11,10 +9,10 @@
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
     [athens.views.left-sidebar :as left-sidebar]
-    [athens.views.spinner :refer [initial-spinner-component]]
     [athens.views.pages.core :as pages]
-    [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch] :as rf]
+    [athens.views.right-sidebar :as right-sidebar]
+    [athens.views.spinner :refer [initial-spinner-component]]
+    [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
@@ -38,10 +36,10 @@
 
 (defn alert
   []
-  (let [alert- (subscribe [:alert])]
+  (let [alert- (rf/subscribe [:alert])]
     (when-not (nil? @alert-)
       (js/alert (str @alert-))
-      (dispatch [:alert/unset]))))
+      (rf/dispatch [:alert/unset]))))
 
 
 ;; Snackbar
@@ -58,18 +56,18 @@
 (rf/reg-event-db
   :show-snack-msg
   (fn [db [_ msg-opts]]
-    (js/setTimeout #(dispatch [:show-snack-msg {}]) 4000)
+    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
     (assoc db :db/snack-msg msg-opts)))
 
 
 (defn main
   []
-  (let [loading    (subscribe [:loading?])
-        modal      (subscribe [:modal])]
+  (let [loading    (rf/subscribe [:loading?])
+        modal      (rf/subscribe [:modal])]
     (fn []
       [:<>
        [alert]
-       (let [{:keys [msg type]} @(subscribe [:db/snack-msg])]
+       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar
           {:message msg
            :open (boolean msg)}

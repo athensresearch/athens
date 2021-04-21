@@ -4,13 +4,13 @@
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.node-page :as node-page]
     [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch] :as rf]))
+    [re-frame.core :as rf]))
 
 
 (defn page
   "Can be a block or a node page."
   []
-  (let [uid (subscribe [:current-route/uid])
+  (let [uid (rf/subscribe [:current-route/uid])
         {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
     (cond
       title [node-page/page id]

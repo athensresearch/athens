@@ -1,7 +1,7 @@
 (ns athens.devcards.right-sidebar
   (:require
     [athens.views.buttons :refer [button]]
-    [athens.views.right-sidebar :refer [right-sidebar-component]]
+    [athens.views.right-sidebar :as right-sidebar]
     [devcards.core :refer [defcard-rg]]
     [re-frame.core :refer [dispatch]]))
 
@@ -12,5 +12,5 @@
 
 (defcard-rg Right-Sidebar
   [:div {:style {:display "flex" :height "60vh" :justify-content "flex-end"}}
-   [right-sidebar-component]]
+   [right-sidebar/right-sidebar]]
   {:padding false})

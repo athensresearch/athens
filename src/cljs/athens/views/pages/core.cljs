@@ -2,12 +2,12 @@
   (:require
     [athens.style :as style]
     [athens.views.pages.all-pages :as all-pages]
-    [athens.views.pages.page :as page]
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]
+    [athens.views.pages.page :as page]
     [athens.views.pages.settings :as settings]
-    [stylefy.core :as stylefy]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy]))
 
 
 ;; Styles
@@ -50,6 +50,6 @@
   []
   (let [route-name (rf/subscribe [:current-route/name])]
     [:div (stylefy/use-style main-content-style
-                     {:on-scroll (when (= @route-name :home)
-                                   #(daily-notes/db-scroll-daily-notes %))})
+                             {:on-scroll (when (= @route-name :home)
+                                           #(daily-notes/db-scroll-daily-notes %))})
      [match-page @route-name]]))
