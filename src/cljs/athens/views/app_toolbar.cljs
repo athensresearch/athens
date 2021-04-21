@@ -38,7 +38,7 @@
    :align-items "center"
    :display "grid"
    :position "absolute"
-   :top "-0.25rem"
+   :top "0"
    :border-bottom [["1px solid" (color :border-color)]]
    :backdrop-filter "blur(0.375rem)"
    :background (color :background-color :opacity-high)
@@ -47,7 +47,7 @@
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
-   :padding "0.25rem 0.75rem"
+   :padding "0 0.75rem"
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"}]]})
 
