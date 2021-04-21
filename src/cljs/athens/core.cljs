@@ -34,7 +34,7 @@
   []
   (rf/clear-subscription-cache!)
   (router/init-routes!)
-  (r-dom/render [views/view]
+  (r-dom/render [views/main]
                 (getElement "app")))
 
 

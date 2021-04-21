@@ -62,7 +62,7 @@
     (assoc db :db/snack-msg msg-opts)))
 
 
-(defn view
+(defn main
   []
   (let [loading    (subscribe [:loading?])
         modal      (subscribe [:modal])]
