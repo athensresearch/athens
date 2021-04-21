@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.70",
+  "version": "1.0.0-beta.71",
   "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
@@ -75,7 +75,7 @@
     "react-highlight.js": "1.0.7"
   },
   "devDependencies": {
-    "electron": "^11.2.3",
+    "electron": "^12.0.4",
     "electron-builder": "22.10",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",

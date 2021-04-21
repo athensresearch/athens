@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.71](https://github.com/athensresearch/athens/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2021-04-21)
+
+
+### Features
+
+* **app-toolbar:** basic tooltips ([#994](https://github.com/athensresearch/athens/issues/994)) ([2996bad](https://github.com/athensresearch/athens/commit/2996bada15ba8fb1b3eab5ecbd1a25bc2aecc298))
+
+
+### Bug Fixes
+
+* `deref` error in web environment. ([#999](https://github.com/athensresearch/athens/issues/999)) ([fa186cd](https://github.com/athensresearch/athens/commit/fa186cdb5c6d7f8650ca41ab1e3dc7451905d3a2))
+
+
+### Refactors
+
+* **parser:** multi-stage parser ([#957](https://github.com/athensresearch/athens/issues/957)) ([9a30ce1](https://github.com/athensresearch/athens/commit/9a30ce139c88b2f412d2f2f8f0c9b597c73994c7))
+
+![](https://media.discordapp.net/attachments/800579670629679165/834182913792671744/115297103-a681b880-a110-11eb-8bc1-5219441d4bbd.png?width=1440&height=610)
+
 ## [1.0.0-beta.70](https://github.com/athensresearch/athens/compare/v1.0.0-beta.69...v1.0.0-beta.70) (2021-04-20)
 
 
