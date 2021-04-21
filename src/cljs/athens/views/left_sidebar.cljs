@@ -143,7 +143,7 @@
         title]])))
 
 
-(defn left-sidebar
+(defn view
   []
   (let [open? (subscribe [:left-sidebar/open])
         shortcuts (->> @(q '[:find ?order ?title ?uid

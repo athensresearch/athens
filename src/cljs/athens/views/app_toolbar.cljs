@@ -91,7 +91,7 @@
   [:hr (use-style separator-style)])
 
 
-(defn app-toolbar
+(defn view
   []
   (let [left-open?        (subscribe [:left-sidebar/open])
         right-open?       (subscribe [:right-sidebar/open])

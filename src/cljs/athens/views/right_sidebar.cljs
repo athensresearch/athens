@@ -264,11 +264,12 @@
                                             [:div (use-style sidebar-item-container-style)
                                              (cond
                                                is-graph? [graph/page uid]
+                                               ;; this could probably be abstracted as well in athens.pages.page
                                                title     [node-page/page [:block/uid uid]]
                                                :else     [block-page/page [:block/uid uid]])])])))]])})))
 
 
-(defn right-sidebar-component
+(defn view
   []
   (let [open? @(subscribe [:right-sidebar/open])
         items @(subscribe [:right-sidebar/items])
