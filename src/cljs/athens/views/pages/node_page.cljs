@@ -1,4 +1,4 @@
-(ns athens.views.node-page
+(ns athens.views.pages.node-page
   (:require
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -582,7 +582,7 @@
          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
 
 
-(defn node-page-component
+(defn page
   [ident]
   (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid   @(subscribe [:editing/uid])

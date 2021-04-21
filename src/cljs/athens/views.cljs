@@ -1,22 +1,24 @@
 (ns athens.views
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
+    ;;[athens.views.right-sidebar :refer [right-sidebar-component]]
+    ;;[athens.views.settings-page :as settings-page]
     [athens.config]
     [athens.db :as db]
     [athens.style :refer [color]]
     [athens.subs]
-    [athens.views.all-pages :refer [table]]
     [athens.views.app-toolbar :refer [app-toolbar]]
     [athens.views.athena :refer [athena-component]]
-    [athens.views.block-page :refer [block-page-component]]
-    [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
-    [athens.views.graph-page :as graph-page]
     [athens.views.left-sidebar :refer [left-sidebar]]
-    [athens.views.node-page :refer [node-page-component]]
-    [athens.views.right-sidebar :refer [right-sidebar-component]]
-    [athens.views.settings-page :as settings-page]
+    [athens.views.pages.all-pages :as all-pages]
+    [athens.views.pages.block-page :as block-page]
+    [athens.views.pages.page :as page]
+    [athens.views.pages.daily-notes :as daily-notes]
+    [athens.views.pages.graph :as graph]
+    [athens.views.pages.node-page :as node-page]
+    [athens.views.pages.settings :as settings]
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
     [re-frame.core :refer [subscribe dispatch] :as rf]
@@ -68,33 +70,17 @@
 ;; Panels
 
 
-(defn pages-panel
-  []
-  (fn []
-    [table db/dsdb]))
-
-
-(defn page-panel
-  []
-  (let [uid (subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
-    (cond
-      title [node-page-component id]
-      string [block-page-component id]
-      :else [:h3 "404: This page doesn't exist"])))
-
-
 (defn match-panel
   "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
   created when app inits. This is expected, but perhaps shouldn't be a side effect here."
   [route-name]
   [(case route-name
-     :settings settings-page/settings-page
-     :home daily-notes-panel
-     :pages pages-panel
-     :page page-panel
-     :graph graph-page/graph-page
-     daily-notes-panel)])
+     :settings settings/page
+     :pages all-pages/page
+     :page page/page
+     :graph graph/page
+     :home daily-notes/page
+     daily-notes/page)])
 
 
 (def m-snackbar (r/adapt-react-class (.-default Snackbar)))
@@ -145,7 +131,7 @@
                  [left-sidebar]
                  [:div (use-style main-content-style
                                   {:on-scroll (when (= @route-name :home)
-                                                #(db-scroll-daily-notes %))})
+                                                #(daily-notes/db-scroll-daily-notes %))})
                   [match-panel @route-name]]
                  [right-sidebar-component]
                  [devtool-component]]])])))
