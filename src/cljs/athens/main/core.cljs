@@ -33,7 +33,8 @@
                                   :height 600
                                   :autoHideMenuBar true
                                   :enableRemoteModule true
-                                  :webPreferences {:nodeIntegration true
+                                  :webPreferences {:contextIsolation false
+                                                   :nodeIntegration true
                                                    :worldSafeExecuteJavaScript true
                                                    :enableRemoteModule true
                                                    :nodeIntegrationWorker true}})))
