@@ -1,4 +1,4 @@
-(ns athens.views.blocks
+(ns athens.views.blocks.core
   (:require
     ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     [athens.db :as db]

@@ -16,7 +16,7 @@
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
-    [athens.views.blocks :refer [block-el bullet-style]]
+    [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
@@ -312,7 +312,7 @@
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
-    [:span (use-style bullet-style)]
+    [:span (use-style blocks/bullet-style)]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
@@ -406,7 +406,7 @@
                                             (swap! state assoc :block new-B :parents new-P)))}
                [parse-and-render (or title string) uid]]))]
          [:div.block-embed
-          [block-el
+          [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
            linked-ref-data
            {:block-embed? true}]]]))))
@@ -575,7 +575,7 @@
            [:div
             (for [{:block/keys [uid] :as child} children]
               ^{:key uid}
-              [block-el child])])
+              [blocks/block-el child])])
 
          ;; References
          [linked-ref-el state on-daily-notes? linked-refs]
