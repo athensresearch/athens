@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.72](https://github.com/athensresearch/athens/compare/v1.0.0-beta.70...v1.0.0-beta.72) (2021-04-21)
+
+
+### Bug Fixes
+
+* Shift+click title of reference won't open it in the right sidebar ([#995](https://github.com/athensresearch/athens/issues/995)) ([31e7bd0](https://github.com/athensresearch/athens/commit/31e7bd0a35074aa729d6e68033d665b1ab281497))
+
+
+### Refactors
+
+* **electron:** update from 11 to 12 ([#982](https://github.com/athensresearch/athens/issues/982)) ([d9d8cbf](https://github.com/athensresearch/athens/commit/d9d8cbf44cc47f15d2d8e19962425fdf165f302a))
+
+
+### Enhancements
+
+* **electron:** make bg default to dark ([#1003](https://github.com/athensresearch/athens/issues/1003)) ([b7f1c6e](https://github.com/athensresearch/athens/commit/b7f1c6e003d5309413b4908a37ce8b01de25a66f))
+* toolbar, sidebar, and scrolling polish ([#998](https://github.com/athensresearch/athens/issues/998)) ([4cf0c99](https://github.com/athensresearch/athens/commit/4cf0c990f009ae334e96803887e9153cd2e07e38))
+
 ## [1.0.0-beta.71](https://github.com/athensresearch/athens/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2021-04-21)
 
 
