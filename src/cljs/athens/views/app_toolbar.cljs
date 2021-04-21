@@ -39,6 +39,9 @@
    :display "grid"
    :position "absolute"
    :top "-0.25rem"
+   :border-bottom [["1px solid" (color :border-color)]]
+   :backdrop-filter "blur(0.375rem)"
+   :background (color :background-color :opacity-high)
    :right 0
    :left 0
    :grid-template-columns "auto 1fr auto"
@@ -52,10 +55,7 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :background (color :background-color :opacity-high)
-   :backdrop-filter "blur(0.375rem)"
    :padding "0.25rem"
-   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :grid-gap "0.25rem"})
 
 
@@ -69,7 +69,7 @@
 
 (def separator-style
   {:border "0"
-   :background (color :background-minus-1 :opacity-high)
+   :background (color :background-minus-2 :opacity-high)
    :margin-inline "20%"
    :margin-block "0"
    :inline-size "1px"
