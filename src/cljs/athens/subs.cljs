@@ -132,3 +132,9 @@
   :modal
   (fn [db _]
     (:modal db)))
+
+
+(re-frame/reg-sub
+ :db/remote-graph-conf
+ (fn [_ _]
+   nil))
