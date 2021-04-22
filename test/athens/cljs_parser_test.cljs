@@ -353,7 +353,19 @@
                     "[*em*](/link)"
                     [:paragraph
                      [:link {:text   "*em*"
-                             :target "/link"}]]))
+                             :target "/link"}]]
+
+               ;; because of fs usage targets can have spaces
+                    "[b c d](/url/with space)"
+                    [:paragraph
+                     [:link {:text   "b c d"
+                             :target "/url/with space"}]]
+
+                    "[b c d](/url/with space (and title))"
+                    [:paragraph
+                     [:link {:text   "b c d"
+                             :target "/url/with space"
+                             :title  "and title"}]]))
 
   (t/testing "images"
     (util/parses-to sut/inline-parser->ast
