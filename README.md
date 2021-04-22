@@ -27,7 +27,7 @@ You can modify Athens's source code. We are also building a plugin system for cu
 
 ### Community-Driven
 
-Athens has a Discord with over 2,200 members. We do support and feature development on Discord and GitHub. Every Sunday at 11am Pacific, we have a community call. [Join us](https://discord.gg/GCJaV3V)!
+Athens has a Discord with over 2,200 members. We handle support and feature development on Discord and GitHub. Every Sunday at 11am Pacific, we have a community call. You can help shape Athens — [join us](https://discord.gg/GCJaV3V)!
 
 # Problem
 
