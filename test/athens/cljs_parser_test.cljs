@@ -414,7 +414,16 @@
                     "<root@example.com>"
                     [:paragraph
                      [:autolink {:text   "root@example.com"
-                                 :target "mailto:root@example.com"}]]))
+                                 :target "mailto:root@example.com"}]]
+
+               ;; multiple auto links
+                    "<first> and <second>"
+                    [:paragraph
+                     [:autolink {:text   "first"
+                                 :target "first"}]
+                     [:text-run " and "]
+                     [:autolink {:text   "second"
+                                 :target "second"}]]))
 
   (t/testing "block references (Athens extension)"
     (util/parses-to sut/inline-parser->ast
@@ -429,7 +438,15 @@
                     [:paragraph
                      [:text-run "Text with "]
                      [:block-ref "block-id"]
-                     [:text-run " a block"]]))
+                     [:text-run " a block"]]
+
+                    "And ((block-id1)) multiple ((block-id2)) times"
+                    [:paragraph
+                     [:text-run "And "]
+                     [:block-ref "block-id1"]
+                     [:text-run " multiple "]
+                     [:block-ref "block-id2"]
+                     [:text-run " times"]]))
 
   (t/testing "hard line breaks"
     (util/parses-to sut/inline-parser->ast
@@ -484,7 +501,14 @@
                     "[[nesting [[nested]]]]"
                     [:paragraph
                      [:page-link "nesting "
-                      [:page-link "nested"]]]))
+                      [:page-link "nested"]]]
+
+               ;; Multiple page links in one blok
+                    "[[one]] and [[two]]"
+                    [:paragraph
+                     [:page-link "one"]
+                     [:text-run " and "]
+                     [:page-link "two"]]))
 
   (t/testing "hashtags (Athens extension)"
     (util/parses-to sut/inline-parser->ast
