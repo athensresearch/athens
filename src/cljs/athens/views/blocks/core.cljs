@@ -91,12 +91,8 @@
 
 (stylefy/class "dragging" dragging-style)
 
-;; Helpers
-
 
 ;;; Components
-
-
 
 (defn block-refs-count-el
   [count uid]
@@ -253,7 +249,6 @@
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
-
 
           ;; Children
           (when (and (seq children)

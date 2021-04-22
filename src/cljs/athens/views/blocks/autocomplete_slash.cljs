@@ -1,6 +1,6 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    [athens.keybindings :as keybindings]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.buttons :as buttons]
     [athens.views.dropdown :as dropdown]
     [goog.events :as events]
@@ -12,7 +12,7 @@
   [state block item]
   (let [id        (str "#editable-uid-" (:block/uid block))
         target    (.. js/document (querySelector id))]
-    (keybindings/auto-complete-slash state target item)))
+    (textarea-keydown/auto-complete-slash state target item)))
 
 
 (defn slash-menu-el

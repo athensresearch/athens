@@ -3,11 +3,11 @@
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :as events]
-    [athens.keybindings :as keybindings]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
     [athens.util :as util]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [garden.selectors :as selectors]
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
@@ -244,7 +244,7 @@
         line-breaks (re-find #"\r?\n" text-data)
         no-shift    (-> @state :last-keydown :shift not)
         items       (array-seq (.. e -clipboardData -items))
-        {:keys [head tail]} (athens.keybindings/destruct-target (.-target e))
+        {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
     (cond
       (seq (filter (fn [item]
@@ -343,7 +343,7 @@
                              :id             (str "editable-uid-" uid)
                              :on-change      (fn [e] (textarea-change e uid state))
                              :on-paste       (fn [e] (textarea-paste e uid state))
-                             :on-key-down    (fn [e] (keybindings/textarea-key-down e uid state))
+                             :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
                              :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
                              :on-click       (fn [e] (textarea-click e uid state))
                              :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))

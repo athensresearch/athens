@@ -1,7 +1,7 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    [athens.keybindings :as keybindings]
     [athens.style :as style]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.buttons :as buttons]
     [athens.views.dropdown :as dropdown]
     [clojure.string :as string]
@@ -15,8 +15,8 @@
   (let [id     (str "#editable-uid-" uid)
         target (.. js/document (querySelector id))]
     (case (:search/type @state)
-      :hashtag (keybindings/auto-complete-hashtag state target expansion)
-      (keybindings/auto-complete-inline state target expansion))))
+      :hashtag (textarea-keydown/auto-complete-hashtag state target expansion)
+      (textarea-keydown/auto-complete-inline state target expansion))))
 
 
 (defn inline-search-el
