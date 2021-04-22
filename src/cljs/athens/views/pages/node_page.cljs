@@ -17,6 +17,7 @@
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.core :as blocks]
+    [athens.views.blocks.bullet :as bullet]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
@@ -312,7 +313,7 @@
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
-    [:span (use-style blocks/bullet-style)]
+    [:span (use-style bullet/bullet-style)]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
