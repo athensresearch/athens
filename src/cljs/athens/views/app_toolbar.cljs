@@ -15,6 +15,10 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    ["@material-ui/icons/HelpOutline" :default HelpOutline]
+    ["@material-ui/icons/Close" :default Close]
+    [athens.views.modal :refer [modal-style]]
+    [komponentit.modal :as modal]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -89,6 +93,60 @@
 (defn separator
   []
   [:hr (use-style separator-style)])
+
+
+(defn help-modal
+  [open?]
+  (let [close-modal         #(reset! open? false)]
+    (fn []
+      [:div (use-style modal-style)
+       [modal/modal
+
+        {:title    [:div.modal__title
+                    [:> MergeType]
+                    [:h4 "Help Popup"]
+                    [button {:on-click close-modal}
+                     [:> Close]]]
+
+        ;;  :content  [:div (use-style modal-contents-style)
+        ;;             (if (nil? @transformed-roam-db)
+        ;;               [:<>
+        ;;                [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
+        ;;                [:div {:style {:position       "relative"
+        ;;                               :padding-bottom "56.25%"
+        ;;                               :margin         "20px 0"
+        ;;                               :width          "100%"}}
+        ;;                 [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
+        ;;                           :frameBorder           "0"
+        ;;                           :webkitallowfullscreen "true"
+        ;;                           :mozallowfullscreen    "true"
+        ;;                           :allowFullScreen       true
+        ;;                           :style                 {:position "absolute"
+        ;;                                                   :top      0
+        ;;                                                   :left     0
+        ;;                                                   :width    "100%"
+        ;;                                                   :height   "100%"}}]]]
+        ;;               (let [roam-pages   (roam-pages @transformed-roam-db)
+        ;;                     shared-pages (events/get-shared-pages @transformed-roam-db)]
+        ;;                 [:div {:style {:display "flex" :flex-direction "column"}}
+        ;;                  [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
+        ;;                  [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]
+        ;;                  [:ol {:style {:max-height "400px"
+        ;;                                :width      "100%"
+        ;;                                :overflow-y "auto"}}
+        ;;                   (for [x shared-pages]
+        ;;                     ^{:key x}
+        ;;                     [:li (str "[[" x "]]")])]
+        ;;                  [button {:style    {:align-self "center"}
+        ;;                           :primary  true
+        ;;                           :on-click (fn []
+        ;;                                       (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
+        ;;                                       (close-modal))}
+        ;;                   "Merge"]]))]
+
+         :on-close close-modal}]])))
+
+
 
 
 (defn app-toolbar
@@ -167,8 +225,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -182,6 +240,11 @@
             [button {:on-click #(dispatch [:modal/toggle])
                      :title "Choose Database"}
              [:> LibraryBooks]]
+            [separator]
+            ;; obnoxious line separator
+            [button {:on-click #(js/alert "help popup") :title "Help Popup"}
+             [:> HelpOutline]]
+            ;; obnoxious line separator
             [separator]]
            [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])
@@ -189,6 +252,7 @@
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
+
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
