@@ -33,7 +33,7 @@ Athens has a Discord with over 2,200 members. We handle support and feature deve
 
 The problem with notetaking apps like Evernote, Microsoft OneNote, or Apple Notes is that once you write a note, you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
-Athens lets you take notes without needing systems or structure, letting you stay creative and in flow state. Athens does this with [[bidirectional links]] and ((block references)) that allow you to take notes on anything from anywhere, and then easily connect them together.
+Athens lets you take notes without needing systems or structure, letting you stay creative and in flow state. Athens does this with **[[bidirectional links]]** and **((block references))** that allow you to take notes on anything from anywhere, and then easily connect them together.
 
 ![graph-demo](https://github.com/tangjeff0/athens-public/blob/main/open-source-graph-demo.gif)
 
