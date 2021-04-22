@@ -446,7 +446,14 @@
                      [:block-ref "block-id1"]
                      [:text-run " multiple "]
                      [:block-ref "block-id2"]
-                     [:text-run " times"]]))
+                     [:text-run " times"]]
+
+               ;; block refs can appear in words
+                    "a((block-id))b"
+                    [:paragraph
+                     [:text-run "a"]
+                     [:block-ref "block-id"]
+                     [:text-run "b"]]))
 
   (t/testing "hard line breaks"
     (util/parses-to sut/inline-parser->ast

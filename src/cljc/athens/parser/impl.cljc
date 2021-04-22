@@ -66,11 +66,11 @@ inline = recur
 
 (* all inline-spans have `x` character (or pair) that is a boundary for this span *)
 (* opening `x` has: *)
-(* - `(?<!\\w)`: it can't be preceded by a word character *)
+(* - `(?<!\\w)`: it can't be preceded by a word character, when it can don't include it *)
 (* - `(?!\\s)`: it can't be followed by a white space *)
 (* closing `x` has: *)
 (* - `(?<!\\s)`: it can't be preceded by a white space *)
-(* - `(?!\\w)`: it can't be followed by a word character *)
+(* - `(?!\\w)`: it can't be followed by a word character, when it can don't include it *)
    
 code-span = <#'(?<!\\w)`'>
             #'(?s)([^`]|(?<=\\s)`(?=\\s))+'
@@ -118,9 +118,9 @@ autolink = <#'(?<!\\w)<(?!\\s)'>
            #'[^>\\s]+'
            <#'(?<!\\s)>(?!\\w)'>
 
-block-ref = <#'(?<!\\w)\\(\\((?!\\s)'>
+block-ref = <#'\\(\\((?!\\s)'>
             #'.+?(?=\\)\\))'
-            <#'(?<!\\s)\\)\\)(?!\\w)'>
+            <#'(?<!\\s)\\)\\)'>
 
 page-link = <#'(?<!\\w)\\[\\[(?!\\s)'>
             (#'[^\\[\\]\\n]+' | page-link)+
@@ -144,7 +144,7 @@ latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'(?:[^\\*_`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\(\\#\\$\\{])+'
+text-run = #'(?:[^\\*_`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\#\\$\\{])+'
 
 (* any special char *)
 <special-char> = #'(?<!\\w)[\\*_`^~\\[!<\\(\\#\\$\\{]'
