@@ -358,7 +358,19 @@
                "[*em*](/link)"
                [:paragraph
                 [:link {:text   "*em*"
-                        :target "/link"}]]))
+                        :target "/link"}]]
+
+               ;; because of fs usage targets can have spaces
+               "[b c d](/url/with space)"
+               [:paragraph
+                [:link {:text   "b c d"
+                        :target "/url/with space"}]]
+
+               "[b c d](/url/with space (and title))"
+               [:paragraph
+                [:link {:text   "b c d"
+                        :target "/url/with space"
+                        :title  "and title"}]]))
 
   (t/testing "images"
     (parses-to sut/inline-parser->ast
@@ -451,7 +463,14 @@
                 [:block-ref "block-id1"]
                 [:text-run " multiple "]
                 [:block-ref "block-id2"]
-                [:text-run " times"]]))
+                [:text-run " times"]]
+
+               ;; block refs can appear in words
+               "a((block-id))b"
+               [:paragraph
+                [:text-run "a"]
+                [:block-ref "block-id"]
+                [:text-run "b"]]))
 
   (t/testing "hard line breaks"
     (parses-to sut/inline-parser->ast
@@ -592,20 +611,18 @@
                [:paragraph
                 [:latex "abc $ d"]]
 
-               ;; also $$ is allowed
-               "$$abc $$def$$"
-               [:paragraph
-                [:latex "abc $$def"]]
-
-               ;; also like this
-               "$$abc$$ def$$"
-               [:paragraph
-                [:latex "abc$$ def"]]
-
-               ;; and surrounded by spaces
+               ;; can't have $$
                "$$abc $$ def$$"
                [:paragraph
-                [:latex "abc $$ def"]])))
+                [:latex "abc "]
+                [:text-run " def$$"]]
+
+               ;; Multiple LaTeX fragments in one block
+               "$$G, \\mu$$ and Poisson's ratio $$\\nu$$"
+               [:paragraph
+                [:latex "G, \\mu"]
+                [:text-run " and Poisson's ratio "]
+                [:latex "\\nu"]])))
 
 
 (t/deftest staged-parser-tests
