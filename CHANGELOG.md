@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.74](https://github.com/athensresearch/athens/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2021-04-22)
+
+
+### Bug Fixes
+
+* allow for multiple block-refs in a block. ([#1012](https://github.com/athensresearch/athens/issues/1012)) ([f26b719](https://github.com/athensresearch/athens/commit/f26b7195ed6c7975908b6f6640921dcf68274e23))
+
 ## [1.0.0-beta.73](https://github.com/athensresearch/athens/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2021-04-21)
 
 
