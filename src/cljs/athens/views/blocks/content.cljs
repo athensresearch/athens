@@ -1,17 +1,17 @@
 (ns athens.views.blocks.content
   (:require
     [athens.db :as db]
-    [athens.events :as events]
-    [athens.parse-renderer :refer [parse-and-render]]
     [athens.electron :as electron]
-    [athens.style :as style]
-    [garden.selectors :as selectors]
-    [re-frame.core :as rf]
-    [komponentit.autosize :as autosize]
-    [goog.events :as goog-events]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.events :as events]
     [athens.keybindings :as keybindings]
-    [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.style :as style]
+    [athens.util :as util]
+    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [garden.selectors :as selectors]
+    [goog.events :as goog-events]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf]
     [stylefy.core :as stylefy])
   (:import
     (goog.events

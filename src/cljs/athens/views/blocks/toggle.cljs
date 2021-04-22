@@ -6,7 +6,6 @@
     [stylefy.core :as stylefy]))
 
 
-
 (def block-disclosure-toggle-style
   {:width "1em"
    :height "2em"
@@ -37,14 +36,14 @@
   [{:block/keys [open uid children]} state linked-ref]
   (if (seq children)
     [:button (stylefy/use-style block-disclosure-toggle-style
-                        {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
-                                           (and (false? linked-ref) open))
-                                     "open"
-                                     "closed")
-                         :on-click (fn [_]
-                                     (if (true? linked-ref)
-                                       (swap! state update :linked-ref/open not)
-                                       (toggle [:block/uid uid] open)))})
+                                {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
+                                                   (and (false? linked-ref) open))
+                                             "open"
+                                             "closed")
+                                 :on-click (fn [_]
+                                             (if (true? linked-ref)
+                                               (swap! state update :linked-ref/open not)
+                                               (toggle [:block/uid uid] open)))})
      [:> KeyboardArrowDown {:style {:font-size "16px"}}]]
     [:span (stylefy/use-style block-disclosure-toggle-style)]))
 

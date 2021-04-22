@@ -1,12 +1,12 @@
 (ns athens.views.blocks.bullet
   (:require
-    [athens.router :as router]
     [athens.db :as db]
-    [athens.views.blocks.context-menu :as context-menu]
+    [athens.router :as router]
     [athens.style :as style]
+    [athens.views.blocks.context-menu :as context-menu]
     [garden.selectors :as selectors]
-    [stylefy.core :as stylefy]
-    [goog.dom.classlist :as classList]))
+    [goog.dom.classlist :as classList]
+    [stylefy.core :as stylefy]))
 
 
 ;; Styles

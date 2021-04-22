@@ -1,7 +1,21 @@
 (ns athens.views.blocks.drop-area-indicator
   (:require
-    [stylefy.core :as stylefy]
-    [athens.style :as style]))
+    [athens.style :as style]
+    [stylefy.core :as stylefy]))
+
+
+(stylefy/keyframes "drop-area-appear"
+                   [:from
+                    {:opacity "0"}]
+                   [:to
+                    {:opacity "1"}])
+
+
+(stylefy/keyframes "drop-area-color-pulse"
+                   [:from
+                    {:opacity (:opacity-lower style/OPACITIES)}]
+                   [:to
+                    {:opacity (:opacity-med style/OPACITIES)}])
 
 
 (def drop-area-indicator-style
@@ -27,6 +41,4 @@
 
 (defn drop-area-indicator
   [active-condition]
-  [:div (stylefy/use-style (merge drop-area-indicator-style
-                                  (active-condition)))])
-
+  [:div (stylefy/use-style (merge drop-area-indicator-style (active-condition)))])

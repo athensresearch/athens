@@ -2,29 +2,24 @@
   (:require
     [athens.db :as db]
     [athens.electron :as electron]
-    [athens.views.buttons :as buttons]
     [athens.style :as style]
     [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
-    [athens.views.blocks.toggle :as toggle]
-    [athens.views.blocks.bullet :as bullet]
-    [athens.views.blocks.content :as content]
-    [athens.views.blocks.tooltip :as tooltip]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.context-menu :as context-menu]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash :as autocomplete-slash]
-    [athens.views.dropdown :as dropdown]
+    [athens.views.blocks.bullet :as bullet]
+    [athens.views.blocks.content :as content]
+    [athens.views.blocks.context-menu :as context-menu]
+    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.blocks.toggle :as toggle]
+    [athens.views.blocks.tooltip :as tooltip]
+    [athens.views.buttons :as buttons]
     [athens.views.presence :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]
-    [garden.selectors :as selectors]
-    [goog.dom.classlist :refer [contains]]
-    [goog.events :as events]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy]))
-
 
 
 ;;; Styles
@@ -90,24 +85,6 @@
 (stylefy/class "block-container" block-container-style)
 
 
-(stylefy/keyframes "drop-area-appear"
-                   [:from
-                    {:opacity "0"}]
-                   [:to
-                    {:opacity "1"}])
-
-
-(stylefy/keyframes "drop-area-color-pulse"
-                   [:from
-                    {:opacity (:opacity-lower style/OPACITIES)}]
-                   [:to
-                    {:opacity (:opacity-med style/OPACITIES)}])
-
-
-
-
-
-
 (def dragging-style
   {:opacity "0.25"})
 
@@ -121,13 +98,12 @@
 
 
 
-
 (defn block-refs-count-el
   [count uid]
   [:div (stylefy/use-style {:margin-left "1em"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-    [buttons/button {:primary true :on-click #(rf/dispatch [:right-sidebar/open-item uid])} count]])
+   [buttons/button {:primary true :on-click #(rf/dispatch [:right-sidebar/open-item uid])} count]])
 
 
 (defn block-drag-over
@@ -291,6 +267,7 @@
 
           [drop-area-indicator/drop-area-indicator #(when (= drag-target :below) {;;:color "red"
                                                                                   :opacity "1"})]])))))
+
 
 (defn block-component
   [ident]

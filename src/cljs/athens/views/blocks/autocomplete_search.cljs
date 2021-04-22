@@ -1,12 +1,12 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    [athens.views.dropdown :as dropdown]
-    [athens.views.buttons :as buttons]
     [athens.keybindings :as keybindings]
-    [reagent.core :as r]
-    [goog.events :as events]
     [athens.style :as style]
+    [athens.views.buttons :as buttons]
+    [athens.views.dropdown :as dropdown]
     [clojure.string :as string]
+    [goog.events :as events]
+    [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
 

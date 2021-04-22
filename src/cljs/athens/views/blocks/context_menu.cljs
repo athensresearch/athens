@@ -1,15 +1,13 @@
 (ns athens.views.blocks.context-menu
   (:require
-    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     [athens.db :as db]
-    [clojure.string :as string]
-    [athens.style :as style]
     [athens.listeners :as listeners]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [clojure.string :as string]
     [goog.events :as events]
-    [reagent.core :as r]
     [re-frame.core :as rf]
+    [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
 

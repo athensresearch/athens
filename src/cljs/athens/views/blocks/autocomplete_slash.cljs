@@ -1,11 +1,10 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    [athens.views.dropdown :as dropdown]
-    [athens.views.buttons :as buttons]
     [athens.keybindings :as keybindings]
-    [reagent.core :as r]
+    [athens.views.buttons :as buttons]
+    [athens.views.dropdown :as dropdown]
     [goog.events :as events]
-    [athens.style :as style]
+    [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
 
@@ -45,6 +44,5 @@
                                                             :active   (= i index)
                                                             :on-click (fn [_] (slash-item-click state block item))}
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
-
 
 

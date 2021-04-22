@@ -1,8 +1,8 @@
 (ns athens.views.blocks.tooltip
   (:require
     [athens.style :as style]
-    [stylefy.core :as stylefy]
-    [athens.util :as util]))
+    [athens.util :as util]
+    [stylefy.core :as stylefy]))
 
 
 ;; Styles
