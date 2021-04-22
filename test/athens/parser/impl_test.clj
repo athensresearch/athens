@@ -592,20 +592,18 @@
                [:paragraph
                 [:latex "abc $ d"]]
 
-               ;; also $$ is allowed
-               "$$abc $$def$$"
-               [:paragraph
-                [:latex "abc $$def"]]
-
-               ;; also like this
-               "$$abc$$ def$$"
-               [:paragraph
-                [:latex "abc$$ def"]]
-
-               ;; and surrounded by spaces
+               ;; can't have $$
                "$$abc $$ def$$"
                [:paragraph
-                [:latex "abc $$ def"]])))
+                [:latex "abc "]
+                [:text-run " def$$"]]
+
+               ;; Multiple LaTeX fragments in one block
+               "$$G, \\mu$$ and Poisson's ratio $$\\nu$$"
+               [:paragraph
+                [:latex "G, \\mu"]
+                [:text-run " and Poisson's ratio "]
+                [:latex "\\nu"]])))
 
 
 (t/deftest staged-parser-tests
