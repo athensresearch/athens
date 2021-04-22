@@ -5,7 +5,7 @@
 <img alt="Athens is proudly backed by Y Combinator (W21)" src="https://github.com/athensresearch/handbook/blob/main/.gitbook/assets/yc.png" width="30" height="30" />
 <a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
-# What is Athens
+# Athens
 
 Athens is a knowledge graph for research and notetaking. Athens is open-source, private, extensible, and community-driven.
 
