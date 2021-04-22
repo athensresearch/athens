@@ -11,9 +11,9 @@ Athens is a knowledge graph for research and notetaking. Athens is open-source, 
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
-**Sponsor us for additional features/services at https://opencollective.com/athens!**
+**[Sponsor us on Open Collective until we migrate to Stripe](https://opencollective.com/athens)! We are building out a software service for users and a [self-hosted/on-premise solution for enterprises](https://github.com/athensresearch/athens-backend).**
 
-**Demo Athens in your browser (no changes are saved): https://athensresearch.github.io/athens**
+**[Demo Athens in your browser (no changes are saved)](https://athensresearch.github.io/athens)**
 
 ![writing-demo](https://github.com/tangjeff0/athens-public/blob/main/bret-victor-demo.gif)
 
@@ -51,7 +51,7 @@ Some tips once you've gotten Athens:
 
 # [Pricing](https://opencollective.com/athens)
 
-Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. We have a self-hosted/on-premise option for enterprises that need to self-host, comparable to GitLab or Mattermost. If you are using Athens commercially, please contact us at researchathens@gmail.com.
+Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option for enterprises that need to self-host](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost. If you want to use Athens commercially, please contact us at researchathens@gmail.com.
 
 Please see our [Open Collective](https://opencollective.com/athens) for more details. We will be migrating to Stripe from OpenColllective.
 
