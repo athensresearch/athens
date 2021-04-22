@@ -23,7 +23,7 @@ You can use Athens as a local desktop app that saves data to your filesystem or 
 
 ### Extensible
 
-You can modify Athens's source code. We are planning to build custom themes, keybdindings, and integrations with other services.
+You can modify Athens's source code. We are also building a plugin system for custom themes, keybindings, and integrations with other data sources.
 
 ### Community-Driven
 
