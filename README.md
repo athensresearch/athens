@@ -7,11 +7,9 @@
 
 # What is Athens
 
-Athens is an open-source knowledge graph for research and notetaking. Open-source makes Athens private, extensible, and community-driven.
+Athens is a knowledge graph for research and notetaking. Athens is open-source, private, extensible, and community-driven.
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
-
-(Do not auto-update with the Mac M1. Right now M1 build auto-updates to Intel. This is a problem with Electron Builder and we are looking into it.)
 
 **Sponsor us for additional features/services at https://opencollective.com/athens!**
 
@@ -19,27 +17,27 @@ Athens is an open-source knowledge graph for research and notetaking. Open-sourc
 
 ![writing-demo](https://github.com/tangjeff0/athens-public/blob/main/bret-victor-demo.gif)
 
-# Private
+### Private
 
-You can Athens as a local desktop app on your filesystem or with a [self-hosted server](https://github.com/athensresearch/athens-backend).
+You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://github.com/athensresearch/athens-backend).
 
-# Extensible
+### Extensible
 
-You can modify Athens's source code. A plugin system with custom themes, keybdindings, and integrations is also planned.
+You can modify Athens's source code. We are planning to build custom themes, keybdindings, and integrations with other services.
 
-# Community-Driven
+### Community-Driven
 
-Athens has a Discord with over 2,200 members, sharing workflows and ideas for knowledge management. We also have an active contributor community and are open to contributions from the public.
+Athens has a Discord with over 2,200 members. We do support and feature development on Discord and GitHub. Every Sunday at 11am Pacific, we have a community call. [Join us](https://discord.gg/GCJaV3V)!
 
 # Problem
 
-The problem with notetaking apps like Evernote or Apple Notes is that once you write a note, after a week you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
+The problem with notetaking apps like Evernote, Microsoft OneNote, or Apple Notes is that once you write a note, you never look at it again. Without any organization, you're stuck praying that search will work for your future self. On the other hand, creating and following a system requires way too much discipline.
 
-Athens lets you take notes with minimal systems, structure, and organization, freeing you to stay creative and in flow state. Athens does this with [[bidirectional links]], ((block references)), and a graph database.
+Athens lets you take notes without needing systems or structure, letting you stay creative and in flow state. Athens does this with [[bidirectional links]] and ((block references)) that allow you to take notes on anything, from anywhere, and connect them easily together.
 
 ![graph-demo](https://github.com/tangjeff0/athens-public/blob/main/open-source-graph-demo.gif)
 
-# [Building Locally or Contributing](https://athensresearch.gitbook.io/handbook/contributing)
+# [Contributing](https://athensresearch.gitbook.io/handbook/contributing)
 
 If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](https://athensresearch.gitbook.io/handbook/contributing). This also contains instructions on how to build Athens on your own computer.
 
@@ -49,15 +47,11 @@ Some tips once you've gotten Athens:
 - [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
 - If you have trouble with a new version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens/releases).
 
-# [Join Discord](https://discord.gg/GCJaV3V)
-
-Our Discord community is a space for [collaboration and learning](https://athensresearch.gitbook.io/handbook/code-of-conduct#values) (especially about Clojure!).
-
-Every Sunday we have a [Community Call](https://loom.com/share/folder/ad4f7f087c8e4736a28983889102fa70) at 11am Pacific.
-
 # [Pricing](https://opencollective.com/athens)
 
-Athens is free to self-host, with additional features and services for our paid sponsors. We are also working on an enterprise offering for companies to self-host. Please see our [Open Collective](https://opencollective.com/athens) for more details.
+Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. We have a self-hosted/on-premise option for enterprises that need to self-host, comparable to GitLab or Mattermost. If you are using Athens commercially, please contact us at researchathens@gmail.com.
+
+Please see our [Open Collective](https://opencollective.com/athens) for more details. We will be migrating to Stripe from OpenColllective.
 
 # Links
 
