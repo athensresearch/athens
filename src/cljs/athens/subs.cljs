@@ -1,5 +1,6 @@
 (ns athens.subs
   (:require
+    [athens.util :as util]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [re-frame.core :as re-frame :refer [subscribe]]))
 
@@ -138,7 +139,7 @@
 (re-frame/reg-sub
   :db/remote-graph-conf
   (fn [db _]
-    (if (athens.util/electron?)
+    (if (util/electron?)
       (:db/remote-graph-conf db)
       {})))
 
