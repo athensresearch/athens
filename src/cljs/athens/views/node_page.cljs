@@ -85,6 +85,7 @@
                                     :z-index 3
                                     :display "block"
                                     :opacity "1"}]
+                     [:abbr {:z-index 4}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
 
@@ -433,7 +434,7 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -478,7 +479,7 @@
             (for [[group-title group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)))} group-title]]
+                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}

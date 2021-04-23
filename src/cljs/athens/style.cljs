@@ -20,11 +20,15 @@
    :background-plus-1   "#222"
    :background-plus-2   "#333"
 
+   :shadow-color  "rgba(0,0,0,0.16)"
+
    :graph-control-bg    "#272727"
    :graph-control-color "white"
    :graph-node-normal   "#909090"
    :graph-node-hlt      "#FBBE63"
-   :graph-link-normal   "#323232"})
+   :graph-link-normal   "#323232"
+
+   :error-color         "#fd5243"})
 
 
 (def THEME-LIGHT
@@ -41,11 +45,15 @@
    :background-minus-1  "#FAF8F6"
    :background-minus-2  "#EFEDEB"
 
+   :shadow-color  "rgba(0,0,0,0.16)"
+
    :graph-control-bg    "#f9f9f9"
    :graph-control-color "black"
    :graph-node-normal   "#909090"
    :graph-node-hlt      "#0075E1"
-   :graph-link-normal   "#cfcfcf"})
+   :graph-link-normal   "#cfcfcf"
+
+   :error-color         "#fd5243"})
 
 
 (def DEPTH-SHADOWS
@@ -142,6 +150,11 @@
    :width    "100vw"})
 
 
+(def codemirror-styles
+  {:z-index 10
+   :height  "min-content"})
+
+
 (defn permute-color-opacities
   "Permutes all colors and opacities.
   There are 5 opacities and 12 colors. There are 72 keys (includes default opacity, 1.0)"
@@ -165,6 +178,7 @@
   (stylefy/init)
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
+  (stylefy/class "CodeMirror" codemirror-styles)
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light

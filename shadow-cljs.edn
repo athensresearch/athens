@@ -26,7 +26,8 @@
                      :modules {:renderer {:init-fn athens.core/init}}
                      :compiler-options {:closure-warnings {:global-this :off}
                                         :infer-externs :auto
-                                        :closure-defines {re-frame.trace.trace-enabled? true}
+                                        :closure-defines {re-frame.trace.trace-enabled? true
+                                                          athens.config.MEASURE_PARSER  false}
                                         :output-feature-set :es-next}
                      :devtools {:preloads [devtools.preload
                                            day8.re-frame-10x.preload]}}

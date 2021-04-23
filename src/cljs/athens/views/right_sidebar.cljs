@@ -33,16 +33,15 @@
    :transition-property "width, border, background"
    :transition-duration "0.35s"
    :transition-timing-function "ease-out"
-   :background-color (color :background-minus-1)
    :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
    ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
                      [:&.is-closed {:width "0"}]
-                     [:&.is-open {:width "32vw"
-                                  :background-color (color :background-minus-1)}]
+                     [:&.is-open {:width "32vw"}]
                      ["::-webkit-scrollbar" {:background (color :background-minus-1)
                                              :width "0.5rem"
                                              :height "0.5rem"}]
-                     ["::-webkit-scrollbar-thumb" {:background (color :background-minus-2)
+                     ["::-webkit-scrollbar-corner" {:background (color :background-minus-1)}]
+                     ["::-webkit-scrollbar-thumb" {:background (color :background-plus-1)
                                                    :border-radius "0.5rem"}]]})
 
 
@@ -74,8 +73,7 @@
 (def sidebar-item-style
   {:display "flex"
    :flex "0 0 auto"
-   :flex-direction "column"
-   :border-top [["1px solid" (color :border-color)]]})
+   :flex-direction "column"})
 
 
 (def sidebar-item-toggle-style
@@ -93,10 +91,11 @@
 
 
 (def sidebar-item-container-style
-  {:padding "0 2rem 1.25rem"
+  {:padding "0 0 1.25rem"
    :line-height "1.5rem"
    :font-size "15px"
    :position "relative"
+   :background "inherit"
    :z-index 1
    ::stylefy/manual [[:h1 {:font-size "1.5em"
                            :display "-webkit-box"
@@ -116,7 +115,8 @@
    :padding "0.25rem 1rem"
    :position "sticky"
    :z-index 2
-   :background (color :background-minus-1) ;; FIXME: Replace with weighted-mix color function
+   :background (color :background-color)
+   :box-shadow [["0 -1px 0 0" (color :border-color)]]
    :top "0"
    :bottom "0"
    ::stylefy/manual [[:h2 {:font-size "inherit"
@@ -139,7 +139,7 @@
                                   :align-items "stretch"
                                   :flex-direction "row"
                                   :transition "opacity 0.3s ease-out"
-                                  :opacity "0.25"}]
+                                  :opacity "0.5"}]
                      [:&:hover [:.controls {:opacity "1"}]]
                      [:svg {:font-size "18px"}]
                      [:hr {:width "1px"
@@ -150,6 +150,27 @@
                            :height "1em"
                            :justify-self "stretch"}]
                      [:&.is-open [:h2 {:font-weight "500"}]]]})
+
+
+(def panel-drag-handle-style
+  {:cursor           "col-resize"
+   :height           "100%"
+   :position         "absolute"
+   :top              0
+   :width            "1px"
+   :z-index          (:zindex-fixed ZINDICES)
+   :background-color (color :border-color)
+   ::stylefy/manual [[:&:after {:content "''"
+                                :position "absolute"
+                                :background (color :link-color)
+                                :transition "opacity 0.2s ease"
+                                :top 0
+                                :bottom 0
+                                :left 0
+                                :right "-4px"
+                                :opacity 0}]
+                     [:&:hover:after {:opacity 0.5}]
+                     [:&.is-dragging:after {:opacity 1}]]})
 
 
 (def empty-message-style
@@ -211,15 +232,10 @@
                                               {:style (cond-> {}
                                                         (:dragging @state) (assoc :transition-duration "0s")
                                                         open? (assoc :width (str (:width @state) "vw")))})
-                                  [:div (use-style {:cursor           "col-resize"
-                                                    :height           "100%"
-                                                    :position         "absolute"
-                                                    :top              0
-                                                    :width            "3px"
-                                                    :z-index          (:zindex-fixed ZINDICES)
-                                                    :background-color (color :border-color)}
-                                                   {:on-mouse-down #(swap! state assoc :dragging true)})]
-                                  [:div (use-style sidebar-content-style {:class (if open? "is-open" "is-closed")})
+                                  [:div (use-style panel-drag-handle-style
+                                                   {:on-mouse-down #(swap! state assoc :dragging true)
+                                                    :class (when (:dragging @state) "is-dragging")})]
+                                  [:div (use-style sidebar-content-style {:class [(if open? "is-open" "is-closed") "right-sidebar-content"]})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
                                    ;;  [button [:> FilterList]]

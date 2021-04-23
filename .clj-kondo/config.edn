@@ -1,14 +1,12 @@
-{:linters {:unresolved-namespace
-           {:exclude [clojure.string]}
-           :unresolved-symbol
-           {:exclude [(devcards.core/defcard)
-                      (devcards.core/defcard-rg)
-                      random-uuid
-                      goog.DEBUG
-                      (com.rpl.specter/recursive-path)]}
-           :unused-referred-var
-           {:exclude {clojure.test [is deftest testing]}}
+{:linters {:unresolved-namespace         {:exclude [clojure.string]}
+           :unresolved-symbol            {:exclude [(devcards.core/defcard)
+                                                    (devcards.core/defcard-rg)
+                                                    random-uuid
+                                                    goog.DEBUG
+                                                    (com.rpl.specter/recursive-path)]}
+           :unused-referred-var          {:exclude {clojure.test [is deftest testing]}}
            :unsorted-required-namespaces {:level :warning}}
- :lint-as {day8.re-frame.tracing/fn-traced clojure.core/fn
+ :lint-as {day8.re-frame.tracing/fn-traced   clojure.core/fn
            day8.re-frame.tracing/defn-traced clojure.core/defn
-           reagent.core/with-let clojure.core/let}}
+           reagent.core/with-let             clojure.core/let
+           instaparse.core/defparser         clojure.core/def}}

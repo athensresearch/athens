@@ -1,5 +1,6 @@
 (ns athens.views
   (:require
+    ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.db :as db]
     [athens.style :refer [color]]
@@ -18,7 +19,8 @@
     [athens.views.settings-page :as settings-page]
     [athens.views.spinner :refer [initial-spinner-component]]
     [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe dispatch] :as rf]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -47,6 +49,7 @@
    ::stylefy/mode {"::-webkit-scrollbar" {:background (color :background-minus-1)
                                           :width "0.5rem"
                                           :height "0.5rem"}
+                   "::-webkit-scrollbar-corner" {:background (color :background-minus-1)}
                    "::-webkit-scrollbar-thumb" {:background (color :background-minus-2)
                                                 :border-radius "0.5rem"}}})
 
@@ -94,6 +97,22 @@
      daily-notes-panel)])
 
 
+(def m-snackbar (r/adapt-react-class (.-default Snackbar)))
+
+
+(rf/reg-sub
+  :db/snack-msg
+  (fn [db]
+    (:db/snack-msg db)))
+
+
+(rf/reg-event-db
+  :show-snack-msg
+  (fn [db [_ msg-opts]]
+    (js/setTimeout #(dispatch [:show-snack-msg {}]) 4000)
+    (assoc db :db/snack-msg msg-opts)))
+
+
 (defn main-panel
   []
   (let [route-name (subscribe [:current-route/name])
@@ -102,6 +121,17 @@
     (fn []
       [:<>
        [alert]
+       (let [{:keys [msg type]} @(subscribe [:db/snack-msg])]
+         [m-snackbar
+          {:message msg
+           :open (boolean msg)}
+          [:span
+           {:style {:background-color (case type
+                                        :success "green"
+                                        "red")
+                    :padding "10px 20px"
+                    :color "white"}}
+           msg]])
        [athena-component]
        (cond
          (and @loading @modal) [filesystem/window]

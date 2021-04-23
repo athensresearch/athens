@@ -483,7 +483,7 @@
 
       (= key-code KeyCodes.B) (surround-and-set "**")
 
-      (= key-code KeyCodes.I) (surround-and-set "__")
+      (= key-code KeyCodes.I) (surround-and-set "*")
 
       (= key-code KeyCodes.Y) (surround-and-set "~~")
 

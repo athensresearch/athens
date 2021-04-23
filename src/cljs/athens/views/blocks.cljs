@@ -15,6 +15,7 @@
     [athens.util :as util :refer [get-dataset-uid mouse-offset vertical-center specter-recursive-path]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [athens.views.presence :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -225,6 +226,12 @@
                       [:>span
                        :>a {:position "relative"
                             :z-index 2}]]
+                     [:abbr
+                      {:grid-area "main"
+                       :z-index   4}
+                      [:>span
+                       :>a {:position "relative"
+                            :z-index 2}]]
                      ;; May want to refactor specific component styles to somewhere else.
                      ;; Closer to the component perhaps?
                      ;; Code
@@ -287,8 +294,45 @@
                                           :color (color :background-color)}]]
                               [:&:active {:transform "scale(0.9)"}]]]
 
-                     [:mark.contents.highlight {:padding "0 2px"
-                                                :background-color "#ffeb7a"}]]})
+                     [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0"
+                                               :color (color :body-text-color :opacity-higher)
+                                               :font-weight "500"}]
+                     [:h1 {:padding "0"
+                           :margin-block-start "-0.1em"}]
+                     [:h2 {:padding "0"}]
+                     [:h3 {:padding "0"}]
+                     [:h4 {:padding "0.25em 0"}]
+                     [:h5 {:padding "1em 0"}]
+                     [:h6 {:text-transform "uppercase"
+                           :letter-spacing "0.06em"
+                           :padding "1em 0"}]
+                     [:p {:margin "0"
+                          :padding-bottom "1em"}]
+                     [:blockquote {:margin-inline "0.5em"
+                                   :margin-block "0.125rem"
+                                   :padding-block "calc(0.5em - 0.125rem - 0.125rem)"
+                                   :padding-inline "1.5em"
+                                   :border-radius "0.25em"
+                                   :background (color :background-minus-1)
+                                   :border-inline-start [["0.25em solid" (color :body-text-color :opacity-lower)]]
+                                   :color (color :body-text-color :opacity-high)}
+                      [:p {:padding-bottom "1em"}]
+                      [:p:last-child {:padding-bottom "0"}]]
+                     [:.CodeMirror {:background (color :background-minus-1)
+                                    :margin "0.125rem 0.5rem"
+                                    :border-radius "0.25rem"
+                                    :font-size "85%"
+                                    :color (color :body-text-color)
+                                    :font-family "IBM Plex Mono"}]
+                     [:.CodeMirror-gutters {:border-right "1px solid transparent"
+                                            :background (color :background-minus-1)}]
+                     [:.CodeMirror-cursor {:border-left-color (color :link-color)}]
+                     [:.CodeMirror-lines {:padding 0}]
+                     [:.CodeMirror-linenumber {:color (color :body-text-color :opacity-med)}]
+
+                     [:mark.contents.highlight {:padding "0 0.2em"
+                                                :border-radius "0.125rem"
+                                                :background-color (color :highlight-color)}]]})
 
 
 (stylefy/class "block-content" block-content-style)
@@ -517,10 +561,19 @@
                                                    (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
             items)
-      :else
-      (when (and line-breaks no-shift)
+
+      (and line-breaks no-shift)
+      (do
         (.. e preventDefault)
-        (dispatch [:paste uid text-data])))))
+        (dispatch [:paste uid text-data]))
+
+      (not no-shift)
+      (do
+        (.. e preventDefault)
+        (dispatch [:paste-verbatim uid text-data]))
+
+      :else
+      nil)))
 
 
 (defn textarea-change
@@ -618,33 +671,34 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [_ _]
-  (fn [block state]
-    (let [{:block/keys [uid original-uid header]} block
-          {:string/keys [local]} @state
-          is-editing @(subscribe [:editing/is-editing uid])
-          selected-items @(subscribe [:selected/items])
-          font-size (case header
-                      1 "2.1em"
-                      2 "1.7em"
-                      3 "1.3em"
-                      "1em")]
-      [:div {:class "block-content" :style {:font-size font-size}}
-       [autosize/textarea {:value          (:string/local @state)
-                           :class          ["textarea" (when (and (empty? selected-items) is-editing) "is-editing")]
+  [block state]
+  (let [{:block/keys [uid original-uid header]} block
+        editing? (subscribe [:editing/is-editing uid])
+        selected-items (subscribe [:selected/items])]
+    (fn [_block _state]
+      (let [font-size (case header
+                        1 "2.1em"
+                        2 "1.7em"
+                        3 "1.3em"
+                        "1em")]
+        [:div {:class "block-content" :style {:font-size font-size}}
+       ;; NOTE: komponentit forces reflow, likely a performance bottle neck
+         [autosize/textarea {:value          (:string/local @state)
+                             :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                            ;;:auto-focus     true
-                           :id             (str "editable-uid-" uid)
-                           :on-change      (fn [e] (textarea-change e uid state))
-                           :on-paste       (fn [e] (textarea-paste e uid state))
-                           :on-key-down    (fn [e] (textarea-key-down e uid state))
-                           :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
-                           :on-click       (fn [e] (textarea-click e uid state))
-                           :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                           :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
-       [parse-and-render local (or original-uid uid)]
-       [:div (use-style (merge drop-area-indicator
-                               (when (= :child (:drag-target @state)) {;;:color "green"
-                                                                       :opacity 1})))]])))
+                             :id             (str "editable-uid-" uid)
+                             :on-change      (fn [e] (textarea-change e uid state))
+                             :on-paste       (fn [e] (textarea-paste e uid state))
+                             :on-key-down    (fn [e] (textarea-key-down e uid state))
+                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                             :on-click       (fn [e] (textarea-click e uid state))
+                             :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                             :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+       ;; TODO pass `state` to parse-and-render
+         [parse-and-render (:string/local @state) (or original-uid uid)]
+         [:div (use-style (merge drop-area-indicator
+                                 (when (= :child (:drag-target @state)) {;;:color "green"
+                                                                         :opacity 1})))]]))))
 
 
 (defn bullet-mouse-out
@@ -899,6 +953,8 @@
            :on-drag-over  (fn [e] (block-drag-over e block state))
            :on-drag-leave (fn [e] (block-drag-leave e block state))
            :on-drop       (fn [e] (block-drop e block state))}
+
+          [presence/presence-popover-info uid {:inline? true}]
 
           [:div (use-style (merge drop-area-indicator (when (= drag-target :above) {:opacity "1"})))]
 
