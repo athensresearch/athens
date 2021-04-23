@@ -134,7 +134,11 @@
     (:modal db)))
 
 
+;; really bad that we're checking if electron in a subscription, but short-term solution to get both web app and desktop to build. see athens.electron
 (re-frame/reg-sub
   :db/remote-graph-conf
-  (fn [_ _]
-    nil))
+  (fn [db _]
+    (if (athens.util/electron?)
+      (:db/remote-graph-conf db)
+      {})))
+
