@@ -54,17 +54,19 @@ Athens is free to use as a local-only desktop app. We are currently building out
 
 Please see our [Open Collective](https://opencollective.com/athens) for more details. We will be migrating to Stripe from OpenColllective.
 
-# Links
+# Blog
 
-To learn more about this project, please see:
+To learn more about this project, please read:
 
-- [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
-- [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
+- [Athens' $1.9M Seed Round, led by Caffeinated Capital](https://athens-research.ghost.io/athens-1-9m-seed-round-led-by-caffeinated-capital/)
+- [Athens Joins Y Combinator](https://athens-research.ghost.io/athens-joins-y-combinator/)
+- [MVP Update, Funding, and Why I Started Athens](https://athens-research.ghost.io/mvp-update-funding-and-why-i-started-athens/)
+- [Why you should learn Clojure - my first month as a Clojurian](https://athens-research.ghost.io/why-you-should-learn-clojure-my-first-month-as-a-clojurian/)
 
 # Thank You
 
 Athens is here today because of our Sponsors and Contributors. Thank you.
 
-[![Sponsors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
+[![Sponsors](https://athens-research.ghost.io/content/images/size/w1140/2021/04/spnosors.png)](https://opencollective.com/athens)
 
 ![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
