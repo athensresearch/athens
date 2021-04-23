@@ -59,21 +59,11 @@ To learn more about this project, please see:
 
 - [Athens Joins Y Combinator](https://www.notion.so/athensresearch/Athens-Joins-Y-Combinator-86b9dfa30f4141e5bf072fad8f95a6c7)
 - [MVP Update, Funding, and Why I Started Athens](https://www.notion.so/athensresearch/MVP-Update-Funding-and-Why-I-Started-Athens-e68822f0c3654660ae621cdcbf932bc4)
-- [Vision](https://athensresearch.gitbook.io/handbook/vision) — individual and collective memexes — computing and the Web as originally promised
-- [Governance](https://athensresearch.gitbook.io/handbook/governance) — BD + Core Team + Guardians + Athenians
-- [Code of Conduct](https://athensresearch.gitbook.io/handbook/code-of-conduct) — our values and guidelines, AKA how to be an awesome Athenian
 
 # Thank You
 
 Athens is here today because of our Sponsors and Contributors. Thank you.
 
-## Sponsors
-
 [![Sponsors](https://athens-assets-1.s3.us-east-2.amazonaws.com/sponsor-faces.png)](https://opencollective.com/athens)
 
-## Contributors
-
 ![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
-
-# [Athens is Hiring](https://www.notion.so/athensresearch/Athens-is-Hiring-Job-Descriptions-7f52ac86e1e1406f93624503e226dfe6#2a769f1161d043e2a8ccb90fe4828654)
-
