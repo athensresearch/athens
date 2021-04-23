@@ -51,7 +51,7 @@ Some tips once you've gotten Athens:
 
 # [Pricing](https://opencollective.com/athens)
 
-Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option for enterprises that need to self-host](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost. If you want to use Athens commercially, please contact us at researchathens@gmail.com.
+Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option for enterprises](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost. If you want to use Athens commercially, please contact us at researchathens@gmail.com.
 
 Please see our [Open Collective](https://opencollective.com/athens) for more details. We will be migrating to Stripe from OpenColllective.
 
