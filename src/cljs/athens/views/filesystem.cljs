@@ -214,6 +214,7 @@
                   :width           "100%"}}
     [:h5 "New Location"]
     [button {:primary  true
+             :disabled (clojure.string/blank? (:input @state))
              :on-click #(electron/create-dialog! (:input @state))}
      "Browse"]]])
 
@@ -261,7 +262,6 @@
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         db-filepath       (subscribe [:db/filepath])
         state             (r/atom {:input     ""
-                                   :remote?   (:default? @remote-graph-conf)
                                    :tab-value 0})]
     (fn []
       (js/ReactDOM.createPortal

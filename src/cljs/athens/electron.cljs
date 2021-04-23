@@ -183,10 +183,11 @@
       (.dirname path (:db/filepath db))))
 
 
-  (reg-sub
-    :db/remote-graph-conf
-    (fn [db _]
-      (:db/remote-graph-conf db)))
+  ;; create sub in athens.subs so web-version of Athens works
+  ;;(reg-sub
+  ;;  :db/remote-graph-conf
+  ;;  (fn [db _]
+  ;;    (:db/remote-graph-conf db)))
 
 
   (reg-sub
