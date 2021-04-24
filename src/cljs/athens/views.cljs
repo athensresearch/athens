@@ -2,26 +2,19 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.db :as db]
-    [athens.style :refer [color]]
+    [athens.style]
     [athens.subs]
-    [athens.views.all-pages :refer [table]]
-    [athens.views.app-toolbar :refer [app-toolbar]]
+    [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
-    [athens.views.block-page :refer [block-page-component]]
-    [athens.views.daily-notes :refer [daily-notes-panel db-scroll-daily-notes]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
-    [athens.views.graph-page :as graph-page]
-    [athens.views.left-sidebar :refer [left-sidebar]]
-    [athens.views.node-page :refer [node-page-component]]
-    [athens.views.right-sidebar :refer [right-sidebar-component]]
-    [athens.views.settings-page :as settings-page]
+    [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.pages.core :as pages]
+    [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
-    [posh.reagent :refer [pull]]
-    [re-frame.core :refer [subscribe dispatch] :as rf]
+    [re-frame.core :as rf]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy]))
 
 
 ;;; Styles
@@ -38,64 +31,18 @@
    :height "100vh"})
 
 
-(def main-content-style
-  {:flex "1 1 100%"
-   :grid-area "main-content"
-   :align-items "flex-start"
-   :justify-content "stretch"
-   :padding-top "2.5rem"
-   :display "flex"
-   :overflow-y "auto"
-   ::stylefy/mode {"::-webkit-scrollbar" {:background (color :background-minus-1)
-                                          :width "0.5rem"
-                                          :height "0.5rem"}
-                   "::-webkit-scrollbar-corner" {:background (color :background-minus-1)}
-                   "::-webkit-scrollbar-thumb" {:background (color :background-minus-2)
-                                                :border-radius "0.5rem"}}})
-
-
 ;;; Components
 
 
 (defn alert
   []
-  (let [alert- (subscribe [:alert])]
+  (let [alert- (rf/subscribe [:alert])]
     (when-not (nil? @alert-)
       (js/alert (str @alert-))
-      (dispatch [:alert/unset]))))
+      (rf/dispatch [:alert/unset]))))
 
 
-;; Panels
-
-
-(defn pages-panel
-  []
-  (fn []
-    [table db/dsdb]))
-
-
-(defn page-panel
-  []
-  (let [uid (subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
-    (cond
-      title [node-page-component id]
-      string [block-page-component id]
-      :else [:h3 "404: This page doesn't exist"])))
-
-
-(defn match-panel
-  "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
-  created when app inits. This is expected, but perhaps shouldn't be a side effect here."
-  [route-name]
-  [(case route-name
-     :settings settings-page/settings-page
-     :home daily-notes-panel
-     :pages pages-panel
-     :page page-panel
-     :graph graph-page/graph-page
-     daily-notes-panel)])
-
+;; Snackbar
 
 (def m-snackbar (r/adapt-react-class (.-default Snackbar)))
 
@@ -109,19 +56,18 @@
 (rf/reg-event-db
   :show-snack-msg
   (fn [db [_ msg-opts]]
-    (js/setTimeout #(dispatch [:show-snack-msg {}]) 4000)
+    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
     (assoc db :db/snack-msg msg-opts)))
 
 
-(defn main-panel
+(defn main
   []
-  (let [route-name (subscribe [:current-route/name])
-        loading    (subscribe [:loading?])
-        modal      (subscribe [:modal])]
+  (let [loading    (rf/subscribe [:loading?])
+        modal      (rf/subscribe [:modal])]
     (fn []
       [:<>
        [alert]
-       (let [{:keys [msg type]} @(subscribe [:db/snack-msg])]
+       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar
           {:message msg
            :open (boolean msg)}
@@ -140,12 +86,9 @@
 
          :else [:<>
                 (when @modal [filesystem/window])
-                [:div (use-style app-wrapper-style)
-                 [app-toolbar]
-                 [left-sidebar]
-                 [:div (use-style main-content-style
-                                  {:on-scroll (when (= @route-name :home)
-                                                #(db-scroll-daily-notes %))})
-                  [match-panel @route-name]]
-                 [right-sidebar-component]
+                [:div (stylefy/use-style app-wrapper-style)
+                 [app-toolbar/app-toolbar]
+                 [left-sidebar/left-sidebar]
+                 [pages/view]
+                 [right-sidebar/right-sidebar]
                  [devtool-component]]])])))

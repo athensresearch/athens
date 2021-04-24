@@ -1,4 +1,4 @@
-(ns athens.views.block-page
+(ns athens.views.pages.block-page
   (:require
     ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
@@ -9,7 +9,7 @@
     [athens.views.blocks :refer [block-el]]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
-    [athens.views.node-page :as node-page]
+    [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -169,7 +169,7 @@
                         [node-page/ref-comp block]]))]))]]])]))))
 
 
-(defn block-page-component
+(defn page
   [ident]
   (let [block       (db/get-block-document ident)
         parents     (db/get-parents-recursively ident)

@@ -1,4 +1,4 @@
-(ns athens.views.all-pages
+(ns athens.views.pages.all-pages
   (:require
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
@@ -70,7 +70,7 @@
 ;;; Components
 
 
-(defn table
+(defn page
   []
   (let [pages (r/atom (->> (d/q '[:find [?e ...]
                                   :where
