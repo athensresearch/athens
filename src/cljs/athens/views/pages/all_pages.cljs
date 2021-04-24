@@ -97,6 +97,6 @@
                [:tr {:key uid}
                 [:td {:class "title" :on-click #(navigate-uid uid %)} title]
                 [:td {:class "links"} (count _refs)]
-                [:td [:div {:class "body-preview"} (map #(vector [:span :block/string %]) children)]]
+                [:td [:div {:class "body-preview"} (map (fn [child] [:span (:block/string child)]) children)]]
                 [:td {:class "date"} (date-string modified)]
                 [:td {:class "date"} (date-string created)]])))]]])))
