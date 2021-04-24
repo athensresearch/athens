@@ -1,8 +1,6 @@
 (ns athens.views
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
-    ;;[athens.views.right-sidebar :refer [right-sidebar-component]]
-    ;;[athens.views.settings-page :as settings-page]
     [athens.config]
     [athens.style]
     [athens.subs]
