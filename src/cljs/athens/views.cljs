@@ -51,18 +51,6 @@
       (js/alert (str @alert-))
       (rf/dispatch [:alert/unset]))))
 
-(defn match-panel
-  "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
-  created when app inits. This is expected, but perhaps shouldn't be a side effect here."
-  [route-name]
-  [(case route-name
-     :settings settings/page
-     :pages all-pages/page
-     :page page/page
-     :graph graph/page
-     :home daily-notes/page
-     daily-notes/page)])
-
 
 ;; Snackbar
 
