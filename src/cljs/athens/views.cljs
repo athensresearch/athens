@@ -1,6 +1,8 @@
 (ns athens.views
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
+    ;;[athens.views.right-sidebar :refer [right-sidebar-component]]
+    ;;[athens.views.settings-page :as settings-page]
     [athens.config]
     [athens.style]
     [athens.subs]
@@ -11,6 +13,14 @@
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
+    [athens.views.left-sidebar :refer [left-sidebar]]
+    [athens.views.pages.all-pages :as all-pages]
+    [athens.views.pages.block-page :as block-page]
+    [athens.views.pages.page :as page]
+    [athens.views.pages.daily-notes :as daily-notes]
+    [athens.views.pages.graph :as graph]
+    [athens.views.pages.node-page :as node-page]
+    [athens.views.pages.settings :as settings]
     [athens.views.spinner :refer [initial-spinner-component]]
     [re-frame.core :as rf]
     [reagent.core :as r]
@@ -40,6 +50,18 @@
     (when-not (nil? @alert-)
       (js/alert (str @alert-))
       (rf/dispatch [:alert/unset]))))
+
+(defn match-panel
+  "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
+  created when app inits. This is expected, but perhaps shouldn't be a side effect here."
+  [route-name]
+  [(case route-name
+     :settings settings/page
+     :pages all-pages/page
+     :page page/page
+     :graph graph/page
+     :home daily-notes/page
+     daily-notes/page)])
 
 
 ;; Snackbar

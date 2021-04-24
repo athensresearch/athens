@@ -12,8 +12,8 @@
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
-    [cljsjs.react]
     [cljsjs.react.dom]
+    [cljsjs.react]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
