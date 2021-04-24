@@ -277,9 +277,11 @@ newline = #'\\n'
     result))
 
 
-(defn- link-transform
-  [& link-parts]
-  (let [{:keys [link-text link-title]} (into {} (remove #(= :link-target (first %)) link-parts))
+(defn- link-parts->map
+  [link-parts]
+  (let [safe-parts (->> link-parts
+                        (remove #(= :link-target (first %)))
+                        (into {}))
         link-target-rest (->> link-parts
                               (filter #(= :link-target (first %)))
                               first
@@ -287,6 +289,12 @@ newline = #'\\n'
         link-target (if (= 1 (count link-target-rest))
                       (first link-target-rest)
                       (string/join link-target-rest))]
+    (assoc safe-parts :link-target link-target)))
+
+
+(defn- link-transform
+  [& link-parts]
+  (let [{:keys [link-text link-target link-title]} (link-parts->map link-parts)]
     [:link (cond-> {:text   link-text
                     :target link-target}
              link-title (assoc :title link-title))]))
@@ -294,7 +302,7 @@ newline = #'\\n'
 
 (defn- image-transform
   [& link-parts]
-  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
+  (let [{:keys [link-text link-target link-title]} (link-parts->map link-parts)]
     [:url-image (cond-> {:alt link-text
                          :src link-target}
                   link-title (assoc :title link-title))]))
