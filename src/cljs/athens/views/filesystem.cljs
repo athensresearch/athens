@@ -136,7 +136,7 @@
                     [button {:on-click close-modal}
                      [:> Close]]]
 
-         :content  [:div (use-style modal-contents-style)
+         :content  [:div (use-style (merge modal-contents-style {:height "20em"}))
                     (if (nil? @transformed-roam-db)
                       [:<>
                        [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
