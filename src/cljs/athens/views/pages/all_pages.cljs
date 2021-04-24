@@ -52,17 +52,17 @@
                                           :-webkit-box-orient "vertical"}
                          [:span {:border "1px solid"}]]
                         [:&.date {:text-align "right"
-                                   :opacity (:opacity-high OPACITIES)
-                                   :font-size "0.75em"
-                                   :min-width "9em"}]
-                        [(selectors/& (selectors/first-child)) {:border-radius "0.5rem 0 0 0.5rem"
-                                                                :box-shadow "-1rem 0 transparent"}]
-                        [(selectors/& (selectors/last-child)) {:border-radius "0 0.5rem 0.5rem 0"
-                                                               :box-shadow "1rem 0 transparent"}]]
+                                  :opacity (:opacity-high OPACITIES)
+                                  :font-size "0.75em"
+                                  :min-width "9em"}]
+                        [:&:first-child {:border-radius "0.5rem 0 0 0.5rem"
+                                         :box-shadow "-1rem 0 transparent"}]
+                        [:&:last-child {:border-radius "0 0.5rem 0.5rem 0"
+                                        :box-shadow "1rem 0 transparent"}]]
                        [:&:hover {:background-color (color :background-minus-1 :opacity-med)
                                   :border-radius "0.5rem"}
-                        [:td [(selectors/& (selectors/first-child)) {:box-shadow [["-1rem 0 " (color :backguround-minus-1 :opacity-med)]]}]]
-                        [:td [(selectors/& (selectors/last-child)) {:box-shadow [["1rem 0 " (color :backgrond-minus-1 :opacity-med)]]}]]]]]
+                        [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
+                        [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "0.5rem"}]
                      [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
 
