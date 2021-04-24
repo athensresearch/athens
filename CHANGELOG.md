@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.76](https://github.com/athensresearch/athens/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2021-04-23)
+
+
+### Bug Fixes
+
+* allow editing of join remote fields ([#1019](https://github.com/athensresearch/athens/issues/1019)) ([3bf2707](https://github.com/athensresearch/athens/commit/3bf27075ca074ccfe7f768ea5d043268524679d7))
+
+## [1.0.0-beta.75](https://github.com/athensresearch/athens/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2021-04-22)
+
+
+### Bug Fixes
+
+* bugs introduced by new parser ([#1017](https://github.com/athensresearch/athens/issues/1017)) ([a2c7cb6](https://github.com/athensresearch/athens/commit/a2c7cb6b914b62562da0c811fdae246afa4c1cc2))
+
+## [1.0.0-beta.74](https://github.com/athensresearch/athens/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2021-04-22)
+
+
+### Bug Fixes
+
+* allow for multiple block-refs in a block. ([#1012](https://github.com/athensresearch/athens/issues/1012)) ([f26b719](https://github.com/athensresearch/athens/commit/f26b7195ed6c7975908b6f6640921dcf68274e23))
+
 ## [1.0.0-beta.73](https://github.com/athensresearch/athens/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2021-04-21)
 
 

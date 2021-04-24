@@ -39,7 +39,7 @@
   ([] [presence-popover-info @(subscribe [:current-route/uid]) {}])
   ([ctx-uid] [presence-popover-info ctx-uid {}])
   ([ctx-uid {:keys [inline?]}]
-   (when (:default? @(subscribe [:db/remote-graph-conf]))
+   (when (and (subscribe [:db/remote-graph-conf]) (:default? @(subscribe [:db/remote-graph-conf])))
      (let [curr-presence         @(subscribe [:presence/current])
            users-in-cur-uid      (->> curr-presence vals
                                       (filter (fn [u-presence]

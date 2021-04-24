@@ -358,7 +358,19 @@
                "[*em*](/link)"
                [:paragraph
                 [:link {:text   "*em*"
-                        :target "/link"}]]))
+                        :target "/link"}]]
+
+               ;; because of fs usage targets can have spaces
+               "[b c d](/url/with space)"
+               [:paragraph
+                [:link {:text   "b c d"
+                        :target "/url/with space"}]]
+
+               "[b c d](/url/with space (and title))"
+               [:paragraph
+                [:link {:text   "b c d"
+                        :target "/url/with space"
+                        :title  "and title"}]]))
 
   (t/testing "images"
     (parses-to sut/inline-parser->ast
@@ -419,7 +431,16 @@
                "<root@example.com>"
                [:paragraph
                 [:autolink {:text   "root@example.com"
-                            :target "mailto:root@example.com"}]]))
+                            :target "mailto:root@example.com"}]]
+
+               ;; multiple auto links
+               "<first> and <second>"
+               [:paragraph
+                [:autolink {:text   "first"
+                            :target "first"}]
+                [:text-run " and "]
+                [:autolink {:text   "second"
+                            :target "second"}]]))
 
   (t/testing "block references (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -434,7 +455,22 @@
                [:paragraph
                 [:text-run "Text with "]
                 [:block-ref "block-id"]
-                [:text-run " a block"]]))
+                [:text-run " a block"]]
+
+               "And ((block-id1)) multiple ((block-id2)) times"
+               [:paragraph
+                [:text-run "And "]
+                [:block-ref "block-id1"]
+                [:text-run " multiple "]
+                [:block-ref "block-id2"]
+                [:text-run " times"]]
+
+               ;; block refs can appear in words
+               "a((block-id))b"
+               [:paragraph
+                [:text-run "a"]
+                [:block-ref "block-id"]
+                [:text-run "b"]]))
 
   (t/testing "hard line breaks"
     (parses-to sut/inline-parser->ast
@@ -489,7 +525,14 @@
                "[[nesting [[nested]]]]"
                [:paragraph
                 [:page-link "nesting "
-                 [:page-link "nested"]]]))
+                 [:page-link "nested"]]]
+
+               ;; Multiple page links in one blok
+               "[[one]] and [[two]]"
+               [:paragraph
+                [:page-link "one"]
+                [:text-run " and "]
+                [:page-link "two"]]))
 
   (t/testing "hashtags (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -568,20 +611,18 @@
                [:paragraph
                 [:latex "abc $ d"]]
 
-               ;; also $$ is allowed
-               "$$abc $$def$$"
-               [:paragraph
-                [:latex "abc $$def"]]
-
-               ;; also like this
-               "$$abc$$ def$$"
-               [:paragraph
-                [:latex "abc$$ def"]]
-
-               ;; and surrounded by spaces
+               ;; can't have $$
                "$$abc $$ def$$"
                [:paragraph
-                [:latex "abc $$ def"]])))
+                [:latex "abc "]
+                [:text-run " def$$"]]
+
+               ;; Multiple LaTeX fragments in one block
+               "$$G, \\mu$$ and Poisson's ratio $$\\nu$$"
+               [:paragraph
+                [:latex "G, \\mu"]
+                [:text-run " and Poisson's ratio "]
+                [:latex "\\nu"]])))
 
 
 (t/deftest staged-parser-tests
