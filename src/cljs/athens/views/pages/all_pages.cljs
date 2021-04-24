@@ -43,14 +43,18 @@
                                    :line-height "1.28"}]
                         [:&.links {:font-size "1em"
                                    :text-align "center"}]
-                        [:&.body-preview {:white-space "wrap"
-                                          :word-break "break-word"
+                        [:&.body-preview {:word-break "break-word"
                                           :overflow "hidden"
                                           :text-overflow "ellipsis"
                                           :display "-webkit-box"
+                                          :-webkit-mask "linear-gradient(to bottom, #fff calc(100% - 1em), transparent)"
                                           :-webkit-line-clamp "3"
                                           :-webkit-box-orient "vertical"}
-                         [:span {:border "1px solid"}]]
+                         [:span:empty {:display "none"}]
+                         [(selectors/+ :span :span)
+                          [:&:before {:content "'•'"
+                                      :margin-inline "0.5em"
+                                      :opacity (:opacity-low OPACITIES)}]]]
                         [:&.date {:text-align "right"
                                   :opacity (:opacity-high OPACITIES)
                                   :font-size "0.75em"
@@ -97,6 +101,6 @@
                [:tr {:key uid}
                 [:td {:class "title" :on-click #(navigate-uid uid %)} title]
                 [:td {:class "links"} (count _refs)]
-                [:td [:div {:class "body-preview"} (map (fn [child] [:span (:block/string child)]) children)]]
+                [:td {:class "body-preview"} (map (fn [child] [:span (:block/string child)]) children)]
                 [:td {:class "date"} (date-string modified)]
                 [:td {:class "date"} (date-string created)]])))]]])))
