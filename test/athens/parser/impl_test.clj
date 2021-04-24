@@ -412,7 +412,19 @@
                "![*em*](/link)"
                [:paragraph
                 [:url-image {:alt "*em*"
-                             :src "/link"}]]))
+                             :src "/link"}]]
+
+               ;; image link with spaces
+               "![image alt text](/url/with spaces)"
+               [:paragraph
+                [:url-image {:alt "image alt text"
+                             :src "/url/with spaces"}]]
+
+               "![image alt text](/url with spaces \"and title\")"
+               [:paragraph
+                [:url-image {:alt   "image alt text"
+                             :src   "/url with spaces"
+                             :title "and title"}]]))
 
   (t/testing "autolinks"
     (parses-to sut/inline-parser->ast
