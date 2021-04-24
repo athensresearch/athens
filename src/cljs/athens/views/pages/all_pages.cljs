@@ -6,7 +6,6 @@
     [athens.util :refer [date-string]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
     [posh.reagent :as p]
