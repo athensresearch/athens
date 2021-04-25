@@ -352,30 +352,27 @@
     (js/alert "Your Data file is corrupted or incorrect, Please select a Backup file")
 
     (let [res  (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
-                                                          :filters    [{:name "Transit" :extensions ["bkp"]}]}))
+                                                     :filters    [{:name "Transit" :extensions ["bkp"]}]}))
           open-file (first res)]
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
-              db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath) ))              
-              ]
-  
+              db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
+              ]  
            (if (is (= (:schema db)  (:schema test-db))) 
-              ((writeDbIndex read-db filepath))((open-dialog-index filepath))  
-             ))))
+              ((writeDbIndex read-db filepath))((open-dialog-index filepath))))))
   ) 
 
   ;; handle index.transit 
-  (defn handleIndexTransit [filepath]
-  
+  (defn handleIndexTransit [filepath]  
     (let [read-db (.readFileSync fs filepath)
-          db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath) ))    
-          ]
-             
+          db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
+          ]             
           (if (is (= (:schema db)  (:schema test-db))) 
             ()(open-dialog-index filepath))       
          (dispatch [:fs/watch filepath])
          (dispatch [:reset-conn db]))
   )
+  
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
