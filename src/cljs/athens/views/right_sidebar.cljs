@@ -8,10 +8,10 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
-    [athens.views.block-page :refer [block-page-component]]
     [athens.views.buttons :refer [button]]
-    [athens.views.graph-page :refer [graph-page]]
-    [athens.views.node-page :refer [node-page-component]]
+    [athens.views.pages.block-page :as block-page]
+    [athens.views.pages.graph :as graph]
+    [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [re-frame.core :refer [dispatch subscribe]]
@@ -263,12 +263,12 @@
                                           (when open
                                             [:div (use-style sidebar-item-container-style)
                                              (cond
-                                               is-graph? [graph-page uid]
-                                               title     [node-page-component [:block/uid uid]]
-                                               :else     [block-page-component [:block/uid uid]])])])))]])})))
+                                               is-graph? [graph/page uid]
+                                               title     [node-page/page [:block/uid uid]]
+                                               :else     [block-page/page [:block/uid uid]])])])))]])})))
 
 
-(defn right-sidebar-component
+(defn right-sidebar
   []
   (let [open? @(subscribe [:right-sidebar/open])
         items @(subscribe [:right-sidebar/items])

@@ -1,9 +1,9 @@
-(ns athens.views.daily-notes
+(ns athens.views.pages.daily-notes
   (:require
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day uid-to-date]]
-    [athens.views.node-page :refer [node-page-component]]
+    [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
@@ -85,7 +85,7 @@
 ;;; Components
 
 
-(defn daily-notes-panel
+(defn page
   []
   (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
@@ -98,6 +98,6 @@
                ^{:key uid}
                [:<>
                 [:div (use-style daily-notes-page-style)
-                 [node-page-component [:block/uid uid]]]]))
+                 [node-page/page [:block/uid uid]]]]))
            [:div (use-style daily-notes-notional-page-style)
             [:h1 "Earlier"]]])))))

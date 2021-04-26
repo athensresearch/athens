@@ -1,10 +1,10 @@
 (ns athens.events
   (:require
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
-    [athens.keybindings :as keybindings]
     [athens.patterns :as patterns]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -1661,7 +1661,7 @@
     (let [[uid embed-id]  (db/uid-and-embed-id uid)
           block         (db/get-block [:block/uid uid])
           {:block/keys  [order children open]} block
-          {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
+          {:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
           block-start?  (zero? start)
@@ -1701,7 +1701,7 @@
 (reg-event-fx
  :paste-verbatim
  (fn [_ [_ uid text]]
-   (let [{:keys [start value]} (keybindings/destruct-target js/document.activeElement)
+   (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
          block-empty?          (string/blank? value)
          block-start?          (zero? start)
          new-string            (cond
