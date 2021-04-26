@@ -1,10 +1,10 @@
 (ns athens.views.textinput
   (:require
-    [athens.db]
-    [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   [athens.db]
+   [athens.style :refer [color OPACITIES DEPTH-SHADOWS]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -15,7 +15,7 @@
    :color (color :body-text-color)
    :caret-color (color :link-color)
    :border-radius "0.25rem"
-   :background (color :background-minus-1)
+   :background (color :background-plus-2)
    :padding "0.125rem 0.5rem"
    :border [["1px solid " (color :border-color)]]
    :transition-property "box-shadow, border, background"
