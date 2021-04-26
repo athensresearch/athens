@@ -1,4 +1,4 @@
-(ns athens.views.node-page
+(ns athens.views.pages.node-page
   (:require
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -9,14 +9,15 @@
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.keybindings :refer [destruct-key-down arrow-key-direction block-start? block-end?]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
-    [athens.views.blocks :refer [block-el bullet-style]]
+    [athens.views.blocks.bullet :as bullet]
+    [athens.views.blocks.core :as blocks]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
@@ -165,7 +166,7 @@
   (.. e preventDefault)
   (let [node-page  (.. e -target (closest ".node-page"))
         block-page (.. e -target (closest ".block-page"))
-        {:keys [start value]} (destruct-key-down e)]
+        {:keys [start value]} (textarea-keydown/destruct-key-down e)]
     (cond
       block-page (dispatch [:split-block-to-children uid value start])
       node-page (if (empty? children)
@@ -175,9 +176,9 @@
 
 (defn handle-page-arrow-key
   [e uid state]
-  (let [{:keys [key-code target]} (destruct-key-down e)
-        start?          (block-start? e)
-        end?            (block-end? e)
+  (let [{:keys [key-code target]} (textarea-keydown/destruct-key-down e)
+        start?          (textarea-keydown/block-start? e)
+        end?            (textarea-keydown/block-end? e)
         {caret-position :caret-position} @state
         textarea-height (.. target -offsetHeight)
         {:keys [top height]} caret-position
@@ -201,11 +202,11 @@
 
 (defn handle-key-down
   [e uid state children]
-  (let [{:keys [key-code shift]} (destruct-key-down e)
+  (let [{:keys [key-code shift]} (textarea-keydown/destruct-key-down e)
         caret-position (get-caret-position (.. e -target))]
     (swap! state assoc :caret-position caret-position)
     (cond
-      (arrow-key-direction e) (handle-page-arrow-key e uid state)
+      (textarea-keydown/arrow-key-direction e) (handle-page-arrow-key e uid state)
       (and (not shift) (= key-code KeyCodes.ENTER)) (handle-enter e uid state children))))
 
 
@@ -312,7 +313,7 @@
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
-    [:span (use-style bullet-style)]
+    [:span (use-style bullet/bullet-style)]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
@@ -406,7 +407,7 @@
                                             (swap! state assoc :block new-B :parents new-P)))}
                [parse-and-render (or title string) uid]]))]
          [:div.block-embed
-          [block-el
+          [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
            linked-ref-data
            {:block-embed? true}]]]))))
@@ -575,14 +576,14 @@
            [:div
             (for [{:block/keys [uid] :as child} children]
               ^{:key uid}
-              [block-el child])])
+              [blocks/block-el child])])
 
          ;; References
          [linked-ref-el state on-daily-notes? linked-refs]
          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
 
 
-(defn node-page-component
+(defn page
   [ident]
   (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
         editing-uid   @(subscribe [:editing/uid])
