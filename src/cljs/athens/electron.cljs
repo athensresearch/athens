@@ -335,7 +335,7 @@
                     :db/valueType :db.type/ref}}
   )
   
-  ;; create an empty Db for test 
+  ;; Create an empty Db for test 
   (def test-db
     (-> (d/empty-db schemaTest))
   )
@@ -347,10 +347,9 @@
   
   
   (defn open-dialog-index
-    "Allow user to open a Backfile."
+    "Allow user to open a Backup file."
     [filepath]
     (js/alert "Your Data file is corrupted or incorrect, Please select a Backup file")
-
     (let [res  (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
                                                      :filters    [{:name "Transit" :extensions ["bkp"]}]}))
           open-file (first res)]
@@ -362,7 +361,7 @@
               ((writeDbIndex read-db filepath))((open-dialog-index filepath))))))
   ) 
 
-  ;; handle index.transit 
+  ;; Handle index.transit 
   (defn handleIndexTransit [filepath]  
     (let [read-db (.readFileSync fs filepath)
           db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
