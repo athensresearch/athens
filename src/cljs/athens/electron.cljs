@@ -9,7 +9,6 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [cljs.test :refer-macros [is deftest]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 
 
@@ -45,7 +44,8 @@
       (when new-dir
         (let [curr-db-filepath @(subscribe [:db/filepath])
               base-dir         (.dirname path curr-db-filepath)
-              base-dir-name    (.basename path base-dir)
+              base-dir-name    (.basen correctly map
+This schemaTest and test-db should be name according to the naming style thanksame path base-dir)
               curr-dir-images  (.resolve path base-dir IMAGES-DIR-NAME)
               new-dir          (.resolve path new-dir base-dir-name)
               new-dir-images   (.resolve path new-dir IMAGES-DIR-NAME)
@@ -358,7 +358,7 @@
         (let [read-db (.readFileSync fs open-file)
               db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
               ]  
-           (if (is (= (:schema db)  (:schema test-db))) 
+           (if (when (= (:schema db)  (:schema test-db))) 
               ((writeDbIndex read-db filepath))((open-dialog-index filepath))))))
   ) 
 
@@ -367,7 +367,7 @@
     (let [read-db (.readFileSync fs filepath)
           db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
           ]             
-          (if (is (= (:schema db)  (:schema test-db))) 
+          (if (when (= (:schema db)  (:schema test-db))) 
             ()(open-dialog-index filepath))       
          (dispatch [:fs/watch filepath])
          (dispatch [:reset-conn db]))
