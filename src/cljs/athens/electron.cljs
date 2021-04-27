@@ -215,15 +215,15 @@
     :local-storage/get-db-filepath
     [(inject-cofx :local-storage "db/filepath")
      (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
-                                      :key :remote-graph-conf})]
+                                      :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
-     (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
-       (cond
-         (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
-         ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
-         ;; Short-circuit the first load and just use the existing DB
-         (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath default-db-path]}
-         :else {:dispatch [:db/update-filepath local-storage]}))))
+      (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
+        (cond
+          (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
+          ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
+          ;; Short-circuit the first load and just use the existing DB
+          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath default-db-path]}
+          :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
   (reg-event-fx
