@@ -13,7 +13,7 @@
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
-    [athens.style :refer [color ZINDICES DEPTH-SHADOWS]]
+    [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.bullet :as bullet]
@@ -27,7 +27,6 @@
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.events :refer [listen unlisten]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -359,7 +358,7 @@
 
 
 (defn menu-dropdown
-  [node state daily-note?]
+  [node daily-note?]
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
                 [:<>
@@ -534,7 +533,7 @@
         unlinked-refs (r/atom [])]
     (fn [node editing-uid linked-refs]
       (let [{:block/keys [children uid] title :node/title} node
-            {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?  (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
