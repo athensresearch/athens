@@ -168,7 +168,7 @@
 
                      [:mark.contents.highlight {:padding "0 0.2em"
                                                 :border-radius "0.125rem"
-                                                :background-color (style/color :highlight-color)}]]})
+                                                :background-color (style/color :text-highlight-color)}]]})
 
 
 (stylefy/class "block-content" block-content-style)
