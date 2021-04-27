@@ -47,6 +47,9 @@
 
 (defn scroll-daily-notes
   [_]
+  ; Load more daily notes if bottom of viewport is <1 pixel above bottom of
+  ; #daily-notes. The #daily-notes element contains all daily notes, but not
+  ; the "Earlier" banner.
   (let [daily-notes @(subscribe [:daily-notes/items])
         el          (getElement "daily-notes")
         offset-top  (.. el -offsetTop)
@@ -62,7 +65,7 @@
       (< bottom-delta 1) (dispatch [:daily-note/next (get-day (uid-to-date (last daily-notes)) 1)]))))
 
 
-(def db-scroll-daily-notes (debounce scroll-daily-notes 500))
+(def db-scroll-daily-notes (debounce scroll-daily-notes 100))
 
 
 (defn safe-pull-many
@@ -92,12 +95,15 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (get-day)])
         (let [notes (safe-pull-many @note-refs)]
-          [:div#daily-notes (use-style daily-notes-scroll-area-style)
-           (doall
-             (for [{:keys [block/uid]} notes]
-               ^{:key uid}
-               [:<>
-                [:div (use-style daily-notes-page-style)
-                 [node-page/page [:block/uid uid]]]]))
+          [:div (use-style daily-notes-scroll-area-style)
+           ; When user scrolls to the bottom of the #daily-notes div, daily
+           ; notes from more distant past are loaded.
+           [:div#daily-notes
+            (doall
+              (for [{:keys [block/uid]} notes]
+                ^{:key uid}
+                [:<>
+                 [:div (use-style daily-notes-page-style)
+                  [node-page/page [:block/uid uid]]]]))]
            [:div (use-style daily-notes-notional-page-style)
             [:h1 "Earlier"]]])))))
