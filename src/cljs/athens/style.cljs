@@ -9,6 +9,7 @@
 (def THEME-DARK
   {:link-color          "#2399E7"
    :highlight-color     "#FBBE63"
+   :text-highlight-color "#FBBE63"
    :warning-color       "#DE3C21"
    :confirmation-color  "#189E36"
    :header-text-color   "#BABABA"
@@ -34,6 +35,7 @@
 (def THEME-LIGHT
   {:link-color          "#0075E1"
    :highlight-color     "#F9A132"
+   :text-highlight-color "#ffdb8a"
    :warning-color       "#D20000"
    :confirmation-color  "#009E23"
    :header-text-color   "#322F38"
@@ -129,6 +131,9 @@
                             :text-transform "uppercase"}]
                       [:.MuiSvgIcon-root {:font-size "1.5rem"}]
                       [:input {:font-family "inherit"}]
+                      [:mark {:background-color (color :text-highlight-color)
+                              :border-radius "0.25rem"
+                              :color "#000"}]
                       [:kbd {:text-transform "uppercase"
                              :font-family    "inherit"
                              :font-size      "0.85em"
