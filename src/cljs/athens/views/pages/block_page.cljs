@@ -118,8 +118,7 @@
              (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
                ^{:key breadcrumb-uid}
                [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
-                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)
-                            :style {:position "relative"}}
+                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
                 [:span {:style {:pointer-events "none"}}
                  [parse-renderer/parse-and-render (or title string)]]]))]]
 
