@@ -1,37 +1,37 @@
 (ns athens.views.pages.node-page
   (:require
-   ["@material-ui/core/Popover" :as Popover]
-   ["@material-ui/icons/Bookmark" :default Bookmark]
-   ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-   ["@material-ui/icons/BubbleChart" :default BubbleChart]
-   ["@material-ui/icons/ChevronRight" :default ChevronRight]
-   ["@material-ui/icons/Delete" :default Delete]
-   ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
-   ["@material-ui/icons/Link" :default Link]
-   ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
-   [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-   [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-   [athens.patterns :as patterns]
-   [athens.router :refer [navigate-uid navigate]]
-   [athens.style :refer [color ZINDICES DEPTH-SHADOWS]]
-   [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
-   [athens.views.alerts :refer [alert-component]]
-   [athens.views.blocks.bullet :as bullet]
-   [athens.views.blocks.core :as blocks]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-   [athens.views.buttons :refer [button]]
-   [athens.views.dropdown :refer [menu-style menu-separator-style]]
-   [cljsjs.react]
-   [cljsjs.react.dom]
-   [clojure.string :as str]
-   [datascript.core :as d]
-   [garden.selectors :as selectors]
-   [goog.events :refer [listen unlisten]]
-   [komponentit.autosize :as autosize]
-   [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]])
+    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/icons/Bookmark" :default Bookmark]
+    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/Delete" :default Delete]
+    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
+    ["@material-ui/icons/Link" :default Link]
+    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
+    [athens.patterns :as patterns]
+    [athens.router :refer [navigate-uid navigate]]
+    [athens.style :refer [color ZINDICES DEPTH-SHADOWS]]
+    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+    [athens.views.alerts :refer [alert-component]]
+    [athens.views.blocks.bullet :as bullet]
+    [athens.views.blocks.core :as blocks]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.dropdown :refer [menu-style menu-separator-style]]
+    [cljsjs.react]
+    [cljsjs.react.dom]
+    [clojure.string :as str]
+    [datascript.core :as d]
+    [garden.selectors :as selectors]
+    [goog.events :refer [listen unlisten]]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       KeyCodes)))
@@ -56,7 +56,7 @@
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
                               :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
-:display "inline-flex"
+                              :display "inline-flex"
                               :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
 
 
@@ -364,47 +364,46 @@
   [node state daily-note?]
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
-      [:<>
-       [button {:class    [(when @ele "is-active")]
-                :on-click #(reset! ele (.-currentTarget %))
-                :style    page-menu-toggle-style}
-        [:> MoreHoriz]]
-       [m-popover
-       (merge (use-style dropdown-style)
-              {:style {:font-size "14px"}
-               :open            @ele
-               :anchorEl        @ele
-               :onClose         #(reset! ele nil)
-               :anchorOrigin    #js{:vertical   "bottom"
-                                    :horizontal "left"}
-               :marginThreshold 10
-               :transformOrigin #js{:vertical   "top"
-                                    :horizontal "left"}
-               :classes {:root "backdrop"
-                         :paper "menu"}})
-        [:div (use-style menu-style)
-         [:<>
-          (if sidebar
-            [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-             [:<>
-              [:> BookmarkBorder]
-              [:span "Remove Shortcut"]]]
-            [button {:on-click #(dispatch [:page/add-shortcut uid])}
-             [:<>
-              [:> Bookmark]
-              [:span "Add Shortcut"]]])
-          [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-           [:<>
-            [:> BubbleChart]
-            [:span "Show Local Graph"]]]]
-         [:hr (use-style menu-separator-style)]
-         [button {:on-click #(if daily-note?
-                               (dispatch [:daily-note/delete uid title])
-                               (do
-                                 (navigate :pages)
-                                 (dispatch [:page/delete uid title])))}
-          [:<> [:> Delete] [:span "Delete Page"]]]]]])))
-
+                [:<>
+                 [button {:class    [(when @ele "is-active")]
+                          :on-click #(reset! ele (.-currentTarget %))
+                          :style    page-menu-toggle-style}
+                  [:> MoreHoriz]]
+                 [m-popover
+                  (merge (use-style dropdown-style)
+                         {:style {:font-size "14px"}
+                          :open            @ele
+                          :anchorEl        @ele
+                          :onClose         #(reset! ele nil)
+                          :anchorOrigin    #js{:vertical   "bottom"
+                                               :horizontal "left"}
+                          :marginThreshold 10
+                          :transformOrigin #js{:vertical   "top"
+                                               :horizontal "left"}
+                          :classes {:root "backdrop"
+                                    :paper "menu"}})
+                  [:div (use-style menu-style)
+                   [:<>
+                    (if sidebar
+                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                       [:<>
+                        [:> BookmarkBorder]
+                        [:span "Remove Shortcut"]]]
+                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                       [:<>
+                        [:> Bookmark]
+                        [:span "Add Shortcut"]]])
+                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                     [:<>
+                      [:> BubbleChart]
+                      [:span "Show Local Graph"]]]]
+                   [:hr (use-style menu-separator-style)]
+                   [button {:on-click #(if daily-note?
+                                         (dispatch [:daily-note/delete uid title])
+                                         (do
+                                           (navigate :pages)
+                                           (dispatch [:page/delete uid title])))}
+                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
 (defn ref-comp
