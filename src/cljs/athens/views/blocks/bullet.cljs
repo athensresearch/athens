@@ -4,7 +4,6 @@
     [athens.router :as router]
     [athens.style :as style]
     [athens.views.blocks.context-menu :as context-menu]
-    [garden.selectors :as selectors]
     [goog.dom.classlist :as classList]
     [stylefy.core :as stylefy]))
 
@@ -17,25 +16,38 @@
    :position "relative"
    :z-index 2
    :cursor "pointer"
-   :width "0.75em"
    :margin-right "0.25em"
+   :appearance "none"
+   :border 0
+   :background "transparent"
    :transition "all 0.05s ease"
    :height "2em"
+   :width "1em"
    :color (style/color :body-text-color :opacity-low)
-   ::stylefy/mode [[:after {:content "''"
-                            :background "currentColor"
-                            :transition "all 0.05s ease"
-                            :border-radius "100px"
-                            :box-shadow "0 0 0 0.125rem transparent"
-                            :display "inline-flex"
-                            :margin "50% 0 0 50%"
-                            :transform "translate(-50%, -50%)"
-                            :height "0.3125em"
-                            :width "0.3125em"}]
-                   [:hover {:color (style/color :link-color)}]]
-   ::stylefy/manual [[:&.closed-with-children [(selectors/& (selectors/after)) {:box-shadow (str "0 0 0 0.125rem " (style/color :body-text-color))
-                                                                                :opacity (:opacity-med style/OPACITIES)}]]
-                     [:&.closed-with-children [(selectors/& (selectors/before)) {:content "none"}]]
+   ::stylefy/manual [[:&:after {:content "''"
+                                :background "currentColor"
+                                :transition "all 0.05s ease"
+                                :border-radius "100px"
+                                :box-shadow "0 0 0 0.125rem transparent"
+                                :display "inline-flex"
+                                :margin "50% 0 0 50%"
+                                :transform "translate(-50%, -50%)"
+                                :height "0.3125em"
+                                :width "0.3125em"}]
+                     [:&:before {:content "''"
+                                 :inset "0.25rem -0.125rem"
+                                 :z-index -1
+                                 :transition "opacity 0.1s ease"
+                                 :position "absolute"
+                                 :border-radius "0.25rem"
+                                 :box-shadow (:4 style/DEPTH-SHADOWS)
+                                 :opacity 0
+                                 :background (style/color :background-plus-2)}]
+                     [:&:hover {:color (style/color :link-color)}]
+                     [:&:hover:before
+                      :&:focus-visible:before {:opacity 1}]
+                     [:&.closed-with-children [:&:after {:box-shadow (str "0 0 0 0.125rem " (style/color :body-text-color))
+                                                         :opacity (:opacity-med style/OPACITIES)}]]
                      [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
                      [:&.dragging {:z-index 1
                                    :cursor "grabbing"
@@ -84,14 +96,15 @@
   [_ _ _]
   (fn [block state linked-ref]
     (let [{:block/keys [uid children open]} block]
-      [:span {:class           ["bullet" (when (and (seq children)
-                                                    (or (and (true? linked-ref) (not (:linked-ref/open @state)))
-                                                        (and (false? linked-ref) (not open))))
-                                           "closed-with-children")]
-              :draggable       true
-              :on-click        (fn [e] (router/navigate-uid uid e))
-              :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
-              :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
-              :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
-              :on-drag-start   (fn [e] (bullet-drag-start e uid state))
-              :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
+      [:button {:class           ["bullet" (when (and (seq children)
+                                                      (or (and (true? linked-ref) (not (:linked-ref/open @state)))
+                                                          (and (false? linked-ref) (not open))))
+                                             "closed-with-children")]
+                :tab-index 0
+                :draggable       true
+                :on-click        (fn [e] (router/navigate-uid uid e))
+                :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
+                :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+                :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+                :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+                :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
