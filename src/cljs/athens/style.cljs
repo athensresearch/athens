@@ -20,8 +20,6 @@
    :background-plus-1   "#222"
    :background-plus-2   "#333"
 
-   :shadow-color  "rgba(0,0,0,0.16)"
-
    :graph-control-bg    "#272727"
    :graph-control-color "white"
    :graph-node-normal   "#909090"
@@ -39,14 +37,11 @@
    :header-text-color   "#322F38"
    :body-text-color     "#433F38"
    :border-color        "hsla(32, 81%, 10%, 0.08)"
-   :background-plus-2   "#FFFFFF"
-   :background-plus-1   "#FFFFFF"
-   :background-color    "#FFFFFF"
+   :background-plus-2   "#fff"
+   :background-plus-1   "#fbfbfb"
+   :background-color    "#F6F6F6"
    :background-minus-1  "#FAF8F6"
    :background-minus-2  "#EFEDEB"
-
-   :shadow-color  "rgba(0,0,0,0.16)"
-
    :graph-control-bg    "#f9f9f9"
    :graph-control-color "black"
    :graph-node-normal   "#909090"
@@ -57,10 +52,10 @@
 
 
 (def DEPTH-SHADOWS
-  {:4  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
-   :8  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
-   :16 "0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.1)"
-   :64 "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"})
+  {:4  "0 2px 4px rgba(0, 0, 0, 0.2)"
+   :8  "0 4px 8px rgba(0, 0, 0, 0.2)"
+   :16 "0 4px 16px rgba(0, 0, 0, 0.2)"
+   :64 "0 24px 60px rgba(0, 0, 0, 0.2)"})
 
 
 (def OPACITIES
