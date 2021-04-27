@@ -18,12 +18,23 @@
    :transition "all 0.05s ease"
    :align-items "center"
    :justify-content "center"
+   :cursor "pointer"
    :padding "0"
    :-webkit-appearance "none"
    :color (style/color :body-text-color :opacity-med)
-   ::stylefy/mode [[:hover {:color (style/color :link-color)}]
-                   [":is(button)" {:cursor "pointer"}]]
-   ::stylefy/manual [[:&.closed [:svg {:transform "rotate(-90deg)"}]]
+   ::stylefy/manual [[:&:hover {:color (style/color :link-color)}]
+                     [:&:before {:content "''"
+                                 :inset "0.25rem -0.125rem"
+                                 :z-index -1
+                                 :position "absolute"
+                                 :transition "opacity 0.1s ease"
+                                 :border-radius "0.25rem"
+                                 :box-shadow (:4 style/DEPTH-SHADOWS)
+                                 :opacity 0
+                                 :background (style/color :background-plus-2)}]
+                     [:&:hover:before
+                      :&:focus-visible:before {:opacity 1}]
+                     [:&.closed [:svg {:transform "rotate(-90deg)"}]]
                      [:&:empty {:pointer-events "none"}]]})
 
 
@@ -40,6 +51,7 @@
                                                    (and (false? linked-ref) open))
                                              "open"
                                              "closed")
+                                 :tab-index 0
                                  :on-click (fn [_]
                                              (if (true? linked-ref)
                                                (swap! state update :linked-ref/open not)

@@ -39,7 +39,7 @@
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
                                                      :position "absolute"
                                                      :width "1px"
-                                                     :left "calc(1.25em + 1px)"
+                                                     :left "calc(1.375em + 1px)"
                                                      :top "2em"
                                                      :bottom "0"
                                                      :transform "translateX(50%)"
