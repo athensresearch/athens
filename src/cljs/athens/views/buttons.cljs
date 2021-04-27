@@ -44,7 +44,10 @@
                      [:&:active
                       :&:hover:active
                       :&.is-active {:color (color :body-text-color)
-                                    :background (color :body-text-color :opacity-low)}]
+                                    :background (color :body-text-color :opacity-lower)}]
+                     [:&:active
+                      :&:hover:active
+                      :&:active.is-active {:background (color :body-text-color :opacity-low)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color :opacity-low)
                                                       :background (color :body-text-color :opacity-lower)
                                                       :cursor "default"}]

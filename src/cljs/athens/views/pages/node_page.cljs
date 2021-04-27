@@ -1,5 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
+    ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
@@ -12,7 +13,7 @@
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
-    [athens.style :refer [color]]
+    [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.bullet :as bullet]
@@ -20,13 +21,12 @@
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [dropdown-style menu-style menu-separator-style]]
+    [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [goog.events :refer [listen unlisten]]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -34,6 +34,12 @@
   (:import
     (goog.events
       KeyCodes)))
+
+;;-------------------------------------------------------------------
+;;--- material ui ---
+
+
+(def m-popover (r/adapt-react-class (.-default Popover)))
 
 ;;; Styles
 
@@ -43,6 +49,18 @@
    :padding "1rem 2rem 10rem 2rem"
    :flex-basis "100%"
    :max-width "55rem"})
+
+
+(def dropdown-style
+  {::stylefy/manual [[:.menu {:background (color :background-plus-2)
+                              :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+                              :padding "0.25rem"
+                              :display "inline-flex"
+                              :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
+
+
+(def page-header-style
+  {:position "relative"})
 
 
 (def title-style
@@ -137,12 +155,11 @@
 
 (def page-menu-toggle-style
   {:position "absolute"
-   :left "-0.5rem"
+   :left "-1.5rem"
    :border-radius "1000px"
    :padding "0.375rem 0.5rem"
    :color (color :body-text-color :opacity-high)
-   :top "50%"
-   :transform "translate(-100%, -50%)"})
+   :top "0.5rem"})
 
 
 ;;; Helpers
@@ -341,48 +358,49 @@
 
 
 (defn menu-dropdown
-  [_node state _daily-note?]
-  (let [ref                  (atom nil)
-        handle-click-outside (fn [e]
-                               (when (and (:menu/show @state)
-                                          (not (.. @ref (contains (.. e -target)))))
-                                 (swap! state assoc :menu/show false)))]
-    (r/create-class
-      {:display-name           "node-page-menu"
-       :component-did-mount    (fn [_this] (listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [node state daily-note?]
-                                 (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node
-                                       {:menu/keys [show]} @state]
-                                   (when show
-                                     [:div (merge (use-style dropdown-style
-                                                             {:ref #(reset! ref %)})
-                                                  {:style {:font-size "14px"
-                                                           :position  "absolute"
-                                                           :left      "-3em"
-                                                           :top       "3.5em"}})
-                                      [:div (use-style menu-style)
-                                       [:<>
-                                        (if sidebar
-                                          [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                                           [:<>
-                                            [:> BookmarkBorder]
-                                            [:span "Remove Shortcut"]]]
-                                          [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                                           [:<>
-                                            [:> Bookmark]
-                                            [:span "Add Shortcut"]]])
-                                        [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                                         [:<>
-                                          [:> BubbleChart]
-                                          [:span "Show Local Graph"]]]]
-                                       [:hr (use-style menu-separator-style)]
-                                       [button {:on-click #(if daily-note?
-                                                             (dispatch [:daily-note/delete uid title])
-                                                             (do
-                                                               (navigate :pages)
-                                                               (dispatch [:page/delete uid title])))}
-                                        [:<> [:> Delete] [:span "Delete Page"]]]]])))})))
+  [node daily-note?]
+  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
+    (r/with-let [ele (r/atom nil)]
+                [:<>
+                 [button {:class    [(when @ele "is-active")]
+                          :on-click #(reset! ele (.-currentTarget %))
+                          :style    page-menu-toggle-style}
+                  [:> MoreHoriz]]
+                 [m-popover
+                  (merge (use-style dropdown-style)
+                         {:style {:font-size "14px"}
+                          :open            @ele
+                          :anchorEl        @ele
+                          :onClose         #(reset! ele nil)
+                          :anchorOrigin    #js{:vertical   "bottom"
+                                               :horizontal "left"}
+                          :marginThreshold 10
+                          :transformOrigin #js{:vertical   "top"
+                                               :horizontal "left"}
+                          :classes {:root "backdrop"
+                                    :paper "menu"}})
+                  [:div (use-style menu-style)
+                   [:<>
+                    (if sidebar
+                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                       [:<>
+                        [:> BookmarkBorder]
+                        [:span "Remove Shortcut"]]]
+                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
+                       [:<>
+                        [:> Bookmark]
+                        [:span "Add Shortcut"]]])
+                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                     [:<>
+                      [:> BubbleChart]
+                      [:span "Show Local Graph"]]]]
+                   [:hr (use-style menu-separator-style)]
+                   [button {:on-click #(if daily-note?
+                                         (dispatch [:daily-note/delete uid title])
+                                         (do
+                                           (navigate :pages)
+                                           (dispatch [:page/delete uid title])))}
+                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
 (defn ref-comp
@@ -515,7 +533,7 @@
         unlinked-refs (r/atom [])]
     (fn [node editing-uid linked-refs]
       (let [{:block/keys [children uid] title :node/title} node
-            {:menu/keys [show] :alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?  (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
@@ -531,44 +549,41 @@
                              :left     "35%"})
             [alert-component message confirm-fn cancel-fn]])
 
+
          ;; Header
-         [:h1 (use-style title-style
-                         {:data-uid uid
-                          :class    "page-header"
-                          :on-click (fn [e]
-                                      (.. e preventDefault)
-                                      (if (or daily-note? (.. e -shiftKey))
-                                        (navigate-uid uid e)
-                                        (dispatch [:editing/uid uid])))})
-          ;; Prevent editable textarea if a node/title is a date
-          ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
-          [button {:class    [(when show "active")]
-                   :on-click (fn [e]
-                               (.. e stopPropagation)
-                               (if show
-                                 (swap! state assoc :menu/show false)
-                                 (swap! state merge {:menu/show true})))
-                   :style    page-menu-toggle-style}
-           [:> MoreHoriz]]
-          (when-not daily-note?
-            [autosize/textarea
-             {:value       (:title/local @state)
-              :id          (str "editable-uid-" uid)
-              :class       (when (= editing-uid uid) "is-editing")
-              :on-blur     (fn [_]
-                             ;; add title Untitled-n for empty titles
-                             (when (empty? (:title/local @state))
-                               (swap! state assoc :title/local (auto-inc-untitled)))
-                             (handle-blur node state linked-refs))
-              :on-key-down (fn [e] (handle-key-down e uid state children))
-              :on-change   (fn [e] (handle-change e state))}])
-          ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-          (if (str/blank? (:title/local @state))
-            [:wbr]
-            [parse-renderer/parse-and-render (:title/local @state) uid])
+         [:header (use-style page-header-style)
 
           ;; Dropdown
-          [menu-dropdown node state daily-note?]]
+          [menu-dropdown node state daily-note?]
+
+          [:h1 (use-style title-style
+                          {:data-uid uid
+                           :class    "page-header"
+                           :on-click (fn [e]
+                                       (.. e preventDefault)
+                                       (if (or daily-note? (.. e -shiftKey))
+                                         (navigate-uid uid e)
+                                         (dispatch [:editing/uid uid])))})
+          ;; Prevent editable textarea if a node/title is a date
+          ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
+
+
+           (when-not daily-note?
+             [autosize/textarea
+              {:value       (:title/local @state)
+               :id          (str "editable-uid-" uid)
+               :class       (when (= editing-uid uid) "is-editing")
+               :on-blur     (fn [_]
+                             ;; add title Untitled-n for empty titles
+                              (when (empty? (:title/local @state))
+                                (swap! state assoc :title/local (auto-inc-untitled)))
+                              (handle-blur node state linked-refs))
+               :on-key-down (fn [e] (handle-key-down e uid state children))
+               :on-change   (fn [e] (handle-change e state))}])
+          ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+           (if (str/blank? (:title/local @state))
+             [:wbr]
+             [parse-renderer/parse-and-render (:title/local @state) uid])]]
 
          ;; Children
          (if (empty? children)
