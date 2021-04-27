@@ -4,15 +4,43 @@
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width,initial-scale=1">
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+      <link rel="shortcut icon" type="image/png" href="favicon.png" />
       <link href="./css/normalize.css" rel="stylesheet" />
+      <link href="./css/katex.min.css" rel="stylesheet" />
+      <link rel="stylesheet" href="./css/codemirror.css" type="text/css" />
       <style id="_stylefy-constant-styles_"></style>
       <style id="_stylefy-styles_"></style>
+      <script>
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+        posthog.init('qouvHPR2-blOal8-l6CSmFybj8VWojBlv472Ac-ovAI',{api_host:'https://app.posthog.com', persistence:'localStorage'})
+      </script>
+      <script type="text/javascript" src="js/lib/codemirror.js"></script>
   </head>
   <body>
     <div id="app">
     </div>
-    <script src="js/compiled/shared.js"></script>
-    <script>stylefy.core.init(); reagent.dom.render(athens.devcards.spinner.initial_spinner_component(), document.getElementById('app'))</script>
-    <script src="js/compiled/app.js"></script>
+    <script>
+      function isElectron() {
+        var userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.indexOf("electron/") > -1
+      }
+      function show10x() {
+        localStorage.setItem("day8.re-frame-10x.show-panel","\"true\"")
+        localStorage.setItem("day8.re-frame-10x.using-trace?","\"true\"")
+      }
+    </script>
+    <script>
+      var electron = isElectron()
+      var src = ""
+      if (electron) {
+         src = "js/compiled/renderer.js"
+         show10x() // 10x exists on DOM by default, but athens.style hides via CSS
+      } else {
+         src = "js/compiled/app.js"
+      }
+      var script = document.createElement("script");
+      script.setAttribute("src", src);
+      document.getElementsByTagName("head")[0].appendChild(script);
+    </script>
   </body>
 </html>

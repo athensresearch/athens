@@ -1,15 +1,7 @@
 (ns athens.patterns-test
   (:require
     [athens.patterns :as patterns]
-    [clojure.string :as str]
     [clojure.test :refer [deftest is]]))
-
-
-(defn update-links-in-block
-  [s old-title new-title]
-  (str/replace s
-               (patterns/linked old-title)
-               (str "$1$3$4" new-title "$2$5")))
 
 
 (def text
@@ -31,4 +23,22 @@
          (first (re-find (patterns/linked "Page Title")
                          "Some text with a #[[Page Title]]"))))
   (is (= new-text
-         (update-links-in-block text "AnotherPage" "AwesomePage"))))
+         (patterns/update-links-in-block text "AnotherPage" "AwesomePage"))))
+
+
+;; The results of these tests may surprise you.
+;; We use .* to detect if a link exists. Can't actually find capture any arbitrary link, because regex is greedy.
+;; Instead, use the Instaparse parser to actually capture the [[inner content]] of strings.
+(deftest wildcard-tests
+  (is (= nil
+         (re-find (patterns/linked ".*") "no link")))
+
+  (is (= "[[a link]]"
+         (first (re-find (patterns/linked ".*") "[[a link]]"))))
+
+  (is (= "[[link 1]] [[link 2]]"
+         (first (re-find (patterns/linked ".*") "[[link 1]] [[link 2]]"))))
+
+  (is (= "#[[link 1]] #hashtag"
+         (first (re-find (patterns/linked ".*") "#[[link 1]] #hashtag")))))
+

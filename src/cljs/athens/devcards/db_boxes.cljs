@@ -1,7 +1,7 @@
 (ns athens.devcards.db-boxes
   (:require
     [athens.db :as db]
-    [athens.devcards.data-browser :as brws :refer [browser]]
+    [athens.views.data-browser :as brws :refer [browser]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [cljsjs.react]

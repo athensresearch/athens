@@ -1,14 +1,11 @@
-;; Init is called by shadow-cljs (https://github.com/athensresearch/athens/blob/c90f3023a1c4480b50ed61d07f973d8c29e08bf8/shadow-cljs.edn#L6)
-athens.core/init
-
-;; URLs can be used if we want to examine other DBs
 athens.db/help-url
 athens.db/ego-url
-
-;; str-kw-mappings will be used for JSON import (see https://github.com/athensresearch/athens/issues/31)
-user/str-kw-mappings
-athens.lib.dom.attributes/with-classes
-
-;; will be used for linked references
-athens.db/get-children
-athens.db/get-parents
+athens.db/get-athens-datoms
+athens.events/shared-blocks-excl-date-pages
+athens.views.right-sidebar/sidebar-section-heading-style
+athens.core/init
+athens.main.core/main
+athens.patterns/date
+athens.util/common-ancestor
+athens.events/pages
+athens.views.blocks.core/block-component

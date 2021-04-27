@@ -1,6 +1,13 @@
 (ns athens.devcards.icons
   (:require
-    ["@material-ui/icons" :as mui-icons]
+    ["@material-ui/icons/Directions" :default Directions]
+    ["@material-ui/icons/DirectionsOutlined" :default DirectionsOutlined]
+    ["@material-ui/icons/DirectionsRounded" :default DirectionsRounded]
+    ["@material-ui/icons/DirectionsSharp" :default DirectionsSharp]
+    ["@material-ui/icons/DirectionsTwoTone" :default DirectionsTwoTone]
+    ["@material-ui/icons/Face" :default Face]
+    ["@material-ui/icons/Search" :default Search]
+    ["@material-ui/icons/Settings" :default Settings]
     [athens.db]
     [athens.style :refer [color OPACITIES]]
     [cljsjs.react]
@@ -11,31 +18,32 @@
 
 (defcard-rg Standard-Icons
   [:div
-   [:> mui-icons/Face]
-   [:> mui-icons/Settings]
-   [:> mui-icons/Search]])
+   [:> Face]
+   [:> Settings]
+   [:> Search]])
 
 
 (defcard-rg Icon-Types
-  "Use the different built-in icon types by appending one of `Outlined`, `Rounded`, `TwoTone`, or `Sharp` to the icon name."
+  "Use the different built-in icon types by appending one of `Outlined`, `Rounded`, `TwoTone`, or `Sharp` to the icon name.
+  List of icons: [https://material-ui.com/components/material-icons/](https://material-ui.com/components/material-icons/)"
   [:div
-   [:> mui-icons/Directions]
-   [:> mui-icons/DirectionsOutlined]
-   [:> mui-icons/DirectionsRounded]
-   [:> mui-icons/DirectionsTwoTone]
-   [:> mui-icons/DirectionsSharp]])
+   [:> Directions]
+   [:> DirectionsOutlined]
+   [:> DirectionsRounded]
+   [:> DirectionsTwoTone]
+   [:> DirectionsSharp]])
 
 
 (defcard-rg Styling-icons
-  "Color, opacity, and other properties can be applied to icons by placing them in an element with those styles applied."
+  "To use icons in lazy seqs (like `for` loops or `map`), or to apply other properties like styles, use `r/adapt-react-class`. See [https://github.com/reagent-project/reagent/issues/369](https://github.com/reagent-project/reagent/issues/369)."
   [:div
-   [:span {:style {:color (color :link-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:color (color :highlight-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:color (color :warning-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:color (color :confirmation-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-lower OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-low OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-med OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:opacity (:opacity-high OPACITIES)}} (r/create-element mui-icons/Face)]
-   [:span {:style {:color (color :body-text-color)}} (r/create-element mui-icons/Face)]])
+   [(r/adapt-react-class Face) {:style {:color (color :link-color)}}]
+   [(r/adapt-react-class Face) {:style {:color (color :highlight-color)}}]
+   [(r/adapt-react-class Face) {:style {:color (color :warning-color)}}]
+   [(r/adapt-react-class Face) {:style {:color (color :confirmation-color)}}]
+   [(r/adapt-react-class Face) {:style {:color (color :body-text-color)}}]
+   [(r/adapt-react-class Face) {:style {:opacity (:opacity-lower OPACITIES)}}]
+   [(r/adapt-react-class Face) {:style {:opacity (:opacity-low OPACITIES)}}]
+   [(r/adapt-react-class Face) {:style {:opacity (:opacity-med OPACITIES)}}]
+   [(r/adapt-react-class Face) {:style {:opacity (:opacity-high OPACITIES)}}]
+   [(r/adapt-react-class Face) {:style {:color (color :header-text-color)}}]])

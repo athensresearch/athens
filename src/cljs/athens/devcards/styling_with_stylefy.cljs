@@ -25,7 +25,7 @@
   ```clojure
   (def button-style
     {:cursor \"pointer\"
-     :padding \"6px 10px\"})
+     :padding \"0.5rem 0.75rem\"})
   ```
 ")
 
@@ -36,7 +36,7 @@
   ```clojure
   (def button-style
     {:cursor \"pointer\"
-      :padding \"6px 10px\"
+      :padding \"0.5rem 0.75rem\"
       ::stylefy/mode [[:hover {:background-color \"blue\"}]
                       [:after {:content \"''\"}]]})
   ```
@@ -59,8 +59,8 @@
 
   ```clojure
   (def block-indicator-style
-    {:width \"12px\"
-     :height \"32px\"
+    {:width \"0.75em\"
+     :height \"2em\"
      ::stylefy/manual [[:&.open {:color \"blue\"}]})
   ```
 ")
@@ -73,8 +73,8 @@
   (:require [garden.selectors :as selector])
 
   (def block-indicator-style
-    {:width \"12px\"
-     :height \"32px\"
+    {:width \"0.75em\"
+     :height \"2em\"
      ::stylefy/mode [[:before {:content \"'hello'\"}]]
      ::stylefy/manual [[:&.closed [(selectors/& (selectors/before)) {:content \"none\"}]]})
   ```

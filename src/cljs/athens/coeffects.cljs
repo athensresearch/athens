@@ -1,10 +1,15 @@
-(ns athens.coeffects)
+(ns athens.coeffects
+  (:require
+    [re-frame.core :refer [reg-cofx]]))
 
 
-;;; Coeffects
+(reg-cofx
+  :local-storage
+  (fn [cofx key]
+    (assoc cofx :local-storage (js/localStorage.getItem key))))
 
-;;
-;;(r/reg-cofx
-;;  :ds
-;;  (fn [coeffects _]
-;;    (assoc coeffects :ds @@store)))
+
+(reg-cofx
+  :local-storage-map
+  (fn [cofx {:keys [ls-key key]}]
+    (assoc cofx key (js/localStorage.getItem ls-key))))

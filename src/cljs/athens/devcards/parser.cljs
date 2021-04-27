@@ -1,8 +1,8 @@
 (ns athens.devcards.parser
   (:require
-    [athens.devcards.blocks :refer [block-el]]
     #_[athens.parse-renderer :refer [parse-and-render]]
     #_[athens.parser :refer [parse-to-ast combine-adjacent-strings]]
+    [athens.views.core :refer [block-el]]
     #_[cljs.test :refer [is testing are async]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -22,11 +22,11 @@
    "This is a block ref: ((lxMRAb5Y5))"                                     ;; TODO
    "This is a **very** important block"
    "This is an [external link](https://github.com/athensresearch/athens/)"
-   "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"])
+   "This is an image: ![alt](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)"
+   "This is a piece of `preformatted code` or ```monospace text```"])
 
 
 (defcard-rg Parse
   [:<>
    (for [s strings]
      ^{:key s} [block-el {:block/string s}])])
-
