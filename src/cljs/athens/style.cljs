@@ -1,9 +1,9 @@
 (ns athens.style
   (:require
-   [athens.config :as config]
-   [athens.util :as util]
-   [garden.color :refer [opacify hex->hsl]]
-   [stylefy.core :as stylefy]))
+    [athens.config :as config]
+    [athens.util :as util]
+    [garden.color :refer [opacify hex->hsl]]
+    [stylefy.core :as stylefy]))
 
 
 (def THEME-DARK
@@ -38,8 +38,8 @@
    :body-text-color     "#433F38"
    :border-color        "hsla(32, 81%, 10%, 0.08)"
    :background-plus-2   "#fff"
-:background-plus-1   "#fbfbfb"
-:background-color    "#F6F6F6"
+   :background-plus-1   "#fbfbfb"
+   :background-color    "#F6F6F6"
    :background-minus-1  "#FAF8F6"
    :background-minus-2  "#EFEDEB"
    :graph-control-bg    "#f9f9f9"
