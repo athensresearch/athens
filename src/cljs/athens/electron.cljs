@@ -358,7 +358,7 @@ This schemaTest and test-db should be name according to the naming style thanksa
         (let [read-db (.readFileSync fs open-file)
               db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
               ]  
-           (if (when (= (:schema db)  (:schema test-db))) 
+           (if (when (= (:schema db)  (:schema test-db)) true) 
               ((writeDbIndex read-db filepath))((open-dialog-index filepath))))))
   ) 
 
@@ -367,7 +367,7 @@ This schemaTest and test-db should be name according to the naming style thanksa
     (let [read-db (.readFileSync fs filepath)
           db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
           ]             
-          (if (when (= (:schema db)  (:schema test-db))) 
+          (if (when (= (:schema db)  (:schema test-db)) true) 
             ()(open-dialog-index filepath))       
          (dispatch [:fs/watch filepath])
          (dispatch [:reset-conn db]))
