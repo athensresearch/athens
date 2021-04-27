@@ -53,17 +53,11 @@
 
 
 (def dropdown-style
-  {:display "inline-flex"
-   :z-index (:zindex-dropdown ZINDICES)
-   :padding "0.25rem"
-   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
-   :min-height "2em"
-   :min-width "2em"
-   :animation "dropdown-appear 0.125s"
-   :animation-fill-mode "both"
-   :flex-direction "column"
-   ::stylefy/manual [[:.MuiPaper-root {:background (color :background-plus-2)
-                                       :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
+  {::stylefy/manual [[:.menu {:background (color :background-plus-2)
+                              :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+                              :padding "0.25rem"
+:display "inline-flex"
+                              :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
 
 
 (def page-header-style
@@ -383,8 +377,11 @@
                :onClose         #(reset! ele nil)
                :anchorOrigin    #js{:vertical   "bottom"
                                     :horizontal "left"}
+               :marginThreshold 10
                :transformOrigin #js{:vertical   "top"
-                                    :horizontal "left"}})
+                                    :horizontal "left"}
+               :classes {:root "backdrop"
+                         :paper "menu"}})
         [:div (use-style menu-style)
          [:<>
           (if sidebar
