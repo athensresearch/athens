@@ -37,7 +37,13 @@
    :transition "all 0.3s ease"
    ::stylefy/manual [[:a {:text-decoration "none"
                           :cursor "pointer"
+                          :position "relative"
                           :color "inherit"}]
+                     [:* {:display "inline"
+                          :pointer-events "none"
+                          :margin 0
+                          :padding 0
+                          :font-size "inherit"}]
                      [:&:last-child {:color (color :body-text-color)}]
                      [:&:hover {:flex-shrink "0"
                                 :color (color :link-color)}]

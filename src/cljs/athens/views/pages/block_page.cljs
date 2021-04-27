@@ -118,10 +118,8 @@
              (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
                ^{:key breadcrumb-uid}
                [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
-                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)
-                            :style {:position "relative"}}
-                [:span {:style {:pointer-events "none"}}
-                 [parse-renderer/parse-and-render (or title string)]]]))]]
+                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
+                [parse-renderer/parse-and-render (or title string)]]))]]
 
          ;; Header
          [:h1 (merge
