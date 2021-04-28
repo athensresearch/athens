@@ -31,6 +31,10 @@
   (def DB-INDEX "index.transit")
   (def IMAGES-DIR-NAME "images")
 
+  (def documents-athens-dir
+    (let [DOC-PATH (.getPath app "documents")]
+      (.resolve path DOC-PATH "athens")))
+
   ;;; Filesystem Dialogs
 
 
@@ -44,8 +48,7 @@
       (when new-dir
         (let [curr-db-filepath @(subscribe [:db/filepath])
               base-dir         (.dirname path curr-db-filepath)
-              base-dir-name    (.basen correctly map
-This schemaTest and test-db should be name according to the naming style thanksame path base-dir)
+              base-dir-name    (.basename path base-dir)
               curr-dir-images  (.resolve path base-dir IMAGES-DIR-NAME)
               new-dir          (.resolve path new-dir base-dir-name)
               new-dir-images   (.resolve path new-dir IMAGES-DIR-NAME)
@@ -212,12 +215,15 @@ This schemaTest and test-db should be name according to the naming style thanksa
     :local-storage/get-db-filepath
     [(inject-cofx :local-storage "db/filepath")
      (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
-                                      :key :remote-graph-conf})]
+                                      :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
-      (if (some-> remote-graph-conf read-string
-                  :default?)
-        {:dispatch [:start-socket]}
-        {:dispatch [:db/update-filepath local-storage]})))
+      (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
+        (cond
+          (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
+          ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
+          ;; Short-circuit the first load and just use the existing DB
+          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath default-db-path]}
+          :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
   (reg-event-fx
@@ -225,11 +231,6 @@ This schemaTest and test-db should be name according to the naming style thanksa
     [(inject-cofx :local-storage "current-route/uid")]
     (fn [{:keys [local-storage]} _]
       {:dispatch [:navigate {:page {:id local-storage}}]}))
-
-
-  (def documents-athens-dir
-    (let [DOC-PATH (.getPath app "documents")]
-      (.resolve path DOC-PATH "athens")))
 
 
   (defn create-dir-if-needed!
@@ -325,27 +326,11 @@ This schemaTest and test-db should be name according to the naming style thanksa
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
   
-  (def schemaTest
-  {:schema/version {}
-   :block/uid      {:db/unique :db.unique/identity}
-   :node/title     {:db/unique :db.unique/identity}
-   :attrs/lookup   {:db/cardinality :db.cardinality/many}
-   :block/children {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}
-   :block/refs     {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}}
-  )
-  
-  ;; Create an empty Db for test 
-  (def test-db
-    (-> (d/empty-db schemaTest))
-  )
-  
-  ;; Update index.transit
-  (defn writeDbIndex [file filepath]
-    (let [w  (.. fs (writeFile filepath file (fn [e](dispatch [:boot/desktop]))))])
-  )
-  
+    
+  ;; Update index.transit    
+  (defn write-db-index [file filepath]
+    (let [w  (.. fs (writeFile filepath file (fn [e] (dispatch [:boot/desktop]))))])
+  )  
   
   (defn open-dialog-index
     "Allow user to open a Backup file."
@@ -356,23 +341,24 @@ This schemaTest and test-db should be name according to the naming style thanksa
           open-file (first res)]
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
-              db      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
-              ]  
-           (if (when (= (:schema db)  (:schema test-db)) true) 
-              ((writeDbIndex read-db filepath))((open-dialog-index filepath))))))
+              db-file      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
+              ] 
+           (if (= (:schema db-file) db/schema) 
+              ((write-db-index read-db filepath))(open-dialog-index filepath)))))
   ) 
 
   ;; Handle index.transit 
-  (defn handleIndexTransit [filepath]  
+  (defn handle-index-transit [filepath]  
     (let [read-db (.readFileSync fs filepath)
-          db    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
-          ]             
-          (if (when (= (:schema db)  (:schema test-db)) true) 
+          db-file    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
+          ]
+        (if (= (:schema db-file) db/schema) 
             ()(open-dialog-index filepath))       
          (dispatch [:fs/watch filepath])
-         (dispatch [:reset-conn db]))
+         (dispatch [:reset-conn db-file]))
   )
   
+
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
@@ -385,7 +371,7 @@ This schemaTest and test-db should be name according to the naming style thanksa
                                                        ;; No database path found in localStorage. Creating new one
                                                        (nil? filepath) (dispatch [:fs/create-new-db])
                                                        ;; Database found in local storage and filesystem:
-                                                       (.existsSync fs filepath) (handleIndexTransit filepath)
+                                                       (.existsSync fs filepath) (handle-index-transit filepath)
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
