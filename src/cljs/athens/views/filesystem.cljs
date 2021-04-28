@@ -136,7 +136,7 @@
                     [button {:on-click close-modal}
                      [:> Close]]]
 
-         :content  [:div (use-style modal-contents-style)
+         :content  [:div (use-style (merge modal-contents-style {:height "20em"}))
                     (if (nil? @transformed-roam-db)
                       [:<>
                        [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
@@ -214,6 +214,7 @@
                   :width           "100%"}}
     [:h5 "New Location"]
     [button {:primary  true
+             :disabled (clojure.string/blank? (:input @state))
              :on-click #(electron/create-dialog! (:input @state))}
      "Browse"]]])
 
@@ -261,7 +262,6 @@
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         db-filepath       (subscribe [:db/filepath])
         state             (r/atom {:input     ""
-                                   :remote?   (:default? @remote-graph-conf)
                                    :tab-value 0})]
     (fn []
       (js/ReactDOM.createPortal

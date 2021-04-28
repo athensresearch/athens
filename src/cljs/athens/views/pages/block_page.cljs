@@ -1,4 +1,4 @@
-(ns athens.views.block-page
+(ns athens.views.pages.block-page
   (:require
     ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
@@ -6,10 +6,10 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts]]
-    [athens.views.blocks :refer [block-el]]
+    [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]
-    [athens.views.node-page :as node-page]
+    [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
@@ -118,8 +118,7 @@
              (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
                ^{:key breadcrumb-uid}
                [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
-                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)
-                            :style {:position "relative"}}
+                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
                 [:span {:style {:pointer-events "none"}}
                  [parse-renderer/parse-and-render (or title string)]]]))]]
 
@@ -146,7 +145,7 @@
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]
-                   ^{:key id} [block-el child]))]
+                   ^{:key id} [blocks/block-el child]))]
 
          ;; Refs
          (when (not-empty refs)
@@ -169,7 +168,7 @@
                         [node-page/ref-comp block]]))]))]]])]))))
 
 
-(defn block-page-component
+(defn page
   [ident]
   (let [block       (db/get-block-document ident)
         parents     (db/get-parents-recursively ident)

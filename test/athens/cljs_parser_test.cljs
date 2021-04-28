@@ -183,13 +183,13 @@
   (t/testing "backslash escapes"
     (util/parses-to sut/inline-parser->ast
 
-               ;; Any ASCII punctuation character may be backslash-escaped
+                    ;; Any ASCII punctuation character may be backslash-escaped
                     "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
                     [:paragraph
                      [:text-run
                       "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
 
-               ;; Backslashes before other characters are treated as literal backslashes:
+                    ;; Backslashes before other characters are treated as literal backslashes:
                     "\\→\\A\\a\\ \\3\\φ\\«"
                     [:paragraph
                      [:text-run "\\→\\A\\a\\ \\3\\φ\\«"]]))
@@ -197,7 +197,7 @@
   (t/testing "code spans"
     (util/parses-to sut/inline-parser->ast
 
-               ;; code spans
+                    ;; code spans
                     "`abc`"
                     [:paragraph
                      [:code-span "abc"]]
@@ -209,7 +209,7 @@
   (t/testing "all sorts of emphasis"
     (util/parses-to sut/inline-parser->ast
 
-               ;; emphasis & strong emphasis
+                    ;; emphasis & strong emphasis
                     "*emphasis*"
                     [:paragraph
                      [:emphasis
@@ -234,7 +234,7 @@
                      [:strong-emphasis
                       [:text-run "very strong"]]]
 
-               ;; mix and match different emphasis
+                    ;; mix and match different emphasis
                     "**bold and *italic***"
                     [:paragraph
                      [:strong-emphasis
@@ -242,7 +242,7 @@
                       [:emphasis
                        [:text-run "italic"]]]]
 
-               ;; next to each other
+                    ;; next to each other
                     "normal *italic* **bold**"
                     [:paragraph
                      [:text-run "normal "]
@@ -257,26 +257,26 @@
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (util/parses-to sut/inline-parser->ast
 
-               ;; just a highlight
+                    ;; just a highlight
                     "^^NEW^^"
                     [:paragraph
                      [:highlight
                       [:text-run "NEW"]]]
 
-               ;; in a middle
+                    ;; in a middle
                     "something ^^completely^^ different"
                     [:paragraph
                      [:text-run "something "]
                      [:highlight [:text-run "completely"]]
                      [:text-run " different"]]
 
-               ;; with spaces
+                    ;; with spaces
                     "^^a b c^^"
                     [:paragraph
                      [:highlight
                       [:text-run "a b c"]]]
 
-               ;; mixing with emphasis
+                    ;; mixing with emphasis
                     "this ^^highlight *has* **emphasis**^^"
                     [:paragraph
                      [:text-run "this "]
@@ -303,12 +303,12 @@
                      [:strikethrough [:text-run "Hi"]]
                      [:text-run " Hello, world!"]]
 
-               ;; not in the middle of the word
+                    ;; not in the middle of the word
                     "T~~hi~~s"
                     [:paragraph
                      [:text-run "T~~hi~~s"]]
 
-               ;; no spaces inside
+                    ;; no spaces inside
                     "Ain't ~~ working ~~"
                     [:paragraph
                      [:text-run "Ain't ~~ working ~~"]]))
@@ -321,7 +321,7 @@
                      [:link {:text   "link text"
                              :target "/some/url"}]]
 
-               ;; 3 sorts of link title
+                    ;; 3 sorts of link title
                     "[link text](/some/url \"title\")"
                     [:paragraph
                      [:link {:text   "link text"
@@ -340,7 +340,7 @@
                              :target "/some/url"
                              :title  "title"}]]
 
-               ;; link in an emphasis
+                    ;; link in an emphasis
                     "this **[link](/example) is bold**"
                     [:paragraph
                      [:text-run "this "]
@@ -349,11 +349,23 @@
                               :target "/example"}]
                       [:text-run " is bold"]]]
 
-               ;; but no emphasis in a link
+                    ;; but no emphasis in a link
                     "[*em*](/link)"
                     [:paragraph
                      [:link {:text   "*em*"
-                             :target "/link"}]]))
+                             :target "/link"}]]
+
+                    ;; because of fs usage targets can have spaces
+                    "[b c d](/url/with space)"
+                    [:paragraph
+                     [:link {:text   "b c d"
+                             :target "/url/with space"}]]
+
+                    "[b c d](/url/with space (and title))"
+                    [:paragraph
+                     [:link {:text   "b c d"
+                             :target "/url/with space"
+                             :title  "and title"}]]))
 
   (t/testing "images"
     (util/parses-to sut/inline-parser->ast
@@ -363,7 +375,7 @@
                      [:url-image {:alt "link text"
                                   :src "/some/url"}]]
 
-               ;; 3 sorts of link title
+                    ;; 3 sorts of link title
                     "![link text](/some/url \"title\")"
                     [:paragraph
                      [:url-image {:alt   "link text"
@@ -382,7 +394,7 @@
                                   :src   "/some/url"
                                   :title "title"}]]
 
-               ;; link in an emphasis
+                    ;; link in an emphasis
                     "this **![link](/example) is bold**"
                     [:paragraph
                      [:text-run "this "]
@@ -391,11 +403,23 @@
                                    :src "/example"}]
                       [:text-run " is bold"]]]
 
-               ;; but no emphasis in a link
+                    ;; but no emphasis in a link
                     "![*em*](/link)"
                     [:paragraph
                      [:url-image {:alt "*em*"
-                                  :src "/link"}]]))
+                                  :src "/link"}]]
+
+                    ;; image link with spaces
+                    "![image alt text](/url/with spaces)"
+                    [:paragraph
+                     [:url-image {:alt "image alt text"
+                                  :src "/url/with spaces"}]]
+
+                    "![image alt text](/url with spaces \"and title\")"
+                    [:paragraph
+                     [:url-image {:alt   "image alt text"
+                                  :src   "/url with spaces"
+                                  :title "and title"}]]))
 
   (t/testing "autolinks"
     (util/parses-to sut/inline-parser->ast
@@ -405,36 +429,60 @@
                      [:autolink {:text   "http://example.com"
                                  :target "http://example.com"}]]
 
-               ;; no white space in autolinks
+                    ;; no white space in autolinks
                     "<http://example.com and>"
                     [:paragraph
                      [:text-run "<http://example.com and>"]]
 
-               ;; emails are recognized
+                    ;; emails are recognized
                     "<root@example.com>"
                     [:paragraph
                      [:autolink {:text   "root@example.com"
-                                 :target "mailto:root@example.com"}]]))
+                                 :target "mailto:root@example.com"}]]
+
+                    ;; multiple auto links
+                    "<first> and <second>"
+                    [:paragraph
+                     [:autolink {:text   "first"
+                                 :target "first"}]
+                     [:text-run " and "]
+                     [:autolink {:text   "second"
+                                 :target "second"}]]))
 
   (t/testing "block references (Athens extension)"
     (util/parses-to sut/inline-parser->ast
 
-               ;; just a block-ref
+                    ;; just a block-ref
                     "((block-id))"
                     [:paragraph
                      [:block-ref "block-id"]]
 
-               ;; in a middle of text-run
+                    ;; in a middle of text-run
                     "Text with ((block-id)) a block"
                     [:paragraph
                      [:text-run "Text with "]
                      [:block-ref "block-id"]
-                     [:text-run " a block"]]))
+                     [:text-run " a block"]]
+
+                    "And ((block-id1)) multiple ((block-id2)) times"
+                    [:paragraph
+                     [:text-run "And "]
+                     [:block-ref "block-id1"]
+                     [:text-run " multiple "]
+                     [:block-ref "block-id2"]
+                     [:text-run " times"]]
+
+                    ;; block refs can appear in words
+                    "a((block-id))b"
+                    [:paragraph
+                     [:text-run "a"]
+                     [:block-ref "block-id"]
+                     [:text-run "b"]]))
 
   (t/testing "hard line breaks"
     (util/parses-to sut/inline-parser->ast
 
-               ;; hard line break can be only at the end of a line
+                    ;; hard line break can be only at the end of a line
                     "abc  \ndef"
                     [:paragraph
                      [:text-run "abc  "]
@@ -468,23 +516,30 @@
                      [:page-link "Page Title"]
                      [:text-run " of text"]]
 
-               ;; But not when surrounded by word
+                    ;; But not when surrounded by word
                     "abc[[def]]ghi"
                     [:paragraph
                      [:text-run "abc[[def]]ghi"]]
 
-               ;; also can't span newline
+                    ;; also can't span newline
                     "abc [[def\nghil]] jkl"
                     [:paragraph
                      [:text-run "abc [[def"]
                      [:newline "\n"]
                      [:text-run "ghil]] jkl"]]
 
-               ;; apparently nesting page links is a thing
+                    ;; apparently nesting page links is a thing
                     "[[nesting [[nested]]]]"
                     [:paragraph
                      [:page-link "nesting "
-                      [:page-link "nested"]]]))
+                      [:page-link "nested"]]]
+
+                    ;; Multiple page links in one blok
+                    "[[one]] and [[two]]"
+                    [:paragraph
+                     [:page-link "one"]
+                     [:text-run " and "]
+                     [:page-link "two"]]))
 
   (t/testing "hashtags (Athens extension)"
     (util/parses-to sut/inline-parser->ast
@@ -498,31 +553,31 @@
                      [:hashtag "Page Title"]
                      [:text-run " of text"]]
 
-               ;; But not when surrounded by word
+                    ;; But not when surrounded by word
                     "abc#[[def]]ghi"
                     [:paragraph
                      [:text-run "abc#[[def]]ghi"]]
 
-               ;; also can't span newline
+                    ;; also can't span newline
                     "abc #[[def\nghil]] jkl"
                     [:paragraph
                      [:text-run "abc #[[def"]
                      [:newline "\n"]
                      [:text-run "ghil]] jkl"]]
 
-               ;; hashtags can also be without `[[]]`
+                    ;; hashtags can also be without `[[]]`
                     "#simple"
                     [:paragraph
                      [:hashtag "simple"]]
 
-               ;; can be in a middle of a text run
+                    ;; can be in a middle of a text run
                     "abc #simple def"
                     [:paragraph
                      [:text-run "abc "]
                      [:hashtag "simple"]
                      [:text-run " def"]]
 
-               ;; but not in a word run
+                    ;; but not in a word run
                     "abc#not-hashtag"
                     [:paragraph
                      [:text-run "abc#not-hashtag"]]))
@@ -530,18 +585,18 @@
   (t/testing "components (Athens extension)"
     (util/parses-to sut/inline-parser->ast
 
-               ;; plain text component
+                    ;; plain text component
                     "{{component}}"
                     [:paragraph
                      [:component "component" "component"]]
 
-               ;; page link component
+                    ;; page link component
                     "{{[[DONE]]}} components"
                     [:paragraph
                      [:component "[[DONE]]" [:page-link "DONE"]]
                      [:text-run " components"]]
 
-               ;; block ref in component
+                    ;; block ref in component
                     "{{((abc))}}"
                     [:paragraph
                      [:component "((abc))" [:block-ref "abc"]]]))
@@ -553,33 +608,31 @@
                     [:paragraph
                      [:latex "\\LaTeX"]]
 
-               ;; can have newlines inside
-               ;; NOTE: not working in JS environment same as in JVM
+                    ;; can have newlines inside
+                    ;; NOTE: not working in JS environment same as in JVM
                     "$$abc\ndef$$"
                     [:paragraph
                      [:text-run "$$abc"]
                      [:newline "\n"]
                      [:text-run "def$$"]]
 
-               ;; can have $ inside
+                    ;; can have $ inside
                     "$$abc $ d$$"
                     [:paragraph
                      [:latex "abc $ d"]]
 
-               ;; also $$ is allowed
-                    "$$abc $$def$$"
-                    [:paragraph
-                     [:latex "abc $$def"]]
-
-               ;; also like this
-                    "$$abc$$ def$$"
-                    [:paragraph
-                     [:latex "abc$$ def"]]
-
-               ;; and surrounded by spaces
+                    ;; can't have $$
                     "$$abc $$ def$$"
                     [:paragraph
-                     [:latex "abc $$ def"]])))
+                     [:latex "abc "]
+                     [:text-run " def$$"]]
+
+                    ;; Multiple LaTeX fragments in one block
+                    "$$G, \\mu$$ and Poisson's ratio $$\\nu$$"
+                    [:paragraph
+                     [:latex "G, \\mu"]
+                     [:text-run " and Poisson's ratio "]
+                     [:latex "\\nu"]])))
 
 
 (t/deftest staged-parser-tests

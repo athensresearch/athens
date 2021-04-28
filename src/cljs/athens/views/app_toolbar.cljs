@@ -246,7 +246,7 @@
              [:> HelpOutline]]
             ;; obnoxious line separator
             [separator]]
-           [button {:on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
+           [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])
                   :title "Toggle Color Scheme"}
           (if @theme-dark
