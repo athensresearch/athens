@@ -6,10 +6,10 @@
 
 
 (defn apply-remote-tx!
-  [tx-data]
+  [db tx-data]
   (let [remote-tx-meta {:dat.sync.prov/agent :dat.sync/remote}]
     (dat.sync.client/transact-with-middleware!
-      db/dsdb dat.sync.client/wrap-remote-tx
+      db dat.sync.client/wrap-remote-tx
       tx-data remote-tx-meta)))
 
 

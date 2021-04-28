@@ -135,6 +135,7 @@
 
 
 (defonce dsdb (d/create-conn schema))
+(defonce db-with-remote-dsdb (d/create-conn schema))
 
 
 ;; todo: turn into an effect

@@ -1,7 +1,6 @@
 (ns athens.effects
   (:require
     [athens.config :as config]
-    [athens.datsync-utils :as dat-s]
     [athens.db :as db]
     [athens.util :as util]
     [athens.walk :as walk]
@@ -238,19 +237,13 @@
                 (dev-pprint more-tx-data)
                 (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
                 (dev-pprint final-tx-data)
-                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
+                (let [{:keys [tx-data]} (transact! db/dsdb final-tx-data)]
 
                   ;; check remote data against previous db
                   (when (and (:default? @remote-graph-conf)
-                             (= @socket-status :running))
-                    ((:send-fn ws/channel-socket)
-                     [:dat.sync.client/tx
-                      [ws/cur-random
-                       (dat-s/remote-tx
-                         db-before
-                         (mapv (fn [[e a v _t sig?]]
-                                 [(if sig? :db/add :db/retract) e a v])
-                               tx-data))]]))
+                             (= @socket-status :running)
+                             (seq tx-data))
+                    (ws/add-tx-to-queue! tx-data))
 
                   (ph-link-created! tx-data)
                   (dev-pprint "TX OUTPUTS")

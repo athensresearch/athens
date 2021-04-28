@@ -1,16 +1,22 @@
 (ns athens.ws-client
   (:require
     [athens.datsync-utils :as dat-s]
+    [athens.db :as db]
+    [cljs.core.async :refer [<! timeout]]
     [cljs.reader :refer [read-string]]
+    [com.rpl.specter :as s]
     [dat.sync.client]
     [re-frame.core :as rf :refer [subscribe dispatch dispatch-sync]]
-    [taoensso.sente :as sente]))
+    [taoensso.sente :as sente])
+  (:require-macros
+    [cljs.core.async :refer [go-loop]]))
 
 
 ;;-------------------------------------------------------------------
 ;;--- re-frame ---
 
 (declare start-socket!)
+(declare start-tx-push!)
 
 
 (rf/reg-sub
@@ -112,6 +118,7 @@
      (def require-reload? reload-on-init?)
      (start-router!)
      (dispatch [:set-socket-status :running])
+     (start-tx-push!)
      (catch js/Error _
        (dispatch [:set-socket-status :closed])))))
 
@@ -195,24 +202,61 @@
 ;;-------------------------------------------------------------------
 ;;--- transactions ---
 
+(def !txn-queue (atom []))
+
+(def !is-txn-push-in-prog? (atom false))
+
+
+(defn start-tx-push!
+  []
+  (go-loop []
+    (<! (timeout 100))
+    (when-let [{:keys [tx-data tx-uid]}
+               (and (= @(subscribe [:socket-status]) :running)
+                    (not @!is-txn-push-in-prog?)
+                    (first @!txn-queue))]
+
+      (reset! !is-txn-push-in-prog? true)
+      ((:send-fn channel-socket)
+       [:dat.sync.client/tx
+        {:user-uid cur-random
+         :tx-uid tx-uid
+         :tx-data (dat-s/remote-tx
+                    @db/db-with-remote-dsdb
+                    (mapv (fn [[e a v _t sig?]]
+                            [(if sig? :db/add :db/retract) e a v])
+                          tx-data))}]))
+    (recur)))
+
+
+(defn add-tx-to-queue!
+  [tx-data]
+  (swap! !txn-queue concat
+         [{:tx-uid (str (random-uuid))
+           :tx-data tx-data}]))
+
 
 (defmethod event-msg-handler :dat.sync.client/recv-remote-tx
   [{:keys [?data]}]
-  (let [[uid tx-data] (second ?data)]
-    ;; If the current user sent the retract txn we don't
-    ;; want that same information re-transacted as this is already
-    ;; done locally and synced. Ent might be completely retracted
-    ;; already and will throw error
-    (cond->> tx-data
-      (= cur-random uid)
-      (remove #(contains? #{:db/retract :db/retractEntity}
-                          (first %)))
+  (let [{:keys [user-uid tx-uid tx-data]} (second ?data)]
 
-      true dat-s/apply-remote-tx!)))
+    (when (not= cur-random user-uid)
+      (dat-s/apply-remote-tx! db/dsdb tx-data))
+
+    (dat-s/apply-remote-tx! db/db-with-remote-dsdb tx-data)
+
+    (swap! !txn-queue (fn [cur-q]
+                        (->> cur-q
+                             (s/transform
+                               [s/ALL #(= (:tx-uid %) tx-uid)]
+                               s/NONE)
+                             (remove nil?))))
+    (reset! !is-txn-push-in-prog? false)))
 
 
 (defmethod event-msg-handler :dat.sync.client/bootstrap
   [{:keys [?data]}]
-  (dat-s/apply-remote-tx! (second ?data))
+  (dat-s/apply-remote-tx! db/dsdb (second ?data))
+  (dat-s/apply-remote-tx! db/db-with-remote-dsdb (second ?data))
   (send-presence!)
   (dispatch-sync [:loading/unset]))
