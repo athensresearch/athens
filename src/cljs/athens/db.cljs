@@ -677,3 +677,70 @@
       (let [new-block-string {:db/id [:block/uid uid] :block/string local}
             tx-data          [new-block-string]]
         (dispatch [:transact tx-data])))))
+
+
+;;; Fuzzy Search
+;;; Full credit goes to https://gist.github.com/vaughnd/5099299
+
+(defn str-len-distance
+  ;; normalized multiplier 0-1
+  ;; measures length distance between strings.
+  ;; 1 = same length
+  [s1 s2]
+  (let [c1 (count s1)
+        c2 (count s2)
+        maxed (max c1 c2)
+        mined (min c1 c2)]
+    (double (- 1
+               (/ (- maxed mined)
+                  maxed)))))
+
+
+(def MAX-STRING-LENGTH 1000.0)
+
+
+(defn clean-str
+  [s]
+  (clojure.string/replace (clojure.string/lower-case s) #"[ \\/_]" ""))
+
+
+(defn score
+  [oquery ostr]
+  (let [query (clean-str oquery)
+        str (clean-str ostr)]
+    (loop [q (seq (clojure.string/split query ""))
+           s (seq (clojure.string/split str ""))
+           mult 1
+           idx MAX-STRING-LENGTH
+           score 0]
+      (cond
+       ;; add str-len-distance to score, so strings with matches in same position get sorted by length
+       ;; boost score if we have an exact match including punctuation
+        (empty? q) (+ score
+                      (str-len-distance query str)
+                      (if (<= 0 (.indexOf ostr oquery)) MAX-STRING-LENGTH 0))
+        (empty? s) 0
+        :else (if (= (first q) (first s))
+                (recur (rest q)
+                       (rest s)
+                       (inc mult) ;; increase the multiplier as more query chars are matched
+                       (dec idx) ;; decrease idx so score gets lowered the further into the string we match
+                       (+ mult score)) ;; score for this match is current multiplier * idx
+                (recur q
+                       (rest s)
+                       1 ;; when there is no match, reset multiplier to one
+                       (dec idx)
+                       score))))))
+
+
+(defn fuzzy-search
+  [query]
+  (->> (for [[a _ e] (into [] (concat (d/datoms @dsdb :avet :node/title) (d/datoms @dsdb :aevt :block/string)))
+             :let [scored (score query e)]
+             :when (and (not= query e) (> scored 0))]
+         {:id a :score scored})
+       (sort-by :score >)
+       (take 10)
+       (map :id)
+       (d/pull-many @dsdb '[:db/id :node/title :block/uid :node/title :block/string {:block/_children ...}])
+       (map get-root-parent-node)))

@@ -4,7 +4,7 @@
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
     ["@material-ui/icons/Search" :default Search]
-    [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.db :as db :refer [search-exact-node-title re-case-insensitive fuzzy-search]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
@@ -151,7 +151,6 @@
 
 ;;; Utilities
 
-
 (defn highlight-match
   [query txt]
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
@@ -172,11 +171,9 @@
                                :results []})
                 (reset! state {:index   0
                                :query   query
-                               :results (->> (concat [(search-exact-node-title query)]
-                                                     (search-in-node-title query 20 true)
-                                                     (search-in-block-content query))
-                                             vec)})))
-            1000))
+                               :results (into [(search-exact-node-title query)]
+                                              (fuzzy-search query))})))
+            300))
 
 
 (defn key-down-handler
