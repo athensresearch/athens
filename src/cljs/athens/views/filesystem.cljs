@@ -136,13 +136,14 @@
                     [button {:on-click close-modal}
                      [:> Close]]]
 
-         :content  [:div (use-style (merge modal-contents-style {:height "20em"}))
+         :content  [:div (use-style (merge modal-contents-style))
                     (if (nil? @transformed-roam-db)
                       [:<>
-                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
+                       [:input {:style {:flex "0 0 auto"} :type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
-                                      :margin         "20px 0"
+                                      :margin         "1em 0 0"
+                                      :flex "1 1 100%"
                                       :width          "100%"}}
                         [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
                                   :frameBorder           "0"
