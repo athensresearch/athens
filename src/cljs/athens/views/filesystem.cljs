@@ -143,7 +143,7 @@
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
                                       :margin         "1em 0 0"
-:flex "1 1 100%"
+                                      :flex "1 1 100%"
                                       :width          "100%"}}
                         [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
                                   :frameBorder           "0"
