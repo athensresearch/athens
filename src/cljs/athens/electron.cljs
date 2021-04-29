@@ -329,8 +329,13 @@
     
   ;; Update index.transit    
   (defn write-db-index [file filepath]
-    (let [w  (.. fs (writeFile filepath file (fn [e] (dispatch [:boot/desktop]))))])
-  )  
+    (.. fs (writeFile filepath file (fn [e] (dispatch [:boot/desktop]))))
+  )
+  
+  ;; Create new index.transit db
+  (defn create-db-index [file filepath]
+    (.. fs (writeFile filepath file (fn [e] (dispatch [:fs/open-dialog]))))
+  ) 
   
   (defn open-dialog-index
     "Allow user to open a Backup file."
@@ -341,23 +346,27 @@
           open-file (first res)]
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
-              db-file      (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))              
+              db-file      (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e))
+                                                                                  (open-dialog-index filepath))))              
               ] 
            (if (= (:schema db-file) db/schema) 
-              ((write-db-index read-db filepath))(open-dialog-index filepath)))))
+                  ((write-db-index read-db filepath))(open-dialog-index filepath))))
+           (let [confirm (js/window.confirm (str "No file selected. Would you like to create a new db?"))]
+                              (if confirm 
+                              (create-db-index "[]" filepath)
+                              (open-dialog-index filepath))))
   ) 
 
   ;; Handle index.transit 
   (defn handle-index-transit [filepath]  
     (let [read-db (.readFileSync fs filepath)
-          db-file    (try  (dt/read-transit-str read-db)(catch  :default e (open-dialog-index filepath)))    
+          db-file    (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e))
+                                                                            (open-dialog-index filepath))))    
           ]
-        (if (= (:schema db-file) db/schema) 
-            ()(open-dialog-index filepath))       
+        (when (not= (:schema db-file) db/schema) (open-dialog-index filepath))
          (dispatch [:fs/watch filepath])
          (dispatch [:reset-conn db-file]))
-  )
-  
+  )   
 
   (reg-event-fx
     :boot/desktop
