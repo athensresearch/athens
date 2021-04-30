@@ -15,6 +15,7 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    [athens.core :refer [main-window]]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -169,8 +170,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -195,5 +196,13 @@
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
                   :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
+          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
+
+         [separator]
+         [separator]
+         [separator]
+         [:span "Windows stuff"]
+
+         [button
+          {:on-click #(main-window/minimize)}]]]])))
 
