@@ -33,6 +33,8 @@
                                   :height 600
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true
+                                  :frame false
+:titleBarStyle "hiddenInset"
                                   :enableRemoteModule true
                                   :webPreferences {:contextIsolation false
                                                    :nodeIntegration true
