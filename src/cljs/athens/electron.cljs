@@ -411,8 +411,8 @@
 
   (reg-event-fx
    :minimize
-   (fn [_ _])
-   (.minimize ^js/Object @main-window))
+   (fn [_ _]
+   {:minimize! _}))
 
 
   ;;; Effects
@@ -475,3 +475,9 @@
    :fs/write!
    (fn []
      (debounce-write-db true))))
+
+
+  (reg-fx
+   :minimize!
+   (fn []
+     (.minimize ^js/Object @main-window)))
