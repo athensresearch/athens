@@ -15,7 +15,6 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    [athens.core :refer [main-window]]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -204,5 +203,6 @@
          [:span "Windows stuff"]
 
          [button
-          {:on-click #(main-window/minimize)}]]]])))
+          {:on-click #(dispatch [:minimize])}
+          "close"]]]])))
 
