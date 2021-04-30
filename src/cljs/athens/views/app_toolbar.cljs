@@ -48,8 +48,10 @@
    :z-index "1070"
    :grid-auto-flow "column"
    :padding "0 0.75rem"
+   :-webkit-app-region "drag"
    ::stylefy/manual [[:svg {:font-size "20px"}]
-                     [:button {:justify-self "flex-start"}]]})
+                     [:button {:justify-self "flex-start"}]
+                     [:&:hover {:border-bottom [["1px solid " (color :border-color)]]}]]})
 
 
 (def app-header-control-section-style

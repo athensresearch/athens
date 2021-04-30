@@ -5,6 +5,7 @@
     [athens.style]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
+    [athens.util :refer [get-os]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
@@ -14,7 +15,7 @@
     [athens.views.spinner :refer [initial-spinner-component]]
     [re-frame.core :as rf]
     [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -86,7 +87,8 @@
 
          :else [:<>
                 (when @modal [filesystem/window])
-                [:div (stylefy/use-style app-wrapper-style)
+                [:div (use-style app-wrapper-style
+                                 {:class (str "os-" (get-os))})
                  [app-toolbar/app-toolbar]
                  [left-sidebar/left-sidebar]
                  [pages/view]
