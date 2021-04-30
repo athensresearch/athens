@@ -15,6 +15,8 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+["@material-ui/icons/Close" :default Close]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -29,6 +31,12 @@
 
 
 ;;; Styles
+
+(def win-close-style
+  {:border-radius 0
+   :border 0
+   :color "#fff"
+   :background "red"})
 
 
 (def app-header-style
@@ -202,7 +210,8 @@
          [separator]
          [:span "Windows stuff"]
 
-         [button
+         [:button
+          ;; (use-style win-close-style)
           {:on-click #(dispatch [:minimize])}
-          "close"]]]])))
+          "minimize"]]]])))
 
