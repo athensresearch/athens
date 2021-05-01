@@ -2,6 +2,7 @@
   (:require
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
+    [clojure.core.reducers :as r]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
@@ -735,12 +736,13 @@
 
 (defn fuzzy-search
   [query]
-  (->> (for [[a _ e] (into [] (concat (d/datoms @dsdb :avet :node/title) (d/datoms @dsdb :aevt :block/string)))
-             :let [scored (score query e)]
-             :when (and (not= query e) (> scored 0))]
-         {:id a :score scored})
+  (->> (for [[id _ string] (into [] (r/cat (d/datoms @dsdb :avet :node/title) (d/datoms @dsdb :aevt :block/string)))
+             :let [scored (score query string)]
+             :when (> scored 0)]
+         {:id id :score scored})
        (sort-by :score >)
-       (take 10)
-       (map :id)
+       (r/take 10)
+       (r/map :id)
        (d/pull-many @dsdb '[:db/id :node/title :block/uid :node/title :block/string {:block/_children ...}])
-       (map get-root-parent-node)))
+       (r/map get-root-parent-node)
+       (r/foldcat)))

@@ -171,8 +171,10 @@
                                :results []})
                 (reset! state {:index   0
                                :query   query
-                               :results (into [(search-exact-node-title query)]
-                                              (fuzzy-search query))})))
+                               :results (let [search-result (fuzzy-search query)] ; remove this. check the first item in fuzzy instead. if not exact, append nil 
+                                          (if (= query (first search-result))
+                                            search-result
+                                            (into [nil] search-result)))})))
             300))
 
 
