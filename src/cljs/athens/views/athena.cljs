@@ -4,7 +4,7 @@
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
     ["@material-ui/icons/Search" :default Search]
-    [athens.db :as db :refer [search-exact-node-title re-case-insensitive fuzzy-search]]
+    [athens.db :as db :refer [re-case-insensitive fuzzy-search]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
