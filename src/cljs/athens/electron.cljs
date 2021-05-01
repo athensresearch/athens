@@ -23,7 +23,6 @@
   (def dialog (.. remote -dialog))
   (def app (.. remote -app))
 
-
   (def fs (js/require "fs"))
   (def path (js/require "path"))
   (def stream (js/require "stream"))
@@ -132,7 +131,7 @@
            new-str          (str head "![](" "file://" img-filename ")" tail)
            cb               (fn [e]
                               (let [img-data (as->
-                                              (.. e -target -result) x
+                                               (.. e -target -result) x
                                                (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
                                                (js/Buffer. x "base64"))]
                                 (when-not (.existsSync fs img-dir)
@@ -169,23 +168,28 @@
 
   ;;; Subs
 
-
   (reg-sub
-   :db/mtime
-   (fn [db _]
-     (:db/mtime db)))
-
-
-  (reg-sub
-   :db/filepath
-   (fn [db _]
-     (:db/filepath db)))
+    :db/mtime
+    (fn [db _]
+      (:db/mtime db)))
 
 
   (reg-sub
-   :db/filepath-dir
-   (fn [db _]
-     (.dirname path (:db/filepath db))))
+    :maximized?
+    (fn [db _]
+      (:maximized? db)))
+
+
+  (reg-sub
+    :db/filepath
+    (fn [db _]
+      (:db/filepath db)))
+
+
+  (reg-sub
+    :db/filepath-dir
+    (fn [db _]
+      (.dirname path (:db/filepath db))))
 
 
   ;; create sub in athens.subs so web-version of Athens works
@@ -196,20 +200,20 @@
 
 
   (reg-sub
-   :db/remote-graph
-   (fn [db _]
-     (:db/remote-graph db)))
+    :db/remote-graph
+    (fn [db _]
+      (:db/remote-graph db)))
 
 
   ;;; Events
 
 
   (reg-event-fx
-   :fs/open-dialog
-   (fn [{:keys [db]} _]
-     (js/alert (str "No DB found at " (:db/filepath db) "."
-                    "\nPlease open or create a new db."))
-     {:dispatch-n [[:modal/toggle]]}))
+    :fs/open-dialog
+    (fn [{:keys [db]} _]
+      (js/alert (str "No DB found at " (:db/filepath db) "."
+                     "\nPlease open or create a new db."))
+      {:dispatch-n [[:modal/toggle]]}))
 
 
   (reg-event-fx
@@ -228,10 +232,10 @@
 
 
   (reg-event-fx
-   :local-storage/navigate
-   [(inject-cofx :local-storage "current-route/uid")]
-   (fn [{:keys [local-storage]} _]
-     {:dispatch [:navigate {:page {:id local-storage}}]}))
+    :local-storage/navigate
+    [(inject-cofx :local-storage "current-route/uid")]
+    (fn [{:keys [local-storage]} _]
+      {:dispatch [:navigate {:page {:id local-storage}}]}))
 
 
   (defn create-dir-if-needed!
@@ -243,28 +247,28 @@
   ;; ├── images
   ;; └── index.transit
   (reg-event-fx
-   :fs/create-new-db
-   (fn []
-     (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
-           db-images   (.resolve path documents-athens-dir IMAGES-DIR-NAME)]
-       (create-dir-if-needed! documents-athens-dir)
-       (create-dir-if-needed! db-images)
-       {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
-        :dispatch-n [[:db/update-filepath db-filepath]
-                     [:transact athens-datoms/datoms]]})))
+    :fs/create-new-db
+    (fn []
+      (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
+            db-images   (.resolve path documents-athens-dir IMAGES-DIR-NAME)]
+        (create-dir-if-needed! documents-athens-dir)
+        (create-dir-if-needed! db-images)
+        {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
+         :dispatch-n [[:db/update-filepath db-filepath]
+                      [:transact athens-datoms/datoms]]})))
 
 
   (reg-event-fx
-   :db/retract-athens-pages
-   (fn []
-     {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
-                                   (db/retract-page-recursively "Changelog"))]}))
+    :db/retract-athens-pages
+    (fn []
+      {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
+                                    (db/retract-page-recursively "Changelog"))]}))
 
 
   (reg-event-fx
-   :db/transact-athens-pages
-   (fn []
-     {:dispatch [:transact athens-datoms/datoms]}))
+    :db/transact-athens-pages
+    (fn []
+      {:dispatch [:transact athens-datoms/datoms]}))
 
   (declare write-bkp)
 
@@ -296,25 +300,25 @@
   ;; Watching db file directly doesn't always work, so watch directory and regex match.
   ;; Debounce because files can be changed multiple times per save.
   (reg-event-fx
-   :fs/watch
-   (fn [_ [_ filepath]]
-     (let [dirpath (.dirname path filepath)]
-       (.. fs (watch dirpath (fn [_event filename]
+    :fs/watch
+    (fn [_ [_ filepath]]
+      (let [dirpath (.dirname path filepath)]
+        (.. fs (watch dirpath (fn [_event filename]
                                 ;; when filename matches last part of filepath
                                 ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                               (when (re-find #"conflict" (or filename ""))
-                                 (throw "Conflict file created by Dropbox"))
-                               (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                 (debounce-sync-db-from-fs filepath filename))))))
-     {}))
+                                (when (re-find #"conflict" (or filename ""))
+                                  (throw "Conflict file created by Dropbox"))
+                                (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                  (debounce-sync-db-from-fs filepath filename))))))
+      {}))
 
 
   (reg-event-db
-   :db/update-mtime
-   (fn [db [_ mtime1]]
-     (let [{:db/keys [filepath]} db
-           mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
-       (assoc db :db/mtime mtime))))
+    :db/update-mtime
+    (fn [db [_ mtime1]]
+      (let [{:db/keys [filepath]} db
+            mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
+        (assoc db :db/mtime mtime))))
 
 
   ;; if localStorage is empty, assume first open
@@ -327,39 +331,39 @@
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
   (reg-event-fx
-   :boot/desktop
-   (fn [_ _]
-     {:db         db/rfdb
-      :async-flow {:first-dispatch [:local-storage/get-db-filepath]
-                   :rules          [{:when        :seen?
-                                     :events      :db/update-filepath
-                                     :dispatch-fn (fn [[_ filepath]]
-                                                    (cond
+    :boot/desktop
+    (fn [_ _]
+      {:db         db/rfdb
+       :async-flow {:first-dispatch [:local-storage/get-db-filepath]
+                    :rules          [{:when        :seen?
+                                      :events      :db/update-filepath
+                                      :dispatch-fn (fn [[_ filepath]]
+                                                     (cond
                                                        ;; No database path found in localStorage. Creating new one
-                                                      (nil? filepath) (dispatch [:fs/create-new-db])
+                                                       (nil? filepath) (dispatch [:fs/create-new-db])
                                                        ;; Database found in local storage and filesystem:
-                                                      (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                      db      (dt/read-transit-str read-db)]
-                                                                                  (dispatch [:fs/watch filepath])
-                                                                                  (dispatch [:reset-conn db]))
+                                                       (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
+                                                                                       db      (dt/read-transit-str read-db)]
+                                                                                   (dispatch [:fs/watch filepath])
+                                                                                   (dispatch [:reset-conn db]))
                                                        ;; Database found in localStorage but not on filesystem
-                                                      :else (dispatch [:fs/open-dialog])))}
+                                                       :else (dispatch [:fs/open-dialog])))}
 
                                      ;; remote graph
-                                    {:when        :seen?
-                                     :events      :start-socket}
+                                     {:when        :seen?
+                                      :events      :start-socket}
 
                                      ;; if first time, go to Daily Pages and open left-sidebar
-                                    {:when       :seen?
-                                     :events     :fs/create-new-db
-                                     :dispatch-n [[:navigate :home]
-                                                  [:left-sidebar/toggle]]}
+                                     {:when       :seen?
+                                      :events     :fs/create-new-db
+                                      :dispatch-n [[:navigate :home]
+                                                   [:left-sidebar/toggle]]}
 
                                      ;; if nth time, remember dark/light theme and last page
-                                    {:when       :seen?
-                                     :events     :reset-conn
-                                     :dispatch-n [[:local-storage/set-theme]
-                                                  #_[:local-storage/navigate]]}
+                                     {:when       :seen?
+                                      :events     :reset-conn
+                                      :dispatch-n [[:local-storage/set-theme]
+                                                   #_[:local-storage/navigate]]}
 
                                      ;; whether first or nth time, update athens pages
                                     #_{:when       :seen-any-of?
@@ -410,9 +414,24 @@
 
 
   (reg-event-fx
-   :minimize
+   :app-minimize
    (fn [_ _]
-   {:minimize! {}}))
+   {:app-minimize! {}}))
+
+  (reg-event-fx
+   :app-maximize
+   (fn [_ _]
+   {:app-maximize! {}}))
+
+  (reg-event-fx
+   :app-restore
+   (fn [_ _]
+   {:app-restore! {}}))
+
+  (reg-event-fx
+   :app-close
+   (fn [_ _]
+   {:app-close! {}}))
 
 
   ;;; Effects
@@ -478,6 +497,24 @@
 
 
   (reg-fx
-   :minimize!
+   :app-minimize!
    (fn []
-     (.. remote getCurrentWindow minimize))))
+     (.. remote getCurrentWindow minimize)))
+
+
+  (reg-fx
+   :app-maximize!
+   (fn []
+     (.. remote getCurrentWindow maximize)))
+
+
+  (reg-fx
+   :app-close!
+   (fn []
+     (.. remote getCurrentWindow close)))
+
+
+  (reg-fx
+   :app-restore!
+   (fn []
+     (.. remote getCurrentWindow restore))))
