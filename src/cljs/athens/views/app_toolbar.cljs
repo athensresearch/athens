@@ -1,13 +1,16 @@
 (ns athens.views.app-toolbar
   (:require
+    ["@material-ui/core/SVGIcon" :default SVGIcon]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/RemoveOutlined" :default RemoveOutlined]
     ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
@@ -15,8 +18,6 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-["@material-ui/icons/Close" :default Close]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
@@ -32,11 +33,22 @@
 
 ;;; Styles
 
-(def win-close-style
-  {:border-radius 0
-   :border 0
-   :color "#fff"
-   :background "red"})
+(def win-toolbar-buttons-style
+  {:display "flex"
+   :margin-left "1rem"
+   ::stylefy/manual [[:button {:border-radius 0
+                               :width "48px"
+                               :height "32px"
+                               :display "flex"
+                               :align-items "center"
+                               :background (color :background-minus-1)
+                               :justify-content "center"
+                               :border 0}]
+                     [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
+                     [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                     [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
+                                                                         :filter "none"
+                                                                         :color "#fff"}]]]})
 
 
 (def app-header-style
@@ -47,7 +59,6 @@
    :display "grid"
    :position "absolute"
    :top "0"
-   :border-bottom [["1px solid" (color :border-color)]]
    :backdrop-filter "blur(0.375rem)"
    :background (color :background-color :opacity-high)
    :right 0
@@ -57,9 +68,12 @@
    :grid-auto-flow "column"
    :padding "0 0.75rem"
    :-webkit-app-region "drag"
+   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
-                     [:button {:justify-self "flex-start"}]
-                     [:&:hover {:border-bottom [["1px solid " (color :border-color)]]}]]})
+                     [:button {:justify-self "flex-start"
+                               :-webkit-app-region "no-drag"}]
+                     [:.os-:win [:& {:border "1px solid red"}]]
+                     [:.os-:mac [:& {:border "1px solid blue"}]]]})
 
 
 (def app-header-control-section-style
@@ -74,7 +88,9 @@
          {:color (color :body-text-color :opacity-med)
           :justify-self "flex-end"
           :margin-left "auto"
-          ::stylefy/manual [[:button {:color "inherit"}]]}))
+   ::stylefy/manual [[:button {:border-radius 0
+                               :color "inherit"
+                               :background "inherit"}]]}))
 
 
 (def separator-style
@@ -118,7 +134,9 @@
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
 
-       [:header (use-style app-header-style)
+       [:header (use-style app-header-style
+                           {:class (if theme-dark "theme-dark" "theme-light")})
+
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
@@ -177,8 +195,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -206,12 +224,57 @@
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
 
          [separator]
-         [separator]
-         [separator]
-         [:span "Windows stuff"]
 
-         [:button
+         [:div (use-style win-toolbar-buttons-style
+                          {:class (if @theme-dark "theme-dark" "theme-light")})
+          [:button
           ;; (use-style win-close-style)
-          {:on-click #(dispatch [:minimize])}
-          "minimize"]]]])))
+           {:on-click #(dispatch [:app-minimize])
+            :title "Minimize"}
+           [:> SVGIcon
+            [:line
+             {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
+
+          ;; (if @is-maximized?
+          [:button
+           {:on-click #(dispatch [:app-restore])
+            :title "Restore"}
+           [:> SVGIcon
+            [:path {:d "M8 5H19V16H8V5Z",
+                    :fill "none" :stroke "currentColor", :stroke-width "2"}]
+            [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]]
+
+          [:button
+           {:on-click #(dispatch [:app-maximize])
+            :title "Maximize"}
+           [:> SVGIcon
+            [:rect
+             {:height "14"
+              :stroke "currentColor"
+              :fill "none"
+              :stroke-width "2"
+              :width "14"
+              :x "5"
+              :y "5"}]]]
+            ;;  )
+
+          [:button
+           {:on-click #(dispatch [:app-close])
+            :class "close"
+            :title "Close Athens"}
+           [:> SVGIcon
+            [:line
+             {:stroke "currentColor"
+              :stroke-width "2"
+              :x1 "4.44194"
+              :x2 "19.4419"
+              :y1 "4.55806"
+              :y2 "19.5581"}]
+            [:line
+             {:stroke "currentColor"
+              :stroke-width "2"
+              :x1 "4.55806"
+              :x2 "19.5581"
+              :y1 "19.5581"
+              :y2 "4.55806"}]]]]]]])))
 

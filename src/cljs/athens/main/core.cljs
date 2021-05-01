@@ -34,7 +34,7 @@
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true
                                   :frame false
-:titleBarStyle "hiddenInset"
+                                  :titleBarStyle "hiddenInset"
                                   :enableRemoteModule true
                                   :webPreferences {:contextIsolation false
                                                    :nodeIntegration true
