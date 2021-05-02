@@ -127,6 +127,7 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
+        win-maximized?    (subscribe [:win-maximized?])
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
@@ -236,24 +237,21 @@
           ;; (if @is-maximized?
           [:button
            {:on-click #(dispatch [:toggle-max-min-win false])
-            :title "Restore"}
-           [:> SVGIcon
-            [:path {:d "M8 5H19V16H8V5Z"
-                    :fill "none" :stroke "currentColor", :stroke-width "2"}]
-            [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]]
-
-          [:button
-           {:on-click #(dispatch [:toggle-max-min-win false])
-            :title "Maximize"}
-           [:> SVGIcon
-            [:rect
-             {:height "14"
-              :stroke "currentColor"
-              :fill "none"
-              :stroke-width "2"
-              :width "14"
-              :x "5"
-              :y "5"}]]]
+            :title (if @win-maximized? "Restore" "Maximize")}
+           (if @win-maximized?
+             [:> SVGIcon
+              [:path {:d "M8 5H19V16H8V5Z"
+                      :fill "none" :stroke "currentColor", :stroke-width "2"}]
+              [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+             [:> SVGIcon
+              [:rect
+               {:height "14"
+                :stroke "currentColor"
+                :fill "none"
+                :stroke-width "2"
+                :width "14"
+                :x "5"
+                :y "5"}]])]
             ;;  )
 
           [:button

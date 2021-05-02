@@ -200,6 +200,11 @@
    (fn [db _]
      (:db/remote-graph db)))
 
+  (reg-sub
+   :win-maximized?
+   (fn [db _]
+     (:win-maximized? db)))
+
 
   ;;; Events
 
@@ -367,6 +372,12 @@
                                        :dispatch-n [[:db/retract-athens-pages]
                                                     [:db/transact-athens-pages]]}
 
+                                    ;; bind windows toolbar electron buttons
+                                    {:when       :seen-any-of?
+                                     :events     [:fs/create-new-db :reset-conn]
+                                     :dispatch   [:bind-win-listeners]}
+
+
                                     {:when        :seen-any-of?
                                      :events      [:fs/create-new-db :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
@@ -413,6 +424,16 @@
    :toggle-max-min-win
    (fn [_ toggle-min?]
      {:toggle-max-min-win! toggle-min?}))
+
+  (reg-event-fx
+   :bind-win-listeners
+   (fn [_ _]
+     {:bind-win-listeners! {}}))
+
+  (reg-event-db
+   :toggle-win-maximized
+   (fn [db [_ maximized?]]
+     (assoc db :win-maximized? maximized?)))
 
   ;;; Effects
 
@@ -478,4 +499,14 @@
   (reg-fx
    :toggle-max-min-win!
    (fn [[_ toggle-min?]]
-     (.. ipcRenderer (invoke "toggle-max-or-min-active-win" toggle-min?)))))
+     (.. ipcRenderer (invoke "toggle-max-or-min-active-win" toggle-min?))))
+
+  (reg-fx
+   :bind-win-listeners!
+   (fn []
+     (let [active-win (.getCurrentWindow remote)]
+       (js/console.log remote)
+       (doto ^BrowserWindow active-win
+         (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
+         (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false])))))))
+
