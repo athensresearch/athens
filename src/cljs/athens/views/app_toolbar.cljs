@@ -1,34 +1,32 @@
 (ns athens.views.app-toolbar
   (:require
-    ["@material-ui/core/SVGIcon" :default SVGIcon]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Close" :default Close]
-    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
-    ["@material-ui/icons/FileCopy" :default FileCopy]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
-    ["@material-ui/icons/Menu" :default Menu]
-    ["@material-ui/icons/MergeType" :default MergeType]
-    ["@material-ui/icons/RemoveOutlined" :default RemoveOutlined]
-    ["@material-ui/icons/Replay" :default Replay]
-    ["@material-ui/icons/Search" :default Search]
-    ["@material-ui/icons/Settings" :default Settings]
-    ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ToggleOff" :default ToggleOff]
-    ["@material-ui/icons/ToggleOn" :default ToggleOn]
-    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    [athens.router :as router]
-    [athens.style :refer [color]]
-    [athens.subs]
-    [athens.util :as util]
-    [athens.views.buttons :refer [button]]
-    [athens.views.filesystem :as filesystem]
-    [athens.views.presence :as presence]
-    [athens.ws-client :as ws]
-    [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@material-ui/core/SVGIcon" :default SVGIcon]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+   ["@material-ui/icons/ChevronRight" :default ChevronRight]
+   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+   ["@material-ui/icons/FileCopy" :default FileCopy]
+   ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
+   ["@material-ui/icons/Menu" :default Menu]
+   ["@material-ui/icons/MergeType" :default MergeType]
+   ["@material-ui/icons/Replay" :default Replay]
+   ["@material-ui/icons/Search" :default Search]
+   ["@material-ui/icons/Settings" :default Settings]
+   ["@material-ui/icons/Today" :default Today]
+   ["@material-ui/icons/ToggleOff" :default ToggleOff]
+   ["@material-ui/icons/ToggleOn" :default ToggleOn]
+   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+   [athens.router :as router]
+   [athens.style :refer [color]]
+   [athens.subs]
+   [athens.util :as util]
+   [athens.views.buttons :refer [button]]
+   [athens.views.filesystem :as filesystem]
+   [athens.views.presence :as presence]
+   [athens.ws-client :as ws]
+   [re-frame.core :refer [subscribe dispatch]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -55,18 +53,17 @@
   {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
+   :background (color :background-minus-1)
    :align-items "center"
    :display "grid"
    :position "absolute"
    :top "0"
    :backdrop-filter "blur(0.375rem)"
-   :background (color :background-color :opacity-high)
    :right 0
    :left 0
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
-   :padding "0 0.75rem"
    :-webkit-app-region "drag"
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
@@ -79,8 +76,13 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :padding "0.25rem"
-   :grid-gap "0.25rem"})
+   :background "inherit"
+   :backdrop-filter "blur(0.375rem)"
+   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+   :grid-gap "0.25rem"
+   ::stylefy/manual [[:button {:border-radius 0
+                               :color "inherit"
+                               :background "inherit"}]]})
 
 
 (def app-header-secondary-controls-style
@@ -88,9 +90,9 @@
          {:color (color :body-text-color :opacity-med)
           :justify-self "flex-end"
           :margin-left "auto"
-   ::stylefy/manual [[:button {:border-radius 0
-                               :color "inherit"
-                               :background "inherit"}]]}))
+          ::stylefy/manual [[:button {:border-radius 0
+                                      :color "inherit"
+                                      :background "inherit"}]]}))
 
 
 (def separator-style
@@ -126,6 +128,7 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
+        win-maximized?    (subscribe [:win-maximized?])
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
@@ -136,7 +139,6 @@
 
        [:header (use-style app-header-style
                            {:class (if theme-dark "theme-dark" "theme-light")})
-
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
@@ -195,8 +197,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -223,13 +225,11 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
 
-         [separator]
 
          [:div (use-style win-toolbar-buttons-style
                           {:class (if @theme-dark "theme-dark" "theme-light")})
           [:button
-          ;; (use-style win-close-style)
-           {:on-click #(dispatch [:app-minimize])
+           {:on-click #(dispatch [:toggle-max-min-win true])
             :title "Minimize"}
            [:> SVGIcon
             [:line
@@ -237,29 +237,26 @@
 
           ;; (if @is-maximized?
           [:button
-           {:on-click #(dispatch [:app-restore])
-            :title "Restore"}
-           [:> SVGIcon
-            [:path {:d "M8 5H19V16H8V5Z",
-                    :fill "none" :stroke "currentColor", :stroke-width "2"}]
-            [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]]
-
-          [:button
-           {:on-click #(dispatch [:app-maximize])
-            :title "Maximize"}
-           [:> SVGIcon
-            [:rect
-             {:height "14"
-              :stroke "currentColor"
-              :fill "none"
-              :stroke-width "2"
-              :width "14"
-              :x "5"
-              :y "5"}]]]
+           {:on-click #(dispatch [:toggle-max-min-win false])
+            :title (if @win-maximized? "Restore" "Maximize")}
+           (if @win-maximized?
+             [:> SVGIcon
+              [:path {:d "M8 5H19V16H8V5Z"
+                      :fill "none" :stroke "currentColor", :stroke-width "2"}]
+              [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+             [:> SVGIcon
+              [:rect
+               {:height "14"
+                :stroke "currentColor"
+                :fill "none"
+                :stroke-width "2"
+                :width "14"
+                :x "5"
+                :y "5"}]])]
             ;;  )
 
           [:button
-           {:on-click #(dispatch [:app-close])
+           {:on-click #(dispatch [:toggle-max-min-win true])
             :class "close"
             :title "Close Athens"}
            [:> SVGIcon
