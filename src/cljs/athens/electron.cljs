@@ -23,7 +23,6 @@
   (def dialog (.. remote -dialog))
   (def app (.. remote -app))
 
-
   (def fs (js/require "fs"))
   (def path (js/require "path"))
   (def stream (js/require "stream"))
@@ -168,7 +167,6 @@
 
 
   ;;; Subs
-
 
   (reg-sub
    :db/mtime

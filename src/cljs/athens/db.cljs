@@ -53,6 +53,7 @@
                :daily-notes/items   []
                :selected/items      []
                :theme/dark          false
+               :maximized?          false
                :graph-conf          default-graph-conf})
 
 

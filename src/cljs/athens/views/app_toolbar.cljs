@@ -57,6 +57,7 @@
    :align-items "center"
    :display "grid"
    :position "absolute"
+   :top "0"
    :backdrop-filter "blur(0.375rem)"
    :right 0
    :left 0
