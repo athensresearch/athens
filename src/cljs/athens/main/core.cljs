@@ -1,7 +1,7 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+   ["electron" :refer [app BrowserWindow ipcMain shell]]
+   ["electron-updater" :refer [autoUpdater]]))
 
 
 (def log (js/require "electron-log"))
@@ -25,22 +25,43 @@
   (when @main-window
     (.. ^js @main-window -webContents (send text))))
 
+(defn init-electron-handlers
+  []
+  (let [toggle-win-channel "toggle-max-or-min-active-win"
+        web-contents ^js/window (. @main-window -webcontents)]
+    (doto ipcMain
+      (.handle toggle-win-channel
+               (fn [_ toggle-min?]
+                 (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                   (if toggle-min?
+                     (if (.isMinimized active-win)
+                       (.restore active-win)
+                       (.minimize active-win))
+                     (if (.isMaximixed active-win)
+                       (.unmaximize active-win)
+                       (.maximize active-win)))))))
+
+    (doto ^BrowserWindow @main-window
+      (.on "enter-full-screen" #(.send web-contents "full-screen" "enter"))
+      (.on "leave-full-screen" #(.send web-contents "full-screen" "leave")))
+
+    #(do (.removeHandler ipcMain toggle-win-channel))))
 
 (defn init-browser
   []
   (reset! main-window (BrowserWindow.
-                        (clj->js {:width 800
-                                  :height 600
-                                  :backgroundColor "#1A1A1A"
-                                  :autoHideMenuBar true
-                                  :frame false
-:titleBarStyle "hiddenInset"
-                                  :enableRemoteModule true
-                                  :webPreferences {:contextIsolation false
-                                                   :nodeIntegration true
-                                                   :worldSafeExecuteJavaScript true
-                                                   :enableRemoteModule true
-                                                   :nodeIntegrationWorker true}})))
+                       (clj->js {:width 800
+                                 :height 600
+                                 :backgroundColor "#1A1A1A"
+                                 :autoHideMenuBar true
+                                 :frame false
+                                 :titleBarStyle "hiddenInset"
+                                 :enableRemoteModule true
+                                 :webPreferences {:contextIsolation false
+                                                  :nodeIntegration true
+                                                  :worldSafeExecuteJavaScript true
+                                                  :enableRemoteModule true
+                                                  :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
@@ -104,5 +125,6 @@
   (.on app "ready" (fn []
                      (init-ipcMain)
                      (init-browser)
+                     (init-electron-handlers)
                      (init-updater)
                      (.. autoUpdater checkForUpdates))))
