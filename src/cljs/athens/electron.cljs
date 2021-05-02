@@ -477,5 +477,5 @@
 
   (reg-fx
    :toggle-max-min-win!
-   (fn [toggle-min?]
+   (fn [[_ toggle-min?]]
      (.. ipcRenderer (invoke "toggle-max-or-min-active-win" toggle-min?)))))

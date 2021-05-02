@@ -37,7 +37,7 @@
                      (if (.isMinimized active-win)
                        (.restore active-win)
                        (.minimize active-win))
-                     (if (.isMaximixed active-win)
+                     (if (.isMaximized active-win)
                        (.unmaximize active-win)
                        (.maximize active-win)))))))
 

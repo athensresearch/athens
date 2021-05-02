@@ -235,7 +235,7 @@
 
           ;; (if @is-maximized?
           [:button
-           {:on-click #(dispatch [:toggle-max-min-win])
+           {:on-click #(dispatch [:toggle-max-min-win false])
             :title "Restore"}
            [:> SVGIcon
             [:path {:d "M8 5H19V16H8V5Z"
@@ -243,7 +243,7 @@
             [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]]
 
           [:button
-           {:on-click #(dispatch [:toggle-max-min-win])
+           {:on-click #(dispatch [:toggle-max-min-win false])
             :title "Maximize"}
            [:> SVGIcon
             [:rect
