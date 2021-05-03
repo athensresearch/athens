@@ -40,6 +40,7 @@
                                :display "flex"
                                :align-items "center"
                                :background (color :background-minus-1)
+                               :transition "background 0.1s ease-in-out, filter 0.1s ease-in-out, color 0.1s ease-in-out"
                                :justify-content "center"
                                :border 0}]
                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
@@ -65,6 +66,7 @@
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
+   :padding-left "70px"
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
@@ -72,23 +74,19 @@
 
 
 (def win-app-header-style
-  {:grid-area "app-header"
+  {
+   :grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
    :background (color :background-minus-1)
    :align-items "center"
    :display "grid"
-   :position "absolute"
-   :top "0"
-   :backdrop-filter "blur(0.375rem)"
-   :right 0
-   :left 0
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
-   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
+   [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]]})
 
