@@ -49,7 +49,7 @@
                                                                          :color "#fff"}]]]})
 
 
-(def app-header-style
+(def mac-app-header-style
   {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
@@ -68,9 +68,51 @@
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
-                               :-webkit-app-region "no-drag"}]
-                     [:.os-:win [:& {:border "1px solid red"}]]
-                     [:.os-:mac [:& {:border "1px solid blue"}]]]})
+                               :-webkit-app-region "no-drag"}]]})
+
+
+(def win-app-header-style
+  {:grid-area "app-header"
+   :justify-content "flex-start"
+   :background-clip "padding-box"
+   :background (color :background-minus-1)
+   :align-items "center"
+   :display "grid"
+   :position "absolute"
+   :top "0"
+   :backdrop-filter "blur(0.375rem)"
+   :right 0
+   :left 0
+   :grid-template-columns "auto 1fr auto"
+   :z-index "1070"
+   :grid-auto-flow "column"
+   :-webkit-app-region "drag"
+   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
+   ::stylefy/manual [[:svg {:font-size "20px"}]
+                     [:button {:justify-self "flex-start"
+                               :-webkit-app-region "no-drag"}]]})
+
+
+(def linux-app-header-style
+  {:grid-area "app-header"
+   :justify-content "flex-start"
+   :background-clip "padding-box"
+   :background (color :background-minus-1)
+   :align-items "center"
+   :display "grid"
+   :position "absolute"
+   :top "0"
+   :backdrop-filter "blur(0.375rem)"
+   :right 0
+   :left 0
+   :grid-template-columns "auto 1fr auto"
+   :z-index "1070"
+   :grid-auto-flow "column"
+   :-webkit-app-region "drag"
+   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
+   ::stylefy/manual [[:svg {:font-size "20px"}]
+                     [:button {:justify-self "flex-start"
+                               :-webkit-app-region "no-drag"}]]})
 
 
 (def app-header-control-section-style
@@ -137,8 +179,14 @@
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
 
-       [:header (use-style app-header-style
-                           {:class (if theme-dark "theme-dark" "theme-light")})
+       [:header (use-style (cond
+                             (and (= (util/get-os) :mac) (util/electron?)) mac-app-header-style
+                             (and (= (util/get-os) :windows) (util/electron?)) win-app-header-style
+                             (and (= (util/get-os) :linux) (util/electron?)) linux-app-header-style)
+                             {:class [(if theme-dark "theme-dark" "theme-light")]})
+
+
+
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
@@ -225,53 +273,53 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
 
-
-         [:div (use-style win-toolbar-buttons-style
-                          {:class (if @theme-dark "theme-dark" "theme-light")})
-          [:button
-           {:on-click #(dispatch [:toggle-max-min-win true])
-            :title "Minimize"}
-           [:> SVGIcon
-            [:line
-             {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
+         (if (and (= (util/get-os) :win) (util/electron?))
+           [:div (use-style win-toolbar-buttons-style
+                            {:class (if @theme-dark "theme-dark" "theme-light")})
+            [:button
+             {:on-click #(dispatch [:toggle-max-min-win true])
+              :title "Minimize"}
+             [:> SVGIcon
+              [:line
+               {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
 
           ;; (if @is-maximized?
-          [:button
-           {:on-click #(dispatch [:toggle-max-min-win false])
-            :title (if @win-maximized? "Restore" "Maximize")}
-           (if @win-maximized?
-             [:> SVGIcon
-              [:path {:d "M8 5H19V16H8V5Z"
-                      :fill "none" :stroke "currentColor", :stroke-width "2"}]
-              [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
-             [:> SVGIcon
-              [:rect
-               {:height "14"
-                :stroke "currentColor"
-                :fill "none"
-                :stroke-width "2"
-                :width "14"
-                :x "5"
-                :y "5"}]])]
+            [:button
+             {:on-click #(dispatch [:toggle-max-min-win false])
+              :title (if @win-maximized? "Restore" "Maximize")}
+             (if @win-maximized?
+               [:> SVGIcon
+                [:path {:d "M8 5H19V16H8V5Z"
+                        :fill "none" :stroke "currentColor", :stroke-width "2"}]
+                [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+               [:> SVGIcon
+                [:rect
+                 {:height "14"
+                  :stroke "currentColor"
+                  :fill "none"
+                  :stroke-width "2"
+                  :width "14"
+                  :x "5"
+                  :y "5"}]])]
             ;;  )
 
-          [:button
-           {:on-click #(dispatch [:toggle-max-min-win true])
-            :class "close"
-            :title "Close Athens"}
-           [:> SVGIcon
-            [:line
-             {:stroke "currentColor"
-              :stroke-width "2"
-              :x1 "4.44194"
-              :x2 "19.4419"
-              :y1 "4.55806"
-              :y2 "19.5581"}]
-            [:line
-             {:stroke "currentColor"
-              :stroke-width "2"
-              :x1 "4.55806"
-              :x2 "19.5581"
-              :y1 "19.5581"
-              :y2 "4.55806"}]]]]]]])))
+            [:button
+             {:on-click #(dispatch [:toggle-max-min-win true])
+              :class "close"
+              :title "Close Athens"}
+             [:> SVGIcon
+              [:line
+               {:stroke "currentColor"
+                :stroke-width "2"
+                :x1 "4.44194"
+                :x2 "19.4419"
+                :y1 "4.55806"
+                :y2 "19.5581"}]
+              [:line
+               {:stroke "currentColor"
+                :stroke-width "2"
+                :x1 "4.55806"
+                :x2 "19.5581"
+                :y1 "19.5581"
+                :y2 "4.55806"}]]]])]]])))
 
