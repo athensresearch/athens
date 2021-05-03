@@ -35,8 +35,8 @@
   {:display "flex"
    :margin-left "1rem"
    :align-self "stretch"
-:align-items "stretch"
-:color "inherit"
+   :align-items "stretch"
+   :color "inherit"
    ::stylefy/manual [[:button {:border-radius 0
                                :width "48px"
                                :min-height "32px"
@@ -64,7 +64,7 @@
    :display "grid"
    :position "absolute"
    :top "0"
-   :backdrop-filter "blur(0.375rem)"
+   :backdrop-filter "blur(20px)"
    :right 0
    :left 0
    :grid-template-columns "auto 1fr auto"
@@ -77,7 +77,8 @@
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
-                               :-webkit-app-region "no-drag"}]]})
+                               :-webkit-app-region "no-drag"}]
+                     ["button:not(:hover):not(.is-active)" {:background "transparent"}]]})
 
 
 (def win-app-header-style
@@ -89,7 +90,7 @@
    :align-items "center"
    :display "grid"
    :height "50px"
-:padding-left "10px"
+   :padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
@@ -126,13 +127,8 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :background "inherit"
-   :color "inherit"
-   :backdrop-filter "blur(0.375rem)"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
-   :grid-gap "0.25rem"
-   ::stylefy/manual [[:button {:color "inherit"
-                               :background "inherit"}]]})
+   :grid-gap "0.25rem"})
 
 
 (def app-header-secondary-controls-style
@@ -146,8 +142,7 @@
 
 (def separator-style
   {:border "0"
-   :background (color :background-minus-2 :opacity-high)
-   :margin-inline "20%"
+   :margin-inline "0.5rem"
    :margin-block "0"
    :inline-size "1px"
    :block-size "auto"})
@@ -187,9 +182,9 @@
          [filesystem/merge-modal merge-open?])
 
        [:header (use-style (cond
-                             (and (= (util/get-os) :mac) (util/electron?)) mac-app-header-style
-                             (and (= (util/get-os) :windows) (util/electron?)) win-app-header-style
-                             (and (= (util/get-os) :linux) (util/electron?)) linux-app-header-style)
+                             (and (= (util/get-os) :mac) electron?) mac-app-header-style
+                             (and (= (util/get-os) :windows) electron?) win-app-header-style
+                             (and (= (util/get-os) :linux) electron?) linux-app-header-style)
                            {:class [(if theme-dark "theme-dark" "theme-light")]})
 
 
@@ -218,7 +213,7 @@
          #_[button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
-                  :style    {:width "14rem" :margin-left "1rem" :background (color :background-minus-1)}
+                  :style    {:width "14rem" :background (color :background-minus-1)}
                   :active   @(subscribe [:athena/open])}
           [:<> [:> Search] [:span "Find or Create a Page"]]]]
 
@@ -279,7 +274,7 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-         (if (and (= (util/get-os) :windows) (util/electron?))
+         (if (and (= (util/get-os) :windows) electron?)
            [:div (use-style win-toolbar-buttons-style
                             {:class (if @theme-dark "theme-dark" "theme-light")})
             [:button
