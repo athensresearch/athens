@@ -29,7 +29,7 @@
                  [borkdude/sci "0.0.13-alpha.22"]
                  [garden "1.3.10"]
                  [stylefy "3.0.0"]
-[stylefy/reagent "3.0.0"]
+                 [stylefy/reagent "3.0.0"]
                  [tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]

@@ -1,32 +1,32 @@
 (ns athens.views.app-toolbar
   (:require
-   ["@material-ui/core/SVGIcon" :default SVGIcon]
-   ["@material-ui/icons/BubbleChart" :default BubbleChart]
-   ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-   ["@material-ui/icons/ChevronRight" :default ChevronRight]
-   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
-   ["@material-ui/icons/FileCopy" :default FileCopy]
-   ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
-   ["@material-ui/icons/Menu" :default Menu]
-   ["@material-ui/icons/MergeType" :default MergeType]
-   ["@material-ui/icons/Replay" :default Replay]
-   ["@material-ui/icons/Search" :default Search]
-   ["@material-ui/icons/Settings" :default Settings]
-   ["@material-ui/icons/Today" :default Today]
-   ["@material-ui/icons/ToggleOff" :default ToggleOff]
-   ["@material-ui/icons/ToggleOn" :default ToggleOn]
-   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-   [athens.router :as router]
-   [athens.style :refer [color]]
-   [athens.subs]
-   [athens.util :as util]
-   [athens.views.buttons :refer [button]]
-   [athens.views.filesystem :as filesystem]
-   [athens.views.presence :as presence]
-   [athens.ws-client :as ws]
-   [re-frame.core :refer [subscribe dispatch]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/SVGIcon" :default SVGIcon]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+    ["@material-ui/icons/FileCopy" :default FileCopy]
+    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
+    ["@material-ui/icons/Menu" :default Menu]
+    ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/Replay" :default Replay]
+    ["@material-ui/icons/Search" :default Search]
+    ["@material-ui/icons/Settings" :default Settings]
+    ["@material-ui/icons/Today" :default Today]
+    ["@material-ui/icons/ToggleOff" :default ToggleOff]
+    ["@material-ui/icons/ToggleOn" :default ToggleOn]
+    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    [athens.router :as router]
+    [athens.style :refer [color]]
+    [athens.subs]
+    [athens.util :as util]
+    [athens.views.buttons :refer [button]]
+    [athens.views.filesystem :as filesystem]
+    [athens.views.presence :as presence]
+    [athens.ws-client :as ws]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -54,7 +54,7 @@
   {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
-   :background (color :background-minus-1)
+   :background (color :background-color :opacity-high)
    :align-items "center"
    :display "grid"
    :position "absolute"
@@ -66,7 +66,9 @@
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
-   :padding-left "70px"
+   :padding-left "88px"
+   :padding-right "22px"
+   :height "54px"
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
@@ -74,8 +76,7 @@
 
 
 (def win-app-header-style
-  {
-   :grid-area "app-header"
+  {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
    :background (color :background-minus-1)
@@ -86,7 +87,7 @@
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
    ::stylefy/manual [[:svg {:font-size "20px"}]
-   [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
+                     [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]]})
 
@@ -120,8 +121,7 @@
    :backdrop-filter "blur(0.375rem)"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :grid-gap "0.25rem"
-   ::stylefy/manual [[:button {:border-radius 0
-                               :color "inherit"
+   ::stylefy/manual [[:button {:color "inherit"
                                :background "inherit"}]]})
 
 
@@ -130,8 +130,7 @@
          {:color (color :body-text-color :opacity-med)
           :justify-self "flex-end"
           :margin-left "auto"
-          ::stylefy/manual [[:button {:border-radius 0
-                                      :color "inherit"
+          ::stylefy/manual [[:button {:color "inherit"
                                       :background "inherit"}]]}))
 
 
@@ -181,8 +180,7 @@
                              (and (= (util/get-os) :mac) (util/electron?)) mac-app-header-style
                              (and (= (util/get-os) :windows) (util/electron?)) win-app-header-style
                              (and (= (util/get-os) :linux) (util/electron?)) linux-app-header-style)
-                             {:class [(if theme-dark "theme-dark" "theme-light")]})
-
+                           {:class [(if theme-dark "theme-dark" "theme-light")]})
 
 
         [:div (use-style app-header-control-section-style)
@@ -243,8 +241,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])

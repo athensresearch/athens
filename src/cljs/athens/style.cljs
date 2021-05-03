@@ -4,7 +4,7 @@
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
     [stylefy.core :as stylefy]
-   [stylefy.reagent :as stylefy-reagent]))
+    [stylefy.reagent :as stylefy-reagent]))
 
 
 (def THEME-DARK

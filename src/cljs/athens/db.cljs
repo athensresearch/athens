@@ -1,12 +1,12 @@
 (ns athens.db
   (:require
-   [athens.patterns :as patterns]
-   [athens.util :refer [escape-str]]
-   [clojure.edn :as edn]
-   [clojure.string :as string]
-   [datascript.core :as d]
-   [posh.reagent :refer [posh! pull q]]
-   [re-frame.core :refer [dispatch]]))
+    [athens.patterns :as patterns]
+    [athens.util :refer [escape-str]]
+    [clojure.edn :as edn]
+    [clojure.string :as string]
+    [datascript.core :as d]
+    [posh.reagent :refer [posh! pull q]]
+    [re-frame.core :refer [dispatch]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -448,17 +448,17 @@
    (if (string/blank? query)
      (vector)
      (->>
-      (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-             :in $ ?query-pattern
-             :where
-             [?block :block/string ?txt]
-             [(re-find ?query-pattern ?txt)]]
-           @dsdb
-           (re-case-insensitive query))
-      (take n)
-      (map get-root-parent-node)
-      (remove nil?)
-      (mapv #(dissoc % :block/_children))))))
+       (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
+              :in $ ?query-pattern
+              :where
+              [?block :block/string ?txt]
+              [(re-find ?query-pattern ?txt)]]
+            @dsdb
+            (re-case-insensitive query))
+       (take n)
+       (map get-root-parent-node)
+       (remove nil?)
+       (mapv #(dissoc % :block/_children))))))
 
 
 (defn nth-sibling
@@ -584,9 +584,9 @@
                            ref-ids)
         blocks (map (fn [id] (get-block-document id)) ref-ids)]
     (mapv
-     (fn [block]
-       (merge block {:block/parents (get parents (:db/id block))}))
-     blocks)))
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
 
 
 (defn group-by-parent
