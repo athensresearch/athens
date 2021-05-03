@@ -10,7 +10,7 @@
     [garden.selectors :as selectors]
     [posh.reagent :as p]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -91,8 +91,8 @@
           [:th [:h5 "Title"]]
           [:th [:h5 "Links"]]
           [:th [:h5 "Body"]]
-          [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
-          [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
+          [:th [:h5 "Modified"]]
+          [:th [:h5 "Created"]]]]
         [:tbody
          (doall
            (for [page @pages]
