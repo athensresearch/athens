@@ -34,13 +34,17 @@
 (def win-toolbar-buttons-style
   {:display "flex"
    :margin-left "1rem"
+   :align-self "stretch"
+:align-items "stretch"
+:color "inherit"
    ::stylefy/manual [[:button {:border-radius 0
                                :width "48px"
-                               :height "32px"
+                               :min-height "32px"
                                :display "flex"
                                :align-items "center"
+                               :color (color :body-text-color :opacity-med)
                                :background (color :background-minus-1)
-                               :transition "background 0.1s ease-in-out, filter 0.1s ease-in-out, color 0.1s ease-in-out"
+                               :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
                                :justify-content "center"
                                :border 0}]
                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
@@ -55,6 +59,7 @@
    :justify-content "flex-start"
    :background-clip "padding-box"
    :background (color :background-color :opacity-high)
+   :color (color :body-text-color :opacity-med)
    :align-items "center"
    :display "grid"
    :position "absolute"
@@ -80,8 +85,11 @@
    :justify-content "flex-start"
    :background-clip "padding-box"
    :background (color :background-minus-1)
+   :color (color :body-text-color :opacity-high)
    :align-items "center"
    :display "grid"
+   :height "50px"
+:padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
@@ -89,6 +97,7 @@
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
+                               :border-radius "0"
                                :-webkit-app-region "no-drag"}]]})
 
 
@@ -118,6 +127,7 @@
   {:display "grid"
    :grid-auto-flow "column"
    :background "inherit"
+   :color "inherit"
    :backdrop-filter "blur(0.375rem)"
    :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :grid-gap "0.25rem"
@@ -127,7 +137,7 @@
 
 (def app-header-secondary-controls-style
   (merge app-header-control-section-style
-         {:color (color :body-text-color :opacity-med)
+         {
           :justify-self "flex-end"
           :margin-left "auto"
           ::stylefy/manual [[:button {:color "inherit"
@@ -267,7 +277,7 @@
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
                   :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
+          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
          (if (and (= (util/get-os) :windows) (util/electron?))
            [:div (use-style win-toolbar-buttons-style
@@ -296,7 +306,6 @@
                   :width "14"
                   :x "5"
                   :y "5"}]])]
-            ;;  )
 
             [:button
              {:on-click #(dispatch [:toggle-max-min-win true])
@@ -316,5 +325,5 @@
                 :x1 "4.55806"
                 :x2 "19.5581"
                 :y1 "19.5581"
-                :y2 "4.55806"}]]]])]]])))
+                :y2 "4.55806"}]]]])]])))
 
