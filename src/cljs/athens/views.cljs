@@ -4,8 +4,8 @@
     [athens.config]
     [athens.style]
     [athens.subs]
+    [athens.util :refer [get-os electron?]]
     [athens.views.app-toolbar :as app-toolbar]
-    [athens.util :refer [get-os]]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
@@ -13,6 +13,7 @@
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
+    [clojure.string :refer [join]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -88,7 +89,12 @@
          :else [:<>
                 (when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style
-                                 {:class (str "os-" (get-os))})
+                                 {:class (join " "
+                                               [(cond
+                                                  (= (get-os) :windows) "os-windows"
+                                                  (= (get-os) :mac) "os-mac"
+                                                  (= (get-os) :linux) "os-linux")
+                                                (when (electron?) "is-electron")])})
                  [app-toolbar/app-toolbar]
                  [left-sidebar/left-sidebar]
                  [pages/view]
