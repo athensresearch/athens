@@ -273,7 +273,7 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]
 
-         (if (and (= (util/get-os) :win) (util/electron?))
+         (if (and (= (util/get-os) :windows) (util/electron?))
            [:div (use-style win-toolbar-buttons-style
                             {:class (if @theme-dark "theme-dark" "theme-light")})
             [:button
@@ -283,7 +283,6 @@
               [:line
                {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
 
-          ;; (if @is-maximized?
             [:button
              {:on-click #(dispatch [:toggle-max-min-win false])
               :title (if @win-maximized? "Restore" "Maximize")}
