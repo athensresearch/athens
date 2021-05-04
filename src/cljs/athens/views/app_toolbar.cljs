@@ -290,21 +290,32 @@
 
             [:button
              {:on-click #(dispatch [:toggle-max-min-win false])
-              :title (if @win-maximized? "Restore" "Maximize")}
-             (if @win-maximized?
-               [:> SVGIcon
-                [:path {:d "M8 5H19V16H8V5Z"
-                        :fill "none" :stroke "currentColor", :stroke-width "2"}]
-                [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
-               [:> SVGIcon
-                [:rect
-                 {:height "14"
-                  :stroke "currentColor"
-                  :fill "none"
-                  :stroke-width "2"
-                  :width "14"
-                  :x "5"
-                  :y "5"}]])]
+              :title (cond
+                       @win-maximized? "Restore"
+                       @win-fullscreen? "Exit FullScreen"
+                       :else "Maximize")}
+             (cond
+               @win-maximized? [:> SVGIcon
+                                [:path {:d "M8 5H19V16H8V5Z"
+                                        :fill "none" :stroke "currentColor", :stroke-width "2"}]
+                                [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+               @win-fullscreen? [:> SVGIcon
+
+                                 [:path
+                                  {:d "M11 13L5 19M11 13V19M11 13H5", :stroke "currentColor", :stroke-width "2"}]
+                                 [:path
+                                  {:d "M13 11L19.5 4.5M13 11L13 5M13 11L19 11"
+                                   :stroke "currentColor"
+                                   :stroke-width "2"}]]
+               :else [:> SVGIcon
+                      [:rect
+                       {:height "14"
+                        :stroke "blue"
+                        :fill "none"
+                        :stroke-width "10"
+                        :width "14"
+                        :x "5"
+                        :y "5"}]])]
 
             [:button
              {:on-click #(dispatch [:toggle-max-min-win true])
