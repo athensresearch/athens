@@ -203,6 +203,11 @@
     (fn [db _]
       (:win-maximized? db)))
 
+  (reg-sub
+   :win-fullscreen?
+   (fn [db _]
+     (:win-fullscreen? db)))
+
 
   ;;; Events
 
@@ -433,6 +438,11 @@
    (fn [db [_ maximized?]]
      (assoc db :win-maximized? maximized?)))
 
+  (reg-event-db
+   :toggle-win-fullscreen
+   (fn [db [_ fullscreen?]]
+     (assoc db :win-fullscreen? fullscreen?)))
+
   ;;; Effects
 
   (defn os-username
@@ -506,5 +516,7 @@
        (js/console.log remote)
        (doto ^BrowserWindow active-win
          (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
-         (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false])))))))
+         (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
+         (.on "enter-full-screen" #(dispatch-sync [:toggle-win-fullscreen true]))
+         (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false])))))))
 

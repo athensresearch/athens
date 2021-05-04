@@ -42,6 +42,7 @@
                :modal               false
                :alert               nil
                :win-maximized?      false
+               :win-fullscreen?     false
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false

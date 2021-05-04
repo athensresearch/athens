@@ -78,6 +78,7 @@
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]
+                     ["&.is-fullscreen" {:padding-left "22px"}]
                      ["button:not(:hover):not(.is-active)" {:background "transparent"}]]})
 
 
@@ -173,6 +174,7 @@
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
         win-maximized?    (subscribe [:win-maximized?])
+        win-fullscreen?    (subscribe [:win-fullscreen?])
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
@@ -185,7 +187,9 @@
                              (and (= (util/get-os) :mac) electron?) mac-app-header-style
                              (and (= (util/get-os) :windows) electron?) win-app-header-style
                              (and (= (util/get-os) :linux) electron?) linux-app-header-style)
-                           {:class [(if theme-dark "theme-dark" "theme-light")]})
+                           {:class [(if theme-dark "theme-dark" "theme-light")
+                                    (when @win-fullscreen? "is-fullscreen")
+                                    (when @win-maximized? "is-maximized")]})
 
 
         [:div (use-style app-header-control-section-style)

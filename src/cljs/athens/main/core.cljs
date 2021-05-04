@@ -27,7 +27,7 @@
 
 
 (defn init-electron-handlers
-  []
+[]
   (let [toggle-win-channel "toggle-max-or-min-active-win"
         web-contents ^js/window (. @main-window -webcontents)]
     (doto ipcMain
@@ -41,10 +41,6 @@
                      (if (.isMaximized active-win)
                        (.unmaximize active-win)
                        (.maximize active-win)))))))
-
-    (doto ^BrowserWindow @main-window
-      (.on "enter-full-screen" #(.send web-contents "full-screen" "enter"))
-      (.on "leave-full-screen" #(.send web-contents "full-screen" "leave")))
 
     #(do (.removeHandler ipcMain toggle-win-channel))))
 
