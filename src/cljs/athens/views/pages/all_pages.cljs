@@ -73,6 +73,12 @@
 
 ;;; Components
 
+(defn- preview-body [block-children]
+  (map (fn [{:keys [db/id block/string]}]
+         ^{:key id}
+         [:span string])
+       block-children))
+
 (def sort-fn
   {:title       (fn [x] (-> x :node/title lower-case))
    :links-count (fn [x] (count (:block/_refs x)))
@@ -116,6 +122,6 @@
               [:tr {:key uid}
                [:td {:class "title" :on-click #(navigate-uid uid %)} title]
                [:td {:class "links"} (count _refs)]
-               [:td {:class "body-preview"} (map (fn [child] [:span (:block/string child)]) children)]
+               [:td {:class "body-preview"} (preview-body children)]
                [:td {:class "date"} (date-string modified)]
                [:td {:class "date"} (date-string created)]]))]]]))))
