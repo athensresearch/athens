@@ -340,7 +340,7 @@
   (defn open-dialog-index
     "Allow user to open a Backup file."
     [filepath]
-    (js/alert "Your data file is corrupted or incorrect, please select a backup file.")
+    (js/alert "Your index.transit is corrupted, please open up a backup")
     (let [res  (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
                                                      :filters    [{:name "Transit" :extensions ["bkp"]}]}))
           open-file (first res)]
