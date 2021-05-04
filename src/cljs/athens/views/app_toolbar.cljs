@@ -1,32 +1,32 @@
 (ns athens.views.app-toolbar
   (:require
-    ["@material-ui/core/SVGIcon" :default SVGIcon]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
-    ["@material-ui/icons/FileCopy" :default FileCopy]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
-    ["@material-ui/icons/Menu" :default Menu]
-    ["@material-ui/icons/MergeType" :default MergeType]
-    ["@material-ui/icons/Replay" :default Replay]
-    ["@material-ui/icons/Search" :default Search]
-    ["@material-ui/icons/Settings" :default Settings]
-    ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ToggleOff" :default ToggleOff]
-    ["@material-ui/icons/ToggleOn" :default ToggleOn]
-    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    [athens.router :as router]
-    [athens.style :refer [color]]
-    [athens.subs]
-    [athens.util :as util]
-    [athens.views.buttons :refer [button]]
-    [athens.views.filesystem :as filesystem]
-    [athens.views.presence :as presence]
-    [athens.ws-client :as ws]
-    [re-frame.core :refer [subscribe dispatch]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@material-ui/core/SVGIcon" :default SVGIcon]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+   ["@material-ui/icons/ChevronRight" :default ChevronRight]
+   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+   ["@material-ui/icons/FileCopy" :default FileCopy]
+   ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
+   ["@material-ui/icons/Menu" :default Menu]
+   ["@material-ui/icons/MergeType" :default MergeType]
+   ["@material-ui/icons/Replay" :default Replay]
+   ["@material-ui/icons/Search" :default Search]
+   ["@material-ui/icons/Settings" :default Settings]
+   ["@material-ui/icons/Today" :default Today]
+   ["@material-ui/icons/ToggleOff" :default ToggleOff]
+   ["@material-ui/icons/ToggleOn" :default ToggleOn]
+   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+   [athens.router :as router]
+   [athens.style :refer [color]]
+   [athens.subs]
+   [athens.util :as util]
+   [athens.views.buttons :refer [button]]
+   [athens.views.filesystem :as filesystem]
+   [athens.views.presence :as presence]
+   [athens.ws-client :as ws]
+   [re-frame.core :refer [subscribe dispatch]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -134,8 +134,7 @@
 
 (def app-header-secondary-controls-style
   (merge app-header-control-section-style
-         {
-          :justify-self "flex-end"
+         {:justify-self "flex-end"
           :margin-left "auto"
           ::stylefy/manual [[:button {:color "inherit"
                                       :background "inherit"}]]}))
@@ -250,8 +249,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -278,62 +277,68 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-         (if (and (= (util/get-os) :windows) electron?)
-           [:div (use-style win-toolbar-buttons-style
-                            {:class (if @theme-dark "theme-dark" "theme-light")})
-            [:button
-             {:on-click #(dispatch [:toggle-max-min-win true])
-              :title "Minimize"}
-             [:> SVGIcon
-              [:line
-               {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
-
-            [:button
-             {:on-click #(dispatch [:toggle-max-min-win false])
-              :title (cond
-                       @win-maximized? "Restore"
-                       @win-fullscreen? "Exit FullScreen"
-                       :else "Maximize")}
-             (cond
-               @win-maximized? [:> SVGIcon
-                                [:path {:d "M8 5H19V16H8V5Z"
-                                        :fill "none" :stroke "currentColor", :stroke-width "2"}]
-                                [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
-               @win-fullscreen? [:> SVGIcon
-
-                                 [:path
-                                  {:d "M11 13L5 19M11 13V19M11 13H5", :stroke "currentColor", :stroke-width "2"}]
-                                 [:path
-                                  {:d "M13 11L19.5 4.5M13 11L13 5M13 11L19 11"
-                                   :stroke "currentColor"
-                                   :stroke-width "2"}]]
-               :else [:> SVGIcon
-                      [:rect
-                       {:height "14"
-                        :stroke "blue"
-                        :fill "none"
-                        :stroke-width "10"
-                        :width "14"
-                        :x "5"
-                        :y "5"}]])]
-
-            [:button
-             {:on-click #(dispatch [:toggle-max-min-win true])
-              :class "close"
-              :title "Close Athens"}
-             [:> SVGIcon
-              [:line
-               {:stroke "currentColor"
-                :stroke-width "2"
-                :x1 "4.44194"
-                :x2 "19.4419"
-                :y1 "4.55806"
-                :y2 "19.5581"}]
-              [:line
-               {:stroke "currentColor"
-                :stroke-width "2"
-                :x1 "4.55806"
-                :x2 "19.5581"
-                :y1 "19.5581"
-                :y2 "4.55806"}]]]])]])))
+        (when (and (= (util/get-os) :windows) electron?)
+          [:div (use-style win-toolbar-buttons-style
+                           {:class (if @theme-dark "theme-dark" "theme-light")})
+           ;; Minimize Button
+           [:button
+            {:on-click #(dispatch [:toggle-max-min-win true])
+             :title "Minimize"}
+            [:> SVGIcon
+             [:line
+              {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
+           ;; Exit Fullscreen Button
+           (if @win-fullscreen?
+             [:button
+              {:on-click #(dispatch [:exit-fullscreen-win])
+               :title  "Exit FullScreen"}
+              [:> SVGIcon
+               [:path
+                {:d "M11 13L5 19M11 13V19M11 13H5", :stroke "currentColor", :stroke-width "2"}]
+               [:path
+                {:d "M13 11L19.5 4.5M13 11L13 5M13 11L19 11"
+                 :stroke "currentColor"
+                 :stroke-width "2"}]]]
+           ;; Maximize/Restore Button
+             [:button
+              {:on-click #(dispatch [:toggle-max-min-win false])
+               :title (if @win-maximized?
+                        "Restore"
+                        "Maximize")}
+              (if @win-maximized?
+              ;; SVG Restore
+                [:> SVGIcon
+                 [:path {:d "M8 5H19V16H8V5Z"
+                         :fill "none" :stroke "currentColor", :stroke-width "2"}]
+                 [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+              ;; SVG Maximize
+                [:> SVGIcon
+                 [:rect
+                  {:height "14"
+                   :stroke "blue"
+                   :fill "none"
+                   :stroke-width "10"
+                   :width "14"
+                   :x "5"
+                   :y "5"}]])])
+           ;; Close Button
+           [:button
+            {:on-click #(dispatch [:close-win])
+             :class "close"
+             :title "Close Athens"}
+            [:> SVGIcon
+             [:line
+              {:stroke "currentColor"
+               :stroke-width "2"
+               :x1 "4.44194"
+               :x2 "19.4419"
+               :y1 "4.55806"
+               :y2 "19.5581"}]
+             [:line
+              {:stroke "currentColor"
+               :stroke-width "2"
+               :x1 "4.55806"
+               :x2 "19.5581"
+               :y1 "19.5581"
+               :y2 "4.55806"}]]]])]])))
 

@@ -1,7 +1,7 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+   ["electron" :refer [app BrowserWindow ipcMain shell]]
+   ["electron-updater" :refer [autoUpdater]]))
 
 
 (def log (js/require "electron-log"))
@@ -27,11 +27,13 @@
 
 
 (defn init-electron-handlers
-[]
-  (let [toggle-win-channel "toggle-max-or-min-active-win"
+  []
+  (let [toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
+        close-win-channel "close-win"
+        exit-fullscreen-win-channel "exit-fullscreen-win"
         web-contents ^js/window (. @main-window -webcontents)]
     (doto ipcMain
-      (.handle toggle-win-channel
+      (.handle toggle-max-or-min-win-channel
                (fn [_ toggle-min?]
                  (when-let [active-win (.getFocusedWindow BrowserWindow)]
                    (if toggle-min?
@@ -40,27 +42,39 @@
                        (.minimize active-win))
                      (if (.isMaximized active-win)
                        (.unmaximize active-win)
-                       (.maximize active-win)))))))
+                       (.maximize active-win))))))
+      (.handle close-win-channel
+               (fn []
 
-    #(do (.removeHandler ipcMain toggle-win-channel))))
+                 (.quit app)))
+      (.handle exit-fullscreen-win-channel
+               (fn []
+                 (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                   (.setFullScreen active-win false)))))
+
+    ;; Future intent to refactor statup to use startup and teardown effects
+    ;; Below is an example of the teardown effect for this init fn
+    ;; #(doall (.removeHandler ipcMain toggle-max-or-min-win-channel)
+    ;;         (.removeHandler ipcMain close-win-channel)
+    ;;         (.removeHandler ipcMain exit-fullscreen-win-channel))
+    ))
 
 
 (defn init-browser
   []
   (reset! main-window (BrowserWindow.
-                        (clj->js {:width 800
-                                  :height 600
-                                  :backgroundColor "#1A1A1A"
-                                  :autoHideMenuBar true
-                                  :frame false
-                                  :titleBarStyle "hidden"
-                                  :trafficLightPosition #js {:x 19, :y 36}
-                                  :enableRemoteModule true
-                                  :webPreferences {:contextIsolation false
-                                                   :nodeIntegration true
-                                                   :worldSafeExecuteJavaScript true
-                                                   :enableRemoteModule true
-                                                   :nodeIntegrationWorker true}})))
+                       (clj->js {:width 800
+                                 :height 600
+                                 :backgroundColor "#1A1A1A"
+                                 :autoHideMenuBar true
+                                 :frame false
+                                 :titleBarStyle "hidden"
+                                 :trafficLightPosition #js {:x 19, :y 36}
+                                 :webPreferences {:contextIsolation false
+                                                  :nodeIntegration true
+                                                  :worldSafeExecuteJavaScript true
+                                                  :enableRemoteModule true
+                                                  :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
