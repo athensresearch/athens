@@ -68,7 +68,12 @@
                         [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
                         [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "0.5rem"}]
-                     [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
+                     [:th [:h5 {:opacity (:opacity-med OPACITIES)
+                                :user-select "none"}]
+                      [:&.sortable
+                       [:h5 {:cursor "pointer"}
+                        [:&:hover {:opacity 1}]]]
+                      [:&.date {:text-align "end"}]]]})
 
 
 ;;; Components
@@ -109,11 +114,15 @@
          [:table (use-style table-style)
           [:thead
            [:tr
-            [:th {:on-click #(sort! :title)} [:h5 "Title"]]
-            [:th {:on-click #(sort! :links-count)} [:h5 "Links"]]
+            [:th {:class "sortable"
+                  :on-click #(sort! :title)} [:h5 "Title"]]
+            [:th {:class "sortable"
+                  :on-click #(sort! :links-count)} [:h5 "Links"]]
             [:th [:h5 "Body"]]
-            [:th {:on-click #(sort! :modified)} [:h5 "Modified"]]
-            [:th {:on-click #(sort! :created)} [:h5 "Created"]]]]
+            [:th {:class "sortable date"
+                  :on-click #(sort! :modified)} [:h5 "Modified"]]
+            [:th {:class "sortable date"
+                  :on-click #(sort! :created)} [:h5 "Created"]]]]
           [:tbody
            (doall
             (for [{:keys [block/uid node/title block/children block/_refs]
