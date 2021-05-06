@@ -586,7 +586,7 @@
         (merge block {:block/parents (get parents (:db/id block))}))
       blocks)))
 
- 
+
 (defn sort-by-parent
   [blocks]
   (sort-by (fn [x]
@@ -597,7 +597,6 @@
                  first
                  :create/time))
            blocks))
- 
 
 
 (defn group-by-parent
