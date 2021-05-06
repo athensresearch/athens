@@ -108,7 +108,8 @@
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]
-                     ["&.is-fullscreen" {:padding-left "22px"}]
+                     ["&.is-fullscreen" {:padding-left "22px"
+                                         :height "44px"}]
                      ["button:not(:hover):not(.is-active)" {:background "transparent"}]]})
 
 
@@ -130,7 +131,8 @@
                      [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
                                :border-radius "0"
-                               :-webkit-app-region "no-drag"}]]})
+                               :-webkit-app-region "no-drag"}]
+                     ["&.is-fullscreen" {:height "44px"}]]})
 
 
 (def linux-app-header-style
