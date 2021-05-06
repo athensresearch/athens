@@ -1,32 +1,32 @@
 (ns athens.views.app-toolbar
   (:require
-   ["@material-ui/core/SvgIcon" :default SvgIcon]
-   ["@material-ui/icons/BubbleChart" :default BubbleChart]
-   ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-   ["@material-ui/icons/ChevronRight" :default ChevronRight]
-   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
-   ["@material-ui/icons/FileCopy" :default FileCopy]
-   ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
-   ["@material-ui/icons/Menu" :default Menu]
-   ["@material-ui/icons/MergeType" :default MergeType]
-   ["@material-ui/icons/Replay" :default Replay]
-   ["@material-ui/icons/Search" :default Search]
-   ["@material-ui/icons/Settings" :default Settings]
-   ["@material-ui/icons/Today" :default Today]
-   ["@material-ui/icons/ToggleOff" :default ToggleOff]
-   ["@material-ui/icons/ToggleOn" :default ToggleOn]
-   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-   [athens.router :as router]
-   [athens.style :refer [color]]
-   [athens.subs]
-   [athens.util :as util]
-   [athens.views.buttons :refer [button]]
-   [athens.views.filesystem :as filesystem]
-   [athens.views.presence :as presence]
-   [athens.ws-client :as ws]
-   [re-frame.core :refer [subscribe dispatch]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/SvgIcon" :default SvgIcon]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+    ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+    ["@material-ui/icons/FileCopy" :default FileCopy]
+    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
+    ["@material-ui/icons/Menu" :default Menu]
+    ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/Replay" :default Replay]
+    ["@material-ui/icons/Search" :default Search]
+    ["@material-ui/icons/Settings" :default Settings]
+    ["@material-ui/icons/Today" :default Today]
+    ["@material-ui/icons/ToggleOff" :default ToggleOff]
+    ["@material-ui/icons/ToggleOn" :default ToggleOn]
+    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    [athens.router :as router]
+    [athens.style :refer [color]]
+    [athens.subs]
+    [athens.util :as util]
+    [athens.views.buttons :refer [button]]
+    [athens.views.filesystem :as filesystem]
+    [athens.views.presence :as presence]
+    [athens.ws-client :as ws]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -138,11 +138,11 @@
    :justify-content "flex-start"
    :background-clip "padding-box"
    :background (color :background-plus-1)
-:color (color :body-text-color :opacity-high)
+   :color (color :body-text-color :opacity-high)
    :align-items "center"
    :display "grid"
    :height "50px"
-:padding-left "10px"
+   :padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
@@ -277,8 +277,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -312,7 +312,7 @@
                             [(if (= (util/get-os) :windows) "os-win"
                                  "os-linux")
                              (if @theme-dark "theme-dark" "theme-light")]})
-                             
+
            ;; Minimize Button
            [:button
             {:on-click #(dispatch [:toggle-max-min-win true])
