@@ -30,8 +30,7 @@
   []
   (let [toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
         close-win-channel "close-win"
-        exit-fullscreen-win-channel "exit-fullscreen-win"
-        web-contents ^js/window (. @main-window -webcontents)]
+        exit-fullscreen-win-channel "exit-fullscreen-win"]
     (doto ipcMain
       (.handle toggle-max-or-min-win-channel
                (fn [_ toggle-min?]
