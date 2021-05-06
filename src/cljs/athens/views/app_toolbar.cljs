@@ -1,6 +1,6 @@
 (ns athens.views.app-toolbar
   (:require
-   ["@material-ui/core/SVGIcon" :default SVGIcon]
+   ["@material-ui/core/SvgIcon" :default SvgIcon]
    ["@material-ui/icons/BubbleChart" :default BubbleChart]
    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
    ["@material-ui/icons/ChevronRight" :default ChevronRight]
@@ -31,27 +31,55 @@
 
 ;;; Styles
 
-(def win-toolbar-buttons-style
+(def window-toolbar-buttons-style
   {:display "flex"
    :margin-left "1rem"
    :align-self "stretch"
    :align-items "stretch"
    :color "inherit"
-   ::stylefy/manual [[:button {:border-radius 0
-                               :width "48px"
-                               :min-height "32px"
-                               :display "flex"
-                               :align-items "center"
-                               :color (color :body-text-color :opacity-med)
-                               :background (color :background-minus-1)
-                               :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
-                               :justify-content "center"
-                               :border 0}]
-                     [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                     [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
-                     [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
-                                                                         :filter "none"
-                                                                         :color "#fff"}]]]})
+   ::stylefy/manual [[:&.os-win [:button {:border-radius 0
+                                          :width "48px"
+                                          :min-height "32px"
+                                          :display "flex"
+                                          :align-items "center"
+                                          :color (color :body-text-color :opacity-med)
+                                          :background (color :background-minus-1)
+                                          :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
+                                          :justify-content "center"
+                                          :border 0}]
+                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
+                                                                          :filter "none"
+                                                                          :color "#fff"}]]]
+                     [:&.os-linux {:display "grid"
+                                   :padding "4px"
+                                   :padding-right "8px"
+                                   :grid-auto-flow "column"
+                                   :grid-gap "4px"}
+                      [:button {:position "relative"
+                                :margin "auto"
+                                :width "32px"
+                                :height "32px"
+                                :display "flex"
+                                :align-items "center"
+                                :background "transparent"
+                                :color (color :body-text-color :opacity-med)
+                                :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
+                                :justify-content "center"
+                                :border 0}
+                       [:&:before {:content "''"
+                                   :border-radius "1000em"
+                                   :z-index -1
+                                   :position "absolute"
+                                   :background (color :background-plus-1)
+                                   :inset "4px"}]
+                       [:&.close {:color "#fff"}
+                        [:&:before {:background "#E9541F" ;; Ubuntu close button background color
+                                    }]]
+                       [:svg {:font-size "12px"}]]
+                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.theme-dark [:button:hover {:filter "brightness(180%)"}]]]]})
 
 
 (def mac-app-header-style
@@ -107,20 +135,18 @@
   {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
-   :background (color :background-minus-1)
+   :background (color :background-plus-1)
+:color (color :body-text-color :opacity-high)
    :align-items "center"
    :display "grid"
-   :position "absolute"
-   :top "0"
-   :backdrop-filter "blur(0.375rem)"
-   :right 0
-   :left 0
+   :height "50px"
+:padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
-   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
+                     [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]]})
 
@@ -186,7 +212,7 @@
                              (and (= (util/get-os) :mac) electron?) mac-app-header-style
                              (and (= (util/get-os) :windows) electron?) win-app-header-style
                              (and (= (util/get-os) :linux) electron?) linux-app-header-style)
-                           {:class [(if theme-dark "theme-dark" "theme-light")
+                           {:class [(if @theme-dark "theme-dark" "theme-light")
                                     (when @win-fullscreen? "is-fullscreen")
                                     (when @win-maximized? "is-maximized")]})
 
@@ -277,14 +303,19 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-        (when (and (= (util/get-os) :windows) electron?)
-          [:div (use-style win-toolbar-buttons-style
-                           {:class (if @theme-dark "theme-dark" "theme-light")})
+        (when (and (or (= (util/get-os) :windows)
+                       (= (util/get-os) :linux)) electron?)
+          [:div (use-style window-toolbar-buttons-style
+                           {:class
+                            [(if (= (util/get-os) :windows) "os-win"
+                                 "os-linux")
+                             (if @theme-dark "theme-dark" "theme-light")]})
+                             
            ;; Minimize Button
            [:button
             {:on-click #(dispatch [:toggle-max-min-win true])
              :title "Minimize"}
-            [:> SVGIcon
+            [:> SvgIcon
              [:line
               {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
            ;; Exit Fullscreen Button
@@ -292,7 +323,7 @@
              [:button
               {:on-click #(dispatch [:exit-fullscreen-win])
                :title  "Exit FullScreen"}
-              [:> SVGIcon
+              [:> SvgIcon
                [:path
                 {:d "M11 13L5 19M11 13V19M11 13H5", :stroke "currentColor", :stroke-width "2"}]
                [:path
@@ -307,17 +338,17 @@
                         "Maximize")}
               (if @win-maximized?
               ;; SVG Restore
-                [:> SVGIcon
+                [:> SvgIcon
                  [:path {:d "M8 5H19V16H8V5Z"
                          :fill "none" :stroke "currentColor", :stroke-width "2"}]
                  [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
               ;; SVG Maximize
-                [:> SVGIcon
+                [:> SvgIcon
                  [:rect
                   {:height "14"
-                   :stroke "blue"
+                   :stroke "currentColor"
                    :fill "none"
-                   :stroke-width "10"
+                   :stroke-width "2"
                    :width "14"
                    :x "5"
                    :y "5"}]])])
@@ -326,7 +357,7 @@
             {:on-click #(dispatch [:close-win])
              :class "close"
              :title "Close Athens"}
-            [:> SVGIcon
+            [:> SvgIcon
              [:line
               {:stroke "currentColor"
                :stroke-width "2"
@@ -341,4 +372,3 @@
                :x2 "19.5581"
                :y1 "19.5581"
                :y2 "4.55806"}]]]])]])))
-
