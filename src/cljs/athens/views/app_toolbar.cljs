@@ -77,6 +77,8 @@
                        [:&.close {:color "#fff"}
                         [:&:before {:background "#E9541F" ;; Ubuntu close button background color
                                     }]]
+                       [:&.minimize [:svg {:position "relative"
+                                           :top "5px"}]]
                        [:svg {:font-size "12px"}]]
                       [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
                       [:&.theme-dark [:button:hover {:filter "brightness(180%)"}]]]]})
@@ -101,7 +103,7 @@
    :-webkit-app-region "drag"
    :padding-left "88px"
    :padding-right "22px"
-   :height "54px"
+   :height "52px"
    :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
    ::stylefy/manual [[:svg {:font-size "20px"}]
                      [:button {:justify-self "flex-start"
@@ -314,6 +316,7 @@
            ;; Minimize Button
            [:button
             {:on-click #(dispatch [:toggle-max-min-win true])
+             :class "minimize"
              :title "Minimize"}
             [:> SvgIcon
              [:line
