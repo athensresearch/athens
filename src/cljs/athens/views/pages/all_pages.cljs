@@ -136,4 +136,4 @@
                 [:td {:class "links"} (count _refs)]
                 [:td {:class "body-preview"} (preview-body children)]
                 [:td {:class "date"} (date-string modified)]
-                [
+                [:td {:class "date"} (date-string created)]]))]]]))))
