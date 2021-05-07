@@ -476,10 +476,6 @@
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
                                                           (dispatch [:selected/add-items children]))
-      ;; When undo no longer makes changes for local textarea, do datascript undo.
-      (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
-                                (when (= local previous)
-                                  (dispatch [:undo])))
 
       (= key-code KeyCodes.B) (surround-and-set "**")
 
