@@ -109,42 +109,6 @@
             nil))))
 
 
-;; -- Window Stuff ------------------------------------------------------------
-
-
-;; (defn window-stuff
-;;   [e]
-;;   (let [{:keys [key ctrl meta shift alt]} (util/destruct-key-down e)
-;;         editing-uid @(subscribe [:editing/uid])]
-;;     (cond
-;;       (util/shortcut-key? meta ctrl) (condp = key-code
-;;                                        KeyCodes.S (dispatch [:save])
-
-;;                                        KeyCodes.K (dispatch [:athena/toggle])
-
-;;                                        KeyCodes.G (dispatch [:devtool/toggle])
-
-;;                                        KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
-;;                                                         selected-items @(subscribe [:selected/items])]
-;;                                                     ;; editing/uid must be nil or selected-items must be non-empty
-;;                                                     (when (or (nil? editing-uid)
-;;                                                               (not-empty selected-items))
-;;                                                       (if shift
-;;                                                         (dispatch [:redo])
-;;                                                         (dispatch [:undo]))))
-
-;;                                        KeyCodes.BACKSLASH (if shift
-;;                                                             (dispatch [:right-sidebar/toggle])
-;;                                                             (dispatch [:left-sidebar/toggle]))
-;;                                        KeyCodes.T (util/toggle-10x)
-;;                                        nil)
-;;       alt (condp = key-code
-;;             KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
-;;             KeyCodes.RIGHT (when (nil? editing-uid) (.forward js/window.history))
-;;             KeyCodes.D (router/nav-daily-notes)
-;;             nil))))
-
-
 ;; -- Clipboard ----------------------------------------------------------
 
 (defn unformat-double-brackets
