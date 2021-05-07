@@ -6,11 +6,12 @@
     [athens.util :refer [date-string]]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [clojure.string :refer [lower-case]]
     [datascript.core :as d]
     [garden.selectors :as selectors]
     [posh.reagent :as p]
     [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;; Styles
@@ -67,39 +68,72 @@
                         [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
                         [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "0.5rem"}]
-                     [:th [:h5 {:opacity (:opacity-med OPACITIES)}]]]})
+                     [:th [:h5 {:opacity (:opacity-med OPACITIES)
+                                :user-select "none"}]
+                      [:&.sortable
+                       [:h5 {:cursor "pointer"}
+                        [:&:hover {:opacity 1}]]]
+                      [:&.date {:text-align "end"}]]]})
 
 
 ;;; Components
 
+(defn- preview-body
+  [block-children]
+  (map (fn [{:keys [db/id block/string]}]
+         ^{:key id}
+         [:span string])
+       block-children))
+
+
+(def sort-fn
+  {:title       (fn [x] (-> x :node/title lower-case))
+   :links-count (fn [x] (count (:block/_refs x)))
+   :modified    :edit/time
+   :created     :create/time})
+
 
 (defn page
   []
-  (let [pages (r/atom (->> (d/q '[:find [?e ...]
-                                  :where
-                                  [?e :node/title ?t]]
-                                @db/dsdb)
-                           (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
-                           deref
-                           (sort-by (fn [x] (count (:block/_refs x))))
-                           reverse))]
+  (let [sorted-by   (r/atom :links-count)
+        growing?    (r/atom false)
+        flip-order! #(swap! growing? not)
+        sort!       (fn [column]
+                      (if (= @sorted-by column)
+                        (flip-order!)
+                        (do (reset! sorted-by column)
+                            (reset! growing? false))))
+        pages       (->> (d/q '[:find [?e ...]
+                                :where
+                                [?e :node/title ?t]]
+                              @db/dsdb)
+                         (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
+                         deref)]
     (fn []
-      [:div (use-style page-style)
-       [:table (use-style table-style)
-        [:thead
-         [:tr
-          [:th [:h5 "Title"]]
-          [:th [:h5 "Links"]]
-          [:th [:h5 "Body"]]
-          [:th (use-sub-style table-style :th-date) [:h5 "Modified"]]
-          [:th (use-sub-style table-style :th-date) [:h5 "Created"]]]]
-        [:tbody
-         (doall
-           (for [page @pages]
-             (let [{:keys [block/uid node/title block/children block/_refs] modified :edit/time created :create/time} page]
+      (let [sorted-pages (sort-by (get sort-fn @sorted-by)
+                                  (if @growing? compare (comp - compare))
+                                  pages)]
+        [:div (use-style page-style)
+         [:table (use-style table-style)
+          [:thead
+           [:tr
+            [:th {:class "sortable"
+                  :on-click #(sort! :title)} [:h5 "Title"]]
+            [:th {:class "sortable"
+                  :on-click #(sort! :links-count)} [:h5 "Links"]]
+            [:th [:h5 "Body"]]
+            [:th {:class "sortable date"
+                  :on-click #(sort! :modified)} [:h5 "Modified"]]
+            [:th {:class "sortable date"
+                  :on-click #(sort! :created)} [:h5 "Created"]]]]
+          [:tbody
+           (doall
+             (for [{:keys [block/uid node/title block/children block/_refs]
+                    modified :edit/time
+                    created :create/time} sorted-pages]
                [:tr {:key uid}
                 [:td {:class "title" :on-click #(navigate-uid uid %)} title]
                 [:td {:class "links"} (count _refs)]
-                [:td {:class "body-preview"} (map (fn [child] [:span (:block/string child)]) children)]
+                [:td {:class "body-preview"} (preview-body children)]
                 [:td {:class "date"} (date-string modified)]
-                [:td {:class "date"} (date-string created)]])))]]])))
+                [:td {:class "date"} (date-string created)]]))]]]))))
