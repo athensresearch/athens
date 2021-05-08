@@ -308,7 +308,7 @@
 
 (defn get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :create/time :block/uid :block/string {:block/_children ...}] id)
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
        shape-parent-query))
 
 
@@ -587,18 +587,6 @@
       blocks)))
 
 
-(defn sort-by-parent
-  [blocks]
-  (sort-by (fn [x]
-             (-> x
-                 second
-                 first
-                 :block/parents
-                 first
-                 :create/time))
-           blocks))
-
-
 (defn group-by-parent
   [blocks]
   (group-by (fn [x]
@@ -622,8 +610,8 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
+       (sort-by :db/id)
        vec
-       sort-by-parent
        rseq))
 
 
