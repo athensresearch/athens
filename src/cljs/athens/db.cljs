@@ -43,6 +43,7 @@
                :alert               nil
                :win-maximized?      false
                :win-fullscreen?     false
+               :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false
