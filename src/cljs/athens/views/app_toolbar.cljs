@@ -52,6 +52,7 @@
                       [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
                                                                           :filter "none"
                                                                           :color "#fff"}]]]
+                     ;; Styles for linux (Ubuntu)
                      [:&.os-linux {:display "grid"
                                    :padding "4px"
                                    :padding-right "8px"
@@ -75,8 +76,8 @@
                                    :background (color :background-plus-1)
                                    :inset "4px"}]
                        [:&.close {:color "#fff"}
-                        [:&:before {:background "#E9541F" ;; Ubuntu close button background color
-                                    }]]
+                        [:&:before {:background "#E9541F"}]] ;; Ubuntu close button background color
+                                    
                        [:&.minimize [:svg {:position "relative"
                                            :top "5px"}]]
                        [:svg {:font-size "12px"}]]
@@ -84,58 +85,7 @@
                       [:&.theme-dark [:button:hover {:filter "brightness(180%)"}]]]]})
 
 
-(def mac-app-header-style
-  {:grid-area "app-header"
-   :justify-content "flex-start"
-   :background-clip "padding-box"
-   :background (color :background-color :opacity-high)
-   :color (color :body-text-color :opacity-med)
-   :align-items "center"
-   :display "grid"
-   :position "absolute"
-   :top "0"
-   :backdrop-filter "blur(20px)"
-   :right 0
-   :left 0
-   :grid-template-columns "auto 1fr auto"
-   :z-index "1070"
-   :grid-auto-flow "column"
-   :-webkit-app-region "drag"
-   :padding-left "88px"
-   :padding-right "22px"
-   :height "52px"
-   :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
-   ::stylefy/manual [[:svg {:font-size "20px"}]
-                     [:button {:justify-self "flex-start"
-                               :-webkit-app-region "no-drag"}]
-                     ["&.is-fullscreen" {:padding-left "22px"
-                                         :height "44px"}]
-                     ["button:not(:hover):not(.is-active)" {:background "transparent"}]]})
-
-
-(def win-app-header-style
-  {:grid-area "app-header"
-   :justify-content "flex-start"
-   :background-clip "padding-box"
-   :background (color :background-minus-1)
-   :color (color :body-text-color :opacity-high)
-   :align-items "center"
-   :display "grid"
-   :height "50px"
-   :padding-left "10px"
-   :grid-template-columns "auto 1fr auto"
-   :z-index "1070"
-   :grid-auto-flow "column"
-   :-webkit-app-region "drag"
-   ::stylefy/manual [[:svg {:font-size "20px"}]
-                     [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
-                     [:button {:justify-self "flex-start"
-                               :border-radius "0"
-                               :-webkit-app-region "no-drag"}]
-                     ["&.is-fullscreen" {:height "44px"}]]})
-
-
-(def linux-app-header-style
+(def app-header-style
   {:grid-area "app-header"
    :justify-content "flex-start"
    :background-clip "padding-box"
@@ -149,10 +99,29 @@
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
-   ::stylefy/manual [[:svg {:font-size "20px"}]
+   ::stylefy/manual [["&.is-fullscreen" {:height "44px"}]
+                     [:svg {:font-size "20px"}]
                      [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
                      [:button {:justify-self "flex-start"
-                               :-webkit-app-region "no-drag"}]]})
+                               :-webkit-app-region "no-drag"}]
+                     ;; Windows-only styles
+                     [:&.os-win {:background (color :background-minus-1)
+                                 :padding-left "10px"}
+                      [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]]
+                     ;; Mac-only styles
+                     [:&.os-mac {:background (color :background-color :opacity-high)
+                                 :color (color :body-text-color :opacity-med)
+                                 :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
+                                 :padding-left "88px"
+                                 :padding-right "22px"
+                                 :height "52px"
+                                 :backdrop-filter "blur(20px)"
+                                 :position "absolute"
+                                 :top "0"
+                                 :right 0
+                                 :left 0}
+                      ["&.is-fullscreen" {:padding-left "22px"}]
+                      ["button:not(:hover):not(.is-active)" {:background "transparent"}]]]})
 
 
 (def app-header-control-section-style
@@ -208,17 +177,22 @@
     (fn []
       [:<>
 
-
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
 
-       [:header (use-style (cond
-                             (and (= (util/get-os) :mac) electron?) mac-app-header-style
-                             (and (= (util/get-os) :windows) electron?) win-app-header-style
-                             (and (= (util/get-os) :linux) electron?) linux-app-header-style)
-                           {:class [(if @theme-dark "theme-dark" "theme-light")
-                                    (when @win-fullscreen? "is-fullscreen")
-                                    (when @win-maximized? "is-maximized")]})
+       [:header (use-style app-header-style
+                           {:class (vec (flatten
+                                    [(if @theme-dark "theme-dark" "theme-light")
+                                     (if electron?
+                                       ["is-electron"
+                                        (case (util/get-os)
+                                          :windows "os-windows"
+                                          :mac "os-mac"
+                                          :linux "os-linux")
+                                        (when @win-fullscreen? "is-fullscreen")
+                                        (when @win-maximized? "is-maximized")]
+                                       "is-web")]))})
+        
 
 
         [:div (use-style app-header-control-section-style)
@@ -279,8 +253,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
