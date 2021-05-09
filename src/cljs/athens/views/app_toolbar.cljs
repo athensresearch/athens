@@ -74,15 +74,15 @@
                                    :z-index -1
                                    :position "absolute"
                                    :background (color :background-plus-1)
-                                   :inset "4px"}]
+                                   :inset "6px"}]
                        [:&.close {:color "#fff"}
-                        [:&:before {:background "#E9541F"}]] ;; Ubuntu close button background color
-
+                        [:&:before {:background "#555"}]] ;; Ubuntu close button background color
                        [:&.minimize [:svg {:position "relative"
                                            :top "5px"}]]
                        [:svg {:font-size "12px"}]]
                       [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                      [:&.theme-dark [:button:hover {:filter "brightness(180%)"}]]]]})
+                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.is-focused ["button.close::before" {:background "#E9541F"}]]]]})
 
 
 (def app-header-style
@@ -288,6 +288,7 @@
                            {:class
                             [(if (= (util/get-os) :windows) "os-win"
                                  "os-linux")
+                             (when @win-focused? "is-focused")
                              (if @theme-dark "theme-dark" "theme-light")]})
 
            ;; Minimize Button
