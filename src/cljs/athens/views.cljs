@@ -13,7 +13,6 @@
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
-    [clojure.string :refer [join]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
