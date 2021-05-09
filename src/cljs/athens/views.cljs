@@ -89,12 +89,11 @@
          :else [:<>
                 (when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style
-                                 {:class (join " "
-                                               [(cond
-                                                  (= (get-os) :windows) "os-windows"
-                                                  (= (get-os) :mac) "os-mac"
-                                                  (= (get-os) :linux) "os-linux")
-                                                (when (electron?) "is-electron")])})
+                                 {:class [(case (get-os)
+                                            :windows "os-windows"
+                                            :mac "os-mac"
+                                            :linux "os-linux")
+                                          (when (electron?) "is-electron")]})
                  [app-toolbar/app-toolbar]
                  [left-sidebar/left-sidebar]
                  [pages/view]
