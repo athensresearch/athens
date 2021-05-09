@@ -208,6 +208,11 @@
     (fn [db _]
       (:win-fullscreen? db)))
 
+  (reg-sub
+    :win-focused?
+    (fn [db _]
+      (:win-focused? db)))
+
 
   ;;; Events
 
@@ -454,6 +459,11 @@
    (fn [db [_ fullscreen?]]
      (assoc db :win-fullscreen? fullscreen?)))
 
+  (reg-event-db
+   :toggle-win-focused
+   (fn [db [_ focused?]]
+     (assoc db :win-focused? focused?)))
+
   ;;; Effects
 
   (defn os-username
@@ -537,5 +547,7 @@
        (doto ^js/BrowserWindow active-win
          (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
          (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
+         (.on "blur" #(dispatch-sync [:toggle-win-focused false]))
+(.on "focus" #(dispatch-sync [:toggle-win-focused true]))
          (.on "enter-full-screen" #(dispatch-sync [:toggle-win-fullscreen true]))
          (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false])))))))

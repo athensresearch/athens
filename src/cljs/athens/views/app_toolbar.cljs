@@ -171,6 +171,7 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
+        win-focused?    (subscribe [:win-focused?])
         win-maximized?    (subscribe [:win-maximized?])
         win-fullscreen?    (subscribe [:win-fullscreen?])
         merge-open?       (reagent.core/atom false)]
@@ -189,6 +190,7 @@
                                                 :windows "os-windows"
                                                 :mac "os-mac"
                                                 :linux "os-linux")
+                                              (when @win-focused? "is-focused")
                                               (when @win-fullscreen? "is-fullscreen")
                                               (when @win-maximized? "is-maximized")]
                                              "is-web")]))})
