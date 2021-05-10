@@ -238,7 +238,7 @@
                 (dev-pprint more-tx-data)
                 (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
                 (dev-pprint final-tx-data)
-                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
+                (let [{:keys [db-before tx-data]} (transact! db/dsdb tx-data)]
 
                   ;; check remote data against previous db
                   (when (and (:default? @remote-graph-conf)
