@@ -395,11 +395,11 @@
                       [:> BubbleChart]
                       [:span "Show Local Graph"]]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(if daily-note?
-                                         (dispatch [:daily-note/delete uid title])
-                                         (do
-                                           (navigate :pages)
-                                           (dispatch [:page/delete uid title])))}
+                   [button {:on-click #(do
+                                         (if daily-note?
+                                           (dispatch [:daily-note/delete uid title])
+                                           (dispatch [:page/delete uid title]))
+                                         (navigate :pages))}
                     [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
@@ -554,7 +554,7 @@
          [:header (use-style page-header-style)
 
           ;; Dropdown
-          [menu-dropdown node state daily-note?]
+          [menu-dropdown node daily-note?]
 
           [:h1 (use-style title-style
                           {:data-uid uid

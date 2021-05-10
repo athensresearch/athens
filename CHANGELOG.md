@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.78](https://github.com/athensresearch/athens/compare/v1.0.0-beta.77...v1.0.0-beta.78) (2021-04-29)
+
+
+### Features
+
+* **blocks:** improved visibility of hover/focus of block bullets ([#1046](https://github.com/athensresearch/athens/issues/1046)) ([84f971a](https://github.com/athensresearch/athens/commit/84f971a20a4a1d7ef510916a490b94ae5c83d572))
+* **style:** improved highlight color consistency ([#1049](https://github.com/athensresearch/athens/issues/1049)) ([4546825](https://github.com/athensresearch/athens/commit/454682547046109d0cea3512d17d4fb3095397ec))
+
+
+### Bug Fixes
+
+* **breadcrumbs:** limit breadcrumb size ([#1047](https://github.com/athensresearch/athens/issues/1047)) ([a4686cc](https://github.com/athensresearch/athens/commit/a4686cc2d7978318e63c5ca5ab7618707a7e6048))
+* **filesystem:** show hidden database merge button ([#1079](https://github.com/athensresearch/athens/issues/1079)) ([432efb9](https://github.com/athensresearch/athens/commit/432efb9e0e24035ce703a11043065913800581f8))
+* use index.transit file if already exists ([#1044](https://github.com/athensresearch/athens/issues/1044)) ([865093f](https://github.com/athensresearch/athens/commit/865093f450dc70be3619f8c062dfbb398b815516))
+
+
+### Refactors
+
+* **node-page:** replace nodepage dropdown with popover ([#1045](https://github.com/athensresearch/athens/issues/1045)) ([2104370](https://github.com/athensresearch/athens/commit/2104370122e7d9036b6da613a2a850dd451c87ea))
+
 ## [1.0.0-beta.77](https://github.com/athensresearch/athens/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2021-04-27)
 
 

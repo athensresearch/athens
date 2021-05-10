@@ -107,6 +107,6 @@
                                       (.. e stopPropagation)
                                       (dispatch [:editing/uid uid]))}])])])
       ;; roam actually hides the brackets around [[embed]]
-      [:span "{{" (str/replace content block-uid "invalid") "}}"])))
+      [:span "{{" content "}}"])))
 
 
