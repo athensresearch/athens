@@ -2,11 +2,4 @@
 
 set -eo pipefail
 
-# This script depends on cljstyle. Installation instructions for cljstyle are linked to in CONTRIBUTING.md.
-
-# REVIEW consider rewriting to babashka to make platform independent?
-
-curl -L -O https://github.com/greglook/cljstyle/releases/download/0.14.0/cljstyle_0.14.0_linux.tar.gz
-tar -zxvf cljstyle_0.14.0_linux.tar.gz
-
-./cljstyle check
+lein cljstyle check --report
