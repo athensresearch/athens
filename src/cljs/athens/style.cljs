@@ -3,8 +3,7 @@
     [athens.config :as config]
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]
-    [stylefy.reagent :as stylefy-reagent]))
+    [stylefy.core :as stylefy]))
 
 
 (def THEME-DARK
@@ -176,7 +175,7 @@
 
 (defn init
   []
-  (stylefy/init {:dom (stylefy-reagent/init)})
+  (stylefy/init)
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
   (stylefy/class "CodeMirror" codemirror-styles)
