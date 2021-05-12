@@ -115,11 +115,8 @@
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
-
-
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
-
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
