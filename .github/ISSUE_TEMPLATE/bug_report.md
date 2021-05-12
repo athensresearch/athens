@@ -22,6 +22,7 @@ Category: ''
 Summarize the *one* issue in 1-3 sentences using keywords. One bug per report!
 
 **Steps to Reproduce**
+Below is an example of what the steps to reproduce a bug might look like:
 1. Go to '...'
 2. Log in '...'
 3. Click on '...'
@@ -57,6 +58,5 @@ Platform and Testing Environment:
 Packages:
 
 Dependencies:
-
 
 
