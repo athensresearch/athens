@@ -162,7 +162,7 @@
                 (= @socket-status :closed)
                 [:> Error (merge (use-style sync-icon-style)
                                  {:style {:color (color :error-color)}
-                                  :title "Synced error"})]
+                                  :title "Disconnected"})]
                 (or (and (:default? @remote-graph-conf)
                          (= @socket-status :running))
                     @(subscribe [:db/synced]))
@@ -171,7 +171,7 @@
                                         :title "Synced"})]
                 :else [:> Sync (merge (use-style sync-icon-style)
                                       {:style {:color (color :highlight-color)}
-                                       :title "Syncing"})])]]
+                                       :title "Synchronizing..."})])]]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
