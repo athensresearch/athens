@@ -63,7 +63,8 @@
             "gh-pages"     ["shell" "yarn" "gh-pages" "-d" "resources/public"]
             "karma"        ["do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "karma-test"]
-                            ["shell" "yarn" "run" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
+                            ["shell" "yarn" "run" "karma" "start" "--single-run" "--reporters" "junit,dots"]]
+            "cljstyle"     ["with-profile" "+cljstyle" "run" "-m" "cljstyle.main"]}
 
   :profiles
   {:dev
@@ -74,6 +75,8 @@
 
     :source-paths ["dev"]}
    :prod
-   {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}}
+   {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}
+   :cljstyle {:dependencies
+              [[mvxcvi/cljstyle "0.14.0" :exclusions [org.clojure/clojure]]]}}
 
   :prep-tasks [])
