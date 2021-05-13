@@ -12,7 +12,7 @@
     [datascript.core :as d]
     [garden.selectors :as selectors]
     [posh.reagent :as p]
-    [reagent.core :as r]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -79,6 +79,51 @@
                         [:.wrap-label {:flex-direction "row-reverse"}]]
                        [:&:hover {:opacity 1}]]]]})
 
+;;; Sort state and logic
+
+(defn- get-sorted-by
+  [db]
+  (get db :all-pages/sorted-by :links-count))
+
+
+(rf/reg-sub
+  :all-pages/sorted-by
+  (fn [db _]
+    (get-sorted-by db)))
+
+
+(rf/reg-sub
+  :all-pages/sort-order-ascending?
+  (fn [db _]
+    (get db :all-pages/sort-order-ascending? false)))
+
+
+(def sort-fn
+  {:title       (fn [x] (-> x :node/title lower-case))
+   :links-count (fn [x] (count (:block/_refs x)))
+   :modified    :edit/time
+   :created     :create/time})
+
+
+(rf/reg-sub
+  :all-pages/sorted
+  :<- [:all-pages/sorted-by]
+  :<- [:all-pages/sort-order-ascending?]
+  (fn [[sorted-by growing?] [_ pages]]
+    (sort-by (get sort-fn sorted-by)
+             (if growing? compare (comp - compare))
+             pages)))
+
+
+(rf/reg-event-db
+  :all-pages/sort-by
+  (fn [db [_ column-id]]
+    (let [sorted-column (get-sorted-by db)]
+      (if (= column-id sorted-column)
+        (update db :all-pages/sort-order-ascending? not)
+        (-> db
+            (assoc :all-pages/sorted-by column-id)
+            (assoc :all-pages/sort-order-ascending? (= column-id :title)))))))
 
 ;;; Components
 
@@ -91,53 +136,37 @@
 
 
 (defn- sortable-header
-  [id label on-click sorted-by growing? & date?]
-  [:th {:on-click #(on-click id)
-        :class ["sortable" (when date? "date")]}
-   [:div.wrap-label
-    [:h5 label]
-    (when (= sorted-by id)
-      (if growing? [:> ArrowDropUp] [:> ArrowDropDown]))]])
-
-
-(def sort-fn
-  {:title       (fn [x] (-> x :node/title lower-case))
-   :links-count (fn [x] (count (:block/_refs x)))
-   :modified    :edit/time
-   :created     :create/time})
+  ([column-id label]
+   (sortable-header column-id label {:date? false}))
+  ([column-id label {:keys [date?]}]
+   (let [sorted-by @(subscribe [:all-pages/sorted-by])
+         growing?  @(subscribe [:all-pages/sort-order-ascending?])]
+     [:th {:on-click #(dispatch [:all-pages/sort-by column-id])
+           :class ["sortable" (when date? "date")]}
+      [:div.wrap-label
+       [:h5 label]
+       (when (= sorted-by column-id)
+         (if growing? [:> ArrowDropUp] [:> ArrowDropDown]))]])))
 
 
 (defn page
   []
-  (let [sorted-by   (r/atom :links-count)
-        growing?    (r/atom false)
-        flip-order! #(swap! growing? not)
-        sort!       (fn [column]
-                      (if (= @sorted-by column)
-                        (flip-order!)
-                        (do (reset! sorted-by column)
-                            (if (= @sorted-by :title)
-                              (reset! growing? true)
-                              (reset! growing? false)))))
-        pages       (->> (d/q '[:find [?e ...]
-                                :where
-                                [?e :node/title ?t]]
-                              @db/dsdb)
-                         (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
-                         deref)]
+  (let [pages (->> (d/q '[:find [?e ...]
+                          :where
+                          [?e :node/title ?t]]
+                        @db/dsdb)
+                   (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
     (fn []
-      (let [sorted-pages (sort-by (get sort-fn @sorted-by)
-                                  (if @growing? compare (comp - compare))
-                                  pages)]
+      (let [sorted-pages @(subscribe [:all-pages/sorted @pages])]
         [:div (use-style page-style)
          [:table (use-style table-style)
           [:thead
            [:tr
-            [sortable-header :title "Title" sort! @sorted-by @growing?]
-            [sortable-header :links-count "Links" sort! @sorted-by @growing?]
+            [sortable-header :title "Title"]
+            [sortable-header :links-count "Links"]
             [:th [:h5 "Body"]]
-            [sortable-header :modified "Modified" sort! @sorted-by @growing? true]
-            [sortable-header :created "Created" sort! @sorted-by @growing? true]]]
+            [sortable-header :modified "Modified" {:date? true}]
+            [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
              (for [{:keys [block/uid node/title block/children block/_refs]
