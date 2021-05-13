@@ -6,7 +6,6 @@
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
@@ -151,24 +150,6 @@
          (if electron?
            [:<>
             [presence/presence-popover-info]
-            [:div {:style {:display "flex"}}
-             [:> Storage {:style {:align-self "center"}}]
-             [:div {:style {:margin-left "-10px"
-                            :align-self "flex-end"}}
-              (cond
-                (= @socket-status :closed)
-                [:> Error (merge (use-style sync-icon-style)
-                                 {:style {:color (color :error-color)}
-                                  :title "Disconnected"})]
-                (or (and (:default? @remote-graph-conf)
-                         (= @socket-status :running))
-                    @(subscribe [:db/synced]))
-                [:> CheckCircle (merge (use-style sync-icon-style)
-                                       {:style {:color (color :confirmation-color)}
-                                        :title "Synced"})]
-                :else [:> Sync (merge (use-style sync-icon-style)
-                                      {:style {:color (color :highlight-color)}
-                                       :title "Synchronizing..."})])]]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
@@ -184,9 +165,28 @@
                      :title "Open Settings"
                      :active   (= @route-name :settings)}
              [:> Settings]]
+
             [button {:on-click #(dispatch [:modal/toggle])
                      :title "Choose Database"}
-             [:> LibraryBooks]]
+             [:div {:style {:display "flex"}}
+              [:> Storage {:style {:align-self "center"}}]
+              [:div {:style {:margin-left "-10px"
+                             :align-self "flex-end"}}
+               (cond
+                 (= @socket-status :closed)
+                 [:> Error (merge (use-style sync-icon-style)
+                                  {:style {:color (color :error-color)}
+                                   :title "Disconnected"})]
+                 (or (and (:default? @remote-graph-conf)
+                          (= @socket-status :running))
+                     @(subscribe [:db/synced]))
+                 [:> CheckCircle (merge (use-style sync-icon-style)
+                                        {:style {:color (color :confirmation-color)}
+                                         :title "Synced"})]
+                 :else [:> Sync (merge (use-style sync-icon-style)
+                                       {:style {:color (color :highlight-color)}
+                                        :title "Synchronizing..."})])]]]
+
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])
