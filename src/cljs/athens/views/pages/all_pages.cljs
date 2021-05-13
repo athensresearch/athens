@@ -1,5 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
+    ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
+    ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
@@ -68,12 +70,14 @@
                         [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
                         [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "0.5rem"}]
-                     [:th [:h5 {:opacity (:opacity-med OPACITIES)
-                                :user-select "none"}]
-                      [:&.sortable
-                       [:h5 {:cursor "pointer"}
-                        [:&:hover {:opacity 1}]]]
-                      [:&.date {:text-align "end"}]]]})
+                     [:th {:opacity (:opacity-med OPACITIES)
+                           :user-select "none"}
+                      [:&.sortable {:cursor "pointer"}
+                       [:.wrap-label {:display "flex"
+                                      :align-items "center"}]
+                       [:&.date
+                        [:.wrap-label {:flex-direction "row-reverse"}]]
+                       [:&:hover {:opacity 1}]]]]})
 
 
 ;;; Components
@@ -84,6 +88,16 @@
          ^{:key id}
          [:span string])
        block-children))
+
+
+(defn- sortable-header
+  [id label on-click sorted-by growing? & date?]
+  [:th {:on-click #(on-click id)
+        :class ["sortable" (when date? "date")]}
+   [:div.wrap-label
+    [:h5 label]
+    (when (= sorted-by id)
+      (if growing? [:> ArrowDropUp] [:> ArrowDropDown]))]])
 
 
 (def sort-fn
@@ -102,7 +116,9 @@
                       (if (= @sorted-by column)
                         (flip-order!)
                         (do (reset! sorted-by column)
-                            (reset! growing? false))))
+                            (if (= @sorted-by :title)
+                              (reset! growing? true)
+                              (reset! growing? false)))))
         pages       (->> (d/q '[:find [?e ...]
                                 :where
                                 [?e :node/title ?t]]
@@ -117,15 +133,11 @@
          [:table (use-style table-style)
           [:thead
            [:tr
-            [:th {:class "sortable"
-                  :on-click #(sort! :title)} [:h5 "Title"]]
-            [:th {:class "sortable"
-                  :on-click #(sort! :links-count)} [:h5 "Links"]]
+            [sortable-header :title "Title" sort! @sorted-by @growing?]
+            [sortable-header :links-count "Links" sort! @sorted-by @growing?]
             [:th [:h5 "Body"]]
-            [:th {:class "sortable date"
-                  :on-click #(sort! :modified)} [:h5 "Modified"]]
-            [:th {:class "sortable date"
-                  :on-click #(sort! :created)} [:h5 "Created"]]]]
+            [sortable-header :modified "Modified" sort! @sorted-by @growing? true]
+            [sortable-header :created "Created" sort! @sorted-by @growing? true]]]
           [:tbody
            (doall
              (for [{:keys [block/uid node/title block/children block/_refs]
