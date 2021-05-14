@@ -171,9 +171,10 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
-        win-focused?    (subscribe [:win-focused?])
+        win-focused?      (subscribe [:win-focused?])
         win-maximized?    (subscribe [:win-maximized?])
-        win-fullscreen?    (subscribe [:win-fullscreen?])
+        win-fullscreen?   (subscribe [:win-fullscreen?])
+        zoom-factor       (subscribe [:zoom-factor])
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
@@ -192,7 +193,8 @@
                                                 :linux "os-linux")
                                               (when @win-focused? "is-focused")
                                               (when @win-fullscreen? "is-fullscreen")
-                                              (when @win-maximized? "is-maximized")]
+                                              (when @win-maximized? "is-maximized")
+                                              (when @zoom-factor (str "zoom-" @zoom-factor))]
                                              "is-web")]))})
 
 
