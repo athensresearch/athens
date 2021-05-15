@@ -8,7 +8,6 @@
     [cljsjs.react.dom]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
-    [posh.reagent :refer [transact!]]
     [reagent.core :as r]))
 
 
@@ -21,7 +20,7 @@
     (let [res (<! (http/get db/athens-url {:with-credentials? false}))
           {:keys [success body]} res]
       (if success
-        (transact! db/dsdb (db/str-to-db-tx body))
+        (d/transact! db/dsdb (db/str-to-db-tx body))
         (js/alert "Failed to retrieve data from GitHub")))))
 
 

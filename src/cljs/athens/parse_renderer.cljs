@@ -39,8 +39,8 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
+    [datascript.core :as d]
     [instaparse.core :as insta]
-    [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -111,7 +111,7 @@
   "Gets a block's node from the display string name (or partially parsed string tree)"
   [title-coll]
   (let [title (parse-title title-coll)]
-    (pull db/dsdb '[*] [:node/title title])))
+    (d/entity @db/dsdb [:node/title title])))
 
 
 (defn render-page-link
@@ -190,17 +190,17 @@
      :hashtag              (fn [& title-coll]
                              (let [node (pull-node-from-string title-coll)]
                                [:span (use-style hashtag {:class    "hashtag"
-                                                          :on-click #(navigate-uid (:block/uid @node) %)})
+                                                          :on-click #(navigate-uid (:block/uid node) %)})
                                 [:span {:class "formatting"} "#"]
                                 [:span {:class "contents"} title-coll]]))
      :block-ref            (fn [ref-uid]
-                             (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
-                               (if @block
+                             (let [block (d/entity @db/dsdb [:block/uid ref-uid])]
+                               (if block
                                  [:span (use-style block-ref {:class "block-ref"})
                                   [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
                                    (if (= uid ref-uid)
                                      [parse-and-render "{{SELF}}"]
-                                     [parse-and-render (:block/string @block) ref-uid])]]
+                                     [parse-and-render (:block/string block) ref-uid])]]
                                  (str "((" ref-uid "))"))))
      :url-image            (fn [{url :src alt :alt}]
                              [:img (use-style image {:class "url-image"

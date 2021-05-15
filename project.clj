@@ -19,7 +19,6 @@
                  [re-frame "1.2.0"]
                  [datascript "1.1.0"]
                  [datascript-transit "0.3.0"]
-                 [denistakeda/posh "0.5.8"]
                  [cljs-http "0.1.46"]
                  [day8.re-frame/async-flow-fx "0.2.0"]
                  [metosin/reitit "0.5.13"]

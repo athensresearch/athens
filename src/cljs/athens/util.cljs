@@ -5,7 +5,6 @@
     [clojure.string :as string]
     [com.rpl.specter :as s]
     [goog.dom :refer [getElement setProperties]]
-    [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
     [tick.locale-en-us])
   (:require-macros
@@ -238,7 +237,6 @@
                   (s/cond-path
                     map? (s/multi-path [s/MAP-VALS p] afn)
                     sequential? [s/ALL p])))
-
 
 ;; OS
 

@@ -3,7 +3,7 @@
     [athens.db :as db]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.node-page :as node-page]
-    [posh.reagent :refer [pull]]
+    [datascript.core :as d]
     [re-frame.core :as rf]))
 
 
@@ -11,7 +11,7 @@
   "Can be a block or a node page."
   []
   (let [uid (rf/subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
+        {:keys [node/title block/string db/id]} (d/entity @db/dsdb [:block/uid @uid])]
     (cond
       title [node-page/page id]
       string [block-page/page id]
