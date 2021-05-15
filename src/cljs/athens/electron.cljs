@@ -213,11 +213,6 @@
     (fn [db _]
       (:win-focused? db)))
 
-  (reg-sub
-    :content-zoom-factor
-    (fn [db _]
-      (:content-zoom-factor db)))
-
 
   ;;; Events
 
@@ -468,6 +463,46 @@
    :toggle-win-focused
    (fn [db [_ focused?]]
      (assoc db :win-focused? focused?)))
+
+
+  ;;; Zoom
+
+  (reg-event-fx
+   :zoom/set
+   (fn [_ [_ level]]
+     {:set-zoom-level! level}))
+
+  (reg-event-fx
+   :zoom/reset
+   (fn [_ _]
+     {:set-zoom-level! 0}))
+
+  (reg-event-fx
+   :zoom/in
+   (fn [_ _]
+     (let [webFrame (.. (js/require "electron") -webFrame)
+           currentZoom (.getZoomLevel webFrame)]
+       {:set-zoom-level! (+ currentZoom 1)})))
+
+  (reg-event-fx
+   :zoom/out
+   (fn [_ _]
+     (let [webFrame (.. (js/require "electron") -webFrame)
+           currentZoom (.getZoomLevel webFrame)]
+       {:set-zoom-level! (- currentZoom 1)})))
+  
+  (reg-fx
+   :set-zoom-level!
+   (fn [level]
+     (let [webFrame (.. (js/require "electron") -webFrame)]
+       (dispatch [:zoom-level/set-level level])
+       (.setZoomLevel webFrame level))))
+
+
+(reg-event-db
+ :zoom-level/set-level
+ (fn [db [_ level]]
+   (assoc db :zoom-level level)))
 
 
   ;;; Effects

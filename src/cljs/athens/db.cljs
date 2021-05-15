@@ -55,7 +55,7 @@
                :daily-notes/items   []
                :selected/items      []
                :theme/dark          false
-               :content-zoom-factor 1
+               :zoom-level          1
                :graph-conf          default-graph-conf})
 
 

@@ -24,7 +24,7 @@
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe dispatch reg-sub]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -153,6 +153,11 @@
                    [:to
                     {:opacity "1"}])
 
+(reg-sub
+  :zoom-level
+  (fn [db _]
+    (:zoom-level db)))
+
 
 ;;; Components
 
@@ -171,6 +176,7 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
+        zoom-level        (subscribe [:zoom-level])
         win-focused?      (subscribe [:win-focused?])
         win-maximized?    (subscribe [:win-maximized?])
         win-fullscreen?   (subscribe [:win-fullscreen?])
@@ -190,6 +196,7 @@
                                                 :windows "os-windows"
                                                 :mac "os-mac"
                                                 :linux "os-linux")
+                                              (str "zoom-level-" @zoom-level)
                                               (when @win-focused? "is-focused")
                                               (when @win-fullscreen? "is-fullscreen")
                                               (when @win-maximized? "is-maximized")]
