@@ -103,7 +103,6 @@
   {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
-   :font-size        "16px"                                 ;; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]
                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"
@@ -182,7 +181,8 @@
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
-                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+                                {:font-size "16px"
+                                 ::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
   (when config/debug?
     (util/hide-10x)))
