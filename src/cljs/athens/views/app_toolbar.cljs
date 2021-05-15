@@ -114,7 +114,7 @@
                                  :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
                                  :padding-left "88px"
                                  :padding-right "22px"
-                                 :height "52px"
+                                 :height "57px"
                                  :backdrop-filter "blur(20px)"
                                  :position "absolute"
                                  :top "0"
@@ -174,7 +174,6 @@
         win-focused?      (subscribe [:win-focused?])
         win-maximized?    (subscribe [:win-maximized?])
         win-fullscreen?   (subscribe [:win-fullscreen?])
-        zoom-factor       (subscribe [:zoom-factor])
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
@@ -193,8 +192,7 @@
                                                 :linux "os-linux")
                                               (when @win-focused? "is-focused")
                                               (when @win-fullscreen? "is-fullscreen")
-                                              (when @win-maximized? "is-maximized")
-                                              (when @zoom-factor (str "zoom-" @zoom-factor))]
+                                              (when @win-maximized? "is-maximized")]
                                              "is-web")]))})
 
 

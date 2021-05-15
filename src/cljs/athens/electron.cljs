@@ -214,9 +214,9 @@
       (:win-focused? db)))
 
   (reg-sub
-    :zoom-factor
+    :content-zoom-factor
     (fn [db _]
-      (:zoom-factor db)))
+      (:content-zoom-factor db)))
 
 
   ;;; Events
@@ -469,10 +469,6 @@
    (fn [db [_ focused?]]
      (assoc db :win-focused? focused?)))
 
-  (reg-event-db
-   :update-zoom-factor
-   (fn [db [_ factor]]
-     (assoc db :zoom-factor factor)))
 
   ;;; Effects
 
@@ -553,16 +549,11 @@
   (reg-fx
    :bind-win-listeners!
    (fn []
-     (let [active-win (.getCurrentWindow remote)
-           web-contents (.getCurrentWebContents remote)]
-       (doall
-        (doto ^js/EventEmitter web-contents
-          (.on "zoom-changed" #(dispatch-sync [:update-zoom-factor (.getZoomFactor web-contents)]))
-          (.on "zoom-changed" #(js/console.log "[:update-zoom-factor (.getZoomFactor web-contents)]")))
+     (let [active-win (.getCurrentWindow remote)]
         (doto ^js/BrowserWindow active-win
           (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
           (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
           (.on "blur" #(dispatch-sync [:toggle-win-focused false]))
           (.on "focus" #(dispatch-sync [:toggle-win-focused true]))
           (.on "enter-full-screen" #(dispatch-sync [:toggle-win-fullscreen true]))
-          (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false]))))))))
+          (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false])))))))

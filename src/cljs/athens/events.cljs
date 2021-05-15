@@ -468,6 +468,26 @@
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
 
+;; Content Zoom
+
+(reg-event-db
+  :content-zoom-factor/in
+  (fn [db _]
+    (let [current-z (:content-zoom-factor db)]
+      (assoc db :content-zoom-factor (min (+ current-z 1) 5)))))
+
+(reg-event-db
+ :content-zoom-factor/out
+ (fn [db _]
+   (let [current-z (:content-zoom-factor db)]
+     (assoc db :content-zoom-factor (max (- current-z 1) -2)))))
+
+(reg-event-db
+  :content-zoom-factor/reset
+  (fn [db _]
+    (assoc db :content-zoom-factor 0)))
+
+
 ;; Loading
 
 (reg-event-db

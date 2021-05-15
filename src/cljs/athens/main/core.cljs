@@ -1,7 +1,8 @@
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+   ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
+   ["electron-updater" :refer [autoUpdater]]
+   [athens.menu :refer [menu-template]]))
 
 
 (def log (js/require "electron-log"))
@@ -62,18 +63,18 @@
 (defn init-browser
   []
   (reset! main-window (BrowserWindow.
-                        (clj->js {:width 800
-                                  :height 600
-                                  :backgroundColor "#1A1A1A"
-                                  :autoHideMenuBar true
-                                  :frame false
-                                  :titleBarStyle "hidden"
-                                  :trafficLightPosition #js {:x 19, :y 36}
-                                  :webPreferences {:contextIsolation false
-                                                   :nodeIntegration true
-                                                   :worldSafeExecuteJavaScript true
-                                                   :enableRemoteModule true
-                                                   :nodeIntegrationWorker true}})))
+                       (clj->js {:width 800
+                                 :height 600
+                                 :backgroundColor "#1A1A1A"
+                                 :autoHideMenuBar true
+                                 :frame false
+                                 :titleBarStyle "hidden"
+                                 :trafficLightPosition #js {:x 19, :y 36}
+                                 :webPreferences {:contextIsolation false
+                                                  :nodeIntegration true
+                                                  :worldSafeExecuteJavaScript true
+                                                  :enableRemoteModule true
+                                                  :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
@@ -127,6 +128,11 @@
          (.. autoUpdater downloadUpdate))))
 
 
+(defn init-menu
+  []
+  (.setApplicationMenu Menu (.buildFromTemplate Menu menu-template)))
+
+
 (defn main
   []
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
@@ -136,6 +142,7 @@
                           (init-browser))))
   (.on app "ready" (fn []
                      (init-ipcMain)
+                     (init-menu)
                      (init-browser)
                      (init-electron-handlers)
                      (init-updater)
