@@ -465,8 +465,22 @@
                              (if selection?
                                (do (setStart target (+ 2 start))
                                    (setEnd target (+ 2 end)))
-                               (set-cursor-position target (+ start 2)))))]
-
+                               (set-cursor-position target (+ start 2)))))
+        
+        surround-and-set1 (fn [surround-text]
+                            (.preventDefault e)
+                            (.stopPropagation e)
+                            (let [selection (surround selection surround-text)
+                                  new-str   (str head selection tail)]
+                             
+                              (swap! state assoc :string/local new-str)
+                              (.. js/document (execCommand "insertText" false selection))
+                              (if selection?
+                                (do (setStart target (+ 1 start))
+                                    (setEnd target (+ 1 end)))
+                                (set-cursor-position target (+ start 1)))))]
+    
+;;Code here should be refactored, both of the above functions can likely be combined into one by just passing a character count variable and using that in place of 1 or 2 as the cursor position and start and end point
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
@@ -485,7 +499,7 @@
 
       (= key-code KeyCodes.B) (surround-and-set "**")
 
-      (= key-code KeyCodes.I) (surround-and-set "*")
+      (= key-code KeyCodes.I) (surround-and-set1 "*")
 
       (= key-code KeyCodes.Y) (surround-and-set "~~")
 
