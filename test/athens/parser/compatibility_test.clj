@@ -95,7 +95,14 @@
     "{{((block-ref-id))}} amazing block"
 
     [:block [:paragraph [:component "AnotherComponent" "AnotherComponent"] " Another Content"]]
-    "{{AnotherComponent}} Another Content"))
+    "{{AnotherComponent}} Another Content"
+
+    ; Regression test for https://github.com/athensresearch/athens/issues/1059
+    [:block
+     [:paragraph [:component "[[TODO]]" [:page-link "TODO"]]]
+     [:fenced-code-block {:lang ""} [:code-text "some code"]]
+     [:paragraph [:text-run "and some text"]]]
+    "{{[[TODO]]}} ```\nsome code```and some text"))
 
 
 (deftest parser-url-image-tests
