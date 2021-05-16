@@ -281,7 +281,7 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-        (when (and ((contains? #{:windows :linux} (util/get-os))) electron?)
+        (when (and (contains? #{:windows :linux} (util/get-os)) electron?)
           [:div (use-style window-toolbar-buttons-style
                            {:class
                             [(if (= (util/get-os) :windows) "os-win"
