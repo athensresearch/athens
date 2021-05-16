@@ -169,7 +169,7 @@
 
        ;; LOGO + BOTTOM BUTTONS
       [:footer (use-sub-style left-sidebar-style :footer)
-       [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens" :target "_blank"}) "Athens"]
+       [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens/issues/new/choose" :target "_blank"}) "Athens"]
        [:h5 (use-style {:align-self "center"})
         [:a (use-style version-style {:href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                                       :target "_blank"})
