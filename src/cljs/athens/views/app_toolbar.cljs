@@ -93,7 +93,7 @@
    :color (color :body-text-color :opacity-high)
    :align-items "center"
    :display "grid"
-   :height "50px"
+   :height "48px"
    :padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :z-index "1070"
