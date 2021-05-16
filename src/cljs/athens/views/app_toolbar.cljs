@@ -106,8 +106,7 @@
                                :-webkit-app-region "no-drag"}]
                      ;; Windows-only styles
                      [:&.os-win {:background (color :background-minus-1)
-                                 :padding-left "10px"}
-                      [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]]
+                                 :padding-left "10px"}]
                      ;; Mac-only styles
                      [:&.os-mac {:background (color :background-color :opacity-high)
                                  :color (color :body-text-color :opacity-med)
