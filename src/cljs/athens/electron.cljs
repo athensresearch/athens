@@ -551,12 +551,10 @@
 
   (reg-fx
    :invoke-win!
-   (fn [arg-map]
-     (let [channel (:channel arg-map)
-           arg (:arg arg-map)]
-       (if arg
-         (.. ipcRenderer (invoke channel arg))
-         (.. ipcRenderer (invoke channel))))))
+   (fn [{:keys [channel arg]} _]
+     (if arg
+       (.. ipcRenderer (invoke channel arg))
+       (.. ipcRenderer (invoke channel)))))
 
   (reg-fx
    :close-win!
