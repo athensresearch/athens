@@ -1,5 +1,6 @@
 (ns athens.events
   (:require
+    [athens.common-events :as common-events]
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.patterns :as patterns]
     [athens.style :as style]
@@ -1702,23 +1703,8 @@
  :paste-verbatim
  (fn [_ [_ uid text]]
    (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-         block-empty?          (string/blank? value)
-         block-start?          (zero? start)
-         new-string            (cond
-
-                                 block-empty?
-                                 text
-
-                                 (and (not block-empty?)
-                                      block-start?)
-                                 (str text value)
-
-                                 :else
-                                 (str (subs value 0 start)
-                                      text
-                                      (subs value start)))
-         tx-data [{:db/id        [:block/uid uid]
-                   :block/string new-string}]]
+         tx-data               (common-events/paste-verbatim->tx uid text start value)]
+     ;; TODO local/hosted distinction
      {:dispatch [:transact tx-data]})))
 
 
