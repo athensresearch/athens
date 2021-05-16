@@ -291,14 +291,14 @@
                                        :max 95}
                             :comp     m-slider
                             :class    "slider"
-                            :onChange (fn [val] (and graph-ref (.. ^js graph-ref (d3Force "link") (distance val))))}
+                            :onChange (fn [val] (and graph-ref (.. graph-ref (d3Force "link") (distance val))))}
                            {:key      :charge-strength
                             :label    "Attraction force"
                             :props    {:min -30
                                        :max 0}
                             :comp     m-slider
                             :class    "slider"
-                            :onChange (fn [val] (and graph-ref (.. ^js graph-ref (d3Force "charge") (strength val))))}]
+                            :onChange (fn [val] (and graph-ref (.. graph-ref (d3Force "charge") (strength val))))}]
            force-section  {:heading  "Forces"
                            :controls force-controls}
 
@@ -353,16 +353,16 @@
                                                 .-parentNode .-clientHeight))
             ;; set init forces for graph
             (when graph-ref
-              (.. (.. ^js graph-ref (d3Force "charge"))
+              (.. (.. graph-ref (d3Force "charge"))
                   (distanceMax (/ (min (:width @dimensions)
                                        (:height @dimensions))
                                   2)))
-              (let [c-force (.. ^js graph-ref (d3Force "center"))]
+              (let [c-force (.. graph-ref (d3Force "center"))]
                 (c-force (/ (:width @dimensions) 2) (/ (:height @dimensions) 2)))
 
-              (.. (.. ^js graph-ref (d3Force "charge")) (strength (:charge-strength graph-conf)))
-              (.. (.. ^js graph-ref (d3Force "link")) (distance (:link-distance graph-conf)))
-              (.d3ReheatSimulation ^js graph-ref))))
+              (.. (.. graph-ref (d3Force "charge")) (strength (:charge-strength graph-conf)))
+              (.. (.. graph-ref (d3Force "link")) (distance (:link-distance graph-conf)))
+              (.d3ReheatSimulation graph-ref))))
 
         :component-will-unmount
         (fn [_this]
@@ -443,8 +443,8 @@
                                  :links links}
               ;; example data
               #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
-                        {"id" "bar", "name" "name2", "val" 10}]
-                :links [{"source" "foo", "target" "bar"}]}
+                         {"id" "bar", "name" "name2", "val" 10}]
+                 :links [{"source" "foo", "target" "bar"}]}
               :width            (:width  @dimensions)
               :height           (:height @dimensions)
               :ref              #(swap! graph-ref-map assoc (or local-node-eid :global) %)
