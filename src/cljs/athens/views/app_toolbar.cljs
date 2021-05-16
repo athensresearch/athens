@@ -24,7 +24,7 @@
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
-    [re-frame.core :refer [subscribe dispatch reg-sub]]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -116,7 +116,7 @@
                                  :height "52px"
                                  :backdrop-filter "blur(20px)"
                                  :position "absolute"
-                                 :top "0"
+                                 :top 0
                                  :right 0
                                  :left 0}
                       ["&.is-fullscreen" {:padding-left "22px"}]
@@ -139,18 +139,18 @@
 
 
 (def separator-style
-  {:border "0"
+  {:border 0
    :margin-inline "0.5rem"
-   :margin-block "0"
+   :margin-block 0
    :inline-size "1px"
    :block-size "auto"})
 
 
 (stylefy/keyframes "fade-in"
                    [:from
-                    {:opacity "0"}]
+                    {:opacity 0}]
                    [:to
-                    {:opacity "1"}])
+                    {:opacity 1}])
 
 
 ;;; Components
@@ -182,17 +182,17 @@
 
        [:header (merge (use-style app-header-style
                                   {:class (vec (flatten
-                                                 [(if @theme-dark "theme-dark" "theme-light")
-                                                  (if electron?
-                                                    ["is-electron"
-                                                     (case (util/get-os)
-                                                       :windows "os-windows"
-                                                       :mac "os-mac"
-                                                       :linux "os-linux")
-                                                     (when @win-focused? "is-focused")
-                                                     (when @win-fullscreen? "is-fullscreen")
-                                                     (when @win-maximized? "is-maximized")]
-                                                    "is-web")]))})
+                                                [(if @theme-dark "theme-dark" "theme-light")
+                                                 (if electron?
+                                                   ["is-electron"
+                                                    (case (util/get-os)
+                                                      :windows "os-windows"
+                                                      :mac "os-mac"
+                                                      :linux "os-linux")
+                                                    (when @win-focused? "is-focused")
+                                                    (when @win-fullscreen? "is-fullscreen")
+                                                    (when @win-maximized? "is-maximized")]
+                                                   "is-web")]))})
                        (unzoom))
 
         [:div (use-style app-header-control-section-style)
@@ -253,8 +253,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -281,8 +281,7 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-        (when (and (or (= (util/get-os) :windows)
-                       (= (util/get-os) :linux)) electron?)
+        (when (and ((contains? #{:windows :linux} (util/get-os))) electron?)
           [:div (use-style window-toolbar-buttons-style
                            {:class
                             [(if (= (util/get-os) :windows) "os-win"
