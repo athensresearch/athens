@@ -69,7 +69,7 @@
                                  :autoHideMenuBar true
                                  :frame false
                                  :titleBarStyle "hidden"
-                                 :trafficLightPosition #js {:x 19, :y 36}
+                                 :trafficLightPosition {:x 19, :y 36}
                                  :webPreferences {:contextIsolation false
                                                   :nodeIntegration true
                                                   :worldSafeExecuteJavaScript true
