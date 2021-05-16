@@ -467,42 +467,25 @@
 
   ;;; Zoom
 
-  (reg-event-fx
-   :zoom/set
-   (fn [_ [_ level]]
-     {:set-zoom-level! level}))
-
-  (reg-event-fx
-   :zoom/reset
-   (fn [_ _]
-     {:set-zoom-level! 0}))
-
-  (reg-event-fx
+  (reg-event-db
    :zoom/in
-   (fn [_ _]
-     (let [webFrame (.. (js/require "electron") -webFrame)
-           currentZoom (.getZoomLevel webFrame)]
-       {:set-zoom-level! (+ currentZoom 1)})))
+   (fn [db _]
+     (update db :zoom-level inc)))
 
-  (reg-event-fx
+  (reg-event-db
    :zoom/out
-   (fn [_ _]
-     (let [webFrame (.. (js/require "electron") -webFrame)
-           currentZoom (.getZoomLevel webFrame)]
-       {:set-zoom-level! (- currentZoom 1)})))
-  
-  (reg-fx
-   :set-zoom-level!
-   (fn [level]
-     (let [webFrame (.. (js/require "electron") -webFrame)]
-       (dispatch [:zoom-level/set-level level])
-       (.setZoomLevel webFrame level))))
+   (fn [db _]
+     (update db :zoom-level dec)))
 
+  (reg-event-db
+   :zoom/set
+   (fn [db [_ level]]
+     (assoc db :zoom-level level)))
 
-(reg-event-db
- :zoom-level/set-level
- (fn [db [_ level]]
-   (assoc db :zoom-level level)))
+  (reg-event-db
+   :zoom/reset
+   (fn [db _]
+     (assoc db :zoom-level 0)))
 
 
   ;;; Effects

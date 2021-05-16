@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.style]
+    [athens.style :refer [zoom]]
     [athens.subs]
     [athens.util :refer [get-os electron?]]
     [athens.views.app-toolbar :as app-toolbar]
@@ -66,7 +66,8 @@
   (let [loading    (rf/subscribe [:loading?])
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:<>
+      [:div (merge {:style {:display "contents"}}
+                   (zoom))
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar

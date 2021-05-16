@@ -1,9 +1,10 @@
 (ns athens.style
   (:require
-    [athens.config :as config]
-    [athens.util :as util]
-    [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]))
+   [athens.config :as config]
+   [athens.util :as util]
+   [garden.color :refer [opacify hex->hsl]]
+   [re-frame.core :refer [reg-sub subscribe]]
+   [stylefy.core :as stylefy]))
 
 
 (def THEME-DARK
@@ -170,6 +171,22 @@
                                     (opacify (hex->hsl color-v) opacity-v)])
                                  OPACITIES))))
        (apply hash-map)))
+
+
+(reg-sub
+  :zoom-level
+  (fn [db _]
+    (:zoom-level db)))
+
+(defn zoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str (* 100 (js/Math.pow 1.2 @zoom-level)) "%")}}))
+
+(defn unzoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str (* 100 (js/Math.pow 1.2 (* -1 @zoom-level))) "%")}}))
 
 
 (defn init

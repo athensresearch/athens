@@ -17,7 +17,7 @@
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.router :as router]
-    [athens.style :refer [color]]
+    [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util]
     [athens.views.buttons :refer [button]]
@@ -114,7 +114,7 @@
                                  :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
                                  :padding-left "88px"
                                  :padding-right "22px"
-                                 :height "57px"
+                                 :height "52px"
                                  :backdrop-filter "blur(20px)"
                                  :position "absolute"
                                  :top "0"
@@ -153,11 +153,6 @@
                    [:to
                     {:opacity "1"}])
 
-(reg-sub
-  :zoom-level
-  (fn [db _]
-    (:zoom-level db)))
-
 
 ;;; Components
 
@@ -176,7 +171,6 @@
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
-        zoom-level        (subscribe [:zoom-level])
         win-focused?      (subscribe [:win-focused?])
         win-maximized?    (subscribe [:win-maximized?])
         win-fullscreen?   (subscribe [:win-fullscreen?])
@@ -187,21 +181,20 @@
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
 
-       [:header (use-style app-header-style
-                           {:class (vec (flatten
-                                          [(if @theme-dark "theme-dark" "theme-light")
-                                           (if electron?
-                                             ["is-electron"
-                                              (case (util/get-os)
-                                                :windows "os-windows"
-                                                :mac "os-mac"
-                                                :linux "os-linux")
-                                              (str "zoom-level-" @zoom-level)
-                                              (when @win-focused? "is-focused")
-                                              (when @win-fullscreen? "is-fullscreen")
-                                              (when @win-maximized? "is-maximized")]
-                                             "is-web")]))})
-
+       [:header (merge (use-style app-header-style
+                                  {:class (vec (flatten
+                                                [(if @theme-dark "theme-dark" "theme-light")
+                                                 (if electron?
+                                                   ["is-electron"
+                                                    (case (util/get-os)
+                                                      :windows "os-windows"
+                                                      :mac "os-mac"
+                                                      :linux "os-linux")
+                                                    (when @win-focused? "is-focused")
+                                                    (when @win-fullscreen? "is-fullscreen")
+                                                    (when @win-maximized? "is-maximized")]
+                                                   "is-web")]))})
+                       (unzoom))
 
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
