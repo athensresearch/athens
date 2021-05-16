@@ -470,12 +470,12 @@
   (reg-event-db
    :zoom/in
    (fn [db _]
-     (update db :zoom-level inc)))
+     (update db :zoom-level #(min (inc %) 3))))
 
   (reg-event-db
    :zoom/out
    (fn [db _]
-     (update db :zoom-level dec)))
+     (update db :zoom-level #(max (dec %) -1))))
 
   (reg-event-db
    :zoom/set

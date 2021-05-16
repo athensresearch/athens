@@ -173,6 +173,11 @@
        (apply hash-map)))
 
 
+
+(def zoom-factor
+  ;; Browser default zoom factor: 1.2
+  1.2)
+
 (reg-sub
   :zoom-level
   (fn [db _]
@@ -181,12 +186,12 @@
 (defn zoom
   []
   (let [zoom-level (subscribe [:zoom-level])]
-    {:style {:font-size (str (* 100 (js/Math.pow 1.2 @zoom-level)) "%")}}))
+    {:style {:font-size (str (* 100 (js/Math.pow zoom-factor @zoom-level)) "%")}}))
 
 (defn unzoom
   []
   (let [zoom-level (subscribe [:zoom-level])]
-    {:style {:font-size (str (* 100 (js/Math.pow 1.2 (* -1 @zoom-level))) "%")}}))
+    {:style {:font-size (str (* 100 (js/Math.pow zoom-factor (* -1 @zoom-level))) "%")}}))
 
 
 (defn init
