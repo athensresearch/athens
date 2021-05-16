@@ -34,7 +34,7 @@
    :min-width "2.5em"
    :white-space "nowrap"
    :text-overflow "ellipsis"
-   :transition "all 0.3s ease"
+   :transition "color 0.3s ease"
    ::stylefy/manual [[:a {:text-decoration "none"
                           :cursor "pointer"
                           :position "relative"

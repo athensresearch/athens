@@ -26,7 +26,7 @@
    :color (style/color :body-text-color :opacity-low)
    ::stylefy/manual [[:&:after {:content "''"
                                 :background "currentColor"
-                                :transition "all 0.05s ease"
+                                :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"
                                 :border-radius "100px"
                                 :box-shadow "0 0 0 0.125rem transparent"
                                 :display "inline-flex"

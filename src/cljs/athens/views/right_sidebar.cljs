@@ -50,7 +50,6 @@
    :flex "1 1 32vw"
    :flex-direction "column"
    :margin-left "0"
-   :transition "all 0.35s ease-out"
    :overflow-y "auto"
    ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
                                     :opacity 0}]
@@ -85,7 +84,7 @@
    :border-radius "1000px"
    :cursor "pointer"
    :place-content "center"
-   ::stylefy/manual [[:svg {:transition "all 0.1s ease-out"
+   ::stylefy/manual [[:svg {:transition "transform 0.1s ease-out"
                             :margin "0"}]
                      [:&.is-open [:svg {:transform "rotate(90deg)"}]]]})
 
@@ -93,7 +92,7 @@
 (def sidebar-item-container-style
   {:padding "0 0 1.25rem"
    :line-height "1.5rem"
-   :font-size "15px"
+   :font-size "95%"
    :position "relative"
    :background "inherit"
    :z-index 1
@@ -108,7 +107,7 @@
 
 
 (def sidebar-item-heading-style
-  {:font-size "16px"
+  {:font-size "100%"
    :display "flex"
    :flex "0 0 auto"
    :align-items "center"
@@ -181,11 +180,11 @@
    :align-items "center"
    :text-align "center"
    :color (color :body-text-color :opacity-med)
-   :font-size "14px"
+   :font-size "80%"
    :border-radius "0.5rem"
    :line-height 1.3
    ::stylefy/manual [[:svg {:opacity (:opacity-low OPACITIES)
-                            :font-size "80px"}]
+                            :font-size "1000%"}]
                      [:p {:max-width "13em"}]]})
 
 

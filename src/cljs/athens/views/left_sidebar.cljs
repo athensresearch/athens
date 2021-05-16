@@ -75,7 +75,7 @@
    :display "flex"
    :flex "0 0 auto"
    :padding "0.25rem 0"
-   :transition "all 0.05s ease"
+   :transition "opacity 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
@@ -88,7 +88,7 @@
    :text-decoration "none"
    :justify-self "flex-start"
    :color (color :header-text-color)
-   :transition "all 0.05s ease"
+   :transition "opacity 0.05s ease"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 

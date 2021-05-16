@@ -15,7 +15,7 @@
    :display "flex"
    :background "none"
    :border "none"
-   :transition "all 0.05s ease"
+   :transition "color 0.05s ease"
    :align-items "center"
    :justify-content "center"
    :cursor "pointer"

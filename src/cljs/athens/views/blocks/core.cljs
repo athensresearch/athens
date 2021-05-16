@@ -60,7 +60,6 @@
                      [:&.is-selected:after {:opacity 1}]
                      [:.block-body {:display "flex"
                                     :border-radius "0.5rem"
-                                    :transition "all 0.1s ease"
                                     :position "relative"}
                       [:button.block-edit-toggle {:position "absolute"
                                                   :appearance "none"
