@@ -60,7 +60,7 @@
                                  {:role "front"}
                                  {:type "separator"}
                                  {:role "window"}]
-                                [{:type "close"}]))}
+                                [{:role "close"}]))}
             {:role "help"
              :submenu [{:label "Learn More"
                         :click #(.openExternal shell "https://github.com/athensresearch/athens")}]}]))
