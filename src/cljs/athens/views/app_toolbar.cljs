@@ -182,17 +182,17 @@
 
        [:header (merge (use-style app-header-style
                                   {:class (vec (flatten
-                                                [(if @theme-dark "theme-dark" "theme-light")
-                                                 (if electron?
-                                                   ["is-electron"
-                                                    (case (util/get-os)
-                                                      :windows "os-windows"
-                                                      :mac "os-mac"
-                                                      :linux "os-linux")
-                                                    (when @win-focused? "is-focused")
-                                                    (when @win-fullscreen? "is-fullscreen")
-                                                    (when @win-maximized? "is-maximized")]
-                                                   "is-web")]))})
+                                                 [(if @theme-dark "theme-dark" "theme-light")
+                                                  (if electron?
+                                                    ["is-electron"
+                                                     (case (util/get-os)
+                                                       :windows "os-windows"
+                                                       :mac "os-mac"
+                                                       :linux "os-linux")
+                                                     (when @win-focused? "is-focused")
+                                                     (when @win-fullscreen? "is-fullscreen")
+                                                     (when @win-maximized? "is-maximized")]
+                                                    "is-web")]))})
                        (unzoom))
 
         [:div (use-style app-header-control-section-style)
@@ -253,8 +253,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
