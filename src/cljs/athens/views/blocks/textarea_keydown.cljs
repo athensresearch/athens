@@ -440,47 +440,37 @@
     (str around selection complement)
     (str around selection around)))
 
+(defn surround-and-set
+  "Default to n=2 because it's more common."
+  ([e state surround-text]
+   (surround-and-set e state surround-text 2))
+  ([e state surround-text n]
+   (let [{:keys [head tail selection start end target]} (destruct-key-down e)
+         selection?       (not= start end)]
+     (.preventDefault e)
+     (.stopPropagation e)
+     (let [selection (surround selection surround-text)
+           new-str   (str head selection tail)]
+       ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+       ;; textarea setval will lose ability to undo/redo
+
+       ;; other note: execCommand is probably the simpler way
+       ;; at least until a new standard comes around
+
+       ;; be wary before updating electron - as chromium might drop support for execCommand
+       ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+       (swap! state assoc :string/local new-str)
+       (.. js/document (execCommand "insertText" false selection))
+       (if selection?
+         (do (setStart target (+ n start))
+             (setEnd target (+ n end)))
+         (set-cursor-position target (+ start n)))))))
+
 
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection start end target value shift]} (destruct-key-down e)
-        selection?       (not= start end)
-
-        surround-and-set (fn [surround-text]
-                           (.preventDefault e)
-                           (.stopPropagation e)
-                           (let [selection (surround selection surround-text)
-                                 new-str   (str head selection tail)]
-                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-                             ;; textarea setval will lose ability to undo/redo
-
-                             ;; other note: execCommand is probably the simpler way
-                             ;; at least until a new standard comes around
-
-                             ;; be wary before updating electron - as chromium might drop support for execCommand
-                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                             (swap! state assoc :string/local new-str)
-                             (.. js/document (execCommand "insertText" false selection))
-                             (if selection?
-                               (do (setStart target (+ 2 start))
-                                   (setEnd target (+ 2 end)))
-                               (set-cursor-position target (+ start 2)))))
-        
-        surround-and-set1 (fn [surround-text]
-                            (.preventDefault e)
-                            (.stopPropagation e)
-                            (let [selection (surround selection surround-text)
-                                  new-str   (str head selection tail)]
-                             
-                              (swap! state assoc :string/local new-str)
-                              (.. js/document (execCommand "insertText" false selection))
-                              (if selection?
-                                (do (setStart target (+ 1 start))
-                                    (setEnd target (+ 1 end)))
-                                (set-cursor-position target (+ start 1)))))]
-    
-;;Code here should be refactored, both of the above functions can likely be combined into one by just passing a character count variable and using that in place of 1 or 2 as the cursor position and start and end point
+  (let [{:keys [key-code head tail selection target value shift]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
@@ -497,15 +487,15 @@
                                     (dispatch [:redo])
                                     (dispatch [:undo]))))
 
-      (= key-code KeyCodes.B) (surround-and-set "**")
+      (= key-code KeyCodes.B) (surround-and-set e state "**")
 
-      (= key-code KeyCodes.I) (surround-and-set1 "*")
+      (= key-code KeyCodes.I) (surround-and-set e state "*" 1)
 
-      (= key-code KeyCodes.Y) (surround-and-set "~~")
+      (= key-code KeyCodes.Y) (surround-and-set e state "~~")
 
-      (= key-code KeyCodes.U) (surround-and-set "--")
+      (= key-code KeyCodes.U) (surround-and-set e state "--")
 
-      (= key-code KeyCodes.H) (surround-and-set "^^")
+      (= key-code KeyCodes.H) (surround-and-set e state "^^")
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
