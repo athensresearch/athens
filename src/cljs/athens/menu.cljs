@@ -59,10 +59,12 @@
                         :submenu (concat [{:role "minimize"}
                                           {:role "zoom"}]
                                          (if isMac
-                                           [{:type "separator"}
-                                            {:role "front"}
-                                            {:type "separator"}
-                                            {:role "window"}]
+                                           [;; More disabled defaults...
+                                            ;; {:type "separator"}
+                                            ;; {:role "front"}
+                                            ;; {:type "separator"}
+                                            ;; {:role "window"}
+                                           ]
                                            [{:role "close"}]))}]
                       [(if isMac
                          {:role "help"
