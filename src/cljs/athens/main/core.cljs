@@ -1,8 +1,8 @@
 (ns athens.main.core
   (:require
-    [athens.menu :refer [menu-template]]
-    ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+   ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
+   ["electron-updater" :refer [autoUpdater]]
+   [athens.menu :refer [menu-template]]))
 
 
 (def log (js/require "electron-log"))
