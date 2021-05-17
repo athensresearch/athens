@@ -1,8 +1,8 @@
 (ns athens.devcards.daily-notes
   (:require
-    [athens.views.daily-notes :refer [daily-notes-panel]]
+    [athens.views.pages.daily-notes :as daily-notes]
     [devcards.core :refer-macros [defcard-rg]]))
 
 
 (defcard-rg Daily-Notes
-  [daily-notes-panel])
+  [daily-notes/page])

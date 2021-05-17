@@ -2,8 +2,8 @@
   (:require
     [athens.db :as db]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.views.all-pages :refer [table]]
     [athens.views.buttons :refer [button]]
+    [athens.views.pages.all-pages :as all-pages]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
     [garden.core :refer [css]]
@@ -34,4 +34,4 @@
 
 
 (defcard-rg Table
-  [table])
+  [all-pages/page])

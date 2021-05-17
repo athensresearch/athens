@@ -2,6 +2,78 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.80](https://github.com/athensresearch/athens/compare/v1.0.0-beta.79...v1.0.0-beta.80) (2021-05-13)
+
+
+### Bug Fixes
+
+* **keybindings:** redo sometimes does undo ([#1151](https://github.com/athensresearch/athens/issues/1151)) ([975afc0](https://github.com/athensresearch/athens/commit/975afc04df3422c8a519ef879a522eb0095a7862))
+
+
+* add cljstyle alias to lein ([#1132](https://github.com/athensresearch/athens/issues/1132)) ([a64025a](https://github.com/athensresearch/athens/commit/a64025a3abd9b1ceaa6b1ebd246f06f9f9a79038))
+
+## [1.0.0-beta.79](https://github.com/athensresearch/athens/compare/v1.0.0-beta.78...v1.0.0-beta.79) (2021-05-10)
+
+
+### Bug Fixes
+
+* Removal of a daily journal page creates a 404 ([#1094](https://github.com/athensresearch/athens/issues/1094)) ([640420f](https://github.com/athensresearch/athens/commit/640420f8fa81ccf88b0a3dc73b55f89949e91a87))
+* **block-embed:** when block-embed is deleted, render uid instead of "invalid" ([#1093](https://github.com/athensresearch/athens/issues/1093)) ([23f1f93](https://github.com/athensresearch/athens/commit/23f1f93453bc090ec6ac4fe1e5562f1183f4365d))
+
+
+### Enhancements
+
+* **all-pages:** allow sort by titles / links / times ([#1105](https://github.com/athensresearch/athens/issues/1105)) ([2e6c548](https://github.com/athensresearch/athens/commit/2e6c54865e1a7b78419c639627aebf4cad621695))
+* **daily-notes:** Shorter debounce time for loading of daily pages ([#1136](https://github.com/athensresearch/athens/issues/1136)) ([9dca967](https://github.com/athensresearch/athens/commit/9dca967ce1564f9c6c09a46f8d3324b6c9c81585))
+* **left-sidebar:** clicking on the logo opens to issue creation rather than main repo [#1130](https://github.com/athensresearch/athens/issues/1130) ([82dd853](https://github.com/athensresearch/athens/commit/82dd853d1f9d253a315f8bc7aadcd9e625300367))
+* **linked-refs:** sort references by newest first ([#1124](https://github.com/athensresearch/athens/issues/1124)) ([19fb97a](https://github.com/athensresearch/athens/commit/19fb97add8e744e24e7d7df3aec2238556cf22da)), closes [#728](https://github.com/athensresearch/athens/issues/728)
+
+## [1.0.0-beta.78](https://github.com/athensresearch/athens/compare/v1.0.0-beta.77...v1.0.0-beta.78) (2021-04-29)
+
+
+### Features
+
+* **blocks:** improved visibility of hover/focus of block bullets ([#1046](https://github.com/athensresearch/athens/issues/1046)) ([84f971a](https://github.com/athensresearch/athens/commit/84f971a20a4a1d7ef510916a490b94ae5c83d572))
+* **style:** improved highlight color consistency ([#1049](https://github.com/athensresearch/athens/issues/1049)) ([4546825](https://github.com/athensresearch/athens/commit/454682547046109d0cea3512d17d4fb3095397ec))
+
+
+### Bug Fixes
+
+* **breadcrumbs:** limit breadcrumb size ([#1047](https://github.com/athensresearch/athens/issues/1047)) ([a4686cc](https://github.com/athensresearch/athens/commit/a4686cc2d7978318e63c5ca5ab7618707a7e6048))
+* **filesystem:** show hidden database merge button ([#1079](https://github.com/athensresearch/athens/issues/1079)) ([432efb9](https://github.com/athensresearch/athens/commit/432efb9e0e24035ce703a11043065913800581f8))
+* use index.transit file if already exists ([#1044](https://github.com/athensresearch/athens/issues/1044)) ([865093f](https://github.com/athensresearch/athens/commit/865093f450dc70be3619f8c062dfbb398b815516))
+
+
+### Refactors
+
+* **node-page:** replace nodepage dropdown with popover ([#1045](https://github.com/athensresearch/athens/issues/1045)) ([2104370](https://github.com/athensresearch/athens/commit/2104370122e7d9036b6da613a2a850dd451c87ea))
+
+## [1.0.0-beta.77](https://github.com/athensresearch/athens/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2021-04-27)
+
+
+### Bug Fixes
+
+* **demo:** solve cause of toolbar button wrapping on demo page ([#1037](https://github.com/athensresearch/athens/issues/1037)) ([d0230f6](https://github.com/athensresearch/athens/commit/d0230f66b4277cc4046ed4c0eb2ac3c2d1002a3d))
+* allow spaces in image urls ([#1034](https://github.com/athensresearch/athens/issues/1034)) ([aa07a57](https://github.com/athensresearch/athens/commit/aa07a57e8e1b4e2616bd66d8aa3daef3ccb053a8))
+* ensure choose file input is visible in merge from roam dialog ([#1032](https://github.com/athensresearch/athens/issues/1032)) ([a69e470](https://github.com/athensresearch/athens/commit/a69e470f566ab37a0c6c0fe55c55c6760adfe0af))
+
+
+### Documentation
+
+* improve README ([#1018](https://github.com/athensresearch/athens/issues/1018)) ([68d7bf4](https://github.com/athensresearch/athens/commit/68d7bf44ec7541ea7e1db758b7c74ad03a954605))
+* update blog links and faces ([5949786](https://github.com/athensresearch/athens/commit/5949786cd912568088f2dbd9813169edbf70c355))
+
+
+### Refactors
+
+* decompose blocks into its own namespace ([#1033](https://github.com/athensresearch/athens/issues/1033)) ([6023c44](https://github.com/athensresearch/athens/commit/6023c4420a263ebde16742d3d1de1d78b4df473a))
+* group pages into new namespace ([#1005](https://github.com/athensresearch/athens/issues/1005)) ([e2046bf](https://github.com/athensresearch/athens/commit/e2046bf7d27a7cf41a3d30e499e9647a6b63520c))
+
+
+### Enhancements
+
+* **all-pages:** hide empty block bullets in all pages view ([#1040](https://github.com/athensresearch/athens/issues/1040)) ([6a308c5](https://github.com/athensresearch/athens/commit/6a308c5ab024502f1955a9965bc6ba15c5d77578))
+
 ## [1.0.0-beta.76](https://github.com/athensresearch/athens/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2021-04-23)
 
 

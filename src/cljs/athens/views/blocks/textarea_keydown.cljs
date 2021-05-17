@@ -1,4 +1,4 @@
-(ns athens.keybindings
+(ns athens.views.blocks.textarea-keydown
   (:require
     ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
     ["@material-ui/icons/Done" :default Done]
@@ -444,7 +444,7 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection start end target value]} (destruct-key-down e)
+  (let [{:keys [key-code head tail selection start end target value shift]} (destruct-key-down e)
         selection?       (not= start end)
 
         surround-and-set (fn [surround-text]
@@ -479,7 +479,9 @@
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
-                                  (dispatch [:undo])))
+                                  (if shift
+                                    (dispatch [:redo])
+                                    (dispatch [:undo]))))
 
       (= key-code KeyCodes.B) (surround-and-set "**")
 

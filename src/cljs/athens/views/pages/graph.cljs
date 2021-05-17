@@ -14,7 +14,7 @@
       Every edit saves this new conf to db as well as localStorage and all
       future graphs that are opened will be based on that.
       "}
-  athens.views.graph-page
+  athens.views.pages.graph
   (:require
     ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
     ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
@@ -497,10 +497,10 @@
                                       (reset! highlight-nodes (n-level-linked all-links node-id (:hlt-link-levels graph-conf))))))}]))}))))
 
 
-(defn graph-page
+(defn page
   "Designed to work with local or global graphs
    Keep in mind block-uid -> db/id (more convenient)"
-  ([] [graph-page nil])
+  ([] [page nil])
   ([block-uid]
    (let [local-node-eid (when block-uid
                           (->> [:block/uid block-uid] (d/pull @db/dsdb '[:db/id])

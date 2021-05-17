@@ -5,7 +5,7 @@
     [athens.parse-renderer :refer [component]]
     [athens.style :refer [color]]
     [athens.util :refer [now-ts recursively-modify-block-for-embed]]
-    [athens.views.blocks :as blocks]
+    [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -107,6 +107,6 @@
                                       (.. e stopPropagation)
                                       (dispatch [:editing/uid uid]))}])])])
       ;; roam actually hides the brackets around [[embed]]
-      [:span "{{" (str/replace content block-uid "invalid") "}}"])))
+      [:span "{{" content "}}"])))
 
 

@@ -229,16 +229,6 @@
                 [:strong-emphasis
                  [:text-run "strong"]]]
 
-               "_also emphasis_"
-               [:paragraph
-                [:emphasis
-                 [:text-run "also emphasis"]]]
-
-               "__very strong__"
-               [:paragraph
-                [:strong-emphasis
-                 [:text-run "very strong"]]]
-
                ;; mix and match different emphasis
                "**bold and *italic***"
                [:paragraph
@@ -412,7 +402,19 @@
                "![*em*](/link)"
                [:paragraph
                 [:url-image {:alt "*em*"
-                             :src "/link"}]]))
+                             :src "/link"}]]
+
+               ;; image link with spaces
+               "![image alt text](/url/with spaces)"
+               [:paragraph
+                [:url-image {:alt "image alt text"
+                             :src "/url/with spaces"}]]
+
+               "![image alt text](/url with spaces \"and title\")"
+               [:paragraph
+                [:url-image {:alt   "image alt text"
+                             :src   "/url with spaces"
+                             :title "and title"}]]))
 
   (t/testing "autolinks"
     (parses-to sut/inline-parser->ast
