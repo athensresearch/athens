@@ -467,15 +467,18 @@
 
   ;;; Zoom
 
+  (def zoom-level-max 11)
+  (def zoom-level-min -5)
+
   (reg-event-db
    :zoom/in
    (fn [db _]
-     (update db :zoom-level #(min (inc %) 3))))
+     (update db :zoom-level #(min (inc %) zoom-level-max))))
 
   (reg-event-db
    :zoom/out
    (fn [db _]
-     (update db :zoom-level #(max (dec %) -1))))
+     (update db :zoom-level #(max (dec %) zoom-level-min))))
 
   (reg-event-db
    :zoom/set

@@ -173,27 +173,46 @@
        (apply hash-map)))
 
 
-(def zoom-factor
-  ;; Browser default zoom factor: 1.2
-  1.2)
-
-
 (reg-sub
   :zoom-level
   (fn [db _]
     (:zoom-level db)))
 
+;; Zoom levels mirror Google Chrome browser zoom levels.
+(def zoom-levels
+  {-5 50
+   -4 67
+   -3 75
+   -2 80
+   -1 90
+   0 100
+   1 110
+   2 125
+   3 133
+   4 140
+   5 150
+   6 175
+   7 200
+   8 250
+   9 300
+   10 400
+   11 500})
+
+(defn get-zoom-pct
+  [n]
+  (zoom-levels n))
+
 
 (defn zoom
   []
   (let [zoom-level (subscribe [:zoom-level])]
-    {:style {:font-size (str (* 100 (js/Math.pow zoom-factor @zoom-level)) "%")}}))
+    {:style {:font-size (str (get-zoom-pct @zoom-level) "%")}}))
 
 
 (defn unzoom
   []
   (let [zoom-level (subscribe [:zoom-level])]
-    {:style {:font-size (str (* 100 (js/Math.pow zoom-factor (* -1 @zoom-level))) "%")}}))
+    {:style {:font-size (str "calc(1 / " (get-zoom-pct @zoom-level) " * 100 * 100%)")}}))
 
 
 (defn init
