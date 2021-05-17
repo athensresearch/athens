@@ -224,16 +224,6 @@
                      [:strong-emphasis
                       [:text-run "strong"]]]
 
-                    "_also emphasis_"
-                    [:paragraph
-                     [:emphasis
-                      [:text-run "also emphasis"]]]
-
-                    "__very strong__"
-                    [:paragraph
-                     [:strong-emphasis
-                      [:text-run "very strong"]]]
-
                     ;; mix and match different emphasis
                     "**bold and *italic***"
                     [:paragraph
@@ -248,11 +238,7 @@
                      [:text-run "normal "]
                      [:emphasis [:text-run "italic"]]
                      [:text-run " "]
-                     [:strong-emphasis [:text-run "bold"]]]
-
-                    "_so wrong*"
-                    [:paragraph
-                     [:text-run "_so wrong*"]]))
+                     [:strong-emphasis [:text-run "bold"]]]))
 
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (util/parses-to sut/inline-parser->ast
