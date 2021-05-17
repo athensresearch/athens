@@ -441,7 +441,7 @@
     (str around selection around)))
 
 (defn surround-and-set
-  "Default to n=2 because it's more common."
+  ;; Default to n=2 because it's more common.
   ([e state surround-text]
    (surround-and-set e state surround-text 2))
   ([e state surround-text n]
