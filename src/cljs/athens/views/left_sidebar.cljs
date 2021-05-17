@@ -96,6 +96,7 @@
   {:color "inherit"
    :text-decoration "none"
    :opacity 0.3
+   :font-size "clamp(12px, 100%, 14px)"
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
