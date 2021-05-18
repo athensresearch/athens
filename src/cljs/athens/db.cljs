@@ -417,11 +417,11 @@
            case-insensitive-query (re-case-insensitive query)]
        (sequence
          (comp
-           (map #(d/entity @dsdb (:e %)))
            (filter (every-pred
-                     #(not= exact-match (:node/title %))
-                     #(re-find case-insensitive-query (:node/title %))))
-           (take n))
+                     #(not= exact-match (:v %))
+                     #(re-find case-insensitive-query (:v %))))
+           (take n)
+           (map #(d/entity @dsdb (:e %))))
          (d/datoms @dsdb :aevt :node/title))))))
 
 
