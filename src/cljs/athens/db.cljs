@@ -410,18 +410,18 @@
 (defn search-in-node-title
   ([query] (search-in-node-title query 20 false))
   ([query n] (search-in-node-title query n false))
-  ([query n ignore-dup]
+  ([query n ignore-exact-match?]
    (if (string/blank? query)
      (vector)
-     (let [ignore-dup             (when ignore-dup query)
+     (let [exact-match            (when ignore-exact-match? query)
            case-insensitive-query (re-case-insensitive query)]
        (sequence
          (comp
-           (filter #(re-find case-insensitive-query (:v %)))
-           (filter #(not= (:v %) ignore-dup))
-           (take n)
-           (map #(:e %))
-           (map #(d/entity @dsdb %)))
+           (map #(d/entity @dsdb (:e %)))
+           (filter (every-pred
+                     #(not= exact-match (:node/title %))
+                     #(re-find case-insensitive-query (:node/title %))))
+           (take n))
          (d/datoms @dsdb :aevt :node/title))))))
 
 
