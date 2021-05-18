@@ -122,6 +122,16 @@
                :target "https://example.com/2"}]]]]
     "First URL: https://example.com/1 second URL: https://example.com/2"
 
+    ; Regression test for https://github.com/athensresearch/athens/issues/1057
+    ; (URL with underscore in plain text)
+    [:block
+     [:paragraph
+      [:span
+       "URL: "
+       [:link {:text   "https://my_url_with_underscore.com"
+               :target "https://my_url_with_underscore.com"}]]]]
+    "URL: https://my_url_with_underscore.com"
+
     ; URL following a TODO component
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
