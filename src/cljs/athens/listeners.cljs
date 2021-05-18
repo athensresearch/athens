@@ -100,9 +100,9 @@
                                        KeyCodes.BACKSLASH (if shift
                                                             (dispatch [:right-sidebar/toggle])
                                                             (dispatch [:left-sidebar/toggle]))
-                                       
+
                                        KeyCodes.COMMA (router/navigate :settings)
-                                       
+
                                        KeyCodes.T (util/toggle-10x)
                                        nil)
       alt (condp = key-code
