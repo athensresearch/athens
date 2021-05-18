@@ -171,10 +171,9 @@
                      :results []})
       (reset! state {:index   0
                      :query   query
-                     :results (doall
-                                (concat [(search-exact-node-title query)]
-                                        (search-in-node-title query 20 true)
-                                        (search-in-block-content query)))}))))
+                     :results (->> (into (search-in-node-title query 20 true)
+                                         (search-in-block-content query))
+                                   (into [(search-exact-node-title query)]))}))))
 
 
 (defn key-down-handler
