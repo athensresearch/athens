@@ -1,5 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
+    ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
+    ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
@@ -10,7 +12,7 @@
     [datascript.core :as d]
     [garden.selectors :as selectors]
     [posh.reagent :as p]
-    [reagent.core :as r]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -68,13 +70,60 @@
                         [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
                         [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
                      [:td :th {:padding "0.5rem"}]
-                     [:th [:h5 {:opacity (:opacity-med OPACITIES)
-                                :user-select "none"}]
-                      [:&.sortable
-                       [:h5 {:cursor "pointer"}
-                        [:&:hover {:opacity 1}]]]
-                      [:&.date {:text-align "end"}]]]})
+                     [:th {:opacity (:opacity-med OPACITIES)
+                           :user-select "none"}
+                      [:&.sortable {:cursor "pointer"}
+                       [:.wrap-label {:display "flex"
+                                      :align-items "center"}]
+                       [:&.date
+                        [:.wrap-label {:flex-direction "row-reverse"}]]
+                       [:&:hover {:opacity 1}]]]]})
 
+;;; Sort state and logic
+
+(defn- get-sorted-by
+  [db]
+  (get db :all-pages/sorted-by :links-count))
+
+
+(rf/reg-sub
+  :all-pages/sorted-by
+  (fn [db _]
+    (get-sorted-by db)))
+
+
+(rf/reg-sub
+  :all-pages/sort-order-ascending?
+  (fn [db _]
+    (get db :all-pages/sort-order-ascending? false)))
+
+
+(def sort-fn
+  {:title       (fn [x] (-> x :node/title lower-case))
+   :links-count (fn [x] (count (:block/_refs x)))
+   :modified    :edit/time
+   :created     :create/time})
+
+
+(rf/reg-sub
+  :all-pages/sorted
+  :<- [:all-pages/sorted-by]
+  :<- [:all-pages/sort-order-ascending?]
+  (fn [[sorted-by growing?] [_ pages]]
+    (sort-by (get sort-fn sorted-by)
+             (if growing? compare (comp - compare))
+             pages)))
+
+
+(rf/reg-event-db
+  :all-pages/sort-by
+  (fn [db [_ column-id]]
+    (let [sorted-column (get-sorted-by db)]
+      (if (= column-id sorted-column)
+        (update db :all-pages/sort-order-ascending? not)
+        (-> db
+            (assoc :all-pages/sorted-by column-id)
+            (assoc :all-pages/sort-order-ascending? (= column-id :title)))))))
 
 ;;; Components
 
@@ -86,46 +135,38 @@
        block-children))
 
 
-(def sort-fn
-  {:title       (fn [x] (-> x :node/title lower-case))
-   :links-count (fn [x] (count (:block/_refs x)))
-   :modified    :edit/time
-   :created     :create/time})
+(defn- sortable-header
+  ([column-id label]
+   (sortable-header column-id label {:date? false}))
+  ([column-id label {:keys [date?]}]
+   (let [sorted-by @(subscribe [:all-pages/sorted-by])
+         growing?  @(subscribe [:all-pages/sort-order-ascending?])]
+     [:th {:on-click #(dispatch [:all-pages/sort-by column-id])
+           :class ["sortable" (when date? "date")]}
+      [:div.wrap-label
+       [:h5 label]
+       (when (= sorted-by column-id)
+         (if growing? [:> ArrowDropUp] [:> ArrowDropDown]))]])))
 
 
 (defn page
   []
-  (let [sorted-by   (r/atom :links-count)
-        growing?    (r/atom false)
-        flip-order! #(swap! growing? not)
-        sort!       (fn [column]
-                      (if (= @sorted-by column)
-                        (flip-order!)
-                        (do (reset! sorted-by column)
-                            (reset! growing? false))))
-        pages       (->> (d/q '[:find [?e ...]
-                                :where
-                                [?e :node/title ?t]]
-                              @db/dsdb)
-                         (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}])
-                         deref)]
+  (let [pages (->> (d/q '[:find [?e ...]
+                          :where
+                          [?e :node/title ?t]]
+                        @db/dsdb)
+                   (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
     (fn []
-      (let [sorted-pages (sort-by (get sort-fn @sorted-by)
-                                  (if @growing? compare (comp - compare))
-                                  pages)]
+      (let [sorted-pages @(subscribe [:all-pages/sorted @pages])]
         [:div (use-style page-style)
          [:table (use-style table-style)
           [:thead
            [:tr
-            [:th {:class "sortable"
-                  :on-click #(sort! :title)} [:h5 "Title"]]
-            [:th {:class "sortable"
-                  :on-click #(sort! :links-count)} [:h5 "Links"]]
+            [sortable-header :title "Title"]
+            [sortable-header :links-count "Links"]
             [:th [:h5 "Body"]]
-            [:th {:class "sortable date"
-                  :on-click #(sort! :modified)} [:h5 "Modified"]]
-            [:th {:class "sortable date"
-                  :on-click #(sort! :created)} [:h5 "Created"]]]]
+            [sortable-header :modified "Modified" {:date? true}]
+            [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
              (for [{:keys [block/uid node/title block/children block/_refs]
