@@ -115,6 +115,7 @@
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
          [separator]
+         [db-switcher]
          ;; TODO: refactor to effects
          (when electron?
            [:<>
