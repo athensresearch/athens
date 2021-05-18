@@ -229,16 +229,6 @@
                 [:strong-emphasis
                  [:text-run "strong"]]]
 
-               "_also emphasis_"
-               [:paragraph
-                [:emphasis
-                 [:text-run "also emphasis"]]]
-
-               "__very strong__"
-               [:paragraph
-                [:strong-emphasis
-                 [:text-run "very strong"]]]
-
                ;; mix and match different emphasis
                "**bold and *italic***"
                [:paragraph
