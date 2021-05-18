@@ -100,12 +100,17 @@
                                        KeyCodes.BACKSLASH (if shift
                                                             (dispatch [:right-sidebar/toggle])
                                                             (dispatch [:left-sidebar/toggle]))
+                                       
+                                       KeyCodes.COMMA (router/navigate :settings)
+                                       
                                        KeyCodes.T (util/toggle-10x)
                                        nil)
       alt (condp = key-code
             KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
             KeyCodes.RIGHT (when (nil? editing-uid) (.forward js/window.history))
             KeyCodes.D (router/nav-daily-notes)
+            KeyCodes.G (router/navigate :graph)
+            KeyCodes.A (router/navigate :pages)
             nil))))
 
 
