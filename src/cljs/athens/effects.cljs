@@ -387,3 +387,8 @@
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
       (when right-sidebar
         (set! (.. right-sidebar -scrollTop) 0)))))
+
+(reg-fx
+ :remote/send-event!
+ (fn [event]
+   (js/console.warn "TODO: sent event" event)))
