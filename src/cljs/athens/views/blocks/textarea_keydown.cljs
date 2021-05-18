@@ -578,7 +578,10 @@
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
                          (swap! state assoc :string/local new-str)
-                         (set! (.-value target) new-str)
+                         (.. js/document (execCommand
+                                          "insertText"
+                                          false
+                                          (str key close-pair)))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -592,7 +595,10 @@
       (not= selection "") (let [surround-selection (surround selection key)
                                 new-str            (str head surround-selection tail)]
                             (swap! state assoc :string/local new-str)
-                            (set! (.-value target) new-str)
+                            (.. js/document (execCommand
+                                             "insertText"
+                                             false
+                                             surround-selection))
                             (set! (.-selectionStart target) (inc start))
                             (set! (.-selectionEnd target) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
