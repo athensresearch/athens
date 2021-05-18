@@ -47,7 +47,7 @@
                                  :caret-color (style/color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
-                                 :line-height "inherit"
+                                 :line-height 0
                                  :border-radius "0.25rem"
                                  :transition "opacity 0.15s ease"
                                  :box-shadow (str "-0.25rem 0 0 0" (style/color :background-minus-1))
@@ -56,6 +56,7 @@
                                  :font-family "inherit"}]
                      [:.is-editing {:z-index 3
                                     :display "block"
+                                    :line-height "inherit"
                                     :opacity "1"}]
                      [:span
                       {:grid-area "main"}
