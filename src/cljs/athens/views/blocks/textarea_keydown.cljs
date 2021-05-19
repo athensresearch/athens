@@ -578,6 +578,9 @@
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
                          (swap! state assoc :string/local new-str)
+                         ;; execCommand is obsolete:
+                         ;; be wary before updating electron - as chromium might drop support for execCommand
+                         ;; electron 11 - uses chromium < 90(latest) which supports execCommand
                          (.. js/document (execCommand
                                           "insertText"
                                           false
@@ -595,6 +598,9 @@
       (not= selection "") (let [surround-selection (surround selection key)
                                 new-str            (str head surround-selection tail)]
                             (swap! state assoc :string/local new-str)
+                            ;; execCommand is obsolete:
+                            ;; be wary before updating electron - as chromium might drop support for execCommand
+                            ;; electron 11 - uses chromium < 90(latest) which supports execCommand
                             (.. js/document (execCommand
                                              "insertText"
                                              false
