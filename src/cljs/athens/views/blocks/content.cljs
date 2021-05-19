@@ -47,13 +47,12 @@
                                  :margin "0"
                                  :font-size "inherit"
                                  :border-radius "0.25rem"
-                                 :transition "opacity 0.15s ease"
                                  :box-shadow (str "-0.25rem 0 0 0" (style/color :background-minus-1))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
+                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
                      [:.is-editing {:z-index 3
-                                    :display "block"
                                     :line-height "inherit"
                                     :opacity "1"}]
                      [:span
