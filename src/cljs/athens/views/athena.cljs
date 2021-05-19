@@ -171,9 +171,11 @@
                      :results []})
       (reset! state {:index   0
                      :query   query
-                     :results (->> (into (search-in-block-content query)
-                                         (search-in-node-title query 20 true))
-                                   (into [(search-exact-node-title query)]))}))))
+                     :results (vec
+                                (concat
+                                  [(search-exact-node-title query)]
+                                  (search-in-node-title query 20 true)
+                                  (search-in-block-content query)))}))))
 
 
 (defn key-down-handler
