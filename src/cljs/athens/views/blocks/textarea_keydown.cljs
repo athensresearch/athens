@@ -566,14 +566,12 @@
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
-
+    
     (cond
       ;; when close char, increment caret index without writing more
-      (or (= ")" key lookbehind-char)
-          (= "}" key lookbehind-char)
-          (= "\"" key lookbehind-char)
-          (= "]" key lookbehind-char)) (do (setStart target (inc start))
-                                           (swap! state assoc :search/type nil))
+      (some #(= % key lookbehind-char)
+             [")" "}" "\"" "]"]) (do (setStart target (inc start))
+                                 (swap! state assoc :search/type nil))
 
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
