@@ -76,7 +76,7 @@
 ;; -- Hotkeys ------------------------------------------------------------
 
 
-(defn key-down
+(defn key-down!
   [e]
   (let [{:keys [key-code ctrl meta shift alt]} (util/destruct-key-down e)
         editing-uid @(subscribe [:editing/uid])]
@@ -217,7 +217,7 @@
   []
   (events/listen js/document EventType.MOUSEDOWN unfocus)
   (events/listen js/window EventType.KEYDOWN multi-block-selection)
-  (events/listen js/window EventType.KEYDOWN key-down)
+  (events/listen js/window EventType.KEYDOWN key-down!)
   (events/listen js/window EventType.COPY copy)
   (events/listen js/window EventType.CUT cut)
   (prevent-save))
