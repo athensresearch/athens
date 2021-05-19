@@ -217,8 +217,7 @@
                                                                               #:block{:uid "13efc72bd",
                                                                                       :string "`ctrl-comma`: open settings page",
                                                                                       :open true,
-                                                                                      :order 6}
-                                                                              ]}]}
+                                                                                      :order 6}]}]}
                                         #:block{:uid "1002528bd",
                                                 :string "Left Sidebar",
                                                 :open false,
