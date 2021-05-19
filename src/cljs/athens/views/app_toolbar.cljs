@@ -20,6 +20,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views.buttons :refer [button]]
+    [athens.views.db-switcher.core :refer [db-switcher]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
@@ -115,13 +116,13 @@
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
          [separator]
-         [db-switcher]
          ;; TODO: refactor to effects
          (when electron?
            [:<>
             [button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
             [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
             [separator]])
+         [db-switcher]
          [button {:on-click router/nav-daily-notes
                   :title "Open Today's Daily Note"
                   :active   (= @route-name :home)} [:> Today]]
