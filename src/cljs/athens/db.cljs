@@ -1,12 +1,12 @@
 (ns athens.db
   (:require
-    [athens.patterns :as patterns]
-    [athens.util :refer [escape-str]]
-    [clojure.edn :as edn]
-    [clojure.string :as string]
-    [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]))
+   [athens.patterns :as patterns]
+   [athens.util :refer [escape-str]]
+   [clojure.edn :as edn]
+   [clojure.string :as string]
+   [datascript.core :as d]
+   [posh.reagent :refer [posh! pull q]]
+   [re-frame.core :refer [dispatch]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -416,14 +416,14 @@
      (let [exact-match            (when exclude-exact-match? query)
            case-insensitive-query (re-case-insensitive query)]
        (sequence
-         (comp
-           (filter (every-pred
-                     #(not= exact-match (:v %))
-                     #(re-find case-insensitive-query (:v %))))
-           (take n)
-           (map #(d/entity @dsdb (:e %))))
-         (d/datoms @dsdb :aevt :node/title))))))
-
+        (comp
+         (filter (every-pred
+                  #(re-find case-insensitive-query (:v %))
+                  #(not= exact-match (:v %))))
+         (take n)
+         (map #(d/entity @dsdb (:e %))))
+        (d/datoms @dsdb :aevt :node/title))))))
+        
 
 (defn get-root-parent-node
   [block]
@@ -442,17 +442,17 @@
      (vector)
      (let [case-insensitive-query (re-case-insensitive query)]
        (->>
-         (d/datoms @dsdb :aevt :block/string)
-         (sequence
-           (comp
-             (filter #(re-find case-insensitive-query (:v %)))
-             (take n)
-             (map #(:e %))))
-         (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
-         (sequence
-           (comp
-             (keep get-root-parent-node)
-             (map #(dissoc % :block/_children)))))))))
+        (d/datoms @dsdb :aevt :block/string)
+        (sequence
+         (comp
+          (filter #(re-find case-insensitive-query (:v %)))
+          (take n)
+          (map #(:e %))))
+        (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
+        (sequence
+         (comp
+          (keep get-root-parent-node)
+          (map #(dissoc % :block/_children)))))))))
 
 
 (defn nth-sibling
@@ -578,9 +578,9 @@
                            ref-ids)
         blocks (map (fn [id] (get-block-document id)) ref-ids)]
     (mapv
-      (fn [block]
-        (merge block {:block/parents (get parents (:db/id block))}))
-      blocks)))
+     (fn [block]
+       (merge block {:block/parents (get parents (:db/id block))}))
+     blocks)))
 
 
 (defn group-by-parent
