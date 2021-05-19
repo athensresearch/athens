@@ -48,16 +48,15 @@
 (def db-switcher-button-style
   {:color (color :body-text-color :opacity-high)
    :background "inherit"
+   :padding "0.375rem"
    :border "1px solid transparent"
    ::stylefy/manual [["&:hover" {:filter "brightness(110%)"
                                  :background (color :backgorund-plus-2)
                                  :border [["1px solid " (color :border-color)]]}]
                      ["&:active" {:filter "brightness(90%)"
                                   :border [["1px solid " (color :border-color)]]}]
-                     [:.active {:filter "brightness(110%)"
-                                :box-shadow [["0 1px 3px -2px " (color :border-color)]]
-                                :background (color :backgorund-plus-2)
-                                :border [["1px solid " (color :border-color)]]}]
+                     [:&.is-active {:color (color :body-text-color);
+                                    :background (color :body-text-color :opacity-lower)}]
                      [:.icon {:width "1.25em"
                               :height "1.25em"}]]})
 
