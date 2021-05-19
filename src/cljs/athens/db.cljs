@@ -410,10 +410,10 @@
 (defn search-in-node-title
   ([query] (search-in-node-title query 20 false))
   ([query n] (search-in-node-title query n false))
-  ([query n ignore-exact-match?]
+  ([query n exclude-exact-match?]
    (if (string/blank? query)
      (vector)
-     (let [exact-match            (when ignore-exact-match? query)
+     (let [exact-match            (when exclude-exact-match? query)
            case-insensitive-query (re-case-insensitive query)]
        (sequence
          (comp
