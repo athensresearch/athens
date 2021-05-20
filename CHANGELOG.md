@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.82](https://github.com/athensresearch/athens/compare/v1.0.0-beta.81...v1.0.0-beta.82) (2021-05-20)
+
+
+### Bug Fixes
+
+* **undo:** undo after pair character input ([#1194](https://github.com/athensresearch/athens/issues/1194)) ([b635da0](https://github.com/athensresearch/athens/commit/b635da00d98c296a533510ef4e47fb021800c75b)), closes [#559](https://github.com/athensresearch/athens/issues/559)
+* **unlinked-refs:** update unlinked refs when page changes ([#1195](https://github.com/athensresearch/athens/issues/1195)) ([5d7b0fe](https://github.com/athensresearch/athens/commit/5d7b0febca5fb9030378857a32fda08f7d876982))
+
+
+### Performance
+
+* **search:** faster search for (()), [[]] and ctrl-k ([#1191](https://github.com/athensresearch/athens/issues/1191)) ([5cfcb2a](https://github.com/athensresearch/athens/commit/5cfcb2a60bc0a5079690fcfb8674767d1a458720)), closes [#756](https://github.com/athensresearch/athens/issues/756) [#756](https://github.com/athensresearch/athens/issues/756)
+
 ## [1.0.0-beta.81](https://github.com/athensresearch/athens/compare/v1.0.0-beta.80...v1.0.0-beta.81) (2021-05-19)
 
 
