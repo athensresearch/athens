@@ -566,19 +566,23 @@
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
-
+    
     (cond
       ;; when close char, increment caret index without writing more
-      (or (= ")" key lookbehind-char)
-          (= "}" key lookbehind-char)
-          (= "\"" key lookbehind-char)
-          (= "]" key lookbehind-char)) (do (setStart target (inc start))
-                                           (swap! state assoc :search/type nil))
+      (some #(= % key lookbehind-char)
+             [")" "}" "\"" "]"]) (do (setStart target (inc start))
+                                 (swap! state assoc :search/type nil))
 
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
                          (swap! state assoc :string/local new-str)
-                         (set! (.-value target) new-str)
+                         ;; execCommand is obsolete:
+                         ;; be wary before updating electron - as chromium might drop support for execCommand
+                         ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                         (.. js/document (execCommand
+                                          "insertText"
+                                          false
+                                          (str key close-pair)))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -592,7 +596,13 @@
       (not= selection "") (let [surround-selection (surround selection key)
                                 new-str            (str head surround-selection tail)]
                             (swap! state assoc :string/local new-str)
-                            (set! (.-value target) new-str)
+                            ;; execCommand is obsolete:
+                            ;; be wary before updating electron - as chromium might drop support for execCommand
+                            ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                            (.. js/document (execCommand
+                                             "insertText"
+                                             false
+                                             surround-selection))
                             (set! (.-selectionStart target) (inc start))
                             (set! (.-selectionEnd target) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
