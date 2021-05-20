@@ -201,7 +201,23 @@
                                                                               #:block{:uid "bb0e8a187",
                                                                                       :string "`ctrl-k`: open search bar",
                                                                                       :open true,
-                                                                                      :order 2}]}]}
+                                                                                      :order 2}
+                                                                              #:block{:uid "13dfc72bd",
+                                                                                      :string "`alt-g`: open graph view",
+                                                                                      :open true,
+                                                                                      :order 3}
+                                                                              #:block{:uid "13edc72bd",
+                                                                                      :string "`alt-d`: open daily note",
+                                                                                      :open true,
+                                                                                      :order 4}
+                                                                              #:block{:uid "13esc72bd",
+                                                                                      :string "`alt-g`: open all-pages view",
+                                                                                      :open true,
+                                                                                      :order 5}
+                                                                              #:block{:uid "13efc72bd",
+                                                                                      :string "`ctrl-comma`: open settings page",
+                                                                                      :open true,
+                                                                                      :order 6}]}]}
                                         #:block{:uid "1002528bd",
                                                 :string "Left Sidebar",
                                                 :open false,
