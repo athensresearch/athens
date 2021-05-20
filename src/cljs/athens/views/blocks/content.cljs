@@ -30,10 +30,9 @@
    :z-index 2
    :flex-grow "1"
    :word-break "break-word"
-   ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:display "block"
-                                                                                       :z-index 1}]]]
-                     [:textarea {:-webkit-appearance "none"
+   ::stylefy/manual [[:textarea {:display "block"
+                                 :line-height 0
+                                 :-webkit-appearance "none"
                                  :cursor "text"
                                  :resize "none"
                                  :transform "translate3d(0,0,0)"
@@ -47,15 +46,14 @@
                                  :caret-color (style/color :link-color)
                                  :margin "0"
                                  :font-size "inherit"
-                                 :line-height "inherit"
                                  :border-radius "0.25rem"
-                                 :transition "opacity 0.15s ease"
                                  :box-shadow (str "-0.25rem 0 0 0" (style/color :background-minus-1))
                                  :border "0"
                                  :opacity "0"
                                  :font-family "inherit"}]
+                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
                      [:.is-editing {:z-index 3
-                                    :display "block"
+                                    :line-height "inherit"
                                     :opacity "1"}]
                      [:span
                       {:grid-area "main"}
