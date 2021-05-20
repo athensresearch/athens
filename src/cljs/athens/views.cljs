@@ -12,6 +12,7 @@
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
+    [athens.hotkeys :as keybindings]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy]))
@@ -86,9 +87,10 @@
 
          :else [:<>
                 (when @modal [filesystem/window])
-                [:div (stylefy/use-style app-wrapper-style)
-                 [app-toolbar/app-toolbar]
-                 [left-sidebar/left-sidebar]
-                 [pages/view]
-                 [right-sidebar/right-sidebar]
-                 [devtool-component]]])])))
+                [keybindings/global-hotkeys
+                 [:div (stylefy/use-style app-wrapper-style)
+                  [app-toolbar/app-toolbar]
+                  [left-sidebar/left-sidebar]
+                  [pages/view]
+                  [right-sidebar/right-sidebar]
+                  [devtool-component]]]])])))
