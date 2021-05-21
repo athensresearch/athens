@@ -57,7 +57,7 @@
                               :height "1.75em"}]]})
 
 (def current-db-area-style
-  {:background (color :background-plus-1)
+  {:background "rgba(144, 144, 144, 0.05)"
    :margin "-0.25rem -0.25rem 0.125rem"
    :border-bottom [["1px solid " (color :border-color)]]
    :padding "0.25rem"})
