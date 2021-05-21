@@ -6,7 +6,8 @@
     [clojure.string :as string]
     [datascript.core :as d]
     [re-frame.core :refer [dispatch]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [reagent.ratom :as ratom]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -267,14 +268,17 @@
   (->> (d/pull @dsdb block-document-pull-vector id)
        sort-block-children))
 
+(def node-id (atom {}))
 
 (defn get-node-document
   ([id]
-   (->> (d/pull @dsdb node-document-pull-vector id)
-        sort-block-children))
+    (ratom/make-reaction
+      (->> (d/pull @dsdb node-document-pull-vector id)
+           sort-block-children)))
   ([id db]
-   (->> (d/pull db node-document-pull-vector id)
-        sort-block-children)))
+   (ratom/make-reaction
+     #(->> (d/pull db node-document-pull-vector id)
+           sort-block-children))))
 
 
 (defn get-roam-node-document
