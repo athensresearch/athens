@@ -5,11 +5,9 @@
 (defn db-icon
   [{:keys [db status]}]
    [:svg.icon {:viewBox "0 0 24 24"
-               :style {:font-size "16px"
-                       ;;:overflow "visible"
-                       }}
+               :style {:font-size "16px"}}
     [:rect
-     {:stroke "var(--body-text-color---opacity-low)"
+     {:stroke "var(--body-text-color---opacity-lower)"
       :fill "var(--background-color)"
       :height "23"
       :rx "4"
@@ -20,10 +18,6 @@
      {:fill "var(--body-text-color)"
       :fontSize "100%"
       :fontWeight "bold"
-      ;; :paintOrder "stroke fill"
-      ;; :stroke "black"
-      ;; :strokeOpacity 0.25
-      ;; :strokeWidth "2"
       :textAnchor "middle"
       :vectorEffect "non-scaling-stroke"
       :style {:text-transform "uppercase"}
