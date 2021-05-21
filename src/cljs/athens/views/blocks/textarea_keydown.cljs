@@ -207,7 +207,7 @@
   ([state e]
    (let [{:search/keys [query type index results]} @state
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [start head tail target]} (destruct-key-down e)
+         {:keys [start head selection tail target]} (destruct-key-down e)
          expansion    (or title uid)
          block?       (= type :block)
          page?        (= type :page)
@@ -222,7 +222,7 @@
          closing-str  (cond block? "))"
                             page? "]]")
          replacement  (str new-head expansion closing-str)
-         replace-str  (replace-first head head-pattern replacement)
+         replace-str  (replace-first (str head selection) head-pattern replacement)
          matches      (re-matches tail-pattern tail)
          [_ _ after-closing-str] matches
          new-str      (str replace-str after-closing-str)]
@@ -232,7 +232,7 @@
      (setStart target (+ 2 start))))
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         {:keys [start head tail]} (destruct-target target)
+         {:keys [start head selection tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
          query        (escape-str query)
@@ -246,7 +246,7 @@
          closing-str  (cond block? "))"
                             page? "]]")
          replacement  (str new-head expansion closing-str)
-         replace-str  (replace-first head head-pattern replacement)
+         replace-str  (replace-first (str head selection) head-pattern replacement)
          matches      (re-matches tail-pattern tail)
          [_ _ after-closing-str] matches
          new-str      (str replace-str after-closing-str)]
