@@ -1,40 +1,41 @@
 (ns athens.views.db-switcher.db-list-item
   (:require
-   ["@material-ui/icons/Link" :default Link]
-   [athens.style :refer [color]]
-   [athens.views.db-switcher.db-icon :refer [db-icon]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/icons/Link" :default Link]
+    [athens.style :refer [color]]
+    [athens.views.db-switcher.db-icon :refer [db-icon]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
-(def db-list-item-style {:display "flex"
-                         ::stylefy/manual [[:.icon {:flex "0 0 1.75em"
-                                                    :font-size "inherit"
-                                                    :margin "0 0.5em 0 0"}]
-                                           [:.body {:display "flex"
-                                                    :text-align "start"
-                                                    :flex "1 1 100%"
-                                                    :padding "0.5rem 0.25rem 0.5rem 0.5rem"
-                                                    :border-radius "0.25rem"
-                                                    :font-weight "normal"
-                                                    :line-height "1.1"}]
-                                           [:.is-current]
-                                           [:.label {:display "block"
-                                                     :overflow "hidden"
-                                                     :flex "1 1 100%"}]
-                                           [:span {:display "block"}]
-                                           [:.name {:font-weight "600"
-                                                    :color "inherit"}]
-                                           [:.path {:color (color :body-text-color :opacity-med)
-                                                    :max-width "100%"
-                                                    :overflow "hidden"
-                                                    :text-overflow "ellipsis"
-                                                    :font-size "12px"
-                                                    :white-space "nowrap"}
-                                            [:svg {:display "inline-block"
-                                                   :font-size "inherit"
-                                                   :position "relative"
-                                                   :top "0.2em"
-                                                   :margin "auto 0.25em auto 0"}]]]})
+(def db-list-item-style
+  {:display "flex"
+   ::stylefy/manual [[:.icon {:flex "0 0 1.75em"
+                              :font-size "inherit"
+                              :margin "0 0.5em 0 0"}]
+                     [:.body {:display "flex"
+                              :text-align "start"
+                              :flex "1 1 100%"
+                              :padding "0.5rem 0.25rem 0.5rem 0.5rem"
+                              :border-radius "0.25rem"
+                              :font-weight "normal"
+                              :line-height "1.1"}]
+                     [:.is-current]
+                     [:.label {:display "block"
+                               :overflow "hidden"
+                               :flex "1 1 100%"}]
+                     [:span {:display "block"}]
+                     [:.name {:font-weight "600"
+                              :color "inherit"}]
+                     [:.path {:color (color :body-text-color :opacity-med)
+                              :max-width "100%"
+                              :overflow "hidden"
+                              :text-overflow "ellipsis"
+                              :font-size "12px"
+                              :white-space "nowrap"}
+                      [:svg {:display "inline-block"
+                             :font-size "inherit"
+                             :position "relative"
+                             :top "0.2em"
+                             :margin "auto 0.25em auto 0"}]]]})
 
 
 (defn db-list-item-content

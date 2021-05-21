@@ -1,11 +1,13 @@
 (ns athens.views.db-switcher.db-icon
   (:require
-   [athens.views.db-switcher.status-indicator :refer [status-indicator]]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    [athens.views.db-switcher.status-indicator :refer [status-indicator]]
+    [stylefy.core :as stylefy :refer [use-style]]))
+
 
 (def db-icon-style
   {:position "relative"
    ::stylefy/manual [[:text {:font-size "16px"}]]})
+
 
 (defn db-icon
   [{:keys [db status]}]

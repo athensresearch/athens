@@ -1,18 +1,13 @@
 (ns athens.views.app-toolbar
   (:require
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/CheckCircle" :default CheckCircle]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/Menu" :default Menu]
-    ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
-    ["@material-ui/icons/Storage" :default Storage]
-    ["@material-ui/icons/Sync" :default Sync]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
@@ -77,15 +72,6 @@
    :margin-block "0"
    :inline-size "1px"
    :block-size "auto"})
-
-
-(def sync-icon-style
-  {:background (color :background-minus-2)
-   :border-radius "100%"
-   :padding 0
-   :margin 0
-   :height "12px !important"
-   :width "12px !important"})
 
 
 (stylefy/keyframes "fade-in"

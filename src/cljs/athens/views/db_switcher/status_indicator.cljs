@@ -1,11 +1,10 @@
 (ns athens.views.db-switcher.status-indicator
   (:require
-   ["@material-ui/icons/CheckCircle" :default CheckCircle]
-   ["@material-ui/icons/Error" :default Error]
-   ["@material-ui/icons/Sync" :default Sync]
-   [athens.style :refer [color]]
-   [stylefy.core :as stylefy :refer [use-style]]))
-
+    ["@material-ui/icons/CheckCircle" :default CheckCircle]
+    ["@material-ui/icons/Error" :default Error]
+    ["@material-ui/icons/Sync" :default Sync]
+    [athens.style :refer [color]]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (def status-icon-style
@@ -19,6 +18,7 @@
    :bottom "0"
    :right "0"
    ::stylefy/manual [[".:running"]]})
+
 
 (defn status-indicator
   [{:keys [status]}]
