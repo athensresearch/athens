@@ -12,7 +12,7 @@
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
-    [athens.hotkeys :as keybindings]
+    [athens.hotkeys :as hotkeys]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy]))
@@ -22,14 +22,14 @@
 
 
 (def app-wrapper-style
-  {:display "grid"
+  {:display               "grid"
    :grid-template-areas
-   "'app-header app-header app-header'
-    'left-sidebar main-content secondary-content'
-   'devtool devtool devtool'"
+                          "'app-header app-header app-header'
+                           'left-sidebar main-content secondary-content'
+                          'devtool devtool devtool'"
    :grid-template-columns "auto 1fr auto"
-   :grid-template-rows "auto 1fr auto"
-   :height "100vh"})
+   :grid-template-rows    "auto 1fr auto"
+   :height                "100vh"})
 
 
 ;;; Components
@@ -63,34 +63,34 @@
 
 (defn main
   []
-  (let [loading    (rf/subscribe [:loading?])
-        modal      (rf/subscribe [:modal])]
+  (let [loading (rf/subscribe [:loading?])
+        modal (rf/subscribe [:modal])]
     (fn []
-      [:<>
-       [alert]
-       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-         [m-snackbar
-          {:message msg
-           :open (boolean msg)}
-          [:span
-           {:style {:background-color (case type
-                                        :success "green"
-                                        "red")
-                    :padding "10px 20px"
-                    :color "white"}}
-           msg]])
-       [athena-component]
-       (cond
-         (and @loading @modal) [filesystem/window]
+      [hotkeys/hotkeys
+       [:<>
+        [alert]
+        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
+          [m-snackbar
+           {:message msg
+            :open    (boolean msg)}
+           [:span
+            {:style {:background-color (case type
+                                         :success "green"
+                                         "red")
+                     :padding          "10px 20px"
+                     :color            "white"}}
+            msg]])
+        [athena-component]
+        (cond
+          (and @loading @modal) [filesystem/window]
 
-         @loading [initial-spinner-component]
+          @loading [initial-spinner-component]
 
-         :else [:<>
-                (when @modal [filesystem/window])
-                [keybindings/global-hotkeys
+          :else [:<>
+                 (when @modal [filesystem/window])
                  [:div (stylefy/use-style app-wrapper-style)
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
                   [right-sidebar/right-sidebar]
-                  [devtool-component]]]])])))
+                  [devtool-component]]])]])))

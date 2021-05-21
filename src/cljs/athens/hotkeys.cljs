@@ -1,9 +1,11 @@
 (ns athens.hotkeys
   (:require
-    ["react-hotkeys" :refer [HotKeys GlobalHotKeys]]
+    ["react-hotkeys" :refer [GlobalHotKeys HotKeys configure]]
     [re-frame.core :refer [dispatch subscribe]]
     [athens.util :as util]
     [athens.router :as router]))
+
+(configure #js{:ignoreTags #js[]})
 
 (def modkey
   (let [os (util/get-os)]
@@ -31,7 +33,7 @@
     (dispatch [operation])))
 
 (defn global-hotkeys
-  [children]
+  []
   [:> GlobalHotKeys
    {:keyMap   {:athena-toggle        (with-mod "k")
                :devtool-toggle       (with-mod "g")
@@ -55,5 +57,19 @@
                :right-sidebar-toggle #(dispatch [:right-sidebar/toggle])
                :undo                 #(maybe-undo-or-redo :undo)
                :redo                 #(maybe-undo-or-redo :redo)
-               :nav-daily-notes      router/nav-daily-notes}}
+               :nav-daily-notes      router/nav-daily-notes}}])
+
+;; For some reason, input elements events
+;; don't work unless the app is wrapped in a root hotkey.
+(defn hotkeys-keymap
+  [children]
+  [:> HotKeys
+   {:root   true}
    children])
+
+;; Maybe change name or remove
+(defn hotkeys
+  [children]
+  [:<>
+   [global-hotkeys]
+   [hotkeys-keymap children]])
