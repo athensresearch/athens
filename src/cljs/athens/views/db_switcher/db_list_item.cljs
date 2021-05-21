@@ -7,9 +7,9 @@
 
 
 (def db-list-item-style {:display "flex"
-                         ::stylefy/manual [[:svg.icon {:flex "0 0 1.75em"
-                                                       :font-size "inherit"
-                                                       :margin "0 0.5em 0 0"}]
+                         ::stylefy/manual [[:.icon {:flex "0 0 1.75em"
+                                                    :font-size "inherit"
+                                                    :margin "0 0.5em 0 0"}]
                                            [:.body {:display "flex"
                                                     :text-align "start"
                                                     :flex "1 1 100%"
@@ -28,6 +28,7 @@
                                                     :max-width "100%"
                                                     :overflow "hidden"
                                                     :text-overflow "ellipsis"
+                                                    :font-size "12px"
                                                     :white-space "nowrap"}
                                             [:svg {:display "inline-block"
                                                    :font-size "inherit"
@@ -44,7 +45,7 @@
     [:span.name (:name db)]
     [:span.path
      {:title (:path db)}
-     (when (:isRemote db)
+     (when (:is-remote db)
        [:> Link])
      (:path db)]]])
 

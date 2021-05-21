@@ -1,21 +1,25 @@
 (ns athens.views.db-switcher.db-icon
   (:require
-   [athens.views.db-switcher.sync-indicator :refer [sync-indicator]]))
+   [athens.views.db-switcher.status-indicator :refer [status-indicator]]
+   [stylefy.core :as stylefy :refer [use-style]]))
+
+(def db-icon-style
+  {:position "relative"
+   ::stylefy/manual [[:text {:font-size "16px"}]]})
 
 (defn db-icon
   [{:keys [db status]}]
-   [:svg.icon {:viewBox "0 0 24 24"
-               :style {:font-size "16px"}}
+  [:div.icon (use-style db-icon-style)
+   [:svg {:viewBox "0 0 24 24"}
     [:rect
-     {:stroke "var(--body-text-color---opacity-lower)"
-      :fill "var(--background-color)"
-      :height "23"
+     {:fill "var(--link-color)"
+      :height "24"
       :rx "4"
-      :width "23"
-      :x "0.5"
-      :y "0.5"}]
+      :width "24"
+      :x "0"
+      :y "0"}]
     [:text
-     {:fill "var(--body-text-color)"
+     {:fill "white"
       :fontSize "100%"
       :fontWeight "bold"
       :textAnchor "middle"
@@ -23,5 +27,5 @@
       :style {:text-transform "uppercase"}
       :x "50%"
       :y "75%"}
-     (nth (:name db) 0)]
-    (when status [sync-indicator {:status status}])])
+     (nth (:name db) 0)]]
+   (when status [status-indicator {:status status}])])

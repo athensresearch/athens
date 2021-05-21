@@ -160,7 +160,7 @@
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
-            [button {:on-click #(swap! merge-open? not)
+            #_ [button {:on-click #(swap! merge-open? not)
                      :title "Merge Roam Database"}
              [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
@@ -168,7 +168,7 @@
                      :active   (= @route-name :settings)}
              [:> Settings]]
 
-            [button {:on-click #(dispatch [:modal/toggle])
+            #_ [button {:on-click #(dispatch [:modal/toggle])
                      :title "Choose Database"}
              [:div {:style {:display "flex"}}
               [:> Storage {:style {:align-self "center"}}]
