@@ -46,17 +46,14 @@
 (def db-switcher-button-style
   {:color (color :body-text-color :opacity-high)
    :background "inherit"
-   :padding "0.25rem"
+   :padding "0"
    :border "1px solid transparent"
-   ::stylefy/manual [["&:hover" {:filter "brightness(110%)"
-                                 :background (color :backgorund-plus-2)
-                                 :border [["1px solid " (color :border-color)]]}]
-                     ["&:active" {:filter "brightness(90%)"
-                                  :border [["1px solid " (color :border-color)]]}]
+   ::stylefy/manual [["&:hover" {:filter "brightness(110%)"}]
+                     ["&:active" {:filter "brightness(90%)"}]
                      [:&.is-active {:color (color :body-text-color);
-                                    :background (color :body-text-color :opacity-lower)}]
-                     [:.icon {:width "1.2em"
-                              :height "1.2em"}]]})
+                                    :filter "brightness(90%)"}]
+                     [:.icon {:width "1.75em"
+                              :height "1.75em"}]]})
 
 
 (def current-db-tools-style
