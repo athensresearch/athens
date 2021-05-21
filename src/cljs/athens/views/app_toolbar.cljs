@@ -111,6 +111,7 @@
 
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
+         [db-switcher]
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
@@ -122,7 +123,6 @@
             [button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
             [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
             [separator]])
-         [db-switcher]
          [button {:on-click router/nav-daily-notes
                   :title "Open Today's Daily Note"
                   :active   (= @route-name :home)} [:> Today]]

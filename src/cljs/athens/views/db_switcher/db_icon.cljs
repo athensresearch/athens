@@ -1,9 +1,11 @@
 (ns athens.views.db-switcher.db-icon
-  (:require [athens.views.db-switcher.sync-indicator :refer [sync-indicator]]))
+  (:require
+   [athens.views.db-switcher.sync-indicator :refer [sync-indicator]]))
 
 (defn db-icon
   [{:keys [db status]}]
-   [:svg.icon {:viewBox "0 0 24 24"}
+   [:svg.icon {:viewBox "0 0 24 24"
+               :style {:font-size "16px"}}
     [:rect
      {:fill "var(--link-color)"
       :height "24"
@@ -21,6 +23,7 @@
       :strokeWidth "2"
       :textAnchor "middle"
       :vectorEffect "non-scaling-stroke"
+      :style {:text-transform "uppercase"}
       :x "50%"
       :y "75%"}
      (nth (:name db) 0)]
