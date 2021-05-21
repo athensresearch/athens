@@ -4,8 +4,8 @@
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Folder" :default Folder]
     ["@material-ui/icons/Group" :default Group]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/Storage" :default Storage]
     [athens.electron :as electron]
     [athens.events :as events]
     [athens.style :refer [color]]
@@ -269,7 +269,7 @@
         (r/as-element [:div (use-style modal-style)
                        [modal/modal
                         {:title    [:div.modal__title
-                                    [:> LibraryBooks]
+                                    [:> Storage]
                                     [:h4 "Database"]
                                     (when-not @loading
                                       [button {:on-click close-modal} [:> Close]])]
