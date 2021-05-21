@@ -1,15 +1,15 @@
 (ns athens.views.db-switcher.core
   (:require
-   ["@material-ui/core/Popover" :as Popover]
-   ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
-   [athens.style :refer [color DEPTH-SHADOWS]]
-   [athens.views.buttons :refer [button]]
-   [athens.views.db-switcher.db-icon :refer [db-icon]]
-   [athens.views.db-switcher.db-list-item :refer [db-list-item]]
-   [athens.views.dropdown :refer [menu-style menu-separator-style]]
-   [re-frame.core :refer [dispatch]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
+    [athens.style :refer [color DEPTH-SHADOWS]]
+    [athens.views.buttons :refer [button]]
+    [athens.views.db-switcher.db-icon :refer [db-icon]]
+    [athens.views.db-switcher.db-list-item :refer [db-list-item]]
+    [athens.views.dropdown :refer [menu-style menu-separator-style]]
+    [re-frame.core :refer [dispatch]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;;-------------------------------------------------------------------
@@ -20,6 +20,7 @@
 ;; temporary local defs
 
 (def current-db-path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com")
+
 
 (def all-dbs
   [{:name "Athens Test Remote DB"
@@ -56,6 +57,7 @@
                      [:.icon {:width "1.75em"
                               :height "1.75em"}]]})
 
+
 (def current-db-area-style
   {:background "rgba(144, 144, 144, 0.05)"
    :margin "-0.25rem -0.25rem 0.125rem"
@@ -90,45 +92,45 @@
                ;; active-db (filter #(= (:path %) current-db-path) all-dbs)
                active-db (nth all-dbs 0)
                inactive-dbs (filter #(not= (:path %) current-db-path) all-dbs)]
-    [:<>
+              [:<>
      ;; DB Icon + Dropdown toggle
-     [button {:class [(when @ele "is-active")]
-              :on-click #(reset! ele (.-currentTarget %))
-              :style db-switcher-button-style}
-      [db-icon {:db active-db
-                :status :running}]]
+               [button {:class [(when @ele "is-active")]
+                        :on-click #(reset! ele (.-currentTarget %))
+                        :style db-switcher-button-style}
+                [db-icon {:db active-db
+                          :status :running}]]
      ;; Dropdown menu
-     [m-popover
-      (merge (use-style dropdown-style)
-             {:style {:font-size "14px"}
-              :open            @ele
-              :anchorEl        @ele
-              :onClose         #(reset! ele nil)
-              :anchorOrigin    #js{:vertical   "bottom"
-                                   :horizontal "left"}
-              :marginThreshold 10
-              :transformOrigin #js{:vertical   "top"
-                                   :horizontal "left"}
-              :classes {:root "backdrop"
-                        :paper "menu"}})
-      [:div (use-style (merge menu-style
-                              {:overflow "visible"}))
-       [:<>
+               [m-popover
+                (merge (use-style dropdown-style)
+                       {:style {:font-size "14px"}
+                        :open            @ele
+                        :anchorEl        @ele
+                        :onClose         #(reset! ele nil)
+                        :anchorOrigin    #js{:vertical   "bottom"
+                                             :horizontal "left"}
+                        :marginThreshold 10
+                        :transformOrigin #js{:vertical   "top"
+                                             :horizontal "left"}
+                        :classes {:root "backdrop"
+                                  :paper "menu"}})
+                [:div (use-style (merge menu-style
+                                        {:overflow "visible"}))
+                 [:<>
        ;; Show active DB first
-        [:div (use-style current-db-area-style)
-         [db-list-item {:db active-db
-                        :is-current true
-                        :key (:path active-db)}]
-         [current-db-tools {:db active-db}]]
+                  [:div (use-style current-db-area-style)
+                   [db-list-item {:db active-db
+                                  :is-current true
+                                  :key (:path active-db)}]
+                   [current-db-tools {:db active-db}]]
         ;; Show all inactive DBs and a separator
-        (doall
-         (for [db inactive-dbs]
-           [db-list-item {:db db
-                          :is-current false
-                          :key (:path db)}]))
-        [:hr (use-style menu-separator-style)]
+                  (doall
+                    (for [db inactive-dbs]
+                      [db-list-item {:db db
+                                     :is-current false
+                                     :key (:path db)}]))
+                  [:hr (use-style menu-separator-style)]
         ;; Add DB control
-        [button {:on-click #(dispatch [:modal/toggle])}
-         [:<>
-          [:> AddCircleOutline]
-          [:span "Add Database"]]]]]]]))
+                  [button {:on-click #(dispatch [:modal/toggle])}
+                   [:<>
+                    [:> AddCircleOutline]
+                    [:span "Add Database"]]]]]]]))
