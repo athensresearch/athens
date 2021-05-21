@@ -45,6 +45,12 @@
 
 
 (defn destruct-target
+  "Get the current value of a textarea (`:value`) and
+   the start (`:start`) and end (`:end`) index of the selection.
+   Furthermore, split the selection into three parts:
+   text before the selection (`:head`),
+   the selection itself (`:selection`),
+   and text after the selection (`:tail`)."
   [target]
   (let [value (.. target -value)
         [start end] (get-end-points target)
@@ -204,51 +210,53 @@
 
 
 (defn auto-complete-inline
+  ;; this signature is called to process keyboard events.
   ([state e]
-   (let [{:search/keys [query type index results]} @state
+   (let [{:search/keys [index results]} @state
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [start head selection tail target]} (destruct-key-down e)
-         expansion    (or title uid)
-         block?       (= type :block)
-         page?        (= type :page)
-         query        (escape-str query)
-         ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
-                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
-                            page? #"(?s)(\]\])?(.*)")
-         new-head     (cond block? "$1(("
-                            page? "$1[[")
-         closing-str  (cond block? "))"
-                            page? "]]")
-         replacement  (str new-head expansion closing-str)
-         replace-str  (replace-first (str head selection) head-pattern replacement)
-         matches      (re-matches tail-pattern tail)
-         [_ _ after-closing-str] matches
-         new-str      (str replace-str after-closing-str)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc :search/type nil :string/local new-str))
-     (setStart target (+ 2 start))))
+         target (.. e -target)
+         expansion    (or title uid)]
+     (auto-complete-inline state target expansion)))
+
+  ;; here comes the autocompletion logic itself,
+  ;; independent of the input method the user used.
+  ;; `expansion` is the identifier of the page or block
+  ;; (i.e., UID of block or title of page) that shall be
+  ;; inserted.
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         {:keys [start head selection tail]} (destruct-target target)
+         {:keys [value start end head selection tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
          query        (escape-str query)
          ;; rewrite this more cleanly
+
+         ;; assumption: cursor or selection is immediately before the closing brackets
+         ;; head-pattern matches everything up to the cursor or end of the selection
+         ;; this is equivalent to "everything up to the end of the query"
          head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
                             page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         ;; tail-pattern matches the closing brackets and everything afterwards
          tail-pattern (cond block? #"(?s)(\)\))?(.*)"
                             page? #"(?s)(\]\])?(.*)")
+         ;; keep text before opening brackets, including the brackets, delete query
          new-head     (cond block? "$1(("
                             page? "$1[[")
+         ;; keep closing brackets
          closing-str  (cond block? "))"
                             page? "]]")
+         ;; "$1" + expanded reference
+         ;; "$1"" is a placeholder for text before the reference
          replacement  (str new-head expansion closing-str)
+
+         ;; new value of textarea up from the left up to the reference (inclusively)
          replace-str  (replace-first (str head selection) head-pattern replacement)
+
+         ;; compute text after closing brackets
          matches      (re-matches tail-pattern tail)
          [_ _ after-closing-str] matches
+
+         ;; new value of textarea
          new-str      (str replace-str after-closing-str)]
      (if (nil? expansion)
        (swap! state assoc :search/type nil)
