@@ -3,8 +3,11 @@
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
+    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
     ["@material-ui/icons/FileCopy" :default FileCopy]
+    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/Menu" :default Menu]
+    ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
@@ -16,8 +19,8 @@
     [athens.style :refer [color]]
     [athens.subs]
     [athens.util :as util]
+    [athens.views.appearance-settings.core :refer [appearance-settings]]
     [athens.views.buttons :refer [button]]
-    [athens.views.db-switcher.core :refer [db-switcher]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
@@ -26,7 +29,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def app-header-style
@@ -81,7 +84,7 @@
                     {:opacity "1"}])
 
 
-;; Components
+;;; Components
 
 
 (defn separator
@@ -101,11 +104,13 @@
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
+
+
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
+
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
-         [db-switcher]
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
@@ -138,50 +143,54 @@
          (if electron?
            [:<>
             [presence/presence-popover-info]
+            [(reagent.core/adapt-react-class FiberManualRecord)
+             {:style {:color (color (cond
+                                      (= @socket-status :closed)
+                                      :error-color
+
+                                      (or (and (:default? @remote-graph-conf)
+                                               (= @socket-status :running))
+                                          @(subscribe [:db/synced]))
+                                      :confirmation-color
+
+                                      :else :highlight-color))
+                      :align-self "center"}
+              :title (cond
+                       (= @socket-status :closed)
+                       "Disconnected"
+
+                       (or (and (:default? @remote-graph-conf)
+                                (= @socket-status :running))
+                           @(subscribe [:db/synced]))
+                       "Synced"
+
+                       :else "Synchronizing...")}]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
-            #_ [button {:on-click #(swap! merge-open? not)
+            [button {:on-click #(swap! merge-open? not)
                      :title "Merge Roam Database"}
              [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
                      :title "Open Settings"
                      :active   (= @route-name :settings)}
              [:> Settings]]
-
-            #_ [button {:on-click #(dispatch [:modal/toggle])
+            [button {:on-click #(dispatch [:modal/toggle])
                      :title "Choose Database"}
-             [:div {:style {:display "flex"}}
-              [:> Storage {:style {:align-self "center"}}]
-              [:div {:style {:margin-left "-10px"
-                             :align-self "flex-end"}}
-               (cond
-                 (= @socket-status :closed)
-                 [:> Error (merge (use-style sync-icon-style)
-                                  {:style {:color (color :error-color)}
-                                   :title "Disconnected"})]
-                 (or (and (:default? @remote-graph-conf)
-                          (= @socket-status :running))
-                     @(subscribe [:db/synced]))
-                 [:> CheckCircle (merge (use-style sync-icon-style)
-                                        {:style {:color (color :confirmation-color)}
-                                         :title "Synced"})]
-                 :else [:> Sync (merge (use-style sync-icon-style)
-                                       {:style {:color (color :highlight-color)}
-                                        :title "Synchronizing..."})])]]]
-
+             [:> LibraryBooks]]
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
-         [button {:on-click #(dispatch [:theme/toggle])
-                  :title "Toggle Color Scheme"}
-          (if @theme-dark
-            [:> ToggleOff]
-            [:> ToggleOn])]
+         [appearance-settings]
+        ;;  [button {:on-click #(dispatch [:theme/toggle])
+        ;;           :title "Toggle Color Scheme"}
+        ;;   (if @theme-dark
+        ;;     [:> ToggleOff]
+        ;;     [:> ToggleOn])]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
