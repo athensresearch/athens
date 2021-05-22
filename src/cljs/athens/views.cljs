@@ -60,12 +60,22 @@
     (assoc db :db/snack-msg msg-opts)))
 
 
+(rf/reg-sub
+  :appearance/font
+  (fn [db]
+    (:appearance/font db)))
+
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        font      (rf/subscribe [:appearance/font])
+        width      (rf/subscribe [:appearance/width])
+        density      (rf/subscribe [:appearance/density])
+        theme      (rf/subscribe [:appearance/theme])]
     (fn []
-      [:<>
+      [:div {:class [@font @width @density @theme]
+             :style {:display "contents"}}
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar
