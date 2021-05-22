@@ -605,14 +605,15 @@
 (defn get-linked-references
   "For node-page references UI."
   [title]
-  (->> (d/pull @dsdb '[* :block/_refs] [:node/title title])
-       :block/_refs
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by :db/id)
-       vec
-       rseq))
+  (ratom/make-reaction
+    #(->> (d/entity @dsdb [:node/title title])
+          :block/_refs
+          (mapv :db/id)
+          merge-parents-and-block
+          group-by-parent
+          (sort-by :db/id)
+          vec
+          rseq)))
 
 
 (defn get-linked-block-references

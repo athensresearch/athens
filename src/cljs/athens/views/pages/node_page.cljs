@@ -355,7 +355,6 @@
    :alert/message        nil
    :alert/confirm-fn     nil
    :alert/cancel-fn      nil
-   "Linked References"   true
    "Unlinked References" false})
 
 
@@ -434,37 +433,39 @@
 
 
 (defn linked-ref-el
-  [state daily-notes? linked-refs]
-  (let [linked? "Linked References"]
-    (when (or (and daily-notes? (not-empty linked-refs))
-              (not daily-notes?))
-      [:section (use-style references-style)
-       [:h4 (use-style references-heading-style)
-        [button {:on-click (fn [] (swap! state update linked? not))}
-         (if (get @state linked?)
-           [:> KeyboardArrowDown]
-           [:> ChevronRight])]
-        [(r/adapt-react-class Link)]
-        [:div {:style {:display "flex"
-                       :flex "1 1 100%"
-                       :justify-content "space-between"}}
-         [:span linked?]]]
-       (when (get @state linked?)
-         [:div (use-style references-list-style)
-          (doall
-            (for [[group-title group] linked-refs]
-              [:div (use-style references-group-style {:key (str "group-" group-title)})
-               [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
-               (doall
-                 (for [block group]
-                   ^{:key (str "ref-" (:block/uid block))}
-                   [:div {:style {:display "flex"
-                                  :flex "1 1 100%"
-                                  :justify-content "space-between"
-                                  :align-items "flex-start"}}
-                    [:div (use-style references-group-block-style)
-                     [ref-comp block]]]))]))])])))
+  [_ _]
+  (let [show-linked? (r/atom true)]
+    (fn [daily-notes? title]
+      (let [linked-refs @(db/get-linked-references title)]
+        (when (or (and daily-notes? (not-empty linked-refs))
+                  (not daily-notes?))
+          [:section (use-style references-style)
+           [:h4 (use-style references-heading-style)
+            [button {:on-click (fn [] (reset! show-linked? (not @show-linked?)))}
+             (if @show-linked?
+               [:> KeyboardArrowDown]
+               [:> ChevronRight])]
+            [:> Link]
+            [:div {:style {:display "flex"
+                           :flex "1 1 100%"
+                           :justify-content "space-between"}}
+             [:span "Linked References"]]]
+           (when @show-linked?
+             [:div (use-style references-list-style)
+              (doall
+                (for [[group-title group] linked-refs]
+                  [:div (use-style references-group-style {:key (str "group-" group-title)})
+                   [:h4 (use-style references-group-title-style)
+                    [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
+                   (doall
+                     (for [block group]
+                       ^{:key (str "ref-" (:block/uid block))}
+                       [:div {:style {:display "flex"
+                                      :flex "1 1 100%"
+                                      :justify-content "space-between"
+                                      :align-items "flex-start"}}
+                        [:div (use-style references-group-block-style)
+                         [ref-comp block]]]))]))])])))))
 
 
 (defn unlinked-ref-el
@@ -540,7 +541,7 @@
       (let [{:block/keys    [children uid] title :node/title :as node} @(db/get-node-document id)
             {:alert/keys    [message confirm-fn cancel-fn] alert-show :alert/show} @state
             editing-uid     @(subscribe [:editing/uid])
-            linked-refs     (get-linked-references title)
+            linked-refs     @(get-linked-references title)
             daily-note?     (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
@@ -607,5 +608,5 @@
               [blocks/block-el child])])
 
          ;; References
-         [linked-ref-el state on-daily-notes? linked-refs]
+         [linked-ref-el on-daily-notes? title]
          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
