@@ -455,7 +455,7 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -500,7 +500,7 @@
             (for [[group-title group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -536,6 +536,7 @@
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
     (fn [id]
+      (println id)
       (let [{:block/keys    [children uid] title :node/title :as node} @(db/get-node-document id)
             {:alert/keys    [message confirm-fn cancel-fn] alert-show :alert/show} @state
             editing-uid     @(subscribe [:editing/uid])
