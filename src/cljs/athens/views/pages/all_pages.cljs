@@ -156,9 +156,9 @@
                           :where
                           [?e :node/title ?t]]
                         @db/dsdb)
-                   (d/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
+                   (d/pull-many @db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
     (fn []
-      (let [sorted-pages @(subscribe [:all-pages/sorted @pages])]
+      (let [sorted-pages @(subscribe [:all-pages/sorted pages])]
         [:div (use-style page-style)
          [:table (use-style table-style)
           [:thead
