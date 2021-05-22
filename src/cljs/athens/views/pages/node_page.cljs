@@ -526,27 +526,31 @@
 
 
 ;; TODO: where to put page-level link filters?
-(defn node-page-el
+(defn page
   "title/initial is the title when a page is first loaded.
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_ _ _ _]
+  [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
-    (fn [node editing-uid linked-refs]
-      (when (not= @block-uid (:block/uid node))
-        (reset! state init-state)
-        (reset! unlinked-refs [])
-        (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title} node
-            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            daily-note?  (is-daily-note uid)
+    (fn [id]
+      (let [{:block/keys    [children uid] title :node/title :as node} @(db/get-node-document id)
+            {:alert/keys    [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            editing-uid     @(subscribe [:editing/uid])
+            linked-refs     (get-linked-references title)
+            daily-note?     (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
+        (when (not= @block-uid (:block/uid node))
+          (reset! state init-state)
+          (reset! unlinked-refs [])
+          (reset! block-uid (:block/uid node)))
 
         (sync-title title state)
+
+
 
         [:div (use-style page-style {:class    ["node-page"]
                                      :data-uid uid})
@@ -604,11 +608,3 @@
          ;; References
          [linked-ref-el state on-daily-notes? linked-refs]
          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
-
-
-(defn page
-  [ident]
-  (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
-        editing-uid   @(subscribe [:editing/uid])
-        linked-refs   (get-linked-references title)]
-    [node-page-el node editing-uid linked-refs]))

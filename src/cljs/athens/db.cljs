@@ -268,12 +268,11 @@
   (->> (d/pull @dsdb block-document-pull-vector id)
        sort-block-children))
 
-(def node-id (atom {}))
 
 (defn get-node-document
   ([id]
-    (ratom/make-reaction
-      (->> (d/pull @dsdb node-document-pull-vector id)
+   (ratom/make-reaction
+     #(->> (d/pull @dsdb node-document-pull-vector id)
            sort-block-children)))
   ([id db]
    (ratom/make-reaction
@@ -316,7 +315,7 @@
 
 (defn get-block
   [id]
-  (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  (d/entity @dsdb id))
 
 
 (defn get-parent
