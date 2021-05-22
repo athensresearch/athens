@@ -64,7 +64,12 @@
 (defn hotkeys-keymap
   [children]
   [:> HotKeys
-   {:root   true}
+   {:root   true
+    :keyMap {:content-bold (with-mod "b")
+             :content-italic (with-mod "i")
+             :content-strikethrough (with-mod "y")
+             :content-dashed (with-mod "--")
+             :content-highlight (with-mod "h")}}
    children])
 
 ;; Maybe change name or remove
