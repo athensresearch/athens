@@ -19,7 +19,7 @@
    :justify-content "stretch"
    :padding-top "2.5rem"
    :display "flex"
-   :overflow-y "auto"
+   :overflow-y "overlay"
    ::stylefy/mode {"::-webkit-scrollbar" {:background (style/color :background-minus-1)
                                           :width "0.5rem"
                                           :height "0.5rem"}

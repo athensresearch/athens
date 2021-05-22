@@ -51,7 +51,7 @@
    :flex-direction "column"
    :margin-left "0"
    :transition "all 0.35s ease-out"
-   :overflow-y "auto"
+   :overflow-y "overlay"
    ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
                                     :opacity 0}]
                      [:&.is-open {:opacity 1}]]})
