@@ -629,7 +629,8 @@
 (defn get-unlinked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/unlinked get-data))
+  (ratom/make-reaction
+    #(-> title patterns/unlinked get-data)))
 
 
 (defn linked-refs-count
