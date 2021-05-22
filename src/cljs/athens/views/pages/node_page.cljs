@@ -291,9 +291,10 @@
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state
   The current blocks will be at the end of the existing page."
-  [node state linked-refs]
+  [node state title]
   (let [{dbid :db/id children :block/children} node
-        {:keys [title/initial title/local]} @state]
+        {:keys [title/initial title/local]} @state
+        linked-refs     @(get-linked-references title)]
     (when (not= initial local)
       (let [existing-page     (get-existing-page local)
             linked-ref-blocks (mapcat second linked-refs)
@@ -541,7 +542,6 @@
       (let [{:block/keys    [children uid] title :node/title :as node} @(db/get-node-document id)
             {:alert/keys    [message confirm-fn cancel-fn] alert-show :alert/show} @state
             editing-uid     @(subscribe [:editing/uid])
-            linked-refs     @(get-linked-references title)
             daily-note?     (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
@@ -591,7 +591,7 @@
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
                                 (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state linked-refs))
+                              (handle-blur node state title))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
