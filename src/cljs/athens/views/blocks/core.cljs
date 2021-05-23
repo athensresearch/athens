@@ -1,7 +1,7 @@
 (ns athens.views.blocks.core
   (:require
-    [athens.electron :as electron]
     [athens.db :as db]
+    [athens.electron :as electron]
     [athens.style :as style]
     [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]

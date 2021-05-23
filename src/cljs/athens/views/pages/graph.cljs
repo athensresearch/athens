@@ -14,27 +14,27 @@
       Every edit saves this new conf to db as well as localStorage and all
       future graphs that are opened will be based on that.
       "}
- athens.views.pages.graph
+  athens.views.pages.graph
   (:require
-   ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
-   ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
-   ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
-   ["@material-ui/core/Slider" :as Slider]
-   ["@material-ui/core/Switch" :as Switch]
-   ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
-   ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
-   ["react-force-graph-2d" :as ForceGraph2D]
-   [athens.db :as db]
-   [athens.router :as router]
-   [athens.style :as styles]
-   [athens.util :as util]
-   [cljs.reader :refer [read-string]]
-   [clojure.set :as set]
-   [datascript.core :as d]
-   [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [reagent.dom :as dom]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
+    ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
+    ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
+    ["@material-ui/core/Slider" :as Slider]
+    ["@material-ui/core/Switch" :as Switch]
+    ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
+    ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
+    ["react-force-graph-2d" :as ForceGraph2D]
+    [athens.db :as db]
+    [athens.router :as router]
+    [athens.style :as styles]
+    [athens.util :as util]
+    [cljs.reader :refer [read-string]]
+    [clojure.set :as set]
+    [datascript.core :as d]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [reagent.dom :as dom]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; all graph refs(react refs) reside in this atom

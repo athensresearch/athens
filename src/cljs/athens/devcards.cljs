@@ -32,8 +32,7 @@
     [devcards.core]
     [posh.reagent :refer [transact!]]
     [re-frame.core :refer [dispatch-sync]]
-    [stylefy.core :as stylefy]
-    [stylefy.reagent :as stylefy-reagent]))
+    [stylefy.core :as stylefy]))
 
 
 ;; Mock Data
@@ -406,7 +405,7 @@
 
 (defn ^:export main
   []
-  (stylefy/init {:dom (stylefy-reagent/init)})
+  (stylefy/init)
   (listeners/init)
   (dispatch-sync [:init-rfdb])
   (dispatch-sync [:loading/unset])
