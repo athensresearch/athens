@@ -4,7 +4,7 @@
    ["@material-ui/icons/Brightness3" :default Brightness3]
    ["@material-ui/icons/Brightness7" :default Brightness7]
    ["@material-ui/icons/Style" :default Style]
-   [athens.style :refer [color DEPTH-SHADOWS]]
+   [athens.style :as style :refer [color DEPTH-SHADOWS]]
    [athens.views.buttons :refer [button]]
    [athens.views.dropdown :refer [menu-style]]
    [re-frame.core :refer [dispatch subscribe]]
@@ -17,7 +17,7 @@
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
-;;
+;; 
 
 
 ;; Style
@@ -80,9 +80,9 @@
 
 (def font-settings
   {:fn :appearance/set-font
-   :content [{:content "Serif" :id "font-serif"}
-             {:content "Sans"  :id "font-sans"}
-             {:content "Mono"  :id "font-mono"}]})
+   :content [{:content [:span {:style {:font-family (:serif style/font-family)}} "Serif"] :id "font-serif"}
+             {:content [:span {:style {:font-family (:sans style/font-family)}} "Sans"] :id "font-sans"}
+             {:content [:span {:style {:font-family (:mono style/font-family)}} "Mono"] :id "font-mono"}]})
 
 
 (def width-settings
