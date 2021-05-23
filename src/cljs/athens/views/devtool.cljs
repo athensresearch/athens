@@ -5,6 +5,7 @@
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
     ["@material-ui/icons/ShortText" :default ShortText]
+    [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
     [athens.views.buttons :refer [button]]
@@ -394,7 +395,11 @@
     (eval-box!)))
 
 
-(d/listen! dsdb :devtool/open listener)
+; Only run the listener in dev mode, not in prod. The listener slows things
+; down a lot. For example it makes the enter key take ~300ms rather than ~100ms,
+; according to the Chrome devtools flamegraph.
+(when config/debug?
+  (d/listen! dsdb :devtool/open listener))
 
 
 (defn handle-box-change!
