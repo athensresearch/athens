@@ -4,6 +4,7 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.util :as util]
+    [athens.style :refer [zoom-level-min zoom-level-max]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -466,9 +467,6 @@
 
 
   ;;; Zoom
-
-  (def zoom-level-max 11)
-  (def zoom-level-min -5)
 
   (reg-event-db
    :zoom/in

@@ -178,6 +178,7 @@
   (fn [db _]
     (:zoom-level db)))
 
+
 ;; Zoom levels mirror Google Chrome browser zoom levels.
 (def zoom-levels
   {-5 50
@@ -198,6 +199,8 @@
    10 400
    11 500})
 
+(def zoom-level-max 11)
+(def zoom-level-min -5)
 
 (defn get-zoom-pct
   [n]
