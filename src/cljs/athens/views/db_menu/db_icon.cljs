@@ -1,6 +1,6 @@
-(ns athens.views.db-switcher.db-icon
+(ns athens.views.db-menu.db-icon
   (:require
-    [athens.views.db-switcher.status-indicator :refer [status-indicator]]
+    [athens.views.db-menu.status-indicator :refer [status-indicator]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 

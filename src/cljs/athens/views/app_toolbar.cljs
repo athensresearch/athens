@@ -17,7 +17,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views.buttons :refer [button]]
-    [athens.views.db-switcher.core :refer [db-switcher]]
+    [athens.views.db-menu.core :refer [db-menu]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
@@ -105,7 +105,7 @@
          [filesystem/merge-modal merge-open?])
        [:header (use-style app-header-style)
         [:div (use-style app-header-control-section-style)
-         [db-switcher]
+         [db-menu]
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}

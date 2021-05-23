@@ -1,11 +1,11 @@
-(ns athens.views.db-switcher.core
+(ns athens.views.db-menu.core
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]
-    [athens.views.db-switcher.db-icon :refer [db-icon]]
-    [athens.views.db-switcher.db-list-item :refer [db-list-item]]
+    [athens.views.db-menu.db-icon :refer [db-icon]]
+    [athens.views.db-menu.db-list-item :refer [db-list-item]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [re-frame.core :refer [dispatch]]
     [reagent.core :as r]
@@ -45,7 +45,7 @@
                               :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
 
 
-(def db-switcher-button-style
+(def db-menu-button-style
   {:color (color :body-text-color :opacity-high)
    :background "inherit"
    :padding "0"
@@ -86,7 +86,7 @@
        [button "Delete"]])]))
 
 
-(defn db-switcher
+(defn db-menu
   []
   (r/with-let [ele (r/atom nil)
                ;; active-db (filter #(= (:path %) current-db-path) all-dbs)
@@ -96,7 +96,7 @@
      ;; DB Icon + Dropdown toggle
                [button {:class [(when @ele "is-active")]
                         :on-click #(reset! ele (.-currentTarget %))
-                        :style db-switcher-button-style}
+                        :style db-menu-button-style}
                 [db-icon {:db active-db
                           :status :running}]]
      ;; Dropdown menu

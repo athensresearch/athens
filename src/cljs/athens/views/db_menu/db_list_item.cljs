@@ -1,8 +1,8 @@
-(ns athens.views.db-switcher.db-list-item
+(ns athens.views.db-menu.db-list-item
   (:require
     ["@material-ui/icons/Link" :default Link]
     [athens.style :refer [color]]
-    [athens.views.db-switcher.db-icon :refer [db-icon]]
+    [athens.views.db-menu.db-icon :refer [db-icon]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
