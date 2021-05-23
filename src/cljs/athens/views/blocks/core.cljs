@@ -111,8 +111,8 @@
    [buttons/button {:primary true
                     :on-click (fn [e]
                                 (doall
-                                 (.. e stopPropagation)
-                                 (rf/dispatch [:right-sidebar/open-item uid])))}
+                                  (.. e stopPropagation)
+                                  (rf/dispatch [:right-sidebar/open-item uid])))}
     count]])
 
 
@@ -215,10 +215,10 @@
      (fn [block linked-ref-data opts]
        (let [{:block/keys [uid string open children _refs]} block
              uid-sanitized-block (s/transform
-                                  (specter-recursive-path #(contains? % :block/uid))
-                                  (fn [{:block/keys [original-uid uid] :as block}]
-                                    (assoc block :block/uid (or original-uid uid)))
-                                  block)
+                                   (specter-recursive-path #(contains? % :block/uid))
+                                   (fn [{:block/keys [original-uid uid] :as block}]
+                                     (assoc block :block/uid (or original-uid uid)))
+                                   block)
              {:search/keys [] :keys [dragging drag-target]} @state
              is-editing  @(rf/subscribe [:editing/is-editing uid])
              is-selected @(rf/subscribe [:selected/is-selected uid])]

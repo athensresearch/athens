@@ -41,4 +41,4 @@
 
 (defn drop-area-indicator
   ([{:keys [style]}]
-  [:div (stylefy/use-style (merge drop-area-indicator-style style))]))
+   [:div (stylefy/use-style (merge drop-area-indicator-style style))]))
