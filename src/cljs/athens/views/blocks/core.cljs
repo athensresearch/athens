@@ -219,7 +219,7 @@
                                    (fn [{:block/keys [original-uid uid] :as block}]
                                      (assoc block :block/uid (or original-uid uid)))
                                    block)
-             {:search/keys [] :keys [dragging drag-target]} @state
+             {:search/keys [] :keys [dragging]} @state
              is-editing  @(rf/subscribe [:editing/is-editing uid])
              is-selected @(rf/subscribe [:selected/is-selected uid])]
 

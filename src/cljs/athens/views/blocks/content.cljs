@@ -6,7 +6,6 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
     [athens.util :as util]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [garden.selectors :as selectors]
     [goog.events :as goog-events]
