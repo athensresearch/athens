@@ -24,11 +24,11 @@
    :pointer-events "none"
    :margin-bottom "-1px"
    :color (style/color :link-color :opacity-high)
+   :animation "drop-area-appear 0.2s both"
    :position "relative"
    :transform-origin "left"
    :z-index 3
    :width "100%"
-   :opacity 0
    ::stylefy/manual [[:&:after {:position "absolute"
                                 :content "''"
                                 :top "-0.5px"
@@ -40,5 +40,5 @@
 
 
 (defn drop-area-indicator
-  [active-condition]
-  [:div (stylefy/use-style (merge drop-area-indicator-style (active-condition)))])
+  ([{:keys [style]}]
+  [:div (stylefy/use-style (merge drop-area-indicator-style style))]))
