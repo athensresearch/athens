@@ -149,10 +149,20 @@
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
+  ;; this signature is called to process keyboard events.
   ([state e]
-   (let [{:search/keys [index results]} @state
-         {:keys [value head tail target]} (destruct-key-down e)
-         [n _ expansion _ pos] (nth results index)
+   (let [target (.. e -target)
+         {:search/keys [index results]} @state
+         item (nth results index)]
+     (auto-complete-slash state target item)))
+  ;; here comes the autocompletion logic itself,
+  ;; independent of the input method the user used.
+  ;; `expansion` is the identifier of the page or block
+  ;; (i.e., UID of block or title of page) that shall be
+  ;; inserted.
+  ([state target item]
+   (let [{:keys [value head tail]} (destruct-target target)
+         [caption _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
          start-idx (dec (count (re-find #"(?s).*/" head)))
          new-head  (subs value 0 start-idx)
@@ -164,39 +174,21 @@
      (when pos
        (let [new-idx (- (count (str new-head expand)) pos)]
          (set-cursor-position target new-idx)
-         (when (= n "Block Embed")
+         (when (= caption "Block Embed")
            (swap! state assoc :search/type :block
-                  :search/query "" :search/results []))))))
-  ([state target item]
-   (let [{:keys [value head tail]} (destruct-target target)
-         [_ _ expansion _ pos] item
-         expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #"(?s).*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)]
-     (swap! state assoc
-            :search/type nil
-            :string/local new-str)
-     (set! (.-value target) new-str)
-     (when pos
-       (let [new-idx (- (count (str new-head expand)) pos)]
-         (set-cursor-position target new-idx))))))
+                  :search/query "" :search/results [])))))))
 
 
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
 (defn auto-complete-hashtag
   ([state e]
    (let [{:search/keys [index results]} @state
+         target (.. e -target)
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [value head tail]} (destruct-key-down e)
-         expansion (or title uid)
-         start-idx (count (re-find #"(?s).*#" head))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head "[[" expansion "]]" tail)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc
-              :search/type nil
-              :string/local new-str))))
+         expansion (or title uid)]
+     (auto-complete-hashtag state target expansion)))
+
   ([state target expansion]
    (let [{:keys [value head tail]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))
@@ -208,9 +200,9 @@
               :search/type nil
               :string/local new-str)))))
 
-
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
 (defn auto-complete-inline
-  ;; this signature is called to process keyboard events.
   ([state e]
    (let [{:search/keys [index results]} @state
          {:keys [node/title block/uid]} (nth results index nil)
@@ -218,11 +210,6 @@
          expansion    (or title uid)]
      (auto-complete-inline state target expansion)))
 
-  ;; here comes the autocompletion logic itself,
-  ;; independent of the input method the user used.
-  ;; `expansion` is the identifier of the page or block
-  ;; (i.e., UID of block or title of page) that shall be
-  ;; inserted.
   ([state target expansion]
    (let [{:search/keys [query type]} @state
          {:keys [start head selection tail]} (destruct-target target)
