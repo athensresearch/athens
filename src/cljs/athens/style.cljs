@@ -199,8 +199,10 @@
    10 400
    11 500})
 
+
 (def zoom-level-max 11)
 (def zoom-level-min -5)
+
 
 (defn get-zoom-pct
   [n]

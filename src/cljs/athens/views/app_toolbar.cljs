@@ -40,15 +40,15 @@
    :align-items "stretch"
    :color "inherit"
    ::stylefy/manual [[:&.os-windows [:button {:border-radius 0
-                                          :width "48px"
-                                          :min-height "32px"
-                                          :display "flex"
-                                          :align-items "center"
-                                          :color (color :body-text-color :opacity-med)
-                                          :background (color :background-minus-1)
-                                          :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
-                                          :justify-content "center"
-                                          :border 0}]
+                                              :width "48px"
+                                              :min-height "32px"
+                                              :display "flex"
+                                              :align-items "center"
+                                              :color (color :body-text-color :opacity-med)
+                                              :background (color :background-minus-1)
+                                              :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
+                                              :justify-content "center"
+                                              :border 0}]
                       [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
                       [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
                       [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
@@ -108,7 +108,7 @@
                                :-webkit-app-region "no-drag"}]
                      ;; Windows-only styles
                      [:&.os-windows {:background (color :background-minus-1)
-                                 :padding-left "10px"}]
+                                     :padding-left "10px"}]
                      ;; Mac-only styles
                      [:&.os-mac {:background (color :background-color :opacity-high)
                                  :color (color :body-text-color :opacity-med)
@@ -233,8 +233,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
