@@ -21,7 +21,7 @@
     [athens.router :as router]
     [athens.style :refer [color unzoom]]
     [athens.subs]
-    [athens.util :as util]
+    [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
@@ -39,7 +39,7 @@
    :align-self "stretch"
    :align-items "stretch"
    :color "inherit"
-   ::stylefy/manual [[:&.os-win [:button {:border-radius 0
+   ::stylefy/manual [[:&.os-windows [:button {:border-radius 0
                                           :width "48px"
                                           :min-height "32px"
                                           :display "flex"
@@ -107,7 +107,7 @@
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]
                      ;; Windows-only styles
-                     [:&.os-win {:background (color :background-minus-1)
+                     [:&.os-windows {:background (color :background-minus-1)
                                  :padding-left "10px"}]
                      ;; Mac-only styles
                      [:&.os-mac {:background (color :background-color :opacity-high)
@@ -128,7 +128,6 @@
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
-   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :grid-gap "0.25rem"})
 
 
@@ -177,6 +176,7 @@
   (let [left-open?        (subscribe [:left-sidebar/open])
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
+        os                (util/get-os)
         electron?         (util/electron?)
         theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
@@ -190,21 +190,15 @@
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
        [:header (merge (use-style app-header-style
-                                  {:class (vec (flatten
-                                                 [(if @theme-dark "theme-dark" "theme-light")
-                                                  (if electron?
-                                                    ["is-electron"
-                                                     (case (util/get-os)
-                                                       :windows "os-windows"
-                                                       :mac "os-mac"
-                                                       :linux "os-linux")
-                                                     (when @win-focused? "is-focused")
-                                                     (when @win-fullscreen? "is-fullscreen")
-                                                     (when @win-maximized? "is-maximized")]
-                                                    "is-web")]))})
+                                  {:class (app-classes {:os os
+                                                        :electron? electron?
+                                                        :theme-dark? @theme-dark
+                                                        :win-focused? @win-focused?
+                                                        :win-fullscreen? @win-fullscreen?
+                                                        :win-maximized? @win-maximized?})})
                        (unzoom))
         [:div (use-style app-header-control-section-style)
-         [button {:active   @left-open?
+         [button {:active @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
@@ -239,8 +233,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
+                           (assoc @remote-graph-conf
+                                  :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
@@ -286,36 +280,38 @@
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
-        (when (and (contains? #{:windows :linux} (util/get-os)) electron?)
+        (when (and (contains? #{:windows :linux} os) electron?)
           [:div (use-style window-toolbar-buttons-style
-                           {:class
-                            [(if (= (util/get-os) :windows) "os-win"
-                                 "os-linux")
-                             (when @win-focused? "is-focused")
-                             (if @theme-dark "theme-dark" "theme-light")]})
+                           {:class (app-classes {:os os
+                                                 :electron? electron?
+                                                 :theme-dark? @theme-dark
+                                                 :win-focused? @win-focused?
+                                                 :win-fullscreen? @win-fullscreen?
+                                                 :win-maximized? @win-maximized?})})
 
            ;; Minimize Button
-           [:button
+           [:button.minimize
             {:on-click #(dispatch [:toggle-max-min-win true])
-             :class "minimize"
              :title "Minimize"}
             [:> SvgIcon
              [:line
               {:stroke "currentColor", :stroke-width "2", :x1 "4", :x2 "20", :y1 "11", :y2 "11"}]]]
            ;; Exit Fullscreen Button
            (if @win-fullscreen?
-             [:button
+             [:button.exit-fullscreen
               {:on-click #(dispatch [:exit-fullscreen-win])
                :title  "Exit FullScreen"}
               [:> SvgIcon
                [:path
-                {:d "M11 13L5 19M11 13V19M11 13H5", :stroke "currentColor", :stroke-width "2"}]
+                {:d "M11 13L5 19M11 13V19M11 13H5"
+                 :stroke "currentColor"
+                 :stroke-width "2"}]
                [:path
                 {:d "M13 11L19.5 4.5M13 11L13 5M13 11L19 11"
                  :stroke "currentColor"
                  :stroke-width "2"}]]]
            ;; Maximize/Restore Button
-             [:button
+             [:button.maximize-restore
               {:on-click #(dispatch [:toggle-max-min-win false])
                :title (if @win-maximized?
                         "Restore"
@@ -324,8 +320,13 @@
               ;; SVG Restore
                 [:> SvgIcon
                  [:path {:d "M8 5H19V16H8V5Z"
-                         :fill "none" :stroke "currentColor", :stroke-width "2"}]
-                 [:path {:d "M16 17V19H5V8H7",                 :fill "none" :stroke "currentColor", :stroke-width "2"}]]
+                         :fill "none"
+                         :stroke "currentColor"
+                         :stroke-width "2"}]
+                 [:path {:d "M16 17V19H5V8H7"
+                         :fill "none"
+                         :stroke "currentColor"
+                         :stroke-width "2"}]]
               ;; SVG Maximize
                 [:> SvgIcon
                  [:rect
@@ -337,9 +338,8 @@
                    :x "5"
                    :y "5"}]])])
            ;; Close Button
-           [:button
+           [:button.close
             {:on-click #(dispatch [:close-win])
-             :class "close"
              :title "Close Athens"}
             [:> SvgIcon
              [:line

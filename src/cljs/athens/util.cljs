@@ -247,6 +247,19 @@
       (re-find #"Linux" os) :linux
       (re-find #"Mac" os) :mac)))
 
+(defn app-classes
+  ([{:keys [os electron? theme-dark? win-focused? win-fullscreen? win-maximized?]}]
+   (vec (flatten [(case os
+                    :windows "os-windows"
+                    :mac "os-mac"
+                    :linux "os-linux")
+                  (if electron? "is-electron" "is-web")
+                  (if theme-dark? "theme-dark" "theme-light")
+                  (when win-focused? "is-focused")
+                  (when win-fullscreen? "is-fullscreen")
+                  (when win-maximized? "is-maximized")]))))
+
+
 
 (defn shortcut-key?
   "Use meta for mac, ctrl for others."

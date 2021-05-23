@@ -468,7 +468,6 @@
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
 
-
 ;; Loading
 
 (reg-event-db
