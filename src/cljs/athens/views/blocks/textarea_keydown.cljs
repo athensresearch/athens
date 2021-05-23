@@ -225,7 +225,7 @@
   ;; inserted.
   ([state target expansion]
    (let [{:search/keys [query type]} @state
-         {:keys [value start end head selection tail]} (destruct-target target)
+         {:keys [start head selection tail]} (destruct-target target)
          block?       (= type :block)
          page?        (= type :page)
          query        (escape-str query)
