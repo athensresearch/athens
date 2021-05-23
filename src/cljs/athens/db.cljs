@@ -241,13 +241,23 @@
                rest vec)
       [uid nil]))
 
-
+;; several functions still refer to this.
+;; to be removed when they are refactored to use 
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
     (assoc block :block/children
            (vec (sort-by :block/order (map sort-block-children children))))
     block))
+
+
+(defn sort-block-children-datom
+  [block]
+  (let [block (into {} block)]
+    (if-let [children (seq (:block/children block))]
+      (assoc block :block/children
+             (vec (sort-by :block/order (map sort-block-children-datom children))))
+      block)))
 
 
 (def block-document-pull-vector
@@ -272,12 +282,12 @@
 (defn get-node-document
   ([id]
    (ratom/make-reaction
-     #(->> (d/pull @dsdb node-document-pull-vector id)
-           sort-block-children)))
+     #(->> (d/entity @dsdb id)
+           sort-block-children-datom)))
   ([id db]
    (ratom/make-reaction
-     #(->> (d/pull db node-document-pull-vector id)
-           sort-block-children))))
+     #(->> (d/entity db id)
+           sort-block-children-datom))))
 
 
 (defn get-roam-node-document
