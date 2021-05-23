@@ -21,7 +21,7 @@
    :display "flex"
    :overflow-y "auto"
    ::stylefy/supports {"overflow-y: overlay"
-                      {:overflow-y "overlay"}}
+                       {:overflow-y "overlay"}}
    ::stylefy/mode {"::-webkit-scrollbar" {:background (style/color :background-minus-1)
                                           :width "0.5rem"
                                           :height "0.5rem"}
