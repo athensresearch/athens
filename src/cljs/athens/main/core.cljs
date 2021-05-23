@@ -40,6 +40,8 @@
                                                    :nodeIntegration true
                                                    :worldSafeExecuteJavaScript true
                                                    :enableRemoteModule true
+                                                   ;; Remove OverlayScrollbars and instances of `overflow-y: overlay`
+                                                   ;; after `scollbar-gutter` is implemented in browsers.
                                                    :enableBlinkFeatures 'OverlayScrollbars'
                                                    :nodeIntegrationWorker true}})))
   ; Path is relative to the compiled js file (main.js in our case)
