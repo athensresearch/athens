@@ -106,6 +106,7 @@
     [:<>
      ;; Dropdown toggle
      [button {:class [(when @ele "is-active")]
+              :title "Change appearance preferences"
               :on-click #(reset! ele (.-currentTarget %))}
       [:> Style]]
      ;; Dropdown menu
