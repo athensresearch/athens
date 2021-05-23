@@ -64,6 +64,8 @@
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600
+                                  :minWidth 400
+                                  :minHeight 300
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true
                                   :frame false

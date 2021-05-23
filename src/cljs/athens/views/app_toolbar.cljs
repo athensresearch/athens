@@ -2,16 +2,18 @@
   (:require
     ["@material-ui/core/SvgIcon" :default SvgIcon]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/CheckCircle" :default CheckCircle]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+    ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
+    ["@material-ui/icons/Storage" :default Storage]
+    ["@material-ui/icons/Sync" :default Sync]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
@@ -29,7 +31,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 (def window-toolbar-buttons-style
   {:display "flex"
@@ -146,6 +148,15 @@
    :block-size "auto"})
 
 
+(def sync-icon-style
+  {:background (color :background-minus-2)
+   :border-radius "100%"
+   :padding 0
+   :margin 0
+   :height "12px !important"
+   :width "12px !important"})
+
+
 (stylefy/keyframes "fade-in"
                    [:from
                     {:opacity 0}]
@@ -153,7 +164,7 @@
                     {:opacity 1}])
 
 
-;;; Components
+;; Components
 
 
 (defn separator
@@ -176,10 +187,8 @@
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
-
        (when @merge-open?
          [filesystem/merge-modal merge-open?])
-
        [:header (merge (use-style app-header-style
                                   {:class (vec (flatten
                                                  [(if @theme-dark "theme-dark" "theme-light")
@@ -194,7 +203,6 @@
                                                      (when @win-maximized? "is-maximized")]
                                                     "is-web")]))})
                        (unzoom))
-
         [:div (use-style app-header-control-section-style)
          [button {:active   @left-open?
                   :title "Toggle Navigation Sidebar"
@@ -228,28 +236,6 @@
          (if electron?
            [:<>
             [presence/presence-popover-info]
-            [(reagent.core/adapt-react-class FiberManualRecord)
-             {:style {:color (color (cond
-                                      (= @socket-status :closed)
-                                      :error-color
-
-                                      (or (and (:default? @remote-graph-conf)
-                                               (= @socket-status :running))
-                                          @(subscribe [:db/synced]))
-                                      :confirmation-color
-
-                                      :else :highlight-color))
-                      :align-self "center"}
-              :title (cond
-                       (= @socket-status :closed)
-                       "Disconnected"
-
-                       (or (and (:default? @remote-graph-conf)
-                                (= @socket-status :running))
-                           @(subscribe [:db/synced]))
-                       "Synced"
-
-                       :else "Synchronizing...")}]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
@@ -265,9 +251,28 @@
                      :title "Open Settings"
                      :active   (= @route-name :settings)}
              [:> Settings]]
+
             [button {:on-click #(dispatch [:modal/toggle])
                      :title "Choose Database"}
-             [:> LibraryBooks]]
+             [:div {:style {:display "flex"}}
+              [:> Storage {:style {:align-self "center"}}]
+              [:div {:style {:margin-left "-10px"
+                             :align-self "flex-end"}}
+               (cond
+                 (= @socket-status :closed)
+                 [:> Error (merge (use-style sync-icon-style)
+                                  {:style {:color (color :error-color)}
+                                   :title "Disconnected"})]
+                 (or (and (:default? @remote-graph-conf)
+                          (= @socket-status :running))
+                     @(subscribe [:db/synced]))
+                 [:> CheckCircle (merge (use-style sync-icon-style)
+                                        {:style {:color (color :confirmation-color)}
+                                         :title "Synced"})]
+                 :else [:> Sync (merge (use-style sync-icon-style)
+                                       {:style {:color (color :highlight-color)}
+                                        :title "Synchronizing..."})])]]]
+
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])

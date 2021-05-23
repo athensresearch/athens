@@ -24,12 +24,11 @@
                           (linked old-title)
                           (str "$1$3$4" new-title "$2$5")))
 
-
-;; Positive Lookbehind: between 1 and 2 digits
-;; One of an ordinal suffix, e.g. -st, -nd, -rd, -th, see https://en.wikipedia.org/wiki/Ordinal_indicator
-;; Comma
-;; Positive Lookahead: whitespace and 4 digits
-(def roam-date #"(?<=\d{1,2})(st|nd|rd|th),(?=\s\d{4})")
+;; Matches a date with an ordinal number (roam format), considering the correct ordinal
+;; suffix based on the ending number of the date
+;; Regular expression, with test cases can be found here https://regex101.com/r/vOzOl9/1
+;; Any update to this should be done after testing it using the previous regex101 link
+(def roam-date #"((?<=\s1\d)th|(?<=(\s|[023456789])\d)((?<=1)st|(?<=2)nd|(?<=3)rd|(?<=[4567890])th)),(?=\s\d{4})")
 
 
 (defn date

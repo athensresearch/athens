@@ -531,8 +531,13 @@
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
   (let [state         (r/atom init-state)
-        unlinked-refs (r/atom [])]
+        unlinked-refs (r/atom [])
+        block-uid     (r/atom nil)]
     (fn [node editing-uid linked-refs]
+      (when (not= @block-uid (:block/uid node))
+        (reset! state init-state)
+        (reset! unlinked-refs [])
+        (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?  (is-daily-note uid)
