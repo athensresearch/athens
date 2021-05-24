@@ -276,7 +276,8 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          (when (= (:drag-target @state) :below) [drop-area-indicator/drop-area-indicator {:grid-area "below"}])])))))
+          (when (= (:drag-target @state) :child) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
+          (when (= (:drag-target @state) :below) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
 
 (defn block-component
