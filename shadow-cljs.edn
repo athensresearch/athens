@@ -25,7 +25,7 @@
                      :asset-path "js/compiled"
                      :modules {:renderer {:init-fn athens.core/init}}
                      :compiler-options {:closure-warnings {:global-this :off}
-                                        :infer-externs :auto
+                                        :infer-externs false
                                         :closure-defines {re-frame.trace.trace-enabled? true
                                                           athens.config.MEASURE_PARSER  false}
                                         :output-feature-set :es-next}

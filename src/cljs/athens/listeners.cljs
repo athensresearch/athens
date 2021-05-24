@@ -3,6 +3,7 @@
     [athens.db :as db]
     [athens.router :as router]
     [athens.util :as util]
+    [athens.views.find-in-page :as find-in-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -104,6 +105,7 @@
                                        KeyCodes.COMMA (router/navigate :settings)
 
                                        KeyCodes.T (util/toggle-10x)
+                                       KeyCodes.F (find-in-page/start-find-in-page!)
                                        nil)
       alt (condp = key-code
             KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
@@ -111,7 +113,9 @@
             KeyCodes.D (router/nav-daily-notes)
             KeyCodes.G (router/navigate :graph)
             KeyCodes.A (router/navigate :pages)
-            nil))))
+            nil)
+
+      (= key-code KeyCodes.ESC) (find-in-page/stop-find-in-page!))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
