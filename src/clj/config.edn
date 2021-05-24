@@ -1,0 +1,5 @@
+{:http     {:port 3010}
+ :datahike {:store {:backend :file
+                    :path    "/tmp/example"}}
+ ;; TODO no REPL yet, just cider-jack-in for now
+ #_#_:repl     {:port 8887}}

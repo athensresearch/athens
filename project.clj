@@ -4,10 +4,10 @@
 
   :url "https://github.com/athensresearch/athens"
 
-  :license {:name "Eclipse Public License - v 1.0"
-            :url "http://www.eclipse.org/legal/epl-v10.html"
+  :license {:name         "Eclipse Public License - v 1.0"
+            :url          "http://www.eclipse.org/legal/epl-v10.html"
             :distribution :repo
-            :comments "same as Clojure"}
+            :comments     "same as Clojure"}
 
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.764"
@@ -32,7 +32,20 @@
                  [tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]
-                 [datsync "0.0.1-alpha2-SNAPSHOT"]]
+                 [datsync "0.0.1-alpha2-SNAPSHOT"]
+                 ;; backend
+                 ;;   logging hell
+                 [org.clojure/tools.logging "1.1.0"]
+                 [ch.qos.logback/logback-classic "1.1.3"]
+                 ;;   IoC
+                 [com.stuartsierra/component "1.0.0"]
+                 ;;   configuration mgmt
+                 [yogthos/config "1.1.7"]
+                 ;;   Datahike
+                 [io.replikativ/datahike "0.3.6"]
+                 ;;   web server
+                 [http-kit "2.5.3"]
+                 [compojure "1.6.2"]]
 
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]]
@@ -40,6 +53,8 @@
   :min-lein-version "2.5.3"
 
   :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
+
+  :main "athens.self-hosted.core"
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
@@ -49,8 +64,8 @@
 
   :aliases {"dev"          ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer"]]
-            "compile"        ["with-profile" "dev" "do"
-                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
+            "compile"      ["with-profile" "dev" "do"
+                            ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "prod"         ["with-profile" "prod" "do"
@@ -67,16 +82,14 @@
             "cljstyle"     ["with-profile" "+cljstyle" "run" "-m" "cljstyle.main"]}
 
   :profiles
-  {:dev
-   {:dependencies [[binaryage/devtools "1.0.0"]
-                   [day8.re-frame/re-frame-10x "0.6.0"]
-                   [day8.re-frame/tracing "0.5.3"]
-                   [cider/cider-nrepl "0.25.1"]]
+  {:dev {:dependencies [[binaryage/devtools "1.0.0"]
+                        [day8.re-frame/re-frame-10x "0.6.0"]
+                        [day8.re-frame/tracing "0.5.3"]
+                        [nrepl/nrepl "0.8.3"]]
+         :plugins      [[cider/cider-nrepl "0.25.9"]]
 
-    :source-paths ["dev"]}
-   :prod
-   {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}
-   :cljstyle {:dependencies
-              [[mvxcvi/cljstyle "0.14.0" :exclusions [org.clojure/clojure]]]}}
+         :source-paths ["dev/clj"]}
+   :prod     {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}
+   :cljstyle {:dependencies [[mvxcvi/cljstyle "0.14.0" :exclusions [org.clojure/clojure]]]}}
 
   :prep-tasks [])
