@@ -17,7 +17,52 @@
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
-;; 
+;; Icons 
+
+(def normal-width-icon
+  [:svg {:viewBox "0 0 24 16"}
+   [:path {:d "M5,3  h15"}]
+   [:path {:d "M5,8  h15"}]
+   [:path {:d "M5,13 h11"}]])
+
+(def large-width-icon
+  [:svg {:viewBox "0 0 24 24"}
+   [:path {:d "M2 7H22"}]
+   [:path {:d "M2 12H22"}]
+   [:path {:d "M2 17H12"}]])
+
+(def unlimited-width-icon
+  [:svg {:viewBox "0 0 24 24"}
+   [:path
+    {:d "M17.5
+         8.5L20.5
+         11.5M20.5
+         11.5L17.5
+         14.5M20.5
+         11.5L3.5
+         11.5M3.5
+         11.5L6.5
+         8.5M3.5
+         11.5L6.5
+         14.5"}]])
+
+#_ (def tight-density-icon
+  [:svg {:viewBox "0 0 16 16"}
+   [:path {:d "M1,5  H15"}]
+   [:path {:d "M1,8  H15"}]
+   [:path {:d "M1,11 H15"}]])
+
+#_ (def normal-density-icon
+  [:svg {:viewBox "0 0 16 16"}
+   [:path {:d "M1,4  H15"}]
+   [:path {:d "M1,8  H15"}]
+   [:path {:d "M1,12 H15"}]])
+
+#_ (def loose-density-icon
+  [:svg {:viewBox "0 0 16 16"}
+   [:path {:d "M1,3  H15"}]
+   [:path {:d "M1,8  H15"}]
+   [:path {:d "M1,13 H15"}]])
 
 
 ;; Style
@@ -50,53 +95,85 @@
    ::stylefy/manual [[:&:hover {:filter "brightness(120%)"
                                 :box-shadow "inset 0 0 0 1px var(--border-color),
       0 0 0 1px var(--background-color)"}]
-                     [:button {:text-align "center"
+                     [:>button {:text-align "center"
                                :display "flex"
                                :align-items "center"
                                :justify-content "center"
                                :background "inherit"
-                               :padding-left 0
-                               :padding-right 0
-                               :font-weight "500"}]]})
+                               :min-height "2.5rem"
+                               :padding "0.5rem"
+                               :font-weight "500"}
+                      [:svg {:vector-effect "non-scaling-stroke"
+                             :stroke "currentColor"
+                             :stroke-weight "0.06rem"
+                             :width "24px"
+                             :height "24px"}]]]})
 
 ;; Components
 
 (defn preferences-set
   [{:keys [prefs current]}]
   [:div (use-style preferences-set-style)
-   (doall (for [option (:content prefs)]
+   (doall (for [option prefs]
             [button {:class (:id option)
                      :key (:id option)
                      :active (= (:id option) current)
-                     :on-click #(dispatch [(:fn prefs) (:id option)])}
+                     :on-click (:fn option)}
              (:content option)]))])
 
 
 (def theme-settings
-  {:fn :appearance/set-theme
-   :content [{:content [:> Brightness7] :id "theme-dark"}
-             {:content "Auto"           :id "theme-auto"}
-             {:content [:> Brightness3] :id "theme-light"}]})
+  [{:content [:> Brightness7]
+    :id "theme-dark"
+    :fn #(dispatch [:theme/toggle])}
+   {:content [:> Brightness3]
+    :id "theme-light"
+    :fn #(dispatch [:theme/toggle])}])
 
 (def font-settings
-  {:fn :appearance/set-font
-   :content [{:content [:span {:style {:font-family (:serif style/font-family)}} "Serif"] :id "font-serif"}
-             {:content [:span {:style {:font-family (:sans style/font-family)}} "Sans"] :id "font-sans"}
-             {:content [:span {:style {:font-family (:mono style/font-family)}} "Mono"] :id "font-mono"}]})
+  [{:content [:span
+              {:style
+               {:display "contents"
+               :font-size "18px"
+                :font-family (:serif style/font-family)}}
+              "Se"]
+    :fn #(dispatch [:appearance/set-font :serif])
+    :id "font-serif"}
+   {:content [:span
+              {:style
+               {:display "contents"
+               :font-size "18px"
+                :font-family (:sans style/font-family)}}
+              "Sa"]
+    :fn #(dispatch [:appearance/set-font :sans])
+    :id "font-sans"}
+   {:content [:span
+              {:style
+               {:display "contents"
+               :font-size "18px"
+                :font-family (:mono style/font-family)}}
+              "Mo"]
+    :fn #(dispatch [:appearance/set-font :mono])
+    :id "font-mono"}])
 
 
 (def width-settings
-  {:fn :appearance/set-width
-   :content [{:content "normal"    :id "width-normal"}
-             {:content "large"     :id "width-large"}
-             {:content "unlimited" :id "width-unlimited"}]})
+  [{:content normal-width-icon
+    :id "width-normal"
+    :fn #(dispatch [:appearance/set-width "width-normal"])}
+   {:content large-width-icon
+    :id "width-large"
+    :fn #(dispatch [:appearance/set-width "width-large"])}
+   {:content unlimited-width-icon
+    :id "width-unlimited"
+    :fn #(dispatch [:appearance/set-width "width-unlimited"])}])
 
 
-(def density-settings
+#_ (def density-settings
   {:fn :appearance/set-density
-   :content [{:content "tight"  :id "density-tight"}
-             {:content "normal" :id "density-normal"}
-             {:content "loose"  :id "density-loose"}]})
+   :content [{:content tight-density-icon  :id "density-tight"}
+             {:content normal-density-icon :id "density-normal"}
+             {:content loose-density-icon  :id "density-loose"}]})
 
 
 (defn appearance-settings
@@ -128,10 +205,10 @@
        [:p (use-style preferences-help-style) @help-text]
        ;; Options
        [preferences-set {:prefs theme-settings
-                         :current @(subscribe [:appearance/theme])}]
+                         :current (if @(subscribe [:theme/dark]) "theme-light" "theme-dark")}]
        [preferences-set {:prefs font-settings
                          :current @(subscribe [:appearance/font])}]
        [preferences-set {:prefs width-settings
                          :current @(subscribe [:appearance/width])}]
-       [preferences-set {:prefs density-settings
+       #_ [preferences-set {:prefs density-settings
                          :current @(subscribe [:appearance/density])}]]]]))
