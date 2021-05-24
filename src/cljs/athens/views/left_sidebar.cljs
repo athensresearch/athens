@@ -24,6 +24,8 @@
    :flex-direction "column"
    :overflow-x "hidden"
    :overflow-y "auto"
+   ::stylefy/supports {"overflow-y: overlay"
+                       {:overflow-y "overlay"}}
    :transition "width 0.5s ease"
    ::stylefy/sub-styles {:top-line {:margin-bottom "2.5rem"
                                     :display "flex"
@@ -62,6 +64,8 @@
    :padding "0 2rem"
    :margin "0 0 2rem"
    :overflow-y "auto"
+   ::stylefy/supports {"overflow-y: overlay"
+                       {:overflow-y "overlay"}}
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
                                    :opacity (:opacity-med OPACITIES)
                                    :line-height "1"
