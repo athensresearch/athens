@@ -200,6 +200,7 @@
               :search/type nil
               :string/local new-str)))))
 
+
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-inline
@@ -211,44 +212,19 @@
      (auto-complete-inline state target expansion)))
 
   ([state target expansion]
-   (let [{:search/keys [query type]} @state
-         {:keys [start head selection tail]} (destruct-target target)
-         block?       (= type :block)
-         page?        (= type :page)
-         query        (escape-str query)
-         ;; rewrite this more cleanly
+   (let [{:search/keys [query]} @state
+         {:keys [start]} (destruct-target target)
+         query        (escape-str query)]
 
-         ;; assumption: cursor or selection is immediately before the closing brackets
-         ;; head-pattern matches everything up to the cursor or end of the selection
-         ;; this is equivalent to "everything up to the end of the query"
-         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
-                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
-         ;; tail-pattern matches the closing brackets and everything afterwards
-         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
-                            page? #"(?s)(\]\])?(.*)")
-         ;; keep text before opening brackets, including the brackets, delete query
-         new-head     (cond block? "$1(("
-                            page? "$1[[")
-         ;; keep closing brackets
-         closing-str  (cond block? "))"
-                            page? "]]")
-         ;; "$1" + expanded reference
-         ;; "$1"" is a placeholder for text before the reference
-         replacement  (str new-head expansion closing-str)
+     ;; assumption: cursor or selection is immediately before the closing brackets
 
-         ;; new value of textarea up from the left up to the reference (inclusively)
-         replace-str  (replace-first (str head selection) head-pattern replacement)
-
-         ;; compute text after closing brackets
-         matches      (re-matches tail-pattern tail)
-         [_ _ after-closing-str] matches
-
-         ;; new value of textarea
-         new-str      (str replace-str after-closing-str)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc :search/type nil :string/local new-str))
-     (setStart target (+ 2 start)))))
+     (when (not (nil? expansion))
+       (setStart target (- start (count query)))
+       (setEnd target start)
+       (.. js/document (execCommand "insertText" false expansion)))
+     (let [new-cursor-pos (+ start (- (count query)) (count expansion) 2)]
+       (set-cursor-position target new-cursor-pos))
+     (swap! state assoc :search/type nil))))
 
 
 ;; Arrow Keys
