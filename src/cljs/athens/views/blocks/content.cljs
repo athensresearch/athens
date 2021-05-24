@@ -13,7 +13,6 @@
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf]
-    ["react-hotkeys" :refer [HotKeys]]
     [stylefy.core :as stylefy])
   (:import
     (goog.events

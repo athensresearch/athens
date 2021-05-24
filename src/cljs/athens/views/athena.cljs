@@ -4,6 +4,7 @@
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
     ["@material-ui/icons/Search" :default Search]
+    [athens.hotkeys :refer [mousetrap]]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
@@ -19,7 +20,6 @@
     [goog.events :as events]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
-    ["react-hotkeys" :refer [HotKeys]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
   (:import
@@ -248,50 +248,46 @@
   [state children]
   (let [{:keys [index query results]} @state
         item (get results index)]
-    [:> HotKeys
-     {:allowChanges true
-      :keyMap       {:move-up       "up"
-                     :move-down     "down"
-                     :create-or-nav "enter"
-                     :close         "escape"}
-      :handlers     {:close         #(dispatch [:athena/toggle])
+    [:> mousetrap
+     {:bindings
+      {"escape"         #(dispatch [:athena/toggle])
 
-                     :create-or-nav (fn [e]
-                                      (let [shift-pressed (.. e -shiftKey)]
-                                        (cond
-                                          ;; if page doesn't exist, create and open
-                                          (and (zero? index) (nil? item))
-                                          (create-page query shift-pressed)
+       "enter" (fn [e]
+                 (let [shift-pressed (.. e -shiftKey)]
+                   (cond
+                     ;; if page doesn't exist, create and open
+                     (and (zero? index) (nil? item))
+                     (create-page query shift-pressed)
 
-                                          ;; if shift: open in right-sidebar
-                                          shift-pressed
-                                          (do (dispatch [:athena/toggle])
-                                              (dispatch [:right-sidebar/open-item (:block/uid item)]))
-                                          ;; else open in main view
-                                          :else
-                                          (do (dispatch [:athena/toggle])
-                                              (navigate-uid (:block/uid item))
-                                              (dispatch [:editing/uid (:block/uid item)])))))
-                     :move-up       (fn [e]
-                                      (swap! state update :index #(dec (if (zero? %) (count results) %)))
-                                      (let [cur-index (:index @state)
-                                            ;; Search input box
-                                            input-el (.. e -target)
-                                            ;; Get the result list container which is the last element child
-                                            ;; of the whole athena component
-                                            result-el (.. input-el (closest "div.athena") -lastElementChild)
-                                            ;; Get next element in the result list
-                                            next-el (nth (array-seq (.. result-el -children)) cur-index)]
-                                        ;; Check if next el is beyond the bounds of the result list and scroll if so
-                                        (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
+                     ;; if shift: open in right-sidebar
+                     shift-pressed
+                     (do (dispatch [:athena/toggle])
+                         (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                     ;; else open in main view
+                     :else
+                     (do (dispatch [:athena/toggle])
+                         (navigate-uid (:block/uid item))
+                         (dispatch [:editing/uid (:block/uid item)])))))
+       "up"      (fn [e]
+                   (swap! state update :index #(dec (if (zero? %) (count results) %)))
+                   (let [cur-index (:index @state)
+                         ;; Search input box
+                         input-el (.. e -target)
+                         ;; Get the result list container which is the last element child
+                         ;; of the whole athena component
+                         result-el (.. input-el (closest "div.athena") -lastElementChild)
+                         ;; Get next element in the result list
+                         next-el (nth (array-seq (.. result-el -children)) cur-index)]
+                     ;; Check if next el is beyond the bounds of the result list and scroll if so
+                     (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
 
-                     :move-down     (fn [e]
-                                      (swap! state update :index #(if (= % (dec (count results))) 0 (inc %))
-                                             (let [cur-index (:index @state)
-                                                   input-el (.. e -target)
-                                                   result-el (.. input-el (closest "div.athena") -lastElementChild)
-                                                   next-el (nth (array-seq (.. result-el -children)) cur-index)]
-                                               (scroll-into-view next-el result-el (zero? cur-index)))))}}
+       "down"     (fn [e]
+                    (swap! state update :index #(if (= % (dec (count results))) 0 (inc %))
+                           (let [cur-index (:index @state)
+                                 input-el (.. e -target)
+                                 result-el (.. input-el (closest "div.athena") -lastElementChild)
+                                 next-el (nth (array-seq (.. result-el -children)) cur-index)]
+                             (scroll-into-view next-el result-el (zero? cur-index)))))}}
 
      children]))
 

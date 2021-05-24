@@ -441,6 +441,7 @@
     (str around selection around)))
 
 
+;; TODO: put text caret in correct position
 (defn shortcut-handlers
   [uid state]
   (let [surround-and-set (fn [surround-text e]
@@ -466,101 +467,82 @@
      "mod+i" (partial surround-and-set "*")
      "mod+y" (partial surround-and-set "~~")
      "mod+u" (partial surround-and-set "--")
-     "mod+h" (partial surround-and-set "^^")}))
+     "mod+h" (partial surround-and-set "^^")
+     "mod+z"
+             (fn []
+               (let [{:string/keys [local previous]} @state]
+                 (when (= local previous)
+                   (dispatch [:undo]))))
+     "mod+shift+z"
+             (fn []
+               (let [{:string/keys [local previous]} @state]
+                 (when (= local previous)
+                   (dispatch [:redo]))))
+     "mod+a"
+             (fn [e]
+               (let [{:keys [selection value]} (destruct-key-down e)]
+                 (when (= selection value)
+                   (let [{:keys [target]} (destruct-key-down e)
+                         closest-node-page (.. target (closest ".node-page"))
+                         closest-block-page (.. target (closest ".block-page"))
+                         closest (or closest-node-page closest-block-page)
+                         block (db/get-block [:block/uid (.. closest -dataset -uid)])
+                         children (->> (:block/children block)
+                                    (sort-by :block/order)
+                                    (mapv :block/uid))]
+                     (dispatch [:selected/add-items children])))))
+     "mod+o"
+             (fn [e]
+               ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
+               ;; if caret on a #hashtag, navigate to that page
+               ;; if caret within ((uid)), navigate to that uid
+               ;; otherwise zoom into current block
+               (let [{:keys [target head tail]} (destruct-key-down e)
+                     [uid _] (db/uid-and-embed-id uid)
+                     link (str (replace-first head #"(?s)(.*)\[\[" "")
+                            (replace-first tail #"(?s)\]\](.*)" ""))
+                     hashtag (str (replace-first head #"(?s).*#" "")
+                               (replace-first tail #"(?s)\s(.*)" ""))
+                     block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
+                                 (replace-first tail #"(?s)\)\)(.*)" ""))]
 
+                 ;; save block before navigating away
+                 (db/transact-state-for-uid uid state)
 
-;; TODO: put text caret in correct position
-(defn handle-shortcuts
-  [e uid state]
-  (let [{:keys [key-code head tail selection start end target value shift]} (destruct-key-down e)
-        selection? (not= start end)
+                 (cond
+                   (and (re-find #"(?s)\[\[" head)
+                     (re-find #"(?s)\]\]" tail)
+                     (nil? (re-find #"(?s)\[" link))
+                     (nil? (re-find #"(?s)\]" link)))
+                   (let [eid (db/e-by-av :node/title link)
+                         uid (db/v-by-ea eid :block/uid)]
+                     (if eid
+                       (router/navigate-uid uid e)
+                       (let [new-uid (athens.util/gen-block-uid)]
+                         (.blur target)
+                         (dispatch [:page/create link new-uid])
+                         (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
-        surround-and-set (fn [surround-text]
-                           (.preventDefault e)
-                           (.stopPropagation e)
-                           (let [selection (surround selection surround-text)
-                                 new-str (str head selection tail)]
-                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-                             ;; textarea setval will lose ability to undo/redo
+                   ;; same logic as link
+                   (and (re-find #"(?s)#" head)
+                     (re-find #"(?s)\s" tail))
+                   (let [eid (db/e-by-av :node/title hashtag)
+                         uid (db/v-by-ea eid :block/uid)]
+                     (if eid
+                       (router/navigate-uid uid e)
+                       (let [new-uid (athens.util/gen-block-uid)]
+                         (.blur target)
+                         (dispatch [:page/create link new-uid])
+                         (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
-                             ;; other note: execCommand is probably the simpler way
-                             ;; at least until a new standard comes around
+                   (and (re-find #"(?s)\(\(" head)
+                     (re-find #"(?s)\)\)" tail)
+                     (nil? (re-find #"(?s)\(" block-ref))
+                     (nil? (re-find #"(?s)\)" block-ref))
+                     (db/e-by-av :block/uid block-ref))
+                   (router/navigate-uid block-ref e)
 
-                             ;; be wary before updating electron - as chromium might drop support for execCommand
-                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                             (swap! state assoc :string/local new-str)
-                             (.. js/document (execCommand "insertText" false selection))
-                             (if selection?
-                               (do (setStart target (+ 2 start))
-                                 (setEnd target (+ 2 end)))
-                               (set-cursor-position target (+ start 2)))))]
-
-    (cond
-      (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page (.. target (closest ".node-page"))
-                                                              closest-block-page (.. target (closest ".block-page"))
-                                                              closest            (or closest-node-page closest-block-page)
-                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
-                                                              children           (->> (:block/children block)
-                                                                                      (sort-by :block/order)
-                                                                                      (mapv :block/uid))]
-                                                          (dispatch [:selected/add-items children]))
-      ;; When undo no longer makes changes for local textarea, do datascript undo.
-      (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
-                                (when (= local previous)
-                                  (if shift
-                                    (dispatch [:redo])
-                                    (dispatch [:undo]))))
-
-      ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
-      ;; if caret on a #hashtag, navigate to that page
-      ;; if caret within ((uid)), navigate to that uid
-      ;; otherwise zoom into current block
-
-      (= key-code KeyCodes.O) (let [[uid _] (db/uid-and-embed-id uid)
-                                    link (str (replace-first head #"(?s)(.*)\[\[" "")
-                                           (replace-first tail #"(?s)\]\](.*)" ""))
-                                    hashtag (str (replace-first head #"(?s).*#" "")
-                                              (replace-first tail #"(?s)\s(.*)" ""))
-                                    block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
-                                                (replace-first tail #"(?s)\)\)(.*)" ""))]
-
-                                ;; save block before navigating away
-                                (db/transact-state-for-uid uid state)
-
-                                (cond
-                                  (and (re-find #"(?s)\[\[" head)
-                                    (re-find #"(?s)\]\]" tail)
-                                    (nil? (re-find #"(?s)\[" link))
-                                    (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
-                                    (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
-                                        (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
-
-                                  ;; same logic as link
-                                  (and (re-find #"(?s)#" head)
-                                    (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
-                                    (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
-                                        (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
-
-                                  (and (re-find #"(?s)\(\(" head)
-                                    (re-find #"(?s)\)\)" tail)
-                                    (nil? (re-find #"(?s)\(" block-ref))
-                                    (nil? (re-find #"(?s)\)" block-ref))
-                                    (db/e-by-av :block/uid block-ref))
-                                  (router/navigate-uid block-ref e)
-
-                                  :else (router/navigate-uid uid e))))))
+                   :else (router/navigate-uid uid e))))}))
 
 
 (defn pair-char?
@@ -730,6 +712,5 @@
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE) (handle-delete e uid state)
           (= key-code KeyCodes.ESC) (handle-escape e state)
-          (shortcut-key? meta ctrl) (handle-shortcuts e uid state)
           (is-character-key? e) (write-char e uid state))))))
 
