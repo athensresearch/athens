@@ -67,6 +67,7 @@
     "highlight.js": "9.15.10",
     "katex": "^0.12.0",
     "marked": "^1.0.0",
+    "mousetrap": "^1.6.5",
     "nedb": "^1.8.0",
     "react": "16.9.0",
     "react-codemirror2": "^7.2.1",

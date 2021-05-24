@@ -1,36 +1,61 @@
 (ns athens.hotkeys
   (:require
-    ["react-hotkeys" :refer [GlobalHotKeys HotKeys configure]]
-    [re-frame.core :refer [dispatch subscribe]]
+    [athens.router :as router]
     [athens.util :as util]
-    [athens.router :as router]))
+    ["mousetrap" :as Mousetrap]
+    [re-frame.core :refer [dispatch subscribe]]
+    [react]
+    ["react-hotkeys" :refer [GlobalHotKeys HotKeys configure]]
+    [reagent.core :as r]))
 
-(configure #js{:ignoreTags #js[]})
+;; Not really sure if this does the trick.
+;; The idea is that it returns the same JS array
+;; for the same cljs vector (using = for equality)
+(def deps (memoize clj->js))
 
-(def modkey
-  (let [os (util/get-os)]
-    (or (and (= os :mac) "meta")
-      (and (= os :windows) "ctrl")
-      (and (= os :linux) "ctrl"))))
+;; Ugly but working mousetrap version using hooks.
+(defn mousetrap
+  [propsjs]
+  (let [mouse-trap (react/useRef)
+        props (js->clj propsjs)]
+    (react/useEffect
+      (fn []
+        (let [m (.-current mouse-trap)
+              bindings (get props "bindings")
+              cleanup-fns (doall
+                            (map
+                              (fn [[binding callback]]
+                                (.bind m binding
+                                       (fn [event]
+                                         (.stopPropagation event)
+                                         (callback event)))
+                                #(.unbind m binding))
+                              bindings))]
+          #(doall
+             (map apply cleanup-fns))))
+      (deps [(get props "bindings")]))
+    (react/createElement "span"
+                         #js{:ref #(set! (.-current mouse-trap) (new Mousetrap %))}
+                         (.-children propsjs))))
 
-(defn with-mod
-  [combination]
-  (str modkey "+" combination))
 
 (defn not-editing
   []
   (nil? @(subscribe [:editing/uid])))
 
+
 (defn selected-items-not-empty
   []
   (not-empty @(subscribe [:selected/items])))
+
 
 (defn maybe-undo-or-redo
   [operation]
   (when
     (or (not-editing)
-      (selected-items-not-empty))
+        (selected-items-not-empty))
     (dispatch [operation])))
+
 
 (defn global-hotkeys
   []
@@ -65,16 +90,18 @@
   [children]
   [:> HotKeys
    {:root   true
-    :keyMap {:content-bold (with-mod "b")
-             :content-italic (with-mod "i")
+    :keyMap {:content-bold          (with-mod "b")
+             :content-italic        (with-mod "i")
              :content-strikethrough (with-mod "y")
-             :content-dashed (with-mod "--")
-             :content-highlight (with-mod "h")}}
+             :content-dashed        (with-mod "--")
+             :content-highlight     (with-mod "h")}}
    children])
 
 ;; Maybe change name or remove
 (defn hotkeys
   [children]
   [:<>
-   [global-hotkeys]
-   [hotkeys-keymap children]])
+   [:> mousetrap
+    {:bindings
+     {"mod+t" #(prn "IT WORKS")}}
+    children]])

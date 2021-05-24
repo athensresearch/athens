@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
+    [athens.hotkeys :as hotkeys]
     [athens.style]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
@@ -12,7 +13,6 @@
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
     [athens.views.spinner :refer [initial-spinner-component]]
-    [athens.hotkeys :as hotkeys]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy]))
@@ -24,7 +24,7 @@
 (def app-wrapper-style
   {:display               "grid"
    :grid-template-areas
-                          "'app-header app-header app-header'
+   "'app-header app-header app-header'
                            'left-sidebar main-content secondary-content'
                           'devtool devtool devtool'"
    :grid-template-columns "auto 1fr auto"

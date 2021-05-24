@@ -1,7 +1,7 @@
 (ns athens.views.utils
   (:require
-    [reagent.core :as r]
-    [goog.events :as events]))
+    [goog.events :as events]
+    [reagent.core :as r]))
 
 ;; Calls `callback` when a click is done outside the provided `children` nodes.
 ;; Note: This won't reattach a document event listener if the callback changes.
@@ -15,8 +15,8 @@
                           (not (.. @ref (contains (.. % -target))))
                           (callback))
                _ (events/listen js/document "mousedown" handler)]
-    [:span
-     {:ref #(reset! ref %)}
-     children]
-    (finally
-      (events/unlisten js/document "mousedown" handler))))
+              [:span
+               {:ref #(reset! ref %)}
+               children]
+              (finally
+                (events/unlisten js/document "mousedown" handler))))

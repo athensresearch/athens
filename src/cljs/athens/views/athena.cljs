@@ -1,17 +1,16 @@
 (ns athens.views.athena
   (:require
-    ["react-hotkeys" :refer [HotKeys]]
     ["@material-ui/icons/ArrowForward" :default ArrowForward]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
     ["@material-ui/icons/Search" :default Search]
-    [athens.views.utils :as view-utils]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid scroll-into-view]]
     [athens.views.buttons :refer [button]]
+    [athens.views.utils :as view-utils]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -20,6 +19,7 @@
     [goog.events :as events]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
+    ["react-hotkeys" :refer [HotKeys]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
   (:import
@@ -161,7 +161,7 @@
                      (if (re-find query-pattern part)
                        [:span.result-highlight (use-style result-highlight-style {:key i}) part]
                        part))
-        (clojure.string/split txt query-pattern)))))
+                   (clojure.string/split txt query-pattern)))))
 
 
 (defn create-search-handler
@@ -174,10 +174,10 @@
                 (reset! state {:index   0
                                :query   query
                                :results (->> (concat [(search-exact-node-title query)]
-                                               (search-in-node-title query 20 true)
-                                               (search-in-block-content query))
-                                          vec)})))
-    1000))
+                                                     (search-in-node-title query 20 true)
+                                                     (search-in-block-content query))
+                                             vec)})))
+            1000))
 
 
 (defn key-down-handler
@@ -231,7 +231,8 @@
 
 (def track-click-outside-athena
   (partial view-utils/track-outside-click
-    #(dispatch [:athena/toggle])))
+           #(dispatch [:athena/toggle])))
+
 
 (defn create-page
   [title openOnSidebar]
@@ -241,6 +242,7 @@
     (if openOnSidebar
       (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500)
       (navigate-uid uid))))
+
 
 (defn athena-hotkeys
   [state children]
@@ -264,12 +266,12 @@
                                           ;; if shift: open in right-sidebar
                                           shift-pressed
                                           (do (dispatch [:athena/toggle])
-                                            (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                                              (dispatch [:right-sidebar/open-item (:block/uid item)]))
                                           ;; else open in main view
                                           :else
                                           (do (dispatch [:athena/toggle])
-                                            (navigate-uid (:block/uid item))
-                                            (dispatch [:editing/uid (:block/uid item)])))))
+                                              (navigate-uid (:block/uid item))
+                                              (dispatch [:editing/uid (:block/uid item)])))))
                      :move-up       (fn [e]
                                       (swap! state update :index #(dec (if (zero? %) (count results) %)))
                                       (let [cur-index (:index @state)
@@ -285,16 +287,17 @@
 
                      :move-down     (fn [e]
                                       (swap! state update :index #(if (= % (dec (count results))) 0 (inc %))
-                                        (let [cur-index (:index @state)
-                                              input-el (.. e -target)
-                                              result-el (.. input-el (closest "div.athena") -lastElementChild)
-                                              next-el (nth (array-seq (.. result-el -children)) cur-index)]
-                                          (scroll-into-view next-el result-el (zero? cur-index)))))}}
+                                             (let [cur-index (:index @state)
+                                                   input-el (.. e -target)
+                                                   result-el (.. input-el (closest "div.athena") -lastElementChild)
+                                                   next-el (nth (array-seq (.. result-el -children)) cur-index)]
+                                               (scroll-into-view next-el result-el (zero? cur-index)))))}}
 
      children]))
 
 
-(defn athena-component []
+(defn athena-component
+  []
   (let [s (r/atom {:index   0
                    :query   nil
                    :results []})
@@ -307,14 +310,14 @@
             [:div.athena (use-style container-style)
              [:header {:style {:position "relative"}}
               [:input (use-style athena-input-style
-                        {:type        "search"
-                         :id          "athena-input"
-                         :auto-focus  true
-                         :required    true
-                         :placeholder "Find or Create Page"
-                         :on-change   (fn [e] (search-handler (.. e -target -value)))})]
+                                 {:type        "search"
+                                  :id          "athena-input"
+                                  :auto-focus  true
+                                  :required    true
+                                  :placeholder "Find or Create Page"
+                                  :on-change   (fn [e] (search-handler (.. e -target -value)))})]
               [:button (use-style search-cancel-button-style
-                         {:on-click #(set! (.-value (getElement "athena-input")))})
+                                  {:on-click #(set! (.-value (getElement "athena-input")))})
                [:> Close]]]
              [results-el s]
              (let [{:keys [results query index]} @s]

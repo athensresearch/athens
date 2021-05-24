@@ -1,9 +1,9 @@
 (ns athens.views.blocks.content
   (:require
-    ["react-hotkeys" :refer [HotKeys]]
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :as events]
+    [athens.hotkeys :refer [mousetrap]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
     [athens.util :as util]
@@ -13,6 +13,7 @@
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf]
+    ["react-hotkeys" :refer [HotKeys]]
     [stylefy.core :as stylefy])
   (:import
     (goog.events
@@ -195,8 +196,8 @@
   (let [target (.. e -target)
         page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
         blocks (->> (.. page (querySelectorAll ".block-container"))
-                 array-seq
-                 vec)
+                    array-seq
+                    vec)
         uids (map util/get-dataset-uid blocks)
         start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
         end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))]
@@ -213,11 +214,11 @@
                           (> (count new-items) delta) new-items
                           (nil? new-items) []
                           (or (and (= (first new-items) start-uid)
-                                (= (last new-items) end-uid))
-                            (and (= (last new-items) start-uid)
-                              (= (first new-items) end-uid))) new-items
+                                   (= (last new-items) end-uid))
+                              (and (= (last new-items) start-uid)
+                                   (= (first new-items) end-uid))) new-items
                           :else (recur (select-fn new-items)
-                                  new-items)))]
+                                       new-items)))]
         (rf/dispatch [:selected/add-items new-items])))))
 
 
@@ -325,13 +326,13 @@
 ;; Handlers will come from textarea-keydown
 (defn content-hotkeys
   [uid state child]
-  [:> HotKeys
-   {:component "span"
-    :handlers
-               (merge
-                 {}
-                 (textarea-keydown/shortcut-handlers uid state))}
+  [:> mousetrap
+   {:bindings
+    (merge
+      {}
+      (textarea-keydown/shortcut-handlers uid state))}
    child])
+
 
 (defn block-content-el
   "Actual string contents. Two elements, one for reading and one for writing.

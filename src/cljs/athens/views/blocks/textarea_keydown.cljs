@@ -440,10 +440,10 @@
     (str around selection complement)
     (str around selection around)))
 
+
 (defn shortcut-handlers
   [uid state]
   (let [surround-and-set (fn [surround-text e]
-                           (.preventDefault e)
                            (let [{:keys [start selection target end head tail]} (destruct-key-down e)
                                  selection (surround selection surround-text)
                                  new-str (str head selection tail)
@@ -462,11 +462,11 @@
                                (do (setStart target (+ 2 start))
                                  (setEnd target (+ 2 end)))
                                (set-cursor-position target (+ start 2)))))]
-    {:content-bold          (partial surround-and-set "**")
-     :content-italic        (partial surround-and-set "*")
-     :content-strikethrough (partial surround-and-set "~~")
-     :content-dashed        (partial surround-and-set "--")
-     :content-highlight     (partial surround-and-set "^^")}))
+    {"mod+b" (partial surround-and-set "**")
+     "mod+i" (partial surround-and-set "*")
+     "mod+y" (partial surround-and-set "~~")
+     "mod+u" (partial surround-and-set "--")
+     "mod+h" (partial surround-and-set "^^")}))
 
 
 ;; TODO: put text caret in correct position
