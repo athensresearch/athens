@@ -56,5 +56,5 @@
 (defn drop-area-indicator
   ([{:keys [style child]}]
    [:div (stylefy/use-style
-          (merge drop-area-indicator-style style)
-          {:class (when child "child")})]))
+           (merge drop-area-indicator-style style)
+           {:class (when child "child")})]))
