@@ -19,7 +19,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def sidebar-style
@@ -189,7 +189,7 @@
                      [:p {:max-width "13em"}]]})
 
 
-;;; Components
+;; Components
 
 
 (defn empty-message

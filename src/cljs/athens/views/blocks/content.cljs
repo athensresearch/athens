@@ -337,7 +337,7 @@
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          [autosize/textarea {:value          (:string/local @state)
                              :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
-                             ;;:auto-focus     true
+                             ;; :auto-focus     true
                              :id             (str "editable-uid-" uid)
                              :on-change      (fn [e] (textarea-change e uid state))
                              :on-paste       (fn [e] (textarea-paste e uid state))
@@ -348,6 +348,6 @@
                              :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
          ;; TODO pass `state` to parse-and-render
          [parse-and-render (:string/local @state) (or original-uid uid)]
-         [drop-area-indicator/drop-area-indicator #(when (= :child (:drag-target @state)) {;;:color "green"
+         [drop-area-indicator/drop-area-indicator #(when (= :child (:drag-target @state)) {;; :color "green"
                                                                                            :opacity 1})]]))))
 
