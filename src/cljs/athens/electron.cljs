@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.style :refer [zoom-level-min zoom-level-max]]
-    [athens.util :as util]
+    [athens.util :as util :refer [ipcMainChannels]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -432,7 +432,7 @@
   (reg-event-fx
    :toggle-max-min-win
    (fn [_ [_ toggle-min?]]
-     {:invoke-win! {:channel "toggle-max-or-min-active-win"
+     {:invoke-win! {:channel (:toggle-max-or-min-win-channel ipcMainChannels)
                     :arg (clj->js toggle-min?)}}))
 
   (reg-event-fx
@@ -443,12 +443,12 @@
   (reg-event-fx
    :exit-fullscreen-win
    (fn [_ _]
-     {:invoke-win! {:channel "exit-fullscreen-win"}}))
+     {:invoke-win! {:channel (:exit-fullscreen-win-channel ipcMainChannels)}}))
 
   (reg-event-fx
    :close-win
    (fn [_ _]
-     {:invoke-win! {:channel "close-win"}}))
+     {:invoke-win! {:channel (:close-win-channel ipcMainChannels)}}))
 
   (reg-event-db
    :toggle-win-maximized

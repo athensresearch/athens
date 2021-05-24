@@ -17,6 +17,14 @@
   (subs (str (random-uuid)) 27))
 
 
+  ;;; Electron ipcMain Channels
+
+  (def ipcMainChannels
+    {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
+     :close-win-channel "close-win"
+     :exit-fullscreen-win-channel "exit-fullscreen-win"})
+
+
 ;; embed block
 
 (declare specter-recursive-path)

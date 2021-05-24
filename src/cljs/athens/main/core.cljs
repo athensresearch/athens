@@ -1,6 +1,7 @@
 (ns athens.main.core
   (:require
     [athens.menu :refer [menu-template]]
+    [athens.util :refer [ipcMainChannels]]
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]))
 
@@ -29,34 +30,31 @@
 
 (defn init-electron-handlers
   []
-  (let [toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
-        close-win-channel "close-win"
-        exit-fullscreen-win-channel "exit-fullscreen-win"]
-    (doto ipcMain
-      (.handle toggle-max-or-min-win-channel
-               (fn [_ toggle-min?]
-                 (when-let [active-win (.getFocusedWindow BrowserWindow)]
-                   (if toggle-min?
-                     (if (.isMinimized active-win)
-                       (.restore active-win)
-                       (.minimize active-win))
-                     (if (.isMaximized active-win)
-                       (.unmaximize active-win)
-                       (.maximize active-win))))))
-      (.handle close-win-channel
-               (fn []
-                 (.quit app)))
-      (.handle exit-fullscreen-win-channel
-               (fn []
-                 (when-let [active-win (.getFocusedWindow BrowserWindow)]
-                   (.setFullScreen active-win false)))))
+  (doto ipcMain
+    (.handle (:toggle-max-or-min-win-channel ipcMainChannels)
+             (fn [_ toggle-min?]
+               (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                 (if toggle-min?
+                   (if (.isMinimized active-win)
+                     (.restore active-win)
+                     (.minimize active-win))
+                   (if (.isMaximized active-win)
+                     (.unmaximize active-win)
+                     (.maximize active-win))))))
+    (.handle (:close-win-channel ipcMainChannels)
+             (fn []
+               (.quit app)))
+    (.handle (:exit-fullscreen-win-channel ipcMainChannels)
+             (fn []
+               (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                 (.setFullScreen active-win false)))))
 
     ;; Future intent to refactor statup to use startup and teardown effects
     ;; Below is an example of the teardown effect for this init fn
     ;; #(doall (.removeHandler ipcMain toggle-max-or-min-win-channel)
     ;;         (.removeHandler ipcMain close-win-channel)
     ;;         (.removeHandler ipcMain exit-fullscreen-win-channel))
-    ))
+  )
 
 
 (defn init-browser
