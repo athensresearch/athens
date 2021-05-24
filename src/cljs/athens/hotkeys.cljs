@@ -52,6 +52,7 @@
         (and (= os :windows) "ctrl")
         (and (= os :linux) "ctrl"))))
 
+
 (defn not-editing
   []
   (nil? @(subscribe [:editing/uid])))
