@@ -7,7 +7,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def breadcrumbs-list-style
@@ -54,7 +54,7 @@
                      [:&:first-child:before {:content "none"}]]})
 
 
-;;; Components
+;; Components
 
 
 (defn breadcrumbs-list

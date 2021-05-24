@@ -28,7 +28,7 @@
       KeyCodes)))
 
 
-;;; Styles
+;; Styles
 
 
 (def container-style
@@ -123,7 +123,7 @@
                           :font-family "IBM Plex Mono"}))
 
 
-;;; Components
+;; Components
 
 
 (def initial-state
@@ -201,7 +201,7 @@
           "Load More"])])))
 
 
-; TODO add truncation of long strings here
+;; TODO add truncation of long strings here
 (defn edn-viewer
   [data _]
   [:pre (use-style edn-viewer-style) [:code (with-out-str (cljs.pprint/pprint data))]])
