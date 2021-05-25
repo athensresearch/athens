@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.82](https://github.com/athensresearch/athens/compare/v1.0.0-beta.81...v1.0.0-beta.82) (2021-05-20)
+
+
+### Bug Fixes
+
+* **undo:** undo after pair character input ([#1194](https://github.com/athensresearch/athens/issues/1194)) ([b635da0](https://github.com/athensresearch/athens/commit/b635da00d98c296a533510ef4e47fb021800c75b)), closes [#559](https://github.com/athensresearch/athens/issues/559)
+* **unlinked-refs:** update unlinked refs when page changes ([#1195](https://github.com/athensresearch/athens/issues/1195)) ([5d7b0fe](https://github.com/athensresearch/athens/commit/5d7b0febca5fb9030378857a32fda08f7d876982))
+
+
+### Performance
+
+* **search:** faster search for (()), [[]] and ctrl-k ([#1191](https://github.com/athensresearch/athens/issues/1191)) ([5cfcb2a](https://github.com/athensresearch/athens/commit/5cfcb2a60bc0a5079690fcfb8674767d1a458720)), closes [#756](https://github.com/athensresearch/athens/issues/756) [#756](https://github.com/athensresearch/athens/issues/756)
+
+## [1.0.0-beta.81](https://github.com/athensresearch/athens/compare/v1.0.0-beta.80...v1.0.0-beta.81) (2021-05-19)
+
+
+### Features
+
+* **app-toolbar:** updated filesystem/sync icons ([#1146](https://github.com/athensresearch/athens/issues/1146)) ([e2ba5d7](https://github.com/athensresearch/athens/commit/e2ba5d7f69d8c628df7a86edfd153fb23643a12b))
+* **datalog-console:** respond to datalog-console messages in browser ([#1193](https://github.com/athensresearch/athens/issues/1193)) ([3ffb781](https://github.com/athensresearch/athens/commit/3ffb781fbfc44a37156a9290cd49a1e2ff631beb))
+* **electron:** set min width and height for electron window ([#1173](https://github.com/athensresearch/athens/issues/1173)) ([f41c028](https://github.com/athensresearch/athens/commit/f41c0289357a06c3d6a5ad538eb0c731457606d5))
+* **keybindings:** keybindings for Graph, All Pages, and Settings ([#1192](https://github.com/athensresearch/athens/issues/1192)) ([47efb81](https://github.com/athensresearch/athens/commit/47efb818a02a3e74e6e994337b0e1eb30c83199f))
+
+
+### Bug Fixes
+
+* **contentarea:** hide multiline text in contentarea ([#1189](https://github.com/athensresearch/athens/issues/1189)) ([dbaa1e5](https://github.com/athensresearch/athens/commit/dbaa1e5138640e2d88a702078e9e1bff408102a7))
+* **keybindings:** place caret correctly after ctrl-i italics ([#1176](https://github.com/athensresearch/athens/issues/1176)) ([a11ea7b](https://github.com/athensresearch/athens/commit/a11ea7b8fc3aff2afccf970658adace05f5c7a13))
+* **parser:** remove support for underscores so URLs can use ([dd5affb](https://github.com/athensresearch/athens/commit/dd5affb08f1c32efe1917704608bc7380c0df2ae))
+* **roam-import:** fix roam-date regex to match ordinal numbers in roam dates more ([#1171](https://github.com/athensresearch/athens/issues/1171)) ([ebd9aac](https://github.com/athensresearch/athens/commit/ebd9aac89e73f2fb7c97bb79903945410c6fe925)), closes [#1135](https://github.com/athensresearch/athens/issues/1135)
+
+
+* **parser:** add regression test for fixed issue [#1057](https://github.com/athensresearch/athens/issues/1057) ([#1175](https://github.com/athensresearch/athens/issues/1175)) ([e74c0c6](https://github.com/athensresearch/athens/commit/e74c0c6cfe4e4288b7a34ff2588d6d4ae434ddb6))
+
+
+### Enhancements
+
+* **all-pages:** add arrow UI and re-frame constructs ([#1152](https://github.com/athensresearch/athens/issues/1152)) ([d59198f](https://github.com/athensresearch/athens/commit/d59198ff7f99d2fb80a35e43231b3dfec560955e))
+
 ## [1.0.0-beta.80](https://github.com/athensresearch/athens/compare/v1.0.0-beta.79...v1.0.0-beta.80) (2021-05-13)
 
 

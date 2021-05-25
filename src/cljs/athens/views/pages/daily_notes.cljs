@@ -13,7 +13,7 @@
     [stylefy.core :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def daily-notes-scroll-area-style
@@ -41,7 +41,7 @@
                                  :opacity "0.5"}))
 
 
-;;; Helpers
+;; Helpers
 
 
 
@@ -82,7 +82,7 @@
                  (not (nil? x))))))
 
 
-;;; Components
+;; Components
 
 
 (defn page

@@ -97,16 +97,16 @@
                 [:paragraph-text "aaa"]
                 [:paragraph-text "bbb"]]
 
-               "  aaa\n bbb" ;; leading spaces are skipped
+               "  aaa\n bbb" ; leading spaces are skipped
                [:block [:paragraph-text "aaa\nbbb"]]
 
                "aaa\n    bbb\n        ccc"
                [:block [:paragraph-text "aaa\nbbb\nccc"]]
 
-               "   aaa\nbbb" ;; 3 spaces max
+               "   aaa\nbbb" ; 3 spaces max
                [:block [:paragraph-text "aaa\nbbb"]]
 
-               "    aaa\nbbb" ;; or code block is triggered
+               "    aaa\nbbb" ; or code block is triggered
                [:block
                 [:indented-code-block [:code-text "aaa"]]
                 [:paragraph-text "bbb"]]))
@@ -228,16 +228,6 @@
                [:paragraph
                 [:strong-emphasis
                  [:text-run "strong"]]]
-
-               "_also emphasis_"
-               [:paragraph
-                [:emphasis
-                 [:text-run "also emphasis"]]]
-
-               "__very strong__"
-               [:paragraph
-                [:strong-emphasis
-                 [:text-run "very strong"]]]
 
                ;; mix and match different emphasis
                "**bold and *italic***"

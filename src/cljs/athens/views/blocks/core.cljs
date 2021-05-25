@@ -22,11 +22,11 @@
     [stylefy.core :as stylefy]))
 
 
-;;; Styles
-;;; 
-;;; Blocks use Em units in many places rather than Rem units because
-;;; blocks need to scale with their container: sidebar blocks are
-;;; smaller than main content blocks, for instance.
+;; Styles
+;;
+;; Blocks use Em units in many places rather than Rem units because
+;; blocks need to scale with their container: sidebar blocks are
+;; smaller than main content blocks, for instance.
 
 
 (def block-container-style
@@ -74,10 +74,10 @@
                                                   :right 0
                                                   :bottom 0
                                                   :left 0}]]
-                      ;;[:&:hover {:background (color :background-minus-1)}]]
+                     ;; [:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing,
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
+                     ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"}]]})
 
@@ -92,7 +92,7 @@
 (stylefy/class "dragging" dragging-style)
 
 
-;;; Components
+;; Components
 
 (defn block-refs-count-el
   [count uid]
@@ -170,7 +170,7 @@
   (let [{target-uid :block/uid} block
         related-uid (util/get-dataset-uid (.. e -relatedTarget))]
     (when-not (= related-uid target-uid)
-      ;;(prn target-uid related-uid  "LEAVE")
+      ;; (prn target-uid related-uid  "LEAVE")
       (swap! state assoc :drag-target nil))))
 
 
@@ -184,7 +184,7 @@
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
-                        :search/type       nil              ;; one of #{:page :block :slash :hashtag}
+                        :search/type       nil              ; one of #{:page :block :slash :hashtag}
                         :search/results    nil
                         :search/query      nil
                         :search/index      nil
@@ -208,7 +208,7 @@
              is-editing  @(rf/subscribe [:editing/is-editing uid])
              is-selected @(rf/subscribe [:selected/is-selected uid])]
 
-         ;;(prn uid is-selected)
+         ;; (prn uid is-selected)
 
          ;; If datascript string value does not equal local value, overwrite local value.
          ;; Write on initialization
@@ -260,7 +260,7 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          [drop-area-indicator/drop-area-indicator #(when (= drag-target :below) {;;:color "red"
+          [drop-area-indicator/drop-area-indicator #(when (= drag-target :below) {;; :color "red"
                                                                                   :opacity "1"})]])))))
 
 

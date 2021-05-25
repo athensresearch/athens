@@ -92,16 +92,16 @@
                      [:paragraph-text "aaa"]
                      [:paragraph-text "bbb"]]
 
-                    "  aaa\n bbb" ;; leading spaces are skipped
+                    "  aaa\n bbb" ; leading spaces are skipped
                     [:block [:paragraph-text "aaa\nbbb"]]
 
                     "aaa\n    bbb\n        ccc"
                     [:block [:paragraph-text "aaa\nbbb\nccc"]]
 
-                    "   aaa\nbbb" ;; 3 spaces max
+                    "   aaa\nbbb" ; 3 spaces max
                     [:block [:paragraph-text "aaa\nbbb"]]
 
-                    "    aaa\nbbb" ;; or code block is triggered
+                    "    aaa\nbbb" ; or code block is triggered
                     [:block
                      [:indented-code-block [:code-text "aaa"]]
                      [:paragraph-text "bbb"]]))
@@ -117,7 +117,7 @@
                              [:heading {:n 1} [:paragraph-text "Foo"]]
                              [:paragraph-text "bar\nbaz"]]]
 
-               ;; spaces after `>` can be omitted
+                    ;; spaces after `>` can be omitted
                     "># Foo
 >bar
 > baz"
@@ -125,7 +125,7 @@
                              [:heading {:n 1} [:paragraph-text "Foo"]]
                              [:paragraph-text "bar\nbaz"]]]
 
-               ;; The > characters can be indented 1-3 spaces
+                    ;; The > characters can be indented 1-3 spaces
                     "   > # Foo
    > bar
  > baz"
@@ -133,13 +133,13 @@
                              [:heading {:n 1} [:paragraph-text "Foo"]]
                              [:paragraph-text "bar\nbaz"]]]
 
-               ;; Four spaces gives us a code block:
+                    ;; Four spaces gives us a code block:
                     "    > # Foo
     > bar
     > baz"
                     [:block [:indented-code-block [:code-text "> # Foo\n> bar\n> baz"]]]
 
-               ;; block quote is a container for other blocks
+                    ;; block quote is a container for other blocks
                     "> aaa
 > 
 > bbb"
@@ -147,7 +147,7 @@
                              [:paragraph-text "aaa"]
                              [:paragraph-text "bbb"]]]
 
-               ;; nested block quotes
+                    ;; nested block quotes
                     "> > aaa
 > > bbb
 > > ccc"
@@ -224,16 +224,6 @@
                      [:strong-emphasis
                       [:text-run "strong"]]]
 
-                    "_also emphasis_"
-                    [:paragraph
-                     [:emphasis
-                      [:text-run "also emphasis"]]]
-
-                    "__very strong__"
-                    [:paragraph
-                     [:strong-emphasis
-                      [:text-run "very strong"]]]
-
                     ;; mix and match different emphasis
                     "**bold and *italic***"
                     [:paragraph
@@ -248,11 +238,7 @@
                      [:text-run "normal "]
                      [:emphasis [:text-run "italic"]]
                      [:text-run " "]
-                     [:strong-emphasis [:text-run "bold"]]]
-
-                    "_so wrong*"
-                    [:paragraph
-                     [:text-run "_so wrong*"]]))
+                     [:strong-emphasis [:text-run "bold"]]]))
 
   (t/testing "highlights (local Athens extension `^^...^^`)"
     (util/parses-to sut/inline-parser->ast

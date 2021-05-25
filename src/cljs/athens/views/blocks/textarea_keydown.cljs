@@ -22,7 +22,7 @@
       KeyCodes)))
 
 
-;;; Event Helpers
+;; Event Helpers
 
 
 (defn modifier-keys
@@ -83,7 +83,7 @@
   (contains? ARROW-KEYS (.. e -keyCode)))
 
 
-;;; Dropdown: inline-search and slash commands
+;; Dropdown: inline-search and slash commands
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
@@ -96,10 +96,11 @@
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[DateRange "Date Picker"]
-;;[Attachment "Upload Image or File"]
-;;[ExposurePlus1 "Word Count"]
+
+;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;; [DateRange "Date Picker"]
+;; [Attachment "Upload Image or File"]
+;; [ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
@@ -255,7 +256,7 @@
      (setStart target (+ 2 start)))))
 
 
-;;; Arrow Keys
+;; Arrow Keys
 
 
 (defn block-start?
@@ -308,7 +309,7 @@
         start?          (block-start? e)
         end?            (block-end? e)
         {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight) ;; this height is accurate, but caret-position height is not updating
+        textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
         row             (js/Math.ceil (/ top height))
@@ -369,7 +370,7 @@
                                   (dispatch [:down uid])))))
 
 
-;;; Tab
+;; Tab
 
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
@@ -421,16 +422,18 @@
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
-;;; Pair Chars: auto-balance for backspace and writing chars
+;; Pair Chars: auto-balance for backspace and writing chars
 
 (def PAIR-CHARS
   {"(" ")"
    "[" "]"
    "{" "}"
    "\"" "\""})
-  ;;"`" "`"
-  ;;"*" "*"
-   ;;"_" "_"})
+
+
+;; "`" "`"
+;; "*" "*"
+;; "_" "_"})
 
 
 (defn surround
@@ -441,32 +444,37 @@
     (str around selection around)))
 
 
+(defn surround-and-set
+  ;; Default to n=2 because it's more common.
+  ([e state surround-text]
+   (surround-and-set e state surround-text 2))
+  ([e state surround-text n]
+   (let [{:keys [head tail selection start end target]} (destruct-key-down e)
+         selection?       (not= start end)]
+     (.preventDefault e)
+     (.stopPropagation e)
+     (let [selection (surround selection surround-text)
+           new-str   (str head selection tail)]
+       ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+       ;; textarea setval will lose ability to undo/redo
+
+       ;; other note: execCommand is probably the simpler way
+       ;; at least until a new standard comes around
+
+       ;; be wary before updating electron - as chromium might drop support for execCommand
+       ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+       (swap! state assoc :string/local new-str)
+       (.. js/document (execCommand "insertText" false selection))
+       (if selection?
+         (do (setStart target (+ n start))
+             (setEnd target (+ n end)))
+         (set-cursor-position target (+ start n)))))))
+
+
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection start end target value shift]} (destruct-key-down e)
-        selection?       (not= start end)
-
-        surround-and-set (fn [surround-text]
-                           (.preventDefault e)
-                           (.stopPropagation e)
-                           (let [selection (surround selection surround-text)
-                                 new-str   (str head selection tail)]
-                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-                             ;; textarea setval will lose ability to undo/redo
-
-                             ;; other note: execCommand is probably the simpler way
-                             ;; at least until a new standard comes around
-
-                             ;; be wary before updating electron - as chromium might drop support for execCommand
-                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                             (swap! state assoc :string/local new-str)
-                             (.. js/document (execCommand "insertText" false selection))
-                             (if selection?
-                               (do (setStart target (+ 2 start))
-                                   (setEnd target (+ 2 end)))
-                               (set-cursor-position target (+ start 2)))))]
-
+  (let [{:keys [key-code head tail selection target value shift]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
@@ -483,15 +491,15 @@
                                     (dispatch [:redo])
                                     (dispatch [:undo]))))
 
-      (= key-code KeyCodes.B) (surround-and-set "**")
+      (= key-code KeyCodes.B) (surround-and-set e state "**")
 
-      (= key-code KeyCodes.I) (surround-and-set "*")
+      (= key-code KeyCodes.I) (surround-and-set e state "*" 1)
 
-      (= key-code KeyCodes.Y) (surround-and-set "~~")
+      (= key-code KeyCodes.Y) (surround-and-set e state "~~")
 
-      (= key-code KeyCodes.U) (surround-and-set "--")
+      (= key-code KeyCodes.U) (surround-and-set e state "--")
 
-      (= key-code KeyCodes.H) (surround-and-set "^^")
+      (= key-code KeyCodes.H) (surround-and-set e state "^^")
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
@@ -564,16 +572,20 @@
 
     (cond
       ;; when close char, increment caret index without writing more
-      (or (= ")" key lookbehind-char)
-          (= "}" key lookbehind-char)
-          (= "\"" key lookbehind-char)
-          (= "]" key lookbehind-char)) (do (setStart target (inc start))
-                                           (swap! state assoc :search/type nil))
+      (some #(= % key lookbehind-char)
+            [")" "}" "\"" "]"]) (do (setStart target (inc start))
+                                    (swap! state assoc :search/type nil))
 
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
                          (swap! state assoc :string/local new-str)
-                         (set! (.-value target) new-str)
+                         ;; execCommand is obsolete:
+                         ;; be wary before updating electron - as chromium might drop support for execCommand
+                         ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                         (.. js/document (execCommand
+                                           "insertText"
+                                           false
+                                           (str key close-pair)))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -587,7 +599,13 @@
       (not= selection "") (let [surround-selection (surround selection key)
                                 new-str            (str head surround-selection tail)]
                             (swap! state assoc :string/local new-str)
-                            (set! (.-value target) new-str)
+                            ;; execCommand is obsolete:
+                            ;; be wary before updating electron - as chromium might drop support for execCommand
+                            ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                            (.. js/document (execCommand
+                                              "insertText"
+                                              false
+                                              surround-selection))
                             (set! (.-selectionStart target) (inc start))
                             (set! (.-selectionEnd target) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))

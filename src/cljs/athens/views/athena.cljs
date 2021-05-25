@@ -16,7 +16,6 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
@@ -25,7 +24,7 @@
       KeyCodes)))
 
 
-;;; Styles
+;; Styles
 
 
 (def container-style
@@ -64,7 +63,7 @@
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
-                   "::-webkit-search-cancel-button" {:display "none"}}}) ;; We replace the button elsewhere
+                   "::-webkit-search-cancel-button" {:display "none"}}}) ; We replace the button elsewhere
 
 
 
@@ -126,7 +125,7 @@
    ::stylefy/manual [[:b {:font-weight "500"
                           :opacity (:opacity-high OPACITIES)}]
                      [:&.selected :&:hover {:background (color :link-color)
-                                            :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
+                                            :color "#fff"} ; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
@@ -149,7 +148,7 @@
    :font-size "14px"})
 
 
-;;; Utilities
+;; Utilities
 
 
 (defn highlight-match
@@ -165,18 +164,18 @@
 
 (defn create-search-handler
   [state]
-  (debounce (fn [query]
-              (if (str/blank? query)
-                (reset! state {:index   0
-                               :query   nil
-                               :results []})
-                (reset! state {:index   0
-                               :query   query
-                               :results (->> (concat [(search-exact-node-title query)]
-                                                     (search-in-node-title query 20 true)
-                                                     (search-in-block-content query))
-                                             vec)})))
-            1000))
+  (fn [query]
+    (if (str/blank? query)
+      (reset! state {:index   0
+                     :query   nil
+                     :results []})
+      (reset! state {:index   0
+                     :query   query
+                     :results (vec
+                                (concat
+                                  [(search-exact-node-title query)]
+                                  (search-in-node-title query 20 true)
+                                  (search-in-block-content query)))}))))
 
 
 (defn key-down-handler
@@ -236,7 +235,7 @@
       :else nil)))
 
 
-;;; Components
+;; Components
 
 
 (defn athena-prompt-el
