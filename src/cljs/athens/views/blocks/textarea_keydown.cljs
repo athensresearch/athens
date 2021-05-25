@@ -206,7 +206,10 @@
 (defn auto-complete-inline
   ([state e]
    (let [{:search/keys [query type index results]} @state
-         {:keys [node/title block/uid]} (nth results index nil)
+         ;; (nth results (or index 0) nil) returns the index-th result
+         ;; If (= index nil) or index is out of bounds, returns nil
+         ;; For example, index can be nil if (= results [])
+         {:keys [node/title block/uid]} (nth results (or index 0) nil)
          {:keys [start head tail target]} (destruct-key-down e)
          expansion    (or title uid)
          block?       (= type :block)
@@ -594,7 +597,14 @@
                                  type             (cond double-brackets? :page
                                                         double-parens? :block)]
                              (when type
-                               (swap! state assoc :search/type type :search/query "" :search/results [])))))
+                               (swap! state assoc
+                                      :search/type type
+                                      :search/query ""
+                                      :search/results []
+                                      ;; It's cleaner to explicitly set this to nil to avoid
+                                      ;; seemingly nondeterministic behavior caused by a
+                                      ;; previous value of :search/index
+                                      :search/index nil)))))
 
       (not= selection "") (let [surround-selection (surround selection key)
                                 new-str            (str head surround-selection tail)]
@@ -617,7 +627,11 @@
                                   query-fn         (cond double-brackets? db/search-in-node-title
                                                          double-parens? db/search-in-block-content)]
                               (when type
-                                (swap! state assoc :search/type type :search/query selection :search/results (query-fn selection))))))))
+                                (swap! state assoc
+                                       :search/type type
+                                       :search/query selection
+                                       :search/results (query-fn selection)
+                                       :search/index 0)))))))
 
 
 ;; Backspace
