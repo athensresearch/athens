@@ -153,7 +153,7 @@
                                     string (assoc :block/string (patterns/replace-roam-date string))
                                     title (assoc :node/title (patterns/replace-roam-date title))))
                                 date-concat)]
-    ;;tx-data))
+    ;; tx-data))
     (d/db-with db tx-data)))
 
 
@@ -230,6 +230,7 @@
   :no-op
   (fn [_ _]
     {}))
+
 
 ;; TODO: dec all indices > closed item
 (reg-event-db
@@ -491,6 +492,7 @@
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
 
+
 ;; Loading
 
 (reg-event-db
@@ -549,10 +551,11 @@
 (reg-event-fx
   :daily-note/delete
   (fn [{:keys [db]} [_ uid title]]
-    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
 
 ;; -- event-fx and Datascript Transactions -------------------------------
 
@@ -848,7 +851,7 @@
 
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
-  ;; which might not be same as blur is not yet called
+;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
@@ -1722,27 +1725,27 @@
 
 
 (reg-event-fx
- :paste-verbatim
- (fn [_ [_ uid text]]
-   (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-         block-empty?          (string/blank? value)
-         block-start?          (zero? start)
-         new-string            (cond
+  :paste-verbatim
+  (fn [_ [_ uid text]]
+    (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
+          block-empty?          (string/blank? value)
+          block-start?          (zero? start)
+          new-string            (cond
 
-                                 block-empty?
-                                 text
+                                  block-empty?
+                                  text
 
-                                 (and (not block-empty?)
-                                      block-start?)
-                                 (str text value)
+                                  (and (not block-empty?)
+                                       block-start?)
+                                  (str text value)
 
-                                 :else
-                                 (str (subs value 0 start)
-                                      text
-                                      (subs value start)))
-         tx-data [{:db/id        [:block/uid uid]
-                   :block/string new-string}]]
-     {:dispatch [:transact tx-data]})))
+                                  :else
+                                  (str (subs value 0 start)
+                                       text
+                                       (subs value start)))
+          tx-data [{:db/id        [:block/uid uid]
+                    :block/string new-string}]]
+      {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above

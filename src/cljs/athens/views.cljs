@@ -17,7 +17,7 @@
    [stylefy.core :as stylefy]))
 
 
-;;; Styles
+;; Styles
 
 
 (def app-wrapper-style
@@ -44,7 +44,7 @@
 (stylefy/tag ".density-loose" {:--content-line-height (:loose style/content-density)})
 
 
-;;; Components
+;; Components
 
 
 (defn alert

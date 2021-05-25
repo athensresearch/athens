@@ -1,8 +1,9 @@
 (ns athens.patterns)
 
-; match [[title]] or #title or #[[title]]
-; provides groups useful for replacing
-; e.g.: $1$3$4new-string$2$5
+
+;; match [[title]] or #title or #[[title]]
+;; provides groups useful for replacing
+;; e.g.: $1$3$4new-string$2$5
 (defn linked
   [string]
   (re-pattern (str "(\\[{2})" string "(\\]{2})"
@@ -23,6 +24,7 @@
   (clojure.string/replace s
                           (linked old-title)
                           (str "$1$3$4" new-title "$2$5")))
+
 
 ;; Matches a date with an ordinal number (roam format), considering the correct ordinal
 ;; suffix based on the ending number of the date

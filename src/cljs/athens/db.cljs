@@ -537,10 +537,12 @@
          (str "-embed-" embed-id)))
      (next-block-uid uid))))
 
+
 ;; history
 
 (defonce history (atom '()))
 #_(def ^:const history-limit 10)
+
 
 ;; this gives us customization options
 ;; now if there is a pattern for a tx then the datoms can be
@@ -561,6 +563,7 @@
                                        true
                                        (:tx-data tx-report)]
                                       cur-his))))))
+
 
 ;; -- Linked & Unlinked References ----------
 
