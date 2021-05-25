@@ -146,6 +146,25 @@
              :search/results results))))
 
 
+;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+;; textarea setval will lose ability to undo/redo
+
+;; execCommand is obsolete:
+;; be wary before updating electron - as chromium might drop support for execCommand
+;; electron 11 - uses chromium < 90(latest) which supports execCommand
+(defn replace-selection-with
+  "replace the current selection with `new-text`"
+  [new-text]
+  (.execCommand js/document "insertText" false new-text))
+
+
+(defn set-selection
+  "select text from `start` to `end` in the textarea `target`"
+  [target start end]
+  (setStart target start)
+  (setEnd target end))
+
+
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
@@ -161,18 +180,20 @@
   ;; (i.e., UID of block or title of page) that shall be
   ;; inserted.
   ([state target item]
-   (let [{:keys [value head tail]} (destruct-target target)
+   (println "Hi")
+   (let [{:keys [start head]} (destruct-target target)
          [caption _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #"(?s).*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)]
+         ;; the regex is evaluated greedily, yielding the last
+         ;; occurrence in head (head = text up to cursor)
+         start-idx (dec (count (re-find #"(?s).*/" head)))]
+     (println start head)
      (swap! state assoc
-            :search/type nil
-            :string/local new-str)
-     (set! (.-value target) new-str)
+            :search/type nil)
+     (set-selection target start-idx start)
+     (replace-selection-with expand)
      (when pos
-       (let [new-idx (- (count (str new-head expand)) pos)]
+       (let [new-idx (+ start-idx (count expand) (- pos))]
          (set-cursor-position target new-idx)
          (when (= caption "Block Embed")
            (swap! state assoc :search/type :block
@@ -190,15 +211,15 @@
      (auto-complete-hashtag state target expansion)))
 
   ([state target expansion]
-   (let [{:keys [value head tail]} (destruct-target target)
-         start-idx (count (re-find #"(?s).*#" head))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head "[[" expansion "]]" tail)]
+   (let [{:keys [start head]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
        (swap! state assoc :search/type nil)
-       (swap! state assoc
-              :search/type nil
-              :string/local new-str)))))
+       (do
+         (set-selection target start-idx start)
+         (replace-selection-with (str "[[" expansion "]]"))
+         (swap! state assoc
+                :search/type nil))))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -213,16 +234,15 @@
 
   ([state target expansion]
    (let [{:search/keys [query]} @state
-         {:keys [start]} (destruct-target target)
+         {:keys [end]} (destruct-target target)
          query        (escape-str query)]
 
      ;; assumption: cursor or selection is immediately before the closing brackets
 
      (when (not (nil? expansion))
-       (setStart target (- start (count query)))
-       (setEnd target start)
-       (.. js/document (execCommand "insertText" false expansion)))
-     (let [new-cursor-pos (+ start (- (count query)) (count expansion) 2)]
+       (set-selection target (- end (count query)) end)
+       (replace-selection-with expansion))
+     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
        (set-cursor-position target new-cursor-pos))
      (swap! state assoc :search/type nil))))
 
@@ -419,26 +439,16 @@
   ;; Default to n=2 because it's more common.
   ([e state surround-text]
    (surround-and-set e state surround-text 2))
-  ([e state surround-text n]
-   (let [{:keys [head tail selection start end target]} (destruct-key-down e)
+  ([e _ surround-text n]
+   (let [{:keys [selection start end target]} (destruct-key-down e)
          selection?       (not= start end)]
      (.preventDefault e)
      (.stopPropagation e)
-     (let [selection (surround selection surround-text)
-           new-str   (str head selection tail)]
-       ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-       ;; textarea setval will lose ability to undo/redo
+     (let [selection (surround selection surround-text)]
 
-       ;; other note: execCommand is probably the simpler way
-       ;; at least until a new standard comes around
-
-       ;; be wary before updating electron - as chromium might drop support for execCommand
-       ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-       (swap! state assoc :string/local new-str)
-       (.. js/document (execCommand "insertText" false selection))
+       (replace-selection-with selection)
        (if selection?
-         (do (setStart target (+ n start))
-             (setEnd target (+ n end)))
+         (set-selection target (+ n start) (+ n end))
          (set-cursor-position target (+ start n)))))))
 
 
@@ -536,7 +546,7 @@
 
 (defn handle-pair-char
   [e _ state]
-  (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
+  (let [{:keys [key target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
@@ -544,19 +554,11 @@
     (cond
       ;; when close char, increment caret index without writing more
       (some #(= % key lookbehind-char)
-            [")" "}" "\"" "]"]) (do (setStart target (inc start))
+            [")" "}" "\"" "]"]) (do (set-cursor-position target (inc start))
                                     (swap! state assoc :search/type nil))
 
-      (= selection "") (let [new-str (str head key close-pair tail)
-                             new-idx (inc start)]
-                         (swap! state assoc :string/local new-str)
-                         ;; execCommand is obsolete:
-                         ;; be wary before updating electron - as chromium might drop support for execCommand
-                         ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                         (.. js/document (execCommand
-                                           "insertText"
-                                           false
-                                           (str key close-pair)))
+      (= selection "") (let [new-idx (inc start)]
+                         (replace-selection-with (str key close-pair))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -567,18 +569,9 @@
                              (when type
                                (swap! state assoc :search/type type :search/query "" :search/results [])))))
 
-      (not= selection "") (let [surround-selection (surround selection key)
-                                new-str            (str head surround-selection tail)]
-                            (swap! state assoc :string/local new-str)
-                            ;; execCommand is obsolete:
-                            ;; be wary before updating electron - as chromium might drop support for execCommand
-                            ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                            (.. js/document (execCommand
-                                              "insertText"
-                                              false
-                                              surround-selection))
-                            (set! (.-selectionStart target) (inc start))
-                            (set! (.-selectionEnd target) (inc end))
+      (not= selection "") (let [surround-selection (surround selection key)]
+                            (replace-selection-with surround-selection)
+                            (set-selection target (inc start) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
                                                         (subs (:string/local @state) (+ end 1) (+ end 3)))
                                   double-brackets? (= "[[]]" four-char)
