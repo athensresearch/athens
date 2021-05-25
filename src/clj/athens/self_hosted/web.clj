@@ -6,8 +6,13 @@
             [compojure.core                  :as compojure]
             [org.httpkit.server              :as http]))
 
+
+(compojure/defroutes health-check-route
+  (compojure/GET "/health-check" [] "ok"))
+
 (defn make-handler [datahike]
-  (compojure/routes presence/presence-routes
+  (compojure/routes health-check-route
+                    presence/presence-routes
                     ;; TODO pass `datahike` to graph-routes
                     graph/graph-routes))
 
