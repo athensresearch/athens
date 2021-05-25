@@ -49,7 +49,7 @@
                    (and (not (clojure.string/includes? new-str title))
                         node
                         (empty? (:block/children node))
-                        (= 1 (db/linked-refs-count title))))))
+                        (= 1 @(db/linked-refs-count title))))))
        (map (fn [title]
               (when-let [eid (:db/id (db/pull-nil with-db '[*] [:node/title title]))]
                 [:db/retractEntity eid])))))

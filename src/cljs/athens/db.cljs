@@ -645,14 +645,15 @@
 
 (defn linked-refs-count
   [title]
-  (d/q '[:find (count ?u) .
+  (ratom/make-reaction
+   #(d/q '[:find (count ?u) .
          :in $ ?t
          :where
          [?e :node/title ?t]
          [?r :block/refs ?e]
          [?r :block/uid ?u]]
        @dsdb
-       title))
+       title)))
 
 
 (defn replace-linked-refs
