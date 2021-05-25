@@ -37,7 +37,7 @@
                  ;; backend
                  ;;   logging hell
                  [org.clojure/tools.logging "1.1.0"]
-                 [ch.qos.logback/logback-classic "1.1.3"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  ;;   IoC
                  [com.stuartsierra/component "1.0.0"]
                  ;;   configuration mgmt
@@ -84,7 +84,7 @@
             "cljstyle"     ["with-profile" "+cljstyle" "run" "-m" "cljstyle.main"]}
 
   :profiles {:dev {:dependencies [[binaryage/devtools "1.0.3"]
-                                  [day8.re-frame/re-frame-10x "1.0.2"]
+                                  [day8.re-frame/re-frame-10x "1.1.0"]
                                   [day8.re-frame/tracing "0.6.2"]
                                   [nrepl/nrepl "0.8.3"]]
                    :plugins      [[cider/cider-nrepl "0.26.0"]]
