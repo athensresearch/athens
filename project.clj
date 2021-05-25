@@ -9,33 +9,35 @@
             :distribution :repo
             :comments "same as Clojure"}
 
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.764"
+  :dependencies [[org.clojure/clojure "1.10.3"]
+                 [org.clojure/clojurescript "1.10.866"
                   :exclusions [com.google.javascript/closure-compiler-unshaded
                                org.clojure/google-closure-library
                                org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.10.22"]
-                 [reagent "0.10.0"]
-                 [re-frame "1.1.0"]
-                 [datascript "1.0.0"]
+                 [thheller/shadow-cljs "2.14.0"]
+                 [reagent "1.0.0"]
+                 [re-frame "1.2.0"]
+                 [datascript "1.1.0"]
                  [datascript-transit "0.3.0"]
                  [denistakeda/posh "0.5.8"]
                  [cljs-http "0.1.46"]
-                 [day8.re-frame/async-flow-fx "0.1.0"]
-                 [metosin/reitit "0.4.2"]
+                 [day8.re-frame/async-flow-fx "0.2.0"]
+                 [metosin/reitit "0.5.13"]
                  [metosin/komponentit "0.3.10"]
                  [instaparse "1.4.10"]
-                 [devcards "0.2.6"]
-                 [borkdude/sci "0.0.13-alpha.22"]
+                 [devcards "0.2.7"]
+                 [borkdude/sci "0.2.5"]
                  [garden "1.3.10"]
-                 [stylefy "2.2.0"]
+                 [stylefy "3.0.0"]
+                 [stylefy/reagent "3.0.0"]
                  [tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]
                  [datsync "0.0.1-alpha2-SNAPSHOT"]]
 
   :plugins [[lein-auto "0.1.3"]
-            [lein-shell "0.5.0"]]
+            [lein-shell "0.5.0"]
+            [lein-ancient "0.7.0"]]
 
   :min-lein-version "2.5.3"
 
@@ -68,15 +70,15 @@
 
   :profiles
   {:dev
-   {:dependencies [[binaryage/devtools "1.0.0"]
-                   [day8.re-frame/re-frame-10x "0.6.0"]
-                   [day8.re-frame/tracing "0.5.3"]
-                   [cider/cider-nrepl "0.25.1"]]
+   {:dependencies [[binaryage/devtools "1.0.3"]
+                   [day8.re-frame/re-frame-10x "1.0.2"]
+                   [day8.re-frame/tracing "0.6.2"]
+                   [cider/cider-nrepl "0.26.0"]]
 
     :source-paths ["dev"]}
    :prod
-   {:dependencies [[day8.re-frame/tracing-stubs "0.5.3"]]}
+   {:dependencies [[day8.re-frame/tracing-stubs "0.6.2"]]}
    :cljstyle {:dependencies
-              [[mvxcvi/cljstyle "0.14.0" :exclusions [org.clojure/clojure]]]}}
+              [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
 
   :prep-tasks [])

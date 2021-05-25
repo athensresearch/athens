@@ -19,7 +19,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def sidebar-style
@@ -52,6 +52,8 @@
    :margin-left "0"
    :transition "all 0.35s ease-out"
    :overflow-y "auto"
+   ::stylefy/supports {"overflow-y: overlay"
+                       {:overflow-y "overlay"}}
    ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
                                     :opacity 0}]
                      [:&.is-open {:opacity 1}]]})
@@ -189,7 +191,7 @@
                      [:p {:max-width "13em"}]]})
 
 
-;;; Components
+;; Components
 
 
 (defn empty-message
