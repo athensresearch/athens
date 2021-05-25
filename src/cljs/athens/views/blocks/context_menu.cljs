@@ -15,8 +15,8 @@
   [_ uid state]
   (let [selected-items @(rf/subscribe [:selected/items])
         ;; use this when using datascript-transit
-        ;uids (map (fn [x] [:block/uid x]) selected-items)
-        ;blocks (d/pull-many @db/dsdb '[*] ids)
+        ;; uids (map (fn [x] [:block/uid x]) selected-items)
+        ;; blocks (d/pull-many @db/dsdb '[*] ids)
         data           (if (empty? selected-items)
                          (str "((" uid "))")
                          (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)

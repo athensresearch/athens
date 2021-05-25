@@ -22,7 +22,7 @@
       KeyCodes)))
 
 
-;;; Event Helpers
+;; Event Helpers
 
 
 (defn modifier-keys
@@ -83,7 +83,7 @@
   (contains? ARROW-KEYS (.. e -keyCode)))
 
 
-;;; Dropdown: inline-search and slash commands
+;; Dropdown: inline-search and slash commands
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
@@ -96,10 +96,11 @@
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[DateRange "Date Picker"]
-;;[Attachment "Upload Image or File"]
-;;[ExposurePlus1 "Word Count"]
+
+;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;; [DateRange "Date Picker"]
+;; [Attachment "Upload Image or File"]
+;; [ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
@@ -255,7 +256,7 @@
      (setStart target (+ 2 start)))))
 
 
-;;; Arrow Keys
+;; Arrow Keys
 
 
 (defn block-start?
@@ -308,7 +309,7 @@
         start?          (block-start? e)
         end?            (block-end? e)
         {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight) ;; this height is accurate, but caret-position height is not updating
+        textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
         row             (js/Math.ceil (/ top height))
@@ -369,7 +370,7 @@
                                   (dispatch [:down uid])))))
 
 
-;;; Tab
+;; Tab
 
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
@@ -421,16 +422,18 @@
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
-;;; Pair Chars: auto-balance for backspace and writing chars
+;; Pair Chars: auto-balance for backspace and writing chars
 
 (def PAIR-CHARS
   {"(" ")"
    "[" "]"
    "{" "}"
    "\"" "\""})
-  ;;"`" "`"
-  ;;"*" "*"
-   ;;"_" "_"})
+
+
+;; "`" "`"
+;; "*" "*"
+;; "_" "_"})
 
 
 (defn surround
@@ -566,12 +569,12 @@
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
-    
+
     (cond
       ;; when close char, increment caret index without writing more
       (some #(= % key lookbehind-char)
-             [")" "}" "\"" "]"]) (do (setStart target (inc start))
-                                 (swap! state assoc :search/type nil))
+            [")" "}" "\"" "]"]) (do (setStart target (inc start))
+                                    (swap! state assoc :search/type nil))
 
       (= selection "") (let [new-str (str head key close-pair tail)
                              new-idx (inc start)]
@@ -580,9 +583,9 @@
                          ;; be wary before updating electron - as chromium might drop support for execCommand
                          ;; electron 11 - uses chromium < 90(latest) which supports execCommand
                          (.. js/document (execCommand
-                                          "insertText"
-                                          false
-                                          (str key close-pair)))
+                                           "insertText"
+                                           false
+                                           (str key close-pair)))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -600,9 +603,9 @@
                             ;; be wary before updating electron - as chromium might drop support for execCommand
                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
                             (.. js/document (execCommand
-                                             "insertText"
-                                             false
-                                             surround-selection))
+                                              "insertText"
+                                              false
+                                              surround-selection))
                             (set! (.-selectionStart target) (inc start))
                             (set! (.-selectionEnd target) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))

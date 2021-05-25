@@ -8,7 +8,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def button-icons-style
@@ -71,7 +71,7 @@
                                                        :cursor "default"}]]]})
 
 
-;;; Components
+;; Components
 
 (stylefy/class "button" buttons-style)
 
