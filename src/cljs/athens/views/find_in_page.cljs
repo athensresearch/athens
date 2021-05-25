@@ -1,123 +1,196 @@
 (ns athens.views.find-in-page
   (:require
-    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    [athens.style :as styles]
     [clojure.string :as str]
-    [re-frame.core :as rf :refer [subscribe dispatch]]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [athens.views.textinput :as textinput]))
+    [re-frame.core :as rf :refer [subscribe dispatch]]))
 
 
 (def electron (js/require "electron"))
 
+(defonce !find-window-id (atom nil))
 
-;;-------------------------------------------------------------------
-;;--- subs and evts ---
-
-(rf/reg-sub
-  :find-in-page-text
-  (fn [db]
-    (some-> db :find-in-page-text str/trim)))
+(defonce !main-window-id (atom nil))
 
 
-(rf/reg-sub
-  :is-find-in-page-open?
-  (fn [db]
-    (:is-find-in-page-open? db)))
+(defn window-id->window
+  [window-id]
+  (.. electron -remote -BrowserWindow (fromId window-id)))
 
 
-(rf/reg-event-db
-  :set-find-in-page-text
-  (fn [db [_ text]]
-    (assoc db :find-in-page-text (some-> text seq str/join))))
-
-
-(rf/reg-event-db
-  :open-find-in-page
-  (fn [db _]
-    (assoc db :is-find-in-page-open? true)))
-
-
-(rf/reg-event-db
-  :close-find-in-page
-  (fn [db _]
-    (assoc db :is-find-in-page-open? false)))
-
-
-;;-------------------------------------------------------------------
-;;--- find fn ---
+;; --------------------------------------------------------------------
+;; ---- find fn ---
 
 
 (defn find-in-page!
-  ([] (find-in-page! @(subscribe [:find-in-page-text])))
-  ([text-to-search]
-   (do (println " - - - -start  - - -  ")
-       (cljs.pprint/pprint text-to-search)
-       (println " - - - - end  - - -  "))
+  ([] (find-in-page! (:text @(subscribe [:find-in-page-info]))))
+  ([text] (find-in-page! text false))
+  ([text-to-search back?]
    (when (some-> text-to-search seq str/join)
-     (let [browser-win (.. electron -remote -BrowserWindow)
-           win         (. browser-win getFocusedWindow)
-           opts        (clj->js {:forward                  true,
-                                 :findNext                 false,
-                                 :matchCase                false,
-                                 :wordStart                false,
-                                 :medialCapitalAsWordStart false})]
-       (.. win -webContents (findInPage text-to-search))
+     ;; todo(ark-recheck) not working with opts
+     (let [opts (cond-> {:forward  true
+                         :findNext false}
 
-       #_(.. win -webContents (on "found-in-page"
-                                  (fn [event result]
-                                    (do (println " - - - -start  - - -  ")
-                                        (cljs.pprint/pprint event)
-                                        (cljs.pprint/pprint result)
-                                        (println " - - - - end  - - -  ")))))))))
+                  (= text-to-search
+                     (:text @(subscribe [:find-in-page-info])))
+                  (merge {:findNext true})
+
+                  back? (merge {:forward false}))]
+
+       (.. (window-id->window @!main-window-id)
+           -webContents
+           (findInPage text-to-search opts))))))
 
 
-(defn clear-find-in-page!
+;; --------------------------------------------------------------------
+;; ---- subs---
+
+
+(rf/reg-sub
+  :find-in-page-info
+  (fn [db]
+    (:find-in-page-info db)))
+
+
+;; --------------------------------------------------------------------
+;; ---- evts ---
+
+
+(rf/reg-fx :find-in-page find-in-page!)
+
+
+(rf/reg-event-fx
+  :set-find-in-page-text
+  (fn [{:keys [db]} [_ text]]
+    (if-let [text (some-> text seq str/join)]
+      {:db           (assoc-in db [:find-in-page-info :text] text)
+       :find-in-page text}
+      {})))
+
+
+(rf/reg-event-fx
+  :next-result
+  (fn [_ _] (find-in-page!)))
+
+
+(rf/reg-fx
+  :prev-result
+  (fn []
+    (find-in-page!
+      (:text @(subscribe [:find-in-page-info])) true)))
+
+
+;; --------------------------------------------------------------------
+;; ---- messages from find window ---
+
+
+(declare stop-find-in-page!)
+
+
+(defonce __ipc-listener-main__
+  (.. electron -remote -ipcMain
+      (on "find-window->parent"
+          (fn [_ msg]
+            (let [[event & args] (js->clj msg)]
+              (case (keyword event)
+                :text (dispatch [:set-find-in-page-text (first args)])
+                :close (stop-find-in-page!)
+                :next (find-in-page!)
+
+                :prev
+                (find-in-page!
+                  (:text @(subscribe [:find-in-page-info]))
+                  true)))))))
+
+
+;; --------------------------------------------------------------------
+;; ---- life cycle ---
+
+
+(defn send-msg-to-find-window!
+  [& msg]
+  (.. electron -ipcRenderer
+      (send "parent->find-window"
+            (-> msg vec clj->js))))
+
+
+(defn get-find-win-pos
+  ([] (get-find-win-pos
+        (window-id->window @!main-window-id)))
+  ([win]
+   (let [[x y] (-> win (. getPosition) js->clj)]
+     [(+ x 20)
+      ;; + y 45(below toolbar) 25(title bar)
+      (+ y 45 (when-not (. win isFullScreen) 25))])))
+
+
+(defn init
   []
-  (do (println " - - - -start  - - -  ")
-      (cljs.pprint/pprint "clear")
-      (println " - - - - end  - - -  "))
   (let [browser-win (.. electron -remote -BrowserWindow)
-        win         (. browser-win getFocusedWindow)]
-    (.. win -webContents (stopFindInPage "clearSelection"))))
+        win         (. browser-win getFocusedWindow)
+        [x y] (get-find-win-pos win)]
 
+    ;; find window setup
+    (-> (new browser-win
+             (clj->js
+               {:modal          false
+                :show           false
+                :x              x
+                :y              y
 
-(defn start-find-in-page!
-  []
-  (dispatch [:open-find-in-page])
-  (find-in-page!))
+                :width          300
+                :height         40
+
+                :movable        false
+                :resizable      false
+
+                :frame          false
+                :useContentSize true
+                :skipTaskbar    true
+                :hasShadow      false
+
+                :minimizable    false
+                :maximizable    false
+                :closable       false
+                :fullscreenable false
+
+                :parent         win
+
+                :webPreferences {:nodeIntegration       true
+                                 :enableRemoteModule    true
+                                 :nodeIntegrationWorker true
+                                 :contextIsolation      false
+                                 :webviewTag            true}}))
+        (. -id)
+        (#(reset! !find-window-id %)))
+
+    (.loadURL
+      ^js (window-id->window @!find-window-id)
+      (str "file://" js/__dirname "/find-in-page.html"))
+
+    ;; main window
+    (reset! !main-window-id (. win -id))
+
+    (.. (window-id->window @!main-window-id)
+        (on "resize"
+            (fn [_]
+              (let [[x y] (get-find-win-pos)]
+                (-> (window-id->window @!find-window-id)
+                    (.. (setPosition x y)))))))))
 
 
 (defn stop-find-in-page!
   []
-  (dispatch [:close-find-in-page])
-  (clear-find-in-page!))
+  (. (window-id->window @!find-window-id) hide)
+  (.. (window-id->window @!main-window-id)
+      -webContents
+      (stopFindInPage "clearSelection")))
 
 
-;;-------------------------------------------------------------------
-;;--- comp stuff ---
-
-
-(defn find-in-page-styles
-  [theme]
-  {#_#_:background (color :background-minus-2 :opacity-med)
-   :position "absolute"
-   :top      "50px"
-   :right    "20px"})
-
-
-(defn find-in-page-comp
+(defn start-find-in-page!
   []
-  (when @(subscribe [:is-find-in-page-open?])
-    (let [theme (if @(subscribe [:theme/dark])
-                  styles/THEME-DARK
-                  styles/THEME-LIGHT)]
-
-      [:div (use-style (find-in-page-styles theme))
-
-       [textinput/textinput
-        {:placeholder " Find in page "
-         :on-change   #(let [text (.. % -target -value)]
-                         (dispatch [:set-find-in-page-text text])
-                         (find-in-page! text))
-         :value       @(subscribe [:find-in-page-text])}]])))
+  (if-let [find-win (window-id->window @!find-window-id)]
+    (. find-win show)
+    (init))
+  (find-in-page!)
+  (send-msg-to-find-window!
+    :opened {:text     (:text @(subscribe [:find-in-page-info]))
+             :is-dark? @(subscribe [:theme/dark])}))

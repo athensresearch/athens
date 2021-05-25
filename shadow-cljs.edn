@@ -32,6 +32,18 @@
                      :devtools {:preloads [devtools.preload
                                            day8.re-frame-10x.preload]}}
 
+          :find-in-page {:target :browser
+                         :output-dir "resources/public/js/compiled"
+                         :asset-path "js/compiled"
+                         :modules {:find-in-page {:init-fn find-in-page.core/init}}
+                         :compiler-options {:closure-warnings {:global-this :off}
+                                            :infer-externs false
+                                            :closure-defines {re-frame.trace.trace-enabled? true
+                                                              athens.config.MEASURE_PARSER  false}
+                                            :output-feature-set :es-next}
+                         :devtools {:preloads [devtools.preload
+                                               day8.re-frame-10x.preload]}}
+
           ;; backend for electron (node.js)
           :main {:target :node-script
                  :output-to "resources/main.js"

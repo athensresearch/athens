@@ -50,7 +50,7 @@
                              :linux   "xdg-open"}}}
 
   :aliases {"dev"          ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer" "find-in-page"]]
             "compile"        ["with-profile" "dev" "do"
                               ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
             "devcards"     ["with-profile" "dev" "do"
@@ -71,7 +71,7 @@
   :profiles
   {:dev
    {:dependencies [[binaryage/devtools "1.0.3"]
-                   [day8.re-frame/re-frame-10x "1.0.2"]
+                   [day8.re-frame/re-frame-10x "1.1.0"]
                    [day8.re-frame/tracing "0.6.2"]
                    [cider/cider-nrepl "0.26.0"]]
 

@@ -8,7 +8,6 @@
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
-    [athens.views.find-in-page :as find-in-page]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
@@ -89,7 +88,6 @@
                 (when @modal [filesystem/window])
                 [:div (stylefy/use-style app-wrapper-style)
                  [app-toolbar/app-toolbar]
-                 [find-in-page/find-in-page-comp]
                  [left-sidebar/left-sidebar]
                  [pages/view]
                  [right-sidebar/right-sidebar]

@@ -16,6 +16,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
+    [athens.views.find-in-page :as find-in-page]
     [cljs.reader :refer [read-string]]
     [goog.dom :refer [getElement]]
     [goog.object :as gobj]
@@ -122,4 +123,5 @@
     (rf/dispatch-sync [:boot/desktop])
     (rf/dispatch-sync [:boot/web]))
   (dev-setup)
-  (mount-root))
+  (mount-root)
+  (find-in-page/init))
