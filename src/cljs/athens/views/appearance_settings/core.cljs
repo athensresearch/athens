@@ -124,17 +124,17 @@
 
 (def theme-settings
   [{:content [:> Brightness7]
-    :id "theme-dark"
-    :fn #(dispatch [:theme/toggle])}
-   {:content [:> Brightness3]
     :id "theme-light"
-    :fn #(dispatch [:theme/toggle])}])
+    :fn #(dispatch [:theme/set-light])}
+   {:content [:> Brightness3]
+    :id "theme-dark"
+    :fn #(dispatch [:theme/set-dark])}])
 
 (def font-settings
   [{:content [:span
               {:style
                {:display "contents"
-               :font-size "18px"
+                :font-size "18px"
                 :font-family (:serif style/font-family)}}
               "Se"]
     :fn #(dispatch [:appearance/set-font :serif])
@@ -142,7 +142,7 @@
    {:content [:span
               {:style
                {:display "contents"
-               :font-size "18px"
+                :font-size "18px"
                 :font-family (:sans style/font-family)}}
               "Sa"]
     :fn #(dispatch [:appearance/set-font :sans])
@@ -150,7 +150,7 @@
    {:content [:span
               {:style
                {:display "contents"
-               :font-size "18px"
+                :font-size "18px"
                 :font-family (:mono style/font-family)}}
               "Mo"]
     :fn #(dispatch [:appearance/set-font :mono])
@@ -205,10 +205,11 @@
        [:p (use-style preferences-help-style) @help-text]
        ;; Options
        [preferences-set {:prefs theme-settings
-                         :current (if @(subscribe [:theme/dark]) "theme-light" "theme-dark")}]
+                         :current (if @(subscribe [:theme/dark]) "theme-dark" "theme-light")}]
        [preferences-set {:prefs font-settings
                          :current @(subscribe [:appearance/font])}]
        [preferences-set {:prefs width-settings
                          :current @(subscribe [:appearance/width])}]
-       #_ [preferences-set {:prefs density-settings
-                         :current @(subscribe [:appearance/density])}]]]]))
+       ;; Density disabled until block styles can support the varying line-heights
+       #_[preferences-set {:prefs density-settings
+                           :current @(subscribe [:appearance/density])}]]]]))

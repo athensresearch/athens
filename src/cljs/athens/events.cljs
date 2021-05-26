@@ -633,6 +633,22 @@
        :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
 
 
+(reg-event-fx
+  :theme/set-dark
+  (fn [{:keys [db]} _]
+    {:db                 (assoc db :theme/dark true)
+     :local-storage/set! ["theme/dark" true]
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-DARK)]}))
+
+
+(reg-event-fx
+  :theme/set-light
+  (fn [{:keys [db]} _]
+    {:db                 (assoc db :theme/dark false)
+     :local-storage/set! ["theme/dark" false]
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]}))
+
+
 ;; Datascript
 
 
