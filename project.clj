@@ -84,7 +84,7 @@
             "cljstyle"     ["with-profile" "+cljstyle" "run" "-m" "cljstyle.main"]}
 
   :profiles {:dev {:dependencies [[binaryage/devtools "1.0.3"]
-                                  [day8.re-frame/re-frame-10x "1.1.0"]
+                                  [day8.re-frame/re-frame-10x "1.1.1"]
                                   [day8.re-frame/tracing "0.6.2"]
                                   [nrepl/nrepl "0.8.3"]]
                    :plugins      [[cider/cider-nrepl "0.26.0"]]
