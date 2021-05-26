@@ -25,7 +25,6 @@
   ([text] (find-in-page! text false))
   ([text-to-search back?]
    (when (some-> text-to-search seq str/join)
-     ;; todo(ark-recheck) not working with opts
      (let [opts (cond-> {:forward  true
                          :findNext false}
 
@@ -33,7 +32,8 @@
                      (:text @(subscribe [:find-in-page-info])))
                   (merge {:findNext true})
 
-                  back? (merge {:forward false}))]
+                  back? (merge {:forward false})
+                  true clj->js)]
 
        (.. (window-id->window @!main-window-id)
            -webContents
@@ -53,17 +53,17 @@
 ;; --------------------------------------------------------------------
 ;; ---- evts ---
 
-
 (rf/reg-fx :find-in-page find-in-page!)
 
 
 (rf/reg-event-fx
   :set-find-in-page-text
   (fn [{:keys [db]} [_ text]]
-    (if-let [text (some-> text seq str/join)]
+    (merge
       {:db           (assoc-in db [:find-in-page-info :text] text)
        :find-in-page text}
-      {})))
+      (when (str/blank? text)
+        {:clear-current-selection _}))))
 
 
 (rf/reg-event-fx
@@ -145,7 +145,7 @@
                 :frame          false
                 :useContentSize true
                 :skipTaskbar    true
-                :hasShadow      false
+                :hasShadow      true
 
                 :minimizable    false
                 :maximizable    false
@@ -177,12 +177,20 @@
                     (.. (setPosition x y)))))))))
 
 
-(defn stop-find-in-page!
+(defn clear-current-selection
   []
-  (. (window-id->window @!find-window-id) hide)
   (.. (window-id->window @!main-window-id)
       -webContents
       (stopFindInPage "clearSelection")))
+
+
+(rf/reg-fx :clear-current-selection clear-current-selection)
+
+
+(defn stop-find-in-page!
+  []
+  (. (window-id->window @!find-window-id) hide)
+  (clear-current-selection))
 
 
 (defn start-find-in-page!

@@ -105,7 +105,7 @@
 
 (defn find-in-page-styles
   [is-dark?]
-  (let [{:keys [background color]}
+  (let [{:keys [background color icon-hover-bg-color]}
         (if is-dark? style/THEME-DARK style/THEME-LIGHT)]
     [:html
      {:height     "100%"
@@ -133,7 +133,7 @@
          :height "1.5rem"
          :color  color}
         [:&:hover
-         {:background "rgb(67 63 56 / 10%)"}]]]]]))
+         {:background icon-hover-bg-color}]]]]]))
 
 
 (defn find-in-page-comp
