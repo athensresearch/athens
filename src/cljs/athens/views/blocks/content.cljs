@@ -55,6 +55,12 @@
                      [:.is-editing {:z-index 3
                                     :line-height "inherit"
                                     :opacity "1"}]
+                     [:span.text-run
+                      {:pointer-events "None"}
+                      [:>a {:position "relative"
+                            :z-index 2
+                            :pointer-events "all"
+                            }]]
                      [:span
                       {:grid-area "main"}
                       [:>span
