@@ -1,79 +1,51 @@
 (ns athens.self-hosted.web.presence
   (:require [clojure.data.json     :as json]
             [clojure.tools.logging :as log]
-            [compojure.core        :as compojure]
             [org.httpkit.server    :as http]))
 
-(defonce clients (atom {}))
-
-
-(defn- now
-  []
+(defn- now []
   (quot (System/currentTimeMillis) 1000))
 
-
 (let [max-id (atom 0)]
-  (defn next-id
-    []
+  (defn next-id []
     (swap! max-id inc)))
-
 
 (defonce all-presence (ref []))
 
+(def supported-event-types
+  #{:presence/hello
+    :presence/editing
+    :presence/viewing})
 
-(defn open-handler
-  [ch]
-  (log/info ch "connected")
-  (swap! clients assoc ch true))
+(defn hello-handler [clients ch {:event/keys [args]}]
+  (let [username (:username args)]
+    (log/info ch "New Client Intro:" username)
+    (swap! clients assoc ch username)))
 
-
-(defn receive-handler
-  [ch msg]
-  (let [ch-username (get @clients ch)]
-    (log/debug ch "WS Server <-" ch-username ":" msg)
-    (let [data (json/read-json msg)]
-      (log/debug "decoded msg:" (pr-str data))
-
-      ;; presence
-      (when-let [uid (:editing data)]
-        (let [data {:presence {:time     (now)
-                               :id       (next-id)
-                               :editing  uid
-                               :username ch-username}}]
-          (dosync
-            (let [all-presence* (conj @all-presence data)
-                  total         (count all-presence*)]
-              ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minutes?
-              (if (> total 100)
-                (ref-set all-presence (vec (drop (- total 100) all-presence*)))
-                (ref-set all-presence all-presence*)))))
-        (doseq [client (keys @clients)]
-          (http/send! client (json/json-str (last @all-presence)))))
-
-      ;; hello
-      (when-let [username (:username data)]
-        (log/info "New Client:" username)
-        (swap! clients assoc ch username)))))
-
-
-(defn close-handler
-  [ch status]
-  (let [ch-username         (get @clients ch)
-        presence-disconnect {:presence {:username   ch-username
-                                        :disconnect true}}]
-    (swap! clients dissoc ch)
-    (log/info ch ch-username "closed, status" status)
-    (when ch-username
+(defn editing-handler [clients ch {:event/keys [args]}]
+  ;; TODO new editing presence
+  (let [username (get clients ch)]
+    (when-let [uid (:editing args)]
+      (let [presence {:presence {:time     (now)
+                                 :id       (next-id)
+                                 :editing  uid
+                                 :username username}}]
+        (dosync
+         (let [all-presence* (conj @all-presence presence)
+               total         (count all-presence*)]
+             ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
+           (if (> total 100)
+             (ref-set all-presence (vec (drop (- total 100) all-presence*)))
+             (ref-set all-presence all-presence*)))))
       (doseq [client (keys @clients)]
-        (http/send! client (json/json-str presence-disconnect))))))
+        (http/send! client (json/json-str (last @all-presence)))))))
 
+(defn viewing-handler [_clients _ch _event]
+  ;; TODO new viewing presence
+  )
 
-(defn presence-handler
-  [req]
-  (http/as-channel req
-                   {:on-open    #'open-handler
-                    :on-receive #'receive-handler
-                    :on-close   #'close-handler}))
-
-(compojure/defroutes presence-routes
-  (compojure/GET "/ws-presence" [] presence-handler))
+(defn presence-handler [clients ch {:event/keys [type] :as event}]
+  (condp = type
+    :presence/hello   (hello-handler clients ch event)
+    :presence/editing (editing-handler clients ch event)
+    :presence/viewing (viewing-handler clients ch event)))

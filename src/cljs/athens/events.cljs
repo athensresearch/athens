@@ -1713,7 +1713,7 @@
          event-id             (gensym)
          paste-verbatim-event {:event/id      event-id     ;; use `:event/id` to track `:ack` events
                                :event/last-tx last-seen-tx ;; in case if event could conflict and was issued from not up to date db
-                               :event/type    :apaste-verbatim
+                               :event/type    :graph/paste-verbatim
                                :event/args    {:uid   uid
                                                :text  text
                                                :start start
