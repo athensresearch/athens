@@ -180,14 +180,12 @@
   ;; (i.e., UID of block or title of page) that shall be
   ;; inserted.
   ([state target item]
-   (println "Hi")
    (let [{:keys [start head]} (destruct-target target)
          [caption _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
          ;; the regex is evaluated greedily, yielding the last
          ;; occurrence in head (head = text up to cursor)
          start-idx (dec (count (re-find #"(?s).*/" head)))]
-     (println start head)
      (swap! state assoc
             :search/type nil)
      (set-selection target start-idx start)
