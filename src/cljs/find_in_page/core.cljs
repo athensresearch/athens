@@ -176,7 +176,9 @@
        :on-change   #(dispatch [:set-find-in-page-text
                                 (.. % -target -value)])
        :value       text}]
-     [:span.index (or curr 0) "/" (or total 0)]
+     [:span.index
+      (when-not (str/blank? text)
+        (str (or curr 0) "/" (or total 0)))]
      [:hr]
      [:<>
       (->> [{:icon ChevronLeft :key :prev}
