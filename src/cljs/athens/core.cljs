@@ -124,4 +124,4 @@
     (rf/dispatch-sync [:boot/web]))
   (dev-setup)
   (mount-root)
-  (find-in-page/init))
+  (find-in-page/init!))

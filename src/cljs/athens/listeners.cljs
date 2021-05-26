@@ -105,7 +105,8 @@
                                        KeyCodes.COMMA (router/navigate :settings)
 
                                        KeyCodes.T (util/toggle-10x)
-                                       KeyCodes.F (find-in-page/start-find-in-page!)
+                                       KeyCodes.F (when (util/electron?)
+                                                    (find-in-page/start-find-in-page!))
                                        nil)
       alt (condp = key-code
             KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))

@@ -1,4 +1,15 @@
-(ns find-in-page.core
+^:cljstyle/ignore
+(ns
+  ^{:doc
+    "This runs inside find window. New compile target altogether.
+
+     Avoid importing stuff directly from athens as target can easily
+     bloat. Instead make new common or cljc and place them
+     strategically there.
+
+     Actions/events to and from inside the window are communicated
+     with ipc"}
+  find-in-page.core
   (:require
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
@@ -23,6 +34,7 @@
 ;; --- parent messages ---
 
 
+;; listens to messages from parent window
 (defonce __ipc-listener-find-window__
   (.. electron -remote -ipcMain
       (on "parent->find-window"
@@ -105,12 +117,13 @@
 
 (defn find-in-page-styles
   [is-dark?]
-  (let [{:keys [background color icon-hover-bg-color]}
+  (let [{:keys [background color icon-hover-bg-color color-light]}
         (if is-dark? style/THEME-DARK style/THEME-LIGHT)]
     [:html
-     {:height     "100%"
-      :background background
-      :color      color}
+     {:height      "100%"
+      :font-family "IBM Plex Sans, Sans-Serif"
+      :background  background
+      :color       color}
      [:body :#app :.find-in-page-root
       {:height "100%"
        :margin "0"}]
@@ -128,17 +141,33 @@
          :border      "none"
          :outline     "none"
          :color       color}]
+       [:hr
+        {:border     "0"
+         :background color-light
+         :width      "1px"
+         :height     "60%"
+         :margin     "0 10px"
+         :flex       "0 0 auto"}]
        [:span
         {:cursor "pointer"
          :height "1.5rem"
-         :color  color}
+         :color  color-light}
         [:&:hover
-         {:background icon-hover-bg-color}]]]]]))
+         {:background icon-hover-bg-color}]
+        [:&.index
+         {:height    "unset"
+          :flex      "0 0 20px"
+          :font-size "12px"
+          :margin    "10px"
+          :color     color-light}
+         [:&:hover
+          {:background "unset"}]]]]]]))
 
 
 (defn find-in-page-comp
   []
-  (let [{:keys [text is-dark?]} @(subscribe [:find-in-page-info])]
+  (let [{:keys [text is-dark?] {:keys [curr total]} :index}
+        @(subscribe [:find-in-page-info])]
     [:div.find-in-page-root
      [:style (css (find-in-page-styles is-dark?))]
      [:input
@@ -147,6 +176,8 @@
        :on-change   #(dispatch [:set-find-in-page-text
                                 (.. % -target -value)])
        :value       text}]
+     [:span.index (or curr 0) "/" (or total 0)]
+     [:hr]
      [:<>
       (->> [{:icon ChevronLeft :key :prev}
             {:icon ChevronRight :key :next}
@@ -159,6 +190,10 @@
            doall)]]))
 
 
+;; -------------------------------------------------------------------
+;; --- listener ---
+
+
 (defn find-win-key-down!
   [e]
   (let [key    (.. e -keyCode)
@@ -169,6 +204,10 @@
                     (= key KeyCodes.ESC) :close
                     :else nil)]
       (send-msg-to-parent! op))))
+
+
+;; -------------------------------------------------------------------
+;; --- init ---
 
 
 (defn init

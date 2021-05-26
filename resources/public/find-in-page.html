@@ -2,24 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <title>Find in page window</title>
 </head>
 <body>
 <div id="app"></div>
-
 <script>
-      function isElectron() {
-        var userAgent = navigator.userAgent.toLowerCase();
-        return userAgent.indexOf("electron/") > -1
-      }
-</script>
-
-<script>
-      var electron = isElectron()
-      var src = ""
-      if (electron) {
-         src = "js/compiled/find-in-page.js"
-      }
+      src = "js/compiled/find-in-page.js"
       var script = document.createElement("script");
       script.setAttribute("src", src);
       document.getElementsByTagName("head")[0].appendChild(script);

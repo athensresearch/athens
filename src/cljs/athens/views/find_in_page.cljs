@@ -1,4 +1,16 @@
-(ns athens.views.find-in-page
+^:cljstyle/ignore
+(ns
+  ^{:doc
+    "This sits runs inside main window.
+    The actual find in page on screen is a new window altogether
+    It follows the main window around and adjusts position on resize
+
+    ctrl/cmd-f and escape - open and close find window
+    note: there's an escape listener inside the window as well
+
+    Actions/events to and from inside the window are communicated
+    with ipc"}
+  athens.views.find-in-page
   (:require
     [clojure.string :as str]
     [re-frame.core :as rf :refer [subscribe dispatch]]))
@@ -12,6 +24,8 @@
 
 
 (defn window-id->window
+  "Window id is more reliable as window object can go out of scope
+   resulting in bad states"
   [window-id]
   (.. electron -remote -BrowserWindow (fromId window-id)))
 
@@ -21,6 +35,8 @@
 
 
 (defn find-in-page!
+  "Uses webContents findInPage(browser based highlighting.
+   Handles back and forward search"
   ([] (find-in-page! (:text @(subscribe [:find-in-page-info]))))
   ([text] (find-in-page! text false))
   ([text-to-search back?]
@@ -85,6 +101,7 @@
 (declare stop-find-in-page!)
 
 
+;; listens to messages from find-window
 (defonce __ipc-listener-main__
   (.. electron -remote -ipcMain
       (on "find-window->parent"
@@ -122,7 +139,7 @@
       (+ y 45 (when-not (. win isFullScreen) 25))])))
 
 
-(defn init
+(defn init!
   []
   (let [browser-win (.. electron -remote -BrowserWindow)
         win         (. browser-win getFocusedWindow)
@@ -136,7 +153,7 @@
                 :x              x
                 :y              y
 
-                :width          300
+                :width          350
                 :height         40
 
                 :movable        false
@@ -169,15 +186,30 @@
     ;; main window
     (reset! !main-window-id (. win -id))
 
+    ;; adjust find window's position on main resize
     (.. (window-id->window @!main-window-id)
         (on "resize"
             (fn [_]
               (let [[x y] (get-find-win-pos)]
                 (-> (window-id->window @!find-window-id)
-                    (.. (setPosition x y)))))))))
+                    (.. (setPosition x y)))))))
+
+    ;; send index (eg 4/10) to find window
+    ;; it's inconsequential so directly send to find window
+    (.. (window-id->window @!main-window-id)
+        -webContents
+        (on "found-in-page"
+            (fn [_ result]
+              (let [{:keys [activeMatchOrdinal matches]}
+                    (js->clj result :keywordize-keys true)]
+                (send-msg-to-find-window!
+                  :search-result-index
+                  {:curr  activeMatchOrdinal
+                   :total matches})))))))
 
 
 (defn clear-current-selection
+  "Clear all highlights on window"
   []
   (.. (window-id->window @!main-window-id)
       -webContents
@@ -189,15 +221,19 @@
 
 (defn stop-find-in-page!
   []
-  (. (window-id->window @!find-window-id) hide)
-  (clear-current-selection))
+  (when @!find-window-id
+    (. (window-id->window @!find-window-id) hide)
+    (clear-current-selection)))
 
 
 (defn start-find-in-page!
+  "Start window if not started.
+   Search highlight also starts when window is open
+   When opened send message to window with text and current theme"
   []
   (if-let [find-win (window-id->window @!find-window-id)]
     (. find-win show)
-    (init))
+    (init!))
   (find-in-page!)
   (send-msg-to-find-window!
     :opened {:text     (:text @(subscribe [:find-in-page-info]))
