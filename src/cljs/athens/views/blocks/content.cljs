@@ -55,6 +55,9 @@
                      [:.is-editing {:z-index 3
                                     :line-height "inherit"
                                     :opacity "1"}]
+                     [:div.text-run
+                      [:>a {:position "relative"
+                            :z-index 2}]]
                      [:span
                       {:grid-area "main"}
                       [:>span
@@ -140,7 +143,7 @@
                      [:h6 {:text-transform "uppercase"
                            :letter-spacing "0.06em"
                            :padding "1em 0"}]
-                     [:p {:margin "0"
+                     [:div.text-run {:margin "0"
                           :padding-bottom "1em"}]
                      [:blockquote {:margin-inline "0.5em"
                                    :margin-block "0.125rem"
