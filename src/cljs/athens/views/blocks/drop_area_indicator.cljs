@@ -1,6 +1,6 @@
 (ns athens.views.blocks.drop-area-indicator
   (:require
-    [athens.style :as style]
+    [athens.style :as style :refer [OPACITIES]]
     [stylefy.core :as stylefy]))
 
 
@@ -23,7 +23,8 @@
    :height "1px"
    :pointer-events "none"
    :margin-bottom "-1px"
-   :color (style/color :link-color :opacity-high)
+   :opacity (:opacity-high OPACITIES)
+   :color (style/color :link-color)
    :animation "drop-area-appear 0.2s both"
    :position "relative"
    :transform-origin "left"
@@ -49,8 +50,8 @@
                                         :border-radius "10em"
                                         :left "var(--indent)"
                                         :top "50%"
-                                        :transform "translateY(-50%) translateX(calc((0.3rem + 2px) * -1))"
-                                        :border [["2px solid " (style/color :link-color :opacity-high)]]}]]})
+                                        :transform "translateY(-50%) translateX(-0.3rem))"
+                                        :border "2px solid "}]]})
 
 
 (defn drop-area-indicator

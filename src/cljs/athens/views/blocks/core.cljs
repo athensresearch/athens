@@ -110,9 +110,8 @@
                             :visibility (when-not (pos? count) "hidden")})
    [buttons/button {:primary true
                     :on-click (fn [e]
-                                (doall
-                                  (.. e stopPropagation)
-                                  (rf/dispatch [:right-sidebar/open-item uid])))}
+                                (.. e stopPropagation)
+                                (rf/dispatch [:right-sidebar/open-item uid]))}
     count]])
 
 
@@ -209,7 +208,7 @@
                         :context-menu/y    nil
                         :context-menu/show false
                         :caret-position    nil
-                        :render-editable   false
+                        :show-editable-dom   false
                         :linked-ref/open (or (false? linked-ref) initial-open)})]
 
      (fn [block linked-ref-data opts]
@@ -239,8 +238,12 @@
                             (when (and (seq children) open) "show-tree-indicator")
                             (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
            :data-uid       uid
-           :on-mouse-enter #(swap! state assoc :render-editable true)
-           :on-mouse-leave #(swap! state assoc :render-editable false)
+           ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+           ;; even when not editing this block. When true, clicking the block content will pass
+           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+           ;; so we avoid rendering it when it's not needed.
+           :on-mouse-enter #(swap! state assoc :show-editable-dom true)
+           :on-mouse-leave #(swap! state assoc :show-editable-dom false)
            :on-click       (fn [e] (doall (.. e stopPropagation) (rf/dispatch [:editing/uid uid])))
            :on-drag-over   (fn [e] (block-drag-over e block state))
            :on-drag-leave  (fn [e] (block-drag-leave e block state))
@@ -259,9 +262,8 @@
            [tooltip/tooltip-el uid-sanitized-block state]
            [content/block-content-el block state]
 
-           (when (> (count _refs) 0)
-             (when-not (:block-embed? opts)
-               [block-refs-count-el (count _refs) uid]))]
+           (when (and (> (count _refs) 0) (not= :block-embed? opts))
+               [block-refs-count-el (count _refs) uid])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]

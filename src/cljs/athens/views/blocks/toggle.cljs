@@ -53,10 +53,9 @@
                                            "closed")
                                :tab-index 0
                                :on-click (fn [e]
-                                           (doall
                                              (.. e stopPropagation)
                                              (if (true? linked-ref)
                                                (swap! state update :linked-ref/open not)
-                                               (toggle [:block/uid uid] open))))})
+                                               (toggle [:block/uid uid] open)))})
    [:> KeyboardArrowDown {:style {:font-size "16px"}}]])
 
