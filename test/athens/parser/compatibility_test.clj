@@ -157,7 +157,7 @@
 ;; as a link. Those mostly test the URL parser.
 (deftest parser-lone-raw-url-tests
   (are [url] (= [:block [:paragraph [:textRun [:link {:text   url
-                                                   :target url}]]]] (sut/staged-parser->ast url))
+                                                      :target url}]]]] (sut/staged-parser->ast url))
     "https://example.com"
     ;; URL with path set to /.
     "https://example.com/"
