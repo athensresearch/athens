@@ -266,5 +266,5 @@
 
 (defn block-component
   [ident]
-  (let [block (db/get-block-document ident)]
+  (let [block @(db/get-block-document ident)]
     [block-el block]))
