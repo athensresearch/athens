@@ -83,13 +83,17 @@
                             ["shell" "yarn" "run" "karma" "start" "--single-run" "--reporters" "junit,dots"]]
             "cljstyle"     ["with-profile" "+cljstyle" "run" "-m" "cljstyle.main"]}
 
-  :profiles {:dev {:dependencies [[binaryage/devtools "1.0.3"]
-                                  [day8.re-frame/re-frame-10x "1.1.1"]
-                                  [day8.re-frame/tracing "0.6.2"]
-                                  [nrepl/nrepl "0.8.3"]]
-                   :plugins      [[cider/cider-nrepl "0.26.0"]]
-                   :source-paths ["dev/clj"]}
-             :prod     {:dependencies [[day8.re-frame/tracing-stubs "0.6.2"]]}
-             :cljstyle {:dependencies [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
+  :profiles
+  {:dev
+   {:dependencies [[binaryage/devtools "1.0.3"]
+                   [day8.re-frame/re-frame-10x "1.1.1"]
+                   [day8.re-frame/tracing "0.6.2"]
+                   [nrepl/nrepl "0.8.3"]]
+    :plugins [[cider/cider-nrepl "0.26.0"]]
+    :source-paths ["dev/clj"]}
+   :prod
+   {:dependencies [[day8.re-frame/tracing-stubs "0.6.2"]]}
+   :cljstyle {:dependencies
+              [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
 
   :prep-tasks [])
