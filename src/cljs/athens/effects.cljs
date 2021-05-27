@@ -153,13 +153,18 @@
                            new-page-refs  (new-page-refs-to-tx-data (:page/refs assert-data) eid)
                            old-block-refs (old-block-refs-to-tx-data (:block/refs retract-data) eid assert-string)
                            old-page-refs  (old-page-refs-to-tx-data (:page/refs retract-data) eid assert-string with-db old-titles)
+                           ; disabling premature retractions
+                           ; tx-data        (concat []
+                           ;                        new-titles
+                           ;                        new-block-refs
+                           ;                        new-page-refs
+                           ;                        old-titles
+                           ;                        old-block-refs
+                           ;                        old-page-refs)]
                            tx-data        (concat []
                                                   new-titles
                                                   new-block-refs
-                                                  new-page-refs
-                                                  old-titles
-                                                  old-block-refs
-                                                  old-page-refs)]
+                                                  new-page-refs)]
                        tx-data)
 
                      ;; [assertion]
@@ -232,13 +237,13 @@
             (let [with-tx (d/with @db/dsdb tx-data)]
               (dev-pprint "TX WITH")                               ;; tx-data normalized by datascript to flat datoms
               (dev-pprint (:tx-data with-tx))
-              (let [more-tx-data  (parse-for-links with-tx)
+              (let [more-tx-data  (vec (parse-for-links with-tx))
                     final-tx-data (vec (concat tx-data more-tx-data))]
                 (dev-pprint "TX MORE")                             ;; parsed tx-data, e.g. asserting/retracting pages and references
                 (dev-pprint more-tx-data)
                 (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
                 (dev-pprint final-tx-data)
-                (let [{:keys [db-before tx-data]} (transact! db/dsdb tx-data)]
+                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
 
                   ;; check remote data against previous db
                   (when (and (:default? @remote-graph-conf)
