@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.hotkeys :as hotkeys]
     [athens.style]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
@@ -25,8 +24,8 @@
   {:display               "grid"
    :grid-template-areas
    "'app-header app-header app-header'
-                           'left-sidebar main-content secondary-content'
-                          'devtool devtool devtool'"
+                                                  'left-sidebar main-content secondary-content'
+                                                 'devtool devtool devtool'"
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows    "auto 1fr auto"
    :height                "100vh"})
@@ -66,31 +65,30 @@
   (let [loading (rf/subscribe [:loading?])
         modal (rf/subscribe [:modal])]
     (fn []
-      [hotkeys/hotkeys
-       [:<>
-        [alert]
-        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-          [m-snackbar
-           {:message msg
-            :open    (boolean msg)}
-           [:span
-            {:style {:background-color (case type
-                                         :success "green"
-                                         "red")
-                     :padding          "10px 20px"
-                     :color            "white"}}
-            msg]])
-        [athena-component]
-        (cond
-          (and @loading @modal) [filesystem/window]
+      [:<>
+       [alert]
+       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
+         [m-snackbar
+          {:message msg
+           :open    (boolean msg)}
+          [:span
+           {:style {:background-color (case type
+                                        :success "green"
+                                        "red")
+                    :padding          "10px 20px"
+                    :color            "white"}}
+           msg]])
+       [athena-component]
+       (cond
+         (and @loading @modal) [filesystem/window]
 
-          @loading [initial-spinner-component]
+         @loading [initial-spinner-component]
 
-          :else [:<>
-                 (when @modal [filesystem/window])
-                 [:div (stylefy/use-style app-wrapper-style)
-                  [app-toolbar/app-toolbar]
-                  [left-sidebar/left-sidebar]
-                  [pages/view]
-                  [right-sidebar/right-sidebar]
-                  [devtool-component]]])]])))
+         :else [:<>
+                (when @modal [filesystem/window])
+                [:div (stylefy/use-style app-wrapper-style)
+                 [app-toolbar/app-toolbar]
+                 [left-sidebar/left-sidebar]
+                 [pages/view]
+                 [right-sidebar/right-sidebar]
+                 [devtool-component]]])])))

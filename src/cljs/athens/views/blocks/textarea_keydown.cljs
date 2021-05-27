@@ -302,7 +302,7 @@
 
 
 (defn handle-arrow-key
-  [e uid state]
+  [uid state e]
   (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
         selection? (not (blank? selection))
         start? (block-start? e)
@@ -374,7 +374,7 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e _uid _state]
+  [e]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items @(subscribe [:selected/items])
@@ -705,9 +705,7 @@
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [:selected/items]))
         (cond
-          (arrow-key-direction e) (handle-arrow-key e uid state)
           (pair-char? e) (handle-pair-char e uid state)
-          (= key-code KeyCodes.TAB) (handle-tab e uid state)
           (= key-code KeyCodes.ENTER) (handle-enter e uid state)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE) (handle-delete e uid state)

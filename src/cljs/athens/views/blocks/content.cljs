@@ -322,15 +322,37 @@
 
 ;; View
 
+(defn map-map-values
+  [f m]
+  (->> m
+    (map (fn [[key value]] [key (f value)]))
+    (into {})))
+
 ;; Handlers will come from textarea-keydown
 (defn content-hotkeys
   [uid state child]
-  [:> mousetrap
-   {:bindings
-    (merge
-      {}
-      (textarea-keydown/shortcut-handlers uid state))}
-   child])
+  (let [event-wrapper
+        (fn [event-handler]
+          (fn [event]
+            (when (= uid @(rf/subscribe [:editing/uid]))
+              (let [d-event (textarea-keydown/destruct-key-down event)]
+
+                ;; used for paste, to determine if shift key was held down
+                (swap! state assoc :last-keydown d-event)
+
+                ;; update caret position for search dropdowns and for up/down
+                (when (nil? (:search/type @state))
+                  (let [caret-position (util/get-caret-position (.. event -target))]
+                    (swap! state assoc :caret-position caret-position))))
+              (when (empty? @(rf/subscribe [:selected/items]))
+                (event-handler event)))))]
+    [mousetrap
+     (map-map-values event-wrapper
+       (merge
+         {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
+          "tab" textarea-keydown/handle-tab}
+         (textarea-keydown/shortcut-handlers uid state)))
+     child]))
 
 
 (defn block-content-el
