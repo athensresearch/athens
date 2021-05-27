@@ -349,7 +349,7 @@
                          [(dec ?target-o) ?prev-sib-order]
                          [?sib :block/order ?prev-sib-order]
                          [?sib :block/uid ?uid]]
-                       @dsdb rules uid)
+                       @dsdb rules uid) ; TODO: determine the purpose of rules
         older-sib (get-block [:block/uid sib-uid])]
     older-sib))
 
@@ -357,7 +357,8 @@
 (defn same-parent?
   "Given a coll of uids, determine if uids are all direct children of the same parent."
   [uids]
-  (let [parents (->> uids
+  (ratom/make-reaction
+    #(let [parents (->> uids
                      (mapv (comp first uid-and-embed-id))
                      (d/q '[:find ?parents
                             :in $ [?uids ...]
@@ -365,8 +366,11 @@
                             [?e :block/uid ?uids]
                             [?parents :block/children ?e]]
                           @dsdb))]
-    (= (count parents) 1)))
+    (= (count parents) 1))))
 
+(comment
+(same-parent? '("29d950503", "5ff8dced3"))
+)
 
 (defn deepest-child-block
   [id]

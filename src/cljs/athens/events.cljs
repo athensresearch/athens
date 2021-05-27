@@ -1076,7 +1076,7 @@
   Reindex parent, add blocks to end of older-sib."
   [uids]
   (let [blocks       (map #(db/get-block [:block/uid %]) uids)
-        same-parent? (db/same-parent? uids)
+        same-parent? @(db/same-parent? uids)
         n-blocks     (count blocks)
         first-block  (first blocks)
         last-block   (last blocks)
@@ -1147,7 +1147,7 @@
   [uids context-root-uid]
   (let [[f-uid f-embed-id]    (-> uids first db/uid-and-embed-id)
         parent                (db/get-parent [:block/uid f-uid])
-        same-parent?          (db/same-parent? uids)
+        same-parent?          @(db/same-parent? uids)
         ;; when all selected items are from same embed block
         ;; check if immediate parent is root-embed
         is-parent-root-embed? (when same-parent?
@@ -1565,8 +1565,8 @@
   [source-uids target-uid kind]
   (let [source-uids          (map (comp first db/uid-and-embed-id) source-uids)
         target-uid           (first (db/uid-and-embed-id target-uid))
-        same-parent-all?     (db/same-parent? (conj source-uids target-uid))
-        same-parent-source?  (db/same-parent? source-uids)
+        same-parent-all?     @(db/same-parent? (conj source-uids target-uid))
+        same-parent-source?  @(db/same-parent? source-uids)
         diff-parents-source? (not same-parent-source?)
         target               (db/get-block [:block/uid target-uid])
         first-source-uid     (first source-uids)
