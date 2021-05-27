@@ -580,13 +580,14 @@
 
 (defn get-ref-ids
   [pattern]
-  (d/q '[:find [?e ...]
+  (ratom/make-reaction
+  #(d/q '[:find [?e ...]
          :in $ ?regex
          :where
          [?e :block/string ?s]
          [(re-find ?regex ?s)]]
        @dsdb
-       pattern))
+       pattern)))
 
 
 (defn merge-parents-and-block
@@ -613,7 +614,7 @@
 
 (defn get-data
   [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+  (-> @(get-ref-ids pattern) merge-parents-and-block group-by-parent seq))
 
 
 (defn get-linked-references
@@ -665,8 +666,7 @@
   "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
   [title]
   (let [pattern (patterns/linked title)]
-    (->> pattern
-         get-ref-ids
+    (->> @(get-ref-ids pattern)
          (d/pull-many @dsdb [:db/id :block/string])
          (mapv (fn [x]
                  (let [new-str (string/replace (:block/string x) pattern title)]
