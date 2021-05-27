@@ -122,10 +122,14 @@
      [:span {:class "formatting"} "[["]
      (into [:span {:on-click (fn [e]
                                (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                               (navigate-uid (:block/uid @node) e))}]
+                               (navigate-uid (:block/uid node) e))}]
            title)
      [:span {:class "formatting"} "]]"]]))
 
+
+(comment
+(render-page-link "a")
+)
 
 ;; -- Component ---
 
