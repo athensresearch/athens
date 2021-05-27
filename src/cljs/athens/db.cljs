@@ -368,20 +368,18 @@
                           @dsdb))]
     (= (count parents) 1))))
 
-(comment
-(same-parent? '("29d950503", "5ff8dced3"))
-)
 
 (defn deepest-child-block
   [id]
-  (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
+  (ratom/make-reaction
+    #(let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
                       sort-block-children)]
     (loop [block document]
       (let [{:block/keys [children]} block
             n (count children)]
         (if (zero? n)
           block
-          (recur (get children (dec n))))))))
+          (recur (get children (dec n)))))))))
 
 
 (defn get-children-recursively
@@ -500,7 +498,7 @@
         prev-block      (cond
                           (zero? (:block/order block)) parent
                           (false? open) prev-sibling
-                          (true? open) (deepest-child-block [:block/uid uid]))]
+                          (true? open) @(deepest-child-block [:block/uid uid]))]
     (cond-> (:block/uid prev-block)
       embed-id (str "-embed-" embed-id))))
 
