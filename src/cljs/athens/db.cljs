@@ -629,11 +629,12 @@
 (defn get-linked-block-references
   "For block-page references UI."
   [block]
-  (->> (:block/_refs block)
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       vec))
+  (ratom/make-reaction
+   #(->> (:block/_refs block)
+         (mapv :db/id)
+         merge-parents-and-block
+         group-by-parent
+         vec)))
 
 
 (defn get-unlinked-references

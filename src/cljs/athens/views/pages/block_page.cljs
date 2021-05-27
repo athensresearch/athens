@@ -169,12 +169,11 @@
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
                         [node-page/ref-comp block]]))]))]]])]))))
 
-
 (defn page
   [ident]
   (let [block       (db/get-block-document ident)
         parents     (db/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])
-        refs        (db/get-linked-block-references block)]
+        refs        @(db/get-linked-block-references block)]
     [block-page-el block parents editing-uid refs]))
 
