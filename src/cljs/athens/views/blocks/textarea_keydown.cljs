@@ -398,7 +398,7 @@
 
 
 (defn handle-enter
-  [e uid state]
+  [uid state e]
   (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
@@ -705,8 +705,6 @@
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [:selected/items]))
         (cond
-          (pair-char? e) (handle-pair-char e uid state)
-          (= key-code KeyCodes.ENTER) (handle-enter e uid state)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE) (handle-delete e uid state)
           (= key-code KeyCodes.ESC) (handle-escape e state)

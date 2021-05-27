@@ -350,7 +350,8 @@
      (map-map-values event-wrapper
        (merge
          {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
-          "tab" textarea-keydown/handle-tab}
+          "tab" textarea-keydown/handle-tab
+          "enter" (partial textarea-keydown/handle-enter uid state)}
          (textarea-keydown/shortcut-handlers uid state)))
      child]))
 
