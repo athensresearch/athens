@@ -689,8 +689,7 @@
   [e uid state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
-    (let [d-event (destruct-key-down e)
-          {:keys [meta ctrl key-code]} d-event]
+    (let [d-event (destruct-key-down e)]
 
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
@@ -700,10 +699,7 @@
         (let [caret-position (get-caret-position (.. e -target))]
           (swap! state assoc :caret-position caret-position)))
 
-      ;; dispatch center
-      ;; only when nothing is selected or duplicate/events dispatched
-      ;; after some ops(like delete) can cause errors
+      ;; Handle search
       (when (empty? @(subscribe [:selected/items]))
         (cond
-          (is-character-key? e) (write-char e uid state))))))
-
+          (is-character-key? e)           (write-char e uid state))))))

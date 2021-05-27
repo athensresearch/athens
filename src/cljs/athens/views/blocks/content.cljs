@@ -195,8 +195,8 @@
   (let [target (.. e -target)
         page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
         blocks (->> (.. page (querySelectorAll ".block-container"))
-                    array-seq
-                    vec)
+                 array-seq
+                 vec)
         uids (map util/get-dataset-uid blocks)
         start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
         end-idx (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))]
@@ -213,11 +213,11 @@
                           (> (count new-items) delta) new-items
                           (nil? new-items) []
                           (or (and (= (first new-items) start-uid)
-                                   (= (last new-items) end-uid))
-                              (and (= (last new-items) start-uid)
-                                   (= (first new-items) end-uid))) new-items
+                                (= (last new-items) end-uid))
+                            (and (= (last new-items) start-uid)
+                              (= (first new-items) end-uid))) new-items
                           :else (recur (select-fn new-items)
-                                       new-items)))]
+                                  new-items)))]
         (rf/dispatch [:selected/add-items new-items])))))
 
 
@@ -332,29 +332,24 @@
 (defn content-hotkeys
   [uid state child]
   (let [event-wrapper
+        ;; Only handle event if the currently editing uid is the same
+        ;; as this block; and there aren't any selected item.
         (fn [event-handler]
           (fn [event]
-            (when (= uid @(rf/subscribe [:editing/uid]))
-              (let [d-event (textarea-keydown/destruct-key-down event)]
-
-                ;; used for paste, to determine if shift key was held down
-                (swap! state assoc :last-keydown d-event)
-
-                ;; update caret position for search dropdowns and for up/down
-                (when (nil? (:search/type @state))
-                  (let [caret-position (util/get-caret-position (.. event -target))]
-                    (swap! state assoc :caret-position caret-position))))
-              (when (empty? @(rf/subscribe [:selected/items]))
-                (event-handler event)))))]
+            (when
+              (and
+                (= uid @(rf/subscribe [:editing/uid]))
+                (empty? @(rf/subscribe [:selected/items])))
+              (event-handler event))))]
     [mousetrap
      (map-map-values event-wrapper
        (merge
          {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
-          "tab" textarea-keydown/handle-tab
-          "enter" (partial textarea-keydown/handle-enter uid state)
-          "backspace" (partial textarea-keydown/handle-backspace uid state)
-          "del" (partial textarea-keydown/handle-delete uid state)
-          "esc" (partial textarea-keydown/handle-escape state)}
+          "tab"                        textarea-keydown/handle-tab
+          "enter"                      (partial textarea-keydown/handle-enter uid state)
+          "backspace"                  (partial textarea-keydown/handle-backspace uid state)
+          "del"                        (partial textarea-keydown/handle-delete uid state)
+          "esc"                        (partial textarea-keydown/handle-escape state)}
          (textarea-keydown/shortcut-handlers uid state)))
      child]))
 
