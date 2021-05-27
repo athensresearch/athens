@@ -28,6 +28,22 @@
    :orphans?         true
    :daily-notes?     true})
 
+(def default-hotkeys-config
+  {:athena/toggle "mod+k"
+   :devtool/toggle "mod+g"
+   :save "mod+s"
+   :10x/toggle "mod+t"
+   :nav/back "alt+left"
+   :nav/forward "alt+right"
+   :nav/daily-notes "alt+d"
+   :left-sidebar/toggle "mod+\\"
+   :right-sidebar/toggle "mod+shift+\\"
+   :content/bold "mod+b"
+   :content/italic "mod+i"
+   :content/strikethrough "mod+y"
+   :content/highlight "mod+h"
+   :content/open-current-block-or-page "mod+o"})
+
 
 ;; -- re-frame -----------------------------------------------------------
 
@@ -52,7 +68,9 @@
                :daily-notes/items   []
                :selected/items      []
                :theme/dark          false
-               :graph-conf          default-graph-conf})
+               :graph-conf          default-graph-conf
+               :config/hotkeys      default-hotkeys-config})
+
 
 
 ;; -- JSON Parsing ----------------------------------------------------
