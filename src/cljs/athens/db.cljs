@@ -227,7 +227,7 @@
               (siblings ?uid ?sib)
               [?sib :block/uid ?sib-uid]
               [?sib :block/order ?sib-o]]
-            @dsdb rules uid)
+            @dsdb rules uid) ;;TODO: determine the purpose of rules here
        (sort-by second)
        last
        first
@@ -272,7 +272,7 @@
 (def roam-node-document-pull-vector
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
-
+;; TODO:
 (defn get-block-document
   [id]
   (->> (d/pull @dsdb block-document-pull-vector id)
@@ -289,7 +289,7 @@
      #(->> (d/entity db id)
            sort-block-children-datom))))
 
-
+;; TODO: to test
 (defn get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
@@ -319,9 +319,10 @@
 
 (defn get-parents-recursively
   [id]
-  (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
-       shape-parent-query))
-
+  (ratom/make-reaction
+    #(->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+       shape-parent-query)))
+  
 
 (defn get-block
   [id]
@@ -587,7 +588,7 @@
 
 (defn merge-parents-and-block
   [ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v @(get-parents-recursively v)))
                            {}
                            ref-ids)
         blocks (map (fn [id] (get-block-document id)) ref-ids)]
