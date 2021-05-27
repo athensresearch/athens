@@ -127,10 +127,6 @@
      [:span {:class "formatting"} "]]"]]))
 
 
-(comment
-(render-page-link "a")
-)
-
 ;; -- Component ---
 
 (def components
