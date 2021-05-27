@@ -1,39 +1,39 @@
 (ns athens.views.pages.node-page
   (:require
-    ["@material-ui/core/Popover" :as Popover]
-    ["@material-ui/icons/Bookmark" :default Bookmark]
-    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
-    ["@material-ui/icons/Link" :default Link]
-    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
-    [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-    [athens.patterns :as patterns]
-    [athens.router :refer [navigate-uid navigate]]
-    [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.alerts :refer [alert-component]]
-    [athens.views.blocks.bullet :as bullet]
-    [athens.views.blocks.core :as blocks]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
-    [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [clojure.string :as str]
-    [datascript.core :as d]
-    [garden.selectors :as selectors]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+   ["@material-ui/core/Popover" :as Popover]
+   ["@material-ui/icons/Bookmark" :default Bookmark]
+   ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/ChevronRight" :default ChevronRight]
+   ["@material-ui/icons/Delete" :default Delete]
+   ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
+   ["@material-ui/icons/Link" :default Link]
+   ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+   [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+   [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
+   [athens.patterns :as patterns]
+   [athens.router :refer [navigate-uid navigate]]
+   [athens.style :refer [color DEPTH-SHADOWS]]
+   [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+   [athens.views.alerts :refer [alert-component]]
+   [athens.views.blocks.bullet :as bullet]
+   [athens.views.blocks.core :as blocks]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+   [athens.views.buttons :refer [button]]
+   [athens.views.dropdown :refer [menu-style menu-separator-style]]
+   [cljsjs.react]
+   [cljsjs.react.dom]
+   [clojure.string :as str]
+   [datascript.core :as d]
+   [garden.selectors :as selectors]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :refer [dispatch subscribe]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]])
   (:import
-    (goog.events
-      KeyCodes)))
+   (goog.events
+    KeyCodes)))
 
 
 ;; -------------------------------------------------------------------
@@ -291,10 +291,9 @@
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state
   The current blocks will be at the end of the existing page."
-  [node state title]
+  [node state linked-refs]
   (let [{dbid :db/id children :block/children} node
-        {:keys [title/initial title/local]} @state
-        linked-refs     @(get-linked-references title)]
+        {:keys [title/initial title/local]} @state]
     (when (not= initial local)
       (let [existing-page     (get-existing-page local)
             linked-ref-blocks (mapcat second linked-refs)
@@ -355,53 +354,55 @@
    :alert/show           nil
    :alert/message        nil
    :alert/confirm-fn     nil
-   :alert/cancel-fn      nil})
+   :alert/cancel-fn      nil
+   "Linked References"   true
+   "Unlinked References" false})
 
 
 (defn menu-dropdown
   [node daily-note?]
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
-                [:<>
-                 [button {:class    [(when @ele "is-active")]
-                          :on-click #(reset! ele (.-currentTarget %))
-                          :style    page-menu-toggle-style}
-                  [:> MoreHoriz]]
-                 [m-popover
-                  (merge (use-style dropdown-style)
-                         {:style {:font-size "14px"}
-                          :open            @ele
-                          :anchorEl        @ele
-                          :onClose         #(reset! ele nil)
-                          :anchorOrigin    #js{:vertical   "bottom"
-                                               :horizontal "left"}
-                          :marginThreshold 10
-                          :transformOrigin #js{:vertical   "top"
-                                               :horizontal "left"}
-                          :classes {:root "backdrop"
-                                    :paper "menu"}})
-                  [:div (use-style menu-style)
-                   [:<>
-                    (if sidebar
-                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                       [:<>
-                        [:> BookmarkBorder]
-                        [:span "Remove Shortcut"]]]
-                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                       [:<>
-                        [:> Bookmark]
-                        [:span "Add Shortcut"]]])
-                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:<>
-                      [:> BubbleChart]
-                      [:span "Show Local Graph"]]]]
-                   [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(do
-                                         (if daily-note?
-                                           (dispatch [:daily-note/delete uid title])
-                                           (dispatch [:page/delete uid title]))
-                                         (navigate :pages))}
-                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
+      [:<>
+       [button {:class    [(when @ele "is-active")]
+                :on-click #(reset! ele (.-currentTarget %))
+                :style    page-menu-toggle-style}
+        [:> MoreHoriz]]
+       [m-popover
+        (merge (use-style dropdown-style)
+               {:style {:font-size "14px"}
+                :open            @ele
+                :anchorEl        @ele
+                :onClose         #(reset! ele nil)
+                :anchorOrigin    #js{:vertical   "bottom"
+                                     :horizontal "left"}
+                :marginThreshold 10
+                :transformOrigin #js{:vertical   "top"
+                                     :horizontal "left"}
+                :classes {:root "backdrop"
+                          :paper "menu"}})
+        [:div (use-style menu-style)
+         [:<>
+          (if sidebar
+            [button {:on-click #(dispatch [:page/remove-shortcut uid])}
+             [:<>
+              [:> BookmarkBorder]
+              [:span "Remove Shortcut"]]]
+            [button {:on-click #(dispatch [:page/add-shortcut uid])}
+             [:<>
+              [:> Bookmark]
+              [:span "Add Shortcut"]]])
+          [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+           [:<>
+            [:> BubbleChart]
+            [:span "Show Local Graph"]]]]
+         [:hr (use-style menu-separator-style)]
+         [button {:on-click #(do
+                               (if daily-note?
+                                 (dispatch [:daily-note/delete uid title])
+                                 (dispatch [:page/delete uid title]))
+                               (navigate :pages))}
+          [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
 (defn ref-comp
@@ -419,12 +420,12 @@
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall
-            (for [{:keys [node/title block/string block/uid]} parents]
-              [breadcrumb {:key       (str "breadcrumb-" uid)
-                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
-                                                new-P (drop-last parents)]
-                                            (swap! state assoc :block new-B :parents new-P)))}
-               [parse-and-render (or title string) uid]]))]
+           (for [{:keys [node/title block/string block/uid]} parents]
+             [breadcrumb {:key       (str "breadcrumb-" uid)
+                          :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                               new-P (drop-last parents)]
+                                           (swap! state assoc :block new-B :parents new-P)))}
+              [parse-and-render (or title string) uid]]))]
          [:div.block-embed
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
@@ -433,101 +434,117 @@
 
 
 (defn linked-ref-el
-  [_ _]
-  (let [show-linked-ref? (r/atom true)]
-    (fn [daily-notes? title]
-      (let [linked-refs @(db/get-linked-references title)]
-        (when (or (and daily-notes? (not-empty linked-refs))
-                  (not daily-notes?))
-          [:section (use-style references-style)
-           [:h4 (use-style references-heading-style)
-            [button {:on-click (fn [] (reset! show-linked-ref? (not @show-linked-ref?)))}
-             (if @show-linked-ref?
-               [:> KeyboardArrowDown]
-               [:> ChevronRight])]
-            [:> Link]
-            [:div {:style {:display "flex"
-                           :flex "1 1 100%"
-                           :justify-content "space-between"}}
-             [:span "Linked References"]]]
-           (when @show-linked-ref?
-             [:div (use-style references-list-style)
+  [state daily-notes? linked-refs]
+  (let [linked? "Linked References"]
+    (when (or (and daily-notes? (not-empty linked-refs))
+              (not daily-notes?))
+      [:section (use-style references-style)
+       [:h4 (use-style references-heading-style)
+        [button {:on-click (fn [] (swap! state update linked? not))}
+         (if (get @state linked?)
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
+        [:div {:style {:display "flex"
+                       :flex "1 1 100%"
+                       :justify-content "space-between"}}
+         [:span linked?]]]
+       (when (get @state linked?)
+         [:div (use-style references-list-style)
+          (doall
+           (for [[group-title group] linked-refs]
+             [:div (use-style references-group-style {:key (str "group-" group-title)})
+              [:h4 (use-style references-group-title-style)
+               [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
               (doall
-                (for [[group-title group] linked-refs]
-                  [:div (use-style references-group-style {:key (str "group-" group-title)})
-                   [:h4 (use-style references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
-                   (doall
-                     (for [block group]
-                       ^{:key (str "ref-" (:block/uid block))}
-                       [:div {:style {:display "flex"
-                                      :flex "1 1 100%"
-                                      :justify-content "space-between"
-                                      :align-items "flex-start"}}
-                        [:div (use-style references-group-block-style)
-                         [ref-comp block]]]))]))])])))))
+               (for [block group]
+                 ^{:key (str "ref-" (:block/uid block))}
+                 [:div {:style {:display "flex"
+                                :flex "1 1 100%"
+                                :justify-content "space-between"
+                                :align-items "flex-start"}}
+                  [:div (use-style references-group-block-style)
+                   [ref-comp block]]]))]))])])))
 
 
 (defn unlinked-ref-el
-  [_ _]
-  (let [show-unlinked-ref? (r/atom false)]
-    (fn [daily-notes? title]
-      (let [unlinked-refs @(get-unlinked-references (escape-str title))]
-        (when (not daily-notes?)
-          [:section (use-style references-style)
-           [:h4 (use-style references-heading-style)
-            [button {:on-click (fn [] (reset! show-unlinked-ref? (not @show-unlinked-ref?)))}
-             (if @show-unlinked-ref?
-               [:> KeyboardArrowDown]
-               [:> ChevronRight])]
-            [:> Link]
-            [:div {:style {:display         "flex"
-                           :justify-content "space-between"
-                           :width "100%"}}
-             [:span "Unlinked References"]
-             (when (and @show-unlinked-ref? (not-empty unlinked-refs))
-               [button {:style    {:font-size "14px"}
-                        :on-click (fn []
-                                    (dispatch [:unlinked-references/link-all unlinked-refs title])
-                                    (reset! show-unlinked-ref? false))}
-                "Link All"])]]
-           (when @show-unlinked-ref?
-             [:div (use-style references-list-style)
+  [state daily-notes? unlinked-refs title]
+  (let [unlinked? "Unlinked References"]
+    (when (not daily-notes?)
+      [:section (use-style references-style)
+       [:h4 (use-style references-heading-style)
+        [button {:on-click (fn []
+                             (if (get @state unlinked?)
+                               (swap! state assoc unlinked? false)
+                               (let [un-refs @(get-unlinked-references (escape-str title))]
+                                 (swap! state assoc unlinked? true)
+                                 (reset! unlinked-refs un-refs))))}
+         (if (get @state unlinked?)
+           [:> KeyboardArrowDown]
+           [:> ChevronRight])]
+        [(r/adapt-react-class Link)]
+        [:div {:style {:display         "flex"
+                       :justify-content "space-between"
+                       :width "100%"}}
+         [:span unlinked?]
+         (when (and unlinked? (not-empty @unlinked-refs))
+           [button {:style    {:font-size "14px"}
+                    :on-click (fn []
+                                (dispatch [:unlinked-references/link-all @unlinked-refs title])
+                                (swap! state assoc unlinked? false)
+                                (reset! unlinked-refs []))}
+            "Link All"])]]
+       (when (get @state unlinked?)
+         [:div (use-style references-list-style)
+          (doall
+           (for [[group-title group] @unlinked-refs]
+             [:div (use-style references-group-style {:key (str "group-" group-title)})
+              [:h4 (use-style references-group-title-style)
+               [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
               (doall
-                (for [[group-title group] unlinked-refs]
-                  [:div (use-style references-group-style {:key (str "group-" group-title)})
-                   [:h4 (use-style references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid (pull-node-from-string group-title)) %)} group-title]]
-                   (doall
-                     (for [block group]
-                       ^{:key (str "ref-" (:block/uid block))}
-                       [:div {:style {:display         "flex"
-                                      :justify-content "space-between"
-                                      :align-items     "flex-start"}}
-                        [:div (merge
-                                (use-style references-group-block-style)
-                                {:style {:max-width "90%"}})
-                         [ref-comp block]]
-                        (when @show-unlinked-ref?
-                          [button {:style    {:margin-top "1.5em"}
-                                   :on-click (fn [] (dispatch [:unlinked-references/link block title]))}
-                           "Link"])]))]))])])))))
+               (for [block group]
+                 ^{:key (str "ref-" (:block/uid block))}
+                 [:div {:style {:display         "flex"
+                                :justify-content "space-between"
+                                :align-items     "flex-start"}}
+                  [:div (merge
+                         (use-style references-group-block-style)
+                         {:style {:max-width "90%"}})
+                   [ref-comp block]]
+                  (when unlinked?
+                    [button {:style    {:margin-top "1.5em"}
+                             :on-click (fn []
+                                         (let [hm                (into (hash-map) @unlinked-refs)
+                                               new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                             (= uid (:block/uid block)))
+                                                                                                           %))
+                                                                      seq)]
+                                             ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                           (reset! unlinked-refs new-unlinked-refs)
+                                           (dispatch [:unlinked-references/link block title])))}
+                     "Link"])]))]))])])))
 
 
 ;; TODO: where to put page-level link filters?
-(defn page
+(defn node-page-el
   "title/initial is the title when a page is first loaded.
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_]
-  (let [state         (r/atom init-state)]
-    (fn [id]
-      (let [{:block/keys    [children uid] title :node/title :as node} @(db/get-node-document id)
-            {:alert/keys    [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            editing-uid     @(subscribe [:editing/uid])
-            daily-note?     (is-daily-note uid)
+  [_ _ _ _]
+  (let [state         (r/atom init-state)
+        unlinked-refs (r/atom [])
+        block-uid     (r/atom nil)]
+    (fn [node editing-uid linked-refs]
+      (when (not= @block-uid (:block/uid node))
+        (reset! state init-state)
+        (reset! unlinked-refs [])
+        (reset! block-uid (:block/uid node)))
+      (let [{:block/keys [children uid] title :node/title} node
+            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            daily-note?  (is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
+
 
         (sync-title title state)
 
@@ -568,7 +585,7 @@
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
                                 (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state title))
+                              (handle-blur node state linked-refs))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
@@ -585,5 +602,13 @@
               [blocks/block-el child])])
 
          ;; References
-         [linked-ref-el on-daily-notes? title]
-         [unlinked-ref-el on-daily-notes? title]]))))
+         [linked-ref-el state on-daily-notes? linked-refs]
+         [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
+
+
+(defn page
+  [ident]
+  (let [{:keys [#_block/uid node/title] :as node} @(db/get-node-document ident)
+        editing-uid   @(subscribe [:editing/uid])
+        linked-refs   @(get-linked-references title)]
+    [node-page-el node editing-uid linked-refs]))
