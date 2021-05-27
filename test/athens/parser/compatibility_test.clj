@@ -113,7 +113,7 @@
     ;; Basic URLs in plain text
     [:block
      [:paragraph
-      [:span
+      [:textRun
        "First URL: "
        [:link {:text   "https://example.com/1"
                :target "https://example.com/1"}]
@@ -126,7 +126,7 @@
     ;; (URL with underscore in plain text)
     [:block
      [:paragraph
-      [:span
+      [:textRun
        "URL: "
        [:link {:text   "https://my_url_with_underscore.com"
                :target "https://my_url_with_underscore.com"}]]]]
@@ -135,7 +135,7 @@
     ;; URL following a TODO component
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
-             [:span
+             [:textRun
               " read: "
               [:link {:text   "https://www.example.com"
                       :target "https://www.example.com"}]]]]
@@ -146,7 +146,7 @@
     ;; or rather not qualify `#` in a middle of a world as hashtag
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
-             [:span
+             [:textRun
               " "
               [:link {:text   "https://example.com"
                       :target "https://example.com"}]]]]
@@ -156,7 +156,7 @@
 ;; Test cases for blocks that only contain a single raw URL that should be parsed
 ;; as a link. Those mostly test the URL parser.
 (deftest parser-lone-raw-url-tests
-  (are [url] (= [:block [:paragraph [:span [:link {:text   url
+  (are [url] (= [:block [:paragraph [:textRun [:link {:text   url
                                                    :target url}]]]] (sut/staged-parser->ast url))
     "https://example.com"
     ;; URL with path set to /.
@@ -269,7 +269,7 @@
 
     [:block
      [:paragraph
-      [:span
+      [:testRun
        [:link {:target "https://raw-link.com"
                :text   "https://raw-link.com"}]]]]
     "https://raw-link.com"))

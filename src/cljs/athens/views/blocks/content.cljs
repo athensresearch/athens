@@ -59,8 +59,7 @@
                       {:pointer-events "None"}
                       [:>a {:position "relative"
                             :z-index 2
-                            :pointer-events "all"
-                            }]]
+                            :pointer-events "all"}]]
                      [:span
                       {:grid-area "main"}
                       [:>span
