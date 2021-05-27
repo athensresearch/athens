@@ -44,7 +44,7 @@
   (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (d/entity @db/dsdb [:block/uid (-> new-match :path-params :id)]) ;; TODO make the page title query work when zoomed in on a block
+          node (d/entity @db/dsdb [:block/uid (-> new-match :path-params :id)]) ; TODO make the page title query work when zoomed in on a block
           node-title (:node/title node)
           route-name (-> new-match :data :name)
           html-title-prefix (cond
