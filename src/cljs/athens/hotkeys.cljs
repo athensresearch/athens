@@ -161,6 +161,7 @@
 ;; Select last element of the selection and clear it.
 (mousetrap-bind "down"
   (fn [e]
-    (.preventDefault e)
-    (dispatch [:selected/clear-items])
-    (dispatch [:down (last (selected-items)) e])))
+    (when (selecting-items?)
+      (.preventDefault e)
+      (dispatch [:selected/clear-items])
+      (dispatch [:down (last (selected-items)) e]))))
