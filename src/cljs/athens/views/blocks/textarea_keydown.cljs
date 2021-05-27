@@ -387,7 +387,7 @@
 
 (defn handle-escape
   "BUG: escape is fired 24 times for some reason."
-  [e state]
+  [state e]
   (.. e preventDefault)
   (swap! state assoc :search/type nil)
   (dispatch [:editing/uid nil]))
@@ -605,7 +605,7 @@
 ;; Backspace
 
 (defn handle-backspace
-  [e uid state]
+  [uid state e]
   (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
         sub-str (subs value (dec start) (inc start))
@@ -671,7 +671,7 @@
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid state]
+  [uid state e]
   (let [{:keys [start end value]} (destruct-key-down e)
         no-selection? (= start end)
         end? (= end (count value))
@@ -705,8 +705,5 @@
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [:selected/items]))
         (cond
-          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-          (= key-code KeyCodes.DELETE) (handle-delete e uid state)
-          (= key-code KeyCodes.ESC) (handle-escape e state)
           (is-character-key? e) (write-char e uid state))))))
 

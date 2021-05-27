@@ -351,7 +351,10 @@
        (merge
          {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
           "tab" textarea-keydown/handle-tab
-          "enter" (partial textarea-keydown/handle-enter uid state)}
+          "enter" (partial textarea-keydown/handle-enter uid state)
+          "backspace" (partial textarea-keydown/handle-backspace uid state)
+          "del" (partial textarea-keydown/handle-delete uid state)
+          "esc" (partial textarea-keydown/handle-escape state)}
          (textarea-keydown/shortcut-handlers uid state)))
      child]))
 
