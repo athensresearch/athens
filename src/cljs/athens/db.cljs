@@ -321,8 +321,8 @@
   [id]
   (ratom/make-reaction
     #(->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
-       shape-parent-query)))
-  
+          shape-parent-query)))
+
 
 (defn get-block
   [id]
@@ -359,38 +359,38 @@
   [uids]
   (ratom/make-reaction
     #(let [parents (->> uids
-                     (mapv (comp first uid-and-embed-id))
-                     (d/q '[:find ?parents
-                            :in $ [?uids ...]
-                            :where
-                            [?e :block/uid ?uids]
-                            [?parents :block/children ?e]]
-                          @dsdb))]
-    (= (count parents) 1))))
+                        (mapv (comp first uid-and-embed-id))
+                        (d/q '[:find ?parents
+                               :in $ [?uids ...]
+                               :where
+                               [?e :block/uid ?uids]
+                               [?parents :block/children ?e]]
+                             @dsdb))]
+       (= (count parents) 1))))
 
 
 (defn deepest-child-block
   [id]
   (ratom/make-reaction
     #(let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
-                      sort-block-children)]
-    (loop [block document]
-      (let [{:block/keys [children]} block
-            n (count children)]
-        (if (zero? n)
-          block
-          (recur (get children (dec n)))))))))
+                         sort-block-children)]
+       (loop [block document]
+         (let [{:block/keys [children]} block
+               n (count children)]
+           (if (zero? n)
+             block
+             (recur (get children (dec n)))))))))
 
 
 (defn get-children-recursively
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
   (ratom/make-reaction
-  #(when-let [eid (e-by-av :block/uid uid)]
-    (->> eid
-         (d/pull @dsdb '[:block/order :block/uid {:block/children ...}])
-         (tree-seq :block/children :block/children)
-         (map :block/uid)))))
+    #(when-let [eid (e-by-av :block/uid uid)]
+       (->> eid
+            (d/pull @dsdb '[:block/order :block/uid {:block/children ...}])
+            (tree-seq :block/children :block/children)
+            (map :block/uid)))))
 
 
 (defn retract-page-recursively
@@ -581,13 +581,13 @@
 (defn get-ref-ids
   [pattern]
   (ratom/make-reaction
-  #(d/q '[:find [?e ...]
-         :in $ ?regex
-         :where
-         [?e :block/string ?s]
-         [(re-find ?regex ?s)]]
-       @dsdb
-       pattern)))
+    #(d/q '[:find [?e ...]
+            :in $ ?regex
+            :where
+            [?e :block/string ?s]
+            [(re-find ?regex ?s)]]
+          @dsdb
+          pattern)))
 
 
 (defn merge-parents-and-block
@@ -635,11 +635,11 @@
   "For block-page references UI."
   [block]
   (ratom/make-reaction
-   #(->> (:block/_refs block)
-         (mapv :db/id)
-         merge-parents-and-block
-         group-by-parent
-         vec)))
+    #(->> (:block/_refs block)
+          (mapv :db/id)
+          merge-parents-and-block
+          group-by-parent
+          vec)))
 
 
 (defn get-unlinked-references
@@ -652,14 +652,14 @@
 (defn linked-refs-count
   [title]
   (ratom/make-reaction
-   #(d/q '[:find (count ?u) .
-         :in $ ?t
-         :where
-         [?e :node/title ?t]
-         [?r :block/refs ?e]
-         [?r :block/uid ?u]]
-       @dsdb
-       title)))
+    #(d/q '[:find (count ?u) .
+            :in $ ?t
+            :where
+            [?e :node/title ?t]
+            [?r :block/refs ?e]
+            [?r :block/uid ?u]]
+          @dsdb
+          title)))
 
 
 (defn replace-linked-refs
