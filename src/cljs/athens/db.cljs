@@ -385,11 +385,12 @@
 (defn get-children-recursively
   "Get list of children UIDs for given block ID (including the root block's UID)"
   [uid]
-  (when-let [eid (e-by-av :block/uid uid)]
+  (ratom/make-reaction
+  #(when-let [eid (e-by-av :block/uid uid)]
     (->> eid
          (d/pull @dsdb '[:block/order :block/uid {:block/children ...}])
          (tree-seq :block/children :block/children)
-         (map :block/uid))))
+         (map :block/uid)))))
 
 
 (defn retract-page-recursively
@@ -398,7 +399,7 @@
   [title]
   (let [eid (e-by-av :node/title title)
         uid (v-by-ea eid :block/uid)]
-    (->> (get-children-recursively uid)
+    (->> @(get-children-recursively uid)
          (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]))
          next)))
 
@@ -407,7 +408,7 @@
   "Retract all blocks of a page, including the page."
   [uid]
   (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-        (get-children-recursively uid)))
+        @(get-children-recursively uid)))
 
 
 (defn re-case-insensitive
