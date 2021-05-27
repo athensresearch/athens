@@ -238,6 +238,7 @@
                     map? (s/multi-path [s/MAP-VALS p] afn)
                     sequential? [s/ALL p])))
 
+
 ;; OS
 
 (defn get-os
