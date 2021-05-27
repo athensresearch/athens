@@ -263,7 +263,7 @@
            [content/block-content-el block state]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-               [block-refs-count-el (count _refs) uid])]
+             [block-refs-count-el (count _refs) uid])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
