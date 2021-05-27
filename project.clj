@@ -52,11 +52,11 @@
   :aliases {"dev"          ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer" "find-in-page"]]
             "compile"        ["with-profile" "dev" "do"
-                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
+                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer" "find-in-page"]]
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "prod"         ["with-profile" "prod" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "app" "main" "renderer"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "app" "main" "renderer" "find-in-page"]]
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]

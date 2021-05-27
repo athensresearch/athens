@@ -10,8 +10,8 @@
   "scripts": {
     "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
-    "dev": "shadow-cljs watch main renderer",
-    "compile": "shadow-cljs compile main renderer",
+    "dev": "shadow-cljs watch main renderer find-in-page",
+    "compile": "shadow-cljs compile main renderer find-in-page",
     "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs",
     "dist": "electron-builder -p always"
   },

@@ -37,7 +37,7 @@
 (defn find-in-page!
   "Uses webContents findInPage(browser based highlighting.
    Handles back and forward search"
-  ([] (find-in-page! (:text @(subscribe [:find-in-page-info]))))
+  ([] (find-in-page! (:text @(subscribe [::find-in-page-info]))))
   ([text] (find-in-page! text false))
   ([text-to-search back?]
    (when (some-> text-to-search seq str/join)
@@ -45,7 +45,7 @@
                          :findNext false}
 
                   (= text-to-search
-                     (:text @(subscribe [:find-in-page-info])))
+                     (:text @(subscribe [::find-in-page-info])))
                   (merge {:findNext true})
 
                   back? (merge {:forward false})
@@ -61,7 +61,7 @@
 
 
 (rf/reg-sub
-  :find-in-page-info
+  ::find-in-page-info
   (fn [db]
     (:find-in-page-info db)))
 
@@ -69,29 +69,17 @@
 ;; --------------------------------------------------------------------
 ;; ---- evts ---
 
-(rf/reg-fx :find-in-page find-in-page!)
+(rf/reg-fx ::find-in-page find-in-page!)
 
 
 (rf/reg-event-fx
-  :set-find-in-page-text
+  ::set-find-in-page-text
   (fn [{:keys [db]} [_ text]]
     (merge
-      {:db           (assoc-in db [:find-in-page-info :text] text)
-       :find-in-page text}
+      {:db            (assoc-in db [:find-in-page-info :text] text)
+       ::find-in-page text}
       (when (str/blank? text)
-        {:clear-current-selection _}))))
-
-
-(rf/reg-event-fx
-  :next-result
-  (fn [_ _] (find-in-page!)))
-
-
-(rf/reg-fx
-  :prev-result
-  (fn []
-    (find-in-page!
-      (:text @(subscribe [:find-in-page-info])) true)))
+        {::clear-current-selection _}))))
 
 
 ;; --------------------------------------------------------------------
@@ -108,13 +96,13 @@
           (fn [_ msg]
             (let [[event & args] (js->clj msg)]
               (case (keyword event)
-                :text (dispatch [:set-find-in-page-text (first args)])
+                :text (dispatch [::set-find-in-page-text (first args)])
                 :close (stop-find-in-page!)
                 :next (find-in-page!)
 
                 :prev
                 (find-in-page!
-                  (:text @(subscribe [:find-in-page-info]))
+                  (:text @(subscribe [::find-in-page-info]))
                   true)))))))
 
 
@@ -219,7 +207,7 @@
       (stopFindInPage "clearSelection")))
 
 
-(rf/reg-fx :clear-current-selection clear-current-selection)
+(rf/reg-fx ::clear-current-selection clear-current-selection)
 
 
 (defn stop-find-in-page!
@@ -227,6 +215,11 @@
   (when @!find-window-id
     (. (window-id->window @!find-window-id) hide)
     (clear-current-selection)))
+
+
+(defn destroy-find-in-page!
+  []
+  (. (window-id->window @!find-window-id) destroy))
 
 
 (defn start-find-in-page!
@@ -239,5 +232,5 @@
     (init!))
   (find-in-page!)
   (send-msg-to-find-window!
-    :opened {:text     (:text @(subscribe [:find-in-page-info]))
+    :opened {:text     (:text @(subscribe [::find-in-page-info]))
              :is-dark? @(subscribe [:theme/dark])}))

@@ -41,10 +41,10 @@
           (fn [_ msg]
             (let [[event & args] (js->clj msg :keywordize-keys true)]
               (case (keyword event)
-                :opened (dispatch [:set-init-data (first args)])
+                :opened (dispatch [::set-init-data (first args)])
 
                 :search-result-index
-                (dispatch [:set-find-in-page-index
+                (dispatch [::set-find-in-page-index
                            (first args)])))))))
 
 
@@ -64,7 +64,7 @@
 
 
 (rf/reg-sub
-  :find-in-page-info
+  ::find-in-page-info
   (fn [db]
     (:find-in-page-info db)))
 
@@ -74,39 +74,39 @@
 
 
 (rf/reg-fx
-  :send-msg
+  ::send-msg
   (fn [args]
     (apply send-msg-to-parent! args)))
 
 
 (rf/reg-fx
-  :focus-on-input
+  ::focus-on-input
   (fn [_]
     (.focus (js/document.querySelector "#find-in-page-input"))))
 
 
 (rf/reg-event-fx
-  :set-find-in-page-text
+  ::set-find-in-page-text
   (fn [{:keys [db]} [_ text no-msg-to-main?]]
     (merge
-      {:db             (assoc-in db [:find-in-page-info :text]
-                                 (some-> text seq str/join))
-       :focus-on-input _}
+      {:db              (assoc-in db [:find-in-page-info :text]
+                                  (some-> text seq str/join))
+       ::focus-on-input _}
       (when-not no-msg-to-main?
-        {:send-msg [:text text]}))))
+        {::send-msg [:text text]}))))
 
 
 (rf/reg-event-fx
-  :set-init-data
+  ::set-init-data
   (fn [{:keys [db]} [_ {:keys [text] :as init-data}]]
     {:db       (update db :find-in-page-info
                        merge (select-keys
                                init-data [:index-info :is-dark?]))
-     :dispatch [:set-find-in-page-text text true]}))
+     :dispatch [::set-find-in-page-text text true]}))
 
 
 (rf/reg-event-db
-  :set-find-in-page-index
+  ::set-find-in-page-index
   (fn [db [_ index-info]]
     (assoc-in db [:find-in-page-info :index] index-info)))
 
@@ -119,7 +119,7 @@
   [is-dark?]
   (let [{:keys [find-in-page-background find-in-page-text-color
                 find-in-page-icon-hover-bg-color
-                find-in-page-text-light]}
+                find-in-page-text-color-light]}
         (if is-dark? theme/THEME-DARK theme/THEME-LIGHT)]
     [:html
      {:height      "100%"
@@ -145,7 +145,7 @@
          :color       find-in-page-text-color}]
        [:hr
         {:border     "0"
-         :background find-in-page-text-light
+         :background find-in-page-text-color-light
          :width      "1px"
          :height     "60%"
          :margin     "0 10px"
@@ -153,7 +153,7 @@
        [:span
         {:cursor "pointer"
          :height "1.5rem"
-         :color  find-in-page-text-light}
+         :color  find-in-page-text-color-light}
         [:&:hover
          {:background find-in-page-icon-hover-bg-color}]
         [:&.index
@@ -161,7 +161,7 @@
           :flex      "0 0 20px"
           :font-size "12px"
           :margin    "10px"
-          :color     find-in-page-text-light}
+          :color     find-in-page-text-color-light}
          [:&:hover
           {:background "unset"}]]]]]]))
 
@@ -169,13 +169,13 @@
 (defn find-in-page-comp
   []
   (let [{:keys [text is-dark?] {:keys [curr total]} :index}
-        @(subscribe [:find-in-page-info])]
+        @(subscribe [::find-in-page-info])]
     [:div.find-in-page-root
      [:style (css (find-in-page-styles is-dark?))]
      [:input
       {:id          "find-in-page-input"
        :placeholder "Find in page"
-       :on-change   #(dispatch [:set-find-in-page-text
+       :on-change   #(dispatch [::set-find-in-page-text
                                 (.. % -target -value)])
        :value       text}]
      [:span.index
@@ -224,6 +224,16 @@
   (r-dom/render [find-in-page-comp] (getElement "app"))
 
   ;; listener
-  (events/listen js/window EventType.KEYDOWN find-win-key-down!))
+  (events/listen js/window EventType.KEYDOWN find-win-key-down!)
+
+  ;; prevent reload
+  (js/window.addEventListener
+    EventType.BEFOREUNLOAD
+    (fn [e]
+      (.. e preventDefault)
+      (set! (.. e -returnValue)
+            (str "Setting e.returnValue to string "
+                 "prevents exit for some browsers."))
+      "Returning a string also prevents exit on other browsers.")))
 
 
