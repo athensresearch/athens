@@ -1,11 +1,11 @@
 (ns athens.self-hosted.web
-  (:require [athens.self-hosted.web.graph    :as graph]
-            [athens.self-hosted.web.presence :as presence]
-            [clojure.data.json               :as json]
-            [clojure.tools.logging           :as log]
-            [com.stuartsierra.component      :as component]
-            [compojure.core                  :as compojure]
-            [org.httpkit.server              :as http]))
+  (:require [athens.self-hosted.web.datascript :as datascript]
+            [athens.self-hosted.web.presence   :as presence]
+            [clojure.data.json                 :as json]
+            [clojure.tools.logging             :as log]
+            [com.stuartsierra.component        :as component]
+            [compojure.core                    :as compojure]
+            [org.httpkit.server                :as http]))
 
 
 ;; Internal state
@@ -40,12 +40,10 @@
       (let [event-type (:event/type data)]
         (cond
           (contains? presence/supported-event-types event-type)
-          (presence/presence-handler clients ch event-type)
+          (presence/presence-handler clients ch data)
 
-          ;; TODO use same approach for graph events
-          ;; 1. check if event type supported
-          ;; 2. delegate to graph handler
-          )))))
+          (contains? datascript/supported-event-types event-type)
+          (datascript/datascript-handler ch data))))))
 
 (defn websocket-handler [request]
   (http/as-channel request
@@ -61,9 +59,7 @@
 
 (defn make-handler [_datahike]
   (compojure/routes health-check-route
-                    ws-route
-                    ;; TODO pass `datahike` to graph-routes
-                    graph/graph-routes))
+                    ws-route))
 
 (defrecord WebServer [config httpkit datahike]
   component/Lifecycle

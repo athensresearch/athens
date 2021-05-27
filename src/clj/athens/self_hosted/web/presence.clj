@@ -23,7 +23,6 @@
     (swap! clients assoc ch username)))
 
 (defn editing-handler [clients ch {:event/keys [args]}]
-  ;; TODO new editing presence
   (let [username (get clients ch)]
     (when-let [uid (:editing args)]
       (let [presence {:presence {:time     (now)
