@@ -14,8 +14,8 @@
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/Clear" :default Clear]
+    [athens.theme :as theme]
     [clojure.string :as str]
-    [find-in-page.style :as style]
     [garden.core :refer [css]]
     [goog.dom :refer [getElement setProperties]]
     [goog.events :as events]
@@ -117,13 +117,15 @@
 
 (defn find-in-page-styles
   [is-dark?]
-  (let [{:keys [background color icon-hover-bg-color color-light]}
-        (if is-dark? style/THEME-DARK style/THEME-LIGHT)]
+  (let [{:keys [find-in-page-background find-in-page-text-color
+                find-in-page-icon-hover-bg-color
+                find-in-page-text-light]}
+        (if is-dark? theme/THEME-DARK theme/THEME-LIGHT)]
     [:html
      {:height      "100%"
       :font-family "IBM Plex Sans, Sans-Serif"
-      :background  background
-      :color       color}
+      :background  find-in-page-background
+      :color       find-in-page-text-color}
      [:body :#app :.find-in-page-root
       {:height "100%"
        :margin "0"}]
@@ -140,10 +142,10 @@
          :padding-top "4px"
          :border      "none"
          :outline     "none"
-         :color       color}]
+         :color       find-in-page-text-color}]
        [:hr
         {:border     "0"
-         :background color-light
+         :background find-in-page-text-light
          :width      "1px"
          :height     "60%"
          :margin     "0 10px"
@@ -151,15 +153,15 @@
        [:span
         {:cursor "pointer"
          :height "1.5rem"
-         :color  color-light}
+         :color  find-in-page-text-light}
         [:&:hover
-         {:background icon-hover-bg-color}]
+         {:background find-in-page-icon-hover-bg-color}]
         [:&.index
          {:height    "unset"
           :flex      "0 0 20px"
           :font-size "12px"
           :margin    "10px"
-          :color     color-light}
+          :color     find-in-page-text-light}
          [:&:hover
           {:background "unset"}]]]]]]))
 

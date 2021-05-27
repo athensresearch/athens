@@ -133,10 +133,13 @@
   ([] (get-find-win-pos
         (window-id->window @!main-window-id)))
   ([win]
-   (let [[x y] (-> win (. getPosition) js->clj)]
+   (let [[x y] (-> win (. getPosition) js->clj)
+         [_ y-win-size] (-> win (. getSize) js->clj)
+         [_ y-content-size] (-> win (. getContentSize) js->clj)]
      [(+ x 20)
       ;; + y 45(below toolbar) 25(title bar)
-      (+ y 45 (when-not (. win isFullScreen) 25))])))
+      (+ y 45 (when-not (. win isFullScreen)
+                (- y-win-size y-content-size)))])))
 
 
 (defn init!

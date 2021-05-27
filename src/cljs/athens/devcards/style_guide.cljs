@@ -1,7 +1,8 @@
 (ns athens.devcards.style-guide
   (:require
     [athens.db]
-    [athens.style :refer [color THEME-LIGHT THEME-DARK OPACITIES]]
+    [athens.style :refer [color OPACITIES]]
+    [athens.theme :refer [THEME-LIGHT THEME-DARK]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [devcards.core :refer-macros [defcard-rg]]

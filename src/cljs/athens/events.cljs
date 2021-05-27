@@ -3,6 +3,7 @@
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.patterns :as patterns]
     [athens.style :as style]
+    [athens.theme :as theme]
     [athens.util :refer [now-ts gen-block-uid]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
@@ -594,7 +595,7 @@
   [(inject-cofx :local-storage "theme/dark")]
   (fn [{:keys [local-storage db]} _]
     (let [is-dark (= "true" local-storage)
-          theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
+          theme   (if is-dark theme/THEME-DARK theme/THEME-LIGHT)]
       {:db          (assoc db :theme/dark is-dark)
        :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
 
@@ -604,7 +605,7 @@
   (fn [{:keys [db]} _]
     (let [dark?    (:theme/dark db)
           new-dark (not dark?)
-          theme    (if dark? style/THEME-LIGHT style/THEME-DARK)]
+          theme    (if dark? theme/THEME-LIGHT theme/THEME-DARK)]
       {:db                 (assoc db :theme/dark new-dark)
        :local-storage/set! ["theme/dark" new-dark]
        :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
