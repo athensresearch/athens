@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.83](https://github.com/athensresearch/athens/compare/v1.0.0-beta.82...v1.0.0-beta.83) (2021-05-28)
+
+
+### Bug Fixes
+
+* **auto-complete:** pressing [[,(( and enter works better. close [#1214](https://github.com/athensresearch/athens/issues/1214), [#1220](https://github.com/athensresearch/athens/issues/1220) ([#1219](https://github.com/athensresearch/athens/issues/1219)) ([856b282](https://github.com/athensresearch/athens/commit/856b282f00a292b206afa5164a8901a15a3a9203)), closes [#1204](https://github.com/athensresearch/athens/issues/1204)
+
+
+* update deps and cljstyle fix ([#1224](https://github.com/athensresearch/athens/issues/1224)) ([181ad52](https://github.com/athensresearch/athens/commit/181ad52286d982586a9c1f5016d37553915b6b05))
+
+
+### Enhancements
+
+* **ui:** Stop content shift when scrollbars appear/disappear ([#1212](https://github.com/athensresearch/athens/issues/1212)) ([9988417](https://github.com/athensresearch/athens/commit/9988417ca3d1298031bfee933366a9969a548910))
+
+
+### Documentation
+
+* Fix grammar in README ([#1235](https://github.com/athensresearch/athens/issues/1235)) ([e55f3f8](https://github.com/athensresearch/athens/commit/e55f3f82e328ee6b1ca758ac3bd5491f717680c5))
+
+
+### Performance
+
+* **blocks:** reduce blocks DOM weight ([#1217](https://github.com/athensresearch/athens/issues/1217)) ([7b922a5](https://github.com/athensresearch/athens/commit/7b922a523991fd5f59f69422a34feb47a9a6c758))
+* **right-sidebar:** fix memory+time leak with proper GC of sorted-map [#1239](https://github.com/athensresearch/athens/issues/1239) ([#1242](https://github.com/athensresearch/athens/issues/1242)) ([32d66f5](https://github.com/athensresearch/athens/commit/32d66f5e514531a080454dc337cf7535381865fb))
+
 ## [1.0.0-beta.82](https://github.com/athensresearch/athens/compare/v1.0.0-beta.81...v1.0.0-beta.82) (2021-05-20)
 
 
