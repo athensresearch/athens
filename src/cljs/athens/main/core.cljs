@@ -73,8 +73,11 @@
                                                    :nodeIntegration true
                                                    :worldSafeExecuteJavaScript true
                                                    :enableRemoteModule true
+                                                   ;; Remove OverlayScrollbars and instances of `overflow-y: overlay`
+                                                   ;; after `scollbar-gutter` is implemented in browsers.
+                                                   :enableBlinkFeatures 'OverlayScrollbars'
                                                    :nodeIntegrationWorker true}})))
-  ; Path is relative to the compiled js file (main.js in our case)
+  ;; Path is relative to the compiled js file (main.js in our case)
   (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
   (.on ^js @main-window "closed" #(reset! main-window nil))
   (.. ^js @main-window -webContents (on "new-window" (fn [e url]

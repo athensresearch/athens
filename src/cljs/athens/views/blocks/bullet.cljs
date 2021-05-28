@@ -13,6 +13,7 @@
 
 (def bullet-style
   {:flex-shrink "0"
+   :grid-area "bullet"
    :position "relative"
    :z-index 2
    :cursor "pointer"
@@ -104,7 +105,7 @@
                 :draggable       true
                 :on-click        (fn [e] (router/navigate-uid uid e))
                 :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
-                :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ;; useful during development to check block meta-data
+                :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ; useful during development to check block meta-data
                 :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
                 :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                 :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))

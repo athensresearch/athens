@@ -35,13 +35,15 @@
     (goog.events
       KeyCodes)))
 
-;;-------------------------------------------------------------------
-;;--- material ui ---
+
+;; -------------------------------------------------------------------
+;; --- material ui ---
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
-;;; Styles
+
+;; Styles
 
 
 (def page-style
@@ -53,7 +55,7 @@
 
 (def dropdown-style
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
-                              :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+                              :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
                               :display "inline-flex"
                               :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
@@ -163,7 +165,7 @@
    :top "50%"})
 
 
-;;; Helpers
+;; Helpers
 
 
 (defn handle-new-first-child-block-click
@@ -325,7 +327,7 @@
                    :alert/cancel-fn cancel-fn)))))))
 
 
-;;; Components
+;; Components
 
 (defn placeholder-block-el
   [parent-uid]
@@ -523,6 +525,7 @@
                                              (dispatch [:unlinked-references/link block title])))}
                        "Link"])]))]))])])))
 
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
@@ -570,8 +573,8 @@
                                        (if (or daily-note? (.. e -shiftKey))
                                          (navigate-uid uid e)
                                          (dispatch [:editing/uid uid])))})
-          ;; Prevent editable textarea if a node/title is a date
-          ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
+           ;; Prevent editable textarea if a node/title is a date
+           ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
 
            (when-not daily-note?
@@ -580,13 +583,13 @@
                :id          (str "editable-uid-" uid)
                :class       (when (= editing-uid uid) "is-editing")
                :on-blur     (fn [_]
-                             ;; add title Untitled-n for empty titles
+                              ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
                                 (swap! state assoc :title/local (auto-inc-untitled)))
                               (handle-blur node state linked-refs))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
-          ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
            (if (str/blank? (:title/local @state))
              [:wbr]
              [parse-renderer/parse-and-render (:title/local @state) uid])]]

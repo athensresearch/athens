@@ -18,7 +18,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def app-wrapper-style
@@ -32,7 +32,7 @@
    :height "100vh"})
 
 
-;;; Components
+;; Components
 
 
 (defn alert

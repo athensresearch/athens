@@ -38,14 +38,15 @@
     (specter-recursive-path #(contains? % :block/uid))
     (fn [{:block/keys [uid] :as block}]
       (assoc block :block/uid (str uid "-embed-" embed-id)
-                   :block/original-uid uid))
+             :block/original-uid uid))
     block))
 
 
 ;; -- DOM ----------------------------------------------------------------
 
 ;; TODO: move all these DOM utilities to a .cljs file instead of cljc
-(defn scroll-top! [element pos]
+(defn scroll-top!
+  [element pos]
   (when pos
     (set! (.. element -scrollTop) pos)))
 
@@ -96,7 +97,8 @@
         (< (.. el-box -top) (.. cont-box -top))))))
 
 
-(defn scroll-into-view [element container align-top?]
+(defn scroll-into-view
+  [element container align-top?]
   (when (is-beyond-rect? element container)
     (.. element (scrollIntoView align-top? {:behavior "auto"}))))
 
@@ -241,9 +243,10 @@
    satisfies the function"
   [afn]
   (recursive-path [] p
-    (s/cond-path
-      map? (s/multi-path [s/MAP-VALS p] afn)
-      sequential? [s/ALL p])))
+                  (s/cond-path
+                    map? (s/multi-path [s/MAP-VALS p] afn)
+                    sequential? [s/ALL p])))
+
 
 ;; OS
 
@@ -317,15 +320,17 @@
     (boolean (re-find #"electron" user-agent))))
 
 
-;;(goog-define COMMIT_URL "")
+;; (goog-define COMMIT_URL "")
 
 
 (defn athens-version
   []
   (cond
     (electron?) (.. (js/require "electron") -remote -app getVersion)))
-    ;;(not (string/blank? COMMIT_URL)) COMMIT_URL
-    ;;:else "Web"))
+
+
+;; (not (string/blank? COMMIT_URL)) COMMIT_URL
+;; :else "Web"))
 
 
 ;; Window

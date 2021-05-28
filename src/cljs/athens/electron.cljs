@@ -36,7 +36,7 @@
     (let [DOC-PATH (.getPath app "documents")]
       (.resolve path DOC-PATH "athens")))
 
-  ;;; Filesystem Dialogs
+  ;; Filesystem Dialogs
 
 
   (defn move-dialog!
@@ -167,7 +167,7 @@
       (js/setTimeout #(dispatch [:transact [tx-data]]) 50)))
 
 
-  ;;; Subs
+  ;; Subs
 
   (reg-sub
     :db/mtime
@@ -188,7 +188,7 @@
 
 
   ;; create sub in athens.subs so web-version of Athens works
-  ;;(reg-sub
+  ;; (reg-sub
   ;;  :db/remote-graph-conf
   ;;  (fn [db _]
   ;;    (:db/remote-graph-conf db)))
@@ -215,7 +215,7 @@
       (:win-focused? db)))
 
 
-  ;;; Events
+  ;; Events
 
 
   (reg-event-fx
@@ -381,7 +381,7 @@
                                         :dispatch-n [[:db/retract-athens-pages]
                                                      [:db/transact-athens-pages]]}
 
-                                    ;; bind windows toolbar electron buttons
+                                     ;; bind windows toolbar electron buttons
                                      {:when       :seen-any-of?
                                       :events     [:fs/create-new-db :reset-conn]
                                       :dispatch   [:bind-win-listeners]}
@@ -430,66 +430,66 @@
 
 
   (reg-event-fx
-   :toggle-max-min-win
-   (fn [_ [_ toggle-min?]]
-     {:invoke-win! {:channel (:toggle-max-or-min-win-channel ipcMainChannels)
-                    :arg (clj->js toggle-min?)}}))
+    :toggle-max-min-win
+    (fn [_ [_ toggle-min?]]
+      {:invoke-win! {:channel (:toggle-max-or-min-win-channel ipcMainChannels)
+                     :arg (clj->js toggle-min?)}}))
 
   (reg-event-fx
-   :bind-win-listeners
-   (fn [_ _]
-     {:bind-win-listeners! {}}))
+    :bind-win-listeners
+    (fn [_ _]
+      {:bind-win-listeners! {}}))
 
   (reg-event-fx
-   :exit-fullscreen-win
-   (fn [_ _]
-     {:invoke-win! {:channel (:exit-fullscreen-win-channel ipcMainChannels)}}))
+    :exit-fullscreen-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:exit-fullscreen-win-channel ipcMainChannels)}}))
 
   (reg-event-fx
-   :close-win
-   (fn [_ _]
-     {:invoke-win! {:channel (:close-win-channel ipcMainChannels)}}))
+    :close-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:close-win-channel ipcMainChannels)}}))
 
   (reg-event-db
-   :toggle-win-maximized
-   (fn [db [_ maximized?]]
-     (assoc db :win-maximized? maximized?)))
+    :toggle-win-maximized
+    (fn [db [_ maximized?]]
+      (assoc db :win-maximized? maximized?)))
 
   (reg-event-db
-   :toggle-win-fullscreen
-   (fn [db [_ fullscreen?]]
-     (assoc db :win-fullscreen? fullscreen?)))
+    :toggle-win-fullscreen
+    (fn [db [_ fullscreen?]]
+      (assoc db :win-fullscreen? fullscreen?)))
 
   (reg-event-db
-   :toggle-win-focused
-   (fn [db [_ focused?]]
-     (assoc db :win-focused? focused?)))
+    :toggle-win-focused
+    (fn [db [_ focused?]]
+      (assoc db :win-focused? focused?)))
 
 
-  ;;; Zoom
-
-  (reg-event-db
-   :zoom/in
-   (fn [db _]
-     (update db :zoom-level #(min (inc %) zoom-level-max))))
+  ;; Zoom
 
   (reg-event-db
-   :zoom/out
-   (fn [db _]
-     (update db :zoom-level #(max (dec %) zoom-level-min))))
+    :zoom/in
+    (fn [db _]
+      (update db :zoom-level #(min (inc %) zoom-level-max))))
 
   (reg-event-db
-   :zoom/set
-   (fn [db [_ level]]
-     (assoc db :zoom-level level)))
+    :zoom/out
+    (fn [db _]
+      (update db :zoom-level #(max (dec %) zoom-level-min))))
 
   (reg-event-db
-   :zoom/reset
-   (fn [db _]
-     (assoc db :zoom-level 0)))
+    :zoom/set
+    (fn [db [_ level]]
+      (assoc db :zoom-level level)))
+
+  (reg-event-db
+    :zoom/reset
+    (fn [db _]
+      (assoc db :zoom-level 0)))
 
 
-  ;;; Effects
+  ;; Effects
 
   (defn os-username
     []
@@ -546,27 +546,27 @@
 
 
   (reg-fx
-   :fs/write!
-   (fn []
-     (debounce-write-db true)))
+    :fs/write!
+    (fn []
+      (debounce-write-db true)))
 
   (reg-fx
-   :invoke-win!
-   (fn [{:keys [channel arg]} _]
-     (if arg
-       (.. ipcRenderer (invoke channel arg))
-       (.. ipcRenderer (invoke channel)))))
+    :invoke-win!
+    (fn [{:keys [channel arg]} _]
+      (if arg
+        (.. ipcRenderer (invoke channel arg))
+        (.. ipcRenderer (invoke channel)))))
 
   (reg-fx
-   :close-win!
-   (fn []
-     (let [window (.. electron -BrowserWindow getFocusedWindow)]
-       (.close window))))
+    :close-win!
+    (fn []
+      (let [window (.. electron -BrowserWindow getFocusedWindow)]
+        (.close window))))
 
   (reg-fx
-   :bind-win-listeners!
-   (fn []
-     (let [active-win (.getCurrentWindow remote)]
+    :bind-win-listeners!
+    (fn []
+      (let [active-win (.getCurrentWindow remote)]
         (doto ^js/BrowserWindow active-win
           (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
           (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
