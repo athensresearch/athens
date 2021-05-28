@@ -8,6 +8,7 @@
 
 (def block-disclosure-toggle-style
   {:width "1em"
+   :grid-area "toggle"
    :height "2em"
    :position "relative"
    :z-index 2
@@ -44,18 +45,17 @@
 
 
 (defn toggle-el
-  [{:block/keys [open uid children]} state linked-ref]
-  (if (seq children)
-    [:button (stylefy/use-style block-disclosure-toggle-style
-                                {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
-                                                   (and (false? linked-ref) open))
-                                             "open"
-                                             "closed")
-                                 :tab-index 0
-                                 :on-click (fn [_]
-                                             (if (true? linked-ref)
-                                               (swap! state update :linked-ref/open not)
-                                               (toggle [:block/uid uid] open)))})
-     [:> KeyboardArrowDown {:style {:font-size "16px"}}]]
-    [:span (stylefy/use-style block-disclosure-toggle-style)]))
+  [{:block/keys [open uid]} state linked-ref]
+  [:button (stylefy/use-style block-disclosure-toggle-style
+                              {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
+                                                 (and (false? linked-ref) open))
+                                           "open"
+                                           "closed")
+                               :tab-index 0
+                               :on-click (fn [e]
+                                           (.. e stopPropagation)
+                                           (if (true? linked-ref)
+                                             (swap! state update :linked-ref/open not)
+                                             (toggle [:block/uid uid] open)))})
+   [:> KeyboardArrowDown {:style {:font-size "16px"}}]])
 
