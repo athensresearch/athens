@@ -6,7 +6,6 @@
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
     [athens.util :as util]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [garden.selectors :as selectors]
     [goog.events :as goog-events]
@@ -335,19 +334,19 @@
                         "1em")]
         [:div {:class "block-content" :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
-         [autosize/textarea {:value          (:string/local @state)
-                             :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
-                             ;; :auto-focus     true
-                             :id             (str "editable-uid-" uid)
-                             :on-change      (fn [e] (textarea-change e uid state))
-                             :on-paste       (fn [e] (textarea-paste e uid state))
-                             :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
-                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
-                             :on-click       (fn [e] (textarea-click e uid state))
-                             :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                             :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+         ;; When block is in editing mode or the editing DOM elements are rendered
+         (when (or (:show-editable-dom @state) editing?)
+           [autosize/textarea {:value          (:string/local @state)
+                               :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
+                               ;; :auto-focus  true
+                               :id             (str "editable-uid-" uid)
+                               :on-change      (fn [e] (textarea-change e uid state))
+                               :on-paste       (fn [e] (textarea-paste e uid state))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
+                               :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                               :on-click       (fn [e] (textarea-click e uid state))
+                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}])
          ;; TODO pass `state` to parse-and-render
-         [parse-and-render (:string/local @state) (or original-uid uid)]
-         [drop-area-indicator/drop-area-indicator #(when (= :child (:drag-target @state)) {;; :color "green"
-                                                                                           :opacity 1})]]))))
+         [parse-and-render (:string/local @state) (or original-uid uid)]]))))
 
