@@ -258,14 +258,18 @@
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items (into {}
+                          (assoc (:right-sidebar/items db) uid new-item))
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
                                new-items)
           sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
-                                                [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
        :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
                     [:right-sidebar/scroll-top]]})))
