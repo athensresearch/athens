@@ -51,7 +51,7 @@
                                               :border 0}]
                       [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
                       [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
-                      [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ;; Windows close button background color
+                      [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
                                                                           :filter "none"
                                                                           :color "#fff"}]]]
                      ;; Styles for linux (Ubuntu)
@@ -78,7 +78,7 @@
                                    :background (color :background-plus-1)
                                    :inset "6px"}]
                        [:&.close {:color "#fff"}
-                        [:&:before {:background "#555"}]] ;; Ubuntu close button background color
+                        [:&:before {:background "#555"}]] ; Ubuntu close button background color
                        [:&.minimize [:svg {:position "relative"
                                            :top "5px"}]]
                        [:svg {:font-size "12px"}]]
@@ -310,14 +310,14 @@
                 {:d "M13 11L19.5 4.5M13 11L13 5M13 11L19 11"
                  :stroke "currentColor"
                  :stroke-width "2"}]]]
-           ;; Maximize/Restore Button
+             ;; Maximize/Restore Button
              [:button.maximize-restore
               {:on-click #(dispatch [:toggle-max-min-win false])
                :title (if @win-maximized?
                         "Restore"
                         "Maximize")}
               (if @win-maximized?
-              ;; SVG Restore
+                ;; SVG Restore
                 [:> SvgIcon
                  [:path {:d "M8 5H19V16H8V5Z"
                          :fill "none"
@@ -327,7 +327,7 @@
                          :fill "none"
                          :stroke "currentColor"
                          :stroke-width "2"}]]
-              ;; SVG Maximize
+                ;; SVG Maximize
                 [:> SvgIcon
                  [:rect
                   {:height "14"

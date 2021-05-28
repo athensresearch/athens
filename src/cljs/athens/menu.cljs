@@ -16,14 +16,14 @@
                                   {:role "forceReload"}
                                   {:role "toggleDevTools"}
                                   {:type "separator"}
-                                 ;; Default zoom tools disabled so we can own
-                                 ;; zoom control internally. It would be better
-                                 ;; to remap these items to commands which
-                                 ;; perform the described action, using our
-                                 ;; internal zoom events.
-                                 ;;  {:role "resetZoom"}
-                                 ;;  {:role "zoomIn"}
-                                 ;;  {:role "zoomOut"}
+                                  ;; Default zoom tools disabled so we can own
+                                  ;; zoom control internally. It would be better
+                                  ;; to remap these items to commands which
+                                  ;; perform the described action, using our
+                                  ;; internal zoom events.
+                                  ;;  {:role "resetZoom"}
+                                  ;;  {:role "zoomIn"}
+                                  ;;  {:role "zoomOut"}
                                   {:type "separator"}
                                   {:role "togglefullscreen"}]}
                        {:role "windowMenu"}]

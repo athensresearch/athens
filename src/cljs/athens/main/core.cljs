@@ -1,9 +1,9 @@
 (ns athens.main.core
   (:require
-    [athens.menu :refer [menu-template]]
-    [athens.util :refer [ipcMainChannels]]
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+    ["electron-updater" :refer [autoUpdater]]
+    [athens.menu :refer [menu-template]]
+    [athens.util :refer [ipcMainChannels]]))
 
 
 (def log (js/require "electron-log"))
@@ -49,11 +49,11 @@
                (when-let [active-win (.getFocusedWindow BrowserWindow)]
                  (.setFullScreen active-win false)))))
 
-    ;; Future intent to refactor statup to use startup and teardown effects
-    ;; Below is an example of the teardown effect for this init fn
-    ;; #(doall (.removeHandler ipcMain toggle-max-or-min-win-channel)
-    ;;         (.removeHandler ipcMain close-win-channel)
-    ;;         (.removeHandler ipcMain exit-fullscreen-win-channel))
+  ;; Future intent to refactor statup to use startup and teardown effects
+  ;; Below is an example of the teardown effect for this init fn
+  ;; #(doall (.removeHandler ipcMain toggle-max-or-min-win-channel)
+  ;;         (.removeHandler ipcMain close-win-channel)
+  ;;         (.removeHandler ipcMain exit-fullscreen-win-channel))
   )
 
 
