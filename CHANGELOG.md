@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.84](https://github.com/athensresearch/athens/compare/v1.0.0-beta.83...v1.0.0-beta.84) (2021-05-28)
+
+
+* downgrade re-frame-10x so web version works, comment out deps-check ([#1244](https://github.com/athensresearch/athens/issues/1244)) ([5fd5763](https://github.com/athensresearch/athens/commit/5fd57630c2bc76efba7c73d6b75cb33524935c52))
+
 ## [1.0.0-beta.83](https://github.com/athensresearch/athens/compare/v1.0.0-beta.82...v1.0.0-beta.83) (2021-05-28)
 
 
