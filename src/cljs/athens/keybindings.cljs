@@ -15,7 +15,6 @@
 (defn convert-to-keys
   [keys-or-alias]
   (let [keymap @(subscribe [:keymap])]
-    (prn "KEYMAP" keymap)
     (if (keyword? keys-or-alias)
       (keys-or-alias keymap)
       (clj->js keys-or-alias))))
@@ -79,7 +78,8 @@
        :reagent-render
        (fn [_ _ children]
          [:span
-          {:ref #(reset! mousetrap-instance (new Mousetrap %))}
+          {:style {:display "contents"}
+           :ref #(reset! mousetrap-instance (new Mousetrap %))}
           children])})))
 
 
