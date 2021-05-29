@@ -331,7 +331,7 @@
                       :style    {:display "block"}}
              shortcut]
             (when different-from-default?
-              [:> SettingsBackupRestore {:style {:margin-left "8px"} :on-click restore-default!}])]
+              [:> SettingsBackupRestore {:style {:margin-left "8px" :cursor "pointer"} :on-click restore-default!}])]
            (when @editing? [:p {:style {:margin-top "4px"}} "Press new shortcut..."])]]]))))
 
 
