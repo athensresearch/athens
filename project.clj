@@ -14,7 +14,7 @@
                   :exclusions [com.google.javascript/closure-compiler-unshaded
                                org.clojure/google-closure-library
                                org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.14.0"]
+                 [thheller/shadow-cljs "2.11.23"]
                  [reagent "1.0.0"]
                  [re-frame "1.2.0"]
                  [datascript "1.1.0"]
@@ -65,13 +65,13 @@
                              :linux   "xdg-open"}}}
 
   :aliases {"dev"          ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer"]]
-            "compile"      ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer" "app"]]
+            "compile"        ["with-profile" "dev" "do"
+                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer" "app"]]
+            "prod"         ["with-profile" "prod" "do"
+                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "main" "renderer" "app"]]
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
-            "prod"         ["with-profile" "prod" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "app" "main" "renderer"]]
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
