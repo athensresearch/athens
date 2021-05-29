@@ -2,11 +2,15 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
+    ["@material-ui/icons/SettingsBackupRestore" :default SettingsBackupRestore]
+    [athens.db :refer [default-keymap]]
     [athens.electron :as electron]
+    [athens.keybindings :refer [mousetrap-record]]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
+    [athens.views.utils :refer [track-outside-click]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [goog.functions :as goog-functions]
@@ -94,8 +98,8 @@
 
 (defn handle-submit-email
   [s value]
-  (let [api       "https://dhx9n94ty5.execute-api.us-east-1.amazonaws.com/Prod/hello"
-        email-qs  "?email="
+  (let [api "https://dhx9n94ty5.execute-api.us-east-1.amazonaws.com/Prod/hello"
+        email-qs "?email="
         query-url (str api email-qs @value)]
     (go (let [resp (<! (http/get query-url))]
           (cond
@@ -265,7 +269,7 @@
 (defn remote-username-comp
   []
   (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
-        remote?           (:default? remote-graph-conf)]
+        remote? (:default? remote-graph-conf)]
     [setting-wrapper
      (when (not remote?) {:disabled true})
      [:<>
@@ -281,6 +285,66 @@
        [:aside
         [:p "For now, a username is only needed if you are connected to a server."]]]]]))
 
+;; -- Keymap Settings -----------------------------------------------------------
+(def key-aliases-description
+  (array-map
+    :athena/toggle "Toggle athena"
+    :devtool/toggle "Toggle datascript devtools"
+    :nav/back "Navigate back"
+    :nav/forward "Navigate forward"
+    :nav/daily-notes "Go to daily Notes"
+    :left-sidebar/toggle "Toggle left sidebar"
+    :right-sidebar/toggle "Toggle right sidebar"
+    :content/bold "Toggle bold"
+    :content/italic "Toggle italics"
+    :content/strikethrough "Toggle strikethrough"
+    :content/highlight "Toggle highlight"
+    :content/open-current-block-or-page "Open current block or page"))
+
+(def changeable-key-aliases
+  (keys key-aliases-description))
+
+(defn key-shortcut
+  [key-alias]
+  (let [editing? (r/atom false)
+        handle-shortcut-change (fn [sequence]
+                                 (when @editing?
+                                   (dispatch [:keymap/update key-alias (first sequence)])
+                                   (reset! editing? false)))
+        default-shortcut (key-alias default-keymap)
+        handle-click (fn []
+                       (reset! editing? true)
+                       (mousetrap-record handle-shortcut-change))
+        restore-default! (fn []
+                           (dispatch [:keymap/update key-alias default-shortcut]))]
+
+    (fn [key-alias]
+      (let [keymap @(subscribe [:keymap])
+            shortcut (key-alias keymap)
+            different-from-default? (not= shortcut default-shortcut)]
+        [:li {:style {:display "flex" :justify-content "space-between" :border-bottom "1px solid var(--border-color)" :padding "10px 0"}}
+         [:span {:style {:font-weight 500}} (key-alias key-aliases-description)]
+         [track-outside-click #(reset! editing? false)
+          [:div
+           [:div {:style {:display "flex" :justify-content "flex-end"}}
+            [:button {:on-click handle-click
+                      :style    {:display "block"}}
+             shortcut]
+            (when different-from-default?
+              [:> SettingsBackupRestore {:style {:margin-left "8px"} :on-click restore-default!}])]
+           (when @editing? [:p {:style {:margin-top "4px"}} "Press new shortcut..."])]]]))))
+
+
+(defn keymap
+  []
+  [setting-wrapper
+   [:<>
+    [:header
+     [:h3 "Keymap"]]
+    [:main
+     (for [key-alias changeable-key-aliases]
+       ^{:key key-alias} [key-shortcut key-alias])]]])
+
 
 (defn page
   []
@@ -292,4 +356,5 @@
       [monitoring-comp s]
       [autosave-comp s]
       [backups-comp s]
-      [remote-username-comp]]]))
+      [remote-username-comp]
+      [keymap]]]))

@@ -31,7 +31,6 @@
 (def default-keymap
   {:athena/toggle "mod+k"
    :devtool/toggle "mod+g"
-   :save "mod+s"
    :10x/toggle "mod+t"
    :nav/back "alt+left"
    :nav/forward "alt+right"
@@ -43,7 +42,6 @@
    :content/strikethrough "mod+y"
    :content/highlight "mod+h"
    :content/open-current-block-or-page "mod+o"})
-
 
 ;; -- re-frame -----------------------------------------------------------
 

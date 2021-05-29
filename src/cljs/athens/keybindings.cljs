@@ -3,10 +3,14 @@
     [athens.router :as router]
     [athens.util :as util]
     ["mousetrap" :as Mousetrap]
+    ["mousetrap/plugins/record/mousetrap-record"]
     [re-frame.core :refer [dispatch subscribe]]
     [react]
     [reagent.core :as r]))
 
+(defn mousetrap-record
+  [callback]
+  (.record Mousetrap callback))
 
 (defn convert-to-keys
   [keys-or-alias]
@@ -21,13 +25,12 @@
   ([keys-or-alias callback & {:keys [stop-propagation? mousetrap-instance]
                               :or   {stop-propagation? true, mousetrap-instance Mousetrap}}]
    (let [keys (convert-to-keys keys-or-alias)]
-     (prn "BINDING" keys keys-or-alias)
      (.bind mousetrap-instance
             keys
             (fn [event]
               (when stop-propagation? (.stopPropagation event))
               (callback event)))
-     #(.unbind mousetrap-instance key-combination))))
+     #(.unbind mousetrap-instance keys))))
 
 
 (defn mousetrap-bind-all
