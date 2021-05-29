@@ -6,6 +6,7 @@
     [athens.coeffects]
     [athens.components]
     [athens.config :as config]
+    [athens.db :refer [dsdb]]
     [athens.effects]
     [athens.electron]
     [athens.events]
@@ -15,8 +16,10 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
+    [cljs.reader :refer [read-string]]
     [athens.keybindings :as keybindings]
     [goog.dom :refer [getElement]]
+    [goog.object :as gobj]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
     [stylefy.core :as stylefy]))
@@ -90,6 +93,22 @@
                                      (rf/dispatch [:window/set-size [x y]])))))))
 
 
+(defn init-datalog-console
+  []
+  (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
+  (let [conn dsdb]
+    (.addEventListener js/window "message"
+                       (fn [event]
+                         (when-let [devtool-message (gobj/getValueByKeys event "data" ":datalog-console.client/devtool-message")]
+                           (let [msg-type (:type (read-string devtool-message))]
+                             (case msg-type
+
+                               :datalog-console.client/request-whole-database-as-string
+                               (.postMessage js/window #js {":datalog-console.remote/remote-message" (pr-str @conn)} "*")
+
+                               nil)))))))
+
+
 (defn init
   []
   (set-global-alert!)
@@ -100,6 +119,7 @@
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (keybindings/init)
+  (init-datalog-console)
   (if (util/electron?)
     (rf/dispatch-sync [:boot/desktop])
     (rf/dispatch-sync [:boot/web]))

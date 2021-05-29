@@ -18,7 +18,6 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
@@ -27,24 +26,24 @@
       KeyCodes)))
 
 
-;;; Styles
+;; Styles
 
 
 (def container-style
-  {:width           "49rem"
-   :max-width       "calc(100vw - 1rem)"
-   :border-radius   "0.25rem"
-   :box-shadow      [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
-   :display         "flex"
-   :flex-direction  "column"
-   :background      (color :background-plus-1)
-   :position        "fixed"
-   :overflow        "hidden"
-   :max-height      "60vh"
-   :z-index         (:zindex-modal ZINDICES)
-   :top             "40%"
-   :left            "50%"
-   :transform       "translate(-50%, -50%)"
+  {:width         "49rem"
+   :max-width "calc(100vw - 1rem)"
+   :border-radius "0.25rem"
+   :box-shadow    [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-lower)]]
+   :display       "flex"
+   :flex-direction "column"
+   :background    (color :background-plus-1)
+   :position      "fixed"
+   :overflow      "hidden"
+   :max-height    "60vh"
+   :z-index       (:zindex-modal ZINDICES)
+   :top           "40%"
+   :left          "50%"
+   :transform     "translate(-50%, -50%)"
    ;; Styling for the states of the custom search-cancel button, which depend on the input contents
    ::stylefy/manual [[(selectors/+ :input :button) {:opacity 0}]
                      ;; Using ':valid' here as a proxy for "has contents", i.e. "button should appear"
@@ -52,8 +51,8 @@
 
 
 (def athena-input-style
-  {:width          "100%"
-   :border         0
+  {:width "100%"
+   :border 0
    :font-size      "2.375rem"
    :font-weight    "300"
    :line-height    "1.3"
@@ -64,94 +63,95 @@
    :caret-color    (color :link-color)
    :padding        "1.5rem 4rem 1.5rem 1.5rem"
    :cursor         "text"
-   ::stylefy/mode  {:focus                           {:outline "none"}
-                    "::placeholder"                  {:color (color :body-text-color :opacity-low)}
-                    "::-webkit-search-cancel-button" {:display "none"}}}) ;; We replace the button elsewhere
+   ::stylefy/mode {:focus {:outline "none"}
+                   "::placeholder" {:color (color :body-text-color :opacity-low)}
+                   "::-webkit-search-cancel-button" {:display "none"}}}) ; We replace the button elsewhere
 
 
 
 (def search-cancel-button-style
-  {:background      "none"
-   :color           "inherit"
-   :position        "absolute"
-   :transition      "opacity 0.1s ease, background 0.1s ease"
-   :cursor          "pointer"
-   :border          0
-   :right           "2rem"
-   :place-items     "center"
-   :place-content   "center"
-   :height          "2.5rem"
-   :width           "2.5rem"
-   :border-radius   "1000px"
-   :display         "flex"
-   :transform       "translate(0%, -50%)"
-   :top             "50%"
+  {:background "none"
+   :color "inherit"
+   :position "absolute"
+   :transition "opacity 0.1s ease, background 0.1s ease"
+   :cursor "pointer"
+   :border 0
+   :right "2rem"
+   :place-items "center"
+   :place-content "center"
+   :height "2.5rem"
+   :width "2.5rem"
+   :border-radius "1000px"
+   :display "flex"
+   :transform "translate(0%, -50%)"
+   :top "50%"
    ::stylefy/manual [[:&:hover :&:focus {:background (color :background-plus-1)}]]})
 
 
 (def results-list-style
-  {:background (color :background-color)
+  {:background    (color :background-color)
    :overflow-y "auto"
    :max-height "100%"})
 
 
 (def results-heading-style
-  {:padding         "0.25rem 1.125rem"
-   :background      (color :background-plus-2)
-   :display         "flex"
-   :position        "sticky"
-   :flex-wrap       "wrap"
-   :gap             "0.5rem"
-   :align-items     "center"
-   :top             "0"
+  {:padding "0.25rem 1.125rem"
+   :background (color :background-plus-2)
+   :display "flex"
+   :position "sticky"
+   :flex-wrap "wrap"
+   :gap "0.5rem"
+   :align-items "center"
+   :top "0"
    :justify-content "space-between"
-   :box-shadow      [["0 1px 0 0 " (color :border-color)]]
-   :border-top      [["1px solid" (color :border-color)]]})
+   :box-shadow [["0 1px 0 0 " (color :border-color)]]
+   :border-top [["1px solid" (color :border-color)]]})
 
 
 (def result-style
-  {:display             "flex"
-   :padding             "0.75rem 2rem"
-   :background          (color :background-plus-1)
-   :color               (color :body-text-color)
-   :transition          "all .05s ease"
-   :border-top          [["1px solid " (color :border-color)]]
-   ::stylefy/sub-styles {:title       {:font-size   "1rem"
-                                       :margin      "0"
-                                       :color       (color :header-text-color)
-                                       :font-weight "500"}
-                         :preview     {:white-space "wrap"
-                                       :word-break  "break-word"
-                                       :color       (color :body-text-color :opacity-med)}
-                         :link-leader {:color  "transparent"
+  {:display "flex"
+   :padding "0.75rem 2rem"
+   :background (color :background-plus-1)
+   :color (color :body-text-color)
+   :transition "all .05s ease"
+   :border-top [["1px solid " (color :border-color)]]
+   ::stylefy/sub-styles {:title {:font-size "1rem"
+                                 :margin "0"
+                                 :color (color :header-text-color)
+                                 :font-weight "500"}
+                         :preview {:white-space "wrap"
+                                   :word-break "break-word"
+                                   :color (color :body-text-color :opacity-med)}
+                         :link-leader {:color "transparent"
                                        :margin "auto auto"}}
-   ::stylefy/manual     [[:b {:font-weight "500"
-                              :opacity     (:opacity-high OPACITIES)}]
-                         [:&.selected :&:hover {:background (color :link-color)
-                                                :color      "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color
-                          [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
+   ::stylefy/manual [[:b {:font-weight "500"
+                          :opacity (:opacity-high OPACITIES)}]
+                     [:&.selected :&:hover {:background (color :link-color)
+                                            :color "#fff"} ; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color
+                      [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
 (def result-body-style
-  {:flex            "1 1 100%"
-   :display         "flex"
-   :flex-direction  "column"
+  {:flex "1 1 100%"
+   :display "flex"
+   :flex-direction "column"
    :justify-content "center"
-   :align-items     "flex-start"})
+   :align-items "flex-start"})
 
 
 (def result-highlight-style
-  {:color       (color :body-text-color)
+  {:color (color :body-text-color)
    :font-weight "500"})
 
 
 (def hint-style
-  {:color     "inherit"
-   :opacity   (:opacity-med OPACITIES)
+  {:color "inherit"
+   :opacity (:opacity-med OPACITIES)
    :font-size "14px"})
 
 
-;;; Utilities
+;; Utilities
+
 
 (defn highlight-match
   [query txt]
@@ -166,18 +166,18 @@
 
 (defn create-search-handler
   [state]
-  (debounce (fn [query]
-              (if (str/blank? query)
-                (reset! state {:index   0
-                               :query   nil
-                               :results []})
-                (reset! state {:index   0
-                               :query   query
-                               :results (->> (concat [(search-exact-node-title query)]
-                                                     (search-in-node-title query 20 true)
-                                                     (search-in-block-content query))
-                                             vec)})))
-            1000))
+  (fn [query]
+    (if (str/blank? query)
+      (reset! state {:index   0
+                     :query   nil
+                     :results []})
+      (reset! state {:index   0
+                     :query   query
+                     :results (vec
+                                (concat
+                                  [(search-exact-node-title query)]
+                                  (search-in-node-title query 20 true)
+                                  (search-in-block-content query)))}))))
 
 
 (defn key-down-handler
@@ -192,14 +192,14 @@
       :else nil)))
 
 
-;;; Components
+;; Components
 
 
 (defn athena-prompt-el
   []
   [button {:on-click #(dispatch [:athena/toggle])
-           :primary  true
-           :style    {:font-size "11px"}}
+           :primary true
+           :style {:font-size "11px"}}
    [:<>
     [:> Search]
     [:span "Find or Create a Page"]]])

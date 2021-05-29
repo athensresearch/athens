@@ -110,7 +110,7 @@
 
 (deftest parser-raw-url-tests
   (are [x y] (= x (sut/staged-parser->ast y))
-    ; Basic URLs in plain text
+    ;; Basic URLs in plain text
     [:block
      [:paragraph
       [:span
@@ -122,8 +122,8 @@
                :target "https://example.com/2"}]]]]
     "First URL: https://example.com/1 second URL: https://example.com/2"
 
-    ; Regression test for https://github.com/athensresearch/athens/issues/1057
-    ; (URL with underscore in plain text)
+    ;; Regression test for https://github.com/athensresearch/athens/issues/1057
+    ;; (URL with underscore in plain text)
     [:block
      [:paragraph
       [:span
@@ -132,7 +132,7 @@
                :target "https://my_url_with_underscore.com"}]]]]
     "URL: https://my_url_with_underscore.com"
 
-    ; URL following a TODO component
+    ;; URL following a TODO component
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
              [:span
@@ -153,8 +153,8 @@
     "{{[[TODO]]}} https://example.com"))
 
 
-; Test cases for blocks that only contain a single raw URL that should be parsed
-; as a link. Those mostly test the URL parser.
+;; Test cases for blocks that only contain a single raw URL that should be parsed
+;; as a link. Those mostly test the URL parser.
 (deftest parser-lone-raw-url-tests
   (are [url] (= [:block [:paragraph [:span [:link {:text   url
                                                    :target url}]]]] (sut/staged-parser->ast url))
@@ -181,20 +181,21 @@
     ;; URL with username and password.
     "http://a:b@example.com"))
 
-; Tests for strings that should not be parsed as URLs.
+
+;; Tests for strings that should not be parsed as URLs.
 (deftest parser-lone-invalid-raw-url-tests
   (are [text] (= [:block [:paragraph text]] (sut/staged-parser->ast text))
-    ; URLs without host.
+    ;; URLs without host.
     "http:///a"
     ;; `#` is special character so is represented by separate string
     ;; "http://#"
     "http://?"
     ;; This passes, though it shouldn't
     ;; "http://12345"
-    ; TODO(agentydragon): Also should not pass:
-    ;   http://0.0.0.0
-    ;   http://999.999.999.999
-    ; See https://mathiasbynens.be/demo/url-regex for more.
+    ;; TODO(agentydragon): Also should not pass:
+    ;;   http://0.0.0.0
+    ;;   http://999.999.999.999
+    ;; See https://mathiasbynens.be/demo/url-regex for more.
     ))
 
 

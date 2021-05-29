@@ -12,7 +12,7 @@
     [reagent.core :as r]))
 
 
-;;; Components
+;; Components
 
 
 (defn load-real-db!
@@ -42,7 +42,7 @@
     [button {:on-click #(d/reset-conn! db/dsdb (d/empty-db db/schema))} "Reset DB"]))
 
 
-;;; Devcards
+;; Devcards
 
 
 (defcard-rg Load-Real-DB
