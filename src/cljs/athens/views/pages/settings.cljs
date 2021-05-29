@@ -322,7 +322,7 @@
       (let [keymap @(subscribe [:keymap])
             shortcut (key-alias keymap)
             different-from-default? (not= shortcut default-shortcut)]
-        [:li {:style {:display "flex" :justify-content "space-between" :border-bottom "1px solid var(--border-color)" :padding "10px 0"}}
+        [:div {:style {:display "flex" :justify-content "space-between" :border-bottom "1px solid var(--border-color)" :padding "10px 0"}}
          [:span {:style {:font-weight 500}} (key-alias key-aliases-description)]
          [track-outside-click #(reset! editing? false)
           [:div
@@ -342,8 +342,8 @@
     [:header
      [:h3 "Keymap"]]
     [:main
-     (for [key-alias changeable-key-aliases]
-       ^{:key key-alias} [key-shortcut key-alias])]]])
+     [:div (for [key-alias changeable-key-aliases]
+             ^{:key key-alias} [key-shortcut key-alias])]]]])
 
 
 (defn page

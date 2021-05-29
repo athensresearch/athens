@@ -456,7 +456,7 @@
                              (.. js/document (execCommand "insertText" false selection))
                              (if selection?
                                (do (setStart target (+ 2 start))
-                                 (setEnd target (+ 2 end)))
+                                   (setEnd target (+ 2 end)))
                                (set-cursor-position target (+ start 2)))))]
     {:content/bold (partial surround-and-set "**")
      :content/italic (partial surround-and-set "*")
@@ -464,80 +464,80 @@
      "mod+u" (partial surround-and-set "--")
      :content/highlight (partial surround-and-set "^^")
      "mod+z"
-             (fn []
-               (let [{:string/keys [local previous]} @state]
-                 (when (= local previous)
-                   (dispatch [:undo]))))
+     (fn []
+       (let [{:string/keys [local previous]} @state]
+         (when (= local previous)
+           (dispatch [:undo]))))
      "mod+shift+z"
-             (fn []
-               (let [{:string/keys [local previous]} @state]
-                 (when (= local previous)
-                   (dispatch [:redo]))))
+     (fn []
+       (let [{:string/keys [local previous]} @state]
+         (when (= local previous)
+           (dispatch [:redo]))))
      "mod+a"
-             (fn [e]
-               (let [{:keys [selection value]} (destruct-key-down e)]
-                 (when (= selection value)
-                   (let [{:keys [target]} (destruct-key-down e)
-                         closest-node-page (.. target (closest ".node-page"))
-                         closest-block-page (.. target (closest ".block-page"))
-                         closest (or closest-node-page closest-block-page)
-                         block (db/get-block [:block/uid (.. closest -dataset -uid)])
-                         children (->> (:block/children block)
-                                    (sort-by :block/order)
-                                    (mapv :block/uid))]
-                     (dispatch [:selected/add-items children])))))
+     (fn [e]
+       (let [{:keys [selection value]} (destruct-key-down e)]
+         (when (= selection value)
+           (let [{:keys [target]} (destruct-key-down e)
+                 closest-node-page (.. target (closest ".node-page"))
+                 closest-block-page (.. target (closest ".block-page"))
+                 closest (or closest-node-page closest-block-page)
+                 block (db/get-block [:block/uid (.. closest -dataset -uid)])
+                 children (->> (:block/children block)
+                               (sort-by :block/order)
+                               (mapv :block/uid))]
+             (dispatch [:selected/add-items children])))))
      :content/open-current-block-or-page
-             (fn [e]
-               ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
-               ;; if caret on a #hashtag, navigate to that page
-               ;; if caret within ((uid)), navigate to that uid
-               ;; otherwise zoom into current block
-               (let [{:keys [target head tail]} (destruct-key-down e)
-                     [uid _] (db/uid-and-embed-id uid)
-                     link (str (replace-first head #"(?s)(.*)\[\[" "")
-                            (replace-first tail #"(?s)\]\](.*)" ""))
-                     hashtag (str (replace-first head #"(?s).*#" "")
-                               (replace-first tail #"(?s)\s(.*)" ""))
-                     block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
-                                 (replace-first tail #"(?s)\)\)(.*)" "")
+     (fn [e]
+       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
+       ;; if caret on a #hashtag, navigate to that page
+       ;; if caret within ((uid)), navigate to that uid
+       ;; otherwise zoom into current block
+       (let [{:keys [target head tail]} (destruct-key-down e)
+             [uid _] (db/uid-and-embed-id uid)
+             link (str (replace-first head #"(?s)(.*)\[\[" "")
+                       (replace-first tail #"(?s)\]\](.*)" ""))
+             hashtag (str (replace-first head #"(?s).*#" "")
+                          (replace-first tail #"(?s)\s(.*)" ""))
+             block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
+                            (replace-first tail #"(?s)\)\)(.*)" ""))]
 
-                                ;; save block before navigating away
-                                (db/transact-state-for-uid uid state)
+         ;; save block before navigating away
+         (db/transact-state-for-uid uid state)
 
-                                (cond
-                                  (and (re-find #"(?s)\[\[" head)
-                                       (re-find #"(?s)\]\]" tail)
-                                       (nil? (re-find #"(?s)\[" link))
-                                       (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
-                                    (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
-                                        (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+         (cond
+           (and (re-find #"(?s)\[\[" head)
+                (re-find #"(?s)\]\]" tail)
+                (nil? (re-find #"(?s)\[" link))
+                (nil? (re-find #"(?s)\]" link)))
+           (let [eid (db/e-by-av :node/title link)
+                 uid (db/v-by-ea eid :block/uid)]
+             (if eid
+               (router/navigate-uid uid e)
+               (let [new-uid (athens.util/gen-block-uid)]
+                 (.blur target)
+                 (dispatch [:page/create link new-uid])
+                 (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
-                                  ;; same logic as link
-                                  (and (re-find #"(?s)#" head)
-                                       (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
-                                    (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
-                                        (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+           ;; same logic as link
+           (and (re-find #"(?s)#" head)
+                (re-find #"(?s)\s" tail))
+           (let [eid (db/e-by-av :node/title hashtag)
+                 uid (db/v-by-ea eid :block/uid)]
+             (if eid
+               (router/navigate-uid uid e)
+               (let [new-uid (athens.util/gen-block-uid)]
+                 (.blur target)
+                 (dispatch [:page/create link new-uid])
+                 (js/setTimeout #(router/navigate-uid new-uid e) 50))))
 
-                                  (and (re-find #"(?s)\(\(" head)
-                                       (re-find #"(?s)\)\)" tail)
-                                       (nil? (re-find #"(?s)\(" block-ref))
-                                       (nil? (re-find #"(?s)\)" block-ref))
-                                       (db/e-by-av :block/uid block-ref))
-                                  (router/navigate-uid block-ref e)
+           (and (re-find #"(?s)\(\(" head)
+                (re-find #"(?s)\)\)" tail)
+                (nil? (re-find #"(?s)\(" block-ref))
+                (nil? (re-find #"(?s)\)" block-ref))
+                (db/e-by-av :block/uid block-ref))
+           (router/navigate-uid block-ref e)
 
-                                  :else (router/navigate-uid uid e)))]))}))
+           :else (router/navigate-uid uid e))))}))
 
 
 (defn pair-char?
