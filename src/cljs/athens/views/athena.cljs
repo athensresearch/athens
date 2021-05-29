@@ -5,7 +5,7 @@
     ["@material-ui/icons/Create" :default Create]
     ["@material-ui/icons/Search" :default Search]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-    [athens.hotkeys :refer [mousetrap]]
+    [athens.keybindings :refer [mousetrap]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]

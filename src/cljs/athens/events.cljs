@@ -10,7 +10,7 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe dispatch]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -19,6 +19,7 @@
   :boot/web
   (fn [_ _]
     {:db         db/rfdb
+     :keybindings/bind! nil
      :dispatch-n [[:loading/unset]
                   [:local-storage/set-theme]]}))
 
@@ -1806,3 +1807,10 @@
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
+
+
+(reg-event-fx
+  :keymap/update
+  (fn [cofx [_ key-alias new-keys]]
+    {:db (assoc-in (:db cofx) [:config/hotkeys key-alias] new-keys)
+     :keybindings/bind! nil}))

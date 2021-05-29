@@ -463,11 +463,11 @@
                                (do (setStart target (+ 2 start))
                                  (setEnd target (+ 2 end)))
                                (set-cursor-position target (+ start 2)))))]
-    {"mod+b" (partial surround-and-set "**")
-     "mod+i" (partial surround-and-set "*")
-     "mod+y" (partial surround-and-set "~~")
+    {:content/bold (partial surround-and-set "**")
+     :content/italic (partial surround-and-set "*")
+     :content/strikethrough (partial surround-and-set "~~")
      "mod+u" (partial surround-and-set "--")
-     "mod+h" (partial surround-and-set "^^")
+     :content/highlight (partial surround-and-set "^^")
      "mod+z"
              (fn []
                (let [{:string/keys [local previous]} @state]
@@ -491,7 +491,7 @@
                                     (sort-by :block/order)
                                     (mapv :block/uid))]
                      (dispatch [:selected/add-items children])))))
-     "mod+o"
+     :content/open-current-block-or-page
              (fn [e]
                ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
                ;; if caret on a #hashtag, navigate to that page

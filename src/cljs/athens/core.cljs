@@ -15,6 +15,7 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
+    [athens.keybindings :as keybindings]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]
@@ -98,6 +99,7 @@
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
+  (keybindings/init)
   (if (util/electron?)
     (rf/dispatch-sync [:boot/desktop])
     (rf/dispatch-sync [:boot/web]))

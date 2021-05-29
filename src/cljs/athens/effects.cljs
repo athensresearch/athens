@@ -17,6 +17,7 @@
     [goog.dom.selection :refer [setCursorPosition]]
     [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx subscribe]]
+    [athens.keybindings :refer [bind-changeable-global-keybindings]]
     [stylefy.core :as stylefy]))
 
 
@@ -387,3 +388,15 @@
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
       (when right-sidebar
         (set! (.. right-sidebar -scrollTop) 0)))))
+
+
+(def unbind-global-keybindings (atom nil))
+
+(reg-fx
+  :keybindings/bind!
+  (fn []
+    (when (not (nil? @unbind-global-keybindings))
+      (@unbind-global-keybindings))
+    (reset! unbind-global-keybindings
+      (bind-changeable-global-keybindings))))
+

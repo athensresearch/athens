@@ -329,6 +329,7 @@
     :boot/desktop
     (fn [_ _]
       {:db         db/rfdb
+       :keybindings/bind! nil
        :async-flow {:first-dispatch [:local-storage/get-db-filepath]
                     :rules          [{:when        :seen?
                                       :events      :db/update-filepath

@@ -3,7 +3,7 @@
     [athens.db :as db]
     [athens.electron :as electron]
     [athens.events :as events]
-    [athens.hotkeys :refer [mousetrap]]
+    [athens.keybindings :refer [mousetrap]]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
     [athens.util :as util]

@@ -6,7 +6,7 @@
     [clojure.string :as string]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]))
+    [re-frame.core :refer [dispatch subscribe clear-subscription-cache!]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -28,7 +28,7 @@
    :orphans?         true
    :daily-notes?     true})
 
-(def default-hotkeys-config
+(def default-keymap
   {:athena/toggle "mod+k"
    :devtool/toggle "mod+g"
    :save "mod+s"
@@ -49,7 +49,6 @@
 
 (defonce rfdb {:user                {:name (or (js/localStorage.getItem "user/name")
                                                "Socrates")}
-
                :db/filepath         nil
                :db/synced           true
                :db/mtime            nil
@@ -69,7 +68,7 @@
                :selected/items      []
                :theme/dark          false
                :graph-conf          default-graph-conf
-               :config/hotkeys      default-hotkeys-config})
+               :keymap              default-keymap})
 
 
 
