@@ -108,14 +108,15 @@
 
 
 (def changeable-global-keybindings
-  {:devtool/toggle       #(dispatch [:devtool/toggle])
-   :athena/toggle        #(dispatch [:athena/toggle])
+  {:athena/toggle        #(dispatch [:athena/toggle])
    :10x/toggle           util/toggle-10x
    :nav/back             #(when (not-editing) (.back js/window.history))
    :nav/forward          #(when (not-editing) (.forward js/window.history))
    :left-sidebar/toggle  #(dispatch [:left-sidebar/toggle]) ;; TODO: Change to "mod+\\"
    :right-sidebar/toggle #(dispatch [:right-sidebar/toggle]) ;; TODO: Change to "mod+shift+\\"
-   :nav/daily-notes      router/nav-daily-notes})
+   :nav/daily-notes      router/nav-daily-notes
+   :nav/pages            #(router/navigate :pages)
+   :nav/graph            #(router/navigate :graph)})
 
 
 (defn bind-changeable-global-keybindings

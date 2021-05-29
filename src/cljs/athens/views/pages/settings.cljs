@@ -293,6 +293,8 @@
     :nav/back "Navigate back"
     :nav/forward "Navigate forward"
     :nav/daily-notes "Go to daily Notes"
+    :nav/pages "Go to pages"
+    :nav/graph "Go to graph"
     :left-sidebar/toggle "Toggle left sidebar"
     :right-sidebar/toggle "Toggle right sidebar"
     :content/bold "Toggle bold"

@@ -30,11 +30,12 @@
 
 (def default-keymap
   {:athena/toggle "mod+k"
-   :devtool/toggle "mod+g"
    :10x/toggle "mod+t"
    :nav/back "alt+left"
    :nav/forward "alt+right"
    :nav/daily-notes "alt+d"
+   :nav/pages "mod+p"
+   :nav/graph "mod+g"
    :left-sidebar/toggle "mod+\\"
    :right-sidebar/toggle "mod+shift+\\"
    :content/bold "mod+b"
