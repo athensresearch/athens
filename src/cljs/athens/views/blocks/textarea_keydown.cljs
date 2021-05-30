@@ -295,7 +295,7 @@
 
 
 (defn handle-arrow-key
-  [e uid state]
+  [uid state e]
   (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
         selection?      (not (blank? selection))
         start?          (block-start? e)
@@ -688,6 +688,8 @@
   [e uid state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
+    (js/console.log (.-target e))
+    (prn e)
     (let [d-event (destruct-key-down e)]
 
       ;; used for paste, to determine if shift key was held down
