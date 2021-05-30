@@ -106,7 +106,7 @@
 
 
 ;; Helpers to read from re-frame db
-(defn not-editing
+(defn not-editing?
   []
   (nil? @(subscribe [:editing/uid])))
 
@@ -118,10 +118,10 @@
   []
   @(subscribe [:selected/items]))
 
-(defn maybe-undo-or-redo
+(defn dispatch-when-undo-or-redo-allowed
   [operation]
   (when
-    (or (not-editing)
+    (or (not-editing?)
         (selecting-items?))
     (dispatch [operation])))
 
@@ -129,8 +129,8 @@
 (def changeable-global-keybindings
   {:athena/toggle        #(dispatch [:athena/toggle])
    :10x/toggle           util/toggle-10x
-   :nav/back             #(when (not-editing) (.back js/window.history))
-   :nav/forward          #(when (not-editing) (.forward js/window.history))
+   :nav/back             #(when (not-editing?) (.back js/window.history))
+   :nav/forward          #(when (not-editing?) (.forward js/window.history))
    :left-sidebar/toggle  #(dispatch [:left-sidebar/toggle]) ; TODO: Change to "mod+\\"
    :right-sidebar/toggle #(dispatch [:right-sidebar/toggle]) ; TODO: Change to "mod+shift+\\"
    :nav/daily-notes      router/nav-daily-notes
@@ -148,8 +148,8 @@
 ;; they are executed before the re-frame db is setup.
 (defn init
   []
-  (mousetrap-bind "mod+z" #(maybe-undo-or-redo :undo))
-  (mousetrap-bind "mod+shift+z" #(maybe-undo-or-redo :redo))
+  (mousetrap-bind "mod+z" #(dispatch-when-undo-or-redo-allowed :undo))
+  (mousetrap-bind "mod+shift+z" #(dispatch-when-undo-or-redo-allowed :redo))
   (mousetrap-bind "mod+s" #(dispatch [:save]))
 
   ;; Multi block selection event handlers

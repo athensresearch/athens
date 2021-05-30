@@ -176,6 +176,17 @@
   (fn [db _]
     (update db :athena/open not)))
 
+(reg-event-fx
+  :athena/create-page
+  (fn [_ [_ title uid open-on-sidebar]]
+    {:fx [[:dispatch [:page/create title uid]]
+          [:dispatch [:athena/toggle]]
+          (if
+            open-on-sidebar
+            [:dispatch-later {:ms 300 :dispatch [:right-sidebar/open-item uid]}]
+            [:dispatch [:navigate :page {:id uid}]])]}))
+
+
 
 (reg-event-db
   :athena/update-recent-items

@@ -229,19 +229,10 @@
                  [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]]))))])]))
 
 
-(def track-click-outside-athena
-  (partial view-utils/track-outside-click
-           #(dispatch [:athena/toggle])))
-
-
 (defn create-page
-  [title openOnSidebar]
-  (let [uid (gen-block-uid)]
-    (dispatch [:athena/toggle])
-    (dispatch [:page/create title uid])
-    (if openOnSidebar
-      (js/setTimeout #(dispatch [:right-sidebar/open-item uid]) 500)
-      (navigate-uid uid))))
+  [title open-on-sidebar]
+  (dispatch
+    [:athena/create-page title (gen-block-uid) open-on-sidebar]))
 
 
 (defn athena-keybindings
@@ -249,24 +240,24 @@
   [mousetrap
    {"escape" #(dispatch [:athena/toggle])
 
-    "enter"  (fn [e]
-               (let [shift-pressed (.. e -shiftKey)
-                     {:keys [index query results]} @state
-                     item (get results index)]
-                 (cond
-                   ;; if page doesn't exist, create and open
-                   (and (zero? index) (nil? item))
-                   (create-page query shift-pressed)
+    ["enter" "shift+enter"]  (fn [e]
+                               (let [shift-pressed (.. e -shiftKey)
+                                     {:keys [index query results]} @state
+                                     item (get results index)]
+                                 (cond
+                                   ;; if page doesn't exist, create and open
+                                   (and (zero? index) (nil? item))
+                                   (create-page query shift-pressed)
 
-                   ;; if shift: open in right-sidebar
-                   shift-pressed
-                   (do (dispatch [:athena/toggle])
-                       (dispatch [:right-sidebar/open-item (:block/uid item)]))
-                   ;; else open in main view
-                   :else
-                   (do (dispatch [:athena/toggle])
-                       (navigate-uid (:block/uid item))
-                       (dispatch [:editing/uid (:block/uid item)])))))
+                                   ;; if shift: open in right-sidebar
+                                   shift-pressed
+                                   (do (dispatch [:athena/toggle])
+                                       (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                                   ;; else open in main view
+                                   :else
+                                   (do (dispatch [:athena/toggle])
+                                       (navigate-uid (:block/uid item))
+                                       (dispatch [:editing/uid (:block/uid item)])))))
     "up"     (fn [e]
                (let [{:keys [results]} @state]
                  (swap! state update :index #(dec (if (zero? %) (count results) %)))
@@ -302,7 +293,7 @@
     (fn []
       (let [open? @(subscribe [:athena/open])]
         (when open?
-          [track-click-outside-athena
+          [view-utils/track-outside-click #(dispatch [:athena/toggle])
            [athena-keybindings s
             [:div.athena (use-style container-style)
              [:header {:style {:position "relative"}}

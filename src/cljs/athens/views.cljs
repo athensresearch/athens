@@ -63,21 +63,21 @@
 (defn main
   []
   (let [loading (rf/subscribe [:loading?])
-        modal (rf/subscribe [:modal])]
+        modal (rf/subscribe [:modal])
+        {:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
     (fn []
       [:<>
        [alert]
-       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-         [m-snackbar
-          {:message msg
-           :open    (boolean msg)}
-          [:span
-           {:style {:background-color (case type
-                                        :success "green"
-                                        "red")
-                    :padding          "10px 20px"
-                    :color            "white"}}
-           msg]])
+       [m-snackbar
+        {:message msg
+         :open    (boolean msg)}
+        [:span
+         {:style {:background-color (case type
+                                      :success "green"
+                                      "red")
+                  :padding          "10px 20px"
+                  :color            "white"}}
+         msg]]
        [athena-component]
        (cond
          (and @loading @modal) [filesystem/window]
