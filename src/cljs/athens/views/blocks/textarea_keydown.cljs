@@ -739,4 +739,6 @@
       ;; Handle search
       (when (empty? @(subscribe [:selected/items]))
         (cond
+          (pair-char? e)                  (handle-pair-char e uid state)
           (is-character-key? e)           (write-char e uid state))))))
+

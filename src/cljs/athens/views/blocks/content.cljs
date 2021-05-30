@@ -336,8 +336,8 @@
                             {["shift+up" "shift+down"]    (partial textarea-keydown/handle-arrow-key-with-shift uid)
                              ["mod+down" "mod+up"] (partial textarea-keydown/handle-arrow-key-with-mod uid)
                              ["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
-                             "tab"                        textarea-keydown/handle-tab
-                             "enter"                      (partial textarea-keydown/handle-enter uid state)
+                             ["tab" "shift+tab"] textarea-keydown/handle-tab
+                             ["enter" "mod+enter" "shift+enter"] (partial textarea-keydown/handle-enter uid state)
                              "backspace"                  (partial textarea-keydown/handle-backspace uid state)
                              "del"                        (partial textarea-keydown/handle-delete uid state)
                              "esc"                        (partial textarea-keydown/handle-escape state)}
