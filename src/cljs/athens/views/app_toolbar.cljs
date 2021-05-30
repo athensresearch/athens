@@ -48,7 +48,8 @@
                                               :background (color :background-minus-1)
                                               :transition "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out"
                                               :justify-content "center"
-                                              :border 0}]
+                                              :border 0}
+                                     [:svg {:font-size "16px"}]]
                       [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
                       [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
                       [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
