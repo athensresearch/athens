@@ -334,45 +334,14 @@
 
 (defn handle-arrow-key
   [uid state e]
-  (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
+  (let [{:keys [selection]} (destruct-key-down e)
+        {:keys [down? up? right? left? top-row? bottom-row?]} (arrow-keys-shared-context e)
         selection?      (not (blank? selection))
         start?          (block-start? e)
         end?            (block-end? e)
-        caret-position  (get-caret-position (.-target e))
         {:search/keys [results type index]} @state
-        textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
-        {:keys [top height]} caret-position
-        rows            (js/Math.round (/ textarea-height height))
-        row             (js/Math.ceil (/ top height))
-        top-row?        (= row 1)
-        bottom-row?     (= row rows)
-        up?             (= key-code KeyCodes.UP)
-        down?           (= key-code KeyCodes.DOWN)
-        left?           (= key-code KeyCodes.LEFT)
-        right?          (= key-code KeyCodes.RIGHT)
         header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
     (cond
-      ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
-      shift (cond
-              left? nil
-              right? nil
-              (or (and up? top-row?)
-                  (and down? bottom-row?)) (do
-                                             (.. target blur)
-                                             (dispatch [:selected/add-item uid])))
-
-      ;; Control: fold or unfold blocks
-      ctrl (cond
-             left? nil
-             right? nil
-             (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
-                                  new-open-state (cond
-                                                   up? false
-                                                   down? true)
-                                  event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
-                              (.. e preventDefault)
-                              (dispatch event)))
-
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
@@ -727,7 +696,7 @@
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
     (let [d-event (destruct-key-down e)]
-
+      (prn "hi")
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
 

@@ -323,19 +323,25 @@
   (let [event-wrapper
         ;; Only handle event if the currently editing uid is the same
         ;; as this block; and there aren't any selected item.
-        (fn [event-handler _]
-          (fn [event]
-            (when
-              (and
-                (= uid @(rf/subscribe [:editing/uid]))
-                (empty? @(rf/subscribe [:selected/items])))
-              (event-handler event))))]
+        (fn [callback-or-config _]
+          (let [wrap-callback
+                (fn [callback]
+                  (fn [event]
+                    (when
+                      (and
+                        (= uid @(rf/subscribe [:editing/uid]))
+                        (empty? @(rf/subscribe [:selected/items])))
+                      (callback event))))]
+            (if (map? callback-or-config)
+              (update callback-or-config :callback wrap-callback)
+              (wrap-callback callback-or-config))))]
     [mousetrap
      (util/map-map-values event-wrapper
                           (merge
-                            {["shift+up" "shift+down"]    (partial textarea-keydown/handle-arrow-key-with-shift uid)
-                             ["mod+down" "mod+up"] (partial textarea-keydown/handle-arrow-key-with-mod uid)
-                             ["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
+                            {["shift+up" "shift+down"]    (partial textarea-keydown/handle-arrow-key-with-shift uid state)
+                             ["mod+down" "mod+up"] (partial textarea-keydown/handle-arrow-key-with-mod uid state)
+                             ["up" "down" "right" "left"] {:callback (partial textarea-keydown/handle-arrow-key uid state)
+                                                           :stop-propagation? false}
                              ["tab" "shift+tab"] textarea-keydown/handle-tab
                              ["enter" "mod+enter" "shift+enter"] (partial textarea-keydown/handle-enter uid state)
                              "backspace"                  (partial textarea-keydown/handle-backspace uid state)

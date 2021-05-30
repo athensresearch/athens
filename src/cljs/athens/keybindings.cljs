@@ -45,12 +45,18 @@
   (let [unbind-fns
         (doall
           (map
-            (fn [[keys callback]]
-              (mousetrap-bind
-                keys
-                callback
-                :stop-propation true
-                :mousetrap-instance mousetrap-instance))
+            (fn [[alias-or-hotkey callback-or-config]]
+              (let [callback (if (map? callback-or-config)
+                               (:callback callback-or-config)
+                               callback-or-config)
+                    stop-propagation? (if (map? callback-or-config)
+                                        (:stop-propagation? callback-or-config)
+                                        true)]
+                (mousetrap-bind
+                  alias-or-hotkey
+                  callback
+                  :stop-propagation? stop-propagation?
+                  :mousetrap-instance mousetrap-instance)))
             keybindings))]
     #(doall (map apply unbind-fns))))
 
