@@ -1818,6 +1818,6 @@
 
 (reg-event-fx
   :keymap/update
-  (fn [cofx [_ key-alias new-keys]]
-    {:db (assoc-in (:db cofx) [:keymap key-alias] new-keys)
+  (fn [cofx [_ hotkey-alias new-hotkey]]
+    {:db (assoc-in (:db cofx) [:keymap hotkey-alias :hotkey] new-hotkey)
      :keybindings/bind! nil}))

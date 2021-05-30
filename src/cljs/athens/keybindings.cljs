@@ -16,7 +16,7 @@
   [keys-or-alias]
   (let [keymap @(subscribe [:keymap])]
     (if (keyword? keys-or-alias)
-      (keys-or-alias keymap)
+      (:hotkey (keys-or-alias keymap))
       (clj->js keys-or-alias))))
 
 ;; Binds an event in the global Moutrap instance.

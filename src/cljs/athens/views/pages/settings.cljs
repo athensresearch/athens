@@ -297,53 +297,33 @@
       (reset! display-unstable-keymap-settings? newVal)
       (js/localStorage.setItem "display-unstable-keymap-config" newVal))))
 
-
-(def key-aliases-description
-  (array-map
-    :athena/toggle "Toggle athena"
-    :devtool/toggle "Toggle datascript devtools"
-    :nav/back "Navigate back"
-    :nav/forward "Navigate forward"
-    :nav/daily-notes "Go to daily Notes"
-    :nav/pages "Go to pages"
-    :nav/graph "Go to graph"
-    :left-sidebar/toggle "Toggle left sidebar"
-    :right-sidebar/toggle "Toggle right sidebar"
-    :content/bold "Toggle bold"
-    :content/italic "Toggle italics"
-    :content/strikethrough "Toggle strikethrough"
-    :content/highlight "Toggle highlight"
-    :content/open-current-block-or-page "Open current block or page"))
-
-(def changeable-key-aliases
-  (keys key-aliases-description))
-
 (defn key-shortcut
   [key-alias]
   (let [editing? (r/atom false)
-        handle-shortcut-change (fn [sequence]
-                                 (when @editing?
-                                   (dispatch [:keymap/update key-alias (first sequence)])
-                                   (reset! editing? false)))
-        default-shortcut (key-alias default-keymap)
+        handle-hotkey-change (fn [sequence]
+                               (when @editing?
+                                 (dispatch [:keymap/update key-alias (first sequence)])
+                                 (reset! editing? false)))
+        default-hotkey (:hotkey (key-alias default-keymap))
         handle-click (fn []
                        (reset! editing? true)
-                       (mousetrap-record handle-shortcut-change))
+                       (mousetrap-record handle-hotkey-change))
         restore-default! (fn []
-                           (dispatch [:keymap/update key-alias default-shortcut]))]
+                           (dispatch [:keymap/update key-alias default-hotkey]))]
 
     (fn [key-alias]
       (let [keymap @(subscribe [:keymap])
-            shortcut (key-alias keymap)
-            different-from-default? (not= shortcut default-shortcut)]
+            hotkey-config (key-alias keymap)
+            hotkey (:hotkey hotkey-config)
+            different-from-default? (not= hotkey default-hotkey)]
         [:div {:style {:display "flex" :justify-content "space-between" :border-bottom "1px solid var(--border-color)" :padding "10px 0"}}
-         [:span {:style {:font-weight 500}} (key-alias key-aliases-description)]
+         [:span {:style {:font-weight 500}} (:name hotkey-config)]
          [track-outside-click #(reset! editing? false)
           [:div
            [:div {:style {:display "flex" :justify-content "flex-end"}}
             [:button {:on-click handle-click
                       :style    {:display "block"}}
-             shortcut]
+             hotkey]
             (when different-from-default?
               [:> SettingsBackupRestore {:style {:margin-left "8px" :cursor "pointer"} :on-click restore-default!}])]
            (when @editing? [:p {:style {:margin-top "4px"}} "Press new shortcut..."])]]]))))
@@ -351,13 +331,14 @@
 
 (defn keymap
   []
-  [setting-wrapper
-   [:<>
-    [:header
-     [:h3 "Keymap"]]
-    [:main
-     [:div (for [key-alias changeable-key-aliases]
-             ^{:key key-alias} [key-shortcut key-alias])]]]])
+  (let [keymap @(subscribe [:keymap])]
+    [setting-wrapper
+     [:<>
+      [:header
+       [:h3 "Keymap"]]
+      [:main
+       [:div (for [key-alias (keys keymap)]
+               ^{:key key-alias} [key-shortcut key-alias])]]]]))
 
 (defn page
   []
