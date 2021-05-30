@@ -93,17 +93,20 @@
    :background-clip "padding-box"
    :background (color :background-plus-1)
    :color (color :body-text-color :opacity-high)
+   :border-bottom "1px solid transparent"
    :align-items "center"
    :display "grid"
    :height "48px"
    :padding-left "10px"
    :grid-template-columns "auto 1fr auto"
+   :transition "border-color 1s ease"
    :z-index "1070"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
    ::stylefy/manual [["&.is-fullscreen" {:height "44px"}]
                      [:svg {:font-size "20px"}]
-                     [:&.theme-light {:border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]}]
+                     [:&:hover {:transition "border-color 0.15s ease"
+                                :border-bottom-color (color :body-text-color :opacity-lower)}]
                      [:button {:justify-self "flex-start"
                                :-webkit-app-region "no-drag"}]
                      ;; Windows-only styles
@@ -112,7 +115,6 @@
                      ;; Mac-only styles
                      [:&.os-mac {:background (color :background-color :opacity-high)
                                  :color (color :body-text-color :opacity-med)
-                                 :border-bottom [["1px solid " (color :body-text-color :opacity-lower)]]
                                  :padding-left "88px"
                                  :padding-right "22px"
                                  :height "52px"
