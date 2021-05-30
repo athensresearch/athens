@@ -294,13 +294,51 @@
   (-> coll count dec))
 
 
+(defn arrow-keys-shared-context
+  [e]
+  (let [{:keys [key-code target]} (destruct-key-down e)
+        caret-position  (get-caret-position (.-target e))
+        textarea-height (.. target -offsetHeight)
+        {:keys [top height]} caret-position
+        rows            (js/Math.round (/ textarea-height height))
+        row             (js/Math.ceil (/ top height))
+        top-row?        (= row 1)
+        bottom-row?     (= row rows)]
+    {:target target
+     :top-row? top-row?
+     :bottom-row? bottom-row?
+     :up?             (= key-code KeyCodes.UP)
+     :down?           (= key-code KeyCodes.DOWN)
+     :left?           (= key-code KeyCodes.LEFT)
+     :right?          (= key-code KeyCodes.RIGHT)}))
+
+
+(defn handle-arrow-key-with-shift
+  [uid e]
+  (let [{:keys [up? down? top-row? bottom-row? target]} (arrow-keys-shared-context e)]
+    (when (or (and up? top-row?)
+              (and down? bottom-row?))
+      (.. target blur)
+      (dispatch [:selected/add-item uid]))))
+
+(defn handle-arrow-key-with-mod
+  [uid e]
+  (let [{:keys [down?]} (arrow-keys-shared-context e)
+        [uid _]        (db/uid-and-embed-id uid)
+        new-open-state down?
+        event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
+    (.. e preventDefault)
+    (dispatch event)))
+
+
 (defn handle-arrow-key
   [uid state e]
   (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
         selection?      (not (blank? selection))
         start?          (block-start? e)
         end?            (block-end? e)
-        {:search/keys [results type index] caret-position :caret-position} @state
+        caret-position  (get-caret-position (.-target e))
+        {:search/keys [results type index]} @state
         textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
@@ -312,7 +350,6 @@
         left?           (= key-code KeyCodes.LEFT)
         right?          (= key-code KeyCodes.RIGHT)
         header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
-
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
@@ -688,8 +725,7 @@
   [e uid state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
-    (js/console.log (.-target e))
-    (prn e)
+    (prn "hi")
     (let [d-event (destruct-key-down e)]
 
       ;; used for paste, to determine if shift key was held down

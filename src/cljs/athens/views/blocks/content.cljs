@@ -333,7 +333,9 @@
     [mousetrap
      (util/map-map-values event-wrapper
                           (merge
-                            {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
+                            {["shift+up" "shift+down"]    (partial textarea-keydown/handle-arrow-key-with-shift uid)
+                             ["mod+down" "mod+up"] (partial textarea-keydown/handle-arrow-key-with-mod uid)
+                             ["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
                              "tab"                        textarea-keydown/handle-tab
                              "enter"                      (partial textarea-keydown/handle-enter uid state)
                              "backspace"                  (partial textarea-keydown/handle-backspace uid state)
