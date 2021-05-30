@@ -89,6 +89,7 @@
    :autosave-time (init-autosave-time)})
 
 
+
 (defn handle-reset-email
   [s value]
   (reset! value "")
@@ -286,6 +287,17 @@
         [:p "For now, a username is only needed if you are connected to a server."]]]]]))
 
 ;; -- Keymap Settings -----------------------------------------------------------
+(def display-unstable-keymap-settings?
+  (r/atom (boolean (js/localStorage.getItem "display-unstable-keymap-settings"))))
+
+;; Temporal function in window to enable this unstable feature
+(set! (.-toggleUnstableKeymapSettings js/window)
+  (fn []
+    (let [newVal (not @display-unstable-keymap-settings?)]
+      (reset! display-unstable-keymap-settings? newVal)
+      (js/localStorage.setItem "display-unstable-keymap-config" newVal))))
+
+
 (def key-aliases-description
   (array-map
     :athena/toggle "Toggle athena"
@@ -347,7 +359,6 @@
      [:div (for [key-alias changeable-key-aliases]
              ^{:key key-alias} [key-shortcut key-alias])]]]])
 
-
 (defn page
   []
   (let [s (r/atom (init-state))]
@@ -359,4 +370,5 @@
       [autosave-comp s]
       [backups-comp s]
       [remote-username-comp]
-      [keymap]]]))
+      (when @display-unstable-keymap-settings?
+        [keymap])]]))

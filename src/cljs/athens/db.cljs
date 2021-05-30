@@ -28,6 +28,7 @@
    :orphans?         true
    :daily-notes?     true})
 
+
 (def default-keymap
   {:athena/toggle "mod+k"
    :10x/toggle "mod+t"
@@ -43,6 +44,7 @@
    :content/strikethrough "mod+y"
    :content/highlight "mod+h"
    :content/open-current-block-or-page "mod+o"})
+
 
 ;; -- re-frame -----------------------------------------------------------
 
@@ -68,7 +70,6 @@
                :theme/dark          false
                :graph-conf          default-graph-conf
                :keymap              default-keymap})
-
 
 
 ;; -- JSON Parsing ----------------------------------------------------
