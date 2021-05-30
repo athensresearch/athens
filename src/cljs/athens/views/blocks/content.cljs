@@ -318,7 +318,7 @@
 
 ;; View
 ;; Handlers will come from textarea-keydown
-(defn content-hotkeys
+(defn content-keybindings
   [uid state child]
   (let [event-wrapper
         ;; Only handle event if the currently editing uid is the same
@@ -332,14 +332,14 @@
               (event-handler event))))]
     [mousetrap
      (util/map-map-values event-wrapper
-       (merge
-         {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
-          "tab"                        textarea-keydown/handle-tab
-          "enter"                      (partial textarea-keydown/handle-enter uid state)
-          "backspace"                  (partial textarea-keydown/handle-backspace uid state)
-          "del"                        (partial textarea-keydown/handle-delete uid state)
-          "esc"                        (partial textarea-keydown/handle-escape state)}
-         (textarea-keydown/shortcut-handlers uid state)))
+                          (merge
+                            {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
+                             "tab"                        textarea-keydown/handle-tab
+                             "enter"                      (partial textarea-keydown/handle-enter uid state)
+                             "backspace"                  (partial textarea-keydown/handle-backspace uid state)
+                             "del"                        (partial textarea-keydown/handle-delete uid state)
+                             "esc"                        (partial textarea-keydown/handle-escape state)}
+                            (textarea-keydown/shortcut-handlers uid state)))
      child]))
 
 
@@ -362,8 +362,7 @@
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) editing?)
-           [content-hotkeys
-            uid state
+           [content-keybindings uid state
             [autosize/textarea {:value          (:string/local @state)
                                 :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                                 ;; :auto-focus  true

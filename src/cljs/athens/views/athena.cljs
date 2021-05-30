@@ -244,7 +244,7 @@
       (navigate-uid uid))))
 
 
-(defn athena-hotkeys
+(defn athena-keybindings
   [state children]
   [mousetrap
    {"escape" #(dispatch [:athena/toggle])
@@ -303,7 +303,7 @@
       (let [open? @(subscribe [:athena/open])]
         (when open?
           [track-click-outside-athena
-           [athena-hotkeys s
+           [athena-keybindings s
             [:div.athena (use-style container-style)
              [:header {:style {:position "relative"}}
               [:input (use-style athena-input-style

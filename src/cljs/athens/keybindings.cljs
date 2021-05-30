@@ -1,29 +1,34 @@
 (ns athens.keybindings
   (:require
-    [athens.router :as router]
-    [athens.util :as util]
     ["mousetrap" :as Mousetrap]
     ["mousetrap/plugins/record/mousetrap-record"]
+    [athens.router :as router]
+    [athens.util :as util]
     [re-frame.core :refer [dispatch subscribe]]
     [react]
     [reagent.core :as r]))
+
 
 (defn mousetrap-record
   [callback]
   (.record Mousetrap callback))
 
-(defn convert-to-keys
-  [keys-or-alias]
-  (let [keymap @(subscribe [:keymap])]
-    (if (keyword? keys-or-alias)
-      (keys-or-alias keymap)
-      (clj->js keys-or-alias))))
 
-;; Binds an event in the global Moutrap instance.
+;; Converts an hotkey alias (:athena/toggle) to a hotkey ("mod+k")
+(defn convert-to-hotkey
+  [alias-or-hotkey]
+  (let [keymap @(subscribe [:keymap])]
+    (if (keyword? alias-or-hotkey)
+      (alias-or-hotkey keymap)
+      (clj->js alias-or-hotkey))))
+
+
+;; Binds a hotkey or hotkey alias to an event handler.
+;; Returns a function to unbind the event.
 (defn mousetrap-bind
-  ([keys-or-alias callback & {:keys [stop-propagation? mousetrap-instance]
-                              :or   {stop-propagation? true, mousetrap-instance Mousetrap}}]
-   (let [keys (convert-to-keys keys-or-alias)]
+  ([alias-or-hotkey callback & {:keys [stop-propagation? mousetrap-instance]
+                                :or   {stop-propagation? true, mousetrap-instance Mousetrap}}]
+   (let [keys (convert-to-hotkey alias-or-hotkey)]
      (.bind mousetrap-instance
             keys
             (fn [event]
@@ -32,6 +37,9 @@
      #(.unbind mousetrap-instance keys))))
 
 
+;; Same as mousetrap-bind but binds a map of keybindings (aliases-or-hotkeys and event handler pairs).
+;; API is a bit different since it accepts the mousetrap-instance as the first argument.
+;; and always stop the event propagation.
 (defn mousetrap-bind-all
   [mousetrap-instance keybindings]
   (let [unbind-fns
@@ -47,20 +55,23 @@
     #(doall (map apply unbind-fns))))
 
 
+;; React component that listen binds event handlers to a local DOM element.
+;; It also listen for changes on keymap to re-bind the event handlers.
+;; Note: this is not meant to be used directly, use mousetrap instead.
 (defn mousetrap-binder
-  [_keymap bindings _children]
+  [_keymap keybindings _children]
   (let [mousetrap-instance (r/atom nil)
         unbind-all (r/atom #())
-        bind (fn [bindings]
+        bind (fn [keybindings]
                (reset! unbind-all
-                       (mousetrap-bind-all @mousetrap-instance bindings)))]
+                       (mousetrap-bind-all @mousetrap-instance keybindings)))]
 
     (r/create-class
       {:display-name
-       "mousetrap"
+       "mousetrap-binder"
 
        :component-did-mount
-       #(bind bindings)
+       #(bind keybindings)
 
        :component-will-unmount
        #(@unbind-all)
@@ -69,10 +80,10 @@
        (fn [this old-argv]
          (let [new-keymap (second (r/argv this))
                prev-keymap (second old-argv)
-               bindings (nth (r/argv this) 2)]
+               keybindings (nth (r/argv this) 2)]
            (when (not= new-keymap prev-keymap)
              (@unbind-all)
-             (bind bindings))))
+             (bind keybindings))))
 
        :reagent-render
        (fn [_ _ children]
@@ -82,21 +93,30 @@
           children])})))
 
 
+;; Wrap what is passed as "child" into a DOM node that listen for hotkeys that
+;; are bound to event handlers.
+;; If the application keymap changes, this component will re-bind the event
+;; handlers with the new hotkeys.
+;; keybindings is a pair of aliases-or-hotkeys and event handler pairs
+;; e.g: {:athena/toggle some-function1 "mod+z" some-function2}
 (defn mousetrap
-  [bindings children]
+  [keybindings children]
   (let [keymap @(subscribe [:keymap])]
-    [mousetrap-binder keymap bindings children]))
+    [mousetrap-binder keymap keybindings children]))
 
 
+;; Helpers to read from re-frame db
 (defn not-editing
   []
   (nil? @(subscribe [:editing/uid])))
-
 
 (defn selecting-items?
   []
   (not-empty @(subscribe [:selected/items])))
 
+(defn selected-items
+  []
+  @(subscribe [:selected/items]))
 
 (defn maybe-undo-or-redo
   [operation]
@@ -111,8 +131,8 @@
    :10x/toggle           util/toggle-10x
    :nav/back             #(when (not-editing) (.back js/window.history))
    :nav/forward          #(when (not-editing) (.forward js/window.history))
-   :left-sidebar/toggle  #(dispatch [:left-sidebar/toggle]) ;; TODO: Change to "mod+\\"
-   :right-sidebar/toggle #(dispatch [:right-sidebar/toggle]) ;; TODO: Change to "mod+shift+\\"
+   :left-sidebar/toggle  #(dispatch [:left-sidebar/toggle]) ; TODO: Change to "mod+\\"
+   :right-sidebar/toggle #(dispatch [:right-sidebar/toggle]) ; TODO: Change to "mod+shift+\\"
    :nav/daily-notes      router/nav-daily-notes
    :nav/pages            #(router/navigate :pages)
    :nav/graph            #(router/navigate :graph)})
@@ -123,11 +143,9 @@
   (mousetrap-bind-all Mousetrap changeable-global-keybindings))
 
 
-(defn selected-items
-  []
-  @(subscribe [:selected/items]))
-
-;; Global, unchangeable keybindings
+;; Global, unchangeable keybindings.
+;; NOTE: This cannot use hotkey aliases (:athena/toggle) because
+;; they are executed before the re-frame db is setup.
 (defn init
   []
   (mousetrap-bind "mod+z" #(maybe-undo-or-redo :undo))
