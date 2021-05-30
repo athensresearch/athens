@@ -246,28 +246,29 @@
 
 (defn athena-hotkeys
   [state children]
-  (let [{:keys [index query results]} @state
-        item (get results index)]
-    [mousetrap
-     {"escape" #(dispatch [:athena/toggle])
+  [mousetrap
+   {"escape" #(dispatch [:athena/toggle])
 
-      "enter"  (fn [e]
-                 (let [shift-pressed (.. e -shiftKey)]
-                   (cond
-                     ;; if page doesn't exist, create and open
-                     (and (zero? index) (nil? item))
-                     (create-page query shift-pressed)
+    "enter"  (fn [e]
+               (let [shift-pressed (.. e -shiftKey)
+                     {:keys [index query results]} @state
+                     item (get results index)]
+                 (cond
+                   ;; if page doesn't exist, create and open
+                   (and (zero? index) (nil? item))
+                   (create-page query shift-pressed)
 
-                     ;; if shift: open in right-sidebar
-                     shift-pressed
-                     (do (dispatch [:athena/toggle])
-                         (dispatch [:right-sidebar/open-item (:block/uid item)]))
-                     ;; else open in main view
-                     :else
-                     (do (dispatch [:athena/toggle])
-                         (navigate-uid (:block/uid item))
-                         (dispatch [:editing/uid (:block/uid item)])))))
-      "up"     (fn [e]
+                   ;; if shift: open in right-sidebar
+                   shift-pressed
+                   (do (dispatch [:athena/toggle])
+                       (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                   ;; else open in main view
+                   :else
+                   (do (dispatch [:athena/toggle])
+                       (navigate-uid (:block/uid item))
+                       (dispatch [:editing/uid (:block/uid item)])))))
+    "up"     (fn [e]
+               (let [{:keys [results]} @state]
                  (swap! state update :index #(dec (if (zero? %) (count results) %)))
                  (let [cur-index (:index @state)
                        ;; Search input box
@@ -278,17 +279,18 @@
                        ;; Get next element in the result list
                        next-el (nth (array-seq (.. result-el -children)) cur-index)]
                    ;; Check if next el is beyond the bounds of the result list and scroll if so
-                   (scroll-into-view next-el result-el (not= cur-index (dec (count results))))))
+                   (scroll-into-view next-el result-el (not= cur-index (dec (count results)))))))
 
-      "down"   (fn [e]
+    "down"   (fn [e]
+               (let [{:keys [results]} @state]
                  (swap! state update :index #(if (= % (dec (count results))) 0 (inc %))
                         (let [cur-index (:index @state)
                               input-el (.. e -target)
                               result-el (.. input-el (closest "div.athena") -lastElementChild)
                               next-el (nth (array-seq (.. result-el -children)) cur-index)]
-                          (scroll-into-view next-el result-el (zero? cur-index)))))}
+                          (scroll-into-view next-el result-el (zero? cur-index))))))}
 
-     children]))
+   children])
 
 
 (defn athena-component
