@@ -295,7 +295,23 @@
   (fn []
     (let [newVal (not @display-unstable-keymap-settings?)]
       (reset! display-unstable-keymap-settings? newVal)
-      (js/localStorage.setItem "display-unstable-keymap-config" newVal))))
+      (js/localStorage.setItem "display-unstable-keymap-settings" newVal))))
+
+(def key-aliases-description
+  (array-map
+    :athena/toggle "Toggle athena"
+    :nav/back "Navigate back"
+    :nav/forward "Navigate forward"
+    :nav/daily-notes "Go to daily Notes"
+    :nav/pages "Go to pages"
+    :nav/graph "Go to graph"
+    :left-sidebar/toggle "Toggle left sidebar"
+    :right-sidebar/toggle "Toggle right sidebar"
+    :content/bold "Toggle bold"
+    :content/italic "Toggle italics"
+    :content/strikethrough "Toggle strikethrough"
+    :content/highlight "Toggle highlight"
+    :content/open-current-block-or-page "Open current block or page"))
 
 (defn key-shortcut
   [key-alias]
@@ -304,20 +320,19 @@
                                (when @editing?
                                  (dispatch [:keymap/update key-alias (first sequence)])
                                  (reset! editing? false)))
-        default-hotkey (:hotkey (key-alias default-keymap))
+        default-hotkey (key-alias default-keymap)
         handle-click (fn []
                        (reset! editing? true)
                        (mousetrap-record handle-hotkey-change))
         restore-default! (fn []
-                           (dispatch [:keymap/update key-alias default-hotkey]))]
+                           (dispatch [:keymap/restore key-alias default-keymap]))]
 
     (fn [key-alias]
       (let [keymap @(subscribe [:keymap])
-            hotkey-config (key-alias keymap)
-            hotkey (:hotkey hotkey-config)
+            hotkey (key-alias keymap)
             different-from-default? (not= hotkey default-hotkey)]
         [:div {:style {:display "flex" :justify-content "space-between" :border-bottom "1px solid var(--border-color)" :padding "10px 0"}}
-         [:span {:style {:font-weight 500}} (:name hotkey-config)]
+         [:span {:style {:font-weight 500}} (key-alias key-aliases-description)]
          [track-outside-click #(reset! editing? false)
           [:div
            [:div {:style {:display "flex" :justify-content "flex-end"}}
@@ -337,7 +352,7 @@
       [:header
        [:h3 "Keymap"]]
       [:main
-       [:div (for [key-alias (keys keymap)]
+       [:div (for [key-alias (keys key-aliases-description)]
                ^{:key key-alias} [key-shortcut key-alias])]]]]))
 
 (defn page

@@ -3,14 +3,15 @@
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
     [athens.patterns :as patterns]
     [athens.style :as style]
-    [athens.util :refer [now-ts gen-block-uid]]
+    [athens.util :refer [now-ts gen-block-uid map-map-values]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe dispatch]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe dispatch]]
+    [clojure.tools.reader.edn :as edn]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -19,9 +20,9 @@
   :boot/web
   (fn [_ _]
     {:db         db/rfdb
-     :keybindings/bind! nil
      :dispatch-n [[:loading/unset]
-                  [:local-storage/set-theme]]}))
+                  [:local-storage/set-theme]
+                  [:keymap/load-from-localstorage]]}))
 
 
 (reg-event-db
@@ -1815,9 +1816,33 @@
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
 
-
 (reg-event-fx
   :keymap/update
   (fn [cofx [_ hotkey-alias new-hotkey]]
-    {:db (assoc-in (:db cofx) [:keymap hotkey-alias :hotkey] new-hotkey)
+    {:db (assoc-in (:db cofx) [:keymap hotkey-alias] new-hotkey)
+     :local-storage/assoc! ["keymap" hotkey-alias new-hotkey]
+     :keybindings/bind! nil}))
+
+;; Join the hotkeys from localstorage with the default keymap
+(reg-event-fx
+  :keymap/load-from-localstorage
+  [(inject-cofx :local-storage "keymap")]
+  (fn [{:keys [local-storage db]} _]
+    (let [{:keys [keymap]} db
+          saved-keymap-hotkeys (edn/read-string local-storage)
+          restored-keymap (map-map-values
+                            (fn [hotkey hotkey-alias]
+                              (if (contains? saved-keymap-hotkeys hotkey-alias)
+                                (hotkey-alias saved-keymap-hotkeys)
+                                hotkey))
+                            keymap)]
+      {:db (assoc db :keymap restored-keymap)
+       :keybindings/bind! nil})))
+
+;; TODO: THIS
+(reg-event-fx
+  :keymap/restore
+  (fn [cofx [_ hotkey-alias default-keymap]]
+    {:db (assoc-in (:db cofx) [:keymap hotkey-alias] (hotkey-alias default-keymap))
+     :local-storage/dissoc! ["keymap" hotkey-alias]
      :keybindings/bind! nil}))

@@ -329,7 +329,6 @@
     :boot/desktop
     (fn [_ _]
       {:db         db/rfdb
-       :keybindings/bind! nil
        :async-flow {:first-dispatch [:local-storage/get-db-filepath]
                     :rules          [{:when        :seen?
                                       :events      :db/update-filepath
@@ -359,6 +358,7 @@
                                      {:when       :seen?
                                       :events     :reset-conn
                                       :dispatch-n [[:local-storage/set-theme]
+                                                   [:keymap/load-from-localstorage]
                                                    #_[:local-storage/navigate]]}
 
                                      ;; whether first or nth time, update athens pages

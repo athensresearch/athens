@@ -30,21 +30,20 @@
 
 
 (def default-keymap
-  (array-map
-    :athena/toggle { :name "Toggle athena" :hotkey "mod+k"}
-    :left-sidebar/toggle { :name "Toggle left sidebar" :hotkey "mod+\\"}
-    :right-sidebar/toggle { :name "Toggle right sidebar" :hotkey "mod+shift+\\"}
-    :nav/back { :name "Navigate back" :hotkey "alt+left"}
-    :nav/forward { :name "Navigate forward" :hotkey "alt+right"}
-    :nav/daily-notes { :name "Go to daily Notes" :hotkey "alt+d"}
-    :nav/pages { :name "Go to pages" :hotkey "mod+p"}
-    :nav/graph { :name "Go to graph" :hotkey "mod+g"}
-    :content/bold { :name "Toggle bold" :hotkey "mod+b"}
-    :content/italic { :name "Toggle italics" :hotkey "mod+i"}
-    :content/strikethrough { :name "Toggle strikethrough" :hotkey "mod+y"}
-    :content/highlight { :name "Toggle highlight" :hotkey "mod+h"}
-    :content/open-current-block-or-page { :name "Open current block or page" :hotkey "mod+o"}
-    :10x/toggle { :name "Toggle re-frame-10x" :hotkey "mod+t"}))
+  {:athena/toggle "mod+k"
+   :10x/toggle "mod+t"
+   :nav/back "alt+left"
+   :nav/forward "alt+right"
+   :nav/daily-notes "alt+d"
+   :nav/pages "mod+p"
+   :nav/graph "mod+g"
+   :left-sidebar/toggle "mod+\\"
+   :right-sidebar/toggle "mod+shift+\\"
+   :content/bold "mod+b"
+   :content/italic "mod+i"
+   :content/strikethrough "mod+y"
+   :content/highlight "mod+h"
+   :content/open-current-block-or-page "mod+o"})
 
 
 ;; -- re-frame -----------------------------------------------------------

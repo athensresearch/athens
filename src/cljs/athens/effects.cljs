@@ -4,6 +4,7 @@
     [athens.datsync-utils :as dat-s]
     [athens.db :as db]
     [athens.util :as util]
+    [clojure.edn :as edn]
     [athens.walk :as walk]
     [athens.ws-client :as ws]
     [cljs-http.client :as http]
@@ -279,6 +280,19 @@
   (fn [[key value]]
     (js/localStorage.setItem key value)))
 
+(reg-fx
+  :local-storage/assoc!
+  (fn [[storage-key key value]]
+    (let [old-value (or (edn/read-string (js/localStorage.getItem storage-key)) {})
+          new-value (assoc old-value key value)]
+      (js/localStorage.setItem storage-key new-value))))
+
+(reg-fx
+  :local-storage/dissoc!
+  (fn [[storage-key key]]
+    (let [old-value (or (edn/read-string (js/localStorage.getItem storage-key)) {})
+          new-value (dissoc old-value key)]
+      (js/localStorage.setItem storage-key new-value))))
 
 (reg-fx
   :local-storage/set-db!

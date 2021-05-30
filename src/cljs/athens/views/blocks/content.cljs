@@ -317,20 +317,13 @@
 
 
 ;; View
-
-(defn map-map-values
-  [f m]
-  (->> m
-    (map (fn [[key value]] [key (f value)]))
-    (into {})))
-
 ;; Handlers will come from textarea-keydown
 (defn content-hotkeys
   [uid state child]
   (let [event-wrapper
         ;; Only handle event if the currently editing uid is the same
         ;; as this block; and there aren't any selected item.
-        (fn [event-handler]
+        (fn [event-handler _]
           (fn [event]
             (when
               (and
@@ -338,7 +331,7 @@
                 (empty? @(rf/subscribe [:selected/items])))
               (event-handler event))))]
     [mousetrap
-     (map-map-values event-wrapper
+     (util/map-map-values event-wrapper
        (merge
          {["up" "down" "right" "left"] (partial textarea-keydown/handle-arrow-key uid state)
           "tab"                        textarea-keydown/handle-tab

@@ -321,3 +321,10 @@
     (if (nil? ws)
       '[800 600]
       (map #(js/parseInt %) (string/split ws ",")))))
+
+;; Maps
+(defn map-map-values
+  [f m]
+  (->> m
+    (map (fn [[key value]] [key (f value key)]))
+    (into (empty m))))
