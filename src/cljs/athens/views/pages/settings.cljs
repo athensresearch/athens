@@ -89,7 +89,6 @@
    :autosave-time (init-autosave-time)})
 
 
-
 (defn handle-reset-email
   [s value]
   (reset! value "")
@@ -286,16 +285,19 @@
        [:aside
         [:p "For now, a username is only needed if you are connected to a server."]]]]]))
 
+
 ;; -- Keymap Settings -----------------------------------------------------------
 (def display-unstable-keymap-settings?
   (r/atom (boolean (js/localStorage.getItem "display-unstable-keymap-settings"))))
 
+
 ;; Temporal function in window to enable this unstable feature
 (set! (.-toggleUnstableKeymapSettings js/window)
-  (fn []
-    (let [newVal (not @display-unstable-keymap-settings?)]
-      (reset! display-unstable-keymap-settings? newVal)
-      (js/localStorage.setItem "display-unstable-keymap-settings" newVal))))
+      (fn []
+        (let [newVal (not @display-unstable-keymap-settings?)]
+          (reset! display-unstable-keymap-settings? newVal)
+          (js/localStorage.setItem "display-unstable-keymap-settings" newVal))))
+
 
 (def key-aliases-description
   (array-map
@@ -312,6 +314,7 @@
     :content/strikethrough "Toggle strikethrough"
     :content/highlight "Toggle highlight"
     :content/open-current-block-or-page "Open current block or page"))
+
 
 (defn key-shortcut
   [key-alias]
@@ -354,6 +357,7 @@
       [:main
        [:div (for [key-alias (keys key-aliases-description)]
                ^{:key key-alias} [key-shortcut key-alias])]]]]))
+
 
 (defn page
   []

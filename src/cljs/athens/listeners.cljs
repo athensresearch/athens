@@ -13,6 +13,7 @@
       EventType
       KeyCodes)))
 
+
 (defn unfocus
   "Clears editing/uid when user clicks anywhere besides bullets, header, or on a block.
   Clears selected/items when user clicks somewhere besides a bullet point."

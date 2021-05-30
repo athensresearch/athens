@@ -6,12 +6,12 @@
     [athens.util :refer [now-ts gen-block-uid map-map-values]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
+    [clojure.tools.reader.edn :as edn]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe dispatch]]
-    [clojure.tools.reader.edn :as edn]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe dispatch]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -176,6 +176,7 @@
   (fn [db _]
     (update db :athena/open not)))
 
+
 (reg-event-fx
   :athena/create-page
   (fn [_ [_ title uid open-on-sidebar]]
@@ -185,7 +186,6 @@
             open-on-sidebar
             [:dispatch-later {:ms 300 :dispatch [:right-sidebar/open-item uid]}]
             [:dispatch [:navigate :page {:id uid}]])]}))
-
 
 
 (reg-event-db
@@ -1827,12 +1827,14 @@
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
 
+
 (reg-event-fx
   :keymap/update
   (fn [cofx [_ hotkey-alias new-hotkey]]
     {:db (assoc-in (:db cofx) [:keymap hotkey-alias] new-hotkey)
      :local-storage/assoc! ["keymap" hotkey-alias new-hotkey]
      :keybindings/bind! nil}))
+
 
 ;; Join the hotkeys from localstorage with the default keymap
 (reg-event-fx
@@ -1849,6 +1851,7 @@
                             keymap)]
       {:db (assoc db :keymap restored-keymap)
        :keybindings/bind! nil})))
+
 
 ;; TODO: THIS
 (reg-event-fx

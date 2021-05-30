@@ -110,13 +110,16 @@
   []
   (nil? @(subscribe [:editing/uid])))
 
+
 (defn selecting-items?
   []
   (not-empty @(subscribe [:selected/items])))
 
+
 (defn selected-items
   []
   @(subscribe [:selected/items]))
+
 
 (defn dispatch-when-undo-or-redo-allowed
   [operation]
