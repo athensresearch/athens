@@ -8,7 +8,6 @@
     [react]
     [reagent.core :as r]))
 
-
 (defn mousetrap-record
   [callback]
   (.record Mousetrap callback))
@@ -136,7 +135,7 @@
 
 
 (def changeable-global-keybindings
-  {:athena/toggle        #(dispatch [:athena/toggle])
+  {:athena/toggle        #(do (prn "Athena") (dispatch [:athena/toggle]))
    :10x/toggle           util/toggle-10x
    :nav/back             #(when (not-editing?) (.back js/window.history))
    :nav/forward          #(when (not-editing?) (.forward js/window.history))
@@ -151,12 +150,15 @@
   []
   (mousetrap-bind-all Mousetrap changeable-global-keybindings))
 
-
 ;; Global, unchangeable keybindings.
 ;; NOTE: This cannot use hotkey aliases (:athena/toggle) because
 ;; they are executed before the re-frame db is setup.
 (defn init
   []
+  ;; Overriding the stopCallback in Mousetrap prototype.
+  ;; This allows to listen for events inside textareas.
+  (set! (.. Mousetrap -prototype -stopCallback) (constantly false))
+
   (mousetrap-bind "mod+z" #(dispatch-when-undo-or-redo-allowed :undo))
   (mousetrap-bind "mod+shift+z" #(dispatch-when-undo-or-redo-allowed :redo))
   (mousetrap-bind "mod+s" #(dispatch [:save]))

@@ -696,7 +696,6 @@
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
     (let [d-event (destruct-key-down e)]
-      (prn "hi")
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
 
