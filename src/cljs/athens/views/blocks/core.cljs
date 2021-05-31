@@ -22,11 +22,11 @@
     [stylefy.core :as stylefy]))
 
 
-;;; Styles
-;;; 
-;;; Blocks use Em units in many places rather than Rem units because
-;;; blocks need to scale with their container: sidebar blocks are
-;;; smaller than main content blocks, for instance.
+;; Styles
+;;
+;; Blocks use Em units in many places rather than Rem units because
+;; blocks need to scale with their container: sidebar blocks are
+;; smaller than main content blocks, for instance.
 
 
 (def block-container-style
@@ -55,10 +55,15 @@
                                 :pointer-events "none"
                                 :border-radius "0.25rem"
                                 :transition "opacity 0.075s ease"
-                                :background (style/color :link-color :opacity-lower)
-                                :box-shadow [["0 0.25rem 0.5rem -0.25rem" (style/color :background-color :opacity-med)]]}]
+                                :background (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
-                     [:.block-body {:display "flex"
+                     [:.block-body {:display "grid"
+                                    :grid-template-columns "1em 1em 1fr auto"
+                                    :grid-template-rows "0 1fr 0"
+                                    :grid-template-areas "
+                                      'above above above above'
+                                      'toggle bullet content refs'
+                                      'below below below below'"
                                     :border-radius "0.5rem"
                                     :transition "all 0.1s ease"
                                     :position "relative"}
@@ -74,12 +79,15 @@
                                                   :right 0
                                                   :bottom 0
                                                   :left 0}]]
-                      ;;[:&:hover {:background (color :background-minus-1)}]]
+                     [:.block-content {:grid-area "content"
+                                       :min-height "1.5em"}]
+                     ;; [:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing,
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;;[(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
+                     ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
-                     [:.block-container {:margin-left "2rem"}]]})
+                     [:.block-container {:margin-left "2rem"
+                                         :grid-area "body"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -92,14 +100,19 @@
 (stylefy/class "dragging" dragging-style)
 
 
-;;; Components
+;; Components
 
 (defn block-refs-count-el
   [count uid]
   [:div (stylefy/use-style {:margin-left "1em"
+                            :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [buttons/button {:primary true :on-click #(rf/dispatch [:right-sidebar/open-item uid])} count]])
+   [buttons/button {:primary true
+                    :on-click (fn [e]
+                                (.. e stopPropagation)
+                                (rf/dispatch [:right-sidebar/open-item uid]))}
+    count]])
 
 
 (defn block-drag-over
@@ -170,7 +183,7 @@
   (let [{target-uid :block/uid} block
         related-uid (util/get-dataset-uid (.. e -relatedTarget))]
     (when-not (= related-uid target-uid)
-      ;;(prn target-uid related-uid  "LEAVE")
+      ;; (prn target-uid related-uid  "LEAVE")
       (swap! state assoc :drag-target nil))))
 
 
@@ -184,7 +197,7 @@
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
-                        :search/type       nil              ;; one of #{:page :block :slash :hashtag}
+                        :search/type       nil              ; one of #{:page :block :slash :hashtag}
                         :search/results    nil
                         :search/query      nil
                         :search/index      nil
@@ -195,6 +208,7 @@
                         :context-menu/y    nil
                         :context-menu/show false
                         :caret-position    nil
+                        :show-editable-dom   false
                         :linked-ref/open (or (false? linked-ref) initial-open)})]
 
      (fn [block linked-ref-data opts]
@@ -204,11 +218,11 @@
                                    (fn [{:block/keys [original-uid uid] :as block}]
                                      (assoc block :block/uid (or original-uid uid)))
                                    block)
-             {:search/keys [] :keys [dragging drag-target]} @state
+             {:search/keys [] :keys [dragging]} @state
              is-editing  @(rf/subscribe [:editing/is-editing uid])
              is-selected @(rf/subscribe [:selected/is-selected uid])]
 
-         ;;(prn uid is-selected)
+         ;; (prn uid is-selected)
 
          ;; If datascript string value does not equal local value, overwrite local value.
          ;; Write on initialization
@@ -217,34 +231,38 @@
            (swap! state assoc :string/previous string :string/local string))
 
          [:div
-          {:class         ["block-container"
-                           (when (and dragging (not is-selected)) "dragging")
-                           (when is-editing "is-editing")
-                           (when is-selected "is-selected")
-                           (when (and (seq children) open) "show-tree-indicator")
-                           (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
-           :data-uid      uid
-           :on-drag-over  (fn [e] (block-drag-over e block state))
-           :on-drag-leave (fn [e] (block-drag-leave e block state))
-           :on-drop       (fn [e] (block-drop e block state))}
+          {:class          ["block-container"
+                            (when (and dragging (not is-selected)) "dragging")
+                            (when is-editing "is-editing")
+                            (when is-selected "is-selected")
+                            (when (and (seq children) open) "show-tree-indicator")
+                            (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
+           :data-uid       uid
+           ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+           ;; even when not editing this block. When true, clicking the block content will pass
+           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+           ;; so we avoid rendering it when it's not needed.
+           :on-mouse-enter #(swap! state assoc :show-editable-dom true)
+           :on-mouse-leave #(swap! state assoc :show-editable-dom false)
+           :on-click       (fn [e] (doall (.. e stopPropagation) (rf/dispatch [:editing/uid uid])))
+           :on-drag-over   (fn [e] (block-drag-over e block state))
+           :on-drag-leave  (fn [e] (block-drag-leave e block state))
+           :on-drop        (fn [e] (block-drop e block state))}
 
           [presence/presence-popover-info uid {:inline? true}]
 
-          [drop-area-indicator/drop-area-indicator #(when (= drag-target :above) {:opacity "1"})]
+          (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
-           [:button.block-edit-toggle
-            {:on-click (fn [e]
-                         (when (false? (.. e -shiftKey))
-                           (rf/dispatch [:editing/uid uid])))}]
-
-           [toggle/toggle-el uid-sanitized-block state linked-ref]
-           [context-menu/context-menu-el uid-sanitized-block state]
+           (when (seq children)
+             [toggle/toggle-el uid-sanitized-block state linked-ref])
+           (when (:context-menu/show @state)
+             [context-menu/context-menu-el uid-sanitized-block state])
            [bullet/bullet-el block state linked-ref]
            [tooltip/tooltip-el uid-sanitized-block state]
            [content/block-content-el block state]
 
-           (when-not (:block-embed? opts)
+           (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el (count _refs) uid])]
 
           [autocomplete-search/inline-search-el block state]
@@ -255,13 +273,13 @@
                      (or (and (true? linked-ref) (:linked-ref/open @state))
                          (and (false? linked-ref) open)))
             (for [child children]
-              [:div {:key (:db/id child)}
+              [:<> {:key (:db/id child)}
                [block-el child
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          [drop-area-indicator/drop-area-indicator #(when (= drag-target :below) {;;:color "red"
-                                                                                  :opacity "1"})]])))))
+          (when (= (:drag-target @state) :child) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
+          (when (= (:drag-target @state) :below) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
 
 (defn block-component

@@ -16,7 +16,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def page-style
@@ -79,7 +79,8 @@
                         [:.wrap-label {:flex-direction "row-reverse"}]]
                        [:&:hover {:opacity 1}]]]]})
 
-;;; Sort state and logic
+
+;; Sort state and logic
 
 (defn- get-sorted-by
   [db]
@@ -125,7 +126,8 @@
             (assoc :all-pages/sorted-by column-id)
             (assoc :all-pages/sort-order-ascending? (= column-id :title)))))))
 
-;;; Components
+
+;; Components
 
 (defn- preview-body
   [block-children]

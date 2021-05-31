@@ -35,7 +35,7 @@
     (let [DOC-PATH (.getPath app "documents")]
       (.resolve path DOC-PATH "athens")))
 
-  ;;; Filesystem Dialogs
+  ;; Filesystem Dialogs
 
 
   (defn move-dialog!
@@ -166,7 +166,7 @@
       (js/setTimeout #(dispatch [:transact [tx-data]]) 50)))
 
 
-  ;;; Subs
+  ;; Subs
 
 
   (reg-sub
@@ -188,7 +188,7 @@
 
 
   ;; create sub in athens.subs so web-version of Athens works
-  ;;(reg-sub
+  ;; (reg-sub
   ;;  :db/remote-graph-conf
   ;;  (fn [db _]
   ;;    (:db/remote-graph-conf db)))
@@ -200,7 +200,7 @@
       (:db/remote-graph db)))
 
 
-  ;;; Events
+  ;; Events
 
 
   (reg-event-fx
@@ -408,7 +408,7 @@
                                       :halt?       true}]}}))
 
 
-  ;;; Effects
+  ;; Effects
 
   (defn os-username
     []
