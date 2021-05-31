@@ -29,7 +29,11 @@
   [clients ch {:event/keys [args]}]
   (let [username (:username args)]
     (log/info ch "New Client Intro:" username)
-    (swap! clients assoc ch username)))
+    (swap! clients assoc ch username)
+    ;; confirm
+    {:event/status :accepted}
+    ;; TODO broadcast new presence
+    ))
 
 
 (defn editing-handler

@@ -7,8 +7,8 @@
     [athens.self-hosted.web        :as web]
     [clojure.tools.logging         :as log]
     [com.stuartsierra.component    :as component]
-    [system.core                   :as system]
-    [system.components.repl-server :as nrepl]))
+    [system.components.repl-server :as nrepl]
+    [system.core                   :as system]))
 
 
 (defn new-system

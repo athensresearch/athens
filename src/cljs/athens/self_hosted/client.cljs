@@ -2,6 +2,7 @@
   "Self-Hosted Mode connector."
   (:require
     [athens.common-events.schema :as schema]
+    [cognitect.transit           :as transit]
     [com.stuartsierra.component  :as component]
     [re-frame.core               :as rf]))
 
@@ -85,10 +86,7 @@
      (if (open? connection)
        (do
          (js/console.debug "WSClient sending to server:" (pr-str data))
-         (.send connection
-                (-> data
-                    clj->js
-                    js/JSON.stringify))
+         (.send connection (transit/write (transit/writer :json) data))
          {:result :sent})
        (do
          (js/console.warn "WSClient not open")
@@ -129,10 +127,9 @@
 
 (defn- message-handler
   [event]
-  (let [data (-> event
-                 .-data
-                 js/JSON.parse
-                 (js->clj :keywordize-keys true))]
+  (let [data (->> event
+                  .-data
+                  (transit/read (transit/reader :json)))]
     (js/console.warn "TODO: WSClient Received:" (pr-str data))
     ;; TODO implement message handler for client
     ))
