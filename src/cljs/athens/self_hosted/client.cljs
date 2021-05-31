@@ -30,9 +30,16 @@
 
 
 (def ^:private send-queue (atom []))
+(def ^:private awaiting-response (atom {}))
 
 
 (def ^:private reconnect-timer (atom nil))
+
+
+(defn- await-response!
+  [{:event/keys [id] :as data}]
+  (js/console.log "WSClient awaiting response:" id)
+  (swap! awaiting-response assoc id data))
 
 
 (defn- reconnecting?
@@ -86,6 +93,7 @@
      (if (open? connection)
        (do
          (js/console.debug "WSClient sending to server:" (pr-str data))
+         (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
          {:result :sent})
        (do
@@ -127,12 +135,18 @@
 
 (defn- message-handler
   [event]
-  (let [data (->> event
-                  .-data
-                  (transit/read (transit/reader :json)))]
-    (js/console.warn "TODO: WSClient Received:" (pr-str data))
-    ;; TODO implement message handler for client
-    ))
+  (let [data               (->> event
+                                .-data
+                                (transit/read (transit/reader :json)))
+        {:event/keys [id]} data
+        event              (get @awaiting-response id)]
+    (if event
+      (do
+        (js/console.log "WSClient: response " (pr-str data)
+                        "to awaited event" (pr-str event))
+        (swap! awaiting-response dissoc id))
+      (do
+        (js/console.log "TODO WSClient: not awaited message received:" (pr-str data))))))
 
 
 (defn- remove-listeners!
