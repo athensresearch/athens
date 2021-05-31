@@ -13,6 +13,51 @@
 (defonce ^:private ws-connection (atom nil))
 
 
+(declare open-handler)
+(declare message-handler)
+(declare close-handler)
+
+
+(defn- connect-to-self-hosted!
+  [url]
+  (js/console.log "WS Client Connecting to:" url)
+  (when url
+    (doto (js/WebSocket. url)
+      (.addEventListener "open" open-handler)
+      (.addEventListener "message" message-handler)
+      (.addEventListener "close" close-handler))))
+
+
+(def ^:private send-queue (atom []))
+
+
+(def ^:private reconnect-timer (atom nil))
+
+
+(defn- reconnecting?
+  "Checks if WebSocket is awaiting reconnection."
+  []
+  (some? @reconnect-timer))
+
+
+(defn- delayed-reconnect!
+  ([url]
+   (delayed-reconnect! url 3000))
+  ([url delay-ms]
+   (js/console.log "WSClient scheduling reconnect in" delay-ms "ms to" url)
+   (let [timer-id (js/setTimeout (fn []
+                                   (reset! reconnect-timer nil)
+                                   (connect-to-self-hosted! url))
+                                 delay-ms)]
+     (reset! reconnect-timer timer-id))))
+
+
+(defn- close-reconnect-timer!
+  []
+  (when-let [timer-id @reconnect-timer]
+    (js/clearTimeout timer-id)))
+
+
 (defn open?
   "Checks if `connection` is open.
   If no args version called, `ws-connection` connection is checked.
@@ -36,22 +81,50 @@
    (send! @ws-connection data))
 
   ([connection data]
-   (when (open? connection)
-     (if (schema/valid-event? data)
-       (.send connection
-              (-> data
-                  clj->js
-                  js/JSON.stringify))
-       (let [explanation (schema/explain data)]
-         (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation)))))))
+   (if (schema/valid-event? data)
+     (if (open? connection)
+       (do
+         (js/console.debug "WSClient sending to server:" (pr-str data))
+         (.send connection
+                (-> data
+                    clj->js
+                    js/JSON.stringify))
+         {:result :sent})
+       (do
+         (js/console.warn "WSClient not open")
+         (if (reconnecting?)
+           (do
+             (js/console.info "WSClient already reconnecting, queued.")
+             (swap! send-queue (fnil conj []) data)
+             {:result :queued
+              :reason :client-already-reconnecting})
+           (do
+             (js/console.warn "WSClient closed & not reconnecting. Reconnecting & queued.")
+             (delayed-reconnect! (.-url connection) 0)
+             (swap! send-queue (fnil conj []) data)
+             {:result :queued
+              :reason :client-started-reconnecting}))))
+     (let [explanation (schema/explain data)]
+       (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation))
+       {:result :rejected
+        :reason :invalid-event-schema}))))
 
 
 (defn- open-handler
   [event]
-  (js/console.log "WS Client Connected:" event)
-  (send! (.-target event)
-         {:event/type :presence/hello
-          :event/args {:username @(rf/subscribe [:user])}}))
+  (js/console.log "WSClient Connected:" event)
+  (let [connection (.-target event)]
+    (reset! ws-connection connection)
+    (send! connection
+           {:event/id      (str (gensym))
+            :event/last-tx "0" ; TODO: discover last tx
+            :event/type    :presence/hello
+            :event/args    {:username (:name @(rf/subscribe [:user]))}})
+    (when (seq @send-queue)
+      (js/console.log "WSClient sending queued packets #" (count @send-queue))
+      (doseq [data @send-queue]
+        (send! connection data))
+      (reset! send-queue []))))
 
 
 (defn- message-handler
@@ -65,38 +138,6 @@
     ))
 
 
-(declare close-handler)
-
-
-(defn- connect-to-self-hosted!
-  [url]
-  (js/console.log "WS Client Connecting to:" url)
-  (when url
-    (doto (js/WebSocket. url)
-      (.addEventListener "open" open-handler)
-      (.addEventListener "message" message-handler)
-      (.addEventListener "close" close-handler))))
-
-
-(def ^:private reconnect-timer (atom nil))
-
-
-(defn- delayed-reconnect!
-  [url]
-  (js/console.log "WSClient scheduling reconnect in 3s to" url)
-  (let [timer-id (js/setTimeout (fn []
-                                  (reset! reconnect-timer nil)
-                                  (connect-to-self-hosted! url))
-                                3000)]
-    (reset! reconnect-timer timer-id)))
-
-
-(defn- close-reconnect-timer!
-  []
-  (when-let [timer-id @reconnect-timer]
-    (js/clearTimeout timer-id)))
-
-
 (defn- remove-listeners!
   [connection]
   (doto connection
@@ -107,7 +148,7 @@
 
 (defn- close-handler
   [event]
-  (js/console.log "WS Client Disconnected:" event)
+  (js/console.log "WSClient Disconnected:" event)
   (let [connection (.-target event)
         url        (.-url connection)]
     (remove-listeners! connection)
@@ -143,3 +184,28 @@
 (defn new-ws-client
   [url]
   (map->WSClient {:url url}))
+
+
+;; REPL Testing
+(comment
+
+  ;; define a client
+  (def client (new-ws-client ws-url))
+
+  ;; start a client
+  (component/start client)
+
+  ;; check if open?
+  (open?)
+
+  ;; try to send an invalid message
+  (send! {:some :message})
+  ;; => {:result :rejected, :reason :invalid-event-schema}
+
+  ;; send a `:presence/hello` event
+  (send! {:event/id "test-id"
+          :event/last-tx "0"
+          :event/type :presence/hello
+          :event/args {:username "Bob's your uncle"}})
+  ;; => {:result :sent}
+  )

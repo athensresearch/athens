@@ -25,7 +25,7 @@
 
 
 (defn -main
-  [& args]
+  [& _args]
   (log/info "Athens Self-Hosted Starting")
   (component/start system)
   (log/info "Athens Self-Hosted ready to do thy bidding"))
