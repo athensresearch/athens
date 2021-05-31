@@ -5,23 +5,20 @@
     [com.stuartsierra.component   :as component]))
 
 
-(def system nil)
-
-
 (defn init
   []
-  (alter-var-root #'system
+  (alter-var-root #'app/system
                   (constantly (app/new-system))))
 
 
 (defn start
   []
-  (alter-var-root #'system component/start))
+  (alter-var-root #'app/system component/start))
 
 
 (defn stop
   []
-  (alter-var-root #'system
+  (alter-var-root #'app/system
                   (fn [s] (when s (component/stop s)))))
 
 

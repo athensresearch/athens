@@ -40,6 +40,7 @@
                  [ch.qos.logback/logback-classic "1.2.3"]
                  ;;   IoC
                  [com.stuartsierra/component "1.0.0"]
+                 [org.danielsz/system "0.4.7"]
                  ;;   configuration mgmt
                  [yogthos/config "1.1.7"]
                  ;;   Datahike

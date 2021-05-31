@@ -24,8 +24,9 @@
 
   (stop
     [component]
+    (log/info "Stopping Datahike")
     (when conn
-      (log/info "Stopping Datahike")
+      (log/info "Releasing conn")
       (d/release conn)
       (assoc component :conn nil))))
 

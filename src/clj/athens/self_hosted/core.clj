@@ -2,11 +2,13 @@
   "Athens Self Hosted Backend entry point."
   (:gen-class)
   (:require
-    [athens.self-hosted.config   :as cfg]
-    [athens.self-hosted.datahike :as datahike]
-    [athens.self-hosted.web      :as web]
-    [clojure.tools.logging       :as log]
-    [com.stuartsierra.component  :as component]))
+    [athens.self-hosted.config     :as cfg]
+    [athens.self-hosted.datahike   :as datahike]
+    [athens.self-hosted.web        :as web]
+    [clojure.tools.logging         :as log]
+    [com.stuartsierra.component    :as component]
+    [system.core                   :as system]
+    [system.components.repl-server :as nrepl]))
 
 
 (defn new-system
@@ -14,11 +16,13 @@
   []
   (log/debug "Building new system map")
   (component/system-map
-    :config (cfg/new-config)
-    :datahike (component/using (datahike/new-datahike {})
-                               [:config])
+    :config    (cfg/new-config)
+    :datahike  (component/using (datahike/new-datahike {})
+                                [:config])
     :webserver (component/using (web/new-web-server {})
-                                [:config :datahike])))
+                                [:config :datahike])
+    ;; TODO move 8877 to configuration, need to wrap new-repl-server so it can use `:config`
+    :nrepl     (nrepl/new-repl-server :port 8877)))
 
 
 (def system (new-system))
