@@ -50,8 +50,44 @@
   (m/validator event))
 
 
-(defn explain
+(defn explain-event
   [data]
   (-> event
+      (m/explain data)
+      (me/humanize)))
+
+
+(def event-status
+  [:enum :rejected :accepted])
+
+
+(def event-response-common
+  [:map
+   [:event/id string?]
+   [:event/status event-status]])
+
+
+(def rejection-reason
+  [:enum :introduce-yourself :stale-client])
+
+
+(def response-rejected
+  [:map
+   [:reject/reason [:or string? rejection-reason]]])
+
+
+(def event-response
+  [:multi {:dispatch :event/status}
+   [:accepted event-response-common]
+   [:rejected (mu/merge event-response-common
+                        response-rejected)]])
+
+(def valid-event-response?
+  (m/validator event-response))
+
+
+(defn explain-event-response
+  [data]
+  (-> event-response
       (m/explain data)
       (me/humanize)))

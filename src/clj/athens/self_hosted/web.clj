@@ -64,7 +64,7 @@
   (let [username (get @clients ch)
         data     (<-transit msg)]
     (if-not (schema/valid-event? data)
-      (let [explanation (schema/explain data)]
+      (let [explanation (schema/explain-event data)]
         (log/warn ch "invalid event received:" explanation)
         (send! ch {:event/id      (:event/id data)
                    :event/status  :rejected

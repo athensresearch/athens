@@ -110,7 +110,7 @@
              (swap! send-queue (fnil conj []) data)
              {:result :queued
               :reason :client-started-reconnecting}))))
-     (let [explanation (schema/explain data)]
+     (let [explanation (schema/explain-event data)]
        (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation))
        {:result :rejected
         :reason :invalid-event-schema}))))
@@ -144,7 +144,15 @@
       (do
         (js/console.log "WSClient: response " (pr-str data)
                         "to awaited event" (pr-str event))
-        (swap! awaiting-response dissoc id))
+        (swap! awaiting-response dissoc id)
+        ;; is valid response?
+        (if (schema/valid-event-response? data)
+          (do
+            (js/console.log "Received valid response.")
+            ;; TODO Accepted or Rejected?
+            )
+          (let [explanation (schema/explain-event-response data)]
+            (js/console.warn "Received invalid response:" (pr-str explanation)))))
       (do
         (js/console.log "TODO WSClient: not awaited message received:" (pr-str data))))))
 
