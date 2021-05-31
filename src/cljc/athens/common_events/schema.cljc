@@ -1,7 +1,9 @@
 (ns athens.common-events.schema
-  (:require [malli.core  :as m]
-            [malli.error :as me]
-            [malli.util  :as mu]))
+  (:require
+    [malli.core  :as m]
+    [malli.error :as me]
+    [malli.util  :as mu]))
+
 
 (def event-type
   [:enum
@@ -48,7 +50,8 @@
   (m/validator event))
 
 
-(defn explain [data]
+(defn explain
+  [data]
   (-> event
       (m/explain data)
       (me/humanize)))

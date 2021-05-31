@@ -1,28 +1,39 @@
 (ns athens.self-hosted.web.presence
-  (:require [clojure.data.json     :as json]
-            [clojure.tools.logging :as log]
-            [org.httpkit.server    :as http]))
+  (:require
+    [clojure.data.json     :as json]
+    [clojure.tools.logging :as log]
+    [org.httpkit.server    :as http]))
 
-(defn- now []
+
+(defn- now
+  []
   (quot (System/currentTimeMillis) 1000))
 
+
 (let [max-id (atom 0)]
-  (defn next-id []
+  (defn next-id
+    []
     (swap! max-id inc)))
 
+
 (defonce all-presence (ref []))
+
 
 (def supported-event-types
   #{:presence/hello
     :presence/editing
     :presence/viewing})
 
-(defn hello-handler [clients ch {:event/keys [args]}]
+
+(defn hello-handler
+  [clients ch {:event/keys [args]}]
   (let [username (:username args)]
     (log/info ch "New Client Intro:" username)
     (swap! clients assoc ch username)))
 
-(defn editing-handler [clients ch {:event/keys [args]}]
+
+(defn editing-handler
+  [clients ch {:event/keys [args]}]
   (let [username (get clients ch)]
     (when-let [uid (:editing args)]
       (let [presence {:presence {:time     (now)
@@ -30,20 +41,24 @@
                                  :editing  uid
                                  :username username}}]
         (dosync
-         (let [all-presence* (conj @all-presence presence)
-               total         (count all-presence*)]
-             ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
-           (if (> total 100)
-             (ref-set all-presence (vec (drop (- total 100) all-presence*)))
-             (ref-set all-presence all-presence*)))))
+          (let [all-presence* (conj @all-presence presence)
+                total         (count all-presence*)]
+            ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
+            (if (> total 100)
+              (ref-set all-presence (vec (drop (- total 100) all-presence*)))
+              (ref-set all-presence all-presence*)))))
       (doseq [client (keys @clients)]
         (http/send! client (json/json-str (last @all-presence)))))))
 
-(defn viewing-handler [_clients _ch _event]
+
+(defn viewing-handler
+  [_clients _ch _event]
   ;; TODO new viewing presence
   )
 
-(defn presence-handler [clients ch {:event/keys [type] :as event}]
+
+(defn presence-handler
+  [clients ch {:event/keys [type] :as event}]
   (condp = type
     :presence/hello   (hello-handler clients ch event)
     :presence/editing (editing-handler clients ch event)

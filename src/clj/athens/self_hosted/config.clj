@@ -1,18 +1,29 @@
 (ns athens.self-hosted.config
   "Athens Self-Hosted Configuration management"
-  (:require [clojure.tools.logging      :as log]
-            [com.stuartsierra.component :as component]
-            [config.core                :as cfg]))
+  (:require
+    [clojure.tools.logging      :as log]
+    [com.stuartsierra.component :as component]
+    [config.core                :as cfg]))
 
-(defrecord Configuration []
+
+(defrecord Configuration
+  []
+
   component/Lifecycle
-  (start [component]
+
+  (start
+    [component]
     (log/info "Starting configuration component")
     (assoc component :config (cfg/reload-env)))
-  (stop [component]
+
+
+  (stop
+    [component]
     (log/info "Stopping configuration component")
     (assoc component :config nil)))
 
-(defn new-config []
+
+(defn new-config
+  []
   (map->Configuration {}))
 

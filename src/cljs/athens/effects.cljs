@@ -392,17 +392,17 @@
       (when right-sidebar
         (set! (.. right-sidebar -scrollTop) 0)))))
 
+
 (reg-fx
- :remote/send-event!
- (fn [event]
-   (if (schema/valid-event? event)
-     ;; valid event let's send it
-     (do
-       (js/console.log "Sending event:" (pr-str event))
-       (js/console.warn "TODO: Implement await ACK or Reject for each sent event.")
-       (client/send! event))
-     (let [explanation (-> schema/event
-                           (m/explain event)
-                           (me/humanize))]
-       (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))
-   ))
+  :remote/send-event!
+  (fn [event]
+    (if (schema/valid-event? event)
+      ;; valid event let's send it
+      (do
+        (js/console.log "Sending event:" (pr-str event))
+        (js/console.warn "TODO: Implement await ACK or Reject for each sent event.")
+        (client/send! event))
+      (let [explanation (-> schema/event
+                            (m/explain event)
+                            (me/humanize))]
+        (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))

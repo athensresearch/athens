@@ -1,25 +1,37 @@
 (ns user
-  (:require [athens.self-hosted.core      :as app]
-            [clojure.tools.namespace.repl :as repl]
-            [com.stuartsierra.component   :as component]))
+  (:require
+    [athens.self-hosted.core      :as app]
+    [clojure.tools.namespace.repl :as repl]
+    [com.stuartsierra.component   :as component]))
+
 
 (def system nil)
 
-(defn init []
+
+(defn init
+  []
   (alter-var-root #'system
                   (constantly (app/new-system))))
 
-(defn start []
+
+(defn start
+  []
   (alter-var-root #'system component/start))
 
-(defn stop []
+
+(defn stop
+  []
   (alter-var-root #'system
                   (fn [s] (when s (component/stop s)))))
 
-(defn go []
+
+(defn go
+  []
   (init)
   (start))
 
-(defn reset []
+
+(defn reset
+  []
   (stop)
   (repl/refresh :after 'user/go))
