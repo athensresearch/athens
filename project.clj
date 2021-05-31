@@ -46,7 +46,9 @@
                  [io.replikativ/datahike "0.3.6"]
                  ;;   web server
                  [http-kit "2.5.3"]
-                 [compojure "1.6.2"]]
+                 [compojure "1.6.2"]
+                 ;;   data validation
+                 [metosin/malli "0.5.1"]]
 
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]

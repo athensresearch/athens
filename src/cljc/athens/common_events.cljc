@@ -2,6 +2,7 @@
   "Event as Verbs executed on Knowledge Graph"
   (:require [clojure.string :as string]))
 
+
 (defn paste-verbatim->tx [uid text start value]
   (let [block-empty? (string/blank? value)
         block-start? (zero? start)

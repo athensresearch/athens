@@ -1,15 +1,16 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
-    [com.stuartsierra.component :as component]
-    [re-frame.core :as rf]))
+    [athens.common-events.schema :as schema]
+    [com.stuartsierra.component  :as component]
+    [re-frame.core               :as rf]))
 
 
-;; TODO: confugrable
-(def ws-url "ws://localhost:1337")
+;; TODO: make configurable
+(def ws-url "ws://localhost:3010/ws")
 
 
-(defonce ws-connection (atom nil))
+(defonce ^:private ws-connection (atom nil))
 
 
 (defn open?
@@ -35,10 +36,14 @@
    (send! @ws-connection data))
 
   ([connection data]
-   (.send connection
-          (-> data
-              clj->js
-              js/JSON.stringify))))
+   (when (open? connection)
+     (if (schema/valid-event? data)
+       (.send connection
+              (-> data
+                  clj->js
+                  js/JSON.stringify))
+       (let [explanation (schema/explain data)]
+         (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation)))))))
 
 
 (defn- open-handler

@@ -1,23 +1,27 @@
 (ns athens.effects
   (:require
-    [athens.config :as config]
-    [athens.datsync-utils :as dat-s]
-    [athens.db :as db]
-    [athens.util :as util]
-    [athens.walk :as walk]
-    [athens.ws-client :as ws]
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [go <!]]
-    [cljs.pprint :refer [pprint]]
-    [clojure.string :as str]
+    [athens.common-events.schema :as schema]
+    [athens.config               :as config]
+    [athens.datsync-utils        :as dat-s]
+    [athens.db                   :as db]
+    [athens.self-hosted.client   :as client]
+    [athens.util                 :as util]
+    [athens.walk                 :as walk]
+    [athens.ws-client            :as ws]
+    [cljs-http.client            :as http]
+    [cljs.core.async             :refer [go <!]]
+    [cljs.pprint                 :refer [pprint]]
+    [clojure.string              :as str]
     [dat.sync.client]
-    [datascript.core :as d]
-    [datascript.transit :as dt]
+    [datascript.core             :as d]
+    [datascript.transit          :as dt]
     [day8.re-frame.async-flow-fx]
-    [goog.dom.selection :refer [setCursorPosition]]
-    [posh.reagent :as p :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx subscribe]]
-    [stylefy.core :as stylefy]))
+    [goog.dom.selection          :refer [setCursorPosition]]
+    [malli.core                  :as m]
+    [malli.error                 :as me]
+    [posh.reagent                :as p :refer [transact!]]
+    [re-frame.core               :refer [dispatch reg-fx subscribe]]
+    [stylefy.core                :as stylefy]))
 
 
 ;; Effects
@@ -391,4 +395,14 @@
 (reg-fx
  :remote/send-event!
  (fn [event]
-   (js/console.warn "TODO: sent event" event)))
+   (if (schema/valid-event? event)
+     ;; valid event let's send it
+     (do
+       (js/console.log "Sending event:" (pr-str event))
+       (js/console.warn "TODO: Implement await ACK or Reject for each sent event.")
+       (client/send! event))
+     (let [explanation (-> schema/event
+                           (m/explain event)
+                           (me/humanize))]
+       (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))
+   ))

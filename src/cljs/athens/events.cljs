@@ -11,7 +11,7 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1713,11 +1713,11 @@
 (reg-event-fx
  :remote/paste-verbatim
  (fn [{db :db} [_ uid text start value]]
-   (let [last-seen-tx         1 ;; TODO last-seen-tx discovery
-         event-id             (gensym)
-         paste-verbatim-event {:event/id      event-id     ;; use `:event/id` to track `:ack` events
+   (let [last-seen-tx         "1" ;; TODO last-seen-tx discovery
+         event-id             (str (gensym))
+         paste-verbatim-event {:event/id      (str event-id)     ;; use `:event/id` to track `:ack` events
                                :event/last-tx last-seen-tx ;; in case if event could conflict and was issued from not up to date db
-                               :event/type    :graph/paste-verbatim
+                               :event/type    :datascript/paste-verbatim
                                :event/args    {:uid   uid
                                                :text  text
                                                :start start
@@ -1732,7 +1732,6 @@
          local?                (not (:db/remote-graph-conf db))]
      (if local?
        {:dispatch [:transact (common-events/paste-verbatim->tx uid text start value)]}
-       ;; TODO event handler for `:remote/paste-verbatim`
        {:dispatch [:remote/paste-verbatim uid text start value]}))))
 
 
