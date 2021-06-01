@@ -576,7 +576,7 @@
   (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+        blocks (map (fn [id] @(r/track get-block-document id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -595,7 +595,7 @@
 
 (defn get-data
   [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
+  (->> pattern (r/track get-ref-ids) deref merge-parents-and-block group-by-parent seq))
 
 
 (defn get-linked-references
@@ -644,7 +644,8 @@
   [title]
   (let [pattern (patterns/linked title)]
     (->> pattern
-         get-ref-ids
+         (r/track get-ref-ids)
+         deref
          (d/pull-many @dsdb [:db/id :block/string])
          (mapv (fn [x]
                  (let [new-str (string/replace (:block/string x) pattern title)]
