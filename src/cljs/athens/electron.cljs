@@ -146,9 +146,9 @@
   (defn dnd-image
     [target-uid drag-target item extension]
     (let [new-str   (save-image item extension)
-          {:block/keys [order]} (db/get-block [:block/uid target-uid])
+          {:block/keys [order]} @(r/track db/get-block [:block/uid target-uid])
           parent    (db/get-parent [:block/uid target-uid])
-          block     (db/get-block [:block/uid target-uid])
+          block     @(r/track db/get-block [:block/uid target-uid])
           new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
           tx-data   (if (= drag-target :child)
                       (let [reindex          @(r/track db/inc-after (:db/id block) -1)

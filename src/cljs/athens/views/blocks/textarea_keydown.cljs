@@ -462,7 +462,7 @@
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
                                                               closest            (or closest-node-page closest-block-page)
-                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              block              @(r/track db/get-block [:block/uid (.. closest -dataset -uid)])
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
@@ -674,7 +674,7 @@
         [o-uid embed-id]          (db/uid-and-embed-id uid)
         next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
-      (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+      (let [next-block @(r/track db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
         (dispatch [:backspace (cond-> next-block-uid
                                 embed-id (str "-embed-" embed-id))
                    (str (:block/string state) (:block/string next-block))])))))

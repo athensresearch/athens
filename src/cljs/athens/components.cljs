@@ -14,7 +14,7 @@
 
 (defn todo-on-click
   [uid from-str to-str]
-  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
+  (let [current-block-content (:block/string @(r/track db/get-block [:block/uid uid]))]
     (dispatch [:transact [{:block/uid    uid
                            :block/string (clojure.string/replace
                                            current-block-content
