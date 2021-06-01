@@ -175,7 +175,7 @@
                                 (concat
                                   [@(r/track search-exact-node-title query)]
                                   @(r/track search-in-node-title query 20 true)
-                                  (search-in-block-content query)))}))))
+                                  @(r/track search-in-block-content query)))}))))
 
 
 (defn key-down-handler
