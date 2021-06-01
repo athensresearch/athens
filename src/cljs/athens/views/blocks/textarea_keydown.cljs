@@ -16,7 +16,8 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -311,7 +312,7 @@
         down?           (= key-code KeyCodes.DOWN)
         left?           (= key-code KeyCodes.LEFT)
         right?          (= key-code KeyCodes.RIGHT)
-        header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
+        header          (db/v-by-ea @(r/track db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -504,7 +505,7 @@
                                        (re-find #"(?s)\]\]" tail)
                                        (nil? (re-find #"(?s)\[" link))
                                        (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
+                                  (let [eid @(r/track db/e-by-av :node/title link)
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
@@ -516,7 +517,7 @@
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
                                        (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
+                                  (let [eid @(r/track db/e-by-av :node/title hashtag)
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
@@ -529,7 +530,7 @@
                                        (re-find #"(?s)\)\)" tail)
                                        (nil? (re-find #"(?s)\(" block-ref))
                                        (nil? (re-find #"(?s)\)" block-ref))
-                                       (db/e-by-av :block/uid block-ref))
+                                       @(r/track db/e-by-av :block/uid block-ref))
                                   (router/navigate-uid block-ref e)
 
                                   :else (router/navigate-uid uid e))))))

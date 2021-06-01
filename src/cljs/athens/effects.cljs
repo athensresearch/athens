@@ -16,6 +16,7 @@
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [re-frame.core :refer [dispatch reg-fx subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
 
@@ -84,7 +85,7 @@
   [old-block-refs e new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
-                 (let [eid (db/e-by-av :block/uid ref-uid)]
+                 (let [eid @(r/track db/e-by-av :block/uid ref-uid)]
                    (and eid
                         (not (str/includes? new-str (str "((" ref-uid "))")))))))
        (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))

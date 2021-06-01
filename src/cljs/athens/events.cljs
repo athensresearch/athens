@@ -10,7 +10,8 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]
+    [reagent.core :as r]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -513,7 +514,7 @@
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db (update db :daily-notes/items (fn [items]
                                                  (into [uid] items)))]
-      (if (db/e-by-av :block/uid uid)
+      (if @(r/track db/e-by-av :block/uid uid)
         {:db new-db}
         {:db        new-db
          :dispatch [:page/create title uid]}))))
@@ -523,7 +524,7 @@
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db (update db :daily-notes/items conj uid)]
-      (if (db/e-by-av :block/uid uid)
+      (if @(r/track db/e-by-av :block/uid uid)
         {:db new-db}
         {:db        new-db
          :dispatch [:page/create title uid]}))))
