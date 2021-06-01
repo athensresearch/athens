@@ -796,7 +796,7 @@
         block           (db/get-block [:block/uid uid])
         {:block/keys    [children order] :or {children []}} block
         parent          (db/get-parent [:block/uid uid])
-        reindex         (dec-after (:db/id parent) (:block/order block))
+        reindex         @(r/track dec-after (:db/id parent) (:block/order block))
         prev-block-uid  (db/prev-block-uid uid)
         prev-block      (db/get-block [:block/uid prev-block-uid])
         prev-sib-order  (dec (:block/order block))
@@ -1058,7 +1058,7 @@
       (let [parent        (db/get-parent [:block/uid o-uid])
             older-sib     (db/get-older-sib o-uid)
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
-            reindex       (dec-after (:db/id parent) (:block/order block))
+            reindex       @(r/track dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
             new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
             new-parent    {:db/id (:db/id parent) :block/children reindex}
@@ -1130,7 +1130,7 @@
                   new-block       {:block/uid o-uid :block/order (inc (:block/order parent)) :block/string value}
                   reindex-grandpa (->> @(r/track inc-after (:db/id grandpa) (:block/order parent))
                                        (concat [new-block]))
-                  reindex-parent  (dec-after (:db/id parent) (:block/order block))
+                  reindex-parent  @(r/track dec-after (:db/id parent) (:block/order block))
                   new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
                   retract         [:db/retract (:db/id parent) :block/children [:block/uid o-uid]]
                   new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
@@ -1289,7 +1289,7 @@
   "Order will always be 0"
   [source source-parent target]
   (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
+        reindex-source-parent @(r/track dec-after (:db/id source-parent) (:block/order source))
         reindex-target-parent @(r/track inc-after (:db/id target) -1)
         retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
         new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
@@ -1364,7 +1364,7 @@
         new-block             {:db/id (:db/id source) :block/order (if (= kind :above)
                                                                      t-order
                                                                      (inc t-order))}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
+        reindex-source-parent @(r/track dec-after (:db/id source-parent) (:block/order source))
         reindex-target-parent (->> @(r/track inc-after (:db/id target-parent) (if (= kind :above)
                                                                        (dec t-order)
                                                                        t-order))
