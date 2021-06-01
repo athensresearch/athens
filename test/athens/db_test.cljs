@@ -27,7 +27,7 @@
          [db/dsdb (d/create-conn db/schema)]
          (d/transact! db/dsdb (make-nodes-with-titles node-titles))
          (let
-           [search-results @(r/track db/search-in-node-title query)
+           [search-results (db/search-in-node-title query)
             actual-titles (map :node/title search-results)]
            (is (= actual-titles expected-titles))))
 
