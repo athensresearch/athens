@@ -173,7 +173,7 @@
                      :query   query
                      :results (vec
                                 (concat
-                                  [(search-exact-node-title query)]
+                                  [@(r/track search-exact-node-title query)]
                                   (search-in-node-title query 20 true)
                                   (search-in-block-content query)))}))))
 

@@ -29,7 +29,7 @@
   (let [now (util/now-ts)]
     (->> new-titles
          (filter (fn [x]
-                   (and (nil? (db/search-exact-node-title x))
+                   (and (nil? @(r/track db/search-exact-node-title x))
                         (not (contains? assert-titles x)))))
          (map (fn [t]
                 {:node/title  t
