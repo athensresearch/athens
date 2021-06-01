@@ -474,8 +474,8 @@
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
   (let [[uid embed-id]  (uid-and-embed-id uid)
-        block           (get-block [:block/uid uid])
-        parent          (get-parent [:block/uid uid])
+        block           @(r/track get-block [:block/uid uid])
+        parent          @(r/track get-parent [:block/uid uid])
         prev-sibling    @(r/track nth-sibling uid -1)
         {:block/keys    [open uid]} prev-sibling
         prev-block      (cond
