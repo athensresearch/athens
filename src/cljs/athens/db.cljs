@@ -481,7 +481,7 @@
         prev-block      (cond
                           (zero? (:block/order block)) parent
                           (false? open) prev-sibling
-                          (true? open) (deepest-child-block [:block/uid uid]))]
+                          (true? open) @(r/track deepest-child-block [:block/uid uid]))]
     (cond-> (:block/uid prev-block)
       embed-id (str "-embed-" embed-id))))
 
