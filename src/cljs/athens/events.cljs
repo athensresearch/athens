@@ -651,7 +651,7 @@
   :page/delete
   (fn [_ [_ uid title]]
     (let [retract-blocks     (retract-uid-recursively uid)
-          delete-linked-refs (db/replace-linked-refs title)
+          delete-linked-refs @(r/track db/replace-linked-refs title)
           tx-data            (concat retract-blocks
                                      delete-linked-refs)]
       {:fx [[:dispatch [:transact tx-data]]]})))
