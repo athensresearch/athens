@@ -58,47 +58,54 @@
         (send! client presence-disconnect)))))
 
 
-(defn receive-handler
-  [ch msg]
-  (log/debug ch "<-" msg)
-  (let [username (get @clients ch)
-        data     (<-transit msg)]
-    (if-not (schema/valid-event? data)
-      (let [explanation (schema/explain-event data)]
-        (log/warn ch "invalid event received:" explanation)
-        (send! ch {:event/id      (:event/id data)
-                   :event/status  :rejected
-                   :reject/reason explanation}))
-      (do
-        (log/debug ch "decoded event" (pr-str data))
-        (if (and (nil? username)
-                 (not= :presence/hello (:event/type data)))
-          (do
-            (log/warn ch "Message out of order, didn't say :presence/hello.")
-            (send! ch {:event/id      (:event/id data)
-                       :event/status  :rejected
-                       :reject/reason :introduce-yourself}))
-          (let [event-type (:event/type data)
-                result     (cond
-                             (contains? presence/supported-event-types event-type)
-                             (presence/presence-handler clients ch data)
+(defn- make-receive-handler
+  [datahike]
+  (fn receive-handler
+    [ch msg]
+    (log/debug ch "<-" msg)
+    (let [username (get @clients ch)
+          data     (<-transit msg)]
+      (if-not (schema/valid-event? data)
+        (let [explanation (schema/explain-event data)]
+          (log/warn ch "invalid event received:" explanation)
+          (send! ch {:event/id      (:event/id data)
+                     :event/status  :rejected
+                     :reject/reason explanation}))
+        (do
+          (log/debug ch "decoded event" (pr-str data))
+          (if (and (nil? username)
+                   (not= :presence/hello (:event/type data)))
+            (do
+              (log/warn ch "Message out of order, didn't say :presence/hello.")
+              (send! ch {:event/id      (:event/id data)
+                         :event/status  :rejected
+                         :reject/reason :introduce-yourself}))
+            (let [event-type (:event/type data)
+                  result     (cond
+                               (contains? presence/supported-event-types event-type)
+                               (presence/presence-handler clients ch data)
 
-                             (contains? datascript/supported-event-types event-type)
-                             (datascript/datascript-handler ch data))]
-            (send! ch (merge {:event/id (:event/id data)}
-                             result))))))))
-
-
-(defn websocket-handler
-  [request]
-  (http/as-channel request
-                   {:on-open    #'open-handler
-                    :on-close   #'close-handler
-                    :on-receive #'receive-handler}))
+                               (contains? datascript/supported-event-types event-type)
+                               (datascript/datascript-handler datahike ch data))]
+              (send! ch (merge {:event/id (:event/id data)}
+                               result)))))))))
 
 
-(compojure/defroutes ws-route
-                     (compojure/GET "/ws" [] websocket-handler))
+(defn- make-websocket-handler
+  [datahike]
+  (fn websocket-handler
+    [request]
+    (http/as-channel request
+                     {:on-open    #'open-handler
+                      :on-close   #'close-handler
+                      :on-receive (make-receive-handler datahike)})))
+
+
+(defn- make-ws-route
+  [datahike]
+  (compojure/routes
+    (compojure/GET "/ws" []
+                   (make-websocket-handler datahike))))
 
 
 (compojure/defroutes health-check-route
@@ -106,9 +113,9 @@
 
 
 (defn make-handler
-  [_datahike]
+  [datahike]
   (compojure/routes health-check-route
-                    ws-route))
+                    (make-ws-route datahike)))
 
 
 (defrecord WebServer

@@ -227,4 +227,13 @@
           :event/type :presence/hello
           :event/args {:username "Bob's your uncle"}})
   ;; => {:result :sent}
+
+  ;; send a `:datascript/paste-verbatim` event
+  (send! {:event/id "test-id2"
+          :event/last-tx "1"
+          :event/type :datascript/paste-verbatim
+          :event/args {:uid "invalid-uid"
+                       :text "pasted text"
+                       :start 0
+                       :value ""}})
   )
