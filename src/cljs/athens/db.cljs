@@ -492,8 +492,8 @@
   [uid]
   (loop [uid uid]
     (let [sib    @(r/track nth-sibling uid +1)
-          parent (get-parent [:block/uid uid])
-          {node :node/title}   (get-block [:block/uid uid])]
+          parent @(r/track get-parent [:block/uid uid])
+          {node :node/title}   @(r/track get-block [:block/uid uid])]
       (if (or sib (:node/title parent) node)
         sib
         (recur (:block/uid parent))))))
