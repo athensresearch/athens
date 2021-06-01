@@ -1272,8 +1272,8 @@
                                                                                           t-order
                                                                                           (inc t-order))}
         reindex-target-parent (->> @(r/track inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
+                                                                                (dec t-order)
+                                                                                t-order))
                                    (concat [new-block]))
         new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
     [new-target-parent]))
@@ -1366,8 +1366,8 @@
                                                                      (inc t-order))}
         reindex-source-parent @(r/track dec-after (:db/id source-parent) (:block/order source))
         reindex-target-parent (->> @(r/track inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
+                                                                                (dec t-order)
+                                                                                t-order))
                                    (concat [new-block]))
         retract               [:db/retract (:db/id source-parent) :block/children (:db/id source)]
         new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
