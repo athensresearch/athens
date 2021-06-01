@@ -1183,7 +1183,7 @@
                   new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
                   new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
                                                sanitized-uids)
-                  reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
+                  reindex-grandpa (->> @(r/track plus-after (:db/id grandpa) (:block/order parent) n-blocks)
                                        (concat new-blocks))
                   retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
                                         blocks)
@@ -1466,7 +1466,7 @@
                                            source-blocks)
         reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
         bound                 (if (= kind :above) (dec t-order) t-order)
-        reindex-target-parent (->> (plus-after (:db/id target-parent) bound n)
+        reindex-target-parent (->> @(r/track plus-after (:db/id target-parent) bound n)
                                    (concat new-source-blocks))
         retracts              (map (fn [x] [:db/retract (:db/id source-parent) :block/children [:block/uid x]])
                                    source-uids)
@@ -1529,7 +1529,7 @@
                                            source-blocks)
         n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
         reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
-        reindex-target-parent (plus-after (:db/id target) -1 n)
+        reindex-target-parent @(r/track plus-after (:db/id target) -1 n)
         retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
                                     source-uids
                                     source-parents)
@@ -1693,7 +1693,7 @@
           amount        (cond
                           empty-block? (dec n)
                           :else n)
-          reindex       (plus-after (:db/id parent) start-reindex amount)
+          reindex       @(r/track plus-after (:db/id parent) start-reindex amount)
           tx-data       (concat reindex
                                 paste-tx-data
                                 (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
