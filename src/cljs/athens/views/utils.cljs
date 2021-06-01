@@ -10,7 +10,7 @@
 ;; be rewritten using an `useEffect` to listen/unlisten for clicks on `callback`
 ;; changes.
 (defn track-outside-click
-  [callback children]
+  [callback child]
   (r/with-let [ref (atom nil)
                handler #(when
                           (not (.. @ref (contains (.. % -target))))
@@ -18,6 +18,6 @@
                _ (events/listen js/document "mousedown" handler)]
               [:span
                {:ref #(reset! ref %)}
-               children]
+               child]
               (finally
                 (events/unlisten js/document "mousedown" handler))))

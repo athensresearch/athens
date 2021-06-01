@@ -327,11 +327,10 @@
           (let [wrap-callback
                 (fn [callback]
                   (fn [event]
-                    (when
-                      (and
-                        (= uid @(rf/subscribe [:editing/uid]))
-                        (empty? @(rf/subscribe [:selected/items])))
-                      (callback event))))]
+                    (let [editing? (= uid @(rf/subscribe [:editing/uid]))
+                          not-selecting-items? (empty? @(rf/subscribe [:selected/items]))]
+                      (if (and editing? not-selecting-items?)
+                        (callback event)))))]
             (if (map? callback-or-config)
               (update callback-or-config :callback wrap-callback)
               (wrap-callback callback-or-config))))]

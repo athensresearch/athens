@@ -386,7 +386,6 @@
 
 
 (defn handle-escape
-  "BUG: escape is fired 24 times for some reason."
   [state e]
   (.. e preventDefault)
   (swap! state assoc :search/type nil)
