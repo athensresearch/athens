@@ -173,7 +173,7 @@
 (defn page
   [ident]
   (let [block       @(r/track db/get-block-document ident)
-        parents     (db/get-parents-recursively ident)
+        parents     @(r/track db/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])
         refs        (db/get-linked-block-references block)]
     [block-page-el block parents editing-uid refs]))
