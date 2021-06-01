@@ -476,7 +476,7 @@
   (let [[uid embed-id]  (uid-and-embed-id uid)
         block           (get-block [:block/uid uid])
         parent          (get-parent [:block/uid uid])
-        prev-sibling    (nth-sibling uid -1)
+        prev-sibling    @(r/track nth-sibling uid -1)
         {:block/keys    [open uid]} prev-sibling
         prev-block      (cond
                           (zero? (:block/order block)) parent
@@ -491,7 +491,7 @@
   If parent is root, go to next sibling."
   [uid]
   (loop [uid uid]
-    (let [sib    (nth-sibling uid +1)
+    (let [sib    @(r/track nth-sibling uid +1)
           parent (get-parent [:block/uid uid])
           {node :node/title}   (get-block [:block/uid uid])]
       (if (or sib (:node/title parent) node)
