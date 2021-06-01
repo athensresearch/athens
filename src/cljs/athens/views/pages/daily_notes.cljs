@@ -6,9 +6,9 @@
     [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [datascript.core :as d]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -75,7 +75,7 @@
        (map (fn [x] [:block/uid x]))
        (map (fn [x]
               (try
-                @(pull db/dsdb '[*] x)
+                (d/pull @db/dsdb '[*] x)
                 (catch js/Error _e
                   nil))))
        (filter (fn [x]

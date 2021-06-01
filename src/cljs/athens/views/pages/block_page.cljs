@@ -163,7 +163,7 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(navigate-uid (:block/uid (parse-renderer/pull-node-from-string group-title)))} group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
