@@ -610,5 +610,5 @@
   [ident]
   (let [{:keys [#_block/uid node/title] :as node} @(r/track db/get-node-document ident)
         editing-uid   @(subscribe [:editing/uid])
-        linked-refs   (get-linked-references title)]
+        linked-refs   @(r/track get-linked-references title)]
     [node-page-el node editing-uid linked-refs]))
