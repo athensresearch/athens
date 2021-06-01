@@ -1,4 +1,4 @@
 {:http     {:port 3010}
  :datahike {:store {:backend :file
                     :path    "/tmp/example"}}
- :repl     {:port 8877}}
+ :nrepl    {:port 8877}}

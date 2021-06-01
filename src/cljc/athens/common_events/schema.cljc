@@ -82,6 +82,7 @@
    [:rejected (mu/merge event-response-common
                         response-rejected)]])
 
+
 (def valid-event-response?
   (m/validator event-response))
 

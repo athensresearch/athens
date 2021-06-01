@@ -40,7 +40,6 @@
                  [ch.qos.logback/logback-classic "1.2.3"]
                  ;;   IoC
                  [com.stuartsierra/component "1.0.0"]
-                 [org.danielsz/system "0.4.7"]
                  ;;   configuration mgmt
                  [yogthos/config "1.1.7"]
                  ;;   Datahike
@@ -49,7 +48,10 @@
                  [http-kit "2.5.3"]
                  [compojure "1.6.2"]
                  ;;   data validation
-                 [metosin/malli "0.5.1"]]
+                 [metosin/malli "0.5.1"]
+                 ;;   networked repl
+                 [com.stuartsierra/component.repl "0.2.0"]
+                 [nrepl/nrepl "0.8.3"]]
 
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]
@@ -59,7 +61,7 @@
 
   :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
 
-  :main "athens.self-hosted.core"
+  :main athens.self-hosted.core
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
@@ -90,8 +92,7 @@
   {:dev
    {:dependencies [[binaryage/devtools "1.0.3"]
                    [day8.re-frame/re-frame-10x "1.1.1"]
-                   [day8.re-frame/tracing "0.6.2"]
-                   [nrepl/nrepl "0.8.3"]]
+                   [day8.re-frame/tracing "0.6.2"]]
     :plugins [[cider/cider-nrepl "0.26.0"]]
     :source-paths ["dev/clj"]}
    :prod
@@ -99,4 +100,10 @@
    :cljstyle {:dependencies
               [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
 
-  :prep-tasks [])
+  :prep-tasks []
+
+  :repl-options {:init-ns user
+                 :welcome (println "Welcome to Athens Self-Hosted magical world of the REPL!
+
+To start the server `(dev)` & `(start)`.
+To reload server `(reset)`, and to stop `(stop)`")})

@@ -1,4 +1,4 @@
-(ns athens.self-hosted.config
+(ns athens.self-hosted.components.config
   "Athens Self-Hosted Configuration management"
   (:require
     [clojure.tools.logging      :as log]

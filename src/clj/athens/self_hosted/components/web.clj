@@ -1,4 +1,4 @@
-(ns athens.self-hosted.web
+(ns athens.self-hosted.components.web
   (:require
     [athens.common-events.schema       :as schema]
     [athens.self-hosted.web.datascript :as datascript]
@@ -137,5 +137,6 @@
 
 
 (defn new-web-server
-  [config]
-  (map->WebServer config))
+  []
+  (map->WebServer {}))
+

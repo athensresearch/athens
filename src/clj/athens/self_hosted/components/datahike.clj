@@ -1,4 +1,4 @@
-(ns athens.self-hosted.datahike
+(ns athens.self-hosted.components.datahike
   (:require
     [clojure.tools.logging :as log]
     [com.stuartsierra.component :as component]
@@ -32,5 +32,5 @@
 
 
 (defn new-datahike
-  [conf]
-  (map->Datahike conf))
+  []
+  (map->Datahike {}))
