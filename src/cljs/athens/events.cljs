@@ -855,7 +855,7 @@
                      :block/open     open
                      :block/children children
                      :block/string   tail}
-        reindex    (->> (inc-after (:db/id parent) order)
+        reindex    (->> @(r/track inc-after (:db/id parent) order)
                         (concat [next-block]))
         new-block  {:db/id (:db/id block) :block/string head}
         new-parent {:db/id (:db/id parent) :block/children reindex}
@@ -876,7 +876,7 @@
                    :block/uid    new-uid
                    :block/open   true
                    :block/string tail}
-        reindex (->> (inc-after (:db/id block) -1)
+        reindex (->> @(r/track inc-after (:db/id block) -1)
                      (concat [new-block]))]
     {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
                                  {:db/id (:db/id block)
@@ -901,7 +901,7 @@
                    :block/uid    new-uid
                    :block/open   true
                    :block/string ""}
-        reindex   (->> (inc-after (:db/id parent) (dec (:block/order block)))
+        reindex   (->> @(r/track inc-after (:db/id parent) (dec (:block/order block)))
                        (concat [new-block]))]
     {:dispatch [:transact [{:db/id          (:db/id parent)
                             :block/children reindex}]]}))
@@ -914,7 +914,7 @@
                    :block/uid    new-uid
                    :block/open   true
                    :block/string ""}
-        reindex (->> (inc-after (:db/id parent) (:block/order block))
+        reindex (->> @(r/track inc-after (:db/id parent) (:block/order block))
                      (concat [new-block]))]
     {:dispatch [:transact [{:db/id          [:block/uid (:block/uid parent)]
                             :block/children reindex}]]}))
@@ -924,7 +924,7 @@
   [block new-uid]
   (let [{p-eid :db/id} block
         new-child {:block/uid new-uid :block/string "" :block/order 0 :block/open true}
-        reindex   (->> (inc-after p-eid -1)
+        reindex   (->> @(r/track inc-after p-eid -1)
                        (concat [new-child]))
         new-block {:db/id p-eid :block/children reindex}
         tx-data   [new-block]]
@@ -1128,7 +1128,7 @@
       :else (let [block           (db/get-block [:block/uid o-uid])
                   grandpa         (db/get-parent (:db/id parent))
                   new-block       {:block/uid o-uid :block/order (inc (:block/order parent)) :block/string value}
-                  reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
+                  reindex-grandpa (->> @(r/track inc-after (:db/id grandpa) (:block/order parent))
                                        (concat [new-block]))
                   reindex-parent  (dec-after (:db/id parent) (:block/order block))
                   new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
@@ -1205,7 +1205,7 @@
   (let [new-uid               (gen-block-uid)
         new-string            (str "((" (source :block/uid) "))")
         new-source-block      {:block/uid new-uid :block/string new-string :block/order 0 :block/open true}
-        reindex-target-parent (inc-after (:db/id target) -1)
+        reindex-target-parent @(r/track inc-after (:db/id target) -1)
         new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
         tx-data               [new-source-block
                                new-target-parent]]
@@ -1271,7 +1271,7 @@
         new-block             {:block/uid new-uid :block/string new-string :block/order (if (= kind :above)
                                                                                           t-order
                                                                                           (inc t-order))}
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
+        reindex-target-parent (->> @(r/track inc-after (:db/id target-parent) (if (= kind :above)
                                                                        (dec t-order)
                                                                        t-order))
                                    (concat [new-block]))
@@ -1290,7 +1290,7 @@
   [source source-parent target]
   (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
         reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (inc-after (:db/id target) -1)
+        reindex-target-parent @(r/track inc-after (:db/id target) -1)
         retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
         new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
         new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
@@ -1365,7 +1365,7 @@
                                                                      t-order
                                                                      (inc t-order))}
         reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
+        reindex-target-parent (->> @(r/track inc-after (:db/id target-parent) (if (= kind :above)
                                                                        (dec t-order)
                                                                        t-order))
                                    (concat [new-block]))

@@ -9,7 +9,8 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]
+    [reagent.core :as r]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -150,14 +151,14 @@
           block     (db/get-block [:block/uid target-uid])
           new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
           tx-data   (if (= drag-target :child)
-                      (let [reindex          (db/inc-after (:db/id block) -1)
+                      (let [reindex          @(r/track db/inc-after (:db/id block) -1)
                             new-children     (conj reindex new-block)
                             new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
                         new-target-block)
                       (let [index        (case drag-target
                                            :above (dec order)
                                            :below order)
-                            reindex      (db/inc-after (:db/id parent) index)
+                            reindex      @(r/track db/inc-after (:db/id parent) index)
                             new-children (conj reindex new-block)
                             new-parent   {:db/id (:db/id parent) :block/children new-children}]
                         new-parent))]
