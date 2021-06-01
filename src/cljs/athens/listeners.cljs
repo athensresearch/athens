@@ -137,7 +137,7 @@
                           (map (fn [[orig-str match-str]]
                                  (let [eid @(r/track db/e-by-av :block/uid match-str)]
                                    (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str @(r/track db/v-by-ea eid :block/string)]
                                      [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]

@@ -312,7 +312,7 @@
         down?           (= key-code KeyCodes.DOWN)
         left?           (= key-code KeyCodes.LEFT)
         right?          (= key-code KeyCodes.RIGHT)
-        header          (db/v-by-ea @(r/track db/e-by-av :block/uid uid) :block/header)]
+        header          @(r/track db/v-by-ea @(r/track db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -506,7 +506,7 @@
                                        (nil? (re-find #"(?s)\[" link))
                                        (nil? (re-find #"(?s)\]" link)))
                                   (let [eid @(r/track db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                        uid @(r/track db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
@@ -518,7 +518,7 @@
                                   (and (re-find #"(?s)#" head)
                                        (re-find #"(?s)\s" tail))
                                   (let [eid @(r/track db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                        uid @(r/track db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
