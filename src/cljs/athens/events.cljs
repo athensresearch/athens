@@ -66,7 +66,7 @@
   "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
   [shared-page roam-db roam-db-filename]
   (let [page-athens              @(r/track db/get-node-document shared-page)
-        page-roam                (db/get-roam-node-document shared-page roam-db)
+        page-roam                @(r/track db/get-roam-node-document shared-page roam-db)
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
         new-uid                  (gen-block-uid)
@@ -165,7 +165,7 @@
           merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
                                shared-pages)
           merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
-                              (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
+                              (map (fn [x] @(r/track db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
           tx-data        (concat merge-shared merge-unshared)]
       {:dispatch [:transact tx-data]})))
 
