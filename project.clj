@@ -1,6 +1,6 @@
 (defproject athens "0.1.0-SNAPSHOT"
 
-  :description "Open-Source Roam"
+  :description "An open-source knowledege graph for research and notetaking"
 
   :url "https://github.com/athensresearch/athens"
 
