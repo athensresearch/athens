@@ -422,7 +422,7 @@
         [uid order] (last selected-sibs-of-last)
         parent (db/get-parent [:block/uid uid])
         n (count selected-sibs-of-last)]
-    (minus-after (:db/id parent) order n)))
+    @(r/track minus-after (:db/id parent) order n)))
 
 
 (reg-event-fx
@@ -1093,7 +1093,7 @@
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                        blocks)
             new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks :block/open true}
-            reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+            reindex       @(r/track minus-after (:db/id parent) (:block/order last-block) n-blocks)
             new-parent    {:db/id (:db/id parent) :block/children reindex}
             retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
                                 blocks)
@@ -1179,7 +1179,7 @@
                   o-parent        (:block/order parent)
                   n-blocks        (count blocks)
                   last-block      (last blocks)
-                  reindex-parent  (minus-after (:db/id parent) (:block/order last-block) n-blocks)
+                  reindex-parent  @(r/track minus-after (:db/id parent) (:block/order last-block) n-blocks)
                   new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
                   new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
                                                sanitized-uids)
@@ -1464,7 +1464,7 @@
                                                                (inc (+ idx t-order)))]
                                                {:db/id (:db/id x) :block/order new-order}))
                                            source-blocks)
-        reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
+        reindex-source-parent @(r/track minus-after (:db/id source-parent) last-s-order n)
         bound                 (if (= kind :above) (dec t-order) t-order)
         reindex-target-parent (->> @(r/track plus-after (:db/id target-parent) bound n)
                                    (concat new-source-blocks))
@@ -1505,7 +1505,7 @@
         last-s-parent              (last source-parents)
         last-s-order               (:block/order (last source-blocks))
         n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
-        reindex-last-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        reindex-last-source-parent @(r/track minus-after (:db/id last-s-parent) last-s-order n)
         source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
         retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
                                          source-uids
@@ -1528,7 +1528,7 @@
         new-source-blocks     (map-indexed (fn [idx x] {:block/uid (:block/uid x) :block/order idx})
                                            source-blocks)
         n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
-        reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
+        reindex-source-parent @(r/track minus-after (:db/id last-s-parent) last-s-order n)
         reindex-target-parent @(r/track plus-after (:db/id target) -1 n)
         retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
                                     source-uids
