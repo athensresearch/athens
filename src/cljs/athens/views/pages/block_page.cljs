@@ -172,7 +172,7 @@
 
 (defn page
   [ident]
-  (let [block       (db/get-block-document ident)
+  (let [block       @(r/track db/get-block-document ident)
         parents     (db/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])
         refs        (db/get-linked-block-references block)]

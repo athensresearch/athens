@@ -176,7 +176,7 @@
   [^js e]
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [copy-data (->> (map (comp deref #(r/track db/get-block-document [:block/uid %])) uids)
                            (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
@@ -188,7 +188,7 @@
   [^js e]
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [copy-data (->> (map (comp deref #(r/track db/get-block-document [:block/uid %])) uids)
                            (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
