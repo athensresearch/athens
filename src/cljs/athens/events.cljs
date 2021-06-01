@@ -330,7 +330,7 @@
         prev-block-uid   (db/prev-block-uid first-item)
         prev-block-o-uid (-> prev-block-uid db/uid-and-embed-id first)
         prev-block       @(r/track db/get-block [:block/uid prev-block-o-uid])
-        parent           (db/get-parent [:block/uid (-> first-item db/uid-and-embed-id first)])
+        parent           @(r/track db/get-parent [:block/uid (-> first-item db/uid-and-embed-id first)])
         editing-uid      @(subscribe [:editing/uid])
         editing-idx      (first (keep-indexed (fn [idx x]
                                                 (when (= x editing-uid)
@@ -420,7 +420,7 @@
                                         @db/dsdb last-item)
                                    (sort-by second))
         [uid order] (last selected-sibs-of-last)
-        parent (db/get-parent [:block/uid uid])
+        parent @(r/track db/get-parent [:block/uid uid])
         n (count selected-sibs-of-last)]
     @(r/track minus-after (:db/id parent) order n)))
 
@@ -795,7 +795,7 @@
         [uid embed-id]  (db/uid-and-embed-id uid)
         block           @(r/track db/get-block [:block/uid uid])
         {:block/keys    [children order] :or {children []}} block
-        parent          (db/get-parent [:block/uid uid])
+        parent          @(r/track db/get-parent [:block/uid uid])
         reindex         @(r/track dec-after (:db/id parent) (:block/order block))
         prev-block-uid  (db/prev-block-uid uid)
         prev-block      @(r/track db/get-block [:block/uid prev-block-uid])
@@ -842,7 +842,7 @@
 
 (defn split-block
   [uid val index new-uid]
-  (let [parent     (db/get-parent [:block/uid uid])
+  (let [parent     @(r/track db/get-parent [:block/uid uid])
         block      @(r/track db/get-block [:block/uid uid])
         {:block/keys [order children open] :or {children []}} block
         head       (subs val 0 index)
@@ -894,7 +894,7 @@
   "If user presses enter at the start of non-empty string, push that block down and
   and start editing a new block in the position of originating block - 'bump up' "
   [uid new-uid]
-  (let [parent    (db/get-parent [:block/uid uid])
+  (let [parent    @(r/track db/get-parent [:block/uid uid])
         block     @(r/track db/get-block [:block/uid uid])
         new-block {:db/id        -1
                    :block/order  (:block/order block)
@@ -979,7 +979,7 @@
                                  uid)
         [uid embed-id]        (db/uid-and-embed-id uid)
         block                 @(r/track db/get-block [:block/uid uid])
-        parent                (db/get-parent [:block/uid uid])
+        parent                @(r/track db/get-parent [:block/uid uid])
         is-parent-root-embed? (= (some-> d-key-down :target
                                          (.. (closest ".block-embed"))
                                          (. -firstChild)
@@ -1055,7 +1055,7 @@
         block             @(r/track db/get-block [:block/uid o-uid])
         block-zero?       (zero? (:block/order block))]
     (when-not block-zero?
-      (let [parent        (db/get-parent [:block/uid o-uid])
+      (let [parent        @(r/track db/get-parent [:block/uid o-uid])
             older-sib     (db/get-older-sib o-uid)
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       @(r/track dec-after (:db/id parent) (:block/order block))
@@ -1087,7 +1087,7 @@
         last-block   (last blocks)
         block-zero?  (-> first-block :block/order zero?)]
     (when (and same-parent? (not block-zero?))
-      (let [parent        (db/get-parent [:block/uid (first uids)])
+      (let [parent        @(r/track db/get-parent [:block/uid (first uids)])
             older-sib     (db/get-older-sib (first uids))
             n-sib         (count (:block/children older-sib))
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
@@ -1114,7 +1114,7 @@
    - dec-after for parent"
   [uid d-key-down context-root-uid]
   (let [[o-uid embed-id]      (db/uid-and-embed-id uid)
-        parent                (db/get-parent [:block/uid o-uid])
+        parent                @(r/track db/get-parent [:block/uid o-uid])
         is-parent-root-embed? (= (some-> d-key-down :target
                                          (.. (closest ".block-embed"))
                                          (. -firstChild)
@@ -1126,7 +1126,7 @@
       (:node/title parent) nil
       (= (:block/uid parent) context-root-uid) nil
       :else (let [block           @(r/track db/get-block [:block/uid o-uid])
-                  grandpa         (db/get-parent (:db/id parent))
+                  grandpa         @(r/track db/get-parent (:db/id parent))
                   new-block       {:block/uid o-uid :block/order (inc (:block/order parent)) :block/string value}
                   reindex-grandpa (->> @(r/track inc-after (:db/id grandpa) (:block/order parent))
                                        (concat [new-block]))
@@ -1151,7 +1151,7 @@
   Otherwise, retract and assert new parent for each block, and reindex parent and grandparent."
   [uids context-root-uid]
   (let [[f-uid f-embed-id]    (-> uids first db/uid-and-embed-id)
-        parent                (db/get-parent [:block/uid f-uid])
+        parent                @(r/track db/get-parent [:block/uid f-uid])
         same-parent?          (db/same-parent? uids)
         ;; when all selected items are from same embed block
         ;; check if immediate parent is root-embed
@@ -1171,7 +1171,7 @@
       ;; as parent un-indent should do nothing -- blocks will disappear from embed and
       ;; have to manually navigate to block to see the un-indented blocks
       (and same-parent? is-parent-root-embed?) nil
-      :else (let [grandpa         (db/get-parent (:db/id parent))
+      :else (let [grandpa         @(r/track db/get-parent (:db/id parent))
                   sanitized-uids  (map (comp
                                          first
                                          db/uid-and-embed-id) uids)
@@ -1387,8 +1387,8 @@
   [source-uid target-uid kind effect-allowed]
   (let [source        @(r/track db/get-block [:block/uid source-uid])
         target        @(r/track db/get-block [:block/uid target-uid])
-        source-parent (db/get-parent [:block/uid source-uid])
-        target-parent (db/get-parent [:block/uid target-uid])
+        source-parent @(r/track db/get-parent [:block/uid source-uid])
+        target-parent @(r/track db/get-parent [:block/uid target-uid])
         same-parent?  (= source-parent target-parent)
         event         (cond
                         (and (= effect-allowed "move") (= kind :child)) [:drop/child source source-parent target]
@@ -1500,13 +1500,13 @@
         tail                       (subvec filtered-children index n)
         new-vec                    (concat head source-uids tail)
         new-source-uids            (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
-        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        source-parents             (mapv (comp deref #(r/track db/get-parent [:block/uid %])) source-uids)
         source-blocks              (mapv (comp deref #(r/track db/get-block [:block/uid %])) source-uids)
         last-s-parent              (last source-parents)
         last-s-order               (:block/order (last source-blocks))
         n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
         reindex-last-source-parent @(r/track minus-after (:db/id last-s-parent) last-s-order n)
-        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        source-parents             (mapv (comp deref #(r/track db/get-parent [:block/uid %])) source-uids)
         retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
                                          source-uids
                                          source-parents)
@@ -1575,8 +1575,8 @@
         diff-parents-source? (not same-parent-source?)
         target               @(r/track db/get-block [:block/uid target-uid])
         first-source-uid     (first source-uids)
-        first-source-parent  (db/get-parent [:block/uid first-source-uid])
-        target-parent        (db/get-parent [:block/uid target-uid])
+        first-source-parent  @(r/track db/get-parent [:block/uid first-source-uid])
+        target-parent        @(r/track db/get-parent [:block/uid target-uid])
         event                (cond
                                (= kind :child) [:drop-multi/child source-uids target]
                                same-parent-all? [:drop-multi/same-all kind source-uids first-source-parent target]
@@ -1682,7 +1682,7 @@
           root-order    (atom start-idx)
           parent        (cond
                           parent? block
-                          :else (db/get-parent [:block/uid uid]))
+                          :else @(r/track db/get-parent [:block/uid uid]))
           paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
           ;; the delta between root-order and start-idx is how many root blocks were added
           n             (- @root-order start-idx)

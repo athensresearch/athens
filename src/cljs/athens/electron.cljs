@@ -147,7 +147,7 @@
     [target-uid drag-target item extension]
     (let [new-str   (save-image item extension)
           {:block/keys [order]} @(r/track db/get-block [:block/uid target-uid])
-          parent    (db/get-parent [:block/uid target-uid])
+          parent    @(r/track db/get-parent [:block/uid target-uid])
           block     @(r/track db/get-block [:block/uid target-uid])
           new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
           tx-data   (if (= drag-target :child)
