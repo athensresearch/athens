@@ -1056,7 +1056,7 @@
         block-zero?       (zero? (:block/order block))]
     (when-not block-zero?
       (let [parent        @(r/track db/get-parent [:block/uid o-uid])
-            older-sib     (db/get-older-sib o-uid)
+            older-sib     @(r/track db/get-older-sib o-uid)
             new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
             reindex       @(r/track dec-after (:db/id parent) (:block/order block))
             retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
@@ -1088,7 +1088,7 @@
         block-zero?  (-> first-block :block/order zero?)]
     (when (and same-parent? (not block-zero?))
       (let [parent        @(r/track db/get-parent [:block/uid (first uids)])
-            older-sib     (db/get-older-sib (first uids))
+            older-sib     @(r/track db/get-older-sib (first uids))
             n-sib         (count (:block/children older-sib))
             new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
                                        blocks)
