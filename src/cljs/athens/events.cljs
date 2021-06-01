@@ -1493,7 +1493,7 @@
         t-order                    (:block/order target)
         index                      (cond
                                      (= kind :above) t-order
-                                     (and (= kind :below) (db/last-child? (:block/uid target))) t-order
+                                     (and (= kind :below) @(r/track db/last-child? (:block/uid target))) t-order
                                      (= kind :below) (inc t-order))
         n                          (count filtered-children)
         head                       (subvec filtered-children 0 index)
