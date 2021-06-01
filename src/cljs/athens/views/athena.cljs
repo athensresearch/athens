@@ -174,7 +174,7 @@
                      :results (vec
                                 (concat
                                   [@(r/track search-exact-node-title query)]
-                                  (search-in-node-title query 20 true)
+                                  @(r/track search-in-node-title query 20 true)
                                   (search-in-block-content query)))}))))
 
 
