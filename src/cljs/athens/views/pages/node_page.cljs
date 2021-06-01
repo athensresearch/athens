@@ -416,13 +416,13 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (db/get-block-document (:db/id block))]
+            block @(r/track db/get-block-document (:db/id block))]
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
               [breadcrumb {:key       (str "breadcrumb-" uid)
-                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                           :on-click #(do (let [new-B @(r/track db/get-block-document [:block/uid uid])
                                                 new-P (drop-last parents)]
                                             (swap! state assoc :block new-B :parents new-P)))}
                [parse-and-render (or title string) uid]]))]
@@ -608,7 +608,7 @@
 
 (defn page
   [ident]
-  (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
+  (let [{:keys [#_block/uid node/title] :as node} @(r/track db/get-node-document ident)
         editing-uid   @(subscribe [:editing/uid])
         linked-refs   (get-linked-references title)]
     [node-page-el node editing-uid linked-refs]))

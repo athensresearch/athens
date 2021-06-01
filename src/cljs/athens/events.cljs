@@ -65,7 +65,7 @@
 (defn merge-shared-page
   "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
   [shared-page roam-db roam-db-filename]
-  (let [page-athens              (db/get-node-document shared-page)
+  (let [page-athens              @(r/track db/get-node-document shared-page)
         page-roam                (db/get-roam-node-document shared-page roam-db)
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
