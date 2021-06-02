@@ -13,7 +13,6 @@
 
 (def bullet-style
   {:flex-shrink "0"
-   :grid-area "bullet"
    :position "relative"
    :z-index 2
    :cursor "pointer"
