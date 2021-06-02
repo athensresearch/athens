@@ -30,5 +30,5 @@
 (defn -main
   [& _args]
   (log/info "Athens Self-Hosted Starting")
-  (component/start system)
+  (alter-var-root #'system component/start)
   (log/info "Athens Self-Hosted ready to do thy bidding"))

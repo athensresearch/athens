@@ -395,9 +395,9 @@
     (eval-box!)))
 
 
-; Only run the listener in dev mode, not in prod. The listener slows things
-; down a lot. For example it makes the enter key take ~300ms rather than ~100ms,
-; according to the Chrome devtools flamegraph.
+;; Only run the listener in dev mode, not in prod. The listener slows things
+;; down a lot. For example it makes the enter key take ~300ms rather than ~100ms,
+;; according to the Chrome devtools flamegraph.
 (when config/debug?
   (d/listen! dsdb :devtool/open listener))
 

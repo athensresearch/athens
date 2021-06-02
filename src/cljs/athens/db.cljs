@@ -131,7 +131,9 @@
    :block/children {:db/cardinality :db.cardinality/many
                     :db/valueType :db.type/ref}
    :block/refs     {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}})
+                    :db/valueType :db.type/ref}
+   ;; to store remote last seen tx, for stale client detection
+   :remote/max-tx  {:db/cardinality :db.cardinality/one}})
 
 
 (defonce dsdb (d/create-conn schema))

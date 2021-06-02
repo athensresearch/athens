@@ -4,6 +4,23 @@
     [clojure.string :as string]))
 
 
+(defn event-accepted
+  "Builds ACK Event Response."
+  [id tx-id]
+  {:event/id       id
+   :event/status   :accepted
+   :accepted/tx-id tx-id})
+
+
+(defn event-rejected
+  "Builds Rejection Event Response."
+  [id message data]
+  {:event/id      id
+   :event/status  :rejected
+   :reject/reason message
+   :reject/data   data})
+
+
 (defn paste-verbatim->tx
   [uid text start value]
   (let [block-empty? (string/blank? value)
