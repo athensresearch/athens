@@ -15,8 +15,8 @@
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
-    [posh.reagent :as p :refer [transact!]]
     [re-frame.core :refer [dispatch reg-fx subscribe]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy]))
 
 
@@ -29,7 +29,7 @@
   (let [now (util/now-ts)]
     (->> new-titles
          (filter (fn [x]
-                   (and (nil? (db/search-exact-node-title x))
+                   (and (nil? @(r/track db/search-exact-node-title x))
                         (not (contains? assert-titles x)))))
          (map (fn [t]
                 {:node/title  t
@@ -50,7 +50,7 @@
                    (and (not (clojure.string/includes? new-str title))
                         node
                         (empty? (:block/children node))
-                        (= 1 (db/linked-refs-count title))))))
+                        (= 1 @(r/track db/linked-refs-count title))))))
        (map (fn [title]
               (when-let [eid (:db/id (db/pull-nil with-db '[*] [:node/title title]))]
                 [:db/retractEntity eid])))))
@@ -85,7 +85,7 @@
   [old-block-refs e new-str]
   (->> old-block-refs
        (filter (fn [ref-uid]
-                 (let [eid (db/e-by-av :block/uid ref-uid)]
+                 (let [eid @(r/track db/e-by-av :block/uid ref-uid)]
                    (and eid
                         (not (str/includes? new-str (str "((" ref-uid "))")))))))
        (map (fn [ref-uid] [:db/retract e :block/refs [:block/uid ref-uid]]))))
@@ -238,7 +238,7 @@
                 (dev-pprint more-tx-data)
                 (dev-pprint "TX FINAL INPUTS")                     ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
                 (dev-pprint final-tx-data)
-                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
+                (let [{:keys [db-before tx-data]} (d/transact! db/dsdb final-tx-data)]
 
                   ;; check remote data against previous db
                   (when (and (:default? @remote-graph-conf)

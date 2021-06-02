@@ -16,7 +16,8 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -311,7 +312,7 @@
         down?           (= key-code KeyCodes.DOWN)
         left?           (= key-code KeyCodes.LEFT)
         right?          (= key-code KeyCodes.RIGHT)
-        header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
+        header          @(r/track db/v-by-ea @(r/track db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -461,7 +462,7 @@
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
                                                               closest            (or closest-node-page closest-block-page)
-                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              block              @(r/track db/get-block [:block/uid (.. closest -dataset -uid)])
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
@@ -504,8 +505,8 @@
                                        (re-find #"(?s)\]\]" tail)
                                        (nil? (re-find #"(?s)\[" link))
                                        (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid @(r/track db/e-by-av :node/title link)
+                                        uid @(r/track db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
@@ -516,8 +517,8 @@
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
                                        (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid @(r/track db/e-by-av :node/title hashtag)
+                                        uid @(r/track db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
                                       (let [new-uid (athens.util/gen-block-uid)]
@@ -529,7 +530,7 @@
                                        (re-find #"(?s)\)\)" tail)
                                        (nil? (re-find #"(?s)\(" block-ref))
                                        (nil? (re-find #"(?s)\)" block-ref))
-                                       (db/e-by-av :block/uid block-ref))
+                                       @(r/track db/e-by-av :block/uid block-ref))
                                   (router/navigate-uid block-ref e)
 
                                   :else (router/navigate-uid uid e))))))
@@ -673,7 +674,7 @@
         [o-uid embed-id]          (db/uid-and-embed-id uid)
         next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
-      (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+      (let [next-block @(r/track db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
         (dispatch [:backspace (cond-> next-block-uid
                                 embed-id (str "-embed-" embed-id))
                    (str (:block/string state) (:block/string next-block))])))))

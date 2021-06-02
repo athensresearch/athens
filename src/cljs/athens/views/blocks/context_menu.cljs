@@ -41,10 +41,10 @@
   [^js e uid state]
   (let [uids @(rf/subscribe [:selected/items])]
     (if (empty? uids)
-      (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
+      (let [block (dissoc @(r/track db/get-block-document [:block/uid uid]) :block/children)
             data  (listeners/blocks-to-clipboard-data 0 block true)]
         (.. js/navigator -clipboard (writeText data)))
-      (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [data (->> (map (comp deref #(r/track db/get-block-document [:block/uid %])) uids)
                       (map #(listeners/blocks-to-clipboard-data 0 % true))
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))

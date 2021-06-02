@@ -29,8 +29,8 @@
     [athens.listeners :as listeners]
     [cljsjs.react]
     [cljsjs.react.dom]
+    [datascript.core :as d]
     [devcards.core]
-    [posh.reagent :refer [transact!]]
     [re-frame.core :refer [dispatch-sync]]
     [stylefy.core :as stylefy]))
 
@@ -400,7 +400,7 @@
                     {:db/id 4137, :block/uid "YDTpf-rMy", :block/string "", :block/open true, :block/order 1}]})
 
 
-(transact! dsdb [athens-faq hyperlink])
+(d/transact! dsdb [athens-faq hyperlink])
 
 
 (defn ^:export main

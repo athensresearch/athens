@@ -7,7 +7,7 @@
     ;; [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [posh.reagent :refer [q]]
+    [datascript.core :as d]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
@@ -150,11 +150,11 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        shortcuts (->> @(q '[:find ?order ?title ?uid
-                             :where
-                             [?e :page/sidebar ?order]
-                             [?e :node/title ?title]
-                             [?e :block/uid ?uid]] db/dsdb)
+        shortcuts (->> (d/q '[:find ?order ?title ?uid
+                              :where
+                              [?e :page/sidebar ?order]
+                              [?e :node/title ?title]
+                              [?e :block/uid ?uid]] @db/dsdb)
                        seq
                        (sort-by first))]
     ;; (when @open?

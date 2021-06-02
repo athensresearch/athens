@@ -153,9 +153,10 @@
               [?r :block/refs ?e]]
             @db/dsdb)
        (map (fn [[node-eid node-uid ref]]
-              (let [first-parent (-> ref
-                                     db/get-parents-recursively
-                                     first)]
+              (let [first-parent (->> ref
+                                      (r/track db/get-parents-recursively)
+                                      deref
+                                      first)]
                 {"source"     (:db/id first-parent)
                  "source-uid" node-uid
                  "target"     node-eid

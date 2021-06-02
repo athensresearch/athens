@@ -7,7 +7,8 @@
     [cljsjs.react.dom]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r])
   (:import
     (goog.events
       EventType
@@ -134,9 +135,9 @@
   (let [replacements (->> s
                           (re-seq #"\(\(([^\(\)]+)\)\)")
                           (map (fn [[orig-str match-str]]
-                                 (let [eid (db/e-by-av :block/uid match-str)]
+                                 (let [eid @(r/track db/e-by-av :block/uid match-str)]
                                    (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str @(r/track db/v-by-ea eid :block/string)]
                                      [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]
@@ -175,7 +176,7 @@
   [^js e]
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [copy-data (->> (map (comp deref #(r/track db/get-block-document [:block/uid %])) uids)
                            (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
@@ -187,7 +188,7 @@
   [^js e]
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [copy-data (->> (map (comp deref #(r/track db/get-block-document [:block/uid %])) uids)
                            (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)

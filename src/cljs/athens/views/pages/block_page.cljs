@@ -163,7 +163,7 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(navigate-uid (:block/uid (parse-renderer/pull-node-from-string group-title)))} group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
@@ -172,8 +172,8 @@
 
 (defn page
   [ident]
-  (let [block       (db/get-block-document ident)
-        parents     (db/get-parents-recursively ident)
+  (let [block       @(r/track db/get-block-document ident)
+        parents     @(r/track db/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])
         refs        (db/get-linked-block-references block)]
     [block-page-el block parents editing-uid refs]))

@@ -11,7 +11,6 @@
     [clojure.string :refer [lower-case]]
     [datascript.core :as d]
     [garden.selectors :as selectors]
-    [posh.reagent :as p]
     [re-frame.core :as rf :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -157,7 +156,7 @@
                           :where
                           [?e :node/title ?t]]
                         @db/dsdb)
-                   (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
+                   (d/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
     (fn []
       (let [sorted-pages @(subscribe [:all-pages/sorted @pages])]
         [:div (use-style page-style)
