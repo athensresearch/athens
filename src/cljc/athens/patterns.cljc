@@ -32,11 +32,11 @@
 ;; Any update to this should be done after testing it using the previous regex101 link
 (def roam-date #"((?<=\s1\d)th|(?<=(\s|[023456789])\d)((?<=1)st|(?<=2)nd|(?<=3)rd|(?<=[4567890])th)),(?=\s\d{4})")
 
+(def pad-single-digit-date-pattern #"(?<=\s)\d(?=,)")
 
 (defn date
   [str]
   (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
-
 
 (defn date-block-string
   [str]
@@ -45,5 +45,8 @@
 
 (defn replace-roam-date
   [string]
-  (clojure.string/replace string athens.patterns/roam-date ","))
+  (-> string
+    (clojure.string/replace roam-date ",")
+    ;; Adds a 0 for single-digit roam dates.
+    (clojure.string/replace pad-single-digit-date-pattern #(str "0" %))))
 
