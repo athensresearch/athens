@@ -201,6 +201,7 @@
             select-fn  (if up? events/select-up events/select-down)
             start-uid (nth uids start-idx)
             end-uid   (nth uids end-idx)
+            ;; TODO: refactor/simplify this loop
             new-items (loop [new-items [source-uid]
                              prev-items []]
                         (cond
