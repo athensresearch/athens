@@ -310,6 +310,12 @@
 
 
 (reg-event-db
+  :selected/remove-items
+  (fn [db [_ uids]]
+    (update db :selected/items #(apply disj %1 %2) uids)))
+
+
+(reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
     (update db :selected/items #(apply conj %1 %2) uids)))
