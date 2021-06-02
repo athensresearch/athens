@@ -52,7 +52,8 @@
                :daily-notes/items   []
                :selected/items      []
                :theme/dark          false
-               :graph-conf          default-graph-conf})
+               :graph-conf          default-graph-conf
+               :db-picker/all-dbs   []}) ; all-dbs is a vector of map
 
 
 ;; -- JSON Parsing ----------------------------------------------------

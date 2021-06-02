@@ -7,22 +7,25 @@
     [athens.views.db-menu.db-icon :refer [db-icon]]
     [athens.views.db-menu.db-list-item :refer [db-list-item]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [re-frame.core :refer [dispatch]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;-------------------------------------------------------------------
-;;--- material ui ---
+;; -------------------------------------------------------------------
+;; --- material ui ---
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
+
 ;; temporary local defs
 
+;; Save last visited db in local storage and get current-db path from local storage on startup
 (def current-db-path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com")
 
 
-(def all-dbs
+;; make this a subscription handler, and subscribe to this in db-menu
+(def dummy-all-dbs
   [{:name "Athens Test Remote DB"
     :path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com"
     :token "x"
@@ -34,12 +37,13 @@
     :path "/Users/coolUser/Documents/athens2/index.transit"
     :is-remote false}])
 
+
 ;; Style
 
 (def dropdown-style
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
                               :color (color :body-text-color)
-                              :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
+                              :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
                               :display "inline-flex"
                               :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
@@ -89,17 +93,19 @@
 (defn db-menu
   []
   (r/with-let [ele (r/atom nil)
+               all-dbs @(subscribe [:db-picker/all-dbs]) ; is this correct ?
                ;; active-db (filter #(= (:path %) current-db-path) all-dbs)
-               active-db (nth all-dbs 0)
+               active-db (nth all-dbs 0) ; TODO for the time being let it be like this
                inactive-dbs (filter #(not= (:path %) current-db-path) all-dbs)]
+              (println ["New sub received all-dbs is -->" all-dbs])
               [:<>
-     ;; DB Icon + Dropdown toggle
+               ;; DB Icon + Dropdown toggle
                [button {:class [(when @ele "is-active")]
                         :on-click #(reset! ele (.-currentTarget %))
                         :style db-menu-button-style}
                 [db-icon {:db active-db
                           :status :running}]]
-     ;; Dropdown menu
+               ;; Dropdown menu
                [m-popover
                 (merge (use-style dropdown-style)
                        {:style {:font-size "14px"}
@@ -116,20 +122,20 @@
                 [:div (use-style (merge menu-style
                                         {:overflow "visible"}))
                  [:<>
-       ;; Show active DB first
+                  ;; Show active DB first
                   [:div (use-style current-db-area-style)
                    [db-list-item {:db active-db
                                   :is-current true
                                   :key (:path active-db)}]
                    [current-db-tools {:db active-db}]]
-        ;; Show all inactive DBs and a separator
+                  ;; Show all inactive DBs and a separator
                   (doall
                     (for [db inactive-dbs]
                       [db-list-item {:db db
                                      :is-current false
                                      :key (:path db)}]))
                   [:hr (use-style menu-separator-style)]
-        ;; Add DB control
+                  ;; Add DB control
                   [button {:on-click #(dispatch [:modal/toggle])}
                    [:<>
                     [:> AddCircleOutline]

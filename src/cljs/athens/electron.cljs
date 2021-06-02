@@ -53,10 +53,13 @@
               new-dir          (.resolve path new-dir base-dir-name)
               new-dir-images   (.resolve path new-dir IMAGES-DIR-NAME)
               new-db-filepath  (.resolve path new-dir DB-INDEX)]
+          (println ["new-db-filepath -->" new-db-filepath "-- new dir is --> " new-dir "-- curr-db-filepath -->"
+                    curr-db-filepath])
           (if (.existsSync fs new-dir)
             (js/alert (str "Directory " new-dir " already exists, sorry."))
             (do (.mkdirSync fs new-dir)
                 (.copyFileSync fs curr-db-filepath new-db-filepath)
+                (dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
                 (dispatch [:db/update-filepath new-db-filepath])
                 (when (.existsSync fs curr-dir-images)
                   (.mkdirSync fs new-dir-images)
@@ -69,12 +72,17 @@
                       (.copyFileSync fs curr new))))))))))
 
 
+
   (defn open-dialog!
-    "Allow user to open db elsewhere from filesystem."
+    "Allow user to open db elsewhere from filesystem.
+     open file with transit name
+     if the file exists, read it dispatch events
+    "
     []
     (let [res       (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
                                                           :filters    [{:name "Transit" :extensions ["transit"]}]}))
           open-file (first res)]
+      (println ["Res is --->" res "first --->" open-file])
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
               db      (dt/read-transit-str read-db)]
@@ -82,7 +90,9 @@
           (dispatch-sync [:init-rfdb])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
-          (dispatch [:db/update-filepath open-file])
+          (dispatch [:db/update-filepath open-file]) ; This is related to current context of updating db name
+          ;; add a new event which updates all-db file list
+          (dispatch [:db-picker/add-new-db open-file false nil])
           (dispatch [:remote-graph-conf/load])
           (dispatch [:loading/unset])))))
 
@@ -100,6 +110,7 @@
               dir         (.resolve path db-location db-name)
               dir-images  (.resolve path dir IMAGES-DIR-NAME)
               db-filepath (.resolve path dir DB-INDEX)]
+          (println ["new db created with location -->" db-location "filepath is ---> " db-filepath])
           (if (.existsSync fs dir)
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
@@ -109,6 +120,9 @@
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
               (dispatch [:fs/watch db-filepath])
               (dispatch [:db/update-filepath db-filepath])
+              ;; dispatch this to update the db list
+              ;; db-filepath also contains the name of db so no need to explicitly send this
+              (dispatch [:db-picker/add-new-db db-filepath false nil])
               (dispatch [:reset-conn db])
               (dispatch [:transact athens-datoms/datoms])
               (dispatch [:loading/unset])))))))
@@ -199,8 +213,147 @@
     (fn [db _]
       (:db/remote-graph db)))
 
+  ;; subscribe to all-dbs
+  (reg-sub
+    :db-picker/all-dbs
+    (fn [db _]
+      (println ["from subscription handler updated db list is  --->" (get db :db-picker/all-dbs)])
+      (:db-picker/all-dbs db)))
 
   ;; Events
+
+  ;; ------- db -picker--------------------------------
+  ;; Event for updating all-dbs in db picker --
+
+
+  ;; what do I need to know to add this db in the list ?
+  ;; file path : will be passed on from the view(electron )
+  ;; db name :  in filepath find the text between last and 2nd last '/'
+  ;; remote db : can only be passed through "join" otherwise set it to none and if none it means
+  ;; token for remote : check if remote and a token is passed
+  ;; local db
+
+
+  (defn get-db-name
+    ;; example dbpath :/home/sid597/Desktop/athens db/test db/index.transit --> test db
+    ;; dbpath type : string
+    [dbpath]
+    (let  [split-path (clojure.string/split dbpath #"/")]
+      (nth  split-path (- (count split-path) 2))))
+
+  ;; (println ( get-db-name "/home/sid597/Desktop/athens db/test db/index.transit")) returns --> test db
+
+  " Find if a db is already in the list
+    2 dbs can have same name ??
+    I think so, so we check the file path if it matches then don't allow user to add this db
+
+  Implementation :
+  - make a set containing all the paths from list
+    - Should this be done whenever a new db is added or should we maintain a set universally and check that?
+    - No performance issues if this is done on evry new db addition because not many dbs would be made frequently to
+    cause performance issue. What about merging 2 large dbs? Not there yet, but in that case also calculating the set
+     of all paths is O(n).
+    - Also reframe is in-memory so saving data which can be easly calculated is not a good idea I think
+  - check if new db path is there
+
+   How dumb can a person be I was using map instead of reduce, and in my head thinking what I did wrong. Facepalm.
+   "
+  (defn check-duplicate-db
+    [db-list check-path]
+    (let [path-set (into #{} (reduce (fn [paths db-list-item]
+                                       (conj paths (get db-list-item :path)))
+                                     [] db-list))]
+      (contains? path-set check-path)))
+
+  ;; TODO add the fillowing test in test
+  (def dummy-db-list
+    [{:name "Athens Test Remote DB"
+      :path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com"
+      :token "x"
+      :is-remote true}
+     {:name "My DB"
+      :path "/Users/coolUser/Documents/athens/index.transit"
+      :is-remote false}
+     {:name "Top Secret"
+      :path "/Users/coolUser/Documents/athens2/index.transit"
+      :is-remote false}])
+
+  ;; TODO add the following test to test
+  ;; (println [ "checking if this path is in dummy list should return true, result is -->" (check-duplicate-db
+  ;; dummy-db-list "/Users/coolUser/Documents/athens2/index.transit"}]) ; --> true
+  ;; (println ["checking if this path is in dummy list should return false, result is -->" (check-duplicate-db dummy-db-list "/Users/coolUser/Documents/athens2/"}]) ; --> ; false
+
+
+
+  ;; under a namespace ?  will add functionality first then on second pass will format it
+  ;; Would this create a effect? like side-effect?  Yeah will
+  ;; save this data to local storage
+
+  (reg-event-fx
+    :db-picker/add-new-db
+    ;; Add new db to db-picker, also update the local storage value
+    (fn [{:keys [db]} [_ dbpath is-remote token]]
+      (println "db-picker/add-new-db newdb add-new-db event occured with args ---->" dbpath is-remote token)
+      (let [current-db-list (get db :db-picker/all-dbs)
+            duplicate (check-duplicate-db current-db-list dbpath)]
+        (println ["db-picker/add-new-db newdb Is the new db already added in the list ? --> " duplicate])
+        (if (not duplicate)
+          (let [dbname (get-db-name dbpath)
+                newdb  {:path dbpath
+                        :is-remote is-remote
+                        :token token
+                        :name dbname}
+                all-dbs (conj current-db-list newdb)]
+            ;; Add this data to newdb data to all-dbs so that view can be updated with this new db
+            ;; also save this updated all-dbs in local storage
+            (println "db-picker/add-new-db newdb is --->" [newdb])
+            (println "db-picker/add-new-db newdb previous db list is ---->" current-db-list)
+            (println "db-picker/add-new-db newdb updated db list is ---->" all-dbs)
+
+            {:db (assoc db :db-picker/all-dbs all-dbs)})
+          (println "=================== DB ALREADY IN DB LIST========================")))))
+
+  ;; TODO handle the case when db is already in the list))))
+  ;; db list got updated but subscription did not work
+  ;; This is working but have to close the dialog first to see the results
+
+  ;; :local-storage/set! ["all-dbs" :db-picker/all-dbs]
+  (reg-event-fx
+    ;; check if local storage has data related to db-picker
+    :local-storage/get-db-picker-list
+    (fn [{:keys [db]} _]
+      (let [val (js/localStorage.getItem "all-dbs")]
+        (println ":local-storage/get-db-picker-list val for db picker list is ---->" val)
+        (if (nil? val)
+          (let [ddb {:name "My DB"
+                     :path "/Users/coolUser/Documents/athens/index.transit"
+                     :is-remote true
+                     :token "x"}]
+            {:db (assoc db :db-picker/all-dbs [ddb])})))))
+
+  ;; Function to remove a path from db list
+  ;; Find the map which has a key matching the db-path then remove it
+  (reg-event-fx
+    :db-picker/remove-db
+    (fn [{:keys [db]} [_ db-path]]
+      (println ["asked to remove db with path ----> " db-path])
+      (let [current-db-list (get db :db-picker/all-dbs)
+            new-db-list (into [] (filter
+                                   (fn [db-list-item]
+                                     (not= db-path (get db-list-item :path)))
+                                   current-db-list))]
+        (println ["new db-list after deleting a path is ---->" new-db-list])
+        {:db (assoc db :db-picker/all-dbs new-db-list)})))
+
+
+  ;; Update db-picker list with new db path when db is moved
+  (reg-event-fx
+    :db-picker/move-db
+    (fn [{:keys [db]} [_ previous_path new_path]]
+      (println ["Asked to update the db path"])
+      {:dispatch-n [[:db-picker/remove-db previous_path]
+                    [:db-picker/add-new-db new_path false nil]]}))
+
 
 
   (reg-event-fx
@@ -218,12 +371,15 @@
                                       :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
       (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
+        (println "get-db-filepath called")
         (cond
           (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
           ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
           ;; Short-circuit the first load and just use the existing DB
-          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath default-db-path]}
-          :else {:dispatch [:db/update-filepath local-storage]}))))
+          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [[:db/update-filepath default-db-path]
+                                                                                  [:local-storage/get-db-picker-list]]}
+          :else {:dispatch-n [[:db/update-filepath local-storage]
+                              [:local-storage/get-db-picker-list]]}))))
 
 
   (reg-event-fx
@@ -241,16 +397,23 @@
   ;; Documents/athens
   ;; ├── images
   ;; └── index.transit
+
+  ;; If new is created add
+  ;; 1. This to all-dbs list
+  ;; 2. Make this db active
   (reg-event-fx
     :fs/create-new-db
     (fn []
       (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
             db-images   (.resolve path documents-athens-dir IMAGES-DIR-NAME)]
+        (println "create-new-db called")
         (create-dir-if-needed! documents-athens-dir)
         (create-dir-if-needed! db-images)
         {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
-                      [:transact athens-datoms/datoms]]})))
+                      [:transact athens-datoms/datoms]
+                      [:db-picker/add-new-db db-filepath false nil]]})))
+
 
 
   (reg-event-fx
@@ -329,9 +492,13 @@
     :boot/desktop
     (fn [_ _]
       {:db         db/rfdb
-       :async-flow {:first-dispatch [:local-storage/get-db-filepath]
+       :async-flow {:first-dispatch [:local-storage/get-db-filepath] ; THis is the first dispatch that happens on
+                    ;; start, this event then dispatches update-filepath, next we see when this event is seen and
+                    ;; when it is seen the following rule handles that.
                     :rules          [{:when        :seen?
-                                      :events      :db/update-filepath
+                                      :events      :db/update-filepath ; ok so this means when db/update-filepath
+                                      ;; event is seen dispatch the following function ?
+
                                       :dispatch-fn (fn [[_ filepath]]
                                                      (cond
                                                        ;; No database path found in localStorage. Creating new one
@@ -341,6 +508,14 @@
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
                                                                                    (dispatch [:reset-conn db]))
+                                                       ;; check if all-dbs list is there
+                                                       ;; in local storage if not then
+                                                       ;; populate it with current
+                                                       ;; filepath and if it is there then
+                                                       ;; update the db
+
+                                                       ;; (dispatch [:db-picker/add-new-db
+
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
