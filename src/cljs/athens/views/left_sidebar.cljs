@@ -4,7 +4,7 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    ;; [athens.views.buttons :refer [button]]
+    ;;[athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [posh.reagent :refer [q]]
@@ -13,7 +13,7 @@
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def left-sidebar-style
@@ -24,8 +24,6 @@
    :flex-direction "column"
    :overflow-x "hidden"
    :overflow-y "auto"
-   ::stylefy/supports {"overflow-y: overlay"
-                       {:overflow-y "overlay"}}
    :transition "width 0.5s ease"
    ::stylefy/sub-styles {:top-line {:margin-bottom "2.5rem"
                                     :display "flex"
@@ -64,8 +62,6 @@
    :padding "0 2rem"
    :margin "0 0 2rem"
    :overflow-y "auto"
-   ::stylefy/supports {"overflow-y: overlay"
-                       {:overflow-y "overlay"}}
    ::stylefy/sub-styles {:heading {:flex "0 0 auto"
                                    :opacity (:opacity-med OPACITIES)
                                    :line-height "1"
@@ -103,7 +99,7 @@
    ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
 
 
-;; Components
+;;; Components
 
 
 (defn shortcut-component
@@ -122,8 +118,8 @@
                                         (.. e preventDefault)
                                         (let [offset       (mouse-offset e)
                                               middle-y     (vertical-center (.. e -target))
-                                              ;; find closest li because sometimes event.target is anchor tag
-                                              ;; if nextSibling is null, then target is last li and therefore end of list
+                                     ;; find closest li because sometimes event.target is anchor tag
+                                     ;; if nextSibling is null, then target is last li and therefore end of list
                                               closest-li   (.. e -target (closest "li"))
                                               next-sibling (.. closest-li -nextElementSibling)
                                               last-child?  (nil? next-sibling)]
@@ -159,11 +155,11 @@
                        (sort-by first))]
     ;; (when @open?
 
-    ;; IF EXPANDED
+      ;; IF EXPANDED
     [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
      [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
 
-      ;; SHORTCUTS
+       ;; SHORTCUTS
       [:ol (use-style shortcuts-list-style)
        [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
        (doall
@@ -171,7 +167,7 @@
            ^{:key (str "left-sidebar-" (second sh))}
            [shortcut-component sh]))]
 
-      ;; LOGO + BOTTOM BUTTONS
+       ;; LOGO + BOTTOM BUTTONS
       [:footer (use-sub-style left-sidebar-style :footer)
        [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens/issues/new/choose" :target "_blank"}) "Athens"]
        [:h5 (use-style {:align-self "center"})

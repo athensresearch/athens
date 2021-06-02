@@ -7,7 +7,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def textinput-style
@@ -48,7 +48,7 @@
    ::stylefy/manual [[:svg {:font-size "20px"}]]})
 
 
-;; Components
+;;; Components
 
 
 (defn textinput

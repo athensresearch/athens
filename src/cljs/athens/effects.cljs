@@ -20,7 +20,7 @@
     [stylefy.core :as stylefy]))
 
 
-;; Effects
+;;; Effects
 
 (defn new-titles-to-tx-data
   "Filter: node/title doesn't exist yet in the db or in the titles being asserted (e.g. when renaming a page and changing it's references).
@@ -226,17 +226,17 @@
     (if (= @socket-status :closed)
       (dispatch [:show-snack-msg
                  {:msg "Graph is now read only"}])
-      (do (dev-pprint "TX RAW INPUTS")                             ; event tx-data
+      (do (dev-pprint "TX RAW INPUTS")                             ;; event tx-data
           (dev-pprint tx-data)
           (try
             (let [with-tx (d/with @db/dsdb tx-data)]
-              (dev-pprint "TX WITH")                               ; tx-data normalized by datascript to flat datoms
+              (dev-pprint "TX WITH")                               ;; tx-data normalized by datascript to flat datoms
               (dev-pprint (:tx-data with-tx))
               (let [more-tx-data  (parse-for-links with-tx)
                     final-tx-data (vec (concat tx-data more-tx-data))]
-                (dev-pprint "TX MORE")                             ; parsed tx-data, e.g. asserting/retracting pages and references
+                (dev-pprint "TX MORE")                             ;; parsed tx-data, e.g. asserting/retracting pages and references
                 (dev-pprint more-tx-data)
-                (dev-pprint "TX FINAL INPUTS")                     ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+                (dev-pprint "TX FINAL INPUTS")                     ;; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
                 (dev-pprint final-tx-data)
                 (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
 
@@ -332,8 +332,8 @@
       (js/setTimeout (fn []
                        (let [[uid embed-id]  (db/uid-and-embed-id uid)
                              html-id         (str "editable-uid-" uid)
-                             ;; targets (js/document.querySelectorAll html-id)
-                             ;; n       (count (array-seq targets))
+                             ;;targets (js/document.querySelectorAll html-id)
+                             ;;n       (count (array-seq targets))
                              el              (js/document.querySelector
                                                (if embed-id
                                                  (or

@@ -7,8 +7,8 @@
     [taoensso.sente :as sente]))
 
 
-;; -------------------------------------------------------------------
-;; --- re-frame ---
+;;-------------------------------------------------------------------
+;;--- re-frame ---
 
 (declare start-socket!)
 
@@ -67,8 +67,8 @@
     (assoc db :socket-status curr)))
 
 
-;; -------------------------------------------------------------------
-;; --- socket ---
+;;-------------------------------------------------------------------
+;;--- socket ---
 
 (declare channel-socket)
 (declare chsk)
@@ -192,9 +192,8 @@
   (when (= @(subscribe [:socket-status]) :running)
     (js/setTimeout (fn [] (send-presence!)) 500)))
 
-
-;; -------------------------------------------------------------------
-;; --- transactions ---
+;;-------------------------------------------------------------------
+;;--- transactions ---
 
 
 (defmethod event-msg-handler :dat.sync.client/recv-remote-tx

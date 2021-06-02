@@ -1,8 +1,8 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.85",
-  "description": "An open-source knowledege graph for research and notetaking",
+  "version": "1.0.0-beta.82",
+  "description": "An open-source alternative to Roam Research",
   "repository": {
     "type": "git",
     "url": "https://github.com/athensresearch/athens/"
@@ -10,9 +10,8 @@
   "scripts": {
     "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
-    "dev": "shadow-cljs watch main renderer app",
-    "compile": "shadow-cljs compile main renderer app",
-    "prod": "shadow-cljs release main renderer app",
+    "dev": "shadow-cljs watch main renderer",
+    "compile": "shadow-cljs compile main renderer",
     "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs",
     "dist": "electron-builder -p always"
   },
@@ -65,13 +64,13 @@
     "create-react-class": "^15.6.3",
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.4",
-    "highlight.js": "^10.7.2",
+    "highlight.js": "9.15.10",
     "katex": "^0.12.0",
     "marked": "^1.0.0",
     "nedb": "^1.8.0",
-    "react": "17.0.1",
+    "react": "16.9.0",
     "react-codemirror2": "^7.2.1",
-    "react-dom": "17.0.1",
+    "react-dom": "16.9.0",
     "react-force-graph-2d": "^1.19.0",
     "react-highlight.js": "1.0.7"
   },
@@ -84,7 +83,7 @@
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
-    "shadow-cljs": "^2.11.23",
+    "shadow-cljs": "^2.10.21",
     "source-map-support": "^0.5.19"
   },
   "standard-version": {

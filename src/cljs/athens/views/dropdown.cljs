@@ -8,7 +8,7 @@
     [stylefy.core :as stylefy]))
 
 
-;; Styles
+;;; Styles
 
 
 (stylefy/keyframes "dropdown-appear"
@@ -22,7 +22,7 @@
   {:display "inline-flex"
    :z-index (:zindex-dropdown ZINDICES)
    :padding "0.25rem"
-   :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
+   :border-radius "calc(0.25rem + 0.25rem)" ;; Button corner radius + container padding makes "concentric" container radius
    :min-height "2em"
    :min-width "2em"
    :animation "dropdown-appear 0.125s"
@@ -80,10 +80,10 @@
      ::stylefy/manual [[:&:last-child {:padding-inline-end "0"}]]})
 
 
-;; Components
+;;; Components
 ;;
 ;;
-;; (defn block-context-menu-component
+;;(defn block-context-menu-component
 ;;  [style]
 ;;  [dropdown {:style style :content
 ;;             [menu {:content
@@ -106,7 +106,7 @@
 ;;                     [button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
 ;;
 ;;
-;; (def items
+;;(def items
 ;;  {"Amet"   {:count 6 :state :added}
 ;;   "At"     {:count 130 :state :excluded}
 ;;   "Diam"   {:count 6}
@@ -125,7 +125,7 @@
 ;;   "Vitae"  {:count 1}})
 ;;
 ;;
-;; (defn filter-dropdown-component
+;;(defn filter-dropdown-component
 ;;  []
 ;;  [dropdown {:style   {:width "20em" :height "20em"}
 ;;             :content [:<>

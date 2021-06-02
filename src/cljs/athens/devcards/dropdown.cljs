@@ -1,6 +1,5 @@
 (ns athens.devcards.dropdown)
 
-
 ;; (ns athens.devcards.dropdown
 ;;   (:require
 ;;    [athens.views.dropdown :refer [block-context-menu-component filter-dropdown-component]]

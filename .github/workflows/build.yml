@@ -59,18 +59,6 @@ jobs:
        - name: Lint
          run: script/lint
 
-# # ignore for now
-#   deps-check:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#       - name: Check Dependencies
-#         run: lein ancient
-
    style:
      runs-on: ubuntu-18.04
      steps:

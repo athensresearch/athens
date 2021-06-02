@@ -8,7 +8,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def color-group-style
@@ -35,7 +35,7 @@
    :justify-content "space-between"})
 
 
-;; Components
+;;; Components
 
 
 (def types [:h1 :h2 :h3 :h4 :h5 :span :span.block-ref])
@@ -47,7 +47,7 @@
    ["IBM Plex Mono" "monospace"]])
 
 
-;; Devcards
+;;; Devcards
 
 
 (defcard-rg Light-Theme

@@ -3,8 +3,7 @@
     [athens.config :as config]
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]
-    [stylefy.reagent :as stylefy-reagent]))
+    [stylefy.core :as stylefy]))
 
 
 (def THEME-DARK
@@ -104,7 +103,7 @@
   {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
-   :font-size        "16px"                                 ; Sets the Rem unit to 16px
+   :font-size        "16px"                                 ;; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]
                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"
@@ -176,7 +175,7 @@
 
 (defn init
   []
-  (stylefy/init {:dom (stylefy-reagent/init)})
+  (stylefy/init)
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
   (stylefy/class "CodeMirror" codemirror-styles)

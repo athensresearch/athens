@@ -8,7 +8,7 @@
     [stylefy.core :as stylefy]))
 
 
-;; Styles
+;;; Styles
 
 (def modal-style
   {:z-index (:zindex-modal ZINDICES)
@@ -24,8 +24,8 @@
                                :background-clip "padding-box"
                                :background (color :background-plus-1)
                                :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px " (color :body-text-color :opacity-low)]]}]
-                     [:modal__header {:display "contents"}] ; Deactivate layout on the default header
-                     [(selectors/> :.modal__header :button) {:display "none"}] ; Hide default close button
+                     [:modal__header {:display "contents"}] ;; Deactivate layout on the default header
+                     [(selectors/> :.modal__header :button) {:display "none"}] ;; Hide default close button
                      [:.modal__title :.modal__footer {:flex "0 0 auto"
                                                       :padding "0.25rem 1rem"
                                                       :display "flex"

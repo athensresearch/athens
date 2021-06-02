@@ -38,13 +38,13 @@
 
 
 ;; all graph refs(react refs) reside in this atom
-;; saving this to re-frame db is not ideal because of serialization
-;; and objects losing their refs
+  ;; saving this to re-frame db is not ideal because of serialization
+  ;; and objects losing their refs
 (def graph-ref-map (r/atom {}))
 
 
-;; -------------------------------------------------------------------
-;; --- material ui ---
+;;-------------------------------------------------------------------
+;;--- material ui ---
 
 
 (def m-slider (r/adapt-react-class (.-default Slider)))
@@ -62,9 +62,9 @@
 (def m-switch (r/adapt-react-class (.-default Switch)))
 
 
-;; -------------------------------------------------------------------
-;; --- re-frame stuff ---
-;; --- read comments at top of file for more ---
+;;-------------------------------------------------------------------
+;;--- re-frame stuff ---
+;;--- read comments at top of file for more ---
 
 
 (rf/reg-sub
@@ -105,8 +105,8 @@
 (dispatch [:graph/load-graph-conf])
 
 
-;; -------------------------------------------------------------------
-;; --- graph data ---
+;;-------------------------------------------------------------------
+;;--- graph data ---
 
 
 (defn build-nodes
@@ -192,8 +192,8 @@
              (- levels 1)))))
 
 
-;; -------------------------------------------------------------------
-;; --- comps ---
+;;-------------------------------------------------------------------
+;;--- comps ---
 
 
 (defn graph-control-style
@@ -258,9 +258,9 @@
 
            ;; code theme
            ;; category -- for eg node-section and section related data
-           ;; controls -- for eg node-controls and their props
-           ;; props -- for eg orphans? inside a control are props for the editing-comp(for slider or toggle)
-           ;; other-keys describe more about the comp
+             ;; controls -- for eg node-controls and their props
+               ;; props -- for eg orphans? inside a control are props for the editing-comp(for slider or toggle)
+               ;; other-keys describe more about the comp
            node-controls  [{:key                   :hlt-link-levels
                             :label                 "No. of link levels to highlight"
                             :props                 {:min   1

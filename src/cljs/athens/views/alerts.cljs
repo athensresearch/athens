@@ -7,12 +7,12 @@
     [athens.views.buttons :refer [button]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    ;; [garden.selectors :as selectors]
+    ;;[garden.selectors :as selectors]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 (def alert-container-style
   {:background-color (color :highlight-color :opacity-low)
@@ -26,7 +26,7 @@
    :border-radius "5px"})
 
 
-;; Components
+;;; Components
 
 
 (defn alert-component

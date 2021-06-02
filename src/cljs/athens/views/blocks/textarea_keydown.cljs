@@ -22,7 +22,7 @@
       KeyCodes)))
 
 
-;; Event Helpers
+;;; Event Helpers
 
 
 (defn modifier-keys
@@ -45,12 +45,6 @@
 
 
 (defn destruct-target
-  "Get the current value of a textarea (`:value`) and
-   the start (`:start`) and end (`:end`) index of the selection.
-   Furthermore, split the selection into three parts:
-   text before the selection (`:head`),
-   the selection itself (`:selection`),
-   and text after the selection (`:tail`)."
   [target]
   (let [value (.. target -value)
         [start end] (get-end-points target)
@@ -89,7 +83,7 @@
   (contains? ARROW-KEYS (.. e -keyCode)))
 
 
-;; Dropdown: inline-search and slash commands
+;;; Dropdown: inline-search and slash commands
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
@@ -102,11 +96,10 @@
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-
-;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;; [DateRange "Date Picker"]
-;; [Attachment "Upload Image or File"]
-;; [ExposurePlus1 "Word Count"]
+;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;;[DateRange "Date Picker"]
+;;[Attachment "Upload Image or File"]
+;;[ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
@@ -146,109 +139,123 @@
              :search/results results))))
 
 
-;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-;; textarea setval will lose ability to undo/redo
-
-;; execCommand is obsolete:
-;; be wary before updating electron - as chromium might drop support for execCommand
-;; electron 11 - uses chromium < 90(latest) which supports execCommand
-(defn replace-selection-with
-  "replace the current selection with `new-text`"
-  [new-text]
-  (.execCommand js/document "insertText" false new-text))
-
-
-(defn set-selection
-  "select text from `start` to `end` in the textarea `target`"
-  [target start end]
-  (setStart target start)
-  (setEnd target end))
-
-
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
-  ;; this signature is called to process keyboard events.
   ([state e]
-   (let [target (.. e -target)
-         {:search/keys [index results]} @state
-         item (nth results index)]
-     (auto-complete-slash state target item)))
-  ;; here comes the autocompletion logic itself,
-  ;; independent of the input method the user used.
-  ;; `expansion` is the identifier of the page or block
-  ;; (i.e., UID of block or title of page) that shall be
-  ;; inserted.
-  ([state target item]
-   (let [{:keys [start head]} (destruct-target target)
-         [caption _ expansion _ pos] item
+   (let [{:search/keys [index results]} @state
+         {:keys [value head tail target]} (destruct-key-down e)
+         [n _ expansion _ pos] (nth results index)
          expand    (if (fn? expansion) (expansion) expansion)
-         ;; the regex is evaluated greedily, yielding the last
-         ;; occurrence in head (head = text up to cursor)
-         start-idx (dec (count (re-find #"(?s).*/" head)))]
+         start-idx (dec (count (re-find #"(?s).*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
      (swap! state assoc
-            :search/type nil)
-     (set-selection target start-idx start)
-     (replace-selection-with expand)
+            :search/type nil
+            :string/local new-str)
+     (set! (.-value target) new-str)
      (when pos
-       (let [new-idx (+ start-idx (count expand) (- pos))]
+       (let [new-idx (- (count (str new-head expand)) pos)]
          (set-cursor-position target new-idx)
-         (when (= caption "Block Embed")
+         (when (= n "Block Embed")
            (swap! state assoc :search/type :block
-                  :search/query "" :search/results [])))))))
+                  :search/query "" :search/results []))))))
+  ([state target item]
+   (let [{:keys [value head tail]} (destruct-target target)
+         [_ _ expansion _ pos] item
+         expand    (if (fn? expansion) (expansion) expansion)
+         start-idx (dec (count (re-find #"(?s).*/" head)))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head expand tail)]
+     (swap! state assoc
+            :search/type nil
+            :string/local new-str)
+     (set! (.-value target) new-str)
+     (when pos
+       (let [new-idx (- (count (str new-head expand)) pos)]
+         (set-cursor-position target new-idx))))))
 
 
-;; see `auto-complete-slash` for how this arity-overloaded
-;; function is used.
 (defn auto-complete-hashtag
   ([state e]
    (let [{:search/keys [index results]} @state
-         target (.. e -target)
          {:keys [node/title block/uid]} (nth results index nil)
-         expansion (or title uid)]
-     (auto-complete-hashtag state target expansion)))
-
-  ([state target expansion]
-   (let [{:keys [start head]} (destruct-target target)
-         start-idx (count (re-find #"(?s).*#" head))]
+         {:keys [value head tail]} (destruct-key-down e)
+         expansion (or title uid)
+         start-idx (count (re-find #"(?s).*#" head))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head "[[" expansion "]]" tail)]
      (if (nil? expansion)
        (swap! state assoc :search/type nil)
-       (do
-         (set-selection target start-idx start)
-         (replace-selection-with (str "[[" expansion "]]"))
-         (swap! state assoc
-                :search/type nil))))))
+       (swap! state assoc
+              :search/type nil
+              :string/local new-str))))
+  ([state target expansion]
+   (let [{:keys [value head tail]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*#" head))
+         new-head  (subs value 0 start-idx)
+         new-str   (str new-head "[[" expansion "]]" tail)]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc
+              :search/type nil
+              :string/local new-str)))))
 
 
-;; see `auto-complete-slash` for how this arity-overloaded
-;; function is used.
 (defn auto-complete-inline
   ([state e]
-   (let [{:search/keys [index results]} @state
-         ;; (nth results (or index 0) nil) returns the index-th result
-         ;; If (= index nil) or index is out of bounds, returns nil
-         ;; For example, index can be nil if (= results [])
-         {:keys [node/title block/uid]} (nth results (or index 0) nil)
-         target (.. e -target)
-         expansion    (or title uid)]
-     (auto-complete-inline state target expansion)))
-
+   (let [{:search/keys [query type index results]} @state
+         {:keys [node/title block/uid]} (nth results index nil)
+         {:keys [start head tail target]} (destruct-key-down e)
+         expansion    (or title uid)
+         block?       (= type :block)
+         page?        (= type :page)
+         query        (escape-str query)
+         ;; rewrite this more cleanly
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
+         new-head     (cond block? "$1(("
+                            page? "$1[[")
+         closing-str  (cond block? "))"
+                            page? "]]")
+         replacement  (str new-head expansion closing-str)
+         replace-str  (replace-first head head-pattern replacement)
+         matches      (re-matches tail-pattern tail)
+         [_ _ after-closing-str] matches
+         new-str      (str replace-str after-closing-str)]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc :search/type nil :string/local new-str))
+     (setStart target (+ 2 start))))
   ([state target expansion]
-   (let [{:search/keys [query]} @state
-         {:keys [end]} (destruct-target target)
-         query        (escape-str query)]
+   (let [{:search/keys [query type]} @state
+         {:keys [start head tail]} (destruct-target target)
+         block?       (= type :block)
+         page?        (= type :page)
+         query        (escape-str query)
+         ;; rewrite this more cleanly
+         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
+                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
+         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
+                            page? #"(?s)(\]\])?(.*)")
+         new-head     (cond block? "$1(("
+                            page? "$1[[")
+         closing-str  (cond block? "))"
+                            page? "]]")
+         replacement  (str new-head expansion closing-str)
+         replace-str  (replace-first head head-pattern replacement)
+         matches      (re-matches tail-pattern tail)
+         [_ _ after-closing-str] matches
+         new-str      (str replace-str after-closing-str)]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (swap! state assoc :search/type nil :string/local new-str))
+     (setStart target (+ 2 start)))))
 
-     ;; assumption: cursor or selection is immediately before the closing brackets
 
-     (when (not (nil? expansion))
-       (set-selection target (- end (count query)) end)
-       (replace-selection-with expansion))
-     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
-       (set-cursor-position target new-cursor-pos))
-     (swap! state assoc :search/type nil))))
-
-
-;; Arrow Keys
+;;; Arrow Keys
 
 
 (defn block-start?
@@ -301,7 +308,7 @@
         start?          (block-start? e)
         end?            (block-end? e)
         {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
+        textarea-height (.. target -offsetHeight) ;; this height is accurate, but caret-position height is not updating
         {:keys [top height]} caret-position
         rows            (js/Math.round (/ textarea-height height))
         row             (js/Math.ceil (/ top height))
@@ -362,7 +369,7 @@
                                   (dispatch [:down uid])))))
 
 
-;; Tab
+;;; Tab
 
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
@@ -414,18 +421,16 @@
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
-;; Pair Chars: auto-balance for backspace and writing chars
+;;; Pair Chars: auto-balance for backspace and writing chars
 
 (def PAIR-CHARS
   {"(" ")"
    "[" "]"
    "{" "}"
    "\"" "\""})
-
-
-;; "`" "`"
-;; "*" "*"
-;; "_" "_"})
+  ;;"`" "`"
+  ;;"*" "*"
+   ;;"_" "_"})
 
 
 (defn surround
@@ -440,16 +445,26 @@
   ;; Default to n=2 because it's more common.
   ([e state surround-text]
    (surround-and-set e state surround-text 2))
-  ([e _ surround-text n]
-   (let [{:keys [selection start end target]} (destruct-key-down e)
+  ([e state surround-text n]
+   (let [{:keys [head tail selection start end target]} (destruct-key-down e)
          selection?       (not= start end)]
      (.preventDefault e)
      (.stopPropagation e)
-     (let [selection (surround selection surround-text)]
+     (let [selection (surround selection surround-text)
+           new-str   (str head selection tail)]
+       ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+       ;; textarea setval will lose ability to undo/redo
 
-       (replace-selection-with selection)
+       ;; other note: execCommand is probably the simpler way
+       ;; at least until a new standard comes around
+
+       ;; be wary before updating electron - as chromium might drop support for execCommand
+       ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+       (swap! state assoc :string/local new-str)
+       (.. js/document (execCommand "insertText" false selection))
        (if selection?
-         (set-selection target (+ n start) (+ n end))
+         (do (setStart target (+ n start))
+             (setEnd target (+ n end)))
          (set-cursor-position target (+ start n)))))))
 
 
@@ -547,19 +562,27 @@
 
 (defn handle-pair-char
   [e _ state]
-  (let [{:keys [key target start end selection value]} (destruct-key-down e)
+  (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
-
+    
     (cond
       ;; when close char, increment caret index without writing more
       (some #(= % key lookbehind-char)
-            [")" "}" "\"" "]"]) (do (set-cursor-position target (inc start))
-                                    (swap! state assoc :search/type nil))
+             [")" "}" "\"" "]"]) (do (setStart target (inc start))
+                                 (swap! state assoc :search/type nil))
 
-      (= selection "") (let [new-idx (inc start)]
-                         (replace-selection-with (str key close-pair))
+      (= selection "") (let [new-str (str head key close-pair tail)
+                             new-idx (inc start)]
+                         (swap! state assoc :string/local new-str)
+                         ;; execCommand is obsolete:
+                         ;; be wary before updating electron - as chromium might drop support for execCommand
+                         ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                         (.. js/document (execCommand
+                                          "insertText"
+                                          false
+                                          (str key close-pair)))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -568,18 +591,20 @@
                                  type             (cond double-brackets? :page
                                                         double-parens? :block)]
                              (when type
-                               (swap! state assoc
-                                      :search/type type
-                                      :search/query ""
-                                      :search/results []
-                                      ;; It's cleaner to explicitly set this to nil to avoid
-                                      ;; seemingly nondeterministic behavior caused by a
-                                      ;; previous value of :search/index
-                                      :search/index nil)))))
+                               (swap! state assoc :search/type type :search/query "" :search/results [])))))
 
-      (not= selection "") (let [surround-selection (surround selection key)]
-                            (replace-selection-with surround-selection)
-                            (set-selection target (inc start) (inc end))
+      (not= selection "") (let [surround-selection (surround selection key)
+                                new-str            (str head surround-selection tail)]
+                            (swap! state assoc :string/local new-str)
+                            ;; execCommand is obsolete:
+                            ;; be wary before updating electron - as chromium might drop support for execCommand
+                            ;; electron 11 - uses chromium < 90(latest) which supports execCommand
+                            (.. js/document (execCommand
+                                             "insertText"
+                                             false
+                                             surround-selection))
+                            (set! (.-selectionStart target) (inc start))
+                            (set! (.-selectionEnd target) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
                                                         (subs (:string/local @state) (+ end 1) (+ end 3)))
                                   double-brackets? (= "[[]]" four-char)
@@ -589,11 +614,7 @@
                                   query-fn         (cond double-brackets? db/search-in-node-title
                                                          double-parens? db/search-in-block-content)]
                               (when type
-                                (swap! state assoc
-                                       :search/type type
-                                       :search/query selection
-                                       :search/results (query-fn selection)
-                                       :search/index 0)))))))
+                                (swap! state assoc :search/type type :search/query selection :search/results (query-fn selection))))))))
 
 
 ;; Backspace

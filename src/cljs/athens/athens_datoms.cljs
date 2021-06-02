@@ -1,6 +1,5 @@
 (ns athens.athens-datoms)
 
-
 ;; Reserved pages that are updated when app is loaded.
 (def datoms
   [{:block/uid "0",

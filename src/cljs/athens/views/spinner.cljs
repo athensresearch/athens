@@ -9,7 +9,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 (stylefy/keyframes "appear-and-drop"
                    [:from
@@ -73,7 +73,7 @@
    :align-items     "center"})
 
 
-;; Components
+;;; Components
 
 
 (defn spinner-component

@@ -15,7 +15,7 @@
     [stylefy.core :as stylefy :refer [use-style #_use-sub-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def container-style
@@ -46,22 +46,20 @@
    ::stylefy/manual [[:svg {:font-size "20px"}]]})
 
 
-(def sort-control-style
-  {:padding "0.25rem 0.375rem"
-   ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
+(def sort-control-style {:padding "0.25rem 0.375rem"
+                         ::stylefy/manual [[:&:hover :&:focus [:& [:+ [:span {:opacity 1}]]]]]})
 
 
 (def reset-control-style {:margin-left "0.5em"})
 
 
-(def sort-indicator-style
-  {:margin-right "auto"
-   :transition "all 0.2s ease"
-   :opacity 0
-   :display "flex"
-   :flex-direction "row"
-   :align-items "center"
-   :margin-left "0.5em"})
+(def sort-indicator-style {:margin-right "auto"
+                           :transition "all 0.2s ease"
+                           :opacity 0
+                           :display "flex"
+                           :flex-direction "row"
+                           :align-items "center"
+                           :margin-left "0.5em"})
 
 
 (def filter-list-style
@@ -136,7 +134,7 @@
    :margin "0"})
 
 
-;; Components
+;;; Components
 
 
 (defn filters-el
@@ -149,8 +147,8 @@
             filtered-items (reduce-kv
                              (fn [m k v]
                                (if (re-find
-                                     (re-pattern (str "(?i)" (:search @s)))
-                                     k)
+                                    (re-pattern (str "(?i)" (:search @s)))
+                                    k)
                                  (assoc m k v)
                                  m))
                              {}
@@ -159,11 +157,11 @@
                     (into (sorted-map) filtered-items)
                     (into (sorted-map-by (fn [k1 k2]
                                            (compare
-                                             [(get-in items [k2 :count]) k1]
-                                             [(get-in items [k1 :count]) k2]))) filtered-items))
+                                            [(get-in items [k2 :count]) k1]
+                                            [(get-in items [k1 :count]) k2]))) filtered-items))
             num-filters (count (filter
-                                 (fn [[_k v]] (:state v))
-                                 items))]
+                                (fn [[_k v]] (:state v))
+                                items))]
 
         [:div (use-style container-style)
 
@@ -191,40 +189,40 @@
                    :on-click (fn [_]
                                (swap! s assoc :items
                                       (reduce-kv
-                                        (fn [m k v]
-                                          (assoc m k (dissoc v :state)))
-                                        {}
-                                        (:items @s))))}
+                                       (fn [m k v]
+                                         (assoc m k (dissoc v :state)))
+                                       {}
+                                       (:items @s))))}
            "Reset"]]
-
+         
 
          ;; List
          [:div (use-style filter-list-style)
           (if (> (count items) 0)
             (doall
-              (for [[k {:keys [count state]}] items
-                    :let [added?    (= state :added)
-                          excluded? (= state :excluded)]]
-                ^{:key k}
-                [:div (use-style (merge filter-style
-                                        (cond
-                                          added? added-style
-                                          excluded? excluded-style))
-                                 {:on-click (fn [_]
-                                              (swap! s assoc-in [:items k :state]
-                                                     (case state
-                                                       nil :added
-                                                       :added :excluded
-                                                       :excluded nil)))})
+             (for [[k {:keys [count state]}] items
+                   :let [added?    (= state :added)
+                         excluded? (= state :excluded)]]
+               ^{:key k}
+               [:div (use-style (merge filter-style
+                                       (cond
+                                         added? added-style
+                                         excluded? excluded-style))
+                                {:on-click (fn [_]
+                                             (swap! s assoc-in [:items k :state]
+                                                    (case state
+                                                      nil :added
+                                                      :added :excluded
+                                                      :excluded nil)))})
 
-                 ;; Left
-                 [:span (use-style count-style) count]
-                 [:span (use-style filter-name-style) k]
+               ;; Left
+                [:span (use-style count-style) count]
+                [:span (use-style filter-name-style) k]
 
-                 ;; Right
-                 (when (or added? excluded?)
-                   [:span (use-style state-style) state
-                    (if added?
-                      [:> Check]
-                      [:> Block])])]))
+               ;; Right
+                (when (or added? excluded?)
+                  [:span (use-style state-style) state
+                   (if added?
+                     [:> Check]
+                     [:> Block])])]))
             [:p (use-style no-items-message-style) "No filters found"])]]))))

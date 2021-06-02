@@ -20,8 +20,8 @@
 
 
 (deftest search-in-node-title-test
-  ;; Given that database contains nodes with titles node-titles and we search
-  ;; for query, check that expected-titles were returned by the search.
+  ; Given that database contains nodes with titles node-titles and we search
+  ; for query, check that expected-titles were returned by the search.
   (are [node-titles query expected-titles]
        (with-redefs
          [db/dsdb (d/create-conn db/schema)]
@@ -31,11 +31,11 @@
             actual-titles (map :node/title search-results)]
            (is (= actual-titles expected-titles))))
 
-    ;; Exact string match
+    ; Exact string match
     ["Foo", "Bar"] "Foo" ["Foo"]
 
-    ;; Case-insensitive substring match
+    ; Case-insensitive substring match
     ["Page foo 1", "Page bar 2"] "FOO" ["Page foo 1"]
 
-    ;; TODO(agentydragon): "kiwi recipe" should match "[[Banana]] - [[Kiwi]] smoothie recipe"
+    ; TODO(agentydragon): "kiwi recipe" should match "[[Banana]] - [[Kiwi]] smoothie recipe"
     ))

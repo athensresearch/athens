@@ -47,7 +47,7 @@
 (declare parse-and-render)
 
 
-;; Styles
+;;; Styles
 
 (def page-link
   {:cursor "pointer"
@@ -106,7 +106,7 @@
        (str/join "")))
 
 
-;; Helper functions for recursive link rendering
+;;; Helper functions for recursive link rendering
 (defn pull-node-from-string
   "Gets a block's node from the display string name (or partially parsed string tree)"
   [title-coll]
@@ -121,11 +121,10 @@
     [:span (use-style page-link {:class "page-link"})
      [:span {:class "formatting"} "[["]
      (into [:span {:on-click (fn [e]
-                               (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                               (.. e stopPropagation) ;; prevent bubbling up click handler for nested links
                                (navigate-uid (:block/uid @node) e))}]
            title)
      [:span {:class "formatting"} "]]"]]))
-
 
 ;; -- Component ---
 
@@ -151,7 +150,7 @@
   [:button content])
 
 
-;; Components
+;;; Components
 
 
 (defn- clean-single-p-appending
@@ -161,7 +160,6 @@
     (let [rest-of-p (-> contents first rest)]
       (apply conj parent rest-of-p))
     (apply conj parent contents)))
-
 
 ;; Instaparse transforming docs: https://github.com/Engelberg/instaparse#transforming-the-tree
 (defn transform
@@ -286,18 +284,18 @@
                                                                ;; update value based on `uid`
                                                                  )))}]))
 
-     :latex (fn [text]
-              [:span {:ref (fn [el]
-                             (when el
-                               (try
-                                 (katex/render text el (clj->js
-                                                         {:throwOnError false}))
-                                 (catch :default e
-                                   (js/console.warn "Unexpected KaTeX error" e)
-                                   (aset el "innerHTML" text)))))}])
+    :latex (fn [text]
+             [:span {:ref (fn [el]
+                            (when el
+                              (try
+                                (katex/render text el (clj->js
+                                                       {:throwOnError false}))
+                                (catch :default e
+                                  (js/console.warn "Unexpected KaTeX error" e)
+                                  (aset el "innerHTML" text)))))}])
      :newline (fn [_]
                 [:br])}
-    tree))
+   tree))
 
 
 (defn parse-and-render

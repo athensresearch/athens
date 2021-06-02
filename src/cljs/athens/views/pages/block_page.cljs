@@ -19,7 +19,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;; Styles
+;;; Styles
 
 
 (def title-style
@@ -64,8 +64,7 @@
                                     :opacity "1"}]
                      [(selectors/+ :.is-editing :span) {:opacity 0}]]})
 
-
-;; Helpers
+;;; Helpers
 
 (defn transact-string
   "A helper function that takes a `string` and a `block` and datascript `transact` vector
@@ -84,8 +83,7 @@
     (when diff?
       (dispatch (transact-string (:string/local state) block)))))
 
-
-;; Components
+;;; Components
 
 (defn block-page-change
   [e _uid state]
@@ -156,8 +154,8 @@
              [:h4 (use-style node-page/references-heading-style)
               [(r/adapt-react-class Link)]
               [:span "Linked References"]]
-             ;; Hide button until feature is implemented
-             ;; [button {:disabled true} [(r/adapt-react-class FilterList)]]]
+              ;; Hide button until feature is implemented
+              ;;[button {:disabled true} [(r/adapt-react-class FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
                 (for [[group-title group] refs]
