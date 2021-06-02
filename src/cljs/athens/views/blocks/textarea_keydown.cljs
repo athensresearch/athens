@@ -119,30 +119,19 @@
 
 
 (defn update-query
-  "Used by backspace and write-char.
-  write-char appends key character. Pass empty string during backspace.
-  query-start is determined by doing a greedy regex find up to head.
-  Head goes up to the text caret position."
-  [state head key type]
-  (let [query-fn        (case type
-                          :block db/search-in-block-content
-                          :page db/search-in-node-title
-                          :hashtag db/search-in-node-title
-                          :slash filter-slash-options)
-        regex           (case type
-                          :block #"(?s).*\(\("
-                          :page #"(?s).*\[\["
-                          :hashtag #"(?s).*#"
-                          :slash #"(?s).*/")
-        find            (re-find regex head)
-        query-start-idx (count find)
-        new-query       (str (subs head query-start-idx) key)
-        results         (query-fn new-query)]
+  [state query type]
+  (let [query-fn (case type
+                   :block   db/search-in-block-content
+                   :page    db/search-in-node-title
+                   :hashtag db/search-in-node-title
+                   :slash   filter-slash-options)
+        results  (query-fn query)]
     (if (and (= type :slash) (empty? results))
       (swap! state assoc :search/type nil)
       (swap! state assoc
-             :search/index 0
-             :search/query new-query
+             :search/index   0
+             :search/type    type
+             :search/query   query
              :search/results results))))
 
 
@@ -194,8 +183,10 @@
        (let [new-idx (+ start-idx (count expand) (- pos))]
          (set-cursor-position target new-idx)
          (when (= caption "Block Embed")
-           (swap! state assoc :search/type :block
-                  :search/query "" :search/results [])))))))
+           (swap! state assoc
+                  :search/type :block
+                  :search/query ""
+                  :search/results [])))))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -337,7 +328,6 @@
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
-             (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
              (or up? down?) (let [cur-index    index
                                   min-index    0
                                   max-index    (max-idx results)
@@ -609,30 +599,19 @@
 ;; Backspace
 
 (defn handle-backspace
-  [e uid state]
+  [e uid]
   (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
         sub-str (subs value (dec start) (inc start))
-        possible-pair (#{"[]" "{}" "()"} sub-str)
-        head    (subs value 0 (dec start))
-        {:search/keys [type]} @state
-        look-behind-char (nth value (dec start) nil)]
+        possible-pair (#{"[]" "{}" "()"} sub-str)]
 
     (cond
       (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
       possible-pair (do
                       (.. e preventDefault)
-                      (swap! state assoc :search/type nil)
                       (set-selection target (dec start) (inc start))
-                      (replace-selection-with ""))
-
-      ;; slash: close dropdown
-      (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
-      ;; hashtag: close dropdown
-      (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
-      ;; dropdown is open: update query
-      type (update-query state head "" type))))
+                      (replace-selection-with "")))))
 
 
 ;; Character: for queries
@@ -647,9 +626,9 @@
 
 (defn write-char
   "When user types /, trigger slash menu.
-  If user writes a character while there is a slash/type, update query and results."
+   If user writes a character while there is a slash/type, update query and results."
   [e _uid state]
-  (let [{:keys [head key]} (destruct-key-down e)
+  (let [{:keys [key]} (destruct-key-down e)
         {:search/keys [type]} @state]
     (cond
       (and (= key " ") (= type :hashtag)) (swap! state assoc
@@ -664,8 +643,7 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :hashtag
-                                           :search/results [])
-      type (update-query state head key type))))
+                                           :search/results []))))
 
 
 (defn handle-delete
@@ -684,11 +662,58 @@
                    (str (:block/string state) (:block/string next-block))])))))
 
 
+(defn search-query-from-context
+  [{:keys [key key-code value is-character-key?]} {:keys [search-head search-type]}]
+  (let [[open close] (get {:page  ["[" "]"]
+                           :block ["(" ")"]}
+                          search-type)
+        new-head  (-> search-head
+                      (clojure.string/last-index-of open)
+                      (inc)
+                      (drop search-head))
+        new-value (cond-> (->> (drop (count search-head) value)
+                               (take-while #(not= close %)))
+                    is-character-key?               (conj key)
+                    (= key-code KeyCodes.BACKSPACE) (rest))]
+    (-> (concat new-head new-value)
+        (clojure.string/join))))
+
+
+(defn page-search?
+  [head]
+  (some->> (clojure.string/reverse head)
+           (re-find #"(?s)[^\]\]]*")
+           (re-find #"(?s).*\[\[")))
+
+
+(defn block-search?
+  [head]
+  (some->> (clojure.string/reverse head)
+           (re-find #"(?s)[^\)\)]*")
+           (re-find #"(?s).*\(\(")))
+
+
+(defn in-search-context
+  [{:keys [start value key-code key is-character-key?]}]
+  (let [new-start (cond
+                    (= key-code KeyCodes.RIGHT)          (inc start)
+                    (or (= key-code KeyCodes.LEFT)
+                        (= key-code KeyCodes.BACKSPACE)) (dec start)
+                    :else start)
+        head      (cond-> (subs value 0 new-start)
+                      is-character-key? (str key))]
+    (cond
+      (page-search? head)  {:search-head (subs value 0 new-start) :search-type :page}
+      (block-search? head) {:search-head (subs value 0 new-start) :search-type :block})))
+
+
 (defn textarea-key-down
   [e uid state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when (= uid @(subscribe [:editing/uid]))
-    (let [d-event (destruct-key-down e)
+    (let [d-event (-> e
+                      (destruct-key-down)
+                      (assoc :is-character-key? (is-character-key? e)))
           {:keys [meta ctrl key-code]} d-event]
 
       ;; used for paste, to determine if shift key was held down
@@ -708,9 +733,23 @@
           (pair-char? e)                  (handle-pair-char e uid state)
           (= key-code KeyCodes.TAB)       (handle-tab e uid state)
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
-          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid)
+          ;; Used to hide dropdown if we backspaced all the way back to / or opening [ (
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
           (= key-code KeyCodes.ESC)       (handle-escape e state)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
-          (is-character-key? e)           (write-char e uid state))))))
+          ;; Doesn't do anything unless we weren't already searching and then typed / or #
+          (is-character-key? e)           (write-char e uid state)))
+
+      ;; TODO
+      ;; Anchor dropdown to beginning of [[ or ((
+      ;; Autocompleting mid-word should replace whole word
+      ;; Slash dropdown is broken
+      (if-let [{:keys [search-type] :as search-context} (in-search-context d-event)]
+        (let [search-query (search-query-from-context d-event search-context)]
+          (when (not= (:search/query @state) search-query)
+            (update-query state search-query search-type)))
+        (swap! state assoc
+               :search/type nil
+               :search/query nil)))))
 
