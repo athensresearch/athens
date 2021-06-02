@@ -132,9 +132,14 @@
 
 (defn init!
   []
-  (let [browser-win (.. electron -remote -BrowserWindow)
-        win         (. browser-win getFocusedWindow)
-        [x y] (get-find-win-pos win)]
+  (let [browser-win          (.. electron -remote -BrowserWindow)
+        win                  (. browser-win getFocusedWindow)
+        [x y] (get-find-win-pos win)
+
+        adjust-find-win-post (fn [_]
+                               (let [[x y] (get-find-win-pos)]
+                                 (-> (window-id->window @!find-window-id)
+                                     (.. (setPosition x y)))))]
 
     ;; find window setup
     (-> (new browser-win
@@ -179,11 +184,13 @@
 
     ;; adjust find window's position on main resize
     (.. (window-id->window @!main-window-id)
-        (on "resize"
-            (fn [_]
-              (let [[x y] (get-find-win-pos)]
-                (-> (window-id->window @!find-window-id)
-                    (.. (setPosition x y)))))))
+        (on "resize" adjust-find-win-post))
+
+    (.. (window-id->window @!main-window-id)
+        (on "move" adjust-find-win-post))
+
+    (.. (window-id->window @!find-window-id)
+        (on "move" adjust-find-win-post))
 
     ;; send index (eg 4/10) to find window
     ;; it's inconsequential so directly send to find window
