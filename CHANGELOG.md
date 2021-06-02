@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.86](https://github.com/athensresearch/athens/compare/v1.0.0-beta.85...v1.0.0-beta.86) (2021-06-02)
+
+
+### Bug Fixes
+
+* **selection:** Selection "freeze" ([#1273](https://github.com/athensresearch/athens/issues/1273)) ([b66bfa8](https://github.com/athensresearch/athens/commit/b66bfa84859088940a1d6280f61ced79196162be))
+
+
+### Performance
+
+* Only run the listener in dev mode ([#1215](https://github.com/athensresearch/athens/issues/1215)) ([b276963](https://github.com/athensresearch/athens/commit/b276963b6096887f68005073bd574619d1623953))
+
+
+### Documentation
+
+* update one liner in package.json and project.clj ([#1258](https://github.com/athensresearch/athens/issues/1258)) ([1b78701](https://github.com/athensresearch/athens/commit/1b7870161c0ded543ca073cae67af2ec4f6427fd))
+
 ## [1.0.0-beta.85](https://github.com/athensresearch/athens/compare/v1.0.0-beta.84...v1.0.0-beta.85) (2021-05-28)
 
 
