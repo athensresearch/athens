@@ -64,7 +64,7 @@
 ;; It also listen for changes on keymap to re-bind the event handlers.
 ;; Note: this is not meant to be used directly, use mousetrap instead.
 (defn mousetrap-binder
-  [_keymap keybindings _children]
+  [_keymap keybindings _child]
   (let [mousetrap-instance (r/atom nil)
         unbind-all (r/atom #())
         bind (fn [keybindings]
@@ -91,11 +91,11 @@
              (bind keybindings))))
 
        :reagent-render
-       (fn [_ _ children]
+       (fn [_ _ child]
          [:span
           {:style {:display "contents"}
            :ref #(reset! mousetrap-instance (new Mousetrap %))}
-          children])})))
+          child])})))
 
 
 ;; Wrap what is passed as "child" into a DOM node that listen for hotkeys that
@@ -105,9 +105,9 @@
 ;; keybindings is a pair of aliases-or-hotkeys and event handler pairs
 ;; e.g: {:athena/toggle some-function1 "mod+z" some-function2}
 (defn mousetrap
-  [keybindings children]
+  [keybindings child]
   (let [keymap @(subscribe [:keymap])]
-    [mousetrap-binder keymap keybindings children]))
+    [mousetrap-binder keymap keybindings child]))
 
 
 ;; Helpers to read from re-frame db
