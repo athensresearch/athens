@@ -111,3 +111,39 @@
   (-> event-response
       (m/explain data)
       (me/humanize)))
+
+
+(def server-event-types
+  [:enum :datascript/tx-log])
+
+
+(def server-event-common
+  [:map
+   [:event/id string?]
+   [:event/last-tx pos-int?]
+   [:event/type server-event-types]])
+
+
+(def tx-log
+  [:map
+   [:event/args
+    [:map
+     [:tx-data seq?]
+     [:tempids map?]]]])
+
+
+(def server-event
+  [:multi {:dispatch :event/type}
+   [:tx-log (mu/merge server-event-common
+                      tx-log)]])
+
+
+(def valid-server-event?
+  (m/validator server-event))
+
+
+(defn explain-server-event
+  [data]
+  (-> server-event
+      (m/explain data)
+      (me/humanize)))

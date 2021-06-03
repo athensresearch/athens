@@ -134,33 +134,51 @@
       (reset! send-queue []))))
 
 
+(defn- awaited-response-handler
+  [req-event {:event/keys [id status] :as packet}]
+  (js/console.log "WSClient: response " (pr-str packet)
+                  "to awaited event" (pr-str req-event))
+  (swap! awaiting-response dissoc id)
+  ;; is valid response?
+  (if (schema/valid-event-response? packet)
+    (do
+      (js/console.debug "Received valid response.")
+      (condp = status
+        :accepted
+        (let [{:accepted/keys [tx-id]} packet]
+          (js/console.log "Event" id "accepted in tx" tx-id)
+          (rf/dispatch [:remote-event/accepted {:event-id id
+                                                :tx-id    tx-id}]))
+        :rejected
+        (let [{:reject/keys [reason data]} packet]
+          (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
+          (rf/dispatch [:remote-event/rejected {:event-id id
+                                                :reason   reason
+                                                :data     data}]))))
+    (let [explanation (schema/explain-event-response packet)]
+      (js/console.warn "Received invalid response:" (pr-str explanation))
+      (rf/dispatch [:remote-event/failed {:event-id id
+                                          :reason   explanation}]))))
+
+
+(defn- server-event-handler
+  [packet]
+  (js/console.log "WSClient: server event:" (pr-str packet))
+  (if (schema/valid-server-event? packet)
+    (js/console.log "TODO valid server event")
+    (js/console.warn "TODO invalid server event" (schema/explain-server-event packet))))
+
+
 (defn- message-handler
   [event]
-  (let [packet                 (->> event
-                                    .-data
-                                    (transit/read (transit/reader :json)))
-        {:event/keys [id
-                      status]} packet
-        req-event              (get @awaiting-response id)]
+  (let [packet             (->> event
+                                .-data
+                                (transit/read (transit/reader :json)))
+        {:event/keys [id]} packet
+        req-event          (get @awaiting-response id)]
     (if req-event
-      (do
-        (js/console.log "WSClient: response " (pr-str packet)
-                        "to awaited event" (pr-str req-event))
-        (swap! awaiting-response dissoc id)
-        ;; is valid response?
-        (if (schema/valid-event-response? packet)
-          (do
-            (js/console.debug "Received valid response.")
-            (condp = status
-              :accepted
-              (js/console.log "Event" id "accepted.")
-              :rejected
-              (let [{:reject/keys [reason data]} packet]
-                (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data)))))
-          (let [explanation (schema/explain-event-response packet)]
-            (js/console.warn "Received invalid response:" (pr-str explanation)))))
-      (do
-        (js/console.log "TODO WSClient: not awaited message received:" (pr-str packet))))))
+      (awaited-response-handler req-event packet)
+      (server-event-handler packet))))
 
 
 (defn- remove-listeners!

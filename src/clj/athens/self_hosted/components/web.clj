@@ -39,6 +39,13 @@
   (http/send! channel (->transit data)))
 
 
+(defn broadcast!
+  "Broadcasts event to all connected clients"
+  [event]
+  (doseq [client (keys @clients)]
+    (send! client event)))
+
+
 ;; WebSocket handlers
 (defn open-handler
   [ch]

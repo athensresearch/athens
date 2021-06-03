@@ -100,3 +100,16 @@
         tx-data      [{:db/id        [:block/uid uid]
                        :block/string new-string}]]
     tx-data))
+
+
+(defn build-tx-log-event
+  [tx-report]
+  (let [event-id          (gen-event-id)
+        {:keys [tx-data
+                tempids]} tx-report
+        last-tx           (:db/current-tx tempids)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/tx-log
+     :event/args    {:tx-data tx-data
+                     :tempids tempids}}))
