@@ -1714,15 +1714,13 @@
 (reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
-    (let [last-seen-tx         "1" ; TODO last-seen-tx discovery
-          event-id             (str (gensym))
-          paste-verbatim-event {:event/id      (str event-id)     ; use `:event/id` to track `:ack` events
-                                :event/last-tx last-seen-tx ; in case if event could conflict and was issued from not up to date db
-                                :event/type    :datascript/paste-verbatim
-                                :event/args    {:uid   uid
-                                                :text  text
-                                                :start start
-                                                :value value}}]
+    (let [last-seen-tx                    "1" ; TODO last-seen-tx discovery
+          {event-id :event/id
+           :as      paste-verbatim-event} (common-events/build-paste-verbatim-event last-seen-tx
+                                                                                    uid
+                                                                                    text
+                                                                                    start
+                                                                                    value)]
       {:db                 (waiting-for-ack db event-id)
        :remote/send-event! paste-verbatim-event})))
 

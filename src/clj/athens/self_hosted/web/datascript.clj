@@ -10,6 +10,7 @@
 
 (def supported-event-types
   #{:datascript/paste-verbatim
+    :datascript/create-page
     ;; TODO: all the events
     })
 
@@ -38,6 +39,14 @@
         (common-events/event-rejected event-id err-msg err-data)))))
 
 
+(defn create-page-handler
+  [datahike _channel {:event/keys [id args] :as _event}]
+  (let [{:keys [uid
+                title]} args
+        txs             (common-events/page-create->tx uid title)]
+    (transact! (:conn datahike) id txs)))
+
+
 (defn paste-verbatim-handler
   [datahike _channel {:event/keys [id args] :as _event}]
   (let [{:keys [uid
@@ -56,5 +65,6 @@
   ;; current -> continue
   ;; stale -> reject
   (condp = type
+    :datascript/create-page    (create-page-handler datahike channel event)
     :datascript/paste-verbatim (paste-verbatim-handler datahike channel event)))
 

@@ -1,7 +1,12 @@
 (ns athens.common-events
   "Event as Verbs executed on Knowledge Graph"
   (:require
-    [clojure.string :as string]))
+    [clojure.string :as string])
+  #?(:clj
+     (:import
+       (java.util
+         Date
+         UUID))))
 
 
 (defn event-accepted
@@ -19,6 +24,66 @@
    :event/status  :rejected
    :reject/reason message
    :reject/data   data})
+
+
+(defn- now-ts
+  []
+  #?(:clj  (.getTime (Date.))
+     :cljs (.getTime (js/Date.))))
+
+
+(defn- gen-block-uid
+  []
+  #?(:clj (subs (.toString (UUID/randomUUID)) 27)
+     :cljs (subs (str (random-uuid)) 27)))
+
+
+(defn- gen-event-id
+  []
+  (str (gensym "eid-")))
+
+
+(defn build-page-create-event
+  [last-tx uid title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/create-page
+     :event/args    {:uid   uid
+                     :title title}}))
+
+
+(defn page-create->tx
+  "Creates Transactions to create a page with `title` & `uid`."
+  [uid title]
+  (let [now       (now-ts)
+        child-uid (gen-block-uid)
+        child     {:db/id        -2
+                   :block/string ""
+                   :block/uid    child-uid
+                   :block/order  0
+                   :block/open   true
+                   :create/time  now
+                   :edit/time    now}
+        page-tx {:db/id -1
+                 :node/title title
+                 :block/uid uid
+                 :block/children [child]
+                 :create/time now
+                 :edit/time now}]
+    [page-tx]))
+
+
+(defn build-paste-verbatim-event
+  [last-tx uid text start value]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/paste-verbatim
+     :event/args    {:uid   uid
+                     :text  text
+                     :start start
+                     :value value}}))
 
 
 (defn paste-verbatim->tx

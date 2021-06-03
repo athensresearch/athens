@@ -8,6 +8,7 @@
 (def event-type
   [:enum
    :presence/hello
+   :datascript/create-page
    :datascript/paste-verbatim])
 
 
@@ -26,6 +27,14 @@
      #_[:last-tx string?]]]])
 
 
+(def datascript-create-page
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:title string?]]]])
+
+
 (def datascript-paste-verbatim
   [:map
    [:event/args
@@ -41,6 +50,9 @@
    [:presence/hello
     (mu/merge event-common
               presence-hello-args)]
+   [:datascript/create-page
+    (mu/merge event-common
+              datascript-create-page)]
    [:datascript/paste-verbatim
     (mu/merge event-common
               datascript-paste-verbatim)]])

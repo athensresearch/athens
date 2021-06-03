@@ -1,6 +1,7 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
+    [athens.common-events        :as common-events]
     [athens.common-events.schema :as schema]
     [cognitect.transit           :as transit]
     [com.stuartsierra.component  :as component]
@@ -123,7 +124,7 @@
     (reset! ws-connection connection)
     (send! connection
            {:event/id      (str (gensym))
-            :event/last-tx "0" ; TODO: discover last tx
+            :event/last-tx 0 ; TODO: discover last tx
             :event/type    :presence/hello
             :event/args    {:username (:name @(rf/subscribe [:user]))}})
     (when (seq @send-queue)
@@ -135,26 +136,31 @@
 
 (defn- message-handler
   [event]
-  (let [data               (->> event
-                                .-data
-                                (transit/read (transit/reader :json)))
-        {:event/keys [id]} data
-        event              (get @awaiting-response id)]
-    (if event
+  (let [packet                 (->> event
+                                    .-data
+                                    (transit/read (transit/reader :json)))
+        {:event/keys [id
+                      status]} packet
+        req-event              (get @awaiting-response id)]
+    (if req-event
       (do
-        (js/console.log "WSClient: response " (pr-str data)
-                        "to awaited event" (pr-str event))
+        (js/console.log "WSClient: response " (pr-str packet)
+                        "to awaited event" (pr-str req-event))
         (swap! awaiting-response dissoc id)
         ;; is valid response?
-        (if (schema/valid-event-response? data)
+        (if (schema/valid-event-response? packet)
           (do
-            (js/console.log "Received valid response.")
-            ;; TODO Accepted or Rejected?
-            )
-          (let [explanation (schema/explain-event-response data)]
+            (js/console.debug "Received valid response.")
+            (condp = status
+              :accepted
+              (js/console.log "Event" id "accepted.")
+              :rejected
+              (let [{:reject/keys [reason data]} packet]
+                (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data)))))
+          (let [explanation (schema/explain-event-response packet)]
             (js/console.warn "Received invalid response:" (pr-str explanation)))))
       (do
-        (js/console.log "TODO WSClient: not awaited message received:" (pr-str data))))))
+        (js/console.log "TODO WSClient: not awaited message received:" (pr-str packet))))))
 
 
 (defn- remove-listeners!
@@ -223,17 +229,23 @@
 
   ;; send a `:presence/hello` event
   (send! {:event/id "test-id"
-          :event/last-tx "0"
+          :event/last-tx 0
           :event/type :presence/hello
           :event/args {:username "Bob's your uncle"}})
   ;; => {:result :sent}
 
   ;; send a `:datascript/paste-verbatim` event
   (send! {:event/id "test-id2"
-          :event/last-tx "1"
+          :event/last-tx 1
           :event/type :datascript/paste-verbatim
           :event/args {:uid "invalid-uid"
                        :text "pasted text"
                        :start 0
                        :value ""}})
+
+  ;; send a `create-page` event
+  (send! (common-events/build-page-create-event
+          1
+          "test-uid-1"
+          "Test Page Title 1"))
   )
