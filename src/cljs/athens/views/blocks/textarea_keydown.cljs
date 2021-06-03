@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
     ["@material-ui/icons/Done" :default Done]
+    ["@material-ui/icons/Gesture" :default Gesture]
     ["@material-ui/icons/Timer" :default Timer]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
@@ -100,7 +101,8 @@
    ["Yesterday"     Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
    ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
+   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
+   ["Excalidraw Embed"  Gesture "Error" nil nil]])
 
 
 ;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
@@ -157,6 +159,15 @@
   [new-text]
   (.execCommand js/document "insertText" false new-text))
 
+(defn random_alphanumeric
+        ([n]
+           (let [chars-between #(map char (range (int %1) (inc (int %2))))
+                 chars (concat (chars-between 48 57)
+                               (chars-between  65 90)
+                               (chars-between 97 122)
+                               [\_])
+                 alphanumeric (take n (repeatedly #(rand-nth chars)))]
+             (reduce str alphanumeric))))
 
 (defn set-selection
   "select text from `start` to `end` in the textarea `target`"
@@ -189,7 +200,7 @@
      (swap! state assoc
             :search/type nil)
      (set-selection target start-idx start)
-     (replace-selection-with expand)
+     (if (= caption "Excalidraw Embed")(replace-selection-with (str "{{iframe: " "https://excalidraw.com/#room=" (str (random_alphanumeric 20)) "," (str (random_alphanumeric 22)) "}}"))(replace-selection-with expand))
      (when pos
        (let [new-idx (+ start-idx (count expand) (- pos))]
          (set-cursor-position target new-idx)
