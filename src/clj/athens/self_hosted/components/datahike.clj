@@ -71,7 +71,9 @@
           (log/info "Creating new Datahike database")
           (d/create-database conf-with-schema)))
       (log/info "Starting Datahike connection: " dh-conf)
-      (assoc component :conn (d/connect conf-with-schema))))
+      (let [connection (d/connect conf-with-schema)]
+        (log/debug "Datahike connected")
+        (assoc component :conn connection))))
 
 
   (stop

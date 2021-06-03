@@ -24,8 +24,8 @@
   [connection event-id tx]
   (try
     (log/debug "Transacting event-id:" event-id ", tx:" (pr-str tx))
-    (let [{:keys [db-after]}      (d/transact connection tx)
-          {:db/keys [current-tx]} db-after]
+    (let [{:keys [tempids]}       (d/transact connection tx)
+          {:db/keys [current-tx]} tempids]
       (log/info "Transacted event-id:" event-id ", tx-id:" current-tx)
       (common-events/event-accepted event-id current-tx))
     (catch ExceptionInfo ex

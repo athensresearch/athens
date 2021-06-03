@@ -2,12 +2,13 @@
   "Athens Self Hosted Backend entry point."
   (:gen-class)
   (:require
-    [athens.self-hosted.components.config   :as cfg]
-    [athens.self-hosted.components.datahike :as datahike]
-    [athens.self-hosted.components.nrepl    :as nrepl]
-    [athens.self-hosted.components.web      :as web]
-    [clojure.tools.logging                  :as log]
-    [com.stuartsierra.component             :as component]))
+    [athens.self-hosted.components.config      :as cfg]
+    [athens.self-hosted.components.datahike    :as datahike]
+    [athens.self-hosted.components.nrepl       :as nrepl]
+    [athens.self-hosted.components.tx-listener :as tx-listener]
+    [athens.self-hosted.components.web         :as web]
+    [clojure.tools.logging                     :as log]
+    [com.stuartsierra.component                :as component]))
 
 
 (defn new-system
@@ -15,13 +16,15 @@
   []
   (log/debug "Building new system map")
   (component/system-map
-    :config    (cfg/new-config)
-    :datahike  (component/using (datahike/new-datahike)
-                                [:config])
-    :webserver (component/using (web/new-web-server)
-                                [:config :datahike])
-    :nrepl     (component/using (nrepl/new-nrepl-server)
-                                [:config])))
+    :config      (cfg/new-config)
+    :datahike    (component/using (datahike/new-datahike)
+                                  [:config])
+    :webserver   (component/using (web/new-web-server)
+                                  [:config :datahike])
+    :tx-listener (component/using (tx-listener/new-tx-listener)
+                                  [:datahike :webserver])
+    :nrepl       (component/using (nrepl/new-nrepl-server)
+                                  [:config])))
 
 
 (def system (new-system))
