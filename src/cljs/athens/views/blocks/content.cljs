@@ -216,7 +216,7 @@
                                                (max start-index end-index))))
                                  (map second)
                                  (into (or selected-uids #{})))
-        descendants-uids    (loop [descendants #{}
+        descendants-uids    (loop [descendants    #{}
                                    ancestors-uids candidate-uids]
                               (if (seq ancestors-uids)
                                 (let [ancestors-children (->> ancestors-uids

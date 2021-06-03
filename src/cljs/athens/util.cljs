@@ -98,7 +98,7 @@
 (defn get-dataset-uid
   [el]
   (let [block (when el (.. el (closest ".block-container")))
-        uid (when block (.. block -dataset -uid))]
+        uid   (when block (.getAttribute block "data-uid"))]
     uid))
 
 
@@ -106,7 +106,7 @@
   [el]
   (let [block         (when el (.. el (closest ".block-container")))
         children-uids (when block
-                        (let [dom-children-uids ^String (.-childrenuids (.-dataset block))]
+                        (let [dom-children-uids ^String (.getAttribute block "data-childrenuids")]
                           (when-not (string/blank? dom-children-uids)
                             (-> dom-children-uids
                                 (string/split #",")
