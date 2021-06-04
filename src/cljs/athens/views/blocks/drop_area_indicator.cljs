@@ -1,21 +1,7 @@
 (ns athens.views.blocks.drop-area-indicator
   (:require
-    [athens.style :refer [color OPACITIES]]
+    [athens.style :as style]
     [stylefy.core :as stylefy]))
-
-
-(stylefy/keyframes "drop-area-appear"
-                   [:from
-                    {:opacity "0"}]
-                   [:to
-                    {:opacity "1"}])
-
-
-(stylefy/keyframes "drop-area-color-pulse"
-                   [:from
-                    {:opacity (:opacity-lower OPACITIES)}]
-                   [:to
-                    {:opacity (:opacity-med OPACITIES)}])
 
 
 (def drop-area-indicator-style
@@ -23,17 +9,12 @@
    :height "1px"
    :pointer-events "none"
    :margin-bottom "-1px"
-   :opacity (:opacity-high OPACITIES)
-   :color (color :link-color)
+   :opacity (:opacity-high style/OPACITIES)
+   :color (style/color :link-color)
    :position "relative"
    :transform-origin "left"
    :z-index 3
    :width "100%"
-   ;; Can't animate this, because the animation
-   ;; fires at too many states. If drop-area-indicator
-   ;; location is determined by order in the current
-   ;; page or block then we can reactivate animation.
-   ;; :animation "drop-area-appear 0.2s both"
    ::stylefy/manual [["&:after" {:position "absolute"
                                  :content "''"
                                  :top "-0.5px"
