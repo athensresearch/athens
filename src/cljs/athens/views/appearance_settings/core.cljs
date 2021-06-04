@@ -19,32 +19,30 @@
 
 ;; Icons 
 
-(def normal-width-icon
-  [:svg {:viewBox "0 0 24 16"}
-   [:path {:d "M5,3  h15"}]
-   [:path {:d "M5,8  h15"}]
-   [:path {:d "M5,13 h11"}]])
+(def width-background [:rect {:x "0" :y "0" :width "24" :height "24" :rx "3" :fill "currentColor" :opacity "0.1"}])
 
+(def normal-width-icon
+  [:svg {:viewBox "0 0 24 24"}
+   width-background
+   [:path {:d "M3,04  H12"}]
+   [:path {:d "M3,08 H12"}]
+   [:path {:d "M3,12 H12"}]
+   [:path {:d "M3,16 H12"}]
+   [:path {:d "M3,20 H8"}]])
+1
 (def large-width-icon
   [:svg {:viewBox "0 0 24 24"}
-   [:path {:d "M2 7H22"}]
-   [:path {:d "M2 12H22"}]
-   [:path {:d "M2 17H12"}]])
+  width-background
+   [:path {:d "M3,04 H16"}]
+   [:path {:d "M3,08 H16"}]
+   [:path {:d "M3,12 H12"}]])
 
 (def unlimited-width-icon
   [:svg {:viewBox "0 0 24 24"}
-   [:path
-    {:d "M17.5
-         8.5L20.5
-         11.5M20.5
-         11.5L17.5
-         14.5M20.5
-         11.5L3.5
-         11.5M3.5
-         11.5L6.5
-         8.5M3.5
-         11.5L6.5
-         14.5"}]])
+  width-background
+   [:path {:d "M3,04 H21"}]
+   [:path {:d "M3,08 H21"}]
+   [:path {:d "M3,12 H8"}]])
 
 #_ (def tight-density-icon
   [:svg {:viewBox "0 0 16 16"}
@@ -86,28 +84,31 @@
 (def preferences-set-style
   {:display "grid"
    :grid-auto-flow "column"
+   :grid-gap "1px"
    :grid-auto-columns "1fr"
    :border-radius "0.25rem"
    :margin "0.125rem 0.5rem"
    :box-shadow "inset 0 0 0 1px transparent, 0 0 0 1px transparent"
-   :transition "box-shadow 0.2s ease, filter 0.2s ease"
+   :transition "box-shadow 0.1s ease, filter 0.1s ease"
    :background "inherit"
    ::stylefy/manual [[:&:hover {:filter "brightness(120%)"
-                                :box-shadow "inset 0 0 0 1px var(--border-color),
-      0 0 0 1px var(--background-color)"}]
+                                :box-shadow [["0 0 0 1px " (color :border-color)]]}]
                      [:>button {:text-align "center"
-                               :display "flex"
-                               :align-items "center"
-                               :justify-content "center"
-                               :background "inherit"
-                               :min-height "2.5rem"
-                               :padding "0.5rem"
-                               :font-weight "500"}
+                                :display "flex"
+                                :align-items "center"
+                                :justify-content "center"
+                                :background "inherit"
+                                :min-height "2.5rem"
+                                :padding "0.5rem"
+                                :font-weight "500"}
                       [:svg {:vector-effect "non-scaling-stroke"
-                             :stroke "currentColor"
-                             :stroke-weight "0.06rem"
+                             :overflow "visible"
                              :width "24px"
-                             :height "24px"}]]]})
+                             :height "24px"}]
+                      ["svg:not(.MuiSvgIcon-root)" {:fill "none"
+                      :stroke-linecap "round"
+                                                    :stroke "currentColor"
+                                                    :stroke-weight "0.06rem"}]]]})
 
 ;; Components
 
@@ -130,7 +131,7 @@
     :id "theme-dark"
     :fn #(dispatch [:theme/set-dark])}])
 
-(def font-settings
+#_ (def font-settings
   [{:content [:span
               {:style
                {:display "contents"
@@ -206,7 +207,7 @@
        ;; Options
        [preferences-set {:prefs theme-settings
                          :current (if @(subscribe [:theme/dark]) "theme-dark" "theme-light")}]
-       [preferences-set {:prefs font-settings
+       #_ [preferences-set {:prefs font-settings
                          :current @(subscribe [:appearance/font])}]
        [preferences-set {:prefs width-settings
                          :current @(subscribe [:appearance/width])}]
