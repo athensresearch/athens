@@ -23,12 +23,8 @@
 (def ^:private datom-writer
   (transit/write-handler
     "datom"
-    (fn [_ datom]
-      (let [{:keys [e a v tx added]} datom]
-        [e a v tx added]))
-    (fn [_ datom]
-      (let [{:keys [e a v tx added]} datom]
-        (str [e a v tx added])))))
+    (fn [{:keys [e a v tx added]}]
+      [e a v tx added])))
 
 
 (defn- ->transit
@@ -49,12 +45,14 @@
 (defn send!
   "Send data to a client via `channel`"
   [channel data]
+  (log/debug "->" (get @clients channel) ", data:" (pr-str data))
   (http/send! channel (->transit data)))
 
 
 (defn broadcast!
   "Broadcasts event to all connected clients"
   [event]
+  (log/debug "Broadcasting:" (pr-str event))
   (doseq [client (keys @clients)]
     (send! client event)))
 

@@ -15,7 +15,7 @@
 (def event-common
   [:map
    [:event/id string?]
-   [:event/last-tx pos-int?]
+   [:event/last-tx int?]
    [:event/type event-type]])
 
 
@@ -23,8 +23,7 @@
   [:map
    [:event/args
     [:map
-     [:username string?]
-     #_[:last-tx string?]]]])
+     [:username string?]]]])
 
 
 (def datascript-create-page
@@ -81,7 +80,7 @@
 
 (def response-accepted
   [:map
-   [:accepted/tx-id pos-int?]])
+   [:accepted/tx-id int?]])
 
 
 (def rejection-reason
@@ -120,7 +119,7 @@
 (def server-event-common
   [:map
    [:event/id string?]
-   [:event/last-tx pos-int?]
+   [:event/last-tx int?]
    [:event/type server-event-types]])
 
 
@@ -129,7 +128,7 @@
    [:e pos-int?]
    [:a keyword?]
    [:v any?]
-   [:tx pos-int?]
+   [:tx int?]
    [:added boolean?]])
 
 

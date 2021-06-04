@@ -9,7 +9,7 @@
          UUID))))
 
 
-(defn event-accepted
+(defn build-event-accepted
   "Builds ACK Event Response."
   [id tx-id]
   {:event/id       id
@@ -100,6 +100,15 @@
         tx-data      [{:db/id        [:block/uid uid]
                        :block/string new-string}]]
     tx-data))
+
+
+(defn build-presence-hello
+  [username last-tx]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/hello
+     :event/args    {:username username}}))
 
 
 (defn build-tx-log-event

@@ -120,13 +120,12 @@
 (defn- open-handler
   [event]
   (js/console.log "WSClient Connected:" event)
-  (let [connection (.-target event)]
+  (let [connection (.-target event)
+        ;; TODO fetch real last-tx
+        last-tx    1]
     (reset! ws-connection connection)
-    (send! connection
-           {:event/id      (str (gensym))
-            :event/last-tx 0 ; TODO: discover last tx
-            :event/type    :presence/hello
-            :event/args    {:username (:name @(rf/subscribe [:user]))}})
+    (send! connection (common-events/build-presence-hello (:name @(rf/subscribe [:user]))
+                                                          last-tx))
     (when (seq @send-queue)
       (js/console.log "WSClient sending queued packets #" (count @send-queue))
       (doseq [data @send-queue]

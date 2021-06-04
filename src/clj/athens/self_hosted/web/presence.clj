@@ -1,5 +1,6 @@
 (ns athens.self-hosted.web.presence
   (:require
+    [athens.common-events  :as common-events]
     [clojure.data.json     :as json]
     [clojure.tools.logging :as log]
     [org.httpkit.server    :as http]))
@@ -26,14 +27,16 @@
 
 
 (defn hello-handler
-  [clients ch {:event/keys [args]}]
+  [clients ch {:event/keys [id args last-tx]}]
   (let [username (:username args)]
     (log/info ch "New Client Intro:" username)
     (swap! clients assoc ch username)
-    ;; confirm
-    {:event/status :accepted}
     ;; TODO broadcast new presence
-    ))
+
+    ;; TODO send client updated entities
+
+    ;; confirm
+    (common-events/build-event-accepted id -1)))
 
 
 (defn editing-handler

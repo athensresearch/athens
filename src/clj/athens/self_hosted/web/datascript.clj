@@ -27,7 +27,7 @@
     (let [{:keys [tempids]}       (d/transact connection tx)
           {:db/keys [current-tx]} tempids]
       (log/info "Transacted event-id:" event-id ", tx-id:" current-tx)
-      (common-events/event-accepted event-id current-tx))
+      (common-events/build-event-accepted event-id current-tx))
     (catch ExceptionInfo ex
       (let [err-msg   (ex-message ex)
             err-data  (ex-data ex)
