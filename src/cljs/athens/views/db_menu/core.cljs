@@ -2,6 +2,8 @@
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
+    [athens.electron :as electron]
+    [athens.db :as dba]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]
     [athens.views.db-menu.db-icon :refer [db-icon]]
@@ -93,11 +95,17 @@
 (defn db-menu
   []
   (r/with-let [ele (r/atom nil)
+               current-db-path @(subscribe [:db/filepath])
                all-dbs @(subscribe [:db-picker/all-dbs]) ; is this correct ?
                ;; active-db (filter #(= (:path %) current-db-path) all-dbs)
                active-db (nth all-dbs 0) ; TODO for the time being let it be like this
                inactive-dbs (filter #(not= (:path %) current-db-path) all-dbs)]
-              (println ["New sub received all-dbs is -->" all-dbs])
+              (println [" all-dbs is -->" all-dbs])
+              (println ["items in all-dbs" (count all-dbs)])
+              (println ["active-dbs is -->" active-db])
+              (println ["inactive-dbs is -->" inactive-dbs])
+              (println ["current db path is " current-db-path])
+
               [:<>
                ;; DB Icon + Dropdown toggle
                [button {:class [(when @ele "is-active")]

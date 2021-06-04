@@ -61,6 +61,7 @@
                 (.copyFileSync fs curr-db-filepath new-db-filepath)
                 (dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
                 (dispatch [:db/update-filepath new-db-filepath])
+                (dispatch [:local-storage/set-db-picker-list])
                 (when (.existsSync fs curr-dir-images)
                   (.mkdirSync fs new-dir-images)
                   (let [imgs (->> (.readdirSync fs curr-dir-images)
@@ -94,7 +95,8 @@
           ;; add a new event which updates all-db file list
           (dispatch [:db-picker/add-new-db open-file false nil])
           (dispatch [:remote-graph-conf/load])
-          (dispatch [:loading/unset])))))
+          (dispatch [:loading/unset])
+          (dispatch [:local-storage/set-db-picker-list])))))
 
 
   ;; mkdir db-location/name/
@@ -123,6 +125,7 @@
               ;; dispatch this to update the db list
               ;; db-filepath also contains the name of db so no need to explicitly send this
               (dispatch [:db-picker/add-new-db db-filepath false nil])
+              (dispatch [:local-storage/set-db-picker-list])
               (dispatch [:reset-conn db])
               (dispatch [:transact athens-datoms/datoms])
               (dispatch [:loading/unset])))))))
@@ -294,7 +297,7 @@
     ;; Add new db to db-picker, also update the local storage value
     (fn [{:keys [db]} [_ dbpath is-remote token]]
       (println "db-picker/add-new-db newdb add-new-db event occured with args ---->" dbpath is-remote token)
-      (let [current-db-list (get db :db-picker/all-dbs)
+      (let [current-db-list (:db-picker/all-dbs db)
             duplicate (check-duplicate-db current-db-list dbpath)]
         (println ["db-picker/add-new-db newdb Is the new db already added in the list ? --> " duplicate])
         (if (not duplicate)
@@ -311,25 +314,37 @@
             (println "db-picker/add-new-db newdb updated db list is ---->" all-dbs)
 
             {:db (assoc db :db-picker/all-dbs all-dbs)})
-          (println "=================== DB ALREADY IN DB LIST========================")))))
+          (js/alert (str "Database already in the list"))))))
 
-  ;; TODO handle the case when db is already in the list))))
+  ;; ==== Thoughts on add-new-db
   ;; db list got updated but subscription did not work
-  ;; This is working but have to close the dialog first to see the results
+  ;; Add new db is working but have to close the dialog first to see the results
 
-  ;; :local-storage/set! ["all-dbs" :db-picker/all-dbs]
+
+  ;; ==== Check and get from local storage
+  ;; Checkout this link for discussion on how to serialize data to store : https://stackoverflow.com/questions/67821181/how-to-set-and-get-a-vector-in-local-storage
   (reg-event-fx
     ;; check if local storage has data related to db-picker
-    :local-storage/get-db-picker-list
+    :local-storage/check-db-picker-list
     (fn [{:keys [db]} _]
-      (let [val (js/localStorage.getItem "all-dbs")]
-        (println ":local-storage/get-db-picker-list val for db picker list is ---->" val)
-        (if (nil? val)
-          (let [ddb {:name "My DB"
-                     :path "/Users/coolUser/Documents/athens/index.transit"
-                     :is-remote true
-                     :token "x"}]
-            {:db (assoc db :db-picker/all-dbs [ddb])})))))
+      (let [val                 (cljs.reader/read-string (js/localStorage.getItem "db-picker/all-dbs"))
+            current-db-filepath (:db/filepath db)]
+        (println ":local-storage/check-db-picker-list val for db picker list is ---->" val)
+        (cond
+          (nil? val)  (dispatch [:db-picker/add-new-db current-db-filepath false nil])
+          :else       {:db (assoc db :db-picker/all-dbs val)}))))
+
+
+  ;; ==== Save to local storage"
+  (reg-event-fx
+    :local-storage/set-db-picker-list
+    (fn [{:keys [db]} _]
+      (let [current-db-list (:db-picker/all-dbs db)]
+        (println ["asked to save db-list to local storage with val---->" current-db-list])
+        ;; Checkout the stackoverflow url above why pr-str and not str (I was previously using str)
+        (js/localStorage.setItem "db-picker/all-dbs" (pr-str current-db-list)))))
+
+
 
   ;; Function to remove a path from db list
   ;; Find the map which has a key matching the db-path then remove it
@@ -337,10 +352,10 @@
     :db-picker/remove-db
     (fn [{:keys [db]} [_ db-path]]
       (println ["asked to remove db with path ----> " db-path])
-      (let [current-db-list (get db :db-picker/all-dbs)
+      (let [current-db-list (:db-picker/all-dbs db)
             new-db-list (into [] (filter
                                    (fn [db-list-item]
-                                     (not= db-path (get db-list-item :path)))
+                                     (not= db-path (:path db-list-item)))
                                    current-db-list))]
         (println ["new db-list after deleting a path is ---->" new-db-list])
         {:db (assoc db :db-picker/all-dbs new-db-list)})))
@@ -376,10 +391,10 @@
           (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
           ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
           ;; Short-circuit the first load and just use the existing DB
-          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [[:db/update-filepath default-db-path]
-                                                                                  [:local-storage/get-db-picker-list]]}
-          :else {:dispatch-n [[:db/update-filepath local-storage]
-                              [:local-storage/get-db-picker-list]]}))))
+          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath-db-path]}
+
+          :else {:dispatch-n [[:db/update-filepath local-storage]]}))))
+
 
 
   (reg-event-fx
@@ -507,16 +522,8 @@
                                                        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
-                                                       ;; check if all-dbs list is there
-                                                       ;; in local storage if not then
-                                                       ;; populate it with current
-                                                       ;; filepath and if it is there then
-                                                       ;; update the db
-
-                                                       ;; (dispatch [:db-picker/add-new-db
-
-                                                       ;; Database found in localStorage but not on filesystem
+                                                                                   (dispatch [:reset-conn db])
+                                                                                   (dispatch [:local-storage/check-db-picker-list]))
                                                        :else (dispatch [:fs/open-dialog])))}
 
                                      ;; remote graph
