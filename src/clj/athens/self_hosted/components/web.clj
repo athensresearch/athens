@@ -9,6 +9,8 @@
     [compojure.core                    :as compojure]
     [org.httpkit.server                :as http])
   (:import
+    (datahike.datom
+      Datom)
     (java.io
       ByteArrayInputStream
       ByteArrayOutputStream)))
@@ -18,10 +20,21 @@
 (defonce clients (atom {}))
 
 
+(def ^:private datom-writer
+  (transit/write-handler
+    "datom"
+    (fn [_ datom]
+      (let [{:keys [e a v tx added]} datom]
+        [e a v tx added]))
+    (fn [_ datom]
+      (let [{:keys [e a v tx added]} datom]
+        (str [e a v tx added])))))
+
+
 (defn- ->transit
   [data]
-  (let [out (ByteArrayOutputStream. 4096)
-        writer (transit/writer out :json)]
+  (let [out    (ByteArrayOutputStream. 4096)
+        writer (transit/writer out :json {:handlers {Datom datom-writer}})]
     (transit/write writer data)
     (.toString out)))
 

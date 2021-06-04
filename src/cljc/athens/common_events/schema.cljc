@@ -124,18 +124,28 @@
    [:event/type server-event-types]])
 
 
+(def datom
+  [:map
+   [:e pos-int?]
+   [:a keyword?]
+   [:v any?]
+   [:tx pos-int?]
+   [:added boolean?]])
+
+
 (def tx-log
   [:map
    [:event/args
     [:map
-     [:tx-data seq?]
+     [:tx-data
+      [:vector datom]]
      [:tempids map?]]]])
 
 
 (def server-event
   [:multi {:dispatch :event/type}
-   [:tx-log (mu/merge server-event-common
-                      tx-log)]])
+   [:datascript/tx-log (mu/merge server-event-common
+                                 tx-log)]])
 
 
 (def valid-server-event?

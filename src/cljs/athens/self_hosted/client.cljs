@@ -166,14 +166,29 @@
   (js/console.log "WSClient: server event:" (pr-str packet))
   (if (schema/valid-server-event? packet)
     (js/console.log "TODO valid server event")
-    (js/console.warn "TODO invalid server event" (schema/explain-server-event packet))))
+    (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
+
+
+(def ^:private datom-reader
+  (transit/read-handler
+    (fn [[e a v tx added :as rep]]
+      (js/console.log "Datom reader:" (pr-str rep))
+      {:e     e
+       :a     a
+       :v     v
+       :tx    tx
+       :added added})))
 
 
 (defn- message-handler
   [event]
   (let [packet             (->> event
                                 .-data
-                                (transit/read (transit/reader :json)))
+                                (transit/read
+                                  (transit/reader
+                                    :json
+                                    {:handlers
+                                     {:datom datom-reader}})))
         {:event/keys [id]} packet
         req-event          (get @awaiting-response id)]
     (if req-event

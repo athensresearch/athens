@@ -14,7 +14,6 @@
 (defn- tx-report-handler
   [tx-report]
   (log/info "tx-report-handler" (pr-str tx-report))
-  ;; TODO provide transit encoding for datoms
   (web/broadcast! (common-events/build-tx-log-event tx-report)))
 
 
