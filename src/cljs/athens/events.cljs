@@ -464,28 +464,12 @@
 
 ;; Appearance Preferences
 
-(reg-event-db
-  :appearance/set-theme
-  (fn [db [_ theme]]
-    (assoc db :appearance/theme theme)))
-
-
-(reg-event-db
-  :appearance/set-font
-  (fn [db [_ font]]
-    (assoc db :appearance/font font)))
-
 
 (reg-event-db
   :appearance/set-width
   (fn [db [_ width]]
     (assoc db :appearance/width width)))
 
-
-(reg-event-db
-  :appearance/set-density
-  (fn [db [_ density]]
-    (assoc db :appearance/density density)))
 
 
 ;; Modal

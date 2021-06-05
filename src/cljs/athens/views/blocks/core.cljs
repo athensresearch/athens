@@ -31,12 +31,11 @@
 
 (def block-container-style
   {:display "flex"
-   :line-height "calc(var(--content-line-height) * 1.25)"
+   :line-height "2em"
    :position "relative"
    :border-radius "0.125rem"
    :justify-content "flex-start"
    :flex-direction "column"
-   :font-family "var(--content-font-family)"
    ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
                                                      :position "absolute"
                                                      :width "1px"

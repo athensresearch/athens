@@ -30,19 +30,9 @@
    :grid-template-rows "auto 1fr auto"
    :height "100vh"})
 
-
-(stylefy/tag ".theme-dark" {:--theme "dark"})
-(stylefy/tag ".theme-auto" {:--theme "auto"})
-(stylefy/tag ".theme-light" {:--theme "light"})
-(stylefy/tag ".font-serif" {:--content-font-family (:serif style/font-family)})
-(stylefy/tag ".font-sans" {:--content-font-family (:sans style/font-family)})
-(stylefy/tag ".font-mono" {:--content-font-family (:mono style/font-family)})
 (stylefy/tag ".width-normal" {:--content-max-width (:normal style/content-max-width)})
 (stylefy/tag ".width-wide" {:--content-max-width (:large style/content-max-width)})
 (stylefy/tag ".width-unlimited" {:--content-max-width (:unlimited style/content-max-width)})
-(stylefy/tag ".density-tight" {:--content-line-height (:tight style/content-density)})
-(stylefy/tag ".density-normal" {:--content-line-height (:normal style/content-density)})
-(stylefy/tag ".density-loose" {:--content-line-height (:loose style/content-density)})
 
 
 ;; Components
@@ -74,22 +64,13 @@
     (assoc db :db/snack-msg msg-opts)))
 
 
-(rf/reg-sub
-  :appearance/font
-  (fn [db]
-    (:appearance/font db)))
-
-
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
         modal      (rf/subscribe [:modal])
-        font       (rf/subscribe [:appearance/font])
-        width      (rf/subscribe [:appearance/width])
-        density    (rf/subscribe [:appearance/density])
-        theme      (rf/subscribe [:appearance/theme])]
+        width      (rf/subscribe [:appearance/width])]
     (fn []
-      [:div {:class [@font @width @density @theme]
+      [:div {:class [@width]
              :style {:display "contents"}}
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]

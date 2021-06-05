@@ -54,7 +54,6 @@
                :theme/dark          false
                :appearance/font     "font-sans"
                :appearance/width    "width-normal"
-               ;; :appearance/density  "density-normal"
                :graph-conf          default-graph-conf})
 
 

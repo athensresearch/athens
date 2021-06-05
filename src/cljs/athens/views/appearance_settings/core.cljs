@@ -1,6 +1,6 @@
 (ns athens.views.appearance-settings.core
   (:require
-    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/core/Popover" :default Popover]
     ["@material-ui/icons/Brightness3" :default Brightness3]
     ["@material-ui/icons/Brightness7" :default Brightness7]
     ["@material-ui/icons/TextFormat" :default TextFormat]
@@ -10,13 +10,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
-
-
-;; -------------------------------------------------------------------
-;; --- material ui ---
-
-(def m-popover (r/adapt-react-class (.-default Popover)))
-
 
 ;; Icons 
 
@@ -33,9 +26,6 @@
    [:path {:d "M7,20 H12"}]])
 
 
-1
-
-
 (def wide-width-icon
   [:svg {:viewBox "0 0 24 24"}
    width-background
@@ -50,27 +40,6 @@
    [:path {:d "M2,04 H22"}]
    [:path {:d "M2,08 H22"}]
    [:path {:d "M2,12 H8"}]])
-
-
-#_ (def tight-density-icon
-  [:svg {:viewBox "0 0 16 16"}
-   [:path {:d "M1,5  H15"}]
-   [:path {:d "M1,8  H15"}]
-   [:path {:d "M1,11 H15"}]])
-
-
-#_ (def normal-density-icon
-  [:svg {:viewBox "0 0 16 16"}
-   [:path {:d "M1,4  H15"}]
-   [:path {:d "M1,8  H15"}]
-   [:path {:d "M1,12 H15"}]])
-
-
-#_ (def loose-density-icon
-  [:svg {:viewBox "0 0 16 16"}
-   [:path {:d "M1,3  H15"}]
-   [:path {:d "M1,8  H15"}]
-   [:path {:d "M1,13 H15"}]])
 
 
 ;; Style
@@ -137,39 +106,9 @@
   [{:content [:<> [:> Brightness7] [:span "Light"]]
     :id "theme-light"
     :fn #(dispatch [:theme/set-light])}
-   #_ {:content "Auto"
-    :id "theme-dark"
-    :fn #(dispatch [:theme/set-dark])}
    {:content [:<> [:> Brightness3] [:span "Dark"]]
     :id "theme-dark"
     :fn #(dispatch [:theme/set-dark])}])
-
-
-#_ (def font-settings
-  [{:content [:span
-              {:style
-               {:display "contents"
-                :font-size "18px"
-                :font-family (:serif style/font-family)}}
-              "Se"]
-    :fn #(dispatch [:appearance/set-font :serif])
-    :id "font-serif"}
-   {:content [:span
-              {:style
-               {:display "contents"
-                :font-size "18px"
-                :font-family (:sans style/font-family)}}
-              "Sa"]
-    :fn #(dispatch [:appearance/set-font :sans])
-    :id "font-sans"}
-   {:content [:span
-              {:style
-               {:display "contents"
-                :font-size "18px"
-                :font-family (:mono style/font-family)}}
-              "Mo"]
-    :fn #(dispatch [:appearance/set-font :mono])
-    :id "font-mono"}])
 
 
 (def width-settings
@@ -184,13 +123,6 @@
     :fn #(dispatch [:appearance/set-width "width-unlimited"])}])
 
 
-#_ (def density-settings
-  {:fn :appearance/set-density
-   :content [{:content tight-density-icon  :id "density-tight"}
-             {:content normal-density-icon :id "density-normal"}
-             {:content loose-density-icon  :id "density-loose"}]})
-
-
 (defn appearance-settings
   []
   (r/with-let [ele (r/atom nil)]
@@ -201,7 +133,7 @@
                         :on-click #(reset! ele (.-currentTarget %))}
                 [:> TextFormat]]
                ;; Dropdown menu
-               [m-popover
+               [:> Popover
                 (merge (use-style dropdown-style)
                        {:style {:font-size "14px"}
                         :open            @ele
@@ -215,13 +147,7 @@
                         :classes {:root "backdrop"
                                   :paper "menu"}})
                 [:div (use-style (merge menu-style))
-                 ;; Options
                  [preferences-set {:prefs theme-settings
                                    :current (if @(subscribe [:theme/dark]) "theme-dark" "theme-light")}]
-                 #_ [preferences-set {:prefs font-settings
-                         :current @(subscribe [:appearance/font])}]
                  [preferences-set {:prefs width-settings
-                                   :current @(subscribe [:appearance/width])}]
-                 ;; Density disabled until block styles can support the varying line-heights
-                 #_[preferences-set {:prefs density-settings
-                           :current @(subscribe [:appearance/density])}]]]]))
+                                   :current @(subscribe [:appearance/width])}]]]]))

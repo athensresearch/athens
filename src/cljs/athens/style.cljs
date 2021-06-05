@@ -98,11 +98,6 @@
           ")"))))
 
 
-(def font-family
-  {:serif "IBM Plex Serif, serif"
-   :sans "IBM Plex Sans, sans-serif"
-   :mono "IBM Plex Mono, monospace"})
-
 
 (def content-max-width
   {:normal "55em"
@@ -110,23 +105,14 @@
    :unlimited "none"})
 
 
-(def content-density
-  {:tight "1.3"
-   :normal "1.5"
-   :loose "1.75"})
-
-
 ;; Base Styles
 
 (def base-styles
   {:background-color (color :background-color)
    :color            (color :body-text-color)
-   :--font-family-default "IBM Plex Sans, serif"
-   :--font-family-serif "IBM Plex Serif, serif"
-   :--font-family-mono "IBM Plex Mono, monospace"
-   :font-family      "var(--font-family-default)"
+   :font-family      "IBM Plex Sans, serif"
    :font-size        "16px" ; Sets the Rem unit to 16px
-   :line-height      "var(--content-line-height)"
+   :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]
                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"
                                                 :line-height "1.3"
