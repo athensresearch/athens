@@ -471,7 +471,6 @@
     (assoc db :appearance/width width)))
 
 
-
 ;; Modal
 
 

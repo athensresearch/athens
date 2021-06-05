@@ -107,7 +107,6 @@
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
         electron?         (util/electron?)
-        theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
         merge-open?       (reagent.core/atom false)]
