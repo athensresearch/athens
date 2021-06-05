@@ -50,7 +50,7 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selected/items      []
+               :selected/items      #{}
                :theme/dark          false
                :appearance/font     "font-sans"
                :appearance/width    "width-normal"
