@@ -26,7 +26,7 @@
    [:path {:d "M7,20 H12"}]])
 
 
-(def wide-width-icon
+(def large-width-icon
   [:svg {:viewBox "0 0 24 24"}
    width-background
    [:path {:d "M3,04 H20"}]
@@ -34,7 +34,7 @@
    [:path {:d "M3,12 H16"}]])
 
 
-(def unlimited-width-icon
+(def full-width-icon
   [:svg {:viewBox "0 0 24 24"}
    width-background
    [:path {:d "M2,04 H22"}]
@@ -114,13 +114,13 @@
 (def width-settings
   [{:content [:<> normal-width-icon [:span "normal"]]
     :id "width-normal"
-    :fn #(dispatch [:appearance/set-width "width-normal"])}
-   {:content [:<> wide-width-icon [:span "large"]]
-    :id "width-wide"
-    :fn #(dispatch [:appearance/set-width "width-wide"])}
-   {:content [:<> unlimited-width-icon [:span "full"]]
-    :id "width-unlimited"
-    :fn #(dispatch [:appearance/set-width "width-unlimited"])}])
+    :fn #(dispatch [:appearance/set-width :normal])}
+   {:content [:<> large-width-icon [:span "large"]]
+    :id "width-large"
+    :fn #(dispatch [:appearance/set-width :large])}
+   {:content [:<> full-width-icon [:span "full"]]
+    :id "width-full"
+    :fn #(dispatch [:appearance/set-width :full])}])
 
 
 (defn appearance-settings

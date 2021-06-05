@@ -70,7 +70,7 @@
         modal      (rf/subscribe [:modal])
         width      (rf/subscribe [:appearance/width])]
     (fn []
-      [:div {:class [@width]
+      [:div {:class (str "width-" (symbol @width))
              :style {:display "contents"}}
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
