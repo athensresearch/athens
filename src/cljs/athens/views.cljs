@@ -31,8 +31,8 @@
    :height "100vh"})
 
 (stylefy/tag ".width-normal" {:--content-max-width (:normal style/content-max-width)})
-(stylefy/tag ".width-wide" {:--content-max-width (:large style/content-max-width)})
-(stylefy/tag ".width-unlimited" {:--content-max-width (:unlimited style/content-max-width)})
+(stylefy/tag ".width-large" {:--content-max-width (:large style/content-max-width)})
+(stylefy/tag ".width-full" {:--content-max-width (:full style/content-max-width)})
 
 
 ;; Components

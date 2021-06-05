@@ -102,7 +102,7 @@
 (def content-max-width
   {:normal "55em"
    :large "65em"
-   :unlimited "none"})
+   :full "none"})
 
 
 ;; Base Styles
