@@ -392,7 +392,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -401,15 +401,25 @@
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
              :hashtag (auto-complete-hashtag state e))
-      ;; shift-enter: add line break to textarea
-      shift (swap! state assoc :string/local (str head "\n" tail))
-      ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
-      (shortcut-key? meta ctrl) (let [first    (subs value 0 13)
-                                      new-tail (subs value 13)
-                                      new-str  (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
-                                                     (= first "{{[[DONE]]}} ") new-tail
-                                                     :else (str "{{[[TODO]]}} " value))]
-                                  (swap! state assoc :string/local new-str))
+      ;; shift-enter: add line break to textarea and move cursor to the next line.
+      shift (replace-selection-with "\n")
+      ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
+      ;; 13 is the length of the {{[[TODO]]}} and {{[[DONE]]}} string
+      ;; this trick depends on the fact that they are of the same length.
+      (shortcut-key? meta ctrl) (let [todo-prefix         "{{[[TODO]]}} "
+                                      done-prefix         "{{[[DONE]]}} "
+                                      no-prefix           ""
+                                      first               (subs value 0 13)
+                                      current-prefix      (cond (= first todo-prefix) todo-prefix
+                                                                (= first done-prefix) done-prefix
+                                                                :else no-prefix)
+                                      new-prefix          (cond (= current-prefix no-prefix) todo-prefix
+                                                                (= current-prefix todo-prefix) done-prefix
+                                                                (= current-prefix done-prefix) no-prefix)
+                                      new-cursor-position (+ start (- (count current-prefix)) (count new-prefix))]
+                                  (set-selection (.. e -target) 0 (count current-prefix))
+                                  (replace-selection-with new-prefix)
+                                  (set-cursor-position (.. e -target) new-cursor-position))
       ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
@@ -611,16 +621,10 @@
     (cond
       (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
-      possible-pair (let [head    (subs value 0 (dec start))
-                          tail    (subs value (inc start))
-                          new-str (str head tail)
-                          new-idx (dec start)]
+      possible-pair (do
                       (.. e preventDefault)
-                      (swap! state assoc
-                             :search/type nil
-                             :string/local new-str)
-                      (set! (.-value target) new-str)
-                      (set-cursor-position target new-idx))
+                      (set-selection target (dec start) (inc start))
+                      (replace-selection-with ""))
 
       ;; slash: close dropdown
       (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
