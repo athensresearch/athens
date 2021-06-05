@@ -3,7 +3,7 @@
    ["@material-ui/core/Popover" :as Popover]
    ["@material-ui/icons/Brightness3" :default Brightness3]
    ["@material-ui/icons/Brightness7" :default Brightness7]
-   ["@material-ui/icons/Style" :default Style]
+   ["@material-ui/icons/TextFormat" :default TextFormat]
    [athens.style :as style :refer [color DEPTH-SHADOWS]]
    [athens.views.buttons :refer [button]]
    [athens.views.dropdown :refer [menu-style]]
@@ -19,30 +19,30 @@
 
 ;; Icons 
 
-(def width-background [:rect {:x "0" :y "0" :width "24" :height "24" :rx "3" :fill "currentColor" :opacity "0.1"}])
+(def width-background [:rect {:x "-2" :y "0" :width "28" :height "24" :rx "3" :opacity "0.25"}])
 
 (def normal-width-icon
   [:svg {:viewBox "0 0 24 24"}
    width-background
-   [:path {:d "M3,04  H12"}]
-   [:path {:d "M3,08 H12"}]
-   [:path {:d "M3,12 H12"}]
-   [:path {:d "M3,16 H12"}]
-   [:path {:d "M3,20 H8"}]])
+   [:path {:d "M7,04 H18"}]
+   [:path {:d "M7,08 H18"}]
+   [:path {:d "M7,12 H18"}]
+   [:path {:d "M7,16 H18"}]
+   [:path {:d "M7,20 H12"}]])
 1
-(def large-width-icon
+(def wide-width-icon
   [:svg {:viewBox "0 0 24 24"}
   width-background
-   [:path {:d "M3,04 H16"}]
-   [:path {:d "M3,08 H16"}]
-   [:path {:d "M3,12 H12"}]])
+   [:path {:d "M3,04 H20"}]
+   [:path {:d "M3,08 H20"}]
+   [:path {:d "M3,12 H16"}]])
 
 (def unlimited-width-icon
   [:svg {:viewBox "0 0 24 24"}
   width-background
-   [:path {:d "M3,04 H21"}]
-   [:path {:d "M3,08 H21"}]
-   [:path {:d "M3,12 H8"}]])
+   [:path {:d "M2,04 H22"}]
+   [:path {:d "M2,08 H22"}]
+   [:path {:d "M2,12 H8"}]])
 
 #_ (def tight-density-icon
   [:svg {:viewBox "0 0 16 16"}
@@ -86,8 +86,9 @@
    :grid-auto-flow "column"
    :grid-gap "1px"
    :grid-auto-columns "1fr"
-   :border-radius "0.25rem"
+   :border-radius "calc(0.25rem + 1px)"
    :margin "0.125rem 0.5rem"
+   :padding "1px"
    :box-shadow "inset 0 0 0 1px transparent, 0 0 0 1px transparent"
    :transition "box-shadow 0.1s ease, filter 0.1s ease"
    :background "inherit"
@@ -95,20 +96,25 @@
                                 :box-shadow [["0 0 0 1px " (color :border-color)]]}]
                      [:>button {:text-align "center"
                                 :display "flex"
+                                :gap "0.25rem"
+                                :text-transform "uppercase"
+                                :flex-direction "column"
                                 :align-items "center"
                                 :justify-content "center"
                                 :background "inherit"
                                 :min-height "2.5rem"
                                 :padding "0.5rem"
                                 :font-weight "500"}
+                      [:span {:font-size "85%"
+                              :color (style/color :body-text-color :opacity-med)}]
                       [:svg {:vector-effect "non-scaling-stroke"
                              :overflow "visible"
                              :width "24px"
                              :height "24px"}]
                       ["svg:not(.MuiSvgIcon-root)" {:fill "none"
-                      :stroke-linecap "round"
+                                                    :stroke-linecap "round"
                                                     :stroke "currentColor"
-                                                    :stroke-weight "0.06rem"}]]]})
+                                                    :stroke-width "0.12rem"}]]]})
 
 ;; Components
 
@@ -124,10 +130,13 @@
 
 
 (def theme-settings
-  [{:content [:> Brightness7]
+  [{:content [:<> [:> Brightness7] [:span "Light"]]
     :id "theme-light"
     :fn #(dispatch [:theme/set-light])}
-   {:content [:> Brightness3]
+   #_ {:content "Auto"
+    :id "theme-dark"
+    :fn #(dispatch [:theme/set-dark])}
+   {:content [:<> [:> Brightness3] [:span "Dark"]]
     :id "theme-dark"
     :fn #(dispatch [:theme/set-dark])}])
 
@@ -159,13 +168,13 @@
 
 
 (def width-settings
-  [{:content normal-width-icon
+  [{:content [:<> normal-width-icon [:span "normal"]]
     :id "width-normal"
     :fn #(dispatch [:appearance/set-width "width-normal"])}
-   {:content large-width-icon
-    :id "width-large"
-    :fn #(dispatch [:appearance/set-width "width-large"])}
-   {:content unlimited-width-icon
+   {:content [:<> wide-width-icon [:span "large"]]
+    :id "width-wide"
+    :fn #(dispatch [:appearance/set-width "width-wide"])}
+   {:content [:<> unlimited-width-icon [:span "full"]]
     :id "width-unlimited"
     :fn #(dispatch [:appearance/set-width "width-unlimited"])}])
 
@@ -186,7 +195,7 @@
      [button {:class [(when @ele "is-active")]
               :title "Change appearance preferences"
               :on-click #(reset! ele (.-currentTarget %))}
-      [:> Style]]
+      [:> TextFormat]]
      ;; Dropdown menu
      [m-popover
       (merge (use-style dropdown-style)

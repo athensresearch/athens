@@ -37,7 +37,7 @@
 (stylefy/tag ".font-sans" {:--content-font-family (:sans style/font-family)})
 (stylefy/tag ".font-mono" {:--content-font-family (:mono style/font-family)})
 (stylefy/tag ".width-normal" {:--content-max-width (:normal style/content-max-width)})
-(stylefy/tag ".width-large" {:--content-max-width (:large style/content-max-width)})
+(stylefy/tag ".width-wide" {:--content-max-width (:large style/content-max-width)})
 (stylefy/tag ".width-unlimited" {:--content-max-width (:unlimited style/content-max-width)})
 (stylefy/tag ".density-tight" {:--content-line-height (:tight style/content-density)})
 (stylefy/tag ".density-normal" {:--content-line-height (:normal style/content-density)})

@@ -52,7 +52,6 @@
                :daily-notes/items   []
                :selected/items      []
                :theme/dark          false
-               ;; :appearance/theme  "theme-auto"
                :appearance/font     "font-sans"
                :appearance/width    "width-normal"
                ;; :appearance/density  "density-normal"

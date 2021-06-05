@@ -12,8 +12,6 @@
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ToggleOff" :default ToggleOff]
-    ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.router :as router]
     [athens.style :refer [color]]
@@ -186,11 +184,6 @@
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [appearance-settings]
-        ;;  [button {:on-click #(dispatch [:theme/toggle])
-        ;;           :title "Toggle Color Scheme"}
-        ;;   (if @theme-dark
-        ;;     [:> ToggleOff]
-        ;;     [:> ToggleOn])]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
