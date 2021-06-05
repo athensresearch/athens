@@ -27,7 +27,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def app-header-style
@@ -82,7 +82,7 @@
                     {:opacity "1"}])
 
 
-;;; Components
+;; Components
 
 
 (defn separator
@@ -96,7 +96,6 @@
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
         electron?         (util/electron?)
-        theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
         merge-open?       (reagent.core/atom false)]
@@ -166,8 +165,8 @@
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
-                           (assoc @remote-graph-conf
-                                  :reload-on-init? true))}
+                            (assoc @remote-graph-conf
+                                   :reload-on-init? true))}
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])

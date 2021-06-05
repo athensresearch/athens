@@ -1,20 +1,20 @@
 (ns athens.views
   (:require
-   ["@material-ui/core/Snackbar" :as Snackbar]
-   [athens.config]
-   [athens.style :as style]
-   [athens.subs]
-   [athens.views.app-toolbar :as app-toolbar]
-   [athens.views.athena :refer [athena-component]]
-   [athens.views.devtool :refer [devtool-component]]
-   [athens.views.filesystem :as filesystem]
-   [athens.views.left-sidebar :as left-sidebar]
-   [athens.views.pages.core :as pages]
-   [athens.views.right-sidebar :as right-sidebar]
-   [athens.views.spinner :refer [initial-spinner-component]]
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy]))
+    ["@material-ui/core/Snackbar" :as Snackbar]
+    [athens.config]
+    [athens.style :as style]
+    [athens.subs]
+    [athens.views.app-toolbar :as app-toolbar]
+    [athens.views.athena :refer [athena-component]]
+    [athens.views.devtool :refer [devtool-component]]
+    [athens.views.filesystem :as filesystem]
+    [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.pages.core :as pages]
+    [athens.views.right-sidebar :as right-sidebar]
+    [athens.views.spinner :refer [initial-spinner-component]]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy]))
 
 
 ;; Styles
@@ -29,6 +29,7 @@
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows "auto 1fr auto"
    :height "100vh"})
+
 
 (stylefy/tag ".theme-dark" {:--theme "dark"})
 (stylefy/tag ".theme-auto" {:--theme "auto"})
@@ -61,22 +62,23 @@
 
 
 (rf/reg-sub
- :db/snack-msg
- (fn [db]
-   (:db/snack-msg db)))
+  :db/snack-msg
+  (fn [db]
+    (:db/snack-msg db)))
 
 
 (rf/reg-event-db
- :show-snack-msg
- (fn [db [_ msg-opts]]
-   (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
-   (assoc db :db/snack-msg msg-opts)))
+  :show-snack-msg
+  (fn [db [_ msg-opts]]
+    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
+    (assoc db :db/snack-msg msg-opts)))
 
 
 (rf/reg-sub
- :appearance/font
- (fn [db]
-   (:appearance/font db)))
+  :appearance/font
+  (fn [db]
+    (:appearance/font db)))
+
 
 (defn main
   []

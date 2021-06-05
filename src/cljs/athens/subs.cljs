@@ -143,24 +143,28 @@
       (:db/remote-graph-conf db)
       {})))
 
+
 ;; Appearance Preferences
 
 (re-frame/reg-sub
- :appearance/theme
- (fn [db _]
-   (:appearance/theme db)))
+  :appearance/theme
+  (fn [db _]
+    (:appearance/theme db)))
+
 
 (re-frame/reg-sub
- :appearance/font
- (fn [db _]
-   (:appearance/font db)))
+  :appearance/font
+  (fn [db _]
+    (:appearance/font db)))
+
 
 (re-frame/reg-sub
- :appearance/width
- (fn [db _]
-   (:appearance/width db)))
+  :appearance/width
+  (fn [db _]
+    (:appearance/width db)))
+
 
 (re-frame/reg-sub
- :appearance/density
- (fn [db _]
-   (:appearance/density db)))
+  :appearance/density
+  (fn [db _]
+    (:appearance/density db)))
