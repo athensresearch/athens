@@ -113,13 +113,13 @@
 
 (def width-settings
   [{:content [:<> normal-width-icon [:span "normal"]]
-    :id "width-normal"
+    :id :normal
     :fn #(dispatch [:appearance/set-width :normal])}
    {:content [:<> large-width-icon [:span "large"]]
-    :id "width-large"
+    :id :large
     :fn #(dispatch [:appearance/set-width :large])}
    {:content [:<> full-width-icon [:span "full"]]
-    :id "width-full"
+    :id :full
     :fn #(dispatch [:appearance/set-width :full])}])
 
 
