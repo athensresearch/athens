@@ -111,12 +111,14 @@
 
 (defn filter-slash-options
   [query]
-  (if (blank? query)
-    slash-options
-    (filterv (fn [[text]]
-               (re-find (re-pattern (str "(?i)" query)) text))
-             slash-options)))
-
+  ((try
+     (if (blank? query)
+       slash-options
+       #(filterv (fn [[text]]
+                   (re-find (re-pattern (str "(?i)" query)) text))
+                 slash-options))
+     (catch js/Error _
+       slash-options))))
 
 (defn update-query
   "Used by backspace and write-char.
@@ -124,27 +126,28 @@
   query-start is determined by doing a greedy regex find up to head.
   Head goes up to the text caret position."
   [state head key type]
-  (let [query-fn        (case type
-                          :block db/search-in-block-content
-                          :page db/search-in-node-title
-                          :hashtag db/search-in-node-title
-                          :slash filter-slash-options)
-        regex           (case type
-                          :block #"(?s).*\(\("
-                          :page #"(?s).*\[\["
-                          :hashtag #"(?s).*#"
-                          :slash #"(?s).*/")
-        find            (re-find regex head)
-        query-start-idx (count find)
-        new-query       (str (subs head query-start-idx) key)
-        results         (query-fn new-query)]
-    (if (and (= type :slash) (empty? results))
-      (swap! state assoc :search/type nil)
-      (swap! state assoc
-             :search/index 0
-             :search/query new-query
-             :search/results results))))
-
+  (try
+    (let [query-fn        (case type
+                            :block db/search-in-block-content
+                            :page db/search-in-node-title
+                            :hashtag db/search-in-node-title
+                            :slash filter-slash-options)
+          regex           (case type
+                            :block #"(?s).*\(\("
+                            :page #"(?s).*\[\["
+                            :hashtag #"(?s).*#"
+                            :slash #"(?s).*/")
+          find            (re-find regex head)
+          query-start-idx (count find)
+          new-query       (str (subs head query-start-idx) key)
+          results         (query-fn new-query)]
+      (if (and (= type :slash) (empty? results))
+        (swap! state assoc :search/type nil)
+        (swap! state assoc
+               :search/index 0
+               :search/query new-query
+               :search/results results)))
+    (catch js/Error _)))
 
 ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
 ;; textarea setval will lose ability to undo/redo
