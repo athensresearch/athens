@@ -392,7 +392,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta value] :as d-key-down} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -406,20 +406,20 @@
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
       ;; 13 is the length of the {{[[TODO]]}} and {{[[DONE]]}} string
       ;; this trick depends on the fact that they are of the same length.
-      (shortcut-key? meta ctrl) (let [todo-prefix     "{{[[TODO]]}} "
-                                      done-prefix     "{{[[DONE]]}} "
-                                      no-prefix       ""
-                                      first           (subs value 0 13)
-                                      current-prefix  (cond (= first todo-prefix) todo-prefix
-                                                            (= first done-prefix) done-prefix
-                                                            :else no-prefix)
-                                      new-prefix      (cond (= current-prefix no-prefix) todo-prefix
-                                                            (= current-prefix todo-prefix) done-prefix
-                                                            (= current-prefix done-prefix) no-prefix)
-                                      end-of-line     (+ (count value) (- (count current-prefix)) (count new-prefix))]
+      (shortcut-key? meta ctrl) (let [todo-prefix         "{{[[TODO]]}} "
+                                      done-prefix         "{{[[DONE]]}} "
+                                      no-prefix           ""
+                                      first               (subs value 0 13)
+                                      current-prefix      (cond (= first todo-prefix) todo-prefix
+                                                                (= first done-prefix) done-prefix
+                                                                :else no-prefix)
+                                      new-prefix          (cond (= current-prefix no-prefix) todo-prefix
+                                                                (= current-prefix todo-prefix) done-prefix
+                                                                (= current-prefix done-prefix) no-prefix)
+                                      new-cursor-position (+ start (- (count current-prefix)) (count new-prefix))]
                                   (set-selection (.. e -target) 0 (count current-prefix))
                                   (replace-selection-with new-prefix)
-                                  (set-cursor-position (.. e -target) end-of-line))
+                                  (set-cursor-position (.. e -target) new-cursor-position))
       ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
