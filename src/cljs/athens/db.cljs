@@ -52,7 +52,6 @@
                :daily-notes/items   []
                :selected/items      #{}
                :theme/dark          false
-               :appearance/font     "font-sans"
                :appearance/width    "width-normal"
                :graph-conf          default-graph-conf})
 

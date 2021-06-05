@@ -109,8 +109,8 @@
 
 (def base-styles
   {:background-color (color :background-color)
+   :font-family      "IBM Plex Sans, sans-serif"
    :color            (color :body-text-color)
-   :font-family      "IBM Plex Sans, serif"
    :font-size        "16px" ; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]

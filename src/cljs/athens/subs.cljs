@@ -146,25 +146,9 @@
 
 ;; Appearance Preferences
 
-(re-frame/reg-sub
-  :appearance/theme
-  (fn [db _]
-    (:appearance/theme db)))
-
-
-(re-frame/reg-sub
-  :appearance/font
-  (fn [db _]
-    (:appearance/font db)))
-
 
 (re-frame/reg-sub
   :appearance/width
   (fn [db _]
     (:appearance/width db)))
 
-
-(re-frame/reg-sub
-  :appearance/density
-  (fn [db _]
-    (:appearance/density db)))
