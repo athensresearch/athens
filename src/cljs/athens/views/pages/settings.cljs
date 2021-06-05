@@ -73,7 +73,7 @@
   (not (.. js/window -posthog has_opted_out_capturing)))
 
 
-(defn init-autosave-time
+(defn init-backup-time
   []
   (js/Number (js/localStorage.getItem "debounce-save-time")))
 
@@ -82,7 +82,7 @@
   []
   {:email         (init-email)
    :monitoring    (init-monitoring)
-   :autosave-time (init-autosave-time)})
+   :backup-time (init-backup-time)})
 
 
 (defn handle-reset-email
@@ -141,10 +141,10 @@
     (monitoring-on s)))
 
 
-(defn handle-blur-autosave-input
+(defn handle-blur-backup-input
   [e s]
   (let [value (.. e -target -value)]
-    (swap! s assoc :autosave-time value)
+    (swap! s assoc :backup-time value)
     (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
     (js/localStorage.setItem "debounce-save-time" value)))
 
@@ -215,24 +215,25 @@
       [:p "Athens will never ever sell your data."]]]]])
 
 
-(defn autosave-comp
+(defn backup-comps
   [s]
   [setting-wrapper
    [:<>
     [:header
-     [:h3 "AutoSave"]
-     [:span.glance (str (:autosave-time @s) " seconds")]]
+     [:h3 "Backups"]
+     [:span.glance (str (:backup-time @s) " seconds after last edit")]]
     [:main
      [:label
       [textinput/textinput {:type         "number"
-                            :defaultValue (:autosave-time @s)
+                            :defaultValue (:backup-time @s)
                             :min          0
                             :step         15
                             :max          100
-                            :on-blur      #(handle-blur-autosave-input % s)}]
+                            :on-blur      #(handle-blur-backup-input % s)}]
       " seconds"]
      [:aside
-      [:p (str "Athens will save and create a local backup " (:autosave-time @s) " seconds after your last edit.")]]]]])
+      [:p "Changes are saved immediately."]
+      [:p (str "Athens will save a new backup " (:backup-time @s) " seconds after your last edit.")]]]]])
 
 
 (defn backups-comp
@@ -290,6 +291,6 @@
       [:h1 "Settings"]
       [email-comp s]
       [monitoring-comp s]
-      [autosave-comp s]
+      [backup-comps s]
       [backups-comp s]
       [remote-username-comp]]]))

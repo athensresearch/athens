@@ -471,7 +471,7 @@
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
                                                               closest            (or closest-node-page closest-block-page)
-                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              block              (db/get-block [:block/uid (.getAttribute closest "data-uid")])
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
