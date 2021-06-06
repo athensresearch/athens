@@ -153,7 +153,7 @@
                                     string (assoc :block/string (patterns/replace-roam-date string))
                                     title (assoc :node/title (patterns/replace-roam-date title))))
                                 date-concat)]
-    ;;tx-data))
+    ;; tx-data))
     (d/db-with db tx-data)))
 
 
@@ -231,6 +231,7 @@
   (fn [_ _]
     {}))
 
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
@@ -257,14 +258,18 @@
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items (into {}
+                          (assoc (:right-sidebar/items db) uid new-item))
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
                                new-items)
           sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
-                                                [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
        :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
                     [:right-sidebar/scroll-top]]})))
@@ -295,26 +300,31 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items conj uid)))
+    (update db :selected/items (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (let [items (:selected/items db)]
-      (assoc db :selected/items (filterv #(not= % uid) items)))))
+    (update db :selected/items disj uid)))
+
+
+(reg-event-db
+  :selected/remove-items
+  (fn [db [_ uids]]
+    (update db :selected/items #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items concat uids)))
+    (update db :selected/items #(apply conj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items [])))
+    (assoc db :selected/items #{})))
 
 
 (defn select-up
@@ -468,6 +478,7 @@
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
 
+
 ;; Loading
 
 (reg-event-db
@@ -526,10 +537,11 @@
 (reg-event-fx
   :daily-note/delete
   (fn [{:keys [db]} [_ uid title]]
-    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
 
 ;; -- event-fx and Datascript Transactions -------------------------------
 
@@ -825,7 +837,7 @@
 
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
-  ;; which might not be same as blur is not yet called
+;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
@@ -1699,27 +1711,27 @@
 
 
 (reg-event-fx
- :paste-verbatim
- (fn [_ [_ uid text]]
-   (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-         block-empty?          (string/blank? value)
-         block-start?          (zero? start)
-         new-string            (cond
+  :paste-verbatim
+  (fn [_ [_ uid text]]
+    (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
+          block-empty?          (string/blank? value)
+          block-start?          (zero? start)
+          new-string            (cond
 
-                                 block-empty?
-                                 text
+                                  block-empty?
+                                  text
 
-                                 (and (not block-empty?)
-                                      block-start?)
-                                 (str text value)
+                                  (and (not block-empty?)
+                                       block-start?)
+                                  (str text value)
 
-                                 :else
-                                 (str (subs value 0 start)
-                                      text
-                                      (subs value start)))
-         tx-data [{:db/id        [:block/uid uid]
-                   :block/string new-string}]]
-     {:dispatch [:transact tx-data]})))
+                                  :else
+                                  (str (subs value 0 start)
+                                       text
+                                       (subs value start)))
+          tx-data [{:db/id        [:block/uid uid]
+                    :block/string new-string}]]
+      {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above
