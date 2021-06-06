@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.88](https://github.com/athensresearch/athens/compare/v1.0.0-beta.87...v1.0.0-beta.88) (2021-06-06)
+
+
+### Bug Fixes
+
+* **#1289:** remove autocomplete on backspace of [[ or (( ([eacd2a3](https://github.com/athensresearch/athens/commit/eacd2a322bad0c2901d35f3d1d01e78d5040ca61)), closes [#1289](https://github.com/athensresearch/athens/issues/1289) [#1289](https://github.com/athensresearch/athens/issues/1289)
+
 ## [1.0.0-beta.87](https://github.com/athensresearch/athens/compare/v1.0.0-beta.86...v1.0.0-beta.87) (2021-06-06)
 
 
