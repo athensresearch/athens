@@ -623,6 +623,7 @@
       ;; pair char: hide inline search and auto-balance
       possible-pair (do
                       (.. e preventDefault)
+                      (swap! state assoc :search/type nil)
                       (set-selection target (dec start) (inc start))
                       (replace-selection-with ""))
 
