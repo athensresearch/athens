@@ -112,14 +112,11 @@
 
 (defn filter-slash-options
   [query]
-  ((try
-     (if (blank? query)
-       slash-options
-       #(filterv (fn [[text]]
-                   (includes? (lower-case text) (lower-case query)))
-                 slash-options))
-     (catch js/Error _
-       slash-options))))
+  (if (blank? query)
+      slash-options
+      #(filterv (fn [[text]]
+                  (includes? (lower-case text) (lower-case query)))
+                slash-options))
 
 (defn update-query
   "Used by backspace and write-char.
