@@ -24,7 +24,7 @@ block = (thematic-break /
          fenced-code-block /
          block-quote /
          paragraph-text)*
-thematic-break = #'[*_-]{3}'
+thematic-break = #'[_-]{3}'
 heading = #'[#]+' <space> #'.+' <newline>*
 indented-code-block = (<'    '> code-text)+
 fenced-code-block = <'```'> #'(?s)(.+(?=(```|\\n))|\\n)+' <'```'>

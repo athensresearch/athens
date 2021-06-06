@@ -30,7 +30,12 @@
     (util/parses-to sut/block-parser->ast
 
                     "***"
-                    [:block [:thematic-break "***"]]
+                    [:block
+                     [:paragraph-text "***"]]
+
+                    "***bold and italic***"
+                    [:block
+                     [:paragraph-text "***bold and italic***"]]
 
                     "---"
                     [:block [:thematic-break "---"]]
@@ -231,6 +236,12 @@
                       [:text-run "bold and "]
                       [:emphasis
                        [:text-run "italic"]]]]
+
+                    "***bold and italic***"
+                    [:paragraph
+                     [:strong-emphasis
+                      [:emphasis
+                       [:text-run "bold and italic"]]]]
 
                     ;; next to each other
                     "normal *italic* **bold**"
