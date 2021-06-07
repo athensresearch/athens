@@ -3,7 +3,9 @@
     ["@material-ui/icons/Link" :default Link]
     [athens.style :refer [color]]
     [athens.views.db-menu.db-icon :refer [db-icon]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [re-frame.core :refer [dispatch subscribe]]
+    [stylefy.core :as stylefy :refer [use-style]]
+    [athens.electron :as electron]))
 
 
 (def db-list-item-style
@@ -57,5 +59,5 @@
    (if is-current
      [:div.body.is-current
       [db-list-item-content {:db db}]]
-     [:button.body.button
+     [:button.body.button {:onClick #(dispatch [:db-picker/select-new-db (:path db) @(subscribe [:db/synced])])}
       [db-list-item-content {:db db}]])])

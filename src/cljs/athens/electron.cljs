@@ -195,6 +195,7 @@
   (reg-sub
     :db/filepath
     (fn [db _]
+      (println ["asked to update db filepath"])
       (:db/filepath db)))
 
 
@@ -349,7 +350,7 @@
   ;; Function to remove a path from db list
   ;; Find the map which has a key matching the db-path then remove it
   (reg-event-fx
-    :db-picker/remove-db
+    :db-picker/remove-db-from-list
     (fn [{:keys [db]} [_ db-path]]
       (println ["asked to remove db with path ----> " db-path])
       (let [current-db-list (:db-picker/all-dbs db)
@@ -366,10 +367,44 @@
     :db-picker/move-db
     (fn [{:keys [db]} [_ previous_path new_path]]
       (println ["Asked to update the db path"])
-      {:dispatch-n [[:db-picker/remove-db previous_path]
+      {:dispatch-n [[:db-picker/remove-db-from-list previous_path]
                     [:db-picker/add-new-db new_path false nil]]}))
 
+  ;; When a db is clicked, update the filepath and reload desktop
+  ;; If it is found that the selected db does not exist on disk show alert,
+  ;; remove it from list
+  
+  (reg-event-fx
+    :db-picker/select-new-db
+    (fn [{:keys [db]} [_ filepath synced]]
+     (if (and filepath (.existsSync fs filepath))
+        (if (true? synced)
+          (do
+            (dispatch [:db/update-filepath filepath])
+            (dispatch [:boot/desktop]))
+          (js/alert "Database is saving your changes, if you switch now your changes will not be saved"))
+      (do
+        (js/alert "This database does not exist, removing it from list")
+        (dispatch [:db-picker/remove-db-from-list filepath])
+        (dispatch [:local-storage/set-db-picker-list (:db-picker/all-dbs db)])))))
 
+  (reg-event-fx
+    :db-picker/delete-db
+    " set the next db in line as active and remove selected db from the list, the new db list
+      is saved in local storage by remove db"
+    (fn [{:keys [db]} [_ db-filepath]]
+      (dispatch [:db-picker/remove-db-from-list db-filepath])
+      (let [new-list (:db-picker/all-dbs db)
+            next-db-filepath (:path ( nth new-list 0))]
+        (println ["db filepath to delete " db-filepath])
+        (println ["current db-list" new-list])
+        (println ["next db filepath is " next-db-filepath])
+        (dispatch [:local-storage/set-db-picker-list new-list ])
+        (dispatch [:db-picker/select-new-db next-db-filepath true])
+        (dispatch [:local-storage/set-db-picker-list new-list ])
+        )))
+
+    ;; ===================================== db- picker end===============
 
   (reg-event-fx
     :fs/open-dialog
@@ -413,8 +448,8 @@
   ;; ├── images
   ;; └── index.transit
 
-  ;; If new is created add
-  ;; 1. This to all-dbs list
+  ;; If new db is created add
+  ;; 1. This db to all-dbs list
   ;; 2. Make this db active
   (reg-event-fx
     :fs/create-new-db
@@ -427,7 +462,8 @@
         {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
                       [:transact athens-datoms/datoms]
-                      [:db-picker/add-new-db db-filepath false nil]]})))
+                      [:db-picker/add-new-db db-filepath false nil]
+                      [:local-storage/set-db-picker-list]]})))
 
 
 

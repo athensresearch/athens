@@ -41,6 +41,7 @@
 (reg-event-fx
   :db/update-filepath
   (fn [{:keys [db]} [_ filepath]]
+    (println "Asked to update filepath to -->" filepath)
     {:db (assoc db :db/filepath filepath)
      :local-storage/set! ["db/filepath" filepath]}))
 

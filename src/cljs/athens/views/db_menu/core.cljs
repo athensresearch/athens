@@ -78,7 +78,7 @@
 ;; Components
 
 (defn current-db-tools
-  ([{:keys [db]}]
+  ([{:keys [db]} all-dbs]
    [:div (use-style current-db-tools-style)
     (if (:is-remote db)
       [:<>
@@ -86,65 +86,70 @@
        [button "Copy Link"]
        [button "Remove"]]
       [:<>
-       [button "Move"]
-       [button "Rename"]
-       [button "Import"]
-       [button "Delete"]])]))
+       [button {:onClick #(electron/move-dialog!)} "Move"]
+      ;[button {:onClick "Rename"]
+       [button {:onClick #(if (= 1 (count all-dbs))
+                            (js/alert "Can't remove last db from the list")
+                            (dispatch [:db-picker/delete-db (:path db)]))}
+               "Delete"]])]))
 
 
 (defn db-menu
   []
-  (r/with-let [ele (r/atom nil)
-               current-db-path @(subscribe [:db/filepath])
-               all-dbs @(subscribe [:db-picker/all-dbs]) ; is this correct ?
-               ;; active-db (filter #(= (:path %) current-db-path) all-dbs)
-               active-db (nth all-dbs 0) ; TODO for the time being let it be like this
-               inactive-dbs (filter #(not= (:path %) current-db-path) all-dbs)]
-              (println [" all-dbs is -->" all-dbs])
-              (println ["items in all-dbs" (count all-dbs)])
-              (println ["active-dbs is -->" active-db])
-              (println ["inactive-dbs is -->" inactive-dbs])
-              (println ["current db path is " current-db-path])
+  (r/with-let [ele (r/atom nil)]
+              (let [current-db-path  @(subscribe [:db/filepath])
+                    all-dbs          @(subscribe [:db-picker/all-dbs]) ; is this correct ?
+                    active-db        (first ( filter #(= (:path %) current-db-path) all-dbs))
+                    inactive-dbs     (filter #(not= (:path %) current-db-path) all-dbs)
+                    sync-status      (if @(subscribe [:db/synced])
+                                       :running
+                                       :synchronising)]
+                (println [" all-dbs is -->" all-dbs])
+                ;(println ["items in all-dbs" (count @all-dbs)])
+                (println ["active-dbs is -->" active-db])
+                (println ["inactive-dbs is -->" inactive-dbs])
+                (println ["current db path is " current-db-path])
+                (println [" sync status is ==========>" sync-status])
 
-              [:<>
+                [:<>
                ;; DB Icon + Dropdown toggle
-               [button {:class [(when @ele "is-active")]
-                        :on-click #(reset! ele (.-currentTarget %))
-                        :style db-menu-button-style}
-                [db-icon {:db active-db
-                          :status :running}]]
-               ;; Dropdown menu
-               [m-popover
-                (merge (use-style dropdown-style)
-                       {:style {:font-size "14px"}
-                        :open            @ele
-                        :anchorEl        @ele
-                        :onClose         #(reset! ele nil)
-                        :anchorOrigin    #js{:vertical   "bottom"
-                                             :horizontal "left"}
-                        :marginThreshold 10
-                        :transformOrigin #js{:vertical   "top"
-                                             :horizontal "left"}
-                        :classes {:root "backdrop"
-                                  :paper "menu"}})
-                [:div (use-style (merge menu-style
-                                        {:overflow "visible"}))
-                 [:<>
-                  ;; Show active DB first
-                  [:div (use-style current-db-area-style)
-                   [db-list-item {:db active-db
-                                  :is-current true
-                                  :key (:path active-db)}]
-                   [current-db-tools {:db active-db}]]
-                  ;; Show all inactive DBs and a separator
-                  (doall
-                    (for [db inactive-dbs]
-                      [db-list-item {:db db
-                                     :is-current false
-                                     :key (:path db)}]))
-                  [:hr (use-style menu-separator-style)]
-                  ;; Add DB control
-                  [button {:on-click #(dispatch [:modal/toggle])}
+                 [button {:class [(when @ele "is-active")]
+                          :on-click #(reset! ele (.-currentTarget %))
+                          :style db-menu-button-style}
+                  [db-icon {:db active-db
+                            :status sync-status}]]
+                 ;; Dropdown menu
+                 [m-popover
+                  (merge (use-style dropdown-style)
+                         {:style {:font-size "14px"}
+                          :open            @ele
+                          :anchorEl        @ele
+                          :onClose         #(reset! ele nil)
+                          :anchorOrigin    #js{:vertical   "bottom"
+                                               :horizontal "left"}
+                          :marginThreshold 10
+                          :transformOrigin #js{:vertical   "top"
+                                               :horizontal "left"}
+                          :classes {:root "backdrop"
+                                    :paper "menu"}})
+                  [:div (use-style (merge menu-style
+                                          {:overflow "visible"}))
                    [:<>
-                    [:> AddCircleOutline]
-                    [:span "Add Database"]]]]]]]))
+                    ;; Show active DB first
+                    [:div (use-style current-db-area-style)
+                     [db-list-item {:db active-db
+                                    :is-current true
+                                    :key (:path active-db)}]
+                     [current-db-tools {:db active-db} all-dbs]]
+                    ;; Show all inactive DBs and a separator
+                    (doall
+                      (for [db inactive-dbs]
+                        [db-list-item {:db db
+                                       :is-current false
+                                       :key (:path db)}]))
+                    [:hr (use-style menu-separator-style)]
+                    ;; Add DB control
+                    [button {:on-click #(dispatch [:modal/toggle])}
+                     [:<>
+                      [:> AddCircleOutline]
+                      [:span "Add Database"]]]]]]])))
