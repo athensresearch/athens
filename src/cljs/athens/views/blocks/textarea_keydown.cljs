@@ -11,13 +11,12 @@
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [replace-first blank?]]
+    [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [clojure.string :refer [includes? lower-case]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -118,6 +117,7 @@
                (includes? (lower-case text) (lower-case query)))
              slash-options)))
 
+
 (defn update-query
   "Used by backspace and write-char.
   write-char appends key character. Pass empty string during backspace.
@@ -144,6 +144,8 @@
              :search/index 0
              :search/query new-query
              :search/results results))))
+
+
 ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
 ;; textarea setval will lose ability to undo/redo
 
