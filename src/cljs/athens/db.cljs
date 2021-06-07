@@ -124,16 +124,16 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
-  {:schema/version {}
-   :block/uid      {:db/unique :db.unique/identity}
-   :node/title     {:db/unique :db.unique/identity}
-   :attrs/lookup   {:db/cardinality :db.cardinality/many}
-   :block/children {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}
-   :block/refs     {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}
-   ;; to store remote last seen tx, for stale client detection
-   :remote/max-tx  {:db/cardinality :db.cardinality/one}})
+  {:schema/version      {}
+   :block/uid           {:db/unique :db.unique/identity}
+   :node/title          {:db/unique :db.unique/identity}
+   :attrs/lookup        {:db/cardinality :db.cardinality/many}
+   :block/children      {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/refs          {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/remote-id     {:db/unique :db.unique/identity}
+   :remote/db-id        {:db/unique :db.unique/identity}})
 
 
 (defonce dsdb (d/create-conn schema))
