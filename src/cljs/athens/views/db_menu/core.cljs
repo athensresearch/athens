@@ -87,10 +87,12 @@
        [button "Remove"]]
       [:<>
        [button {:onClick #(electron/move-dialog!)} "Move"]
-      ;[button {:onClick "Rename"]
+    ;; [button {:onClick "Rename"]
        [button {:onClick #(if (= 1 (count all-dbs))
                             (js/alert "Can't remove last db from the list")
-                            (dispatch [:db-picker/delete-db (:path db)]))}
+                            (do
+                              (dispatch [:db-picker/remove-db-from-list (:path db)])
+                              (dispatch [:db-picker/delete-db (:path db)])))}
                "Delete"]])]))
 
 
@@ -98,19 +100,12 @@
   []
   (r/with-let [ele (r/atom nil)]
               (let [current-db-path  @(subscribe [:db/filepath])
-                    all-dbs          @(subscribe [:db-picker/all-dbs]) ; is this correct ?
+                    all-dbs          @(subscribe [:db-picker/all-dbs])
                     active-db        (first ( filter #(= (:path %) current-db-path) all-dbs))
                     inactive-dbs     (filter #(not= (:path %) current-db-path) all-dbs)
                     sync-status      (if @(subscribe [:db/synced])
                                        :running
                                        :synchronising)]
-                (println [" all-dbs is -->" all-dbs])
-                ;(println ["items in all-dbs" (count @all-dbs)])
-                (println ["active-dbs is -->" active-db])
-                (println ["inactive-dbs is -->" inactive-dbs])
-                (println ["current db path is " current-db-path])
-                (println [" sync status is ==========>" sync-status])
-
                 [:<>
                ;; DB Icon + Dropdown toggle
                  [button {:class [(when @ele "is-active")]
