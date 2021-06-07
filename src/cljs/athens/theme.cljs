@@ -27,7 +27,7 @@
    ;; find in page styles
    :find-in-page-background          "#151515"
    :find-in-page-text-color          "white"
-   :find-in-page-icon-hover-bg-color "rgb(67 63 56 / 65%)"
+   :find-in-page-icon-hover-bg-color "rgb(67 63 56)"
    :find-in-page-text-color-light    "#cecece"})
 
 
@@ -54,7 +54,7 @@
    :error-color                      "#fd5243"
 
    ;; find in page styles
-   :find-in-page-background          "rgb(245 245 245 / 75%)"
+   :find-in-page-background          "rgb(245 245 245)"
    :find-in-page-text-color          "black"
    :find-in-page-icon-hover-bg-color "rgb(67 63 56 / 10%)"
    :find-in-page-text-color-light    "#3e3e3e"})

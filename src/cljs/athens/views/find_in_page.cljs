@@ -18,7 +18,7 @@
 
 (def electron (js/require "electron"))
 
-(defonce !find-window-id (atom nil))
+(defonce !find-browser-view (atom nil))
 
 (defonce !main-window-id (atom nil))
 
@@ -110,6 +110,18 @@
 ;; ---- life cycle ---
 
 
+(defn set-find-window!
+  []
+  (.. (window-id->window @!main-window-id)
+      (setBrowserView @!find-browser-view)))
+
+
+(defn remove-find-window!
+  []
+  (.. (window-id->window @!main-window-id)
+      (removeBrowserView @!find-browser-view)))
+
+
 (defn send-msg-to-find-window!
   [& msg]
   (.. electron -ipcRenderer
@@ -117,80 +129,39 @@
             (-> msg vec clj->js))))
 
 
-(defn get-find-win-pos
-  ([] (get-find-win-pos
-        (window-id->window @!main-window-id)))
-  ([win]
-   (let [[x y] (-> win (. getPosition) js->clj)
-         [_ y-win-size] (-> win (. getSize) js->clj)
-         [_ y-content-size] (-> win (. getContentSize) js->clj)]
-     [(+ x 20)
-      ;; + y 45(below toolbar) 25(title bar)
-      (+ y 45 (when-not (. win isFullScreen)
-                (- y-win-size y-content-size)))])))
-
-
 (defn init!
   []
-  (let [browser-win          (.. electron -remote -BrowserWindow)
-        win                  (. browser-win getFocusedWindow)
-        [x y] (get-find-win-pos win)
+  (let [browser-view (.. electron -remote -BrowserView)
+        browser-win  (.. electron -remote -BrowserWindow)
+        win          (. browser-win getFocusedWindow)]
 
-        adjust-find-win-post (fn [_]
-                               (let [[x y] (get-find-win-pos)]
-                                 (-> (window-id->window @!find-window-id)
-                                     (.. (setPosition x y)))))]
-
-    ;; find window setup
-    (-> (new browser-win
-             (clj->js
-               {:modal          false
-                :show           false
-                :x              x
-                :y              y
-
-                :width          350
-                :height         40
-
-                :movable        false
-                :resizable      false
-
-                :frame          false
-                :useContentSize true
-                :skipTaskbar    true
-                :hasShadow      true
-
-                :minimizable    false
-                :maximizable    false
-                :closable       false
-                :fullscreenable false
-
-                :parent         win
-
-                :webPreferences {:nodeIntegration       true
-                                 :enableRemoteModule    true
-                                 :nodeIntegrationWorker true
-                                 :contextIsolation      false
-                                 :webviewTag            true}}))
-        (. -id)
-        (#(reset! !find-window-id %)))
-
-    (.loadURL
-      ^js (window-id->window @!find-window-id)
-      (str "file://" js/__dirname "/find-in-page.html"))
-
-    ;; main window
     (reset! !main-window-id (. win -id))
 
-    ;; adjust find window's position on main resize
-    (.. (window-id->window @!main-window-id)
-        (on "resize" adjust-find-win-post))
+    ;; find window setup
+    (reset! !find-browser-view
+            (new browser-view
+                 (clj->js
+                   {:webPreferences {:nodeIntegration       true
+                                     :enableRemoteModule    true
+                                     :nodeIntegrationWorker true
+                                     :contextIsolation      false
+                                     :webviewTag            true}})))
 
-    (.. (window-id->window @!main-window-id)
-        (on "move" adjust-find-win-post))
+    ;; add to main and wait for basic things to load then remove
+    (set-find-window!)
 
-    (.. (window-id->window @!find-window-id)
-        (on "move" adjust-find-win-post))
+    (.. @!find-browser-view
+        (setBounds (clj->js {:x 20 :y 50
+                             :height 42 :width 350})))
+
+    (.. @!find-browser-view -webContents
+        (loadURL
+          (str "file://" js/__dirname "/find-in-page.html")))
+
+    (.. @!find-browser-view -webContents openDevTools)
+
+    ;; remove -> hide
+    (remove-find-window!)
 
     ;; send index (eg 4/10) to find window
     ;; it's inconsequential so directly send to find window
@@ -219,14 +190,16 @@
 
 (defn stop-find-in-page!
   []
-  (when @!find-window-id
-    (. (window-id->window @!find-window-id) hide)
-    (clear-current-selection)))
+  (remove-find-window!)
+  (.. (window-id->window @!main-window-id)
+      -webContents focus)
+  (clear-current-selection))
 
 
 (defn destroy-find-in-page!
   []
-  (. (window-id->window @!find-window-id) destroy))
+  (remove-find-window!)
+  (. @!find-browser-view destroy))
 
 
 (defn start-find-in-page!
@@ -234,10 +207,11 @@
    Search highlight also starts when window is open
    When opened send message to window with text and current theme"
   []
-  (if-let [find-win (window-id->window @!find-window-id)]
-    (. find-win show)
+  (if @!find-browser-view
+    (set-find-window!)
     (init!))
   (find-in-page!)
+  (.. @!find-browser-view -webContents focus)
   (send-msg-to-find-window!
     :opened {:text     (:text @(subscribe [::find-in-page-info]))
              :is-dark? @(subscribe [:theme/dark])}))

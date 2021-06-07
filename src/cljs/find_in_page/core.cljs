@@ -124,17 +124,22 @@
     [:html
      {:height      "100%"
       :font-family "IBM Plex Sans, Sans-Serif"
-      :background  find-in-page-background
-      :color       find-in-page-text-color}
-     [:body :#app :.find-in-page-root
-      {:height "100%"
-       :margin "0"}]
+      :color       find-in-page-text-color
+      :background  "transparent"}
+     [:body :#app
+      {:height     "100%"
+       :margin     "0"
+       :background "transparent"}]
      [:#app
       [:.find-in-page-root
-       {:padding     "0px 12px"
-        :visibility  "unset"
-        :display     "flex"
-        :align-items "center"}
+       {:height        "calc(100% - 2px)"
+        :background    find-in-page-background
+        :border        (str "1px solid " "#717171")
+        :border-radius "0.5rem"
+        :padding       "0px 12px"
+        :visibility    "unset"
+        :display       "flex"
+        :align-items   "center"}
        [:input
         {:background  "transparent"
          :flex        "1 0 auto"
