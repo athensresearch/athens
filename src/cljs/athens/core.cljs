@@ -124,4 +124,5 @@
     (rf/dispatch-sync [:boot/web]))
   (dev-setup)
   (mount-root)
-  (find-in-page/init!))
+  (when (util/electron?)
+    (find-in-page/init!)))

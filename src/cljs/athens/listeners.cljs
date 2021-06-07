@@ -116,7 +116,8 @@
             KeyCodes.A (router/navigate :pages)
             nil)
 
-      (= key-code KeyCodes.ESC) (find-in-page/stop-find-in-page!))))
+      (= key-code KeyCodes.ESC) (when (util/electron?)
+                                  (find-in-page/stop-find-in-page!)))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
@@ -217,7 +218,8 @@
             (.. e preventDefault)
             (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
             "Returning a string also prevents exit on other browsers.")
-          (find-in-page/destroy-find-in-page!))))))
+          (when (util/electron?)
+            (find-in-page/destroy-find-in-page!)))))))
 
 
 (defn init
