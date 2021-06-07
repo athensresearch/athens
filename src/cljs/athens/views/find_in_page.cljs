@@ -158,6 +158,7 @@
         (loadURL
           (str "file://" js/__dirname "/find-in-page.html")))
 
+    #_;; debug find-window
     (.. @!find-browser-view -webContents openDevTools)
 
     ;; remove -> hide
