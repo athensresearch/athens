@@ -17,12 +17,14 @@ Functionality:
 
 ## Decision
 
-There are 3 possible approaches to it
+There are 4 possible approaches to it
 1. Using an external lib like
     - https://github.com/glafche/electron-find-in-page
     - https://github.com/rhysd/electron-in-page-search
 2. Using highlight.js and dom modal
 3. Separate window and using webContents API(cljs)
+3. Using browserView and using webContents API(cljs)
+    - https://github.com/electron/electron/blob/v12.0.4/docs/api/browser-view.md 
 
 ### Prerequisites
 
@@ -76,9 +78,16 @@ Avoiding this due to:
 5. WebContents is faster and ensured to work without affecting dom.
 
 
+### Using browserView and using webContents API(cljs)
+
+1. All the pros of using a separate window but addresses the tiling issue
+2. BrowserView will always be relative to main window
+3. Docs mention to not use webview and use browserView as alternative
+
+
 ## Consequences
 
-Choosing "Separate window and using webContents API"
+Choosing "Using browserView and using webContents API(cljs)"
 
 1. We'd have readable cljs code all across
 2. Avoids external deps. 
