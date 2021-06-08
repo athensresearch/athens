@@ -95,6 +95,7 @@
                                  :font-family        "inherit"
                                  :visibility         "hidden"
                                  :position           "absolute"}]
+                     [:textarea ["::-webkit-scrollbar" {:display "none"}]]
                      [:textarea:focus
                       :.is-editing {:outline    "none"
                                     :visibility "visible"
