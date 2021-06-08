@@ -25,15 +25,9 @@
 
 (reg-event-db
   :init-rfdb
-  (fn [db [_]]
-    "This reframe db values are reset whenever a new db
-     is added i.e on open, move and add, due to this resetting
-     db-list also gets reset, we want to remember the previous
-     db so I think I should copy previous db list, reset it and
-     update the new rfdb with  db-list"
-    (let [previous-db-list (get db :db-picker/all-dbs)]
-      db/rfdb
-      (assoc db :db-picker/all-dbs previous-db-list))))
+  (fn [_ _]
+      db/rfdb))
+
 
 
 (reg-event-fx
