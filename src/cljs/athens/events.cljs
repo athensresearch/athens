@@ -1819,3 +1819,56 @@
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
+
+
+(reg-event-db
+ :remote/await-event
+ (fn [db [_ event]]
+   (js/console.log "await event" (pr-str event))
+   (update db :remote/awaited-events (fnil conj #{}) event)))
+
+
+(reg-event-db
+ :remote/accept-event
+ (fn [db [_ {:keys [event-id tx-id] :as acceptance-event}]]
+   (js/console.log "accept event" (pr-str acceptance-event))
+   (let [awaited-event   (->> (:remote/awaited-events db)
+                             (filter #(= event-id (:event/id %)))
+                             first)
+         acceptance-info {:event-id event-id
+                          :tx-id    tx-id
+                          :event    awaited-event}]
+     (-> db
+         (update :remote/awaited-events disj awaited-event)
+         (update :remote/accepted-events (fnil conj #{}) acceptance-info)))))
+
+
+(reg-event-db
+ :remote/reject-event
+ (fn [db [_ {:keys [event-id reason data] :as rejection-event}]]
+   (js/console.log "reject event" (pr-str rejection-event))
+   (let [awaited-event  (->> (:remote/awaited-events db)
+                             (filter #(= event-id (:event/id %)))
+                             first)
+         rejection-info {:event-id  event-id
+                         :rejection {:reason reason
+                                     :data   data}
+                         :event     awaited-event}]
+     (-> db
+         (update :remote/awaited-events disj awaited-event)
+         (update :remote/rejected-events (fnil conj #{}) rejection-info)))))
+
+
+(reg-event-db
+ :remote/fail-event
+ (fn [db [_ {:keys [event-id reason] :as failure-event}]]
+   (js/console.warn "fail event" (pr-str failure-event))
+   (let [awaited-event (->> (:remote/awaited-events db)
+                            (filter #(= event-id (:event/id %)))
+                            first)
+         failure-info  {:event-id event-id
+                        :reason   reason
+                        :event    awaited-event}]
+     (-> db
+         (update :remote/awaited-events disj awaited-event)
+         (update :remote/failed-events (fnil conj #{}) failure-info)))))

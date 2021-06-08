@@ -143,3 +143,26 @@
       (:db/remote-graph-conf db)
       {})))
 
+
+(re-frame/reg-sub
+ :remote/awaited-events
+ (fn [db _]
+   (:remote/awaited-events db #{})))
+
+
+(re-frame/reg-sub
+ :remote/accepted-events
+ (fn [db _]
+   (:remote/accepted-events db #{})))
+
+
+(re-frame/reg-sub
+ :remote/rejected-events
+ (fn [db _]
+   (:remote/rejected-events db #{})))
+
+
+(re-frame/reg-sub
+ :remote/failed-events
+ (fn [db _]
+   (:remote/failed-events db #{})))

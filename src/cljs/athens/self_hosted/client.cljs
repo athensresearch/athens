@@ -149,24 +149,18 @@
         :accepted
         (let [{:accepted/keys [tx-id]} packet]
           (js/console.log "Event" id "accepted in tx" tx-id)
-          (rf/dispatch [:remote-event/accepted {:event-id id
-                                                :tx-id    tx-id}]))
+          (rf/dispatch [:remote/accept-event {:event-id id
+                                              :tx-id    tx-id}]))
         :rejected
         (let [{:reject/keys [reason data]} packet]
           (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-          (rf/dispatch [:remote-event/rejected {:event-id id
-                                                :reason   reason
-                                                :data     data}]))))
+          (rf/dispatch [:remote/reject-event {:event-id id
+                                              :reason   reason
+                                              :data     data}]))))
     (let [explanation (schema/explain-event-response packet)]
       (js/console.warn "Received invalid response:" (pr-str explanation))
-      (rf/dispatch [:remote-event/failed {:event-id id
-                                          :reason   explanation}]))))
-
-
-(defn- add-remote-id
-  [{:keys [e] :as datom}]
-  (assoc datom
-         :db/remote-id e))
+      (rf/dispatch [:remote/fail-event {:event-id id
+                                        :reason   explanation}]))))
 
 
 (defn- build-addition-tx

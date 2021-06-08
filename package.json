@@ -80,7 +80,7 @@
     "electron-builder": "22.10",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
-    "karma": "^4.4.1",
+    "karma": "^6.3.3",
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
