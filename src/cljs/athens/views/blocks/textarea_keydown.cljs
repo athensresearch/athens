@@ -11,7 +11,7 @@
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [replace-first blank?]]
+    [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
@@ -114,7 +114,7 @@
   (if (blank? query)
     slash-options
     (filterv (fn [[text]]
-               (re-find (re-pattern (str "(?i)" query)) text))
+               (includes? (lower-case text) (lower-case query)))
              slash-options)))
 
 
