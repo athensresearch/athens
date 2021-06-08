@@ -168,7 +168,6 @@
   (when (seq additions)
     (let [e->tmp (set/map-invert tempids)]
       (reduce (fn [acc {:keys [_e a v _tx _added]}]
-                ;;
                 (assoc acc a (if (= :block/children a)
                                (get e->tmp v v)
                                v)))

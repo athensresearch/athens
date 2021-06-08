@@ -145,24 +145,36 @@
 
 
 (re-frame/reg-sub
- :remote/awaited-events
- (fn [db _]
-   (:remote/awaited-events db #{})))
+  :remote/awaited-events
+  (fn [db _]
+    (:remote/awaited-events db #{})))
 
 
 (re-frame/reg-sub
- :remote/accepted-events
- (fn [db _]
-   (:remote/accepted-events db #{})))
+  :remote/accepted-events
+  (fn [db _]
+    (:remote/accepted-events db #{})))
 
 
 (re-frame/reg-sub
- :remote/rejected-events
- (fn [db _]
-   (:remote/rejected-events db #{})))
+  :remote/rejected-events
+  (fn [db _]
+    (:remote/rejected-events db #{})))
 
 
 (re-frame/reg-sub
- :remote/failed-events
- (fn [db _]
-   (:remote/failed-events db #{})))
+  :remote/failed-events
+  (fn [db _]
+    (:remote/failed-events db #{})))
+
+
+(re-frame/reg-sub
+  :remote/last-seen-tx
+  (fn [db _]
+    (:remote/last-seen-tx db -1)))
+
+
+(re-frame/reg-sub
+  :remote/awaited-tx
+  (fn [db _]
+    (:remote/awaited-tx db #{})))

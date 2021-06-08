@@ -1822,53 +1822,89 @@
 
 
 (reg-event-db
- :remote/await-event
- (fn [db [_ event]]
-   (js/console.log "await event" (pr-str event))
-   (update db :remote/awaited-events (fnil conj #{}) event)))
+  :remote/await-event
+  (fn [db [_ event]]
+    (js/console.log "await event" (pr-str event))
+    (update db :remote/awaited-events (fnil conj #{}) event)))
 
 
 (reg-event-db
- :remote/accept-event
- (fn [db [_ {:keys [event-id tx-id] :as acceptance-event}]]
-   (js/console.log "accept event" (pr-str acceptance-event))
-   (let [awaited-event   (->> (:remote/awaited-events db)
+  :remote/await-tx
+  (fn [db [_ awaited-tx-id]]
+    (js/console.log "await tx" awaited-tx-id)
+    (update db :remote/awaited-tx (fnil conj #{}) awaited-tx-id)))
+
+
+(reg-event-db
+  :remote/accepted-event
+  (fn [db _]
+    (js/console.debug ":remote/accepted-event")
+    db))
+
+
+(reg-event-fx
+  :remote/accept-event
+  (fn [{db :db} [_ {:keys [event-id tx-id] :as acceptance-event}]]
+    (js/console.log "accept event" (pr-str acceptance-event))
+    (let [awaited-event   (->> (:remote/awaited-events db)
+                               (filter #(= event-id (:event/id %)))
+                               first)
+          acceptance-info {:event-id event-id
+                           :tx-id    tx-id
+                           :event    awaited-event}
+          last-seen-tx    (:remote/last-seen-tx db -1)
+          events          (cond-> []
+                            (< last-seen-tx tx-id)
+                            (conj [:remote/await-tx tx-id])
+                            true
+                            (conj [:remote/accepted-event]))]
+      {:db (-> db
+               (update :remote/awaited-events disj awaited-event)
+               (update :remote/accepted-events (fnil conj #{}) acceptance-info))
+       :fx [[:dispatch-n events]]})))
+
+
+(reg-event-db
+  :remote/reject-event
+  (fn [db [_ {:keys [event-id reason data] :as rejection-event}]]
+    (js/console.log "reject event" (pr-str rejection-event))
+    (let [awaited-event  (->> (:remote/awaited-events db)
+                              (filter #(= event-id (:event/id %)))
+                              first)
+          rejection-info {:event-id  event-id
+                          :rejection {:reason reason
+                                      :data   data}
+                          :event     awaited-event}]
+      (-> db
+          (update :remote/awaited-events disj awaited-event)
+          (update :remote/rejected-events (fnil conj #{}) rejection-info)))))
+
+
+(reg-event-db
+  :remote/fail-event
+  (fn [db [_ {:keys [event-id reason] :as failure-event}]]
+    (js/console.warn "fail event" (pr-str failure-event))
+    (let [awaited-event (->> (:remote/awaited-events db)
                              (filter #(= event-id (:event/id %)))
                              first)
-         acceptance-info {:event-id event-id
-                          :tx-id    tx-id
-                          :event    awaited-event}]
-     (-> db
-         (update :remote/awaited-events disj awaited-event)
-         (update :remote/accepted-events (fnil conj #{}) acceptance-info)))))
+          failure-info  {:event-id event-id
+                         :reason   reason
+                         :event    awaited-event}]
+      (-> db
+          (update :remote/awaited-events disj awaited-event)
+          (update :remote/failed-events (fnil conj #{}) failure-info)))))
 
 
 (reg-event-db
- :remote/reject-event
- (fn [db [_ {:keys [event-id reason data] :as rejection-event}]]
-   (js/console.log "reject event" (pr-str rejection-event))
-   (let [awaited-event  (->> (:remote/awaited-events db)
-                             (filter #(= event-id (:event/id %)))
-                             first)
-         rejection-info {:event-id  event-id
-                         :rejection {:reason reason
-                                     :data   data}
-                         :event     awaited-event}]
-     (-> db
-         (update :remote/awaited-events disj awaited-event)
-         (update :remote/rejected-events (fnil conj #{}) rejection-info)))))
+  :remote/updated-last-seen-tx
+  (fn [db _]
+    (js/console.debug ":remote/updated-last-seen-tx")
+    db))
 
 
-(reg-event-db
- :remote/fail-event
- (fn [db [_ {:keys [event-id reason] :as failure-event}]]
-   (js/console.warn "fail event" (pr-str failure-event))
-   (let [awaited-event (->> (:remote/awaited-events db)
-                            (filter #(= event-id (:event/id %)))
-                            first)
-         failure-info  {:event-id event-id
-                        :reason   reason
-                        :event    awaited-event}]
-     (-> db
-         (update :remote/awaited-events disj awaited-event)
-         (update :remote/failed-events (fnil conj #{}) failure-info)))))
+(reg-event-fx
+  :remote/last-seen-tx!
+  (fn [{db :db} [_ new-tx-id]]
+    (js/console.debug "last-seen-tx!" new-tx-id)
+    {:db (assoc db :remote/last-seen-tx new-tx-id)
+     :fx [[:dispatch [:remote/updated-last-seen-tx]]]}))
