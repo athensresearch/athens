@@ -374,7 +374,7 @@ newline = #'\\n'
   [text-run]
   (let [matches (re-seq uri-pattern text-run)]
     (if (seq matches)
-      (into [:textRun]
+      (into [:text-run]
             (loop [t   text-run
                    m   matches
                    acc []]
