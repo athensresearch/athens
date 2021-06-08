@@ -50,7 +50,7 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selected/items      []
+               :selected/items      #{}
                :theme/dark          false
                :graph-conf          default-graph-conf
                :db-picker/all-dbs   []}) ; all-dbs is a vector of map
