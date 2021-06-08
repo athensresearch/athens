@@ -301,26 +301,31 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items conj uid)))
+    (update db :selected/items (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (let [items (:selected/items db)]
-      (assoc db :selected/items (filterv #(not= % uid) items)))))
+    (update db :selected/items disj uid)))
+
+
+(reg-event-db
+  :selected/remove-items
+  (fn [db [_ uids]]
+    (update db :selected/items #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items concat uids)))
+    (update db :selected/items #(apply conj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items [])))
+    (assoc db :selected/items #{})))
 
 
 (defn select-up

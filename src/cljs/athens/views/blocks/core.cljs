@@ -197,7 +197,8 @@
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
-                        :search/type       nil              ; one of #{:page :block :slash :hashtag}
+                        ;; one of #{:page :block :slash :hashtag}
+                        :search/type       nil
                         :search/results    nil
                         :search/query      nil
                         :search/index      nil
@@ -208,19 +209,24 @@
                         :context-menu/y    nil
                         :context-menu/show false
                         :caret-position    nil
-                        :show-editable-dom   false
-                        :linked-ref/open (or (false? linked-ref) initial-open)})]
+                        :show-editable-dom false
+                        :linked-ref/open   (or (false? linked-ref) initial-open)})]
 
      (fn [block linked-ref-data opts]
-       (let [{:block/keys [uid string open children _refs]} block
-             uid-sanitized-block (s/transform
-                                   (specter-recursive-path #(contains? % :block/uid))
-                                   (fn [{:block/keys [original-uid uid] :as block}]
-                                     (assoc block :block/uid (or original-uid uid)))
-                                   block)
-             {:search/keys [] :keys [dragging]} @state
-             is-editing  @(rf/subscribe [:editing/is-editing uid])
-             is-selected @(rf/subscribe [:selected/is-selected uid])]
+       (let [{:block/keys [uid
+                           string
+                           open
+                           children
+                           _refs]} block
+             children-uids         (set (map :block/uid children))
+             uid-sanitized-block   (s/transform
+                                     (specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
+             {:keys [dragging]}    @state
+             is-editing            @(rf/subscribe [:editing/is-editing uid])
+             is-selected           @(rf/subscribe [:selected/is-selected uid])]
 
          ;; (prn uid is-selected)
 
@@ -231,23 +237,25 @@
            (swap! state assoc :string/previous string :string/local string))
 
          [:div
-          {:class          ["block-container"
-                            (when (and dragging (not is-selected)) "dragging")
-                            (when is-editing "is-editing")
-                            (when is-selected "is-selected")
-                            (when (and (seq children) open) "show-tree-indicator")
-                            (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
-           :data-uid       uid
+          {:class             ["block-container"
+                               (when (and dragging (not is-selected)) "dragging")
+                               (when is-editing "is-editing")
+                               (when is-selected "is-selected")
+                               (when (and (seq children) open) "show-tree-indicator")
+                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
+           :data-uid          uid
+           ;; need to know children for selection resolution
+           :data-childrenuids children-uids
            ;; :show-editable-dom allows us to render the editing elements (like the textarea)
            ;; even when not editing this block. When true, clicking the block content will pass
            ;; the clicks down to the underlying textarea. The textarea is expensive to render,
            ;; so we avoid rendering it when it's not needed.
-           :on-mouse-enter #(swap! state assoc :show-editable-dom true)
-           :on-mouse-leave #(swap! state assoc :show-editable-dom false)
-           :on-click       (fn [e] (doall (.. e stopPropagation) (rf/dispatch [:editing/uid uid])))
-           :on-drag-over   (fn [e] (block-drag-over e block state))
-           :on-drag-leave  (fn [e] (block-drag-leave e block state))
-           :on-drop        (fn [e] (block-drop e block state))}
+           :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
+           :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
+           :on-click          (fn [e] (doall (.. e stopPropagation) (rf/dispatch [:editing/uid uid])))
+           :on-drag-over      (fn [e] (block-drag-over e block state))
+           :on-drag-leave     (fn [e] (block-drag-leave e block state))
+           :on-drop           (fn [e] (block-drop e block state))}
 
           [presence/presence-popover-info uid {:inline? true}]
 
