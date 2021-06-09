@@ -274,9 +274,9 @@
       (let [val                 (cljs.reader/read-string
                                   (js/localStorage.getItem "db-picker/all-dbs"))
             current-db-filepath (:db/filepath db)]
-        (cond
-          (nil? val)  {:dispatch [:db-picker/add-new-db current-db-filepath]}
-          :else       {:db (assoc db :db-picker/all-dbs val)}))))
+        (if (nil? val)
+          {:dispatch [:db-picker/add-new-db current-db-filepath]}
+          {:db (assoc db :db-picker/all-dbs val)}))))
 
   (reg-event-fx
     :db-picker/remove-db-from-list
@@ -306,13 +306,11 @@
       is happening, instead show an alert describing the situation."
       (let [file-exists? (and db-path (.existsSync fs db-path))]
         (cond
-          file-exists? (cond
-                         synced? {:dispatch-n [[:db/update-filepath db-path]
-                                               [:boot/desktop]]}
-                         :else   {:dispatch  [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]})
-
-          :else        {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
-                                     [:db-picker/remove-db-from-list db-path]]}))))
+          (and file-exists? synced?)        {:dispatch-n [[:db/update-filepath db-path]
+                                                          [:boot/desktop]]}
+          (and file-exists? (not synced?))  {:dispatch   [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]}
+          :else                             {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
+                                                          [:db-picker/remove-db-from-list db-path]]}))))
 
   (reg-event-fx
     :db-picker/delete-db
