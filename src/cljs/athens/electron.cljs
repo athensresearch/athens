@@ -353,7 +353,7 @@
                                                                                   (open-dialog-index filepath))))              
               ] 
            (if (= (:schema db-file) db/schema) 
-                  ((write-db-index read-db filepath))(open-dialog-index filepath))))
+                  (write-db-index read-db filepath)(open-dialog-index filepath))))
            (let [confirm (js/window.confirm (str "No file selected. Would you like to create a new db?"))]
                               (if confirm 
                               (create-db-index "[]" filepath)
