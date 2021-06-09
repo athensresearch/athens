@@ -258,14 +258,18 @@
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items (into {}
+                          (assoc (:right-sidebar/items db) uid new-item))
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
                                new-items)
           sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
-                                                [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
        :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
                     [:right-sidebar/scroll-top]]})))
@@ -296,26 +300,31 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items conj uid)))
+    (update db :selected/items (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (let [items (:selected/items db)]
-      (assoc db :selected/items (filterv #(not= % uid) items)))))
+    (update db :selected/items disj uid)))
+
+
+(reg-event-db
+  :selected/remove-items
+  (fn [db [_ uids]]
+    (update db :selected/items #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items concat uids)))
+    (update db :selected/items #(apply conj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items [])))
+    (assoc db :selected/items #{})))
 
 
 (defn select-up

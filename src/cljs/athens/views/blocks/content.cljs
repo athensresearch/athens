@@ -1,18 +1,18 @@
 (ns athens.views.blocks.content
   (:require
-    [athens.db :as db]
-    [athens.electron :as electron]
-    [athens.events :as events]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.style :as style]
-    [athens.util :as util]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.config                        :as config]
+    [athens.db                            :as db]
+    [athens.electron                      :as electron]
+    [athens.parse-renderer                :refer [parse-and-render]]
+    [athens.style                         :as style]
+    [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [garden.selectors :as selectors]
-    [goog.events :as goog-events]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf]
-    [stylefy.core :as stylefy])
+    [clojure.set                          :as set]
+    [garden.selectors                     :as selectors]
+    [goog.events                          :as goog-events]
+    [komponentit.autosize                 :as autosize]
+    [re-frame.core                        :as rf]
+    [stylefy.core                         :as stylefy])
   (:import
     (goog.events
       EventType)))
@@ -193,33 +193,54 @@
    • 3
   Because of this bug, add additional exit cases to prevent stack overflow."
   [e source-uid target-uid]
-  (let [target (.. e -target)
-        page (or (.. target (closest ".node-page")) (.. target (closest ".block-page")))
-        blocks (->> (.. page (querySelectorAll ".block-container"))
-                    array-seq
-                    vec)
-        uids (map util/get-dataset-uid blocks)
-        start-idx (first (keep-indexed (fn [i uid] (when (= uid source-uid) i)) uids))
-        end-idx   (first (keep-indexed (fn [i uid] (when (= uid target-uid) i)) uids))]
-    (when (and start-idx end-idx)
-      (let [up? (> start-idx end-idx)
-            delta (js/Math.abs (- start-idx end-idx))
-            select-fn  (if up? events/select-up events/select-down)
-            start-uid (nth uids start-idx)
-            end-uid   (nth uids end-idx)
-            new-items (loop [new-items [source-uid]
-                             prev-items []]
-                        (cond
-                          (= prev-items new-items) new-items
-                          (> (count new-items) delta) new-items
-                          (nil? new-items) []
-                          (or (and (= (first new-items) start-uid)
-                                   (= (last new-items) end-uid))
-                              (and (= (last new-items) start-uid)
-                                   (= (first new-items) end-uid))) new-items
-                          :else (recur (select-fn new-items)
-                                       new-items)))]
-        (rf/dispatch [:selected/add-items new-items])))))
+  (let [target              (.. e -target)
+        page                (or (.. target (closest ".node-page"))
+                                (.. target (closest ".block-page")))
+        blocks              (->> (.. page (querySelectorAll ".block-container"))
+                                 array-seq
+                                 vec)
+        uids                (map util/get-dataset-uid blocks)
+        uids->children-uids (->> (zipmap uids
+                                         (map util/get-dataset-children-uids blocks))
+                                 (remove #(-> % second empty?))
+                                 (into {}))
+        indexed-uids        (map-indexed vector uids)
+        start-index         (->> indexed-uids
+                                 (filter (fn [[_idx uid]]
+                                           (= source-uid uid)))
+                                 ffirst)
+        end-index           (->> indexed-uids
+                                 (filter (fn [[_idx uid]]
+                                           (= target-uid uid)))
+                                 ffirst)
+        selected-uids       @(rf/subscribe [:selected/items])
+        candidate-uids      (->> indexed-uids
+                                 (filter (fn [[idx _uid]]
+                                           (<= (min start-index end-index)
+                                               idx
+                                               (max start-index end-index))))
+                                 (map second)
+                                 (into (or selected-uids #{})))
+        descendants-uids    (loop [descendants    #{}
+                                   ancestors-uids candidate-uids]
+                              (if (seq ancestors-uids)
+                                (let [ancestors-children (->> ancestors-uids
+                                                              (mapcat #(get uids->children-uids %))
+                                                              (into #{}))]
+                                  (recur (apply conj descendants ancestors-children)
+                                         ancestors-children))
+                                descendants))
+        to-remove-uids      (set/intersection selected-uids descendants-uids)
+        selection-new-uids  (set/difference candidate-uids descendants-uids)]
+    (when config/debug?
+      (js/console.debug (str "selection: " (pr-str selected-uids)
+                             ", candidates: " (pr-str candidate-uids)
+                             ", descendants: " (pr-str descendants-uids)
+                             ", rm: " (pr-str to-remove-uids)
+                             ", add: " (pr-str selection-new-uids))))
+    (when (and start-index end-index)
+      (rf/dispatch [:selected/remove-items to-remove-uids])
+      (rf/dispatch [:selected/add-items selection-new-uids]))))
 
 
 ;; Event Handlers
@@ -285,9 +306,14 @@
   "If shift key is held when user clicks across multiple blocks, select the blocks."
   [e target-uid _state]
   (let [[target-uid _] (db/uid-and-embed-id target-uid)
-        source-uid @(rf/subscribe [:editing/uid])]
-    (when (and source-uid target-uid (not= source-uid target-uid) (.. e -shiftKey))
-      (find-selected-items e source-uid target-uid))))
+        source-uid     @(rf/subscribe [:editing/uid])
+        shift?         (.-shiftKey e)]
+    (if (and shift?
+             source-uid
+             target-uid
+             (not= source-uid target-uid))
+      (find-selected-items e source-uid target-uid)
+      (rf/dispatch [:selected/clear-items]))))
 
 
 (defn global-mouseup
@@ -340,19 +366,19 @@
                         "1em")]
         [:div {:class "block-content" :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
-         [autosize/textarea {:value          (:string/local @state)
-                             :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
-                             ;; :auto-focus     true
-                             :id             (str "editable-uid-" uid)
-                             :on-change      (fn [e] (textarea-change e uid state))
-                             :on-paste       (fn [e] (textarea-paste e uid state))
-                             :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
-                             :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
-                             :on-click       (fn [e] (textarea-click e uid state))
-                             :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                             :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}]
+         ;; When block is in editing mode or the editing DOM elements are rendered
+         (when (or (:show-editable-dom @state) editing?)
+           [autosize/textarea {:value          (:string/local @state)
+                               :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
+                               ;; :auto-focus  true
+                               :id             (str "editable-uid-" uid)
+                               :on-change      (fn [e] (textarea-change e uid state))
+                               :on-paste       (fn [e] (textarea-paste e uid state))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
+                               :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                               :on-click       (fn [e] (textarea-click e uid state))
+                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
+                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}])
          ;; TODO pass `state` to parse-and-render
-         [parse-and-render (:string/local @state) (or original-uid uid)]
-         [drop-area-indicator/drop-area-indicator #(when (= :child (:drag-target @state)) {;; :color "green"
-                                                                                           :opacity 1})]]))))
+         [parse-and-render (:string/local @state) (or original-uid uid)]]))))
 
