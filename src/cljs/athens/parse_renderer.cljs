@@ -226,6 +226,8 @@
                                    :target "_blank"}
                                text]
                               [:span {:class "formatting"} ">"]])
+     :text-run              (fn [& contents]
+                              (apply conj [:span {:class "text-run"}] contents))
      :paragraph            (fn [& contents]
                              (apply conj [:p] contents))
      :bold                 (fn [& contents]

@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.88](https://github.com/athensresearch/athens/compare/v1.0.0-beta.87...v1.0.0-beta.88) (2021-06-06)
+
+
+### Bug Fixes
+
+* **#1289:** remove autocomplete on backspace of [[ or (( ([eacd2a3](https://github.com/athensresearch/athens/commit/eacd2a322bad0c2901d35f3d1d01e78d5040ca61)), closes [#1289](https://github.com/athensresearch/athens/issues/1289) [#1289](https://github.com/athensresearch/athens/issues/1289)
+
+## [1.0.0-beta.87](https://github.com/athensresearch/athens/compare/v1.0.0-beta.86...v1.0.0-beta.87) (2021-06-06)
+
+
+### Features
+
+* **athena:** Shift+Click opens in right sidebar, not just Shift+Enter ([#1272](https://github.com/athensresearch/athens/issues/1272)) ([13274dc](https://github.com/athensresearch/athens/commit/13274dc521b7c0e967f75a1b1dd657eab0dcf16c))
+
+
+### Bug Fixes
+
+* **blocks:** child drop-area-indicator shouldn't squish or be misplaced ([#1264](https://github.com/athensresearch/athens/issues/1264)) ([b04c5a2](https://github.com/athensresearch/athens/commit/b04c5a2eb55438988d697fc1dbf4f6e258966507))
+
+
+### Enhancements
+
+* **settings:** clarify language around autosave backups ([#1285](https://github.com/athensresearch/athens/issues/1285)) ([de86794](https://github.com/athensresearch/athens/commit/de867941dbd512a56536cd38f4b22b208941f323))
+
+
+### Documentation
+
+* Create a Contributor Covenant Code of Conduct ([#1210](https://github.com/athensresearch/athens/issues/1210)) ([f5d6a27](https://github.com/athensresearch/athens/commit/f5d6a27eaf692be222e9a264b845854e3654ec54))
+
+## [1.0.0-beta.86](https://github.com/athensresearch/athens/compare/v1.0.0-beta.85...v1.0.0-beta.86) (2021-06-02)
+
+
+### Bug Fixes
+
+* **selection:** Selection "freeze" ([#1273](https://github.com/athensresearch/athens/issues/1273)) ([b66bfa8](https://github.com/athensresearch/athens/commit/b66bfa84859088940a1d6280f61ced79196162be))
+
+
+### Performance
+
+* Only run the listener in dev mode ([#1215](https://github.com/athensresearch/athens/issues/1215)) ([b276963](https://github.com/athensresearch/athens/commit/b276963b6096887f68005073bd574619d1623953))
+
+
+### Documentation
+
+* update one liner in package.json and project.clj ([#1258](https://github.com/athensresearch/athens/issues/1258)) ([1b78701](https://github.com/athensresearch/athens/commit/1b7870161c0ded543ca073cae67af2ec4f6427fd))
+
 ## [1.0.0-beta.85](https://github.com/athensresearch/athens/compare/v1.0.0-beta.84...v1.0.0-beta.85) (2021-05-28)
 
 

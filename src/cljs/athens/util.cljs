@@ -106,8 +106,20 @@
 (defn get-dataset-uid
   [el]
   (let [block (when el (.. el (closest ".block-container")))
-        uid (when block (.. block -dataset -uid))]
+        uid   (when block (.getAttribute block "data-uid"))]
     uid))
+
+
+(defn get-dataset-children-uids
+  [el]
+  (let [block         (when el (.. el (closest ".block-container")))
+        children-uids (when block
+                        (let [dom-children-uids ^String (.getAttribute block "data-childrenuids")]
+                          (when-not (string/blank? dom-children-uids)
+                            (-> dom-children-uids
+                                (string/split #",")
+                                set))))]
+    children-uids))
 
 
 (defn get-caret-position
