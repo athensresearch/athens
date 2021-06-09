@@ -308,8 +308,8 @@
                                                              (let [uid (gen-block-uid)]
                                                                (dispatch [:athena/toggle])
                                                                (dispatch [:page/create query uid])
-                                                                          ;; TODO(agentydragon): Open the new page in sidebar if Shift is pressed.
-                                                                          ;; (navigate-uid uid e) does not work, because the page does not exist yet.
+                                                               ;; TODO(agentydragon): Open the new page in sidebar if Shift is pressed.
+                                                               ;; (navigate-uid uid e) does not work, because the page does not exist yet.
                                                                (navigate-uid uid)))
                                                  :class    (when (= i index) "selected")})
 
