@@ -26,13 +26,20 @@
 
 
 (defn hello-handler
-  [channel {:event/keys [id args last-tx]}]
-  (let [username (:username args)]
+  [datahike channel {:event/keys [id args last-tx]}]
+  (let [username (:username args)
+        max-tx   (-> datahike
+                     :conn
+                     deref
+                     :max-tx)]
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
-    ;; TODO broadcast new presence
+    (clients/broadcast! (common-events/build-presence-online username max-tx))
 
     ;; TODO send client updated entities
+    ;; 1. query for tx-ids since `last-tx`
+    ;; 2. query for all eavt touples from 1.
+    ;; 3. send! to client
 
     ;; confirm
     (common-events/build-event-accepted id -1)))
@@ -63,8 +70,8 @@
 
 
 (defn presence-handler
-  [channel {:event/keys [type] :as event}]
+  [datahike channel {:event/keys [type] :as event}]
   (condp = type
-    :presence/hello   (hello-handler channel event)
+    :presence/hello   (hello-handler datahike channel event)
     :presence/editing (editing-handler channel event)
     :presence/viewing (viewing-handler channel event)))

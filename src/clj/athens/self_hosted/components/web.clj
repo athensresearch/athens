@@ -52,7 +52,7 @@
             (let [event-type (:event/type data)
                   result     (cond
                                (contains? presence/supported-event-types event-type)
-                               (presence/presence-handler channel data)
+                               (presence/presence-handler datahike channel data)
 
                                (contains? datascript/supported-event-types event-type)
                                (datascript/datascript-handler datahike channel data))]

@@ -113,7 +113,9 @@
 
 
 (def server-event-types
-  [:enum :datascript/tx-log])
+  [:enum
+   :datascript/tx-log
+   :presence/online])
 
 
 (def server-event-common
@@ -141,10 +143,19 @@
      [:tempids map?]]]])
 
 
+(def presence-online
+  [:map
+   [:event/args
+    [:map
+     [:username string?]]]])
+
+
 (def server-event
   [:multi {:dispatch :event/type}
    [:datascript/tx-log (mu/merge server-event-common
-                                 tx-log)]])
+                                 tx-log)]
+   [:presence/online (mu/merge server-event-common
+                               presence-online)]])
 
 
 (def valid-server-event?

@@ -111,6 +111,15 @@
      :event/args    {:username username}}))
 
 
+(defn build-presence-online
+  [username last-tx]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/online
+     :event/args    {:username username}}))
+
+
 (defn build-tx-log-event
   [tx-report]
   (let [event-id          (gen-event-id)

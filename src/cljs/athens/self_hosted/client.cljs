@@ -220,13 +220,22 @@
   (js/console.log "<-" id ", last-tx:" last-tx ", type:" type)
   (js/console.debug "WSClient: server event:" (pr-str packet))
   (if (schema/valid-server-event? packet)
-    ;; TODO too oportunistic, for now works because server only produces one type of event tx-log
-    (let [txs (reconstruct-tx-from-log args)]
-      (js/console.debug "Reconstructed txs:" (pr-str txs))
-      (let [remote-tx-id (get-in args [:tempids :db/current-tx])
-            _result      (d/transact! db/dsdb txs)]
-        (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
-        (js/console.log "Transacted locally remote tx-id:" remote-tx-id)))
+
+    (condp = type
+
+      :datascript/tx-log
+      (let [txs (reconstruct-tx-from-log args)]
+        (js/console.debug "Reconstructed txs:" (pr-str txs))
+        (let [remote-tx-id (get-in args [:tempids :db/current-tx])
+              _result      (d/transact! db/dsdb txs)]
+          (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
+          (js/console.log "Transacted locally remote tx-id:" remote-tx-id)))
+
+      :presence/online
+      (let [username (:username args)]
+        ;; TODO manage connected users in re-frame
+        (js/console.log "User online:" username)))
+
     (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
 
 
