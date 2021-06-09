@@ -215,6 +215,23 @@
        (remove #(nil? (second %)))))
 
 
+(defn- ds-tx-log-handler
+  [args]
+  (let [txs (reconstruct-tx-from-log args)]
+    (js/console.debug "Reconstructed txs:" (pr-str txs))
+    (let [remote-tx-id (get-in args [:tempids :db/current-tx])
+          _result      (d/transact! db/dsdb txs)]
+      (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
+      (js/console.log "Transacted locally remote tx-id:" remote-tx-id))))
+
+
+(defn- presence-online-handler
+  [args]
+  (let [username (:username args)]
+    ;; TODO manage connected users in re-frame
+    (js/console.log "User online:" username)))
+
+
 (defn- server-event-handler
   [{:event/keys [id last-tx type args] :as packet}]
   (js/console.log "<-" id ", last-tx:" last-tx ", type:" type)
@@ -222,19 +239,8 @@
   (if (schema/valid-server-event? packet)
 
     (condp = type
-
-      :datascript/tx-log
-      (let [txs (reconstruct-tx-from-log args)]
-        (js/console.debug "Reconstructed txs:" (pr-str txs))
-        (let [remote-tx-id (get-in args [:tempids :db/current-tx])
-              _result      (d/transact! db/dsdb txs)]
-          (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
-          (js/console.log "Transacted locally remote tx-id:" remote-tx-id)))
-
-      :presence/online
-      (let [username (:username args)]
-        ;; TODO manage connected users in re-frame
-        (js/console.log "User online:" username)))
+      :datascript/tx-log (ds-tx-log-handler args)
+      :presence/online   (presence-online-handler args))
 
     (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
 
