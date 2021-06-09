@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.89](https://github.com/athensresearch/athens/compare/v1.0.0-beta.88...v1.0.0-beta.89) (2021-06-09)
+
+
+### Bug Fixes
+
+* when editing long block-page title, title overlaps with child block ([#1291](https://github.com/athensresearch/athens/issues/1291)) ([ed9568b](https://github.com/athensresearch/athens/commit/ed9568bbe326b0e4afcb99c8415f1337425e59c5))
+* **#1107:** drop support for *** for thematic-break ([#1203](https://github.com/athensresearch/athens/issues/1203)) ([b1d978e](https://github.com/athensresearch/athens/commit/b1d978e4d2893f0fc5f8612ef4737794c68c73fe)), closes [#1107](https://github.com/athensresearch/athens/issues/1107)
+* **#1277:** compare string without dangerous regex injection for slash cmd ([#1287](https://github.com/athensresearch/athens/issues/1287)) ([c1c4c2a](https://github.com/athensresearch/athens/commit/c1c4c2a11cded25017cbba4a9ca15f660cef032f)), closes [#1277](https://github.com/athensresearch/athens/issues/1277) [#1277](https://github.com/athensresearch/athens/issues/1277)
+* **click:** Clicking inside a block with hyperlink works on first attempt ([#1236](https://github.com/athensresearch/athens/issues/1236)) ([c619ecf](https://github.com/athensresearch/athens/commit/c619ecfe477cc8b503d504e32daf7e4e5f317f1d))
+
 ## [1.0.0-beta.88](https://github.com/athensresearch/athens/compare/v1.0.0-beta.87...v1.0.0-beta.88) (2021-06-06)
 
 
