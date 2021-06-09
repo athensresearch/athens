@@ -1,9 +1,8 @@
 (ns athens.self-hosted.web.presence
   (:require
-    [athens.common-events  :as common-events]
-    [clojure.data.json     :as json]
-    [clojure.tools.logging :as log]
-    [org.httpkit.server    :as http]))
+    [athens.common-events       :as common-events]
+    [athens.self-hosted.clients :as clients]
+    [clojure.tools.logging      :as log]))
 
 
 (defn- now
@@ -27,10 +26,10 @@
 
 
 (defn hello-handler
-  [clients ch {:event/keys [id args last-tx]}]
+  [channel {:event/keys [id args last-tx]}]
   (let [username (:username args)]
-    (log/info ch "New Client Intro:" username)
-    (swap! clients assoc ch username)
+    (log/info channel "New Client Intro:" username)
+    (clients/add-client! channel username)
     ;; TODO broadcast new presence
 
     ;; TODO send client updated entities
@@ -40,8 +39,8 @@
 
 
 (defn editing-handler
-  [clients ch {:event/keys [args]}]
-  (let [username (get clients ch)]
+  [channel {:event/keys [args]}]
+  (let [username (clients/get-client-username channel)]
     (when-let [uid (:editing args)]
       (let [presence {:presence {:time     (now)
                                  :id       (next-id)
@@ -54,19 +53,18 @@
             (if (> total 100)
               (ref-set all-presence (vec (drop (- total 100) all-presence*)))
               (ref-set all-presence all-presence*)))))
-      (doseq [client (keys @clients)]
-        (http/send! client (json/json-str (last @all-presence)))))))
+      (clients/broadcast! (last @all-presence)))))
 
 
 (defn viewing-handler
-  [_clients _ch _event]
+  [_channel _event]
   ;; TODO new viewing presence
   )
 
 
 (defn presence-handler
-  [clients ch {:event/keys [type] :as event}]
+  [channel {:event/keys [type] :as event}]
   (condp = type
-    :presence/hello   (hello-handler clients ch event)
-    :presence/editing (editing-handler clients ch event)
-    :presence/viewing (viewing-handler clients ch event)))
+    :presence/hello   (hello-handler channel event)
+    :presence/editing (editing-handler channel event)
+    :presence/viewing (viewing-handler channel event)))

@@ -1,112 +1,63 @@
 (ns athens.self-hosted.components.web
   (:require
     [athens.common-events.schema       :as schema]
+    [athens.self-hosted.clients        :as clients]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
     [clojure.tools.logging             :as log]
-    [cognitect.transit                 :as transit]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
-    [org.httpkit.server                :as http])
-  (:import
-    (datahike.datom
-      Datom)
-    (java.io
-      ByteArrayInputStream
-      ByteArrayOutputStream)))
-
-
-;; Internal state
-(defonce clients (atom {}))
-
-
-(def ^:private datom-writer
-  (transit/write-handler
-    "datom"
-    (fn [{:keys [e a v tx added]}]
-      [e a v tx added])))
-
-
-(defn- ->transit
-  [data]
-  (let [out    (ByteArrayOutputStream. 4096)
-        writer (transit/writer out :json {:handlers {Datom datom-writer}})]
-    (transit/write writer data)
-    (.toString out)))
-
-
-(defn- <-transit
-  [transit-str]
-  (let [in (ByteArrayInputStream. (.getBytes transit-str))
-        reader (transit/reader in :json)]
-    (transit/read reader)))
-
-
-(defn send!
-  "Send data to a client via `channel`"
-  [channel data]
-  (log/debug "->" (get @clients channel) ", data:" (pr-str data))
-  (http/send! channel (->transit data)))
-
-
-(defn broadcast!
-  "Broadcasts event to all connected clients"
-  [event]
-  (log/debug "Broadcasting:" (pr-str event))
-  (doseq [client (keys @clients)]
-    (send! client event)))
+    [org.httpkit.server                :as http]))
 
 
 ;; WebSocket handlers
 (defn open-handler
-  [ch]
-  (log/info ch "connected")
-  (swap! clients assoc ch true))
+  [channel]
+  (clients/add-client! channel))
 
 
 (defn close-handler
-  [ch status]
-  (let [ch-username         (get @clients ch)
-        presence-disconnect {:presence {:username   ch-username
+  [channel status]
+  (let [username            (clients/get-client-username channel)
+        presence-disconnect {:presence {:username   username
                                         :disconnect true}}]
-    (swap! clients dissoc ch)
-    (log/info ch ch-username "closed, status" status)
-    (when ch-username
-      (doseq [client (keys @clients)]
-        (send! client presence-disconnect)))))
+    (clients/remove-client! channel)
+    (log/info channel username "closed, status" status)
+    (when username
+      (clients/broadcast! presence-disconnect))))
 
 
 (defn- make-receive-handler
   [datahike]
   (fn receive-handler
-    [ch msg]
-    (log/debug ch "<-" msg)
-    (let [username (get @clients ch)
-          data     (<-transit msg)]
+    [channel msg]
+    (log/debug channel "<-" msg)
+    (let [username (clients/get-client-username channel)
+          data     (clients/<-transit msg)]
       (if-not (schema/valid-event? data)
         (let [explanation (schema/explain-event data)]
-          (log/warn ch "invalid event received:" explanation)
-          (send! ch {:event/id      (:event/id data)
-                     :event/status  :rejected
-                     :reject/reason explanation}))
+          (log/warn channel "invalid event received:" explanation)
+          (clients/send! channel {:event/id      (:event/id data)
+                                  :event/status  :rejected
+                                  :reject/reason explanation}))
         (do
-          (log/debug ch "decoded event" (pr-str data))
+          (log/debug channel "decoded event" (pr-str data))
           (if (and (nil? username)
                    (not= :presence/hello (:event/type data)))
             (do
-              (log/warn ch "Message out of order, didn't say :presence/hello.")
-              (send! ch {:event/id      (:event/id data)
-                         :event/status  :rejected
-                         :reject/reason :introduce-yourself}))
+              (log/warn channel "Message out of order, didn't say :presence/hello.")
+              (clients/send! channel {:event/id      (:event/id data)
+                                      :event/status  :rejected
+                                      :reject/reason :introduce-yourself}))
             (let [event-type (:event/type data)
                   result     (cond
                                (contains? presence/supported-event-types event-type)
-                               (presence/presence-handler clients ch data)
+                               (presence/presence-handler channel data)
 
                                (contains? datascript/supported-event-types event-type)
-                               (datascript/datascript-handler datahike ch data))]
-              (send! ch (merge {:event/id (:event/id data)}
-                               result)))))))))
+                               (datascript/datascript-handler datahike channel data))]
+              (clients/send! channel (merge {:event/id (:event/id data)}
+                                            result)))))))))
 
 
 (defn- make-websocket-handler

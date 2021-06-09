@@ -225,9 +225,8 @@
       (js/console.debug "Reconstructed txs:" (pr-str txs))
       (let [remote-tx-id (get-in args [:tempids :db/current-tx])
             _result      (d/transact! db/dsdb txs)]
-        (js/console.log "Transacted locally remote tx-id:" remote-tx-id))
-      ;; update re-frame db with last seen tx
-      )
+        (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
+        (js/console.log "Transacted locally remote tx-id:" remote-tx-id)))
     (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
 
 
@@ -341,8 +340,8 @@
   ;; send a `create-page` event
   (send! (common-events/build-page-create-event
           1
-          "test-uid-5"
-          "Test Page Title 5")))
+          "test-uid-6"
+          "Test Page Title 6")))
 
 
 (comment

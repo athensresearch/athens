@@ -4,17 +4,17 @@
   Component depends on `:datahike` for connection to listen on
   and `:webserver` for broadcasting to connected clients"
   (:require
-    [athens.common-events              :as common-events]
-    [athens.self-hosted.components.web :as web]
-    [clojure.tools.logging             :as log]
-    [com.stuartsierra.component        :as component]
-    [datahike.api                      :as d]))
+    [athens.common-events       :as common-events]
+    [athens.self-hosted.clients :as clients]
+    [clojure.tools.logging      :as log]
+    [com.stuartsierra.component :as component]
+    [datahike.api               :as d]))
 
 
 (defn- tx-report-handler
   [tx-report]
   (log/info "tx-report-handler" (pr-str tx-report))
-  (web/broadcast! (common-events/build-tx-log-event tx-report)))
+  (clients/broadcast! (common-events/build-tx-log-event tx-report)))
 
 
 (defn- start-listener!

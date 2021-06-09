@@ -1863,6 +1863,7 @@
                             (conj [:remote/await-tx tx-id])
                             true
                             (conj [:remote/accepted-event]))]
+      (js/console.debug "events to dispatch:" (pr-str events))
       {:db (-> db
                (update :remote/awaited-events disj awaited-event)
                (update :remote/accepted-events (fnil conj #{}) acceptance-info))
