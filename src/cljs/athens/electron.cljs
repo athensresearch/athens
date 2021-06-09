@@ -328,12 +328,16 @@
   
     ;; Update index.transit    
   (defn write-db-index [file filepath]
-    (.. fs (writeFile filepath file (fn [e] (dispatch [:boot/desktop]))))
+    (go   
+     (when-not (exists? (fs.writeFileSync filepath file))  
+     (js/alert "Backup file correctly restored, click Ok to re-start") 
+     (js/setTimeout #(dispatch [:boot/desktop]) 50))    
+    ) 
   )
   
   ;; Create new index.transit db
   (defn create-db-index [file filepath]
-    (.. fs (writeFile filepath file (fn [e] (dispatch [:fs/open-dialog]))))
+    (fs.writeFile filepath file (fn [e] (dispatch [:fs/open-dialog])))
   ) 
   
   (defn open-dialog-index
@@ -345,7 +349,7 @@
           open-file (first res)]
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
-              db-file      (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e))
+              db-file      (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e)) 
                                                                                   (open-dialog-index filepath))))              
               ] 
            (if (= (:schema db-file) db/schema) 
