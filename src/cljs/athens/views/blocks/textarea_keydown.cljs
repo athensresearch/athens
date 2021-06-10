@@ -226,15 +226,22 @@
 
   ([state target expansion]
    (let [{:search/keys [query]} @state
-         {:keys [end]} (destruct-target target)
-         query        (escape-str query)]
-
-     ;; assumption: cursor or selection is immediately before the closing brackets
+         {:keys [head tail start end]} (destruct-target target)
+         query                         (escape-str query)
+         start-idx                     (- start (-> head
+                                                    (clojure.string/reverse)
+                                                    (clojure.string/split #"\[\[")
+                                                    (first)
+                                                    (count)))
+         end-idx                       (+ end (-> tail
+                                                  (clojure.string/split #"\]\]")
+                                                  (first)
+                                                  (count)))]
 
      (when (not (nil? expansion))
-       (set-selection target (- end (count query)) end)
+       (set-selection target start-idx end-idx)
        (replace-selection-with expansion))
-     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
+     (let [new-cursor-pos (+ end-idx (- (count query)) (count expansion) 2)]
        (set-cursor-position target new-cursor-pos))
      (swap! state assoc :search/type nil))))
 
