@@ -32,8 +32,9 @@
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
        :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
        :reagent-render         (fn [block state]
-                                 (let [{:search/keys [query results index type] caret-position :caret-position} @state
-                                       {:keys [left top]} caret-position]
+                                 (let [{:search/keys [query results index type]
+                                        dropdown-position :dropdown-position} @state
+                                       {:keys [left top]} dropdown-position]
                                    (when (some #(= % type) [:page :block :hashtag])
                                      [:div (merge (stylefy/use-style dropdown/dropdown-style
                                                                      {:ref           #(reset! ref %)

@@ -702,7 +702,7 @@
        (re-find #"(?s).*\)\)" tail)))
 
 
-(defn in-search-context
+(defn get-search-context
   [{:keys [start value key-code key is-character-key?]}]
   (let [new-start      (cond
                          (= key-code KeyCodes.RIGHT)          (inc start)
@@ -714,8 +714,21 @@
         head-with-char (cond-> head
                          is-character-key? (str key))]
     (cond
-      (page-search? head-with-char tail)  {:search-head head :search-type :page}
-      (block-search? head-with-char tail) {:search-head head :search-type :block})))
+      (page-search? head-with-char tail)  {:search-head       head
+                                           :dropdown-position (- new-start (-> head-with-char
+                                                                               (clojure.string/reverse)
+                                                                               (clojure.string/split #"\[\[")
+                                                                               (first)
+                                                                               (count)))
+                                           :caret-position    start
+                                           :search-type       :page}
+      (block-search? head-with-char tail) {:search-head       head
+                                           :dropdown-position (- new-start (-> head-with-char
+                                                                               (clojure.string/reverse)
+                                                                               (clojure.string/split #"\(\(")
+                                                                               (first)
+                                                                               (count)))
+                                           :search-type       :block})))
 
 
 (defn textarea-key-down
@@ -756,11 +769,16 @@
       ;; Anchor dropdown to beginning of [[ or ((
       ;; Autocompleting mid-word should replace whole word
       ;; Slash dropdown is broken
-      (if-let [{:keys [search-type] :as search-context} (in-search-context d-event)]
+      (if-let [{:keys [search-type dropdown-position caret-position] :as search-context} (get-search-context d-event)]
         (let [search-query (search-query-from-context d-event search-context)]
+          (when (nil? (:dropdown-position @state))
+            (set-cursor-position (.. e -target) dropdown-position)
+            (swap! state assoc :dropdown-position (get-caret-position (.. e -target)))
+            (set-cursor-position (.. e -target) caret-position))
           (when (not= (:search/query @state) search-query)
             (update-query state search-query search-type)))
         (swap! state assoc
-               :search/type nil
-               :search/query nil)))))
+               :search/type       nil
+               :search/query      nil
+               :dropdown-position nil)))))
 

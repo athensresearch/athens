@@ -209,6 +209,7 @@
                         :context-menu/y    nil
                         :context-menu/show false
                         :caret-position    nil
+                        :dropdown-position nil
                         :show-editable-dom false
                         :linked-ref/open   (or (false? linked-ref) initial-open)})]
 
