@@ -64,6 +64,8 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
+        os         (get-os)
+        electron?  (electron?)
         modal      (rf/subscribe [:modal])]
     (fn []
       [:div (merge {:style {:display "contents"}}
@@ -89,11 +91,11 @@
          :else [:<>
                 (when @modal [filesystem/window])
                 [:div (use-style app-wrapper-style
-                                 {:class [(case (get-os)
+                                 {:class [(case os
                                             :windows "os-windows"
                                             :mac "os-mac"
                                             :linux "os-linux")
-                                          (when (electron?) "is-electron")]})
+                                          (when electron? "is-electron")]})
                  [app-toolbar/app-toolbar]
                  [left-sidebar/left-sidebar]
                  [pages/view]
