@@ -349,8 +349,8 @@
           open-file (first res)]
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
-              db-file      (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e)) 
-                                                                                  (open-dialog-index filepath))))              
+              db-file      (try  (dt/read-transit-str read-db)(catch  :default e (do (js/console.error (js/Error. e)) 
+                                                                                     (open-dialog-index filepath))))              
               ] 
            (if (= (:schema db-file) db/schema) 
                   (write-db-index read-db filepath)(open-dialog-index filepath))))
@@ -363,8 +363,8 @@
   ;; Handle index.transit 
   (defn handle-index-transit [filepath]  
     (let [read-db (.readFileSync fs filepath)
-          db-file    (try  (dt/read-transit-str read-db)(catch  :default e ((js/console.error (js/Error. e))
-                                                                            (open-dialog-index filepath))))    
+          db-file    (try  (dt/read-transit-str read-db)(catch  :default e (do (js/console.error (js/Error. e))
+                                                                               (open-dialog-index filepath))))    
           ]
         (when (not= (:schema db-file) db/schema) (open-dialog-index filepath))
          (dispatch [:fs/watch filepath])
