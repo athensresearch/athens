@@ -128,6 +128,12 @@
                       ["button:not(:hover):not(.is-active)" {:background "transparent"}]]]})
 
 
+(def athena-button-label-style
+  {:padding-left "1rem"
+   :padding-right "1rem"
+   ::stylefy/media {{:max-width "800px"} {:display "none"}}})
+
+
 (def app-header-control-section-style
   {:display "grid"
    :grid-auto-flow "column"
@@ -144,9 +150,8 @@
 
 (def separator-style
   {:border 0
-   :margin-inline "0.5rem"
+   :margin-inline "0.125rem"
    :margin-block 0
-   :inline-size "1px"
    :block-size "auto"})
 
 
@@ -225,9 +230,10 @@
          #_[button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
          [button {:on-click #(dispatch [:athena/toggle])
-                  :style    {:width "14rem" :background (color :background-minus-1)}
+                  :class "athena"
+                  :style    {:background "inherit"}
                   :active   @(subscribe [:athena/open])}
-          [:<> [:> Search] [:span "Find or Create a Page"]]]]
+          [:<> [:> Search] [:span (use-style athena-button-label-style) "Find or Create a Page"]]]]
 
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
