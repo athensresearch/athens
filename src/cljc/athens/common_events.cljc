@@ -111,6 +111,15 @@
      :event/args    {:username username}}))
 
 
+(defn build-db-dump
+  [datoms last-tx]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/db-dump
+     :event/args    {:datoms datoms}}))
+
+
 (defn build-presence-online
   [username last-tx]
   (let [event-id (gen-event-id)]

@@ -169,10 +169,9 @@
     (let [e->tmp (set/map-invert tempids)]
       (reduce (fn [acc {:keys [_e a v _tx _added]}]
                 (assoc acc a (if (= :block/children a)
-                               (get e->tmp v v)
+                               (get e->tmp v [:remote/db-id v])
                                v)))
-              {:db/id        (or (get e->tmp e-id)
-                                 [:remote/db-id e-id])
+              {:db/id        (get e->tmp e-id [:remote/db-id e-id])
                :remote/db-id e-id}
               additions))))
 
@@ -212,7 +211,8 @@
        (remove #(= :db/txInstant (:a %)))
        (group-by :e)
        (mapcat (partial tx-log->tx tempids))
-       (remove #(nil? (second %)))))
+       (remove #(nil? (second %)))
+       (sort-by :tx)))
 
 
 (defn- ds-tx-log-handler
@@ -223,6 +223,44 @@
           _result      (d/transact! db/dsdb txs)]
       (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
       (js/console.log "Transacted locally remote tx-id:" remote-tx-id))))
+
+
+(defn- reconstruct-entities-from-db-dump
+  [datoms]
+  (js/console.debug "Reconstructing tx from db dump of" (count datoms) "datoms")
+  (let [insert-id    (comp - inc)
+        new-entities (->> datoms
+                          (remove #(contains? #{:db/txInstant
+                                                :db/ident
+                                                :db/cardinality
+                                                :db/valueType
+                                                :db/unique}
+                                              (second %))) ; attribute
+                          (group-by first) ; entity
+                          (reduce (fn [acc [e-id datoms]]
+                                    (assoc acc e-id
+                                           (reduce (fn [entity [_ a v :as datom]]
+                                                     (assoc entity a
+                                                            (if (= :block/children a)
+                                                              (conj (:block/children entity #{})
+                                                                    (insert-id v))
+                                                              v)))
+                                                   {:db/id        (insert-id e-id)
+                                                    :remote/db-id e-id}
+                                                   datoms)))
+                                  {})
+                          vals)]
+    (js/console.debug "Reconstructed" (count new-entities) "entities")
+    new-entities))
+
+
+(defn- db-dump-handler
+  [last-tx {:keys [datoms] :as args}]
+  (let [txs (reconstruct-entities-from-db-dump datoms)]
+    (js/console.debug "db dump. to transact:" (pr-str txs))
+    (d/transact! db/dsdb txs)
+    (rf/dispatch [:remote/last-seen-tx! last-tx])
+    (js/console.log "Transacted DB dump, till tx" last-tx)))
 
 
 (defn- presence-online-handler
@@ -239,8 +277,9 @@
   (if (schema/valid-server-event? packet)
 
     (condp = type
-      :datascript/tx-log (ds-tx-log-handler args)
-      :presence/online   (presence-online-handler args))
+      :datascript/tx-log  (ds-tx-log-handler args)
+      :datascript/db-dump (db-dump-handler last-tx args)
+      :presence/online    (presence-online-handler args))
 
     (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
 

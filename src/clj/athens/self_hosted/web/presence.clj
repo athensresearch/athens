@@ -2,7 +2,8 @@
   (:require
     [athens.common-events       :as common-events]
     [athens.self-hosted.clients :as clients]
-    [clojure.tools.logging      :as log]))
+    [clojure.tools.logging      :as log]
+    [datahike.api               :as d]))
 
 
 (defn- now
@@ -36,13 +37,20 @@
     (clients/add-client! channel username)
     (clients/broadcast! (common-events/build-presence-online username max-tx))
 
-    ;; TODO send client updated entities
+    (let [datoms (d/q '[:find ?e ?a ?v ?t ?add
+                        :where [?e ?a ?v ?t ?add]]
+                      @(:conn datahike))]
+      (log/debug channel "Sending" (count datoms) "eavt")
+      (clients/send! channel
+                     (common-events/build-db-dump datoms max-tx)))
+
+    ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
     ;; 2. query for all eavt touples from 1.
     ;; 3. send! to client
 
     ;; confirm
-    (common-events/build-event-accepted id -1)))
+    (common-events/build-event-accepted id max-tx)))
 
 
 (defn editing-handler

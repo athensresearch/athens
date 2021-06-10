@@ -115,6 +115,7 @@
 (def server-event-types
   [:enum
    :datascript/tx-log
+   :datascript/db-dump
    :presence/online])
 
 
@@ -131,7 +132,7 @@
    [:a keyword?]
    [:v any?]
    [:tx int?]
-   [:added boolean?]])
+   [:added {:optional true} boolean?]])
 
 
 (def tx-log
@@ -141,6 +142,14 @@
      [:tx-data
       [:vector datom]]
      [:tempids map?]]]])
+
+
+(def db-dump
+  [:map
+   [:event/args
+    [:map
+     [:datoms
+      [:set vector?]]]]])
 
 
 (def presence-online
@@ -154,6 +163,8 @@
   [:multi {:dispatch :event/type}
    [:datascript/tx-log (mu/merge server-event-common
                                  tx-log)]
+   [:datascript/db-dump (mu/merge server-event-common
+                                  db-dump)]
    [:presence/online (mu/merge server-event-common
                                presence-online)]])
 
