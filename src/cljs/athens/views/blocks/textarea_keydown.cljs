@@ -687,31 +687,35 @@
 
 
 (defn page-search?
-  [head]
-  (some->> (clojure.string/reverse head)
-           (re-find #"(?s)[^\]\]]*")
-           (re-find #"(?s).*\[\[")))
+  [head tail]
+  (and (some->> (clojure.string/reverse head)
+                (re-find #"(?s)[^\]\]]*")
+                (re-find #"(?s).*\[\["))
+       (re-find #"(?s).*\]\]" tail)))
 
 
 (defn block-search?
-  [head]
-  (some->> (clojure.string/reverse head)
-           (re-find #"(?s)[^\)\)]*")
-           (re-find #"(?s).*\(\(")))
+  [head tail]
+  (and (some->> (clojure.string/reverse head)
+                (re-find #"(?s)[^\)\)]*")
+                (re-find #"(?s).*\(\("))
+       (re-find #"(?s).*\)\)" tail)))
 
 
 (defn in-search-context
   [{:keys [start value key-code key is-character-key?]}]
-  (let [new-start (cond
-                    (= key-code KeyCodes.RIGHT)          (inc start)
-                    (or (= key-code KeyCodes.LEFT)
-                        (= key-code KeyCodes.BACKSPACE)) (dec start)
-                    :else start)
-        head      (cond-> (subs value 0 new-start)
-                      is-character-key? (str key))]
+  (let [new-start      (cond
+                         (= key-code KeyCodes.RIGHT)          (inc start)
+                         (or (= key-code KeyCodes.LEFT)
+                             (= key-code KeyCodes.BACKSPACE)) (dec start)
+                         :else start)
+        head           (subs value 0 new-start)
+        tail           (subs value new-start)
+        head-with-char (cond-> head
+                         is-character-key? (str key))]
     (cond
-      (page-search? head)  {:search-head (subs value 0 new-start) :search-type :page}
-      (block-search? head) {:search-head (subs value 0 new-start) :search-type :block})))
+      (page-search? head-with-char tail)  {:search-head head :search-type :page}
+      (block-search? head-with-char tail) {:search-head head :search-type :block})))
 
 
 (defn textarea-key-down
