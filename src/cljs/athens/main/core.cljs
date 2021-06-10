@@ -62,7 +62,7 @@
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600
-                                  :minWidth 670
+                                  :minWidth 670 ;; Minimum width before clipping in toolbar
                                   :minHeight 300
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true

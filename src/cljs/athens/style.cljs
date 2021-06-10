@@ -182,6 +182,7 @@
 
 
 ;; Zoom levels mirror Google Chrome browser zoom levels.
+;; Levels determined by zooming Chrome in/out and recording the zoom percent.
 (def zoom-levels
   {-5 50
    -4 67
