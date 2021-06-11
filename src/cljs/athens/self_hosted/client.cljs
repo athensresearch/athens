@@ -180,9 +180,12 @@
   [e-id retractions]
   (when (seq retractions)
     (reduce (fn [acc {:keys [_e a v _tx _added]}]
-              (conj acc [:db/retract [:remote/db-id e-id] a (if (= :block/children a)
-                                                              [:remote/db-id v]
-                                                              v)]))
+              (conj acc [:db/retract
+                         [:remote/db-id e-id]
+                         a
+                         (if (= :block/children a)
+                           [:remote/db-id v]
+                           v)]))
             []
             retractions)))
 
@@ -216,51 +219,53 @@
 
 
 (defn- ds-tx-log-handler
-  [args]
-  (let [txs (reconstruct-tx-from-log args)]
-    (js/console.debug "Reconstructed txs:" (pr-str txs))
-    (let [remote-tx-id (get-in args [:tempids :db/current-tx])
-          _result      (d/transact! db/dsdb txs)]
-      (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
-      (js/console.log "Transacted locally remote tx-id:" remote-tx-id))))
+  [{:keys [tx-data tempids] :as args}]
+  (js/console.debug "Received TX Log with" (count tx-data) "datoms.")
+  (let [txs          (reconstruct-tx-from-log args)
+        remote-tx-id (:db/current-tx tempids)]
+    (js/console.debug "Reconstructed" (count txs) "DB changes")
+    (d/transact! db/dsdb txs)
+    (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
+    (js/console.log "✅ Transacted locally. last-seen-tx" remote-tx-id)))
 
 
 (defn- reconstruct-entities-from-db-dump
   [datoms]
   (js/console.debug "Reconstructing tx from db dump of" (count datoms) "datoms")
-  (let [insert-id    (comp - inc)
-        new-entities (->> datoms
-                          (remove #(contains? #{:db/txInstant
-                                                :db/ident
-                                                :db/cardinality
-                                                :db/valueType
-                                                :db/unique}
-                                              (second %))) ; attribute
-                          (group-by first) ; entity
-                          (reduce (fn [acc [e-id datoms]]
-                                    (assoc acc e-id
-                                           (reduce (fn [entity [_ a v :as datom]]
-                                                     (assoc entity a
-                                                            (if (= :block/children a)
-                                                              (conj (:block/children entity #{})
-                                                                    (insert-id v))
-                                                              v)))
-                                                   {:db/id        (insert-id e-id)
-                                                    :remote/db-id e-id}
-                                                   datoms)))
-                                  {})
-                          vals)]
-    (js/console.debug "Reconstructed" (count new-entities) "entities")
-    new-entities))
+  (let [insert-id (comp - inc)]
+    (->> datoms
+         (remove #(contains? #{:db/txInstant
+                               :db/ident
+                               :db/cardinality
+                               :db/valueType
+                               :db/unique}
+                             ;; attribute
+                             (second %)))
+         ;; group by entity id
+         (group-by first)
+         (reduce (fn [acc [entity-id datoms]]
+                   (assoc acc entity-id
+                          (reduce (fn [entity [_ a v]]
+                                    (assoc entity a
+                                           (if (= :block/children a)
+                                             (conj (:block/children entity #{})
+                                                   (insert-id v))
+                                             v)))
+                                  {:db/id        (insert-id entity-id)
+                                   :remote/db-id entity-id}
+                                  datoms)))
+                 {})
+         vals)))
 
 
 (defn- db-dump-handler
   [last-tx {:keys [datoms] :as args}]
-  (let [txs (reconstruct-entities-from-db-dump datoms)]
-    (js/console.debug "db dump. to transact:" (pr-str txs))
-    (d/transact! db/dsdb txs)
+  (js/console.debug "Received DB Dump")
+  (let [entities (reconstruct-entities-from-db-dump datoms)]
+    (js/console.debug "Reconstructed" (count entities) "entities")
+    (d/transact! db/dsdb entities)
     (rf/dispatch [:remote/last-seen-tx! last-tx])
-    (js/console.log "Transacted DB dump, till tx" last-tx)))
+    (js/console.log "✅ Transacted DB dump. last-seen-tx" last-tx)))
 
 
 (defn- presence-online-handler

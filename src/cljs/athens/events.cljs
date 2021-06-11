@@ -230,6 +230,7 @@
 (reg-event-fx
   :no-op
   (fn [_ _]
+    (js/console.warn "Called :no-op re-frame event, this shouldn't be happening.")
     {}))
 
 
