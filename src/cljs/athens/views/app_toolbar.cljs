@@ -146,7 +146,7 @@
                [:<>
                 [:> Replay]
                 [:span "Re-connect with remote"]]])
-            #_ [button {:on-click #(swap! merge-open? not)
+            [button {:on-click #(swap! merge-open? not)
                      :title "Merge Roam Database"}
              [:> MergeType]]
             [button {:on-click #(router/navigate :settings)
