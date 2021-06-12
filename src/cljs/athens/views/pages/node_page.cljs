@@ -161,7 +161,7 @@
    :border-radius "1000px"
    :padding "0.375rem 0.5rem"
    :color (color :body-text-color :opacity-high)
-   :top "0.5rem"})
+   :top "1.25rem"})
 
 
 ;; Helpers
