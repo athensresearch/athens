@@ -154,8 +154,6 @@
                      :active   (= @route-name :settings)}
              [:> Settings]]
 
-            #_ [button {:on-click #(dispatch [:modal/toggle])
-                     :title "Choose Database"}
              [:div {:style {:display "flex"}}
               [:> Storage {:style {:align-self "center"}}]
               [:div {:style {:margin-left "-10px"
