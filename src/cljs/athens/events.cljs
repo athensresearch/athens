@@ -465,7 +465,7 @@
 ;; Appearance Preferences
 
 
-(reg-event-db
+#_(reg-event-db
   :appearance/set-width
   (fn [db [_ width]]
     (assoc db :appearance/width width)))
@@ -614,26 +614,16 @@
     (let [is-dark (= "true" local-storage)
           theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
       {:db          (assoc db :theme/dark is-dark)
-       :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
-
-
-(reg-event-fx
-  :theme/toggle
-  (fn [{:keys [db]} _]
-    (let [dark?    (:theme/dark db)
-          new-dark (not dark?)
-          theme    (if dark? style/THEME-LIGHT style/THEME-DARK)]
-      {:db                 (assoc db :theme/dark new-dark)
-       :local-storage/set! ["theme/dark" new-dark]
-       :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
-
+       :stylefy/tag [":root" (style/permute-color-opacities theme)]
+       :dispatch [:pdb]})))
 
 (reg-event-fx
   :theme/set-dark
   (fn [{:keys [db]} _]
     {:db                 (assoc db :theme/dark true)
      :local-storage/set! ["theme/dark" true]
-     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-DARK)]}))
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-DARK)]
+     :dispatch [:pdb]}))
 
 
 (reg-event-fx
@@ -641,8 +631,15 @@
   (fn [{:keys [db]} _]
     {:db                 (assoc db :theme/dark false)
      :local-storage/set! ["theme/dark" false]
-     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]}))
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]
+     :dispatch [:pdb]}))
 
+(reg-event-fx
+  :appearance/set-width
+  (fn [{:keys [db]} [_ width]]
+    {:db                 (assoc db :appearance/width width)
+     :local-storage/set! ["appearance/width" width]
+     :dispatch [:pdb]}))
 
 ;; Datascript
 

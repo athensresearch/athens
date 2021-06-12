@@ -4,12 +4,14 @@
     [athens.db :as db]
     [athens.patterns :as patterns]
     [athens.util :as util]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]
+    [athens.style :as style]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -80,6 +82,7 @@
               db      (dt/read-transit-str read-db)]
           (dispatch-sync [:remote-graph/set-conf :default? false])
           (dispatch-sync [:init-rfdb])
+          (dispatch [:local-storage/set-rfdb])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
           (dispatch [:db/update-filepath open-file])
@@ -104,6 +107,7 @@
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
               (dispatch-sync [:init-rfdb])
+              (dispatch [:local-storage/set-rfdb])
               (.mkdirSync fs dir)
               (.mkdirSync fs dir-images)
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
@@ -251,6 +255,7 @@
         {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
                       [:transact athens-datoms/datoms]]})))
+                      ;[:local-storage/set-rfdb]]})))
 
 
   (reg-event-fx
@@ -315,6 +320,37 @@
             mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
         (assoc db :db/mtime mtime))))
 
+  (reg-event-fx
+    :local-storage/set-rfdb
+    [(inject-cofx :local-storage-map {:ls-key "theme/dark"
+                                      :key    :theme-dark?})
+     (inject-cofx :local-storage-map {:ls-key "appearance/width"
+                                      :key    :appearance-width})]
+    (fn [{:keys [theme-dark? appearance-width db]} []]
+      "This event will be triggered whenever we need to set re-frame db with values from
+      local storage. Which currently happens whenever:
+      - Athens is started
+      - A new db is opened or added"
+      (println "From local storage to rfdb")
+      (if (and theme-dark? appearance-width)
+       {:dispatch-n  [[:associate-key-val :appearance/width appearance-width]
+                      [:associate-key-val :theme/dark       theme-dark?]
+                      [:pdb]]}
+       {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
+                      [:associate-key-val :theme/dark       (:theme/dark db)]
+                      [:pdb]]})))
+
+
+  (reg-event-fx
+    :associate-key-val
+    (fn [{:keys [db]} [_ k v]]
+      (println ["asked to set -->" k "to val -->" v])
+      {:db (assoc db k v)}))
+
+  (reg-event-db
+    :pdb
+    (fn [db]
+      (println ["width is -->"(:appearance/width db) "theme is --->" (:theme/dark db)])))
 
   ;; if localStorage is empty, assume first open
   ;; create a Documents/athens directory and Documents/athens/db.transit file
@@ -340,7 +376,8 @@
                                                        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
+                                                                                   (dispatch [:reset-conn db])
+                                                                                   (dispatch [:local-storage/set-rfdb]))
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
