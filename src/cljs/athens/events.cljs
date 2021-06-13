@@ -462,15 +462,6 @@
     {:alert/js! message}))
 
 
-;; Appearance Preferences
-
-
-(reg-event-db
-  :appearance/set-width
-  (fn [db [_ width]]
-    (assoc db :appearance/width width)))
-
-
 ;; Modal
 
 
@@ -618,17 +609,6 @@
 
 
 (reg-event-fx
-  :theme/toggle
-  (fn [{:keys [db]} _]
-    (let [dark?    (:theme/dark db)
-          new-dark (not dark?)
-          theme    (if dark? style/THEME-LIGHT style/THEME-DARK)]
-      {:db                 (assoc db :theme/dark new-dark)
-       :local-storage/set! ["theme/dark" new-dark]
-       :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
-
-
-(reg-event-fx
   :theme/set-dark
   (fn [{:keys [db]} _]
     {:db                 (assoc db :theme/dark true)
@@ -642,6 +622,14 @@
     {:db                 (assoc db :theme/dark false)
      :local-storage/set! ["theme/dark" false]
      :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]}))
+
+
+(reg-event-fx
+  :appearance/set-width
+  (fn [{:keys [db]} [_ width]]
+    "Need to serialize width then store in local storage because width is a symbol "
+    {:db                 (assoc db :appearance/width width)
+     :local-storage/set! ["appearance/width" (pr-str width)]}))
 
 
 ;; Datascript
