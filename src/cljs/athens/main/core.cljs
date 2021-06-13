@@ -1,3 +1,4 @@
+^:cljstyle/ignore
 (ns athens.main.core
   (:require
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
@@ -62,7 +63,7 @@
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600
-                                  :minWidth 670 ;; Minimum width before clipping in toolbar
+                                  :minWidth 800 ;; Minimum width before clipping in toolbar
                                   :minHeight 300
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true
