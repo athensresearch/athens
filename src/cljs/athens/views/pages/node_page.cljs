@@ -143,7 +143,7 @@
 
 (def references-group-block-style
   {:border-top [["1px solid " (color :border-color)]]
-   :width      "100%"
+   :width "100%"
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
@@ -156,7 +156,8 @@
    :border-radius "1000px"
    :padding "0.375rem 0.5rem"
    :color (color :body-text-color :opacity-high)
-   :top "0.5rem"})
+   :transform "translateY(-50%)"
+   :top "50%"})
 
 
 ;; Helpers

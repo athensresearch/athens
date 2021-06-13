@@ -3,6 +3,7 @@
     [athens.config :as config]
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
+    [re-frame.core :refer [reg-sub subscribe]]
     [stylefy.core :as stylefy]
     [stylefy.reagent :as stylefy-reagent]))
 
@@ -174,6 +175,55 @@
        (apply hash-map)))
 
 
+(reg-sub
+  :zoom-level
+  (fn [db _]
+    (:zoom-level db)))
+
+
+;; Zoom levels mirror Google Chrome browser zoom levels.
+;; Levels determined by zooming Chrome in/out and recording the zoom percent.
+(def zoom-levels
+  {-5 50
+   -4 67
+   -3 75
+   -2 80
+   -1 90
+   0 100
+   1 110
+   2 125
+   3 133
+   4 140
+   5 150
+   6 175
+   7 200
+   8 250
+   9 300
+   10 400
+   11 500})
+
+
+(def zoom-level-max 11)
+(def zoom-level-min -5)
+
+
+(defn get-zoom-pct
+  [n]
+  (zoom-levels n))
+
+
+(defn zoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str (get-zoom-pct @zoom-level) "%")}}))
+
+
+(defn unzoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str "calc(1 / " (get-zoom-pct @zoom-level) " * 100 * 100%)")}}))
+
+
 (defn init
   []
   (stylefy/init {:dom (stylefy-reagent/init)})
@@ -183,7 +233,8 @@
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
-                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+                                {:font-size "16px"
+                                 ::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
   (when config/debug?
     (util/hide-10x)))
