@@ -623,12 +623,14 @@
      :local-storage/set! ["theme/dark" false]
      :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]}))
 
+
 (reg-event-fx
   :appearance/set-width
   (fn [{:keys [db]} [_ width]]
     "Need to serialize width then store in local storage because width is a symbol "
     {:db                 (assoc db :appearance/width width)
      :local-storage/set! ["appearance/width" (pr-str width)]}))
+
 
 ;; Datascript
 

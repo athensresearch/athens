@@ -3,13 +3,11 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.patterns :as patterns]
-    [athens.style :as style]
     [athens.util :as util]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.functions :refer [debounce]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 
