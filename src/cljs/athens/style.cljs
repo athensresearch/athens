@@ -98,13 +98,19 @@
           ")"))))
 
 
+(def content-max-width
+  {:normal "55em"
+   :large "65em"
+   :full "none"})
+
+
 ;; Base Styles
 
 (def base-styles
   {:background-color (color :background-color)
-   :font-family      "IBM Plex Sans, Sans-Serif"
+   :font-family      "IBM Plex Sans, sans-serif"
    :color            (color :body-text-color)
-   :font-size        "16px"                                 ; Sets the Rem unit to 16px
+   :font-size        "16px" ; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]
                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"

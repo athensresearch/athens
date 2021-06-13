@@ -50,11 +50,12 @@
   {:margin "2rem auto"
    :padding "1rem 2rem 10rem 2rem"
    :flex-basis "100%"
-   :max-width "55rem"})
+   :max-width "var(--content-max-width)"})
 
 
 (def dropdown-style
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
+                              :color (color :body-text-color)
                               :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
                               :display "inline-flex"

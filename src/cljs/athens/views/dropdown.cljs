@@ -20,6 +20,7 @@
 
 (def dropdown-style
   {:display "inline-flex"
+   :color (color :body-text-color)
    :z-index (:zindex-dropdown ZINDICES)
    :padding "0.25rem"
    :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
@@ -41,10 +42,7 @@
    :overflow "auto"
    ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "0.25rem"}]
                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "0.25rem"}]
-                     [:button {:min-height "1.5rem"}
-                      [:svg:first-child {:font-size "16px"
-                                         :margin-inline-start "0"
-                                         :margin-inline-end "0.5rem"}]]]})
+                     [:button {:min-height "1.5rem"}]]})
 
 
 #_(def menu-heading-style

@@ -80,6 +80,7 @@
               db      (dt/read-transit-str read-db)]
           (dispatch-sync [:remote-graph/set-conf :default? false])
           (dispatch-sync [:init-rfdb])
+          (dispatch [:local-storage/set-rfdb])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
           (dispatch [:db/update-filepath open-file])
@@ -104,6 +105,7 @@
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
               (dispatch-sync [:init-rfdb])
+              (dispatch [:local-storage/set-rfdb])
               (.mkdirSync fs dir)
               (.mkdirSync fs dir-images)
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
@@ -315,6 +317,42 @@
             mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
         (assoc db :db/mtime mtime))))
 
+  (reg-event-fx
+    :local-storage/set-rfdb
+    [(inject-cofx :local-storage-map {:ls-key "theme/dark"
+                                      :key    :theme-dark?})
+     (inject-cofx :local-storage-map {:ls-key "appearance/width"
+                                      :key    :appearance-width})]
+    (fn [{:keys [theme-dark? appearance-width db]} []]
+      "This event will be triggered whenever we need to set re-frame db with values from
+      local storage. Which currently happens whenever:
+        - Athens is started
+        - A new db is opened or added
+      -Check if any values is nil in local storage i.e it is deleted from local storage
+      then reset all the values just as in a fresh Athens
+      -Need to keep track of what type of value coeffect has
+      and de-serialize that before associating
+
+      Type of coeffect:
+      theme-dark? : boolean
+      appearance-width : keyword
+      "
+      (let [d-theme-dark?      (cljs.reader/read-string theme-dark?)
+            d-appearance-width (cljs.reader/read-string appearance-width)]
+        (if (and d-theme-dark? d-appearance-width)
+          {:dispatch-n  [[:associate-key-val :appearance/width d-appearance-width]
+                         [:associate-key-val :theme/dark       d-theme-dark?]]}
+
+          {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
+                         [:associate-key-val :theme/dark       (:theme/dark db)]]}))))
+
+
+
+  (reg-event-fx
+    :associate-key-val
+    (fn [{:keys [db]} [_ k v]]
+      {:db (assoc db k v)}))
+
 
   ;; if localStorage is empty, assume first open
   ;; create a Documents/athens directory and Documents/athens/db.transit file
@@ -340,7 +378,8 @@
                                                        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
+                                                                                   (dispatch [:reset-conn db])
+                                                                                   (dispatch [:local-storage/set-rfdb]))
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 

@@ -14,13 +14,12 @@
     ["@material-ui/icons/Storage" :default Storage]
     ["@material-ui/icons/Sync" :default Sync]
     ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ToggleOff" :default ToggleOff]
-    ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.subs]
     [athens.util :as util]
+    [athens.views.appearance-settings.core :refer [appearance-settings]]
     [athens.views.buttons :refer [button]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
@@ -108,7 +107,6 @@
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
         electron?         (util/electron?)
-        theme-dark        (subscribe [:theme/dark])
         remote-graph-conf (subscribe [:db/remote-graph-conf])
         socket-status     (subscribe [:socket-status])
         merge-open?       (reagent.core/atom false)]
@@ -189,14 +187,9 @@
 
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
-         [button {:on-click #(dispatch [:theme/toggle])
-                  :title "Toggle Color Scheme"}
-          (if @theme-dark
-            [:> ToggleOff]
-            [:> ToggleOn])]
+         [appearance-settings]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]]])))
-

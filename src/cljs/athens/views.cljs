@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.style]
+    [athens.style :as style]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
@@ -29,6 +29,11 @@
    :grid-template-columns "auto 1fr auto"
    :grid-template-rows "auto 1fr auto"
    :height "100vh"})
+
+
+(stylefy/tag ".width-normal" {:--content-max-width (:normal style/content-max-width)})
+(stylefy/tag ".width-large" {:--content-max-width (:large style/content-max-width)})
+(stylefy/tag ".width-full" {:--content-max-width (:full style/content-max-width)})
 
 
 ;; Components
@@ -63,9 +68,11 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        width      (rf/subscribe [:appearance/width])]
     (fn []
-      [:<>
+      [:div {:class (str "width-" (symbol @width))
+             :style {:display "contents"}}
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar

@@ -55,7 +55,7 @@
                              :text-align "left"}]
                      [:kbd {:margin-inline-start "1rem"
                             :font-size "85%"}]
-                     [:svg button-icons-style
+                     ["> svg" button-icons-style
                       [(selectors/& (selectors/not (selectors/last-child))) button-icons-not-last-child-style]
                       [(selectors/& (selectors/not (selectors/first-child))) button-icons-not-first-child-style]
                       [(selectors/& ((selectors/first-child (selectors/last-child)))) button-icons-only-child-style]]

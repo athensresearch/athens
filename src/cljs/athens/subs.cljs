@@ -143,3 +143,12 @@
       (:db/remote-graph-conf db)
       {})))
 
+
+;; Appearance Preferences
+
+
+(re-frame/reg-sub
+  :appearance/width
+  (fn [db _]
+    (:appearance/width db)))
+
