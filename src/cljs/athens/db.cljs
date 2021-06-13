@@ -51,8 +51,10 @@
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      #{}
-               :theme/dark          false
-               :appearance/width    :normal
+               :theme/dark          (or (cljs.reader/read-string (js/localStorage.getItem "theme/dark"))
+                                        false)
+               :appearance/width    (or (cljs.reader/read-string (js/localStorage.getItem "appearance/width"))
+                                        :normal)
                :graph-conf          default-graph-conf})
 
 
