@@ -17,6 +17,14 @@
   (subs (str (random-uuid)) 27))
 
 
+;; Electron ipcMain Channels
+
+(def ipcMainChannels
+  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
+   :close-win-channel "close-win"
+   :exit-fullscreen-win-channel "exit-fullscreen-win"})
+
+
 ;; embed block
 
 (declare specter-recursive-path)
@@ -261,6 +269,19 @@
       (re-find #"Windows" os) :windows
       (re-find #"Linux" os) :linux
       (re-find #"Mac" os) :mac)))
+
+
+(defn app-classes
+  ([{:keys [os electron? theme-dark? win-focused? win-fullscreen? win-maximized?]}]
+   [(case os
+      :windows "os-windows"
+      :mac "os-mac"
+      :linux "os-linux")
+    (if electron? "is-electron" "is-web")
+    (if theme-dark? "theme-dark" "theme-light")
+    (when win-focused? "is-focused")
+    (when win-fullscreen? "is-fullscreen")
+    (when win-maximized? "is-maximized")]))
 
 
 (defn shortcut-key?
