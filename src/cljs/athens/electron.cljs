@@ -329,28 +329,33 @@
     (fn [{:keys [theme-dark? appearance-width db]} []]
       "This event will be triggered whenever we need to set re-frame db with values from
       local storage. Which currently happens whenever:
-      - Athens is started
-      - A new db is opened or added"
-      (println "From local storage to rfdb")
-      (if (and theme-dark? appearance-width)
-       {:dispatch-n  [[:associate-key-val :appearance/width appearance-width]
-                      [:associate-key-val :theme/dark       theme-dark?]
-                      [:pdb]]}
-       {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
-                      [:associate-key-val :theme/dark       (:theme/dark db)]
-                      [:pdb]]})))
+        - Athens is started
+        - A new db is opened or added
+      -Check if any values is nil in local storage i.e it is deleted from local storage
+      then reset all the values just as in a fresh Athens
+      -Need to keep track of what type of value coeffect has
+      and de-serialize that before associating
+
+      Type of coeffect:
+      theme-dark? : boolean
+      appearance-width : keyword
+      "
+      ( let [d-theme-dark?      (cljs.reader/read-string theme-dark?)
+             d-appearance-width (cljs.reader/read-string appearance-width)]
+       (if (and d-theme-dark? d-appearance-width)
+        {:dispatch-n  [[:associate-key-val :appearance/width d-appearance-width]
+                       [:associate-key-val :theme/dark       d-theme-dark?]]}
+
+        {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
+                       [:associate-key-val :theme/dark       (:theme/dark db)]]}))))
+
 
 
   (reg-event-fx
     :associate-key-val
     (fn [{:keys [db]} [_ k v]]
-      (println ["asked to set -->" k "to val -->" v])
       {:db (assoc db k v)}))
 
-  (reg-event-db
-    :pdb
-    (fn [db]
-      (println ["width is -->"(:appearance/width db) "theme is --->" (:theme/dark db)])))
 
   ;; if localStorage is empty, assume first open
   ;; create a Documents/athens directory and Documents/athens/db.transit file

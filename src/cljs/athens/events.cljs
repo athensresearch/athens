@@ -622,8 +622,7 @@
   (fn [{:keys [db]} _]
     {:db                 (assoc db :theme/dark true)
      :local-storage/set! ["theme/dark" true]
-     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-DARK)]
-     :dispatch [:pdb]}))
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-DARK)]}))
 
 
 (reg-event-fx
@@ -631,15 +630,14 @@
   (fn [{:keys [db]} _]
     {:db                 (assoc db :theme/dark false)
      :local-storage/set! ["theme/dark" false]
-     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]
-     :dispatch [:pdb]}))
+     :stylefy/tag        [":root" (style/permute-color-opacities style/THEME-LIGHT)]}))
 
 (reg-event-fx
   :appearance/set-width
   (fn [{:keys [db]} [_ width]]
+    "Need to serialize width then store in local storage because width is a symbol "
     {:db                 (assoc db :appearance/width width)
-     :local-storage/set! ["appearance/width" width]
-     :dispatch [:pdb]}))
+     :local-storage/set! ["appearance/width" (pr-str width)]}))
 
 ;; Datascript
 
