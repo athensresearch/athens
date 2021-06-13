@@ -3,15 +3,15 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.patterns :as patterns]
+    [athens.style :as style]
     [athens.util :as util]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]
-    [athens.style :as style]))
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -255,7 +255,6 @@
         {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
                       [:transact athens-datoms/datoms]]})))
-                      ;[:local-storage/set-rfdb]]})))
 
 
   (reg-event-fx
@@ -340,14 +339,14 @@
       theme-dark? : boolean
       appearance-width : keyword
       "
-      ( let [d-theme-dark?      (cljs.reader/read-string theme-dark?)
-             d-appearance-width (cljs.reader/read-string appearance-width)]
-       (if (and d-theme-dark? d-appearance-width)
-        {:dispatch-n  [[:associate-key-val :appearance/width d-appearance-width]
-                       [:associate-key-val :theme/dark       d-theme-dark?]]}
+      (let [d-theme-dark?      (cljs.reader/read-string theme-dark?)
+            d-appearance-width (cljs.reader/read-string appearance-width)]
+        (if (and d-theme-dark? d-appearance-width)
+          {:dispatch-n  [[:associate-key-val :appearance/width d-appearance-width]
+                         [:associate-key-val :theme/dark       d-theme-dark?]]}
 
-        {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
-                       [:associate-key-val :theme/dark       (:theme/dark db)]]}))))
+          {:dispatch-n  [[:associate-key-val :appearance/width (:appearance/width db)]
+                         [:associate-key-val :theme/dark       (:theme/dark db)]]}))))
 
 
 

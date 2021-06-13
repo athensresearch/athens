@@ -462,15 +462,6 @@
     {:alert/js! message}))
 
 
-;; Appearance Preferences
-
-
-#_(reg-event-db
-  :appearance/set-width
-  (fn [db [_ width]]
-    (assoc db :appearance/width width)))
-
-
 ;; Modal
 
 
@@ -614,8 +605,8 @@
     (let [is-dark (= "true" local-storage)
           theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
       {:db          (assoc db :theme/dark is-dark)
-       :stylefy/tag [":root" (style/permute-color-opacities theme)]
-       :dispatch [:pdb]})))
+       :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
+
 
 (reg-event-fx
   :theme/set-dark
