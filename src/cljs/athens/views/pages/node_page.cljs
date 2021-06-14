@@ -394,15 +394,16 @@
                       [:span "Show Local Graph"]]]]
                    [:hr (use-style menu-separator-style)]
                    [button {:on-click (fn []
+                                        ;; if page being deleted is in right sidebar, remove from right sidebar
                                         (when (contains? @(subscribe [:right-sidebar/items]) uid)
                                           (dispatch [:right-sidebar/close-item uid]))
-
+                                        ;; if page being deleted is open, navigate to all pages
+                                        (when (= @(subscribe [:current-route/uid]) uid)
+                                          (navigate :pages))
+                                        ;; if daily note, delete page and remove from daily notes, otherwise just delete page
                                         (if daily-note?
                                           (dispatch [:daily-note/delete uid title])
-                                          (dispatch [:page/delete uid title]))
-
-                                        (when (= @(subscribe [:current-route/uid]) uid)
-                                          (navigate :pages)))}
+                                          (dispatch [:page/delete uid title])))}
                     [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
