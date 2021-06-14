@@ -212,7 +212,7 @@
                                                                                       :open true,
                                                                                       :order 4}
                                                                               #:block{:uid "13esc72bd",
-                                                                                      :string "`alt-g`: open all-pages view",
+                                                                                      :string "`alt-a`: open all-pages view",
                                                                                       :open true,
                                                                                       :order 5}
                                                                               #:block{:uid "13efc72bd",
