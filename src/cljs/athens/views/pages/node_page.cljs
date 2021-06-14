@@ -156,8 +156,7 @@
    :border-radius "1000px"
    :padding "0.375rem 0.5rem"
    :color (color :body-text-color :opacity-high)
-   :transform "translateY(-50%)"
-   :top "50%"})
+   :top "1.25rem"})
 
 
 ;; Helpers
