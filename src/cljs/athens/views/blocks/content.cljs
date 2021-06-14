@@ -55,6 +55,11 @@
                      [:.is-editing {:z-index 3
                                     :line-height "inherit"
                                     :opacity "1"}]
+                     [:span.text-run
+                      {:pointer-events "None"}
+                      [:>a {:position "relative"
+                            :z-index 2
+                            :pointer-events "all"}]]
                      [:span
                       {:grid-area "main"}
                       [:>span
@@ -110,7 +115,7 @@
                                                                     :top "0.13em"
                                                                     :width "1rem"
                                                                     :height "1rem"
-                                                                    :transition "all 0.05s ease"
+                                                                    :transition "color 0.05s ease, transform 0.05s ease, box-shadow 0.05s ease"
                                                                     :transform "scale(1)"
                                                                     :box-shadow "inset 0 0 0 1px"}
                               [:&:after {:content "''"
