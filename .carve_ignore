@@ -9,3 +9,6 @@ athens.patterns/date
 athens.util/common-ancestor
 athens.events/pages
 athens.views.blocks.core/block-component
+find-in-page.core/__ipc-listener-find-window__
+find-in-page.core/init
+athens.views.find-in-page/__ipc-listener-main__

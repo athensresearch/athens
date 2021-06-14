@@ -50,11 +50,11 @@
                              :linux   "xdg-open"}}}
 
   :aliases {"dev"          ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer" "app"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "main" "renderer" "find-in-page" "app"]]
             "compile"        ["with-profile" "dev" "do"
-                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer" "app"]]
+                              ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer" "find-in-page" "app"]]
             "prod"         ["with-profile" "prod" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "main" "renderer" "app"]]
+                            ["run" "-m" "shadow.cljs.devtools.cli" "release" "main" "renderer" "find-in-page" "app"]]
             "devcards"     ["with-profile" "dev" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "build-report" ["with-profile" "prod" "do"

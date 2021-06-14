@@ -26,7 +26,7 @@
     ["react-force-graph-2d" :as ForceGraph2D]
     [athens.db :as db]
     [athens.router :as router]
-    [athens.style :as styles]
+    [athens.theme :as theme]
     [athens.util :as util]
     [cljs.reader :refer [read-string]]
     [clojure.set :as set]
@@ -254,7 +254,7 @@
    (fn []
      (let [graph-conf     @(subscribe [:graph/conf])
            graph-ref      (get @graph-ref-map (or local-node-eid :global))
-           theme          (if @(rf/subscribe [:theme/dark]) styles/THEME-DARK styles/THEME-LIGHT)
+           theme          (if @(rf/subscribe [:theme/dark]) theme/THEME-DARK theme/THEME-LIGHT)
 
            ;; code theme
            ;; category -- for eg node-section and section related data
@@ -436,8 +436,8 @@
                                                                  (contains? filtered-nodes-set (get link-obj "target"))))))
 
                 theme                            (if dark?
-                                                   styles/THEME-DARK
-                                                   styles/THEME-LIGHT)]
+                                                   theme/THEME-DARK
+                                                   theme/THEME-LIGHT)]
             [:> ForceGraph2D
              {:graphData        {:nodes nodes
                                  :links links}

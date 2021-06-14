@@ -3,6 +3,7 @@
     [athens.db :as db]
     [athens.router :as router]
     [athens.util :as util]
+    [athens.views.find-in-page :as find-in-page]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
@@ -108,6 +109,8 @@
                                        KeyCodes.COMMA (router/navigate :settings)
 
                                        KeyCodes.T (util/toggle-10x)
+                                       KeyCodes.F (when (util/electron?)
+                                                    (find-in-page/start-find-in-page!))
                                        nil)
       alt (condp = key-code
             KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
@@ -115,7 +118,10 @@
             KeyCodes.D (router/nav-daily-notes)
             KeyCodes.G (router/navigate :graph)
             KeyCodes.A (router/navigate :pages)
-            nil))))
+            nil)
+
+      (= key-code KeyCodes.ESC) (when (util/electron?)
+                                  (find-in-page/stop-find-in-page!)))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
@@ -210,11 +216,14 @@
     (fn [e]
       (let [synced? (or @(subscribe [:db/synced])
                         (:default? @(subscribe [:db/remote-graph-conf])))]
-        (when-not synced?
-          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
-          (.. e preventDefault)
-          (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
-          "Returning a string also prevents exit on other browsers.")))))
+        (if-not synced?
+          (do
+            (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
+            (.. e preventDefault)
+            (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
+            "Returning a string also prevents exit on other browsers.")
+          (when (util/electron?)
+            (find-in-page/destroy-find-in-page!)))))))
 
 
 (defn init
