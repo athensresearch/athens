@@ -234,6 +234,7 @@
   (js/console.debug "Reconstructing tx from db dump of" (count datoms) "datoms")
   (let [insert-id (comp - inc)]
     (->> datoms
+         ;; NOTE: removing schema, should re apply Datahike schema to Datascript?
          (remove #(contains? #{:db/txInstant
                                :db/ident
                                :db/cardinality
@@ -243,8 +244,8 @@
                              (:a %)))
          ;; group by entity id
          (group-by :e)
+         ;; reduce datoms to entities
          (reduce (fn [acc [entity-id datoms]]
-                   (js/console.debug "reduce1:" (pr-str entity-id))
                    (assoc acc entity-id
                           (reduce (fn [entity {:keys [a v]}]
                                     (assoc entity a
@@ -256,6 +257,7 @@
                                    :remote/db-id entity-id}
                                   datoms)))
                  {})
+         ;; only entities
          vals)))
 
 
