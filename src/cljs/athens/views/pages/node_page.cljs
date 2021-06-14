@@ -393,11 +393,16 @@
                       [:> BubbleChart]
                       [:span "Show Local Graph"]]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(do
-                                         (if daily-note?
-                                           (dispatch [:daily-note/delete uid title])
-                                           (dispatch [:page/delete uid title]))
-                                         (navigate :pages))}
+                   [button {:on-click (fn []
+                                        (when (contains? @(subscribe [:right-sidebar/items]) uid)
+                                          (dispatch [:right-sidebar/close-item uid]))
+
+                                        (if daily-note?
+                                          (dispatch [:daily-note/delete uid title])
+                                          (dispatch [:page/delete uid title]))
+
+                                        (when (= @(subscribe [:current-route/uid]) uid)
+                                          (navigate :pages)))}
                     [:<> [:> Delete] [:span "Delete Page"]]]]]])))
 
 
