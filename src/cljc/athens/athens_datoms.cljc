@@ -84,7 +84,7 @@
                                                                                       :order 0,
                                                                                       :_refs []}]}
                                                            #:block{:uid "0f5b500f6",
-                                                                   :string "{{[[TODO]]}} `ctrl-enter` to cycle between TODO and DONE",
+                                                                   :string "{{[[TODO]]}} `ctrl-enter` / `cmd-enter` (for mac) to cycle between TODO and DONE",
                                                                    :open true,
                                                                    :order 5}
                                                            #:block{:uid "851cfb2f3",
@@ -152,7 +152,7 @@
                                                                    :open true,
                                                                    :order 0,
                                                                    :children [#:block{:uid "0ea74b8e8",
-                                                                                      :string "`ctrl-b`: **bold**",
+                                                                                      :string "`ctrl-b` / `cmd-b` (for mac): **bold**",
                                                                                       :open true,
                                                                                       :order 0}
                                                                               #:block{:uid "b96876779",
@@ -172,19 +172,19 @@
                                                                                       :open true,
                                                                                       :order 4}
                                                                               #:block{:uid "019774c8b",
-                                                                                      :string "`ctrl-a`: select all blocks on page",
+                                                                                      :string "`ctrl-a` / `cmd-a` (for mac): select all blocks on page",
                                                                                       :open true,
                                                                                       :order 5}
                                                                               #:block{:uid "1be25bf14",
-                                                                                      :string "`ctrl-z`: undo",
+                                                                                      :string "`ctrl-z` / `cmd-z` (for mac): undo",
                                                                                       :open true,
                                                                                       :order 6}
                                                                               #:block{:uid "7379f541a",
-                                                                                      :string "`ctrl-shift-z`: redo",
+                                                                                      :string "`ctrl-shift-z` / `cmd-shift-z` (for mac): redo",
                                                                                       :open true,
                                                                                       :order 7}
                                                                               #:block{:uid "0c11c0416",
-                                                                                      :string "`ctrl-up` or `ctrl-down`: collapse or expand blocks",
+                                                                                      :string "`ctrl-up` / `cmd-up` or `ctrl-down` / `cmd-down`: collapse or expand blocks",
                                                                                       :open true,
                                                                                       :order 8}]}
                                                            #:block{:uid "311b96eb2",
@@ -192,15 +192,15 @@
                                                                    :open true,
                                                                    :order 1,
                                                                    :children [#:block{:uid "55ea160af",
-                                                                                      :string "`ctrl-\\`: open left sidebar",
+                                                                                      :string "`ctrl-\\` or `cmd-\\` (for mac): open left sidebar",
                                                                                       :open true,
                                                                                       :order 0}
-                                                                              #:block{:uid "13efc72bd",
-                                                                                      :string "`ctrl-shift-\\`: open right sidebar",
+                                                                              #:block{:uid "13efc72fd",
+                                                                                      :string "`ctrl-shift-\\` or `cmd-shift-\\` (for mac): open right sidebar",
                                                                                       :open true,
                                                                                       :order 1}
                                                                               #:block{:uid "bb0e8a187",
-                                                                                      :string "`ctrl-k`: open search bar",
+                                                                                      :string "`ctrl-k` / `cmd-k` (for mac): open search bar",
                                                                                       :open true,
                                                                                       :order 2}
                                                                               #:block{:uid "13dfc72bd",
@@ -216,7 +216,7 @@
                                                                                       :open true,
                                                                                       :order 5}
                                                                               #:block{:uid "13efc72bd",
-                                                                                      :string "`ctrl-comma`: open settings page",
+                                                                                      :string "`ctrl-comma` / `cmd-comma` (for mac): open settings page",
                                                                                       :open true,
                                                                                       :order 6}]}]}
                                         #:block{:uid "1002528bd",
