@@ -37,9 +37,7 @@
     (clients/add-client! channel username)
     (clients/broadcast! (common-events/build-presence-online username max-tx))
 
-    (let [datoms (d/q '[:find ?e ?a ?v ?t ?add
-                        :where [?e ?a ?v ?t ?add]]
-                      @(:conn datahike))]
+    (let [datoms (d/datoms @(:conn datahike) :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump datoms max-tx)))

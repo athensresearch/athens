@@ -149,7 +149,7 @@
    [:event/args
     [:map
      [:datoms
-      [:set vector?]]]]])
+      [:sequential datom]]]]])
 
 
 (def presence-online

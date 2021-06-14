@@ -3,6 +3,7 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.patterns :as patterns]
+    [athens.self-hosted.client :as client]
     [athens.style :refer [zoom-level-min zoom-level-max]]
     [athens.util :as util :refer [ipcMainChannels]]
     [cljs.reader :refer [read-string]]
@@ -502,7 +503,9 @@
     If the write operation succeeds, a backup is created and index.transit is overwritten.
     User should eventually have MANY backups files. It's their job to manage these backups :)"
     [copy?]
-    (when-not @(subscribe [:socket-status])
+    (when-not (or (client/open?)
+                  ;; TODO this is part of Self-Hosted API, remove later
+                  @(subscribe [:socket-status]))
       (let [filepath     @(subscribe [:db/filepath])
             data         (dt/write-transit-str @db/dsdb)
             r            (.. stream -Readable (from data))

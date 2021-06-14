@@ -25,7 +25,7 @@
 
 (defn- connect-to-self-hosted!
   [url]
-  (js/console.log "WS Client Connecting to:" url)
+  (js/console.log "WSClient Connecting to:" url)
   (when url
     (doto (js/WebSocket. url)
       (.addEventListener "open" open-handler)
@@ -240,12 +240,13 @@
                                :db/valueType
                                :db/unique}
                              ;; attribute
-                             (second %)))
+                             (:a %)))
          ;; group by entity id
-         (group-by first)
+         (group-by :e)
          (reduce (fn [acc [entity-id datoms]]
+                   (js/console.debug "reduce1:" (pr-str entity-id))
                    (assoc acc entity-id
-                          (reduce (fn [entity [_ a v]]
+                          (reduce (fn [entity {:keys [a v]}]
                                     (assoc entity a
                                            (if (= :block/children a)
                                              (conj (:block/children entity #{})
@@ -263,8 +264,11 @@
   (js/console.debug "Received DB Dump")
   (let [entities (reconstruct-entities-from-db-dump datoms)]
     (js/console.debug "Reconstructed" (count entities) "entities")
-    (d/transact! db/dsdb entities)
+    (rf/dispatch [:reset-conn (d/empty-db db/schema)])
+    (rf/dispatch [:transact entities])
     (rf/dispatch [:remote/last-seen-tx! last-tx])
+    (rf/dispatch [:db/sync])
+    (rf/dispatch [:remote/connected])
     (js/console.log "✅ Transacted DB dump. last-seen-tx" last-tx)))
 
 
@@ -311,6 +315,7 @@
         {:event/keys
          [id]}    packet
         req-event (get @awaiting-response id)]
+    (js/console.log "message-handler" (pr-str packet))
     (if req-event
       (awaited-response-handler req-event packet)
       (server-event-handler packet))))
@@ -359,6 +364,7 @@
       component)))
 
 
+;; TODO: password protection
 (defn new-ws-client
   [url]
   (map->WSClient {:url url}))

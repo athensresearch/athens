@@ -1,5 +1,6 @@
 (ns athens.self-hosted.components.datahike
   (:require
+    [athens.athens-datoms       :as athens-datoms]
     [clojure.tools.logging      :as log]
     [com.stuartsierra.component :as component]
     [datahike.api               :as d]))
@@ -63,16 +64,21 @@
 
   (start
     [component]
-    (let [dh-conf (get-in config [:config :datahike])
-          conf-with-schema (assoc dh-conf :initial-tx schema)]
+    (let [dh-conf          (get-in config [:config :datahike])
+          conf-with-schema (assoc dh-conf :initial-tx schema)
+          new-db?          (atom false)]
       (if (d/database-exists? dh-conf)
         (log/info "Connecting to existing Datahike database")
         (do
           (log/info "Creating new Datahike database")
-          (d/create-database conf-with-schema)))
+          (d/create-database conf-with-schema)
+          (reset! new-db? true)))
       (log/info "Starting Datahike connection: " dh-conf)
       (let [connection (d/connect conf-with-schema)]
         (log/debug "Datahike connected")
+        (when @new-db?
+          (log/debug "Populating fresh db with datoms.")
+          (d/transact connection athens-datoms/lan-datoms))
         (assoc component :conn connection))))
 
 

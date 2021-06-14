@@ -12,6 +12,7 @@
     [cljs.core.async             :refer [go <!]]
     [cljs.pprint                 :refer [pprint]]
     [clojure.string              :as str]
+    [com.stuartsierra.component  :as component]
     [dat.sync.client]
     [datascript.core             :as d]
     [datascript.transit          :as dt]
@@ -393,6 +394,32 @@
         (set! (.. right-sidebar -scrollTop) 0)))))
 
 
+;; TODO: temporary, and limits to one client opened.
+(def self-hosted-client (atom nil))
+
+
+(reg-fx
+  :remote/client-connect!
+  (fn [{:keys [url] :as connection-config}]
+    (js/console.debug ":remote/client-connect!" (pr-str connection-config))
+    (when @self-hosted-client
+      (js/console.log ":remote/client-connect! already connected, restarting")
+      (component/stop @self-hosted-client))
+    (js/console.log ":remote/client-connect! connecting")
+    (reset! self-hosted-client (-> url
+                                   client/new-ws-client
+                                   component/start))))
+
+
+(reg-fx
+  :remote/client-disconnect!
+  (fn []
+    (js/console.debug ":remote/client-disconnect!")
+    (when @self-hosted-client
+      (component/stop @self-hosted-client)
+      (reset! self-hosted-client nil))))
+
+
 (reg-fx
   :remote/send-event!
   (fn [event]
@@ -406,3 +433,5 @@
                             (m/explain event)
                             (me/humanize))]
         (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))
+
+

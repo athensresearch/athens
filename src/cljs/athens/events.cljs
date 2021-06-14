@@ -37,6 +37,34 @@
      :local-storage/set! ["db/filepath" filepath]}))
 
 
+(reg-event-fx
+  :remote/connect!
+  (fn [{:keys [db]} [_ connection-config]]
+    (js/console.log ":remote/connect!" (pr-str connection-config))
+    {:db                     (-> db
+                                 (dissoc :db/filepath)
+                                 (assoc :db/remote connection-config))
+     :remote/client-connect! connection-config
+     :local-storage/set!     ["db/remote" connection-config]
+     :fx                     [[:dispatch [:loading/set]]]}))
+
+
+(reg-event-fx
+  :remote/connected
+  (fn [{:keys [db]} _]
+    (js/console.log ":remote/connected")
+    {:db (dissoc db :db/remote)
+     :fx [[:dispatch [:loading/unset]]]}))
+
+
+(reg-event-fx
+  :remote/disconnect!
+  (fn [{:keys [db]} _]
+    {:db                        (dissoc db :db/remote)
+     :remote/client-disconnect! nil
+     :local-storage/set!        ["db/remote" nil]}))
+
+
 (reg-event-db
   :db/sync
   (fn [db [_]]
