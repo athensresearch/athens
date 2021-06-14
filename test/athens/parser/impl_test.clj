@@ -34,9 +34,6 @@
 
     (parses-to sut/block-parser->ast
 
-               "***"
-               [:block [:thematic-break "***"]]
-
                "---"
                [:block [:thematic-break "---"]]
 

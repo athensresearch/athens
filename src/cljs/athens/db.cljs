@@ -41,6 +41,9 @@
                :loading?            true
                :modal               false
                :alert               nil
+               :win-maximized?      false
+               :win-fullscreen?     false
+               :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false
@@ -52,6 +55,7 @@
                :daily-notes/items   []
                :selected/items      #{}
                :theme/dark          false
+               :zoom-level          1
                :graph-conf          default-graph-conf})
 
 

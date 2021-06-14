@@ -2,8 +2,9 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.style]
+    [athens.style :refer [zoom]]
     [athens.subs]
+    [athens.util :refer [get-os electron?]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
@@ -14,7 +15,7 @@
     [athens.views.spinner :refer [initial-spinner-component]]
     [re-frame.core :as rf]
     [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; Styles
@@ -63,9 +64,12 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
+        os         (get-os)
+        electron?  (electron?)
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:<>
+      [:div (merge {:style {:display "contents"}}
+                   (zoom))
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar
@@ -86,7 +90,12 @@
 
          :else [:<>
                 (when @modal [filesystem/window])
-                [:div (stylefy/use-style app-wrapper-style)
+                [:div (use-style app-wrapper-style
+                                 {:class [(case os
+                                            :windows "os-windows"
+                                            :mac "os-mac"
+                                            :linux "os-linux")
+                                          (when electron? "is-electron")]})
                  [app-toolbar/app-toolbar]
                  [left-sidebar/left-sidebar]
                  [pages/view]
