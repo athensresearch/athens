@@ -35,12 +35,12 @@
                      :max-tx)]
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
-    (clients/broadcast! (common-events/build-presence-online username max-tx))
+    (clients/broadcast! (common-events/build-presence-online-event max-tx username))
 
     (let [datoms (d/datoms @(:conn datahike) :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
-                     (common-events/build-db-dump datoms max-tx)))
+                     (common-events/build-db-dump-event max-tx datoms)))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`

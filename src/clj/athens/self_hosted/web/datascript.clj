@@ -36,7 +36,7 @@
                            " FAIL: " (pr-str {:msg   err-msg
                                               :data  err-data
                                               :cause err-cause})))
-        (common-events/event-rejected event-id err-msg err-data)))))
+        (common-events/build-event-rejected event-id err-msg err-data)))))
 
 
 (defn create-page-handler

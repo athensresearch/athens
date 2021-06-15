@@ -127,8 +127,8 @@
         ;; TODO fetch real last-tx
         last-tx    1]
     (reset! ws-connection connection)
-    (send! connection (common-events/build-presence-hello (:name @(rf/subscribe [:user]))
-                                                          last-tx))
+    (send! connection (common-events/build-presence-hello-event last-tx
+                                                                (:name @(rf/subscribe [:user]))))
     (when (seq @send-queue)
       (js/console.log "WSClient sending queued packets #" (count @send-queue))
       (doseq [data @send-queue]
