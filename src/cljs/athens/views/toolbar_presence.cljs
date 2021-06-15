@@ -2,8 +2,8 @@
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Link" :default Link]
-    [athens.style :refer [color]]
-    [athens.views.buttons :refer [button]]
+    [athens.style :as style]
+    [athens.views.buttons :refer [button buttons-style]]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
@@ -16,12 +16,12 @@
 ;; Data
 
 (def PALETTE
-  ["#21A469",
-   "#DDA74C",
-   "#009FB8",
-   "#0062BE"
-   "yellow"
-   "red"])
+  ["#DDA74C"
+   "#C45042"
+   "#611A58"
+   "#21A469"
+   "#009FB8"
+   "#0062BE"])
 
 
 (def NAMES
@@ -70,8 +70,7 @@
   [:svg (merge (use-style {:height          "1.5em"
                            :width           "1.5em"
                            :overflow        "visible"
-                           ::stylefy/manual [[:circle {:stroke-width "0.2px"}]
-                                             [:text {:font-weight "bold"}]]})
+                           ::stylefy/manual [[:text {:font-weight "bold"}]]})
                props)
    children])
 
@@ -83,35 +82,36 @@
    [avatar-el member {:filled true}])
   ([{:keys [username color]} {:keys [filled]}]
    (let [initials (first username)]
-     [avatar-svg {:viewBox "0 0 4 4"}
-      [:circle {:cx          2
-                :cy          2
-                :r           2
-                :fill        (when filled color)
-                :stroke      (when filled color)
+     [avatar-svg {:viewBox "0 0 24 24"
+                  :vectorEffect "non-scaling-stroke"}
+      [:circle {:cx          12
+                :cy          12
+                :r           12
+                :fill        color
+                :stroke      color
                 :fillOpacity (when-not filled 0.1)
-
-                :strokeWidth "1px"}]
-      [:text {:width      4
-              :x          2
+                :strokeWidth (if filled 0 "1px")}]
+      [:text {:width      24
+              :x          12
               :y          "72%"
-              :font-size  "18%"
+              :font-size  16
               :fill       (if filled "#fff" color)
               :textAnchor "middle"}
        initials]])))
 
 
+
+(def avatar-stack-style
+  {:display "grid"
+   :grid-auto-flow "column"
+   :grid-template-columns "repeat(auto-fit, 1em)"
+   ::stylefy/manual [[:svg ["&:last-child" {:margin-right "-1.25rem"}]]]})
+
+
 (defn avatar-stack-el
   [& children]
-  [:div (use-style {:display "grid"
-                    :grid-auto-flow "column"
-                    :grid-template-columns "repeat(auto-fit, 1em)"
-                    :svg {:mask-image "radial-gradient(
-                         1.5em 1.15em at 150% 50%
-                         transparent calc(96%)
-                         #000 100%)"}})
+  [:div (use-style avatar-stack-style)
    children])
-
 
 
 ;; List
@@ -166,11 +166,33 @@
                    :border-bottom "1px solid #ddd"})])
 
 
+(def member-list-item-style
+  {:padding "6px 16px"
+   :display "flex"
+   :font-size "14px"
+   :align-items "center"
+   :cursor "pointer"
+   :font-weight "600"
+   :color (style/color :body-text-color :opacity-higher)
+   :transition "backdrop-filter 0.1s ease"
+   ::stylefy/manual [[:svg {:margin-right "0.25rem"}]
+                     [:&:hover {:background (style/color :body-text-color :opacity-lower)}]
+                     [:&:active
+                      :&:hover:active
+                      :&.is-active {:color (style/color :body-text-color)
+                                    :background (style/color :body-text-color :opacity-lower)}]
+                     [:&:active
+                      :&:hover:active
+                      :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
+                     [:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
+                                                      :background (style/color :body-text-color :opacity-lower)
+                                                      :cursor "default"}]]})
+
+
 (defn MemberListItem
   [& children]
-  [:li (use-style {:padding "8px 16px"
-                   :cursor "pointer"
-                   :transition "backdrop-filter 0.1s ease"})
+  [:li (use-style member-list-item-style
+                  {:on-click #(prn "hi")})
    children])
 
 
@@ -215,7 +237,7 @@
                                         :horizontal "center"}}
                   [list-header-el
                    [list-header-url-el "ath.ns/34op5fds0a"]
-                   [:> Link]]
+                   [button [:> Link]]]
                   [list-el
 
                    ;; On same page
