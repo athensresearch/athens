@@ -59,12 +59,6 @@
 
 ;; Avatar
 
-(defn avatars
-  [members]
-  (mapv (fn [{}])
-        members))
-
-
 (defn avatar-svg
   [props & children]
   [:svg (merge (use-style {:height          "1.5em"
@@ -90,13 +84,15 @@
                 :fill        color
                 :stroke      color
                 :fillOpacity (when-not filled 0.1)
-                :strokeWidth (if filled 0 "1px")}]
+                :strokeWidth (if filled 0 "1px")
+                :key "circle"}]
       [:text {:width      24
               :x          12
               :y          "72%"
               :font-size  16
               :fill       (if filled "#fff" color)
-              :textAnchor "middle"}
+              :textAnchor "middle"
+              :key "text"}
        initials]])))
 
 
@@ -171,45 +167,40 @@
    :display "flex"
    :font-size "14px"
    :align-items "center"
-   :cursor "pointer"
    :font-weight "600"
    :color (style/color :body-text-color :opacity-higher)
    :transition "backdrop-filter 0.1s ease"
-   ::stylefy/manual [[:svg {:margin-right "0.25rem"}]
-                     [:&:hover {:background (style/color :body-text-color :opacity-lower)}]
-                     [:&:active
-                      :&:hover:active
-                      :&.is-active {:color (style/color :body-text-color)
-                                    :background (style/color :body-text-color :opacity-lower)}]
-                     [:&:active
-                      :&:hover:active
-                      :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
-                     [:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
-                                                      :background (style/color :body-text-color :opacity-lower)
-                                                      :cursor "default"}]]})
+   ;;:cursor "pointer"
+   ::stylefy/manual [[:svg {:margin-right "0.25rem"}]]})
+;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
+                     ;;[:&:hover {:background (style/color :body-text-color :opacity-lower)}]
+                     ;;[:&:active
+                     ;; :&:hover:active
+                     ;; :&.is-active {:color (style/color :body-text-color)
+                     ;;               :background (style/color :body-text-color :opacity-lower)}]
+                     ;;[:&:active
+                     ;; :&:hover:active
+                     ;; :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
+                     ;;[:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
+                     ;;                                 :background (style/color :body-text-color :opacity-lower)
+                     ;;                                 :cursor "default"}]]})
 
 
-(defn MemberListItem
-  [& children]
-  [:li (use-style member-list-item-style
-                  {:on-click #(prn "hi")})
-   children])
+
+;; event
+:presence/ping
+
+;; re-frame db
+{:presence/users {"user-id-1" {:username  "Zeus"
+                               :block/uid "asd123"
+                               :page/uid  "page-1"}}}
 
 
 (defn member-item-el
   [member filled?]
-  [:<>
+  [:li (use-style member-list-item-style #_{:on-click #(prn member)})
    [avatar-el member filled?]
    (:username member)])
-
-;;&hover {
-;;        :backdrop-filter "brightness(95%)"}
-;;
-;;
-;;&active {
-;;         :backdrop-filter "brightness(92%)"}
-;;
-;;(defn ListItem = styled.li``
 
 
 (defn toolbar-presence
@@ -238,17 +229,15 @@
                   [list-header-el
                    [list-header-url-el "ath.ns/34op5fds0a"]
                    [button [:> Link]]]
-                  [list-el
 
+                  [list-el
                    ;; On same page
                    [list-section-header-el "On This Page"]
                    (for [member same-page-members]
-                     [MemberListItem
-                      [member-item-el member]])
+                     [member-item-el member {:filled true}])
 
                    ;; Online, different page
                    [list-separator-el]
                    (for [member online-members]
-                     [MemberListItem
-                      [member-item-el member]])]]])))
+                     [member-item-el member {:filled false}])]]])))
 
