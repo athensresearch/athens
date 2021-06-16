@@ -3,9 +3,10 @@
    ["@material-ui/core/Popover" :as Popover]
    ["@material-ui/icons/Link" :default Link]
    [athens.style :as style]
+   [athens.db :as db]
    [athens.views.buttons :refer [button]]
    [clojure.string :as str]
-   [re-frame.core :refer [subscribe]]
+   [re-frame.core :as rf]
    [reagent.core :as r]
    [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -13,8 +14,11 @@
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
 
-;; Data
+;; re-frame
 
+;; colors do not persist across sessions
+;; colors are not shared between users
+;; TODO import to athens.style ?
 (def PALETTE
   ["#DDA74C"
    "#C45042"
@@ -24,6 +28,7 @@
    "#0062BE"])
 
 
+;; TODO import to a constants namespace?
 (def NAMES
   ["Zeus"
    "Poseidon"
@@ -55,6 +60,74 @@
    (fn [username color uid]
      {:username username :color color :block/uid uid})
    NAMES PALETTE BLOCK-UIDS))
+
+
+;; re-frame subs
+
+
+(rf/reg-sub
+  :presence/users
+  (fn [db _]
+    (:presence/users db)))
+
+
+(rf/reg-sub
+  :presence/users-with-page-data
+  :<- [:presence/users]
+  (fn [users _]
+    (mapv (fn [{:keys [block/uid] :as user}]
+            (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
+              (assoc user :page/uid page-uid :page/title page-title)))
+          users)))
+
+
+(rf/reg-sub
+  :presence/same-page
+  :<- [:presence/users-with-page-data]
+  :<- [:current-route/uid]
+  :<- [:current-route/name]
+  (fn [[users current-uid current-route-name] _]
+    (cond
+      (= current-route-name :page)
+      (filter (fn [user]
+                (= current-uid (:page/uid user)))
+              users)
+
+      :else [])))
+
+;;(let [users       (rf/subscribe [:presence/users-with-page-data])
+;;      current-uid (rf/subscribe [:current-route/name])
+;;      current-uid (rf/subscribe [:current-route/uid])]
+;;  (filter (fn [user]
+;;            ;;(and (not (nil? (:page/uid user))))
+;;            (= @current-uid (:page/uid user)))
+;;          @users))
+
+
+(rf/reg-sub
+  :presence/diff-page
+  :<- [:presence/users-with-page-data]
+  :<- [:current-route/uid]
+  (fn [[users current-uid] _]
+    (filter (fn [user]
+              (not= current-uid (:page/uid user)))
+            users)))
+
+;;(rf/subscribe [:presence/diff-page])
+
+
+;; re-frame events
+
+;; user joins presence
+  ;; conj :presence/users
+
+;; user joins presence
+  ;; disj :presence/users
+
+;; user navigates to new block
+  ;; update-in :presence/users
+;; user navigates to new page
+;; user leaves block, i.e. nil :editing/uid
 
 
 ;; Avatar
@@ -198,37 +271,30 @@
 
 
 
-;; event
-:presence/ping
-
-;; re-frame db
-{:presence/users {"user-id-1" {:username  "Zeus"
-                               :block/uid "asd123"
-                               :page/uid  "page-1"}}}
-
-
 (defn member-item-el
-  [member filled?]
-  [:li (use-style member-list-item-style #_{:on-click #(prn member)})
-   [avatar-el member filled?]
-   (:username member)])
+  [user props]
+  [:li (use-style member-list-item-style #_{:on-click #(prn user)})
+   [avatar-el user props]
+   (:username user)])
 
 
 (defn toolbar-presence
   []
   (r/with-let [ele (r/atom nil)]
-    (let [same-page-members (take 3 MEMBERS)
-          online-members    (drop 3 MEMBERS)]
+    (let [users (rf/subscribe [:presence/users-with-page-data])
+          same-page-users (rf/subscribe [:presence/same-page])
+          diff-page-users (rf/subscribe [:presence/diff-page])]
       [:<>
 
-                 ;; Preview
+       ;; Preview
        [button {:on-click #(reset! ele (.-currentTarget %))}
         [:<>
          [avatar-stack-el
-          (for [member same-page-members]
-            [avatar-el member])]]]
 
-                 ;; Dropdown
+          (for [user @users]
+            [avatar-el user {:filled false}])]]]
+
+       ;; Dropdown
        [m-popover
         {:open            (boolean (and @ele))
          :anchorEl        @ele
@@ -242,13 +308,13 @@
          [button [:> Link]]]
 
         [list-el
-                   ;; On same page
+         ;; On same page
          [list-section-header-el "On This Page"]
-         (for [member same-page-members]
-           [member-item-el member {:filled true}])
+         (for [user @same-page-users]
+           [member-item-el user {:filled true}])
 
-                   ;; Online, different page
+         ;; Online, different page
          [list-separator-el]
-         (for [member online-members]
-           [member-item-el member {:filled false}])]]])))
+         (for [user @diff-page-users]
+           [member-item-el user {:filled false}])]]])))
 
