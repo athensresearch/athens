@@ -680,8 +680,25 @@
 
 (defn- followup-fx
   [db event-id fx]
-  (js/console.log "followup-fx" event-id "->" (pr-str fx))
   (update db :remote/followup (fnil assoc {}) event-id fx))
+
+
+(rf/reg-event-db
+  :remote/await-ack
+  (fn [db [_ event-id]]
+    (waiting-for-ack db event-id)))
+
+
+(rf/reg-event-db
+  :remote/register-followup
+  (fn [db [_ event-id fx]]
+    (followup-fx db event-id fx)))
+
+
+(rf/reg-event-db
+  :remote/unregister-followup
+  (fn [db [_ event-id]]
+    (update db :remote/followup dissoc event-id)))
 
 
 (rf/reg-event-fx
@@ -691,11 +708,11 @@
           {event-id :event/id
            :as      page-create-event} (common-events/build-page-create-event last-seen-tx
                                                                               uid
-                                                                              title)]
+                                                                              title)
+          followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
       (js/console.debug ":remote/page-create" (pr-str page-create-event))
-      {:db                 (-> db
-                               (waiting-for-ack page-create-event)
-                               (followup-fx event-id [[:dispatch [:remote/followup-page-create event-id]]]))
+      {:fx                 [[:dispatch-n [[:remote/await-ack event-id]
+                                          [:remote/register-followup event-id followup-fx]]]]
        :remote/send-event! page-create-event})))
 
 
@@ -717,8 +734,8 @@
                                         first
                                         :block/uid)]
       (js/console.log ":remote/folloup-page-create, child-block-uid" child-block-uid)
-      {:db (update db :remote/followup dissoc event-id)
-       :fx [[:dispatch [:editing/uid child-block-uid]]]})))
+      {:fx [[:dispatch-n [[:editing/uid child-block-uid]
+                          [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
@@ -1813,7 +1830,7 @@
                                                                                     text
                                                                                     start
                                                                                     value)]
-      {:db                 (waiting-for-ack db event-id)
+      {:fx                 [[:dispatch [:remote/await-ack event-id]]]
        :remote/send-event! paste-verbatim-event})))
 
 
