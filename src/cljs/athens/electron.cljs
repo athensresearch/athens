@@ -81,7 +81,7 @@
               db      (dt/read-transit-str read-db)]
           (dispatch-sync [:remote-graph/set-conf :default? false])
           (dispatch-sync [:init-rfdb])
-          (dispatch [:local-storage/check-db-picker-list])
+          (dispatch [:local-storage/create-db-picker-list])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
           (dispatch [:db/update-filepath open-file])
@@ -106,7 +106,7 @@
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
               (dispatch-sync [:init-rfdb])
-              (dispatch [:local-storage/check-db-picker-list])
+              (dispatch [:local-storage/create-db-picker-list])
               (.mkdirSync fs dir)
               (.mkdirSync fs dir-images)
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
@@ -232,7 +232,7 @@
       - Also re-frame is in-memory so saving data which can be easily calculated is
         not a good idea I think"
     [db-list check-path]
-    (contains? (into #{} (map #(:path %) db-list)) check-path))
+    (seq (filter #(= check-path (:path %)) db-list)))
 
   ;; Events
 
@@ -247,13 +247,13 @@
                                current-db-list
                                dbpath)]
         (if duplicate?
-          {:dispatch [:alert/js (str "Database already in the list")]}
+          {:fx [[:dispatch [:alert/js (str "Database already in the list")]]]}
           (let [dbname  (get-db-name dbpath)
                 newdb   {:path dbpath
                          :name dbname}
                 all-dbs (conj current-db-list newdb)]
             {:db       (assoc db :db-picker/all-dbs all-dbs)
-             :dispatch [:local-storage/set-db-picker-list]})))))
+             :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))))
 
 
   (reg-event-fx
@@ -266,7 +266,7 @@
           {:local-storage/set! ["db-picker/all-dbs" (pr-str current-db-list)]})))
 
   (reg-event-fx
-    :local-storage/check-db-picker-list
+    :local-storage/create-db-picker-list
     (fn [{:keys [db]} _]
       "Check if local storage contains db-picker list.
        If not it means this is the first time opening Athens or local storage was
@@ -275,7 +275,7 @@
                                   (js/localStorage.getItem "db-picker/all-dbs"))
             current-db-filepath (:db/filepath db)]
         (if (nil? val)
-          {:dispatch [:db-picker/add-new-db current-db-filepath]}
+          {:fx [[:dispatch [:db-picker/add-new-db current-db-filepath]]]}
           {:db (assoc db :db-picker/all-dbs val)}))))
 
   (reg-event-fx
@@ -287,7 +287,7 @@
                                        (fn [db-list-item] (not= db-path (:path db-list-item)))
                                        current-db-list))]
         {:db       (assoc db :db-picker/all-dbs new-db-list)
-         :dispatch [:local-storage/set-db-picker-list]})))
+         :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))
 
 
   (reg-event-fx
@@ -308,7 +308,7 @@
         (cond
           (and file-exists? synced?)        {:dispatch-n [[:db/update-filepath db-path]
                                                           [:boot/desktop]]}
-          (and file-exists? (not synced?))  {:dispatch   [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]}
+          (and file-exists? (not synced?))  {:fx   [[:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]]]}
           :else                             {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
                                                           [:db-picker/remove-db-from-list db-path]]}))))
 
@@ -329,8 +329,8 @@
       ;;so that we can test without accidently deleting real db
       (let [new-list         (:db-picker/all-dbs db)
             next-db-filepath (:path ( nth new-list 0))]
-        {:dispatch           [:db-picker/select-new-db next-db-filepath true]
-         :local-storage/set! ["db-picker/all-dbs" new-list]})))
+        {:fx   [[:dispatch [:db-picker/select-new-db next-db-filepath true]]
+                [:local-storage/set! ["db-picker/all-dbs" new-list]]]})))
 
  ;; ==================== db- picker end ==========================
 
@@ -477,7 +477,7 @@
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
                                                                                    (dispatch [:reset-conn db])
-                                                                                   (dispatch [:local-storage/check-db-picker-list]))
+                                                                                   (dispatch [:local-storage/create-db-picker-list]))
                                                        :else (dispatch [:fs/open-dialog])))}
 
                                      ;; remote graph
