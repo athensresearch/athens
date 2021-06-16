@@ -1,13 +1,13 @@
 (ns athens.views.toolbar-presence
   (:require
-    ["@material-ui/core/Popover" :as Popover]
-    ["@material-ui/icons/Link" :default Link]
-    [athens.style :as style]
-    [athens.views.buttons :refer [button buttons-style]]
-    [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@material-ui/core/Popover" :as Popover]
+   ["@material-ui/icons/Link" :default Link]
+   [athens.style :as style]
+   [athens.views.buttons :refer [button]]
+   [clojure.string :as str]
+   [re-frame.core :refer [subscribe]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
@@ -52,9 +52,9 @@
 
 (def MEMBERS
   (mapv
-    (fn [username color uid]
-      {:username username :color color :block/uid uid})
-    NAMES PALETTE BLOCK-UIDS))
+   (fn [username color uid]
+     {:username username :color color :block/uid uid})
+   NAMES PALETTE BLOCK-UIDS))
 
 
 ;; Avatar
@@ -63,7 +63,8 @@
   [props & children]
   [:svg (merge (use-style {:height          "1.5em"
                            :width           "1.5em"
-                           :overflow        "visible"
+                           :overflow        "hidden"
+                           :border-radius   "1000em"
                            ::stylefy/manual [[:text {:font-weight "bold"}]]})
                props)
    children])
@@ -84,7 +85,7 @@
                 :fill        color
                 :stroke      color
                 :fillOpacity (when-not filled 0.1)
-                :strokeWidth (if filled 0 "1px")
+                :strokeWidth (if filled 0 "3px")
                 :key "circle"}]
       [:text {:width      24
               :x          12
@@ -98,10 +99,19 @@
 
 
 (def avatar-stack-style
-  {:display "grid"
-   :grid-auto-flow "column"
-   :grid-template-columns "repeat(auto-fit, 1em)"
-   ::stylefy/manual [[:svg ["&:last-child" {:margin-right "-1.25rem"}]]]})
+  {:display "flex"
+   ::stylefy/manual [[:svg {:width "1.5rem"
+                            :height "1.5rem"}
+                      ; In a stack, each sequential item sucks in the spacing
+                      ; from the item before it
+                      ["&:not(:first-child)" {:margin-left "-0.8rem"}]
+                      ; All but the last get a slice masked out for readability
+                      ;
+                      ; I'm not clear on why 1.55rem / 1.1rem work in this case
+                      ; It'd be nice to have a simpler masking method
+                      ; or a better-constructed string with some documentation
+                      ["&:not(:last-child)" {:mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"
+                                             :-webkit-mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"}]]]})
 
 
 (defn avatar-stack-el
@@ -125,7 +135,7 @@
 (defn list-header-el
   [& children]
   [:header (use-style {:border-bottom "1px solid #ddd"
-                       :padding "4px 8px"
+                       :padding "0.25rem 0.5rem"
                        :display "flex"
                        :justify-content "space-between"
                        :align-items "center"})
@@ -138,7 +148,7 @@
   [:li (use-style {:font-size "12px"
                    :font-weight "bold"
                    :opacity "0.5"
-                   :padding "16px 16px 4px"})
+                   :padding "1rem 1rem 0.25rem"})
    children])
 
 
@@ -148,7 +158,8 @@
                      :font-weight   "700"
                      :display       "inline-block"
                      :opacity       "0.5"
-                     :padding       "8px"
+                     :padding       "0.5rem"
+                     :user-select   "all"
                      :margin-right  "1em"
                      :flex          "1 1 100%"
                      :white-space   "nowrap"
@@ -158,21 +169,21 @@
 
 (defn list-separator-el
   []
-  [:li (use-style {:margin "5px 0 6px 16px"
+  [:li (use-style {:margin "0.5rem 0 0.5rem 1rem"
                    :border-bottom "1px solid #ddd"})])
 
 
 (def member-list-item-style
-  {:padding "6px 16px"
+  {:padding "0.375rem 1rem"
    :display "flex"
    :font-size "14px"
    :align-items "center"
    :font-weight "600"
    :color (style/color :body-text-color :opacity-higher)
    :transition "backdrop-filter 0.1s ease"
-   ;;:cursor "pointer"
+   :cursor "default"
    ::stylefy/manual [[:svg {:margin-right "0.25rem"}]]})
-;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
+   ;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
                      ;;[:&:hover {:background (style/color :body-text-color :opacity-lower)}]
                      ;;[:&:active
                      ;; :&:hover:active
@@ -206,38 +217,38 @@
 (defn toolbar-presence
   []
   (r/with-let [ele (r/atom nil)]
-              (let [same-page-members (take 3 MEMBERS)
-                    online-members    (drop 3 MEMBERS)]
-                [:<>
+    (let [same-page-members (take 3 MEMBERS)
+          online-members    (drop 3 MEMBERS)]
+      [:<>
 
                  ;; Preview
-                 [button {:on-click #(reset! ele (.-currentTarget %))}
-                  [:<>
-                   [avatar-stack-el
-                    (for [member same-page-members]
-                      [avatar-el member])]]]
+       [button {:on-click #(reset! ele (.-currentTarget %))}
+        [:<>
+         [avatar-stack-el
+          (for [member same-page-members]
+            [avatar-el member])]]]
 
                  ;; Dropdown
-                 [m-popover
-                  {:open            (boolean (and @ele))
-                   :anchorEl        @ele
-                   :onClose         #(reset! ele nil)
-                   :anchorOrigin    #js{:vertical   "bottom"
-                                        :horizontal "center"}
-                   :transformOrigin #js{:vertical   "top"
-                                        :horizontal "center"}}
-                  [list-header-el
-                   [list-header-url-el "ath.ns/34op5fds0a"]
-                   [button [:> Link]]]
+       [m-popover
+        {:open            (boolean (and @ele))
+         :anchorEl        @ele
+         :onClose         #(reset! ele nil)
+         :anchorOrigin    #js{:vertical   "bottom"
+                              :horizontal "center"}
+         :transformOrigin #js{:vertical   "top"
+                              :horizontal "center"}}
+        [list-header-el
+         [list-header-url-el "ath.ns/34op5fds0a"]
+         [button [:> Link]]]
 
-                  [list-el
+        [list-el
                    ;; On same page
-                   [list-section-header-el "On This Page"]
-                   (for [member same-page-members]
-                     [member-item-el member {:filled true}])
+         [list-section-header-el "On This Page"]
+         (for [member same-page-members]
+           [member-item-el member {:filled true}])
 
                    ;; Online, different page
-                   [list-separator-el]
-                   (for [member online-members]
-                     [member-item-el member {:filled false}])]]])))
+         [list-separator-el]
+         (for [member online-members]
+           [member-item-el member {:filled false}])]]])))
 
