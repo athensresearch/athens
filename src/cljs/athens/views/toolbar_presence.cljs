@@ -283,16 +283,20 @@
   (r/with-let [ele (r/atom nil)]
     (let [users (rf/subscribe [:presence/users-with-page-data])
           same-page-users (rf/subscribe [:presence/same-page])
-          diff-page-users (rf/subscribe [:presence/diff-page])]
+          diff-page-users (rf/subscribe [:presence/diff-page])
+          current-route-name (rf/subscribe [:current-route/name])]
       [:<>
 
        ;; Preview
        [button {:on-click #(reset! ele (.-currentTarget %))}
         [:<>
          [avatar-stack-el
-
-          (for [user @users]
-            [avatar-el user {:filled false}])]]]
+          (for [user @same-page-users]
+            [avatar-el user {:filled true}])
+          (for [user @diff-page-users]
+            [avatar-el user {:filled false}])
+          #_(for [user @users]
+              [avatar-el user {:filled false}])]]]
 
        ;; Dropdown
        [m-popover
@@ -318,3 +322,22 @@
          (for [user @diff-page-users]
            [member-item-el user {:filled false}])]]])))
 
+
+;; inline
+
+(rf/reg-sub
+  :presence/inline-present?
+  :<- [:presence/users-with-page-data]
+  ;;:<- [:editing/uid]
+  (fn [users [_ uid]]
+    (-> (filter (fn [user]
+                  (= uid (:block/uid user)))
+                users)
+        first)))
+
+
+(defn inline-presence
+  [uid]
+  (let [inline-present? (rf/subscribe [:presence/inline-present? uid])]
+    (when @inline-present?
+      [avatar-el @inline-present?])))
