@@ -1,27 +1,10 @@
 (ns athens.common-events
   "Event as Verbs executed on Knowledge Graph"
   (:require
-    [clojure.string :as string])
-  #?(:clj
-     (:import
-       (java.util
-         Date
-         UUID))))
+    [clojure.string :as string]))
 
 
 ;; helpers
-
-(defn- now-ts
-  []
-  #?(:clj  (.getTime (Date.))
-     :cljs (.getTime (js/Date.))))
-
-
-(defn- gen-block-uid
-  []
-  #?(:clj (subs (.toString (UUID/randomUUID)) 27)
-     :cljs (subs (str (random-uuid)) 27)))
-
 
 (defn- gen-event-id
   []
@@ -125,42 +108,3 @@
      :event/last-tx last-tx
      :event/type    :presence/online
      :event/args    {:username username}}))
-
-
-;; resolving events
-
-(defn page-create->tx
-  "Creates Transactions to create a page with `title` & `uid`."
-  [uid title]
-  (let [now       (now-ts)
-        child-uid (gen-block-uid)
-        child     {:db/id        -2
-                   :block/string ""
-                   :block/uid    child-uid
-                   :block/order  0
-                   :block/open   true
-                   :create/time  now
-                   :edit/time    now}
-        page-tx {:db/id -1
-                 :node/title title
-                 :block/uid uid
-                 :block/children [child]
-                 :create/time now
-                 :edit/time now}]
-    [page-tx]))
-
-
-(defn paste-verbatim->tx
-  [uid text start value]
-  (let [block-empty? (string/blank? value)
-        block-start? (zero? start)
-        new-string   (cond
-                       block-empty?       text
-                       (and (not block-empty?)
-                            block-start?) (str text value)
-                       :else              (str (subs value 0 start)
-                                               text
-                                               (subs value start)))
-        tx-data      [{:db/id        [:block/uid uid]
-                       :block/string new-string}]]
-    tx-data))

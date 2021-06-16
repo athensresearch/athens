@@ -1,142 +1,142 @@
 (ns athens.subs
   (:require
-    [athens.util :as util]
+    [athens.util           :as util]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core :as re-frame :refer [subscribe]]))
+    [re-frame.core         :as rf]))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :user
   (fn [db _]
     (:user db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :db/synced
   (fn [db _]
     (:db/synced db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :theme/dark
   (fn [db _]
     (:theme/dark db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :app-db
   (fn [db _]
     db))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :alert
   (fn [db _]
     (:alert db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :loading?
   (fn [db _]
     (:loading? db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :athena/open
   (fn-traced [db _]
              (:athena/open db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :devtool/open
   (fn-traced [db _]
              (:devtool/open db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :left-sidebar/open
   (fn-traced [db _]
              (:left-sidebar/open db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :right-sidebar/open
   (fn-traced [db _]
              (:right-sidebar/open db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :right-sidebar/items
   (fn-traced [db _]
              (:right-sidebar/items db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :right-sidebar/width
   (fn [db _]
     (:right-sidebar/width db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :mouse-down
   (fn [db _]
     (:mouse-down db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :merge-prompt
   (fn [db _]
     (:merge-prompt db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :editing/uid
   (fn-traced [db _]
              (:editing/uid db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :editing/is-editing
   (fn [_]
-    [(subscribe [:editing/uid])])
+    [(rf/subscribe [:editing/uid])])
   (fn [[editing-uid] [_ uid]]
     (= editing-uid uid)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :selected/items
   (fn [db _]
     (:selected/items db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :selected/is-selected
   (fn [_]
-    [(subscribe [:selected/items])])
+    [(rf/subscribe [:selected/items])])
   (fn [[selected-items] [_ uid]]
     (contains? (set selected-items) uid)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :daily-notes/items
   (fn-traced [db _]
              (:daily-notes/items db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :athena/get-recent
   (fn-traced [db _]
              (:athena/recent-items db)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :modal
   (fn [db _]
     (:modal db)))
 
 
 ;; really bad that we're checking if electron in a subscription, but short-term solution to get both web app and desktop to build. see athens.electron
-(re-frame/reg-sub
+(rf/reg-sub
   :db/remote-graph-conf
   (fn [db _]
     (if (util/electron?)
@@ -144,37 +144,50 @@
       {})))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/awaited-events
   (fn [db _]
     (:remote/awaited-events db #{})))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/accepted-events
   (fn [db _]
     (:remote/accepted-events db #{})))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/rejected-events
   (fn [db _]
     (:remote/rejected-events db #{})))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/failed-events
   (fn [db _]
     (:remote/failed-events db #{})))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/last-seen-tx
   (fn [db _]
     (:remote/last-seen-tx db -1)))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :remote/awaited-tx
   (fn [db _]
     (:remote/awaited-tx db #{})))
+
+
+(rf/reg-sub
+  :remote/followup
+  (fn [db _]
+    (:remote/followup db {})))
+
+
+(rf/reg-sub
+  :remote/followup-for
+  :<- [:remote/followup]
+  (fn [followups [_ event-id]]
+    (get followups event-id)))

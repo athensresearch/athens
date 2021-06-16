@@ -1,8 +1,8 @@
 (ns athens.common-events.fixture
   (:require
-   [athens.athens-datoms                   :as athens-datoms]
-   [athens.self-hosted.components.datahike :as athens-datahike]
-   [datahike.api                           :as d]))
+    [athens.athens-datoms                   :as athens-datoms]
+    [athens.self-hosted.components.datahike :as athens-datahike]
+    [datahike.api                           :as d]))
 
 
 (def connection (atom nil))
@@ -16,7 +16,7 @@
 (defn integration-test-fixture
   ([test-fn]
    (integration-test-fixture in-mem-config test-fn))
-  
+
   ([config test-fn]
    (d/create-database config)
    (let [conn (d/connect config)]

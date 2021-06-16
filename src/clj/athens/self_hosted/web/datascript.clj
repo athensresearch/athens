@@ -1,8 +1,9 @@
 (ns athens.self-hosted.web.datascript
   (:require
-    [athens.common-events  :as common-events]
-    [clojure.tools.logging :as log]
-    [datahike.api          :as d])
+    [athens.common-events          :as common-events]
+    [athens.common-events.resolver :as resolver]
+    [clojure.tools.logging         :as log]
+    [datahike.api                  :as d])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -40,20 +41,14 @@
 
 
 (defn create-page-handler
-  [datahike _channel {:event/keys [id args] :as _event}]
-  (let [{:keys [uid
-                title]} args
-        txs             (common-events/page-create->tx uid title)]
+  [datahike _channel {:event/keys [id] :as event}]
+  (let [txs (resolver/resolve-event-to-tx (:conn datahike) event)]
     (transact! (:conn datahike) id txs)))
 
 
 (defn paste-verbatim-handler
-  [datahike _channel {:event/keys [id args] :as _event}]
-  (let [{:keys [uid
-                text
-                start
-                value]} args
-        txs             (common-events/paste-verbatim->tx uid text start value)]
+  [datahike _channel {:event/keys [id] :as event}]
+  (let [txs (resolver/resolve-event-to-tx (:conn datahike) event)]
     (transact! (:conn datahike) id txs)))
 
 

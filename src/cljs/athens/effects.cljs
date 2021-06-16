@@ -21,7 +21,7 @@
     [malli.core                  :as m]
     [malli.error                 :as me]
     [posh.reagent                :as p :refer [transact!]]
-    [re-frame.core               :refer [dispatch reg-fx subscribe]]
+    [re-frame.core               :as rf]
     [stylefy.core                :as stylefy]))
 
 
@@ -226,11 +226,11 @@
 
 (defn walk-transact
   [tx-data]
-  (let [socket-status     (subscribe [:socket-status])
-        remote-graph-conf (subscribe [:db/remote-graph-conf])]
+  (let [socket-status     (rf/subscribe [:socket-status])
+        remote-graph-conf (rf/subscribe [:db/remote-graph-conf])]
     (if (= @socket-status :closed)
-      (dispatch [:show-snack-msg
-                 {:msg "Graph is now read only"}])
+      (rf/dispatch [:show-snack-msg
+                    {:msg "Graph is now read only"}])
       (do (dev-pprint "TX RAW INPUTS")                             ; event tx-data
           (dev-pprint tx-data)
           (try
@@ -266,31 +266,31 @@
               (js/console.log "EXCEPTION" e)))))))
 
 
-(reg-fx
+(rf/reg-fx
   :transact!
   (fn [tx-data]
     (walk-transact tx-data)))
 
 
-(reg-fx
+(rf/reg-fx
   :reset-conn!
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)))
 
 
-(reg-fx
+(rf/reg-fx
   :local-storage/set!
   (fn [[key value]]
     (js/localStorage.setItem key value)))
 
 
-(reg-fx
+(rf/reg-fx
   :local-storage/set-db!
   (fn [db]
     (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
 
 
-(reg-fx
+(rf/reg-fx
   :http
   (fn [{:keys [url method opts on-success on-failure]}]
     (go
@@ -300,16 +300,16 @@
             res     (<! (http-fn url opts))
             {:keys [success body] :as all} res]
         (if success
-          (dispatch (conj on-success body))
-          (dispatch (conj on-failure all)))))))
+          (rf/dispatch (conj on-success body))
+          (rf/dispatch (conj on-failure all)))))))
 
 
-(reg-fx
+(rf/reg-fx
   :timeout
   (let [timers (atom {})]
     (fn [{:keys [action id event wait]}]
       (case action
-        :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
+        :start (swap! timers assoc id (js/setTimeout #(rf/dispatch event) wait))
         :clear (do (js/clearTimeout (get @timers id))
                    (swap! timers dissoc id))))))
 
@@ -328,7 +328,7 @@
 ;;   - element sometimes hasn't been created yet (enter), sometimes has been just destroyed (backspace)
 ;; - uid sometimes nil
 
-(reg-fx
+(rf/reg-fx
   :editing/focus
   (fn [[uid index]]
     (if (nil? uid)
@@ -363,7 +363,7 @@
 ;; think of this + up/down + editing/focus for common up down press
 ;; and cursor goes to apt position rather than last visited point in the block(current)
 ;; inspirations - intelli-j's up/down
-(reg-fx
+(rf/reg-fx
   :set-cursor-position
   (fn [[uid start end]]
     (js/setTimeout (fn []
@@ -374,19 +374,19 @@
                    100)))
 
 
-(reg-fx
+(rf/reg-fx
   :stylefy/tag
   (fn [[tag properties]]
     (stylefy/tag tag properties)))
 
 
-(reg-fx
+(rf/reg-fx
   :alert/js!
   (fn [message]
     (js/alert message)))
 
 
-(reg-fx
+(rf/reg-fx
   :right-sidebar/scroll-top
   (fn []
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
@@ -398,7 +398,7 @@
 (def self-hosted-client (atom nil))
 
 
-(reg-fx
+(rf/reg-fx
   :remote/client-connect!
   (fn [{:keys [url] :as connection-config}]
     (js/console.debug ":remote/client-connect!" (pr-str connection-config))
@@ -411,7 +411,7 @@
                                    component/start))))
 
 
-(reg-fx
+(rf/reg-fx
   :remote/client-disconnect!
   (fn []
     (js/console.debug ":remote/client-disconnect!")
@@ -420,7 +420,7 @@
       (reset! self-hosted-client nil))))
 
 
-(reg-fx
+(rf/reg-fx
   :remote/send-event!
   (fn [event]
     (if (schema/valid-event? event)

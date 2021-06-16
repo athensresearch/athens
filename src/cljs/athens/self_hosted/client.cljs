@@ -124,8 +124,7 @@
   [event]
   (js/console.log "WSClient Connected:" event)
   (let [connection (.-target event)
-        ;; TODO fetch real last-tx
-        last-tx    1]
+        last-tx    @(rf/subscribe [:remote/last-seen-tx])]
     (reset! ws-connection connection)
     (send! connection (common-events/build-presence-hello-event last-tx
                                                                 (:name @(rf/subscribe [:user]))))
