@@ -289,14 +289,25 @@
 
        ;; Preview
        [button {:on-click #(reset! ele (.-currentTarget %))}
-        [:<>
-         [avatar-stack-el
-          (for [user @same-page-users]
-            [avatar-el user {:filled true}])
-          (for [user @diff-page-users]
-            [avatar-el user {:filled false}])
-          #_(for [user @users]
-              [avatar-el user {:filled false}])]]]
+        [avatar-stack-el
+         (cond
+
+           (= @current-route-name :page)
+           [:<>
+            ;; same page
+            (for [user @same-page-users]
+              [avatar-el user {:filled true}])
+            ;; diff page but online
+            (for [user @diff-page-users]
+              [avatar-el user {:filled false}])]
+
+           ;; TODO: capture what page user is scrolled to on Daily Notes
+           (= @current-route-name :home)
+           [:div "TODO"]
+
+           ;; default to showing all users
+           :else (for [user @users]
+                   [avatar-el user {:filled false}]))]]
 
        ;; Dropdown
        [m-popover
@@ -313,12 +324,15 @@
 
         [list-el
          ;; On same page
-         [list-section-header-el "On This Page"]
-         (for [user @same-page-users]
-           [member-item-el user {:filled true}])
+
+         (when-not (empty? @same-page-users)
+           [:<>
+            [list-section-header-el "On This Page"]
+            (for [user @same-page-users]
+              [member-item-el user {:filled true}])
+            [list-separator-el]])
 
          ;; Online, different page
-         [list-separator-el]
          (for [user @diff-page-users]
            [member-item-el user {:filled false}])]]])))
 
