@@ -80,8 +80,9 @@
    (open? @ws-connection))
 
   ([connection]
-   (= (.-OPEN js/WebSocket)
-      (.-readyState connection))))
+   (and (not (nil? connection))
+        (= (.-OPEN js/WebSocket)
+           (.-readyState connection)))))
 
 
 (defn send!
