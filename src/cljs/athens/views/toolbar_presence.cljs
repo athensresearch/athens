@@ -64,8 +64,7 @@
   [:svg (merge (use-style {:height          "1.5em"
                            :width           "1.5em"
                            :overflow        "hidden"
-                           :border-radius   "1000em"
-                           ::stylefy/manual [[:text {:font-weight "bold"}]]})
+                           :border-radius   "1000em"})
                props)
    children])
 
@@ -76,7 +75,7 @@
   ([member]
    [avatar-el member {:filled true}])
   ([{:keys [username color]} {:keys [filled]}]
-   (let [initials (first username)]
+   (let [initials (subs username 0 2)]
      [avatar-svg {:viewBox "0 0 24 24"
                   :vectorEffect "non-scaling-stroke"}
       [:circle {:cx          12
@@ -89,8 +88,9 @@
                 :key "circle"}]
       [:text {:width      24
               :x          12
-              :y          "72%"
-              :font-size  16
+              :y          16.5
+              :font-size  14
+              :font-weight 600
               :fill       (if filled "#fff" color)
               :textAnchor "middle"
               :key "text"}
