@@ -342,7 +342,6 @@
 (rf/reg-sub
   :presence/inline-present?
   :<- [:presence/users-with-page-data]
-  ;;:<- [:editing/uid]
   (fn [users [_ uid]]
     (-> (filter (fn [user]
                   (= uid (:block/uid user)))

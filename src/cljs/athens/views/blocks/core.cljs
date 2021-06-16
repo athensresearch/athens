@@ -31,63 +31,64 @@
 
 
 (def block-container-style
-  {:display "flex"
-   :line-height "2em"
-   :position "relative"
-   :border-radius "0.125rem"
+  {:display         "flex"
+   :line-height     "2em"
+   :position        "relative"
+   :border-radius   "0.125rem"
    :justify-content "flex-start"
-   :flex-direction "column"
-   ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
-                                                     :position "absolute"
-                                                     :width "1px"
-                                                     :left "calc(1.375em + 1px)"
-                                                     :top "2em"
-                                                     :bottom "0"
-                                                     :transform "translateX(50%)"
+   :flex-direction  "column"
+   ::stylefy/manual [[:&.show-tree-indicator:before {:content    "''"
+                                                     :position   "absolute"
+                                                     :width      "1px"
+                                                     :left       "calc(1.375em + 1px)"
+                                                     :top        "2em"
+                                                     :bottom     "0"
+                                                     :transform  "translateX(50%)"
                                                      :background (style/color :border-color)}]
-                     [:&:after {:content "''"
-                                :z-index -1
-                                :position "absolute"
-                                :top "0.75px"
-                                :right 0
-                                :bottom "0.75px"
-                                :left 0
-                                :opacity 0
+                     [:&:after {:content        "''"
+                                :z-index        -1
+                                :position       "absolute"
+                                :top            "0.75px"
+                                :right          0
+                                :bottom         "0.75px"
+                                :left           0
+                                :opacity        0
                                 :pointer-events "none"
-                                :border-radius "0.25rem"
-                                :transition "opacity 0.075s ease"
-                                :background (style/color :link-color :opacity-lower)}]
+                                :border-radius  "0.25rem"
+                                :transition     "opacity 0.075s ease"
+                                :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
-                     [:.block-body {:display "grid"
+                     [:.block-body {:display               "grid"
                                     :grid-template-columns "1em 1em 1fr auto"
-                                    :grid-template-rows "0 1fr 0"
-                                    :grid-template-areas "
+                                    :grid-template-rows    "0 1fr 0"
+                                    :grid-template-areas   "
                                       'above above above above'
                                       'toggle bullet content refs'
                                       'below below below below'"
-                                    :border-radius "0.5rem"
-                                    :position "relative"}
-                      [:button.block-edit-toggle {:position "absolute"
+                                    :border-radius         "0.5rem"
+                                    :position              "relative"}
+                      [:button.block-edit-toggle {:position   "absolute"
                                                   :appearance "none"
-                                                  :width "100%"
+                                                  :width      "100%"
                                                   :background "none"
-                                                  :border 0
-                                                  :cursor "text"
-                                                  :display "block"
-                                                  :z-index 1
-                                                  :top 0
-                                                  :right 0
-                                                  :bottom 0
-                                                  :left 0}]]
-                     [:.block-content {:grid-area "content"
+                                                  :border     0
+                                                  :cursor     "text"
+                                                  :display    "block"
+                                                  :z-index    1
+                                                  :top        0
+                                                  :right      0
+                                                  :bottom     0
+                                                  :left       0}]]
+                     [:.block-content {:grid-area  "content"
                                        :min-height "1.5em"}]
                      ;; [:&:hover {:background (color :background-minus-1)}]]
                      ;; Darken block body when block editing,
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
                      ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
+                     [:&.is-presence [:.block-content {:opacity 0.5}]]
                      [:.block-container {:margin-left "2rem"
-                                         :grid-area "body"}]]})
+                                         :grid-area   "body"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -226,7 +227,9 @@
                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
-             is-selected           @(rf/subscribe [:selected/is-selected uid])]
+             is-selected           @(rf/subscribe [:selected/is-selected uid])
+             present-user          @(rf/subscribe [:presence/inline-present? uid])
+             is-presence           (not (nil? present-user))]
 
          ;; (prn uid is-selected)
 
@@ -242,7 +245,8 @@
                                (when is-editing "is-editing")
                                (when is-selected "is-selected")
                                (when (and (seq children) open) "show-tree-indicator")
-                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
+                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
+                               (when is-presence "is-presence")]
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
@@ -263,7 +267,8 @@
           (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
-           (when (seq children)
+           (when (and (seq children)
+                      (not is-presence))
              [toggle/toggle-el uid-sanitized-block state linked-ref])
            (when (:context-menu/show @state)
              [context-menu/context-menu-el uid-sanitized-block state])
