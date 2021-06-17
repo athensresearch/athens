@@ -7,65 +7,93 @@
 
 # Athens
 
-Athens is a knowledge graph for research and notetaking. Athens is open-source, private, extensible, and community-driven.
+Athens is an open-source, self-hosted app for research and notetaking. Outline your ideas, connect them with links and embedded content, and build a personal knowledge database without worrying about organizing your thoughts. Athens makes your writing more useful over time by making it easy to find and learn from again.
+
+Athens solves the [big problem](#problem) with information overload while _also_ being open-source, [private](#private), [extensible](#extensible), and [community-driven](#community-driven). We have a much larger [vision](https://athensresearch.gitbook.io/handbook/community/about/vision) for self-hosting, bi-directional links, collective knowledge, and learning in public.
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
-**[Sponsor us on Open Collective](https://opencollective.com/athens) until we migrate to Stripe! We are building out a software service for individuals and teams and a [self-hosted/on-premise solution for enterprises](https://github.com/athensresearch/athens-backend).**
+<details>
+  <summary>Not sure if Athens is right for you?</summary>
 
-**[Demo Athens in your browser (no changes are saved)](https://athensresearch.github.io/athens)**
+  **[Demo Athens in your browser](https://athensresearch.github.io/athens)** to see how it works.
 
-⬇️ Click to watch video demoing the value of Athens ⬇️ 
-[![7f9876cb28bd455a9de52673efefa2c8-00001](https://user-images.githubusercontent.com/8952138/115828768-00a9a480-a3c3-11eb-9b44-ae5488434ce2.gif)](https://www.loom.com/share/7f9876cb28bd455a9de52673efefa2c8)
+  > ⚠️ The demo doesn't work in Safari due to missing features. Sorry!
 
-### Private
+  Or click below to **watch a video** from author @tangjeff0 demoing the value of Athens.
 
-You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://github.com/athensresearch/athens-backend).
+  [![7f9876cb28bd455a9de52673efefa2c8-00001](https://user-images.githubusercontent.com/8952138/115828768-00a9a480-a3c3-11eb-9b44-ae5488434ce2.gif)](https://www.loom.com/share/7f9876cb28bd455a9de52673efefa2c8)
 
-### Extensible
+</details> 
 
-You can modify Athens's source code. We are also building a plugin system for custom themes, keybindings, and integrations with other data sources.
+## Problem
 
-### Community-Driven
-
-Athens has a Discord with over 2,200 members. We handle support and feature development on Discord and GitHub. Every Sunday at 11am Pacific, we have a community call. You can help shape Athens — [join us](https://discord.gg/GCJaV3V)!
-
-# Problem
-
-The problem today is that we are getting drowned in information. If we don't take notes, we forget everything. So we take notes, but then we have too many notes! Search doesn't work. Folders don't work. And no one does tagging.
+We're getting drowned in information. If we don't take notes, we forget everything, and when we do take notes, we have too many! Search doesn't work. Folders and sub-sub-sub-folders don't work. And no one properly #tags their notes.
 
 Athens lets you take notes without praying to the search gods, without double-clicking endlessly on folders, and without manual tagging.
 
-Athens does this with **[[bidirectional links]]** and **((block references))** that let you to take notes on anything from any page. Just [[link]] or ((reference)) another page or block - and voilà! - you can now go to this page and see all the places that linked back to it. The next time you press `[[` or `((`, you will be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
+Athens does this with **[[bidirectional links]]** and **((block references))**, which are like hyperlinks and embeds with superpowers. Just [[link]] or ((reference)) another page or block—and voilà!—you've now connected two of your ideas and can see all the other places that _link back_ to these pages. The next time you press `[[` or `((`, you'll be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
 
-# [Contributing](https://athensresearch.gitbook.io/handbook/contributing)
+### Private
 
-If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](https://athensresearch.gitbook.io/handbook/contributing). This also contains instructions on how to build Athens on your own computer.
+The [Athens desktop app](https://github.com/athensresearch/athens/releases) saves your notes to your local filesystem (and edit on multiple systems with a syncing tool like Dropbox), or use the [self-hosted server](https://github.com/athensresearch/athens-backend). You always own the content of your knowledge graph.
 
-Some tips once you've gotten Athens:
-- [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
-- [How to file a bug report](https://www.loom.com/share/e69857c0f65f4232ab10dd78f47c4c44)
-- [How to file a feature request](https://www.loom.com/share/dea9e3b3e7424f97a84e2fb81daed9c9)
-- If you have trouble with a new version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens/releases).
+### Extensible
 
-# [Pricing](https://opencollective.com/athens)
+Athens' source code is open, and we're [accepting contributions](#contributing). We're also building a plugin system for custom themes, keybindings, and integrations with other data sources.
 
-Athens is free to use as a local-only desktop app. We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option for enterprises](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost. If you want to use Athens commercially, please contact us at researchathens@gmail.com.
+### Community-driven
 
-Please see our [Open Collective](https://opencollective.com/athens) for more details. We will be migrating to Stripe from OpenColllective.
+Athens has a Discord server with over 2,500 members. [Joining our Discord](https://discord.gg/GCJaV3V) is the easiest way to chat with other members of the Athens community and learn about what's going on.
 
-# Blog
+Everyone is welcome to join our weekday standups at 11:30am Eastern time to learn more about what core team members and contributors are working on.
+We have a community call every Sunday at 2pm Eastern time. [Put it on your calendar](https://calendar.google.com/calendar/u/2?cid=cmVzZWFyY2hhdGhlbnNAZ21haWwuY29t) and join us! You can help shape the future of notetaking and knowledge graphs.
 
-To learn more about this project, please read:
+## Contributing
+
+If you want to contribute to Athens as a developer, designer, writer, or anything else, start by reading our
+[contributing](https://athensresearch.gitbook.io/handbook/community/get-involved/contributing) doc and [joining our
+Discord](https://discord.gg/GCJaV3V).
+
+Clojure developers: Read the [instructions to build Athens](https://athensresearch.gitbook.io/handbook/company/athens-research-governance-and-operations/engineering/development#running-athens-locally) to set up your local development environment.
+
+## Learn more and get help
+
+The best place to learn about Athens, its community, and the company behind it, is our [handbook](https://athensresearch.gitbook.io/handbook/).
+
+If you have trouble with the latest version of Athens, download a previous build on our [releases page](https://github.com/athensresearch/athens/releases).
+
+And if you have a question that's not answered here, search our [handbook](https://athensresearch.gitbook.io/handbook/) or [join us on Discord](https://discord.gg/GCJaV3V), find the `#help` or `#questions` channel, and ask away!
+
+## Pricing
+
+Athens is free to use as a local-only desktop app. 
+
+We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost, for enterprises. While that repository is archived, anyone can run it until we're finished adding the real-time collaboration (RTC) code into this repository. See the [self-hosted RTC project board](https://github.com/athensresearch/athens/projects/16) for details.
+
+If you want to use Athens commercially, please fill out our [intake form](https://docs.google.com/forms/d/e/1FAIpQLSfuWgzGZ2ocB-SweDizMAINYyRZ-3KYwkaf3xIdb4pOs1I-4A/viewform).
+
+### Sponsorships
+
+**[Sponsor us on Open Collective](https://opencollective.com/athens)** if you believe in the [Athens
+vision](https://athensresearch.gitbook.io/handbook/community/about/vision).
+
+This sponsorship gives you first access to upcoming features, like a software service for individuals/teams and a [self-hosted/on-premise solution for enterprises](https://github.com/athensresearch/athens-backend). See the Athens Research [Open Collective page](https://opencollective.com/athens) for details.
+
+> We are working on migrating all our sponsorships to Stripe.
+
+## Blog
+
+To learn more about Athens, please read:
 
 - [Athens' $1.9M Seed Round, led by Caffeinated Capital](https://athens-research.ghost.io/athens-1-9m-seed-round-led-by-caffeinated-capital/)
 - [Athens Joins Y Combinator](https://athens-research.ghost.io/athens-joins-y-combinator/)
 - [MVP Update, Funding, and Why I Started Athens](https://athens-research.ghost.io/mvp-update-funding-and-why-i-started-athens/)
 - [Why you should learn Clojure - my first month as a Clojurian](https://athens-research.ghost.io/why-you-should-learn-clojure-my-first-month-as-a-clojurian/)
 
-# Thank You
+## Thank you!
 
-Athens is here today because of our Sponsors and Contributors. Thank you.
+Athens is here today because of our sponsors and contributors. Thank you.
 
 [![Sponsors](https://athens-research.ghost.io/content/images/size/w1140/2021/04/spnosors.png)](https://opencollective.com/athens)
 
