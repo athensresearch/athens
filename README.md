@@ -5,8 +5,6 @@
 <img alt="Athens is proudly backed by Y Combinator (W21)" src="https://github.com/athensresearch/handbook/blob/main/.gitbook/assets/yc.png" width="30" height="30" />
 <a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
-> - Update the OpenCollective images
-
 # Athens
 
 Athens is an open-source, self-hosted app for research and notetaking. Outline your ideas, connect them with links and embedded content, and build a personal knowledge database without having to worry about organizing your thoughts. Athens makes your writing more useful over time by making it easy to find and learn from again.
