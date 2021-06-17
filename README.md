@@ -5,20 +5,13 @@
 <img alt="Athens is proudly backed by Y Combinator (W21)" src="https://github.com/athensresearch/handbook/blob/main/.gitbook/assets/yc.png" width="30" height="30" />
 <a href="https://www.producthunt.com/posts/athens-research?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-athens-research" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=286558&theme=light" alt="Athens Research - Open-source, local-first Roam Research | Product Hunt" style="width: 250px; height: 54px;" width="140" height="30" /></a>
 
-> TODOs
-> - Work on the contributing section based on core team call
-> - Add links to the Athens vision in two places
-> - Make changes to sponsorship area after the core team call
-> - Figure out how many Discord users there are now
-> - Add a news/latest releases section?
-> - Add links to help section
 > - Update the OpenCollective images
 
 # Athens
 
 Athens is an open-source, self-hosted app for research and notetaking. Outline your ideas, connect them with links and embedded content, and build a personal knowledge database without having to worry about organizing your thoughts. Athens makes your writing more useful over time by making it easy to find and learn from again.
 
-Athens solves the [big problem](#problem) with information overload while _also_ being open-source, [private](#private), [extensible](#extensible), and [community-driven](#community-driven).
+Athens solves the [big problem](#problem) with information overload while _also_ being open-source, [private](#private), [extensible](#extensible), and [community-driven](#community-driven). We have a much larger [vision](https://athensresearch.gitbook.io/handbook/community/about/vision) for self-hosting, bi-directional links, collective knowledge, and learning in public.
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
@@ -26,6 +19,8 @@ Athens solves the [big problem](#problem) with information overload while _also_
   <summary>Not sure if Athens is right for you?</summary>
 
   **[Demo Athens in your browser](https://athensresearch.github.io/athens)** to see how it works.
+
+  > ⚠️ The demo doesn't work in Safari due to a limitation in the 
 
   Or click below to **watch a video** from author @tangjeff0 demoing the value of Athens.
 
@@ -51,16 +46,18 @@ Athens' source code is open and we're [accepting contributions](#contributing). 
 
 ### Community-driven
 
-Athens has a Discord server with over 2,200 members. [Joining our Discord](https://discord.gg/GCJaV3V) is the easiest way start chatting with other members of the Athens community.
+Athens has a Discord server with over 2,500 members. [Joining our Discord](https://discord.gg/GCJaV3V) is the easiest way to chat with other members of the Athens community and learn about what's going on.
 
-We have a community call every Sunday at 11am Pacific. [Put it on your calendar](https://calendar.google.com/calendar/u/2?cid=cmVzZWFyY2hhdGhlbnNAZ21haWwuY29t) and join us! You can help shape the future of notetaking and knowledge graphs.
+Everyone is welcome to join our weekday standups at 11:30am Eastern time to learn more about what core team members and contributors are working on.
+We have a community call every Sunday at 2pm Eastern time. [Put it on your calendar](https://calendar.google.com/calendar/u/2?cid=cmVzZWFyY2hhdGhlbnNAZ21haWwuY29t) and join us! You can help shape the future of notetaking and knowledge graphs.
 
 ## Contributing
 
-If you want to contribute to Athens as a developer, designer, writer, or anything else, start by reading our 
-[contributing](https://athensresearch.gitbook.io/handbook/contributing) doc and [joining our Discord](https://discord.gg/GCJaV3V).
+If you want to contribute to Athens as a developer, designer, writer, or anything else, start by reading our
+[contributing](https://athensresearch.gitbook.io/handbook/community/get-involved/contributing) doc and [joining our
+Discord](https://discord.gg/GCJaV3V).
 
-Developers should read the [instructions to build Athens](https://athensresearch.gitbook.io/handbook/main-stuff/athens-research-governance-and-operations/develop-athens/development#running-athens-locally) to set up your local development environment.
+Developers should read the [instructions to build Athens](https://athensresearch.gitbook.io/handbook/company/athens-research-governance-and-operations/engineering/development#running-athens-locally) to set up your local development environment.
 
 ## Learn more and get help
 
@@ -78,7 +75,8 @@ We are currently building out a hosted software service that will start at $6/mo
 
 ### Sponsorships
 
-**[Sponsor us on Open Collective](https://opencollective.com/athens)** if you believe in the [Athens vision]().
+**[Sponsor us on Open Collective](https://opencollective.com/athens)** if you believe in the [Athens
+vision](https://athensresearch.gitbook.io/handbook/community/about/vision).
 
 This sponsorship gives you first access to upcoming features, like a software service for individuals/teams and a [self-hosted/on-premise solution for enterprises](https://github.com/athensresearch/athens-backend). See the Athens Research [Open Collective page](https://opencollective.com/athens) for details.
 
