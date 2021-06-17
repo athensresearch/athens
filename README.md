@@ -7,7 +7,7 @@
 
 # Athens
 
-Athens is an open-source, self-hosted app for research and notetaking. Outline your ideas, connect them with links and embedded content, and build a personal knowledge database without having to worry about organizing your thoughts. Athens makes your writing more useful over time by making it easy to find and learn from again.
+Athens is an open-source, self-hosted app for research and notetaking. Outline your ideas, connect them with links and embedded content, and build a personal knowledge database without worrying about organizing your thoughts. Athens makes your writing more useful over time by making it easy to find and learn from again.
 
 Athens solves the [big problem](#problem) with information overload while _also_ being open-source, [private](#private), [extensible](#extensible), and [community-driven](#community-driven). We have a much larger [vision](https://athensresearch.gitbook.io/handbook/community/about/vision) for self-hosting, bi-directional links, collective knowledge, and learning in public.
 
@@ -18,7 +18,7 @@ Athens solves the [big problem](#problem) with information overload while _also_
 
   **[Demo Athens in your browser](https://athensresearch.github.io/athens)** to see how it works.
 
-  > ⚠️ The demo doesn't work in Safari due to a limitation in the 
+  > ⚠️ The demo doesn't work in Safari due to missing features. Sorry!
 
   Or click below to **watch a video** from author @tangjeff0 demoing the value of Athens.
 
@@ -32,15 +32,15 @@ We're getting drowned in information. If we don't take notes, we forget everythi
 
 Athens lets you take notes without praying to the search gods, without double-clicking endlessly on folders, and without manual tagging.
 
-Athens does this with **[[bidirectional links]]** and **((block references))**, which are like hyperlinks and embeds with superpowers. Just [[link]] or ((reference)) another page or block—and voilà!—you've now connected two of your ideas, and can see all the other places that _link back_ to these pages. The next time you press `[[` or `((`, you'll be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
+Athens does this with **[[bidirectional links]]** and **((block references))**, which are like hyperlinks and embeds with superpowers. Just [[link]] or ((reference)) another page or block—and voilà!—you've now connected two of your ideas and can see all the other places that _link back_ to these pages. The next time you press `[[` or `((`, you'll be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
 
 ### Private
 
-The [Athens desktop app](https://github.com/athensresearch/athens/releases) saves your notes to your local filesystem (and edit on multiple system with a syncing tool like Dropbox), or use the [self-hosted server](https://github.com/athensresearch/athens-backend). You always own the content of your knowledge graph.
+The [Athens desktop app](https://github.com/athensresearch/athens/releases) saves your notes to your local filesystem (and edit on multiple systems with a syncing tool like Dropbox), or use the [self-hosted server](https://github.com/athensresearch/athens-backend). You always own the content of your knowledge graph.
 
 ### Extensible
 
-Athens' source code is open and we're [accepting contributions](#contributing). We're also building a plugin system for custom themes, keybindings, and integrations with other data sources.
+Athens' source code is open, and we're [accepting contributions](#contributing). We're also building a plugin system for custom themes, keybindings, and integrations with other data sources.
 
 ### Community-driven
 
@@ -55,7 +55,7 @@ If you want to contribute to Athens as a developer, designer, writer, or anythin
 [contributing](https://athensresearch.gitbook.io/handbook/community/get-involved/contributing) doc and [joining our
 Discord](https://discord.gg/GCJaV3V).
 
-Developers should read the [instructions to build Athens](https://athensresearch.gitbook.io/handbook/company/athens-research-governance-and-operations/engineering/development#running-athens-locally) to set up your local development environment.
+Clojure developers: Read the [instructions to build Athens](https://athensresearch.gitbook.io/handbook/company/athens-research-governance-and-operations/engineering/development#running-athens-locally) to set up your local development environment.
 
 ## Learn more and get help
 
@@ -69,7 +69,9 @@ And if you have a question that's not answered here, search our [handbook](https
 
 Athens is free to use as a local-only desktop app. 
 
-We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option for enterprises](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost. If you want to use Athens commercially, please fill out our [intake form](https://docs.google.com/forms/d/e/1FAIpQLSfuWgzGZ2ocB-SweDizMAINYyRZ-3KYwkaf3xIdb4pOs1I-4A/viewform).
+We are currently building out a hosted software service that will start at $6/month. [We have a self-hosted/on-premise option](https://github.com/athensresearch/athens-backend), comparable to GitLab or Mattermost, for enterprises. While that repository is archived, anyone can run it until we're finished adding the real-time collaboration (RTC) code into this repository. See the [self-hosted RTC project board](https://github.com/athensresearch/athens/projects/16) for details.
+
+If you want to use Athens commercially, please fill out our [intake form](https://docs.google.com/forms/d/e/1FAIpQLSfuWgzGZ2ocB-SweDizMAINYyRZ-3KYwkaf3xIdb4pOs1I-4A/viewform).
 
 ### Sponsorships
 
