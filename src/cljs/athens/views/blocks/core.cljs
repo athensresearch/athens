@@ -44,7 +44,9 @@
                                                      :top        "2em"
                                                      :bottom     "0"
                                                      :transform  "translateX(50%)"
+                                                     :transition "background-color 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
+                     ["&.is-presence.show-tree-indicator:before" {:background [["var(--user-color)"]]}]
                      [:&:after {:content        "''"
                                 :z-index        -1
                                 :position       "absolute"
@@ -58,6 +60,10 @@
                                 :transition     "opacity 0.075s ease"
                                 :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
+                     [:.user-avatar {:position "absolute"
+                     :transition "transform 0.3s ease"
+                                     :left "4px"
+                                     :top "4px"}]
                      [:.block-body {:display               "grid"
                                     :grid-template-columns "1em 1em 1fr auto"
                                     :grid-template-rows    "0 1fr 0"
@@ -80,13 +86,10 @@
                                                   :bottom     0
                                                   :left       0}]]
                      [:.block-content {:grid-area  "content"
-                                       :min-height "1.5em"}]
-                     ;; [:&:hover {:background (color :background-minus-1)}]]
-                     ;; Darken block body when block editing,
+                                       :min-height "1.5em"}
+                                       [:&:hover [:+ [:.user-avatar {:transform "translateX(-2em)"}]]]]
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
-                     [:&.is-presence [:.block-content {:opacity 0.5}]]
                      [:.block-container {:margin-left "2rem"
                                          :grid-area   "body"}]]})
 
@@ -247,6 +250,7 @@
                                (when (and (seq children) open) "show-tree-indicator")
                                (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
                                (when is-presence "is-presence")]
+           :style             {"--user-color" (if is-presence (:color present-user) nil)}
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
@@ -261,20 +265,19 @@
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
 
-          #_[presence/presence-popover-info uid {:inline? true}]
-          [toolbar-presence/inline-presence uid]
-
           (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
-           (when (and (seq children)
-                      (not is-presence))
+           (when (seq children)
              [toggle/toggle-el uid-sanitized-block state linked-ref])
            (when (:context-menu/show @state)
              [context-menu/context-menu-el uid-sanitized-block state])
            [bullet/bullet-el block state linked-ref]
            [tooltip/tooltip-el uid-sanitized-block state]
-           [content/block-content-el block state]
+           [content/block-content-el block state is-presence]
+
+          #_[presence/presence-popover-info uid {:inline? true}]
+          [toolbar-presence/inline-presence uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el (count _refs) uid])]
