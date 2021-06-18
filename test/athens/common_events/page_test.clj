@@ -66,5 +66,44 @@
           (test/is (= e-by-title e-by-uid))))))
 
   (test/testing "Delete page with references"
-                ;; TODO continue here
-                ))
+    (let [test-page-1-title "test page 1 title"
+          test-page-1-uid   "test-page-1-uid"
+          test-page-2-title "test page 2 title"
+          test-page-2-uid   "test-page-2-uid"
+          block-text        (str "[[" test-page-1-title "]]")
+          block-uid         "test-block-uid"
+          setup-txs         [{:db/id          -1
+                              :node/title     test-page-1-title
+                              :block/uid      test-page-1-uid
+                              :block/children {:db/id          -2
+                                               :block/uid      "test-block-1-uid"
+                                               :block/string   ""
+                                               :block/children []}}
+                             {:db/id          -3
+                              :node/title     test-page-2-title
+                              :block/uid      test-page-2-uid
+                              :block/children {:db/id        -4
+                                               :block/uid    block-uid
+                                               :block/string block-text}}]
+          query             '[:find ?text
+                              :where
+                              [?e :block/string ?text]
+                              [?e :block/uid ?uid]
+                              :in $ ?uid]]
+      (d/transact @fixture/connection setup-txs)
+      (println "Delete page:" @@fixture/connection)
+      (test/is (= #{[block-text]}
+                  (d/q query
+                       @@fixture/connection
+                       block-uid)))
+
+      ;; delete page 1
+      (d/transact @fixture/connection
+                  (->> test-page-1-uid
+                       (common-events/build-page-delete-event -1)
+                       (resolver/resolve-event-to-tx @@fixture/connection)))
+      ;; check if page reference was cleaned
+      (test/is (= #{[test-page-1-title]}
+                  (d/q query
+                       @@fixture/connection
+                       block-uid))))))
