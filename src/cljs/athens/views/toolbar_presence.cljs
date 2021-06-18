@@ -48,7 +48,7 @@
 
 (def BLOCK-UIDS
   ["" ;; on page, not block
-   "51c3580f5" ;; poseidon
+   "6b8c28b09" ;; poseidon
    "ed9f20b26" ;; way down
    "8b66a56f3" ;; different page
    "4135c0ecb" ;; different page on a block
@@ -137,7 +137,8 @@
   [:svg (merge (use-style {:height          "1.5em"
                            :width           "1.5em"
                            :overflow        "hidden"
-                           :border-radius   "1000em"})
+                           :border-radius   "1000em"}
+                           {:class "user-avatar"})
                props)
    children])
 

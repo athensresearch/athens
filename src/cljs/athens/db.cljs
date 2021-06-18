@@ -58,7 +58,7 @@
                :zoom-level          1
                :graph-conf          default-graph-conf
                :presence/users      [{:username "Zeus", :color "#DDA74C", :block/uid ""}
-                                     {:username "Poseidon", :color "#C45042", :block/uid "51c3580f5"}
+                                     {:username "Poseidon", :color "#C45042", :block/uid "94272f778"}
                                      {:username "Hera", :color "#611A58", :block/uid "ed9f20b26"}
                                      {:username "Demeter", :color "#21A469", :block/uid "8b66a56f3"}
                                      {:username "Athena", :color "#009FB8", :block/uid "4135c0ecb"}
