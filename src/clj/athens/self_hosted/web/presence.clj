@@ -29,15 +29,12 @@
 (defn hello-handler
   [datahike channel {:event/keys [id args last-tx]}]
   (let [username (:username args)
-        max-tx   (-> datahike
-                     :conn
-                     deref
-                     :max-tx)]
+        max-tx   (:max-tx @datahike)]
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
     (clients/broadcast! (common-events/build-presence-online-event max-tx username))
 
-    (let [datoms (d/datoms @(:conn datahike) :eavt)]
+    (let [datoms (d/datoms @datahike :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump-event max-tx datoms)))

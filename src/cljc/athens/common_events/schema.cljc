@@ -9,6 +9,7 @@
   [:enum
    :presence/hello
    :datascript/create-page
+   :datascript/delete-page
    :datascript/paste-verbatim])
 
 
@@ -34,6 +35,13 @@
      [:title string?]]]])
 
 
+(def datascript-delete-page
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
+
 (def datascript-paste-verbatim
   [:map
    [:event/args
@@ -52,6 +60,9 @@
    [:datascript/create-page
     (mu/merge event-common
               datascript-create-page)]
+   [:datascript/delete-page
+    (mu/merge event-common
+              datascript-delete-page)]
    [:datascript/paste-verbatim
     (mu/merge event-common
               datascript-paste-verbatim)]])

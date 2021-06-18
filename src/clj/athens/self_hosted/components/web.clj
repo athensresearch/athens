@@ -52,10 +52,10 @@
             (let [event-type (:event/type data)
                   result     (cond
                                (contains? presence/supported-event-types event-type)
-                               (presence/presence-handler datahike channel data)
+                               (presence/presence-handler (:conn datahike) channel data)
 
                                (contains? datascript/supported-event-types event-type)
-                               (datascript/datascript-handler datahike channel data))]
+                               (datascript/datascript-handler (:conn datahike) channel data))]
               (clients/send! channel (merge {:event/id (:event/id data)}
                                             result)))))))))
 

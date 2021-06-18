@@ -1,6 +1,9 @@
 (ns athens.common-events.resolver
   (:require
-    [clojure.string :as string])
+    [athens.common-db :as common-db]
+    [clojure.string :as string]
+    #?(:clj  [datahike.api :as d]
+       :cljs [datascript.core :as d]))
   #?(:clj
      (:import
        (java.util
@@ -48,6 +51,25 @@
                          :create/time    now
                          :edit/time      now}]
     [page-tx]))
+
+
+(defmethod resolve-event-to-tx :datascript/delete-page
+  [db {:event/keys [args]}]
+  (let [{uid :uid}         args
+        ;; NOTE: common DB query? find page title by page uid?
+        title              (ffirst
+                             (d/q '[:find ?title
+                                    :where
+                                    [?e :node/title ?title]
+                                    [?e :block/uid ?uid]
+                                    :in $ ?uid]
+                                  db uid))
+        retract-blocks     (common-db/retract-uid-recursively-tx db uid)
+        delete-linked-refs (common-db/replace-linked-refs-tx db title)
+        tx-data            (concat retract-blocks
+                                   delete-linked-refs)]
+    (println ":datascript/delete-page" uid title)
+    tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/paste-verbatim

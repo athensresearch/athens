@@ -12,6 +12,7 @@
 (def supported-event-types
   #{:datascript/paste-verbatim
     :datascript/create-page
+    :datascript/delete-page
     ;; TODO: all the events
     })
 
@@ -40,26 +41,24 @@
         (common-events/build-event-rejected event-id err-msg err-data)))))
 
 
-(defn create-page-handler
+(defn default-handler
   [datahike _channel {:event/keys [id] :as event}]
-  (let [txs (resolver/resolve-event-to-tx (:conn datahike) event)]
-    (transact! (:conn datahike) id txs)))
-
-
-(defn paste-verbatim-handler
-  [datahike _channel {:event/keys [id] :as event}]
-  (let [txs (resolver/resolve-event-to-tx (:conn datahike) event)]
-    (transact! (:conn datahike) id txs)))
+  (let [txs (resolver/resolve-event-to-tx @datahike event)]
+    (transact! datahike id txs)))
 
 
 (defn datascript-handler
-  [datahike channel {:event/keys [type args] :as event}]
+  [datahike channel {:event/keys [id type args] :as event}]
   (log/info channel "Received:" type "with args:" args)
   ;; TODO Check if potentially conflicting event?
   ;; if so compare tx-id from client with HEAD master DB
   ;; current -> continue
   ;; stale -> reject
-  (condp = type
-    :datascript/create-page    (create-page-handler datahike channel event)
-    :datascript/paste-verbatim (paste-verbatim-handler datahike channel event)))
+  (if (contains? supported-event-types type)
+    (default-handler datahike channel event)
+    (do
+      (log/error "datascript-handler, unsupported event:" (pr-str event))
+      (common-events/build-event-rejected id
+                                          (str "Unsupported event: " type)
+                                          {:unsupported-type type}))))
 

@@ -56,7 +56,8 @@
   (fn [{:keys [db]} _]
     (js/console.log ":remote/connected")
     {:db (dissoc db :db/remote)
-     :fx [[:dispatch [:loading/unset]]]}))
+     :fx [[:dispatch-n [[:loading/unset]
+                        [:db/sync]]]]}))
 
 
 (rf/reg-event-fx
@@ -754,7 +755,6 @@
                                     :block/children
                                     first ; 1st child
                                     :block/uid)]
-          (js/console.warn "executing locally, wtf?!")
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid child-uid]]]]})
         {:fx [[:dispatch
@@ -762,13 +762,30 @@
 
 
 (rf/reg-event-fx
+  :remote/page-delete
+  (fn [{db :db} [_ uid]]
+    (let [last-seen-tx                 (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      page-delete-event} (common-events/build-page-delete-event last-seen-tx
+                                                                              uid)]
+      (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
+      {:fx                 [[:dispatch [:remote/await-ack event-id]]]
+       :remote/send-event! page-delete-event})))
+
+
+(rf/reg-event-fx
   :page/delete
-  (fn [_ [_ uid title]]
-    (let [retract-blocks     (retract-uid-recursively uid)
-          delete-linked-refs (db/replace-linked-refs title)
-          tx-data            (concat retract-blocks
-                                     delete-linked-refs)]
-      {:fx [[:dispatch [:transact tx-data]]]})))
+  (fn [_ [_ uid _title]]
+    (js/console.debug ":page/delete:" uid)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":page/delete local?" local?)
+      (if local?
+        (let [delete-page-event (common-events/build-page-delete-event -1
+                                                                       uid)
+              tx-data           (resolver/resolve-event-to-tx @db/dsdb delete-page-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        {:fx [[:dispatch
+               [:remote/page-delete uid]]]}))))
 
 
 (rf/reg-event-fx

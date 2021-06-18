@@ -88,6 +88,17 @@
                      :value value}}))
 
 
+(defn build-page-delete-event
+  "Builds `:datascript/page-delete` event with:
+  - `uid`: of page to be deleted."
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/delete-page
+     :event/args    {:uid uid}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event
