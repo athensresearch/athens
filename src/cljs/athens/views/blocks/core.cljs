@@ -231,7 +231,7 @@
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [:selected/is-selected uid])
-             present-user          @(rf/subscribe [:presence/inline-present? uid])
+             present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (not (nil? present-user))]
 
          ;; (prn uid is-selected)

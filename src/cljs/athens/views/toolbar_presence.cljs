@@ -138,9 +138,10 @@
                            :width           "1.5em"
                            :overflow        "hidden"
                            :border-radius   "1000em"}
-                           {:class "user-avatar"})
+                          {:class "user-avatar"})
                props)
    children])
+
 
 
 (defn avatar-el
@@ -341,7 +342,7 @@
 ;; inline
 
 (rf/reg-sub
-  :presence/inline-present?
+  :presence/has-presence
   :<- [:presence/users-with-page-data]
   (fn [users [_ uid]]
     (-> (filter (fn [user]
@@ -352,6 +353,6 @@
 
 (defn inline-presence
   [uid]
-  (let [inline-present? (rf/subscribe [:presence/inline-present? uid])]
+  (let [inline-present? (rf/subscribe [:presence/has-presence uid])]
     (when @inline-present?
       [avatar-el @inline-present?])))
