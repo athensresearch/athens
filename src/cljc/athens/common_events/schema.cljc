@@ -10,6 +10,8 @@
    :presence/hello
    :datascript/create-page
    :datascript/delete-page
+   :datascript/new-block
+   :datascript/add-child
    :datascript/paste-verbatim])
 
 
@@ -42,6 +44,23 @@
      [:uid string?]]]])
 
 
+(def datascript-new-block
+  [:map
+   [:event/args
+    [:map
+     [:parent-eid int?]
+     [:block-order int?]
+     [:new-uid string?]]]])
+
+
+(def datascript-add-child
+  [:map
+   [:event/args
+    [:map
+     [:eid int?]
+     [:new-uid string?]]]])
+
+
 (def datascript-paste-verbatim
   [:map
    [:event/args
@@ -63,6 +82,12 @@
    [:datascript/delete-page
     (mu/merge event-common
               datascript-delete-page)]
+   [:datascript/new-block
+    (mu/merge event-common
+              datascript-new-block)]
+   [:datascript/add-child
+    (mu/merge event-common
+              datascript-add-child)]
    [:datascript/paste-verbatim
     (mu/merge event-common
               datascript-paste-verbatim)]])

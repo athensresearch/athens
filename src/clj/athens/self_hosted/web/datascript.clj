@@ -13,6 +13,8 @@
   #{:datascript/paste-verbatim
     :datascript/create-page
     :datascript/delete-page
+    :datascript/new-block
+    :datascript/add-child
     ;; TODO: all the events
     })
 

@@ -72,6 +72,42 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/new-block
+  [db {:event/keys [args]}]
+  (let [{:keys [parent-eid
+                block-order
+                new-uid]} args
+        new-block         {:db/id        -1
+                           :block/uid    new-uid
+                           :block/string ""
+                           :block/order  (inc block-order)
+                           :block/open   true}
+        reindex           (concat [new-block]
+                                  (common-db/inc-after db parent-eid block-order))
+        tx-data           [{:db/id          parent-eid
+                            :block/children reindex}]]
+    (println ":datascript/new-block" parent-eid new-uid)
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/add-child
+  [db {:event/keys [args]}]
+  (let [{:keys [eid
+                new-uid]} args
+        new-child         {:db/id        -1
+                           :block/uid    new-uid
+                           :block/string ""
+                           :block/order  0
+                           :block/open   true}
+        reindex           (concat [new-child]
+                                  (common-db/inc-after db eid -1))
+        new-block         {:db/id          eid
+                           :block/children reindex}
+        tx-data           [new-block]]
+    (println ":datascript/add-child" eid new-uid)
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
   [_db {:event/keys [args]}]
   (let [{:keys [uid

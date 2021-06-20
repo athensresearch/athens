@@ -163,15 +163,20 @@
                                         :reason   explanation}]))))
 
 
+(defn- local-eid
+  [remote-eid]
+  (db/e-by-av :remote/db-id remote-eid))
+
+
 (defn- build-addition-tx
   [tempids e-id additions]
   (when (seq additions)
     (let [e->tmp (set/map-invert tempids)]
       (reduce (fn [acc {:keys [_e a v _tx _added]}]
                 (assoc acc a (if (= :block/children a)
-                               (get e->tmp v [:remote/db-id v])
+                               (get e->tmp v (local-eid v))
                                v)))
-              {:db/id        (get e->tmp e-id [:remote/db-id e-id])
+              {:db/id        (get e->tmp e-id (local-eid e-id))
                :remote/db-id e-id}
               additions))))
 
@@ -181,10 +186,10 @@
   (when (seq retractions)
     (reduce (fn [acc {:keys [_e a v _tx _added]}]
               (conj acc [:db/retract
-                         [:remote/db-id e-id]
+                         (local-eid e-id)
                          a
                          (if (= :block/children a)
-                           [:remote/db-id v]
+                           (local-eid v)
                            v)]))
             []
             retractions)))

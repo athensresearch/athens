@@ -75,16 +75,16 @@
           setup-txs         [{:db/id          -1
                               :node/title     test-page-1-title
                               :block/uid      test-page-1-uid
-                              :block/children {:db/id          -2
-                                               :block/uid      "test-block-1-uid"
-                                               :block/string   ""
-                                               :block/children []}}
+                              :block/children [{:db/id          -2
+                                                :block/uid      "test-block-1-uid"
+                                                :block/string   ""
+                                                :block/children []}]}
                              {:db/id          -3
                               :node/title     test-page-2-title
                               :block/uid      test-page-2-uid
-                              :block/children {:db/id        -4
-                                               :block/uid    block-uid
-                                               :block/string block-text}}]
+                              :block/children [{:db/id        -4
+                                                :block/uid    block-uid
+                                                :block/string block-text}]}]
           query             '[:find ?text
                               :where
                               [?e :block/string ?text]

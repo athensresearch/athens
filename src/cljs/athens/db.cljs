@@ -320,7 +320,7 @@
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  @(pull dsdb '[:db/id :remote/db-id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
 (defn get-parent

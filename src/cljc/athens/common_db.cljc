@@ -15,6 +15,46 @@
       :e))
 
 
+(def rules
+  '[[(after ?p ?at ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?at)]]
+    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
+     [?p :block/children ?ch]
+     [?ch :block/order ?o]
+     [(> ?o ?lower-bound)]
+     [(< ?o ?upper-bound)]]
+    [(inc-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(inc ?o) ?new-o]]
+    [(dec-after ?p ?at ?ch ?new-o)
+     (after ?p ?at ?ch ?o)
+     [(dec ?o) ?new-o]]
+    [(plus-after ?p ?at ?ch ?new-o ?x)
+     (after ?p ?at ?ch ?o)
+     [(+ ?o ?x) ?new-o]]
+    [(minus-after ?p ?at ?ch ?new-o ?x)
+     (after ?p ?at ?ch ?o)
+     [(- ?o ?x) ?new-o]]
+    [(siblings ?uid ?sib-e)
+     [?e :block/uid ?uid]
+     [?p :block/children ?e]
+     [?p :block/children ?sib-e]]])
+
+
+(defn inc-after
+  [db eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :in $ % ?p ?at
+              :keys db/id block/order
+              :where (inc-after ?p ?at ?ch ?new-o)]
+            db
+            rules
+            eid
+            order)))
+
+
 (defn get-children-uids-recursively
   "Get list of children UIDs for given block `uid` (including the root block's UID)"
   [db uid]

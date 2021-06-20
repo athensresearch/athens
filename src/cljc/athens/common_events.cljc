@@ -59,6 +59,8 @@
                      :tempids tempids}}))
 
 
+;;   - page events
+
 (defn build-page-create-event
   "Builds `:datascript/create-page` event with `uid` and `title` of page."
   [last-tx uid title]
@@ -97,6 +99,37 @@
      :event/last-tx last-tx
      :event/type    :datascript/delete-page
      :event/args    {:uid uid}}))
+
+
+;;   - block events
+;;     NOTE: `new-uid` is always passed from the caller,
+;;           it would be safer to generate it during resolution
+(defn build-new-block-event
+  "Builds `:datascript/new-block` event with:
+  - `parent-eid`: `:db/id` of parent node
+  - `block-order`: order of current block
+  - `new-uid`: `:block/uid` for new block"
+  [last-tx parent-eid block-order new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/new-block
+     :event/args    {:parent-eid  parent-eid
+                     :block-order block-order
+                     :new-uid     new-uid}}))
+
+
+(defn build-add-child-event
+  "Builds `:datascript/add-child` event with:
+  - `eid`: `:db/id` of parent block
+  -`new-uid`: new child's block uid"
+  [last-tx eid new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/add-child
+     :event/args    {:eid     eid
+                     :new-uid new-uid}}))
 
 
 ;; - presence events
