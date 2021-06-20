@@ -13,12 +13,12 @@
     [datascript.transit                   :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
-    [re-frame.core                        :as rf]))
+    [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
 
-(rf/reg-event-fx
+(reg-event-fx
   :boot/web
   (fn [_ _]
     {:db         db/rfdb
@@ -26,20 +26,20 @@
                   [:local-storage/set-theme]]}))
 
 
-(rf/reg-event-db
+(reg-event-db
   :init-rfdb
   (fn [_ _]
     db/rfdb))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :db/update-filepath
   (fn [{:keys [db]} [_ filepath]]
     {:db (assoc db :db/filepath filepath)
      :local-storage/set! ["db/filepath" filepath]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/connect!
   (fn [{:keys [db]} [_ connection-config]]
     (js/console.log ":remote/connect!" (pr-str connection-config))
@@ -51,7 +51,7 @@
      :fx                     [[:dispatch [:loading/set]]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/connected
   (fn [{:keys [db]} _]
     (js/console.log ":remote/connected")
@@ -60,7 +60,7 @@
                         [:db/sync]]]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/disconnect!
   (fn [{:keys [db]} _]
     {:db                        (dissoc db :db/remote)
@@ -68,13 +68,13 @@
      :local-storage/set!        ["db/remote" nil]}))
 
 
-(rf/reg-event-db
+(reg-event-db
   :db/sync
   (fn [db [_]]
     (assoc db :db/synced true)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :db/not-synced
   (fn [db [_]]
     (assoc db :db/synced false)))
@@ -189,7 +189,7 @@
     (d/db-with db tx-data)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :upload/roam-edn
   (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
     (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
@@ -201,56 +201,56 @@
       {:dispatch [:transact tx-data]})))
 
 
-(rf/reg-event-db
+(reg-event-db
   :athena/toggle
   (fn [db _]
     (update db :athena/open not)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :athena/update-recent-items
   (fn-traced [db [_ selected-page]]
              (when (nil? ((set (:athena/recent-items db)) selected-page))
                (update db :athena/recent-items conj selected-page))))
 
 
-(rf/reg-event-db
+(reg-event-db
   :devtool/toggle
   (fn [db _]
     (update db :devtool/open not)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :left-sidebar/toggle
   (fn [db _]
     (update db :left-sidebar/open not)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :right-sidebar/toggle
   (fn [db _]
     (update db :right-sidebar/open not)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :right-sidebar/toggle-item
   (fn [db [_ item]]
     (update-in db [:right-sidebar/items item :open] not)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :right-sidebar/set-width
   (fn [db [_ width]]
     (assoc db :right-sidebar/width width)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :mouse-down/set
   (fn [db _]
     (assoc db :mouse-down true)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :mouse-down/unset
   (fn [db _]
     (assoc db :mouse-down false)))
@@ -258,7 +258,7 @@
 
 ;; no ops -- does not do anything
 ;; useful in situations where there is no dispatch value
-(rf/reg-event-fx
+(reg-event-fx
   :no-op
   (fn [_ _]
     (js/console.warn "Called :no-op re-frame event, this shouldn't be happening.")
@@ -266,7 +266,7 @@
 
 
 ;; TODO: dec all indices > closed item
-(rf/reg-event-db
+(reg-event-db
   :right-sidebar/close-item
   (fn [db [_ uid]]
     (let [{:right-sidebar/keys [items]} db]
@@ -274,7 +274,7 @@
         (= 1 (count items)) (assoc :right-sidebar/open false)))))
 
 
-(rf/reg-event-db
+(reg-event-db
   :right-sidebar/navigate-item
   (fn [db [_ uid breadcrumb-uid]]
     (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
@@ -286,7 +286,7 @@
 
 
 ;; TODO: change right sidebar items from map to datascript
-(rf/reg-event-fx
+(reg-event-fx
   :right-sidebar/open-item
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
@@ -308,20 +308,20 @@
                     [:right-sidebar/scroll-top]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :right-sidebar/scroll-top
   (fn []
     {:right-sidebar/scroll-top nil}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
     {:db            (assoc db :editing/uid uid)
      :editing/focus [uid index]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :editing/target
   (fn [{:keys [db]} [_ target]]
     (let [uid (-> (.. target -id)
@@ -330,31 +330,31 @@
       {:db (assoc db :editing/uid uid)})))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
     (update db :selected/items (fnil conj #{}) uid)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
     (update db :selected/items disj uid)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/remove-items
   (fn [db [_ uids]]
     (update db :selected/items #(apply disj %1 %2) uids)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
     (update db :selected/items #(apply conj %1 %2) uids)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/clear-items
   (fn [db _]
     (assoc db :selected/items #{})))
@@ -368,7 +368,7 @@
         prev-block-o-uid (-> prev-block-uid db/uid-and-embed-id first)
         prev-block       (db/get-block [:block/uid prev-block-o-uid])
         parent           (db/get-parent [:block/uid (-> first-item db/uid-and-embed-id first)])
-        editing-uid      @(rf/subscribe [:editing/uid])
+        editing-uid      @(subscribe [:editing/uid])
         editing-idx      (first (keep-indexed (fn [idx x]
                                                 (when (= x editing-uid)
                                                   idx))
@@ -398,7 +398,7 @@
     new-items))
 
 
-(rf/reg-event-db
+(reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
     (assoc db :selected/items (select-up selected-items))))
@@ -406,7 +406,7 @@
 
 (defn select-down
   [selected-items]
-  (let [editing-uid @(rf/subscribe [:editing/uid])
+  (let [editing-uid @(subscribe [:editing/uid])
         editing-idx (first (keep-indexed (fn [idx x]
                                            (when (= x editing-uid)
                                              idx))
@@ -429,7 +429,7 @@
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
 ;; this would let us know if the operation is additive or subtractive
-(rf/reg-event-db
+(reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
     (assoc db :selected/items (select-down selected-items))))
@@ -462,7 +462,7 @@
     (minus-after (:db/id parent) order n)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :selected/delete
   (fn [{:keys [db]} [_ selected-items]]
     (let [sanitize-selected (map (comp first db/uid-and-embed-id) selected-items)
@@ -476,20 +476,20 @@
 
 ;; Alerts
 
-(rf/reg-event-db
+(reg-event-db
   :alert/set
   (fn-traced [db alert]
              (assoc db :alert alert)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :alert/unset
   (fn-traced [db]
              (assoc db :alert nil)))
 
 
 ;; Use native js/alert rather than custom UI alert
-(rf/reg-event-fx
+(reg-event-fx
   :alert/js
   (fn [_ [_ message]]
     {:alert/js! message}))
@@ -498,7 +498,7 @@
 ;; Modal
 
 
-(rf/reg-event-db
+(reg-event-db
   :modal/toggle
   (fn [db _]
     (update db :modal not)))
@@ -506,7 +506,7 @@
 
 ;; Window Size
 
-(rf/reg-event-fx
+(reg-event-fx
   :window/set-size
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
@@ -514,19 +514,19 @@
 
 ;; Loading
 
-(rf/reg-event-db
+(reg-event-db
   :loading/set
   (fn-traced [db]
              (assoc-in db [:loading?] true)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :loading/unset
   (fn-traced [db]
              (assoc-in db [:loading?] false)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :tooltip/uid
   (fn [db [_ uid]]
     (assoc db :tooltip/uid uid)))
@@ -534,19 +534,19 @@
 
 ;; Daily Notes
 
-(rf/reg-event-db
+(reg-event-db
   :daily-notes/reset
   (fn [db _]
     (assoc db :daily-notes/items [])))
 
 
-(rf/reg-event-db
+(reg-event-db
   :daily-notes/add
   (fn [db [_ uid]]
     (assoc db :daily-notes/items [uid])))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :daily-note/prev
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db (update db :daily-notes/items (fn [items]
@@ -557,7 +557,7 @@
          :dispatch [:page/create title uid]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db (update db :daily-notes/items conj uid)]
@@ -567,7 +567,7 @@
          :dispatch [:page/create title uid]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :daily-note/delete
   (fn [{:keys [db]} [_ uid title]]
     (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
@@ -580,7 +580,7 @@
 
 ;; Import/Export
 
-(rf/reg-event-fx
+(reg-event-fx
   :get-db/init
   (fn [{rfdb :db} _]
     {:db (cond-> db/rfdb
@@ -599,7 +599,7 @@
                                     :halt? true}]}}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :http/get-db
   (fn [_ _]
     {:http {:method :get
@@ -609,7 +609,7 @@
             :on-failure [:alert/set]}}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :http-success/get-db
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
@@ -618,22 +618,22 @@
              :dispatch [:local-storage/set-db new-db]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :local-storage/get-db
-  [(rf/inject-cofx :local-storage "datascript/DB")]
+  [(inject-cofx :local-storage "datascript/DB")]
   (fn [{:keys [local-storage]} _]
     {:dispatch [:reset-conn (dt/read-transit-str local-storage)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :local-storage/set-db
   (fn [_ [_ db]]
     {:local-storage/set-db! db}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :local-storage/set-theme
-  [(rf/inject-cofx :local-storage "theme/dark")]
+  [(inject-cofx :local-storage "theme/dark")]
   (fn [{:keys [local-storage db]} _]
     (let [is-dark (= "true" local-storage)
           theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
@@ -641,7 +641,7 @@
        :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :theme/toggle
   (fn [{:keys [db]} _]
     (let [dark?    (:theme/dark db)
@@ -656,10 +656,10 @@
 
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
-    (let [synced?   @(rf/subscribe [:db/synced])
+    (let [synced?   @(subscribe [:db/synced])
           electron? (athens.util/electron?)]
       (if (and synced? electron?)
         {:fx [[:transact! tx-data]
@@ -668,7 +668,7 @@
         {:fx [[:transact! tx-data]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :reset-conn
   (fn [_ [_ db]]
     {:reset-conn! db}))
@@ -679,19 +679,19 @@
   (update db :remote/followup (fnil assoc {}) event-id fx))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/register-followup
   (fn [db [_ event-id fx]]
     (followup-fx db event-id fx)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/unregister-followup
   (fn [db [_ event-id]]
     (update db :remote/followup dissoc event-id)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/page-create
   (fn [{db :db} [_ uid title]]
     (let [last-seen-tx                 (:remote/last-seen-tx db)
@@ -706,7 +706,7 @@
        :remote/send-event! page-create-event})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/followup-page-create
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-page-create" event-id)
@@ -726,7 +726,7 @@
                           [:remote/unregister-followup event-id]]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :page/create
   (fn [_ [_ title uid]]
     (js/console.debug ":page/create" title uid)
@@ -748,19 +748,18 @@
                [:remote/page-create uid title]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/page-delete
   (fn [{db :db} [_ uid]]
-    (let [last-seen-tx                 (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      page-delete-event} (common-events/build-page-delete-event last-seen-tx
-                                                                              uid)]
+    (let [last-seen-tx      (:remote/last-seen-tx db)
+          page-delete-event (common-events/build-page-delete-event last-seen-tx
+                                                                   uid)]
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
       {:fx                 [[:dispatch [:remote/await-event page-delete-event]]]
        :remote/send-event! page-delete-event})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :page/delete
   (fn [_ [_ uid _title]]
     (js/console.debug ":page/delete:" uid)
@@ -775,7 +774,7 @@
                [:remote/page-delete uid]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :page/reindex-left-sidebar
   (fn [_ _]
     {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
@@ -789,7 +788,7 @@
       {:fx [[:dispatch [:transact sidebar-ents]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
     (let [sidebar-ents-count (or (d/q '[:find (count ?e) .
@@ -800,14 +799,14 @@
             [:dispatch [:page/reindex-left-sidebar]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
     {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]
           [:dispatch [:page/reindex-left-sidebar]]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :save
   (fn [_ _]
     {:fs/write! nil}))
@@ -858,19 +857,19 @@
        true (concat [[:db/add "new" :from-undo-redo true]])))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :undo
   (fn [_ _]
     {:dispatch [:transact (inverse-tx)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :redo
   (fn [_ _]
     {:dispatch [:transact (inverse-tx true)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :up
   (fn [_ [_ uid d-key-up]]
     {:dispatch [:editing/uid
@@ -884,7 +883,7 @@
                     uid)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :down
   (fn [_ [_ uid _d-key-down]]
     (let [[_o-uid o-embed-id] (db/uid-and-embed-id uid)
@@ -952,7 +951,7 @@
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
 ;; which might not be same as blur is not yet called
-(rf/reg-event-fx
+(reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
     (backspace uid value)))
@@ -1002,7 +1001,7 @@
           [:dispatch [:editing/uid new-uid]]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :split-block-to-children
   (fn [_ [_ uid val index new-uid]]
     (split-block-to-children uid val index (or new-uid (gen-block-uid)))))
@@ -1038,7 +1037,7 @@
                             :block/children reindex}]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/new-block
   (fn [{db :db} [_ block parent new-uid]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
@@ -1054,7 +1053,7 @@
        :remote/send-event! new-block-event})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/followup-new-block
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-new-block" event-id)
@@ -1068,7 +1067,7 @@
                           [:remote/unregister-followup event-id]]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter/new-block
   (fn [_ [_ block parent new-uid]]
     (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
@@ -1084,7 +1083,7 @@
         {:fx [[:dispatch [:remote/new-block block parent new-uid]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/add-child
   (fn [{db :db} [_ remote-db-id new-uid]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
@@ -1099,7 +1098,7 @@
        :remote/send-event! add-child-event})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/followup-add-child
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-add-child" event-id)
@@ -1113,7 +1112,7 @@
                           [:remote/unregister-followup event-id]]]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter/add-child
   (fn [_ [_ block new-uid]]
     (js/console.debug ":enter/add-child" (pr-str block) new-uid)
@@ -1129,19 +1128,19 @@
         {:fx [[:dispatch [:remote/add-child (:remote/db-id block) new-uid]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter/split-block
   (fn [_ [_ uid val index new-uid]]
     (split-block uid val index new-uid)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter/bump-up
   (fn [_ [_ uid new-uid]]
     (bump-up uid new-uid)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter/open-block-and-child
   (fn [_ [_ block new-uid]]
     {:fx [[:dispatch [:transact [[:db/add [:block/uid (:block/uid block)] :block/open true]]]]
@@ -1221,7 +1220,7 @@
                                     embed-id (str "-embed-" embed-id))])]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :enter
   (fn [{rfdb :db} [_ uid d-event]]
     (enter rfdb uid d-event)))
@@ -1254,7 +1253,7 @@
          :set-cursor-position [uid start end]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :indent
   (fn [_ [_ uid d-event]]
     (indent uid d-event)))
@@ -1288,7 +1287,7 @@
         {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :indent/multi
   (fn [_ [_ uids]]
     (indent-multi (mapv (comp first db/uid-and-embed-id) uids))))
@@ -1326,7 +1325,7 @@
                :set-cursor-position [uid start end]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :unindent
   (fn [{rfdb :db} [_ uid d-event]]
     (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
@@ -1379,7 +1378,7 @@
               {:fx [[:dispatch [:transact tx-data]]]}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :unindent/multi
   (fn [{rfdb :db} [_ uids]]
     (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
@@ -1399,7 +1398,7 @@
     tx-data))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-link/child
   (fn [_ [_ source target]]
     {:dispatch [:transact (drop-link-child source target)]}))
@@ -1443,7 +1442,7 @@
     tx-data))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-link/same
   (fn [_ [_ kind source parent target]]
     {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
@@ -1466,7 +1465,7 @@
     [new-target-parent]))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-link/diff
   (fn [_ [_ kind source target target-parent]]
     {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
@@ -1487,7 +1486,7 @@
     tx-data))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop/child
   (fn [_ [_ source source-parent target]]
     {:dispatch [:transact (drop-child source source-parent target)]}))
@@ -1536,7 +1535,7 @@
     tx-data))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop/same
   (fn [_ [_ kind source parent target]]
     {:dispatch [:transact (drop-same-parent kind source parent target)]}))
@@ -1564,7 +1563,7 @@
      new-target-parent]))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop/diff
   (fn [_ [_ kind source source-parent target target-parent]]
     {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
@@ -1587,7 +1586,7 @@
     {:dispatch event}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop
   (fn [_ [_ source-uid target-uid kind effect-allowed]]
     (drop-bullet source-uid target-uid kind effect-allowed)))
@@ -1726,25 +1725,25 @@
     tx-data))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-multi/child
   (fn [_ [_ source-uid target]]
     {:dispatch [:transact (drop-multi-child source-uid target)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-multi/same-all
   (fn [_ [_ kind source-uids parent target]]
     {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-multi/same-source
   (fn [_ [_ kind source-uids first-source-parent target target-parent]]
     {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
@@ -1773,7 +1772,7 @@
           [:dispatch event]]}))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :drop-multi
   (fn [_ [_ uids target-uid kind]]
     (drop-bullet-multi uids target-uid kind)))
@@ -1850,7 +1849,7 @@
 ;; - If anywhere else beyond text start of an OPEN parent block, prepend children
 ;; - Otherwise append after current block.
 
-(rf/reg-event-fx
+(reg-event-fx
   :paste
   (fn [_ [_ uid text]]
     (let [[uid embed-id]  (db/uid-and-embed-id uid)
@@ -1893,23 +1892,22 @@
                                         embed-id (str "-embed-" embed-id)) n]))]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
-    (let [last-seen-tx                    (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      paste-verbatim-event} (common-events/build-paste-verbatim-event last-seen-tx
-                                                                                    uid
-                                                                                    text
-                                                                                    start
-                                                                                    value)]
+    (let [last-seen-tx         (:remote/last-seen-tx db)
+          paste-verbatim-event (common-events/build-paste-verbatim-event last-seen-tx
+                                                                         uid
+                                                                         text
+                                                                         start
+                                                                         value)]
       {:fx                 [[:dispatch [:remote/await-event paste-verbatim-event]]]
        :remote/send-event! paste-verbatim-event})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :paste-verbatim
-  (fn [{db :db} [_ uid text]]
+  (fn [{_db :db} [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
     (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
@@ -1948,7 +1946,7 @@
     new-indices))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :left-sidebar/drop-above
   (fn-traced [_ [_ source-order target-order]]
              {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
@@ -1973,7 +1971,7 @@
     new-indices))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :left-sidebar/drop-below
   (fn-traced [_ [_ source-order target-order]]
              {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
@@ -1990,7 +1988,7 @@
     new-str))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :unlinked-references/link
   (fn [_ [_ block title]]
     (let [{:block/keys [string uid]} block
@@ -1998,41 +1996,41 @@
       {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
     (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second unlinked-refs)
+                               (mapcat second)
                                (map (fn [{:block/keys [string uid]}]
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/await-event
   (fn [db [_ event]]
     (js/console.log "await event" (pr-str event))
     (update db :remote/awaited-events (fnil conj #{}) event)))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/await-tx
   (fn [db [_ awaited-tx-id]]
     (js/console.log "await tx" awaited-tx-id)
     (update db :remote/awaited-tx (fnil conj #{}) awaited-tx-id)))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/accepted-event
-  (fn [{db :db} [_ {:keys [event-id tx-id event]}]]
+  (fn [{db :db} [_ {:keys [event-id]}]]
     (let [followups (get-in db [:remote/followup event-id])]
       (js/console.debug ":remote/accepted-event: " event-id "followup" (pr-str followups))
       (when (seq followups)
         {:fx followups}))))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/accept-event
   (fn [{db :db} [_ {:keys [event-id tx-id] :as acceptance-event}]]
     (js/console.log "accept event" (pr-str acceptance-event))
@@ -2055,7 +2053,7 @@
        :fx [[:dispatch-n events]]})))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/reject-event
   (fn [db [_ {:keys [event-id reason data] :as rejection-event}]]
     (js/console.log "reject event" (pr-str rejection-event))
@@ -2071,7 +2069,7 @@
           (update :remote/rejected-events (fnil conj #{}) rejection-info)))))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/fail-event
   (fn [db [_ {:keys [event-id reason] :as failure-event}]]
     (js/console.warn "fail event" (pr-str failure-event))
@@ -2086,14 +2084,14 @@
           (update :remote/failed-events (fnil conj #{}) failure-info)))))
 
 
-(rf/reg-event-db
+(reg-event-db
   :remote/updated-last-seen-tx
   (fn [db _]
     (js/console.debug ":remote/updated-last-seen-tx")
     db))
 
 
-(rf/reg-event-fx
+(reg-event-fx
   :remote/last-seen-tx!
   (fn [{db :db} [_ new-tx-id]]
     (js/console.debug "last-seen-tx!" new-tx-id)

@@ -27,7 +27,7 @@
 
 
 (defn hello-handler
-  [datahike channel {:event/keys [id args last-tx]}]
+  [datahike channel {:event/keys [id args _last-tx]}]
   (let [username (:username args)
         max-tx   (:max-tx @datahike)]
     (log/info channel "New Client Intro:" username)

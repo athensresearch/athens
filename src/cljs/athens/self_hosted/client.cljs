@@ -267,7 +267,7 @@
 
 
 (defn- db-dump-handler
-  [last-tx {:keys [datoms] :as args}]
+  [last-tx {:keys [datoms]}]
   (js/console.debug "Received DB Dump")
   (let [entities (reconstruct-entities-from-db-dump datoms)]
     (js/console.debug "Reconstructed" (count entities) "entities")
