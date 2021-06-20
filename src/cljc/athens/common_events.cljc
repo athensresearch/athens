@@ -1,7 +1,5 @@
 (ns athens.common-events
-  "Event as Verbs executed on Knowledge Graph"
-  (:require
-    [clojure.string :as string]))
+  "Event as Verbs executed on Knowledge Graph")
 
 
 ;; helpers

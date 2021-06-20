@@ -751,10 +751,9 @@
 (rf/reg-event-fx
   :remote/page-delete
   (fn [{db :db} [_ uid]]
-    (let [last-seen-tx                 (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      page-delete-event} (common-events/build-page-delete-event last-seen-tx
-                                                                              uid)]
+    (let [last-seen-tx      (:remote/last-seen-tx db)
+          page-delete-event (common-events/build-page-delete-event last-seen-tx
+                                                                   uid)]
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
       {:fx                 [[:dispatch [:remote/await-event page-delete-event]]]
        :remote/send-event! page-delete-event})))
@@ -1896,20 +1895,19 @@
 (rf/reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
-    (let [last-seen-tx                    (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      paste-verbatim-event} (common-events/build-paste-verbatim-event last-seen-tx
-                                                                                    uid
-                                                                                    text
-                                                                                    start
-                                                                                    value)]
+    (let [last-seen-tx         (:remote/last-seen-tx db)
+          paste-verbatim-event (common-events/build-paste-verbatim-event last-seen-tx
+                                                                         uid
+                                                                         text
+                                                                         start
+                                                                         value)]
       {:fx                 [[:dispatch [:remote/await-event paste-verbatim-event]]]
        :remote/send-event! paste-verbatim-event})))
 
 
 (rf/reg-event-fx
   :paste-verbatim
-  (fn [{db :db} [_ uid text]]
+  (fn [{_db :db} [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
     (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
@@ -2002,7 +2000,7 @@
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
     (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second unlinked-refs)
+                               (mapcat second)
                                (map (fn [{:block/keys [string uid]}]
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
@@ -2025,7 +2023,7 @@
 
 (rf/reg-event-fx
   :remote/accepted-event
-  (fn [{db :db} [_ {:keys [event-id tx-id event]}]]
+  (fn [{db :db} [_ {:keys [event-id]}]]
     (let [followups (get-in db [:remote/followup event-id])]
       (js/console.debug ":remote/accepted-event: " event-id "followup" (pr-str followups))
       (when (seq followups)
