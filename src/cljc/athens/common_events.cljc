@@ -150,3 +150,16 @@
      :event/last-tx last-tx
      :event/type    :presence/online
      :event/args    {:username username}}))
+
+
+;; TODO: could we reuse the `:presence/all-online` event and pass a vector of maps instead of a single map
+(defn build-presence-all-online-event
+  "Builds `:presence/all-online` event with all active users, excluding origin client."
+  [last-tx clients]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/all-online
+     :event/args    (mapv (fn [username]
+                            {:username username})
+                          clients)}))

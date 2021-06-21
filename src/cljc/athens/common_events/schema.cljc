@@ -152,7 +152,8 @@
   [:enum
    :datascript/tx-log
    :datascript/db-dump
-   :presence/online])
+   :presence/online
+   :presence/all-online])
 
 
 (def server-event-common
@@ -195,6 +196,14 @@
      [:username string?]]]])
 
 
+(def presence-all-online
+  [:map
+   [:event/args
+    [:vector
+     [:map
+      [:username string?]]]]])
+
+
 (def server-event
   [:multi {:dispatch :event/type}
    [:datascript/tx-log (mu/merge server-event-common
@@ -202,7 +211,9 @@
    [:datascript/db-dump (mu/merge server-event-common
                                   db-dump)]
    [:presence/online (mu/merge server-event-common
-                               presence-online)]])
+                               presence-online)]
+   [:presence/all-online (mu/merge server-event-common
+                                    presence-all-online)]])
 
 
 (def valid-server-event?

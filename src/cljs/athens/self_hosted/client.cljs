@@ -285,6 +285,9 @@
     ;; TODO manage connected users in re-frame
     (js/console.log "User online:" username)))
 
+(defn- presence-all-online-handler
+  [args]
+  (js/console.log "HIIII"))
 
 (defn- server-event-handler
   [{:event/keys [id last-tx type args] :as packet}]
@@ -293,9 +296,10 @@
   (if (schema/valid-server-event? packet)
 
     (condp = type
-      :datascript/tx-log  (ds-tx-log-handler args)
+      :datascript/tx-log (ds-tx-log-handler args)
       :datascript/db-dump (db-dump-handler last-tx args)
-      :presence/online    (presence-online-handler args))
+      :presence/online (presence-online-handler args)
+      :presence/all-online (presence-all-online-handler args))
 
     (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
 
@@ -449,6 +453,6 @@
                {:e 42, :a :block/children, :v 43, :tx 536870942, :added false}]
      :tempids {:db/current-tx 536870942}})
   
-  (reconstruct-tx-from-log args)
+  (reconstruct-tx-from-log args))
   
-  )
+

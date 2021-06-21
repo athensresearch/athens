@@ -220,8 +220,8 @@
 
 
 (defn dev-pprint
-  [data]
-  (when config/debug? (pprint data)))
+  [data])
+  ;(when config/debug? (pprint data)))
 
 
 (defn walk-transact

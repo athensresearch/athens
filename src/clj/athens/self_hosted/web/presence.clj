@@ -23,7 +23,7 @@
 (def supported-event-types
   #{:presence/hello
     :presence/editing
-    :presence/viewing})
+    :presence/goodbye})
 
 
 (defn hello-handler
@@ -37,7 +37,9 @@
     (let [datoms (d/datoms @datahike :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
-                     (common-events/build-db-dump-event max-tx datoms)))
+                     (common-events/build-db-dump-event max-tx datoms))
+      (log/debug "HELLO")
+      (clients/send! channel (common-events/build-presence-all-online-event max-tx (clients/get-clients))))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
@@ -66,10 +68,8 @@
       (clients/broadcast! (last @all-presence)))))
 
 
-(defn viewing-handler
-  [_channel _event]
-  ;; TODO new viewing presence
-  )
+(defn goodbye-handler
+  [_channel _event])
 
 
 (defn presence-handler
@@ -77,4 +77,4 @@
   (condp = type
     :presence/hello   (hello-handler datahike channel event)
     :presence/editing (editing-handler channel event)
-    :presence/viewing (viewing-handler channel event)))
+    :presence/goodbye (goodbye-handler channel event)))
