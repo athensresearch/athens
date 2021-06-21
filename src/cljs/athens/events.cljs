@@ -2,8 +2,8 @@
   (:require
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
-    [athens.common-events.schema          :as schema]
     [athens.db                            :as db :refer [dec-after inc-after minus-after plus-after retract-uid-recursively]]
+    [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
@@ -14,8 +14,6 @@
     [datascript.transit                   :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
-    [malli.core                           :as m]
-    [malli.error                          :as me]
     [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -40,48 +38,6 @@
   (fn [{:keys [db]} [_ filepath]]
     {:db (assoc db :db/filepath filepath)
      :local-storage/set! ["db/filepath" filepath]}))
-
-
-(reg-event-fx
-  :remote/connect!
-  (fn [{:keys [db]} [_ connection-config]]
-    (js/console.log ":remote/connect!" (pr-str connection-config))
-    {:db                     (-> db
-                                 (dissoc :db/filepath)
-                                 (assoc :db/remote connection-config))
-     :remote/client-connect! connection-config
-     :local-storage/set!     ["db/remote" connection-config]
-     :fx                     [[:dispatch [:loading/set]]]}))
-
-
-(reg-event-fx
-  :remote/connected
-  (fn [{:keys [db]} _]
-    (js/console.log ":remote/connected")
-    {:db (dissoc db :db/remote)
-     :fx [[:dispatch-n [[:loading/unset]
-                        [:db/sync]]]]}))
-
-
-(reg-event-fx
-  :remote/disconnect!
-  (fn [{:keys [db]} _]
-    {:db                        (dissoc db :db/remote)
-     :remote/client-disconnect! nil
-     :local-storage/set!        ["db/remote" nil]}))
-
-
-(reg-event-fx
-  :remote/send!
-  (fn [_ [_ event]]
-    (if (schema/valid-event? event)
-      ;; valid event, send item
-      {:fx                    [[:dispatch [:remote/await-event event]]]
-       :remote/send-event-fx! event}
-      (let [explanation (-> schema/event
-                            (m/explain event)
-                            (me/humanize))]
-        (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))))))
 
 
 (reg-event-db
@@ -690,57 +646,6 @@
     {:reset-conn! db}))
 
 
-(defn- followup-fx
-  [db event-id fx]
-  (update db :remote/followup (fnil assoc {}) event-id fx))
-
-
-(reg-event-db
-  :remote/register-followup
-  (fn [db [_ event-id fx]]
-    (followup-fx db event-id fx)))
-
-
-(reg-event-db
-  :remote/unregister-followup
-  (fn [db [_ event-id]]
-    (update db :remote/followup dissoc event-id)))
-
-
-(reg-event-fx
-  :remote/page-create
-  (fn [{db :db} [_ uid title]]
-    (let [last-seen-tx                 (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      page-create-event} (common-events/build-page-create-event last-seen-tx
-                                                                              uid
-                                                                              title)
-          followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
-      (js/console.debug ":remote/page-create" (pr-str page-create-event))
-      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remote/send-event! page-create-event]]]]})))
-
-
-(reg-event-fx
-  :remote/followup-page-create
-  (fn [{db :db} [_ event-id]]
-    (js/console.debug ":remote/followup-page-create" event-id)
-    (let [{:keys [event]} (->> db
-                               :remote/accepted-events
-                               (filter #(= event-id (:event-id %)))
-                               first)
-          {:keys [uid]}   (:event/args event)
-          page-id         (db/e-by-av :block/uid uid)
-          page            (db/get-node-document page-id)
-          children        (:block/children page)
-          child-block-uid (-> children
-                              first
-                              :block/uid)]
-      (js/console.log ":remote/followup-page-create, child-block-uid" child-block-uid)
-      {:fx [[:dispatch-n [[:editing/uid child-block-uid]
-                          [:remote/unregister-followup event-id]]]]})))
-
-
 (reg-event-fx
   :page/create
   (fn [_ [_ title uid]]
@@ -761,16 +666,6 @@
                               [:editing/uid child-uid]]]]})
         {:fx [[:dispatch
                [:remote/page-create uid title]]]}))))
-
-
-(reg-event-fx
-  :remote/page-delete
-  (fn [{db :db} [_ uid]]
-    (let [last-seen-tx      (:remote/last-seen-tx db)
-          page-delete-event (common-events/build-page-delete-event last-seen-tx
-                                                                   uid)]
-      (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
-      {:fx [[:dispatch [:remote/send-event! page-delete-event]]]})))
 
 
 (reg-event-fx
@@ -1052,35 +947,6 @@
 
 
 (reg-event-fx
-  :remote/new-block
-  (fn [{db :db} [_ block parent new-uid]]
-    (let [last-seen-tx               (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      new-block-event} (common-events/build-new-block-event last-seen-tx
-                                                                          (:remote/db-id parent)
-                                                                          (:block/order block)
-                                                                          new-uid)
-          followup-fx                [[:dispatch [:remote/followup-new-block event-id]]]]
-      (js/console.debug ":remote/new-block" (pr-str new-block-event))
-      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remote/send-event! new-block-event]]]]})))
-
-
-(reg-event-fx
-  :remote/followup-new-block
-  (fn [{db :db} [_ event-id]]
-    (js/console.debug ":remote/followup-new-block" event-id)
-    (let [{:keys [event]}   (->> db
-                                 :remote/accepted-events
-                                 (filter #(= event-id (:event-id %)))
-                                 first)
-          {:keys [new-uid]} (:event/args event)]
-      (js/console.log ":remote/followup-new-block, new-uid" new-uid)
-      {:fx [[:dispatch-n [[:editing/uid new-uid] ; TODO handle block embed case
-                          [:remote/unregister-followup event-id]]]]})))
-
-
-(reg-event-fx
   :enter/new-block
   (fn [_ [_ block parent new-uid]]
     (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
@@ -1094,34 +960,6 @@
               tx              (resolver/resolve-event-to-tx @db/dsdb new-block-event)]
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/new-block block parent new-uid]]]}))))
-
-
-(reg-event-fx
-  :remote/add-child
-  (fn [{db :db} [_ remote-db-id new-uid]]
-    (let [last-seen-tx               (:remote/last-seen-tx db)
-          {event-id :event/id
-           :as      add-child-event} (common-events/build-add-child-event last-seen-tx
-                                                                          remote-db-id
-                                                                          new-uid)
-          followup-fx                [[:dispatch [:remote/followup-add-child event-id]]]]
-      (js/console.debug ":remote/add-child" (pr-str add-child-event))
-      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remote/send-event! add-child-event]]]]})))
-
-
-(reg-event-fx
-  :remote/followup-add-child
-  (fn [{db :db} [_ event-id]]
-    (js/console.debug ":remote/followup-add-child" event-id)
-    (let [{:keys [event]} (->> db
-                               :remote/accepted-events
-                               (filter #(= event-id (:event-id %)))
-                               first)
-          {:keys [new-uid]} (:event/args event)]
-      (js/console.log ":remote/followup-add-child, new-uid" new-uid)
-      {:fx [[:dispatch-n [[:editing/uid new-uid] ; TODO handle block embed case
-                          [:remote/unregister-followup event-id]]]]})))
 
 
 (reg-event-fx
@@ -1905,18 +1743,6 @@
 
 
 (reg-event-fx
-  :remote/paste-verbatim
-  (fn [{db :db} [_ uid text start value]]
-    (let [last-seen-tx         (:remote/last-seen-tx db)
-          paste-verbatim-event (common-events/build-paste-verbatim-event last-seen-tx
-                                                                         uid
-                                                                         text
-                                                                         start
-                                                                         value)]
-      {:fx [[:dispatch [:remote/send-event! paste-verbatim-event]]]})))
-
-
-(reg-event-fx
   :paste-verbatim
   (fn [{_db :db} [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
@@ -2016,95 +1842,3 @@
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]
       {:dispatch [:transact new-str-tx-data]})))
-
-
-(reg-event-db
-  :remote/await-event
-  (fn [db [_ event]]
-    (js/console.log "await event" (pr-str event))
-    (update db :remote/awaited-events (fnil conj #{}) event)))
-
-
-(reg-event-db
-  :remote/await-tx
-  (fn [db [_ awaited-tx-id]]
-    (js/console.log "await tx" awaited-tx-id)
-    (update db :remote/awaited-tx (fnil conj #{}) awaited-tx-id)))
-
-
-(reg-event-fx
-  :remote/accepted-event
-  (fn [{db :db} [_ {:keys [event-id]}]]
-    (let [followups (get-in db [:remote/followup event-id])]
-      (js/console.debug ":remote/accepted-event: " event-id "followup" (pr-str followups))
-      (when (seq followups)
-        {:fx followups}))))
-
-
-(reg-event-fx
-  :remote/accept-event
-  (fn [{db :db} [_ {:keys [event-id tx-id] :as acceptance-event}]]
-    (js/console.log "accept event" (pr-str acceptance-event))
-    (let [awaited-event   (->> (:remote/awaited-events db)
-                               (filter #(= event-id (:event/id %)))
-                               first)
-          acceptance-info {:event-id event-id
-                           :tx-id    tx-id
-                           :event    awaited-event}
-          last-seen-tx    (:remote/last-seen-tx db -1)
-          events          (cond-> []
-                            (< last-seen-tx tx-id)
-                            (conj [:remote/await-tx tx-id])
-                            true
-                            (conj [:remote/accepted-event acceptance-info]))]
-      (js/console.debug "events to dispatch:" (pr-str events))
-      {:db (-> db
-               (update :remote/awaited-events disj awaited-event)
-               (update :remote/accepted-events (fnil conj #{}) acceptance-info))
-       :fx [[:dispatch-n events]]})))
-
-
-(reg-event-db
-  :remote/reject-event
-  (fn [db [_ {:keys [event-id reason data] :as rejection-event}]]
-    (js/console.log "reject event" (pr-str rejection-event))
-    (let [awaited-event  (->> (:remote/awaited-events db)
-                              (filter #(= event-id (:event/id %)))
-                              first)
-          rejection-info {:event-id  event-id
-                          :rejection {:reason reason
-                                      :data   data}
-                          :event     awaited-event}]
-      (-> db
-          (update :remote/awaited-events disj awaited-event)
-          (update :remote/rejected-events (fnil conj #{}) rejection-info)))))
-
-
-(reg-event-db
-  :remote/fail-event
-  (fn [db [_ {:keys [event-id reason] :as failure-event}]]
-    (js/console.warn "fail event" (pr-str failure-event))
-    (let [awaited-event (->> (:remote/awaited-events db)
-                             (filter #(= event-id (:event/id %)))
-                             first)
-          failure-info  {:event-id event-id
-                         :reason   reason
-                         :event    awaited-event}]
-      (-> db
-          (update :remote/awaited-events disj awaited-event)
-          (update :remote/failed-events (fnil conj #{}) failure-info)))))
-
-
-(reg-event-db
-  :remote/updated-last-seen-tx
-  (fn [db _]
-    (js/console.debug ":remote/updated-last-seen-tx")
-    db))
-
-
-(reg-event-fx
-  :remote/last-seen-tx!
-  (fn [{db :db} [_ new-tx-id]]
-    (js/console.debug "last-seen-tx!" new-tx-id)
-    {:db (assoc db :remote/last-seen-tx new-tx-id)
-     :fx [[:dispatch [:remote/updated-last-seen-tx]]]}))
