@@ -189,19 +189,21 @@
       [:sequential datom]]]]])
 
 
+(def user
+  [:map
+   [:username string?]])
+
 (def presence-online
   [:map
    [:event/args
-    [:map
-     [:username string?]]]])
+    user]])
 
 
 (def presence-all-online
   [:map
    [:event/args
     [:vector
-     [:map
-      [:username string?]]]]])
+     user]]])
 
 
 (def server-event

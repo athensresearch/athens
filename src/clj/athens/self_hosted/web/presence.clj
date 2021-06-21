@@ -38,8 +38,8 @@
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump-event max-tx datoms))
-      (log/debug "HELLO")
-      (clients/send! channel (common-events/build-presence-all-online-event max-tx (clients/get-clients))))
+      (clients/send! channel
+                     (common-events/build-presence-all-online-event max-tx (clients/get-clients-usernames))))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
