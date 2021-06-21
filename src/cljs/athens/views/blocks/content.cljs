@@ -52,6 +52,7 @@
                                  :opacity "0"
                                  :font-family "inherit"}]
                      [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
+                     [:&.is-locked {:opacity "0.5"}]
                      [:.is-editing {:z-index 3
                                     :line-height "inherit"
                                     :opacity "1"}]
@@ -354,7 +355,7 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block state]
+  [block state is-presence]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [:selected/items])]
@@ -364,7 +365,9 @@
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:div {:class "block-content" :style {:font-size font-size}}
+        [:div {:class ["block-content"
+                       (when is-presence "is-locked")]
+        :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) editing?)

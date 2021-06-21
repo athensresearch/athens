@@ -13,7 +13,8 @@
     [athens.views.blocks.toggle :as toggle]
     [athens.views.blocks.tooltip :as tooltip]
     [athens.views.buttons :as buttons]
-    [athens.views.presence :as presence]
+    ;;[athens.views.presence :as presence]
+    [athens.views.toolbar-presence :as toolbar-presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]
@@ -30,63 +31,67 @@
 
 
 (def block-container-style
-  {:display "flex"
-   :line-height "2em"
-   :position "relative"
-   :border-radius "0.125rem"
+  {:display         "flex"
+   :line-height     "2em"
+   :position        "relative"
+   :border-radius   "0.125rem"
    :justify-content "flex-start"
-   :flex-direction "column"
-   ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
-                                                     :position "absolute"
-                                                     :width "1px"
-                                                     :left "calc(1.375em + 1px)"
-                                                     :top "2em"
-                                                     :bottom "0"
-                                                     :transform "translateX(50%)"
+   :flex-direction  "column"
+   ::stylefy/manual [[:&.show-tree-indicator:before {:content    "''"
+                                                     :position   "absolute"
+                                                     :width      "1px"
+                                                     :left       "calc(1.375em + 1px)"
+                                                     :top        "2em"
+                                                     :bottom     "0"
+                                                     :transform  "translateX(50%)"
+                                                     :transition "background-color 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
-                     [:&:after {:content "''"
-                                :z-index -1
-                                :position "absolute"
-                                :top "0.75px"
-                                :right 0
-                                :bottom "0.75px"
-                                :left 0
-                                :opacity 0
+                     ["&.is-presence.show-tree-indicator:before" {:background [["var(--user-color)"]]}]
+                     [:&:after {:content        "''"
+                                :z-index        -1
+                                :position       "absolute"
+                                :top            "0.75px"
+                                :right          0
+                                :bottom         "0.75px"
+                                :left           0
+                                :opacity        0
                                 :pointer-events "none"
-                                :border-radius "0.25rem"
-                                :transition "opacity 0.075s ease"
-                                :background (style/color :link-color :opacity-lower)}]
+                                :border-radius  "0.25rem"
+                                :transition     "opacity 0.075s ease"
+                                :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
-                     [:.block-body {:display "grid"
+                     [:.user-avatar {:position "absolute"
+                     :transition "transform 0.3s ease"
+                                     :left "4px"
+                                     :top "4px"}]
+                     [:.block-body {:display               "grid"
                                     :grid-template-columns "1em 1em 1fr auto"
-                                    :grid-template-rows "0 1fr 0"
-                                    :grid-template-areas "
+                                    :grid-template-rows    "0 1fr 0"
+                                    :grid-template-areas   "
                                       'above above above above'
                                       'toggle bullet content refs'
                                       'below below below below'"
-                                    :border-radius "0.5rem"
-                                    :position "relative"}
-                      [:button.block-edit-toggle {:position "absolute"
+                                    :border-radius         "0.5rem"
+                                    :position              "relative"}
+                      [:button.block-edit-toggle {:position   "absolute"
                                                   :appearance "none"
-                                                  :width "100%"
+                                                  :width      "100%"
                                                   :background "none"
-                                                  :border 0
-                                                  :cursor "text"
-                                                  :display "block"
-                                                  :z-index 1
-                                                  :top 0
-                                                  :right 0
-                                                  :bottom 0
-                                                  :left 0}]]
-                     [:.block-content {:grid-area "content"
-                                       :min-height "1.5em"}]
-                     ;; [:&:hover {:background (color :background-minus-1)}]]
-                     ;; Darken block body when block editing,
+                                                  :border     0
+                                                  :cursor     "text"
+                                                  :display    "block"
+                                                  :z-index    1
+                                                  :top        0
+                                                  :right      0
+                                                  :bottom     0
+                                                  :left       0}]]
+                     [:.block-content {:grid-area  "content"
+                                       :min-height "1.5em"}
+                                       [:&:hover [:+ [:.user-avatar {:transform "translateX(-2em)"}]]]]
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"
-                                         :grid-area "body"}]]})
+                                         :grid-area   "body"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -225,7 +230,9 @@
                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
-             is-selected           @(rf/subscribe [:selected/is-selected uid])]
+             is-selected           @(rf/subscribe [:selected/is-selected uid])
+             present-user          @(rf/subscribe [:presence/has-presence uid])
+             is-presence           (not (nil? present-user))]
 
          ;; (prn uid is-selected)
 
@@ -241,7 +248,9 @@
                                (when is-editing "is-editing")
                                (when is-selected "is-selected")
                                (when (and (seq children) open) "show-tree-indicator")
-                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
+                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
+                               (when is-presence "is-presence")]
+           :style             {"--user-color" (if is-presence (:color present-user) nil)}
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
@@ -256,8 +265,6 @@
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
 
-          [presence/presence-popover-info uid {:inline? true}]
-
           (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
@@ -267,7 +274,10 @@
              [context-menu/context-menu-el uid-sanitized-block state])
            [bullet/bullet-el block state linked-ref]
            [tooltip/tooltip-el uid-sanitized-block state]
-           [content/block-content-el block state]
+           [content/block-content-el block state is-presence]
+
+          #_[presence/presence-popover-info uid {:inline? true}]
+          [toolbar-presence/inline-presence uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el (count _refs) uid])]

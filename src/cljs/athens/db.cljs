@@ -56,7 +56,13 @@
                :selected/items      #{}
                :theme/dark          false
                :zoom-level          1
-               :graph-conf          default-graph-conf})
+               :graph-conf          default-graph-conf
+               :presence/users      [{:username "Zeus", :color "#DDA74C", :block/uid "f8de04e0f"}
+                                     {:username "Poseidon", :color "#C45042", :block/uid "87ba25e9d"}
+                                     {:username "Hera", :color "#611A58", :block/uid "7c2b4b308"}
+                                     {:username "Demeter", :color "#21A469", :block/uid "e0d06f525"}
+                                     {:username "Athena", :color "#009FB8", :block/uid "4135c0ecb"}
+                                     {:username "Apollo", :color "#0062BE", :block/uid "f24df1ea6"}]})
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -318,6 +324,15 @@
        shape-parent-query))
 
 
+(defn get-root-parent-page
+  "Returns the root parent page or returns the block because this block is a page."
+  [uid]
+  ;; make sure block first exists
+  (when-let [block (d/entity @dsdb [:block/uid uid])]
+    (let [opt1 (first (get-parents-recursively [:block/uid uid]))]
+      (or opt1 block))))
+
+
 (defn get-block
   [id]
   @(pull dsdb '[:db/id :remote/db-id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
@@ -431,7 +446,7 @@
          (d/datoms @dsdb :aevt :node/title))))))
 
 
-(defn get-root-parent-node
+(defn get-root-parent-node-from-block
   [block]
   (loop [b block]
     (cond
@@ -457,7 +472,7 @@
          (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
          (sequence
            (comp
-             (keep get-root-parent-node)
+             (keep get-root-parent-node-from-block)
              (map #(dissoc % :block/_children)))))))))
 
 
