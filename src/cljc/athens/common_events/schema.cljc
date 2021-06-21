@@ -153,7 +153,8 @@
    :datascript/tx-log
    :datascript/db-dump
    :presence/online
-   :presence/all-online])
+   :presence/all-online
+   :presence/offline])
 
 
 (def server-event-common
@@ -205,6 +206,9 @@
     [:vector
      user]]])
 
+(def presence-offline
+  presence-online)
+
 
 (def server-event
   [:multi {:dispatch :event/type}
@@ -215,7 +219,9 @@
    [:presence/online (mu/merge server-event-common
                                presence-online)]
    [:presence/all-online (mu/merge server-event-common
-                                    presence-all-online)]])
+                                   presence-all-online)]
+   [:presence/offline (mu/merge server-event-common
+                                presence-offline)]])
 
 
 (def valid-server-event?

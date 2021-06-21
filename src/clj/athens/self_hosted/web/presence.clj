@@ -69,7 +69,9 @@
 
 
 (defn goodbye-handler
-  [_channel _event])
+  [channel _event]
+  (let [username (clients/get-client-username channel)]
+    (prn _event)))
 
 
 (defn presence-handler
@@ -77,4 +79,4 @@
   (condp = type
     :presence/hello   (hello-handler datahike channel event)
     :presence/editing (editing-handler channel event)
-    :presence/goodbye (goodbye-handler channel event)))
+    #_#_:presence/goodbye (goodbye-handler channel event)))

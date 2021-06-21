@@ -286,8 +286,15 @@
     (js/console.log "User online:" username)))
 
 (defn- presence-all-online-handler
+  "args is a vector of users, e.g. [{:username \"Zeus\"}] "
   [args]
-  (js/console.log "HIIII"))
+  (rf/dispatch [:presence/all-online args]))
+
+
+(defn- presence-offline-handler
+  [args]
+  (js/console.log "BYEEE" args))
+
 
 (defn- server-event-handler
   [{:event/keys [id last-tx type args] :as packet}]
@@ -299,9 +306,10 @@
       :datascript/tx-log (ds-tx-log-handler args)
       :datascript/db-dump (db-dump-handler last-tx args)
       :presence/online (presence-online-handler args)
-      :presence/all-online (presence-all-online-handler args))
+      :presence/all-online (presence-all-online-handler args)
+      :presence/offline (presence-offline-handler args))
 
-    (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
+    (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet) packet))))
 
 
 (def ^:private datom-reader

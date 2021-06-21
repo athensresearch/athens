@@ -19,8 +19,9 @@
 (defn close-handler
   [channel status]
   (let [username            (clients/get-client-username channel)
-        presence-disconnect {:presence {:username   username
-                                        :disconnect true}}]
+        presence-disconnect {:presence/offline {:username username}}
+        #_#_presence-disconnect {:presence {:username   username
+                                            :disconnect true}}]
     (clients/remove-client! channel)
     (log/info channel username "closed, status" status)
     (when username

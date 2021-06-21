@@ -95,15 +95,6 @@
 
       :else [])))
 
-;;(let [users       (rf/subscribe [:presence/users-with-page-data])
-;;      current-uid (rf/subscribe [:current-route/name])
-;;      current-uid (rf/subscribe [:current-route/uid])]
-;;  (filter (fn [user]
-;;            ;;(and (not (nil? (:page/uid user))))
-;;            (= @current-uid (:page/uid user)))
-;;          @users))
-
-
 (rf/reg-sub
   :presence/diff-page
   :<- [:presence/users-with-page-data]
@@ -113,10 +104,13 @@
               (not= current-uid (:page/uid user)))
             users)))
 
-;;(rf/subscribe [:presence/diff-page])
-
-
 ;; re-frame events
+
+
+(rf/reg-event-db
+  :presence/all-online
+  (fn [db [_ users]]
+     (assoc db :presence/users users)))
 
 ;; user joins presence
   ;; conj :presence/users
