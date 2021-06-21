@@ -2,6 +2,7 @@
   (:require
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
+    [athens.common-events.schema          :as schema]
     [athens.db                            :as db :refer [dec-after inc-after minus-after plus-after retract-uid-recursively]]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
@@ -13,6 +14,8 @@
     [datascript.transit                   :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [malli.core                           :as m]
+    [malli.error                          :as me]
     [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -66,6 +69,19 @@
     {:db                        (dissoc db :db/remote)
      :remote/client-disconnect! nil
      :local-storage/set!        ["db/remote" nil]}))
+
+
+(reg-event-fx
+  :remote/send!
+  (fn [_ [_ event]]
+    (if (schema/valid-event? event)
+      ;; valid event, send item
+      {:fx                    [[:dispatch [:remote/await-event event]]]
+       :remote/send-event-fx! event}
+      (let [explanation (-> schema/event
+                            (m/explain event)
+                            (me/humanize))]
+        (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))))))
 
 
 (reg-event-db
@@ -701,9 +717,8 @@
                                                                               title)
           followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
       (js/console.debug ":remote/page-create" (pr-str page-create-event))
-      {:fx                 [[:dispatch-n [[:remote/await-event page-create-event]
-                                          [:remote/register-followup event-id followup-fx]]]]
-       :remote/send-event! page-create-event})))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! page-create-event]]]]})))
 
 
 (reg-event-fx
@@ -755,8 +770,7 @@
           page-delete-event (common-events/build-page-delete-event last-seen-tx
                                                                    uid)]
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
-      {:fx                 [[:dispatch [:remote/await-event page-delete-event]]]
-       :remote/send-event! page-delete-event})))
+      {:fx [[:dispatch [:remote/send-event! page-delete-event]]]})))
 
 
 (reg-event-fx
@@ -1046,11 +1060,10 @@
                                                                           (:remote/db-id parent)
                                                                           (:block/order block)
                                                                           new-uid)
-          followup-fx [[:dispatch [:remote/followup-new-block event-id]]]]
+          followup-fx                [[:dispatch [:remote/followup-new-block event-id]]]]
       (js/console.debug ":remote/new-block" (pr-str new-block-event))
-      {:fx                 [[:dispatch-n [[:remote/await-event new-block-event]
-                                          [:remote/register-followup event-id followup-fx]]]]
-       :remote/send-event! new-block-event})))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! new-block-event]]]]})))
 
 
 (reg-event-fx
@@ -1093,9 +1106,8 @@
                                                                           new-uid)
           followup-fx                [[:dispatch [:remote/followup-add-child event-id]]]]
       (js/console.debug ":remote/add-child" (pr-str add-child-event))
-      {:fx                 [[:dispatch-n [[:remote/await-event add-child-event]
-                                          [:remote/register-followup event-id followup-fx]]]]
-       :remote/send-event! add-child-event})))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! add-child-event]]]]})))
 
 
 (reg-event-fx
@@ -1901,8 +1913,7 @@
                                                                          text
                                                                          start
                                                                          value)]
-      {:fx                 [[:dispatch [:remote/await-event paste-verbatim-event]]]
-       :remote/send-event! paste-verbatim-event})))
+      {:fx [[:dispatch [:remote/send-event! paste-verbatim-event]]]})))
 
 
 (reg-event-fx

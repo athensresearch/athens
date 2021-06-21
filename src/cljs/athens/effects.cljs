@@ -421,7 +421,7 @@
 
 
 (rf/reg-fx
-  :remote/send-event!
+  :remote/send-event-fx!
   (fn [event]
     (if (schema/valid-event? event)
       ;; valid event let's send it
