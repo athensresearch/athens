@@ -71,46 +71,89 @@
     (:presence/users db)))
 
 
+^{:doc "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"}
 (rf/reg-sub
   :presence/users-with-page-data
   :<- [:presence/users]
   (fn [users _]
     (mapv (fn [{:keys [block/uid] :as user}]
             (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
-              (assoc user :page/uid page-uid :page/title page-title)))
+              (assoc user :page/uid page-uid :page/title page-title :block/uid uid)))
           users)))
 
 
 (rf/reg-sub
   :presence/same-page
   :<- [:presence/users-with-page-data]
-  :<- [:current-route/uid]
   :<- [:current-route/name]
-  (fn [[users current-uid current-route-name] _]
-    (cond
-      (= current-route-name :page)
-      (filter (fn [user]
-                (= current-uid (:page/uid user)))
-              users)
+  :<- [:current-route/uid]
+  (fn [[users current-route-name current-route-uid ] _]
+    (case current-route-name
 
-      :else [])))
+      :page
+      (filterv (fn [user]
+                 (= current-route-uid (:page/uid user)))
+               users)
+
+      [])))
 
 (rf/reg-sub
   :presence/diff-page
   :<- [:presence/users-with-page-data]
+  :<- [:current-route/name]
   :<- [:current-route/uid]
-  (fn [[users current-uid] _]
-    (filter (fn [user]
-              (not= current-uid (:page/uid user)))
-            users)))
+  (fn [[users current-route-name current-route-uid] _]
+    (case current-route-name
 
-;; re-frame events
+      :page
+      (filterv (fn [user]
+                 (not= current-route-uid (:page/uid user)))
+               users)
+
+      users)))
+
+;;; re-frame events
+;@(re-frame.core/subscribe [:presence/users])
+;@(re-frame.core/subscribe [:presence/users-with-page-data])
+@(re-frame.core/subscribe [:current-route/name])
+;
+;(let [current-uid @(re-frame.core/subscribe [:current-route/uid])
+;      users @(re-frame.core/subscribe [:presence/users-with-page-data])]
+;  (filterv (fn [user]
+;             (prn current-uid (:page/uid user))
+;             (and current-uid
+;                  (not= current-uid (:page/uid user))))
+;           users))
+
 
 
 (rf/reg-event-db
   :presence/all-online
   (fn [db [_ users]]
      (assoc db :presence/users users)))
+
+
+(rf/reg-event-db
+  :presence/add-user
+  (fn [db [_ user]]
+    (update db :presence/users conj user)))
+
+(rf/reg-event-db
+  :presence/remove-user
+  (fn [db [_ user]]
+    (update db :presence/users (fn [users]
+                                 (filterv
+                                   (fn [{username :username}]
+                                     (not= username (:username user)))
+                                   users)))))
+
+#_(update @re-frame.db/app-db :presence/users conj {:hi 1})
+
+#_(update @re-frame.db/app-db :presence/users (fn [users]
+                                                (filterv
+                                                  (fn [{username :username}]
+                                                    (not= username "Socrates"))
+                                                  users)))
 
 ;; user joins presence
   ;; conj :presence/users
@@ -297,9 +340,9 @@
             (for [user @diff-page-users]
               [avatar-el user {:filled false}])]
 
-           ;; TODO: capture what page user is scrolled to on Daily Notes
-           (= @current-route-name :home)
-           [:div "TODO"]
+           ;;; TODO: capture what page user is scrolled to on Daily Notes
+           ;(= @current-route-name :home)
+           ;[:div "TODO"]
 
            ;; default to showing all users
            :else (for [user @users]

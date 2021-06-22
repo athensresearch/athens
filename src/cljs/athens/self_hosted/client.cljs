@@ -282,8 +282,8 @@
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
-    ;; TODO manage connected users in re-frame
-    (js/console.log "User online:" username)))
+    (js/console.log "User online:" username)
+    (rf/dispatch [:presence/add-user args])))
 
 (defn- presence-all-online-handler
   "args is a vector of users, e.g. [{:username \"Zeus\"}] "
@@ -293,7 +293,9 @@
 
 (defn- presence-offline-handler
   [args]
-  (js/console.log "BYEEE" args))
+  (let [username (:username args)]
+    (js/console.log "User offine:" username)
+    (rf/dispatch [:presence/remove-user args])))
 
 
 (defn- server-event-handler

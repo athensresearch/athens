@@ -18,14 +18,13 @@
 
 (defn close-handler
   [channel status]
-  (let [username            (clients/get-client-username channel)
-        presence-disconnect {:presence/offline {:username username}}
-        #_#_presence-disconnect {:presence {:username   username
-                                            :disconnect true}}]
+  (let [username (clients/get-client-username channel)
+        ;; TODO: max-tx shouldn't be 42
+        presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
     (clients/remove-client! channel)
     (log/info channel username "closed, status" status)
     (when username
-      (clients/broadcast! presence-disconnect))))
+      (clients/broadcast! presence-offline-event))))
 
 
 (defn- make-receive-handler
