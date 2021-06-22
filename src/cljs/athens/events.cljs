@@ -957,34 +957,42 @@
 
 (reg-event-fx
   :enter/new-block
-  (fn [_ [_ block parent new-uid]]
+  (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
     (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
     (let [local? (not (client/open?))]
-      (js/console.debug ":enter/add-child local?" local?)
+      (js/console.debug ":enter/new-block local?" local?)
       (if local?
         (let [new-block-event (common-events/build-new-block-event -1
                                                                    (:db/id parent)
                                                                    (:block/order block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb new-block-event)]
-          {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/new-block block parent new-uid]]]}))))
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        {:fx [[:dispatch [:remote/new-block {:block    block
+                                             :parent   parent
+                                             :new-uid  new-uid
+                                             :embed-id embed-id}]]]}))))
 
 
 (reg-event-fx
   :enter/add-child
-  (fn [_ [_ block new-uid]]
+  (fn [_ [_ {:keys [block new-uid embed-id]}]]
     (js/console.debug ":enter/add-child" (pr-str block) new-uid)
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
-                                                                   ;; NOTE in remote implementation use `:remote/db-id`
                                                                    (:db/id block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb add-child-event)]
-          {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/add-child (:remote/db-id block) new-uid]]]}))))
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        {:fx [[:dispatch [:remote/add-child {:block-eid (:remote/db-id block)
+                                             :new-uid   new-uid
+                                             :embed-id  embed-id}]]]}))))
 
 
 (reg-event-fx
@@ -1000,10 +1008,24 @@
 
 
 (reg-event-fx
-  :enter/open-block-and-child
-  (fn [_ [_ block new-uid]]
-    {:fx [[:dispatch [:transact [[:db/add [:block/uid (:block/uid block)] :block/open true]]]]
-          [:dispatch [:enter/add-child block new-uid]]]}))
+  :enter/open-block-add-child
+  (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
+    (js/console.debug ":enter/open-block-add-child" (pr-str block) new-uid)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":enter/open-block-add-child local?" local?)
+      (if local?
+        (let [block-eid                  (:db/id block)
+              open-block-add-child-event (common-events/build-open-block-add-child-event -1
+                                                                                         block-eid
+                                                                                         new-uid)
+              tx                         (resolver/resolve-event-to-tx @db/dsdb open-block-add-child-event)]
+          (js/console.debug ":enter/open-block-add-child tx:" (pr-str tx))
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        {:fx [[:dispatch [:remote/open-block-add-chilid {:block-eid (:remote/db-id block)
+                                                         :new-uid   new-uid
+                                                         :embed-id  embed-id}]]]}))))
 
 
 (defn enter
@@ -1037,21 +1059,31 @@
                                 (and (:block/open block)
                                      (not-empty (:block/children block))
                                      (= start (count value)))
-                                [:enter/add-child block new-uid]
+                                [:enter/add-child {:block    block
+                                                   :new-uid  new-uid
+                                                   :embed-id embed-id}]
 
                                 (and embed-id root-embed?
                                      (= start (count value)))
-                                [:enter/open-block-and-child block new-uid]
+                                [:enter/open-block-add-child {:block    block
+                                                              :new-uid  new-uid
+                                                              :embed-id embed-id}]
 
                                 (and (not (:block/open block))
                                      (not-empty (:block/children block))
                                      (= start (count value)))
-                                [:enter/new-block block parent new-uid]
+                                [:enter/new-block {:block    block
+                                                   :parent   parent
+                                                   :new-uid  new-uid
+                                                   :embed-id embed-id}]
 
                                 (and (empty? value)
                                      (or (= context-root-uid (:block/uid parent))
                                          root-block?))
-                                [:enter/new-block block parent new-uid]
+                                [:enter/new-block {:block    block
+                                                   :parent   parent
+                                                   :new-uid  new-uid
+                                                   :embed-id embed-id}]
 
                                 (and (:block/open block)
                                      embed-id root-embed?
@@ -1062,7 +1094,10 @@
                                 [:unindent uid d-key-down context-root-uid]
 
                                 (and (empty? value) embed-id is-parent-root-embed?)
-                                [:enter/new-block block parent new-uid]
+                                [:enter/new-block {:block    block
+                                                   :parent   parent
+                                                   :new-uid  new-uid
+                                                   :embed-id embed-id}]
 
                                 (not (zero? start))
                                 [:enter/split-block uid value start new-uid]

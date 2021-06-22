@@ -12,6 +12,7 @@
    :datascript/delete-page
    :datascript/new-block
    :datascript/add-child
+   :datascript/open-block-add-child
    :datascript/paste-verbatim])
 
 
@@ -88,6 +89,9 @@
    [:datascript/add-child
     (mu/merge event-common
               datascript-add-child)]
+   [:datascript/open-block-add-child
+    (mu/merge event-common
+              datascript-add-child)] ; Same args as `datascript-add-child`
    [:datascript/paste-verbatim
     (mu/merge event-common
               datascript-paste-verbatim)]])

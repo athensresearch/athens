@@ -130,6 +130,19 @@
                      :new-uid new-uid}}))
 
 
+(defn build-open-block-add-child-event
+  "Builds `:datascript/open-block-add-child` event with:
+  - `eid`: `:db/id` of parent block
+  - `new-uid`: `:block/uid` for new block"
+  [last-tx eid new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/open-block-add-child
+     :event/args    {:eid     eid
+                     :new-uid new-uid}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

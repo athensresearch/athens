@@ -108,6 +108,20 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/open-block-add-child
+  [db {:event/keys [args]}]
+  (let [{:keys [eid
+                new-uid]} args
+        open-block-tx     [:db/add eid :block/open true]
+        ;; delegate add-child-tx creation
+        add-child-tx      (resolve-event-to-tx db
+                                               {:event/type :datascript/add-child
+                                                :event/args args})
+        tx-data           (apply conj [open-block-tx] add-child-tx)]
+    (println ":datascript/open-block-add-child" eid new-uid)
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
   [_db {:event/keys [args]}]
   (let [{:keys [uid
