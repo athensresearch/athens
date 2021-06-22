@@ -136,6 +136,14 @@
 
 ;; `re-frame` followup events
 
+(defn- get-event-acceptance-info
+  [db event-id]
+  (->> db
+       :remote/accepted-events
+       (filter #(= event-id (:event-id %)))
+       first))
+
+
 (defn- followup-fx
   [db event-id fx]
   (update db :remote/followup (fnil assoc {}) event-id fx))
@@ -172,14 +180,12 @@
 
 ;; - Page related
 
+
 (rf/reg-event-fx
   :remote/followup-page-create
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-page-create" event-id)
-    (let [{:keys [event]} (->> db
-                               :remote/accepted-events
-                               (filter #(= event-id (:event-id %)))
-                               first)
+    (let [{:keys [event]} (get-event-acceptance-info db event-id)
           {:keys [uid]}   (:event/args event)
           page-id         (db/e-by-av :block/uid uid)
           page            (db/get-node-document page-id)
@@ -220,28 +226,27 @@
 
 (rf/reg-event-fx
   :remote/followup-new-block
-  (fn [{db :db} [_ event-id]]
+  (fn [{db :db} [_ {:keys [event-id embed-id]}]]
     (js/console.debug ":remote/followup-new-block" event-id)
-    (let [{:keys [event]}   (->> db
-                                 :remote/accepted-events
-                                 (filter #(= event-id (:event-id %)))
-                                 first)
+    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
           {:keys [new-uid]} (:event/args event)]
       (js/console.log ":remote/followup-new-block, new-uid" new-uid)
-      {:fx [[:dispatch-n [[:editing/uid new-uid] ; TODO handle block embed case
+      {:fx [[:dispatch-n [[:editing/uid (str new-uid (when embed-id
+                                                       (str "-embed-" embed-id)))]
                           [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
   :remote/new-block
-  (fn [{db :db} [_ block parent new-uid]]
+  (fn [{db :db} [_ {:keys [block parent new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      new-block-event} (common-events/build-new-block-event last-seen-tx
                                                                           (:remote/db-id parent)
                                                                           (:block/order block)
                                                                           new-uid)
-          followup-fx                [[:dispatch [:remote/followup-new-block event-id]]]]
+          followup-fx                [[:dispatch [:remote/followup-new-block {:event-id event-id
+                                                                              :embed-id embed-id}]]]]
       (js/console.debug ":remote/new-block" (pr-str new-block-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! new-block-event]]]]})))
@@ -249,27 +254,53 @@
 
 (rf/reg-event-fx
   :remote/followup-add-child
-  (fn [{db :db} [_ event-id]]
+  (fn [{db :db} [_ {:keys [event-id embed-id]}]]
     (js/console.debug ":remote/followup-add-child" event-id)
-    (let [{:keys [event]} (->> db
-                               :remote/accepted-events
-                               (filter #(= event-id (:event-id %)))
-                               first)
+    (let [{:keys [event]} (get-event-acceptance-info db event-id)
           {:keys [new-uid]} (:event/args event)]
       (js/console.log ":remote/followup-add-child, new-uid" new-uid)
-      {:fx [[:dispatch-n [[:editing/uid new-uid] ; TODO handle block embed case
+      {:fx [[:dispatch-n [[:editing/uid (str new-uid (when embed-id
+                                                       (str "-embed-" embed-id)))]
                           [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
   :remote/add-child
-  (fn [{db :db} [_ remote-db-id new-uid]]
+  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-add-child-event last-seen-tx
-                                                                          remote-db-id
+                                                                          block-eid
                                                                           new-uid)
-          followup-fx                [[:dispatch [:remote/followup-add-child event-id]]]]
+          followup-fx                [[:dispatch [:remote/followup-add-child {:event-id event-id
+                                                                              :embed-id embed-id}]]]]
+      (js/console.debug ":remote/add-child" (pr-str add-child-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! add-child-event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/followup-open-block-add-child
+  (fn [{db :db} [_ {:keys [event-id embed-id] :as args}]]
+    (js/console.debug ":remote/followup-open-block-add-child" (pr-str args))
+    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
+          {:keys [new-uid]} (:event/args event)]
+      (js/console.log ":remote/followup-open-block-add-child, new-uid" new-uid
+                      ", embed-id" embed-id)
+      {:fx [[:dispatch [:editing/uid (str new-uid (when embed-id
+                                                    (str "-embed-" embed-id)))]]]})))
+
+
+(rf/reg-event-fx
+  :remote/open-block-add-child
+  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
+    (let [last-seen-tx               (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      add-child-event} (common-events/build-open-block-add-child-event last-seen-tx
+                                                                                     block-eid
+                                                                                     new-uid)
+          followup-fx                [[:dispatch [:remote/followup-open-block-add-child {:event-id event-id
+                                                                                         :embed-id embed-id}]]]]
       (js/console.debug ":remote/add-child" (pr-str add-child-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! add-child-event]]]]})))
