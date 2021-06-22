@@ -52,20 +52,19 @@
 
 (defn editing-handler
   [channel {:event/keys [args]}]
-  (let [username (clients/get-client-username channel)]
-    (when-let [uid (:editing args)]
-      (let [presence {:presence {:time     (now)
-                                 :id       (next-id)
-                                 :editing  uid
-                                 :username username}}]
-        (dosync
-          (let [all-presence* (conj @all-presence presence)
-                total         (count all-presence*)]
-            ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
-            (if (> total 100)
-              (ref-set all-presence (vec (drop (- total 100) all-presence*)))
-              (ref-set all-presence all-presence*)))))
-      (clients/broadcast! (last @all-presence)))))
+  (let [username (clients/get-client-username channel)
+        {:keys [block/uid]} args]
+    (when uid
+      (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event 42 username uid)]
+        (clients/broadcast! broadcast-presence-editing-event)
+        #_(dosync
+            (let [all-presence* (conj @all-presence presence)
+                  total (count all-presence*)]
+              ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
+              (if (> total 100)
+                (ref-set all-presence (vec (drop (- total 100) all-presence*)))
+                (ref-set all-presence all-presence*)))))
+      #_(clients/broadcast! (last @all-presence)))))
 
 
 (defn goodbye-handler

@@ -22,7 +22,6 @@
 (declare message-handler)
 (declare close-handler)
 
-
 (defn- connect-to-self-hosted!
   [url]
   (js/console.log "WSClient Connecting to:" url)
@@ -116,7 +115,7 @@
              {:result :queued
               :reason :client-started-reconnecting}))))
      (let [explanation (schema/explain-event data)]
-       (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation))
+       (js/console.warn "Client tried to send invalid event. Explanation: " (pr-str explanation data))
        {:result :rejected
         :reason :invalid-event-schema}))))
 
@@ -298,6 +297,12 @@
     (rf/dispatch [:presence/remove-user args])))
 
 
+(defn- presence-receive-editing
+  [args]
+  (js/console.log "User editing:" (pr-str args))
+  (rf/dispatch [:presence/update-editing args]))
+
+
 (defn- server-event-handler
   [{:event/keys [id last-tx type args] :as packet}]
   (js/console.log "<-" id ", last-tx:" last-tx ", type:" type)
@@ -309,9 +314,13 @@
       :datascript/db-dump (db-dump-handler last-tx args)
       :presence/online (presence-online-handler args)
       :presence/all-online (presence-all-online-handler args)
-      :presence/offline (presence-offline-handler args))
+      :presence/offline (presence-offline-handler args)
+      :presence/broadcast-editing (presence-receive-editing args))
 
-    (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet) packet))))
+    (do
+      (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
+      (js/console.warn "Received " (pr-str packet)))))
+
 
 
 (def ^:private datom-reader
@@ -390,6 +399,26 @@
   [url]
   (map->WSClient {:url url}))
 
+
+;; re-frame
+
+(rf/reg-fx
+  :presence/send-editing
+  (fn [uid]
+    (send! (common-events/build-presence-editing-event 42
+                                                       (:name @(rf/subscribe [:user]))
+                                                       uid))))
+
+(rf/reg-event-db
+  :presence/update-editing
+  (fn [db [_ {:keys [username block/uid]}]]
+    (update db :presence/users (fn [users]
+                                 (mapv
+                                   (fn [user]
+                                     (if (= username (:username user))
+                                       (assoc user :block/uid uid)
+                                       user))
+                                   users)))))
 
 ;; REPL Testing
 (comment

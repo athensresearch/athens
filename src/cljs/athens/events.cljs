@@ -290,7 +290,8 @@
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
     {:db            (assoc db :editing/uid uid)
-     :editing/focus [uid index]}))
+     :editing/focus [uid index]
+     :presence/send-editing uid}))
 
 
 (reg-event-fx

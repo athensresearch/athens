@@ -82,6 +82,15 @@
           users)))
 
 
+#_^{:doc "Helpful subscription for re-indexing. Easier to reindex or update nested map than vector of maps."}
+#_(rf/reg-sub
+    :presence/users-with-page-data-as-map
+    :<- [:presence/users-with-page-data]
+    (fn [users _]
+      (zipmap (map :username users)
+              users)))
+
+
 (rf/reg-sub
   :presence/same-page
   :<- [:presence/users-with-page-data]
@@ -138,6 +147,7 @@
   (fn [db [_ user]]
     (update db :presence/users conj user)))
 
+
 (rf/reg-event-db
   :presence/remove-user
   (fn [db [_ user]]
@@ -147,14 +157,24 @@
                                      (not= username (:username user)))
                                    users)))))
 
-#_(update @re-frame.db/app-db :presence/users conj {:hi 1})
+(rf/reg-sub
+  :presence/has-presence
+  :<- [:presence/users-with-page-data]
+  (fn [users [_ uid]]
+    (-> (filter (fn [user]
+                  (= uid (:block/uid user)))
+                users)
+        first)))
 
-#_(update @re-frame.db/app-db :presence/users (fn [users]
-                                                (filterv
-                                                  (fn [{username :username}]
-                                                    (not= username "Socrates"))
-                                                  users)))
-
+;(update @re-frame.db/app-db :presence/users conj {:hi 1})
+;
+;;(update-in @re-frame.db/app-db [:presence/users "jeff's linux (development)"] dissoc)
+;(update @(rf/subscribe [:presence/users-with-page-data-as-map]) dissoc "jeff's linux (development)")
+;
+;(dissoc @(rf/subscribe [:presence/users-with-page-data-as-map]) "jeff's linux (development)")
+;
+;(dissoc @re-frame.db/app-db :presence/users)
+;
 ;; user joins presence
   ;; conj :presence/users
 
@@ -377,16 +397,6 @@
 
 
 ;; inline
-
-(rf/reg-sub
-  :presence/has-presence
-  :<- [:presence/users-with-page-data]
-  (fn [users [_ uid]]
-    (-> (filter (fn [user]
-                  (= uid (:block/uid user)))
-                users)
-        first)))
-
 
 (defn inline-presence
   [uid]
