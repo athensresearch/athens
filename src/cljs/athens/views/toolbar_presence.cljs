@@ -71,7 +71,7 @@
     (:presence/users db)))
 
 
-^{:doc "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"}
+;; "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"
 (rf/reg-sub
   :presence/users-with-page-data
   :<- [:presence/users]
@@ -82,7 +82,7 @@
           users)))
 
 
-#_^{:doc "Helpful subscription for re-indexing. Easier to reindex or update nested map than vector of maps."}
+;; "Helpful subscription for re-indexing. Easier to reindex or update nested map than vector of maps."
 #_(rf/reg-sub
     :presence/users-with-page-data-as-map
     :<- [:presence/users-with-page-data]
