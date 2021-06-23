@@ -16,6 +16,7 @@
     :datascript/new-block
     :datascript/open-block-add-child
     :datascript/add-child
+    :datascript/split-block
     ;; TODO: all the events
     })
 

@@ -1,5 +1,6 @@
 (ns athens.self-hosted.components.web
   (:require
+    [athens.common-events              :as common-events]
     [athens.common-events.schema       :as schema]
     [athens.self-hosted.clients        :as clients]
     [athens.self-hosted.web.datascript :as datascript]
@@ -49,14 +50,22 @@
               (clients/send! channel {:event/id      (:event/id data)
                                       :event/status  :rejected
                                       :reject/reason :introduce-yourself}))
-            (let [event-type (:event/type data)
-                  result     (cond
-                               (contains? presence/supported-event-types event-type)
-                               (presence/presence-handler (:conn datahike) channel data)
+            (let [{:event/keys [id
+                                type]} data
+                  result               (cond
+                                         (contains? presence/supported-event-types type)
+                                         (presence/presence-handler (:conn datahike) channel data)
 
-                               (contains? datascript/supported-event-types event-type)
-                               (datascript/datascript-handler (:conn datahike) channel data))]
-              (clients/send! channel (merge {:event/id (:event/id data)}
+                                         (contains? datascript/supported-event-types type)
+                                         (datascript/datascript-handler (:conn datahike) channel data)
+
+                                         :else
+                                         (do
+                                           (log/error "receive-handler, unsupported event:" (pr-str type))
+                                           (common-events/build-event-rejected id
+                                                                               (str "Unsupported event: " type)
+                                                                               {:unsupported-type type})))]
+              (clients/send! channel (merge {:event/id id}
                                             result)))))))))
 
 

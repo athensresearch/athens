@@ -986,14 +986,13 @@
                                                                        value
                                                                        index
                                                                        new-uid)
-              _                 (js/console.debug ":enter/split-block event" (pr-str split-block-event))
               tx                (resolver/resolve-event-to-tx @db/dsdb split-block-event)]
           (js/console.debug ":enter/split-block tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        (throw (js/Error ":enter/split-block not implemented for remote"))))
-    #_(split-block uid val index new-uid)))
+
+        {:fx [[:dispatch [:remote/split-block args]]]}))))
 
 
 (reg-event-fx
