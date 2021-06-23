@@ -104,7 +104,7 @@
         new-block         {:db/id          eid
                            :block/children reindex}
         tx-data           [new-block]]
-    (println ":datascript/add-child" eid new-uid)
+    (println "resolver :datascript/add-child" eid new-uid "=>" (pr-str tx-data))
     tx-data))
 
 

@@ -986,8 +986,7 @@
                                                                        value
                                                                        index
                                                                        new-uid)
-              _                 (js/console.debug ":enter/split-block event" (pr-str split-block-event)
-                                                  )
+              _                 (js/console.debug ":enter/split-block event" (pr-str split-block-event))
               tx                (resolver/resolve-event-to-tx @db/dsdb split-block-event)]
           (js/console.debug ":enter/split-block tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
