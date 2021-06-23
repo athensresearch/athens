@@ -7,6 +7,7 @@
    [athens.views.buttons :refer [button]]
    [athens.self-hosted.presence.events]
    [athens.self-hosted.presence.subs]
+   [athens.self-hosted.presence.fx]
    [athens.self-hosted.presence.utils :as utils]
    [clojure.string :as str]
    [re-frame.core :as rf]
@@ -31,14 +32,15 @@
    children])
 
 
-
 (defn- avatar-el
   "Takes a member map for the user data.
   Optionally takes some props for things like fill."
   ([member]
    [avatar-el member {:filled true}])
   ([{:keys [username color]} {:keys [filled]}]
-   (let [initials (subs username 0 2)]
+   (let [initials (if (string? username)
+                    (subs username 0 2)
+                    "")]
      [avatar-svg {:viewBox "0 0 24 24"
                   :vectorEffect "non-scaling-stroke"}
       [:circle {:cx          12
