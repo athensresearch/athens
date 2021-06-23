@@ -30,7 +30,7 @@
   [connection event-id tx]
   (try
     (log/debug "Transacting event-id:" event-id ", tx:" (pr-str tx))
-    (let [{:keys [tempids]}       (d/transact connection tx)
+    (let [{:keys [tempids]}       (d/transact connection tx) ;; TODO this is a place to hook walk-transact thing
           {:db/keys [current-tx]} tempids]
       (log/info "Transacted event-id:" event-id ", tx-id:" current-tx)
       (common-events/build-event-accepted event-id current-tx))
