@@ -284,6 +284,7 @@
     (js/console.log "User online:" username)
     (rf/dispatch [:presence/add-user args])))
 
+
 (defn- presence-all-online-handler
   "args is a vector of users, e.g. [{:username \"Zeus\"}] "
   [args]
@@ -399,26 +400,6 @@
   [url]
   (map->WSClient {:url url}))
 
-
-;; re-frame
-
-(rf/reg-fx
-  :presence/send-editing
-  (fn [uid]
-    (send! (common-events/build-presence-editing-event 42
-                                                       (:name @(rf/subscribe [:user]))
-                                                       uid))))
-
-(rf/reg-event-db
-  :presence/update-editing
-  (fn [db [_ {:keys [username block/uid]}]]
-    (update db :presence/users (fn [users]
-                                 (mapv
-                                   (fn [user]
-                                     (if (= username (:username user))
-                                       (assoc user :block/uid uid)
-                                       user))
-                                   users)))))
 
 ;; REPL Testing
 (comment

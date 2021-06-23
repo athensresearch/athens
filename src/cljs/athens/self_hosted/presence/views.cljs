@@ -7,6 +7,7 @@
    [athens.views.buttons :refer [button]]
    [athens.self-hosted.presence.events]
    [athens.self-hosted.presence.subs]
+   [athens.self-hosted.presence.utils :as utils]
    [clojure.string :as str]
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -14,54 +15,6 @@
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
-
-
-;; re-frame
-
-;; colors do not persist across sessions
-;; colors are not shared between users
-;; TODO import to athens.style ?
-(def PALETTE
-  ["#DDA74C"
-   "#C45042"
-   "#611A58"
-   "#21A469"
-   "#009FB8"
-   "#0062BE"])
-
-
-;; TODO import to a constants namespace?
-(def NAMES
-  ["Zeus"
-   "Poseidon"
-   "Hera"
-   "Demeter"
-   "Athena"
-   "Apollo"])
-   ;;"Artemis"
-   ;;"Ares"
-   ;;"Aphrodite"
-   ;;"Hephaestus"
-   ;;"Hermes"
-   ;;"Hestia"
-   ;;"Dionysus"
-   ;;"Hades"])
-
-
-(def BLOCK-UIDS
-  ["" ;; on page, not block
-   "6b8c28b09" ;; poseidon
-   "ed9f20b26" ;; way down
-   "8b66a56f3" ;; different page
-   "4135c0ecb" ;; different page on a block
-   ""])
-
-
-(def MEMBERS
-  (mapv
-   (fn [username color uid]
-     {:username username :color color :block/uid uid})
-   NAMES PALETTE BLOCK-UIDS))
 
 
 ;; Avatar

@@ -57,12 +57,7 @@
                :theme/dark          false
                :zoom-level          1
                :graph-conf          default-graph-conf
-               :presence            {:users {"Zeus"     {:username "Zeus", :color "#DDA74C", :block/uid "6aecd4172"},
-                                             "Poseidon" {:username "Poseidon", :color "#C45042", :block/uid "87ba25e9d"},
-                                             "Hera"     {:username "Hera", :color "#611A58", :block/uid "7c2b4b308"},
-                                             "Demeter"  {:username "Demeter", :color "#21A469", :block/uid "e0d06f525"},
-                                             "Athena"   {:username "Athena", :color "#009FB8", :block/uid "4135c0ecb"},
-                                             "Apollo"   {:username "Apollo", :color "#0062BE", :block/uid "f24df1ea6"}}}})
+               :presence            {}})
 
 
 
