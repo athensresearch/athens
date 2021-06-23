@@ -23,7 +23,7 @@
 (def supported-event-types
   #{:presence/hello
     :presence/editing
-    :presence/viewing})
+    :presence/goodbye})
 
 
 (defn hello-handler
@@ -37,7 +37,9 @@
     (let [datoms (d/datoms @datahike :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
-                     (common-events/build-db-dump-event max-tx datoms)))
+                     (common-events/build-db-dump-event max-tx datoms))
+      (clients/send! channel
+                     (common-events/build-presence-all-online-event max-tx (clients/get-clients-usernames))))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
@@ -50,26 +52,25 @@
 
 (defn editing-handler
   [channel {:event/keys [args]}]
+  (let [username (clients/get-client-username channel)
+        {:keys [block/uid]} args]
+    (when uid
+      (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event 42 username uid)]
+        (clients/broadcast! broadcast-presence-editing-event)
+        #_(dosync
+            (let [all-presence* (conj @all-presence presence)
+                  total (count all-presence*)]
+              ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
+              (if (> total 100)
+                (ref-set all-presence (vec (drop (- total 100) all-presence*)))
+                (ref-set all-presence all-presence*)))))
+      #_(clients/broadcast! (last @all-presence)))))
+
+
+(defn goodbye-handler
+  [channel _event]
   (let [username (clients/get-client-username channel)]
-    (when-let [uid (:editing args)]
-      (let [presence {:presence {:time     (now)
-                                 :id       (next-id)
-                                 :editing  uid
-                                 :username username}}]
-        (dosync
-          (let [all-presence* (conj @all-presence presence)
-                total         (count all-presence*)]
-            ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
-            (if (> total 100)
-              (ref-set all-presence (vec (drop (- total 100) all-presence*)))
-              (ref-set all-presence all-presence*)))))
-      (clients/broadcast! (last @all-presence)))))
-
-
-(defn viewing-handler
-  [_channel _event]
-  ;; TODO new viewing presence
-  )
+    (prn _event)))
 
 
 (defn presence-handler
@@ -77,4 +78,4 @@
   (condp = type
     :presence/hello   (hello-handler datahike channel event)
     :presence/editing (editing-handler channel event)
-    :presence/viewing (viewing-handler channel event)))
+    #_#_:presence/goodbye (goodbye-handler channel event)))

@@ -180,3 +180,41 @@
      :event/last-tx last-tx
      :event/type    :presence/online
      :event/args    {:username username}}))
+
+
+(defn build-presence-all-online-event
+  "Builds `:presence/all-online` event with all active users, excluding origin client."
+  [last-tx clients]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/all-online
+     :event/args    (mapv (fn [username]
+                            {:username username})
+                          clients)}))
+
+
+(defn build-presence-offline-event
+  [last-tx username]
+  (let [event (build-presence-online-event last-tx username)]
+    (assoc event :event/type :presence/offline)))
+
+
+(defn build-presence-editing-event
+  "Sent by client."
+  [last-tx username uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/editing
+     :event/args    {:username username :block/uid uid}}))
+
+
+(defn build-presence-broadcast-editing-event
+  "Sent by server."
+  [last-tx username block-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/broadcast-editing
+     :event/args    {:username username :block/uid block-uid}}))

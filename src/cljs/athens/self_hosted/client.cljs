@@ -22,7 +22,6 @@
 (declare message-handler)
 (declare close-handler)
 
-
 (defn- connect-to-self-hosted!
   [url]
   (js/console.log "WSClient Connecting to:" url)
@@ -116,7 +115,7 @@
              {:result :queued
               :reason :client-started-reconnecting}))))
      (let [explanation (schema/explain-event data)]
-       (js/console.warn "Tried to send invalid event. Explanation: " (pr-str explanation))
+       (js/console.warn "Client tried to send invalid event. Explanation: " (pr-str explanation data))
        {:result :rejected
         :reason :invalid-event-schema}))))
 
@@ -282,8 +281,26 @@
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
-    ;; TODO manage connected users in re-frame
-    (js/console.log "User online:" username)))
+    (js/console.log "User online:" username)
+    (rf/dispatch [:presence/add-user args])))
+
+(defn- presence-all-online-handler
+  "args is a vector of users, e.g. [{:username \"Zeus\"}] "
+  [args]
+  (rf/dispatch [:presence/all-online args]))
+
+
+(defn- presence-offline-handler
+  [args]
+  (let [username (:username args)]
+    (js/console.log "User offine:" username)
+    (rf/dispatch [:presence/remove-user args])))
+
+
+(defn- presence-receive-editing
+  [args]
+  (js/console.log "User editing:" (pr-str args))
+  (rf/dispatch [:presence/update-editing args]))
 
 
 (defn- server-event-handler
@@ -293,11 +310,17 @@
   (if (schema/valid-server-event? packet)
 
     (condp = type
-      :datascript/tx-log  (ds-tx-log-handler args)
+      :datascript/tx-log (ds-tx-log-handler args)
       :datascript/db-dump (db-dump-handler last-tx args)
-      :presence/online    (presence-online-handler args))
+      :presence/online (presence-online-handler args)
+      :presence/all-online (presence-all-online-handler args)
+      :presence/offline (presence-offline-handler args)
+      :presence/broadcast-editing (presence-receive-editing args))
 
-    (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))))
+    (do
+      (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
+      (js/console.warn "Received " (pr-str packet)))))
+
 
 
 (def ^:private datom-reader
@@ -377,6 +400,26 @@
   (map->WSClient {:url url}))
 
 
+;; re-frame
+
+(rf/reg-fx
+  :presence/send-editing
+  (fn [uid]
+    (send! (common-events/build-presence-editing-event 42
+                                                       (:name @(rf/subscribe [:user]))
+                                                       uid))))
+
+(rf/reg-event-db
+  :presence/update-editing
+  (fn [db [_ {:keys [username block/uid]}]]
+    (update db :presence/users (fn [users]
+                                 (mapv
+                                   (fn [user]
+                                     (if (= username (:username user))
+                                       (assoc user :block/uid uid)
+                                       user))
+                                   users)))))
+
 ;; REPL Testing
 (comment
 
@@ -449,6 +492,6 @@
                {:e 42, :a :block/children, :v 43, :tx 536870942, :added false}]
      :tempids {:db/current-tx 536870942}})
   
-  (reconstruct-tx-from-log args)
+  (reconstruct-tx-from-log args))
   
-  )
+

@@ -8,6 +8,7 @@
 (def event-type
   [:enum
    :presence/hello
+   :presence/editing
    :datascript/create-page
    :datascript/delete-page
    :datascript/new-block
@@ -29,6 +30,14 @@
    [:event/args
     [:map
      [:username string?]]]])
+
+
+(def presence-editing
+  [:map
+   [:event/args
+    [:map
+     [:username string?]
+     [:block/uid string?]]]])
 
 
 (def datascript-create-page
@@ -88,6 +97,9 @@
    [:presence/hello
     (mu/merge event-common
               presence-hello-args)]
+   [:presence/editing
+     (mu/merge event-common
+               presence-editing)]
    [:datascript/create-page
     (mu/merge event-common
               datascript-create-page)]
@@ -170,7 +182,10 @@
   [:enum
    :datascript/tx-log
    :datascript/db-dump
-   :presence/online])
+   :presence/online
+   :presence/all-online
+   :presence/offline
+   :presence/broadcast-editing])
 
 
 (def server-event-common
@@ -206,11 +221,31 @@
       [:sequential datom]]]]])
 
 
+(def user
+  [:map
+   [:username string?]])
+
 (def presence-online
   [:map
    [:event/args
+    user]])
+
+
+(def presence-all-online
+  [:map
+   [:event/args
+    [:vector
+     user]]])
+
+(def presence-offline
+  presence-online)
+
+(def presence-broadcast-editing
+  [:map
+   [:event/args
     [:map
-     [:username string?]]]])
+     [:username string?]
+     [:block/uid string?]]]])
 
 
 (def server-event
@@ -220,7 +255,13 @@
    [:datascript/db-dump (mu/merge server-event-common
                                   db-dump)]
    [:presence/online (mu/merge server-event-common
-                               presence-online)]])
+                               presence-online)]
+   [:presence/all-online (mu/merge server-event-common
+                                   presence-all-online)]
+   [:presence/offline (mu/merge server-event-common
+                                presence-offline)]
+   [:presence/broadcast-editing (mu/merge server-event-common
+                                          presence-broadcast-editing)]])
 
 
 (def valid-server-event?
