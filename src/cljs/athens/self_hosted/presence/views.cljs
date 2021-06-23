@@ -1,10 +1,12 @@
-(ns athens.views.toolbar-presence
+(ns athens.self-hosted.presence.views
   (:require
    ["@material-ui/core/Popover" :as Popover]
    ["@material-ui/icons/Link" :default Link]
    [athens.style :as style]
    [athens.db :as db]
    [athens.views.buttons :refer [button]]
+   [athens.self-hosted.presence.events]
+   [athens.self-hosted.presence.subs]
    [clojure.string :as str]
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -62,134 +64,10 @@
    NAMES PALETTE BLOCK-UIDS))
 
 
-;; re-frame subs
-
-
-(rf/reg-sub
-  :presence/users
-  (fn [db _]
-    (:presence/users db)))
-
-
-;; "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"
-(rf/reg-sub
-  :presence/users-with-page-data
-  :<- [:presence/users]
-  (fn [users _]
-    (mapv (fn [{:keys [block/uid] :as user}]
-            (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
-              (assoc user :page/uid page-uid :page/title page-title :block/uid uid)))
-          users)))
-
-
-;; "Helpful subscription for re-indexing. Easier to reindex or update nested map than vector of maps."
-#_(rf/reg-sub
-    :presence/users-with-page-data-as-map
-    :<- [:presence/users-with-page-data]
-    (fn [users _]
-      (zipmap (map :username users)
-              users)))
-
-
-(rf/reg-sub
-  :presence/same-page
-  :<- [:presence/users-with-page-data]
-  :<- [:current-route/name]
-  :<- [:current-route/uid]
-  (fn [[users current-route-name current-route-uid ] _]
-    (case current-route-name
-
-      :page
-      (filterv (fn [user]
-                 (= current-route-uid (:page/uid user)))
-               users)
-
-      [])))
-
-(rf/reg-sub
-  :presence/diff-page
-  :<- [:presence/users-with-page-data]
-  :<- [:current-route/name]
-  :<- [:current-route/uid]
-  (fn [[users current-route-name current-route-uid] _]
-    (case current-route-name
-
-      :page
-      (filterv (fn [user]
-                 (not= current-route-uid (:page/uid user)))
-               users)
-
-      users)))
-
-;;; re-frame events
-;@(re-frame.core/subscribe [:presence/users])
-;@(re-frame.core/subscribe [:presence/users-with-page-data])
-@(re-frame.core/subscribe [:current-route/name])
-;
-;(let [current-uid @(re-frame.core/subscribe [:current-route/uid])
-;      users @(re-frame.core/subscribe [:presence/users-with-page-data])]
-;  (filterv (fn [user]
-;             (prn current-uid (:page/uid user))
-;             (and current-uid
-;                  (not= current-uid (:page/uid user))))
-;           users))
-
-
-
-(rf/reg-event-db
-  :presence/all-online
-  (fn [db [_ users]]
-     (assoc db :presence/users users)))
-
-
-(rf/reg-event-db
-  :presence/add-user
-  (fn [db [_ user]]
-    (update db :presence/users conj user)))
-
-
-(rf/reg-event-db
-  :presence/remove-user
-  (fn [db [_ user]]
-    (update db :presence/users (fn [users]
-                                 (filterv
-                                   (fn [{username :username}]
-                                     (not= username (:username user)))
-                                   users)))))
-
-(rf/reg-sub
-  :presence/has-presence
-  :<- [:presence/users-with-page-data]
-  (fn [users [_ uid]]
-    (-> (filter (fn [user]
-                  (= uid (:block/uid user)))
-                users)
-        first)))
-
-;(update @re-frame.db/app-db :presence/users conj {:hi 1})
-;
-;;(update-in @re-frame.db/app-db [:presence/users "jeff's linux (development)"] dissoc)
-;(update @(rf/subscribe [:presence/users-with-page-data-as-map]) dissoc "jeff's linux (development)")
-;
-;(dissoc @(rf/subscribe [:presence/users-with-page-data-as-map]) "jeff's linux (development)")
-;
-;(dissoc @re-frame.db/app-db :presence/users)
-;
-;; user joins presence
-  ;; conj :presence/users
-
-;; user joins presence
-  ;; disj :presence/users
-
-;; user navigates to new block
-  ;; update-in :presence/users
-;; user navigates to new page
-;; user leaves block, i.e. nil :editing/uid
-
-
 ;; Avatar
 
-(defn avatar-svg
+
+(defn- avatar-svg
   [props & children]
   [:svg (merge (use-style {:height          "1.5em"
                            :width           "1.5em"
@@ -201,7 +79,7 @@
 
 
 
-(defn avatar-el
+(defn- avatar-el
   "Takes a member map for the user data.
   Optionally takes some props for things like fill."
   ([member]
@@ -230,7 +108,7 @@
 
 
 
-(def avatar-stack-style
+(def ^:private avatar-stack-style
   {:display "flex"
    ::stylefy/manual [[:svg {:width "1.5rem"
                             :height "1.5rem"}
@@ -246,7 +124,7 @@
                                              :-webkit-mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"}]]]})
 
 
-(defn avatar-stack-el
+(defn- avatar-stack-el
   [& children]
   [:div (use-style avatar-stack-style)
    children])
@@ -254,7 +132,7 @@
 
 ;; List
 
-(defn list-el
+(defn- list-el
   [& children]
   [:ul (use-style {:padding        0
                    :margin         0
@@ -264,7 +142,7 @@
    children])
 
 
-(defn list-header-el
+(defn- list-header-el
   [& children]
   [:header (use-style {:border-bottom "1px solid #ddd"
                        :padding "0.25rem 0.5rem"
@@ -275,7 +153,7 @@
 
 
 
-(defn list-section-header-el
+(defn- list-section-header-el
   [& children]
   [:li (use-style {:font-size "12px"
                    :font-weight "bold"
@@ -284,7 +162,7 @@
    children])
 
 
-(defn list-header-url-el
+(defn- list-header-url-el
   [& children]
   [:span (use-style {:font-size     "12px"
                      :font-weight   "700"
@@ -299,13 +177,13 @@
    children])
 
 
-(defn list-separator-el
+(defn- list-separator-el
   []
   [:li (use-style {:margin "0.5rem 0 0.5rem 1rem"
                    :border-bottom "1px solid #ddd"})])
 
 
-(def member-list-item-style
+(def ^:private member-list-item-style
   {:padding "0.375rem 1rem"
    :display "flex"
    :font-size "14px"
@@ -330,14 +208,15 @@
 
 
 
-(defn member-item-el
+(defn- member-item-el
   [user props]
   [:li (use-style member-list-item-style #_{:on-click #(prn user)})
    [avatar-el user props]
    (:username user)])
 
 
-(defn toolbar-presence
+;; Exports
+(defn toolbar-presence-el
   []
   (r/with-let [ele (r/atom nil)]
     (let [users (rf/subscribe [:presence/users-with-page-data])
@@ -354,10 +233,12 @@
            (= @current-route-name :page)
            [:<>
             ;; same page
-            (for [user @same-page-users]
+            (for [[username user] @same-page-users]
+              ^{:key username}
               [avatar-el user {:filled true}])
             ;; diff page but online
-            (for [user @diff-page-users]
+            (for [[username user] @diff-page-users]
+              ^{:key username}
               [avatar-el user {:filled false}])]
 
            ;;; TODO: capture what page user is scrolled to on Daily Notes
@@ -365,7 +246,8 @@
            ;[:div "TODO"]
 
            ;; default to showing all users
-           :else (for [user @users]
+           :else (for [[username user] @users]
+                   ^{:key username}
                    [avatar-el user {:filled false}]))]]
 
        ;; Dropdown
@@ -387,18 +269,20 @@
          (when-not (empty? @same-page-users)
            [:<>
             [list-section-header-el "On This Page"]
-            (for [user @same-page-users]
+            (for [[username user] @same-page-users]
+              ^{:key username}
               [member-item-el user {:filled true}])
             [list-separator-el]])
 
          ;; Online, different page
-         (for [user @diff-page-users]
+         (for [[username user] @diff-page-users]
+           ^{:key username}
            [member-item-el user {:filled false}])]]])))
 
 
 ;; inline
 
-(defn inline-presence
+(defn inline-presence-el
   [uid]
   (let [inline-present? (rf/subscribe [:presence/has-presence uid])]
     (when @inline-present?

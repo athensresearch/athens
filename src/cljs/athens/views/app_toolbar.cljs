@@ -24,8 +24,7 @@
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
     [athens.views.filesystem :as filesystem]
-    [athens.views.presence :as presence]
-    [athens.views.toolbar-presence :as toolbar-presence]
+    [athens.self-hosted.presence.views :as presence]
     [athens.ws-client :as ws]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -239,8 +238,7 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [toolbar-presence/toolbar-presence]
-            #_[presence/presence-popover-info]
+            [presence/toolbar-presence-el]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!
