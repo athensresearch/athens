@@ -5,6 +5,11 @@
     [instaparse.core :as parse]))
 
 
+;; NOTE: collecting
+;; - :node/titles
+;; - :page/refs
+;; - :block/refs
+
 (defn walk-string
   "Walk previous and new strings to delete or add links, block references, etc. to datascript."
   [string]
@@ -22,5 +27,7 @@
                       (str "#" inner-title)))
        :block-ref (fn [uid] (swap! data update :block/refs #(conj % uid)))}
       (parser/parse-to-ast string))
+    #?(:cljs
+       (js/console.log "walk-string" (pr-str @data)))
     @data))
 

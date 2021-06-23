@@ -912,7 +912,8 @@
 
 (reg-event-fx
   :split-block-to-children
-  (fn [_ [_ uid val index new-uid]]
+  (fn [_ [_ uid val index new-uid :as args]]
+    (js/console.debug ":split-block-to-children" (pr-str args))
     (split-block-to-children uid val index (or new-uid (gen-block-uid)))))
 
 
@@ -930,19 +931,6 @@
         reindex   (->> (inc-after (:db/id parent) (dec (:block/order block)))
                        (concat [new-block]))]
     {:dispatch [:transact [{:db/id          (:db/id parent)
-                            :block/children reindex}]]}))
-
-
-(defn new-block
-  "Add a new-block after block"
-  [block parent new-uid]
-  (let [new-block {:block/order  (inc (:block/order block))
-                   :block/uid    new-uid
-                   :block/open   true
-                   :block/string ""}
-        reindex (->> (inc-after (:db/id parent) (:block/order block))
-                     (concat [new-block]))]
-    {:dispatch [:transact [{:db/id          [:block/uid (:block/uid parent)]
                             :block/children reindex}]]}))
 
 
@@ -988,8 +976,25 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [_ [_ uid val index new-uid]]
-    (split-block uid val index new-uid)))
+  (fn [_ [_ {:keys [uid value index new-uid embed-id] :as args}]]
+    (js/console.debug ":enter/split-block" (pr-str args))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":enter/split-block local?" local?)
+      (if local?
+        (let [split-block-event (common-events/build-split-block-event -1
+                                                                       uid
+                                                                       value
+                                                                       index
+                                                                       new-uid)
+              _                 (js/console.debug ":enter/split-block event" (pr-str split-block-event)
+                                                  )
+              tx                (resolver/resolve-event-to-tx @db/dsdb split-block-event)]
+          (js/console.debug ":enter/split-block tx:" (pr-str tx))
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        (throw (js/Error ":enter/split-block not implemented for remote"))))
+    #_(split-block uid val index new-uid)))
 
 
 (reg-event-fx
@@ -1000,7 +1005,7 @@
 
 (reg-event-fx
   :enter/open-block-add-child
-  (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
+  (fn [_ [_ {:keys [block new-uid embed-id]}]]
     (js/console.debug ":enter/open-block-add-child" (pr-str block) new-uid)
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/open-block-add-child local?" local?)
@@ -1091,7 +1096,11 @@
                                                    :embed-id embed-id}]
 
                                 (not (zero? start))
-                                [:enter/split-block uid value start new-uid]
+                                [:enter/split-block {:uid      uid
+                                                     :value    value
+                                                     :index    start
+                                                     :new-uid  new-uid
+                                                     :embed-id embed-id}]
 
                                 (empty? value)
                                 [:unindent uid d-key-down context-root-uid]
@@ -1101,6 +1110,7 @@
     (js/console.debug "[Enter] ->" (pr-str event))
     {:dispatch-n [event
                   (when-not (= event [:no-op])
+                    ;; TODO when `:enter/*` events are ported to common events, individual events will execute followup so dispatching `:editing/uid` is going to be unnecessary
                     [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
                                     embed-id (str "-embed-" embed-id))])]}))
 

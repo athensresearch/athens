@@ -14,6 +14,10 @@
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique      :db.unique/identity}
+   {:db/ident       :remote/db-id
+    :db/valueType   :db.type/long
+    :db/unique      :db.unique/identity
+    :db/cardinality :db.cardinality/one}
    {:db/ident       :block/title
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one

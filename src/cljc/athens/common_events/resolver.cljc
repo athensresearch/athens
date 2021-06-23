@@ -122,6 +122,39 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/split-block
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/split-block" (pr-str args))
+  (let [{:keys [uid
+                value
+                index
+                new-uid]}             args
+        parent                        (common-db/get-parent db [:block/uid uid])
+        block                         (common-db/get-block db [:block/uid uid])
+        {:block/keys [order
+                      children
+                      open]
+         :or         {children []
+                      open     true}} block
+        head                          (subs value 0 index)
+        tail                          (subs value index)
+        retracts                      (mapv (fn [child]
+                                              [:db/retract (:db/id block) :block/children (:db/id child)])
+                                            children)
+        next-block                    {:db/id          -1
+                                       :block/order    (inc order)
+                                       :block/uid      new-uid
+                                       :block/open     open
+                                       :block/children children
+                                       :block/string   tail}
+        reindex                       (->> (common-db/inc-after db (:db/id parent) order)
+                                           (concat [next-block]))
+        new-block                     {:db/id (:db/id block) :block/string head}
+        new-parent                    {:db/id (:db/id parent) :block/children reindex}
+        tx-data                       (conj retracts new-block new-parent)]
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
   [_db {:event/keys [args]}]
   (let [{:keys [uid

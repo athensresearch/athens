@@ -93,3 +93,28 @@
          (mapv (fn [x]
                  (let [new-str (string/replace (:block/string x) pattern title)]
                    (assoc x :block/string new-str)))))))
+
+
+(defn get-block
+  "Fetches whole block based on `:db/id`."
+  [db eid]
+  (d/pull db '[:db/id
+               :remote/db-id
+               :node/title
+               :block/uid
+               :block/order
+               :block/string
+               :block/open
+               {:block/children [:block/uid
+                                 :block/order]}]
+          eid))
+
+
+(defn get-parent
+  "Given `:db/id` find it's parent."
+  [db eid]
+  (->> (d/entity db eid)
+       :block/_children
+       first
+       :db/id
+       (get-block db)))
