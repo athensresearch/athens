@@ -22,6 +22,7 @@
 (declare message-handler)
 (declare close-handler)
 
+
 (defn- connect-to-self-hosted!
   [url]
   (js/console.log "WSClient Connecting to:" url)
@@ -284,6 +285,7 @@
     (js/console.log "User online:" username)
     (rf/dispatch [:presence/add-user args])))
 
+
 (defn- presence-all-online-handler
   "args is a vector of users, e.g. [{:username \"Zeus\"}] "
   [args]
@@ -320,7 +322,6 @@
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
       (js/console.warn "Received " (pr-str packet)))))
-
 
 
 (def ^:private datom-reader
@@ -409,6 +410,7 @@
                                                        (:name @(rf/subscribe [:user]))
                                                        uid))))
 
+
 (rf/reg-event-db
   :presence/update-editing
   (fn [db [_ {:keys [username block/uid]}]]
@@ -419,6 +421,7 @@
                                        (assoc user :block/uid uid)
                                        user))
                                    users)))))
+
 
 ;; REPL Testing
 (comment
@@ -493,5 +496,5 @@
      :tempids {:db/current-tx 536870942}})
   
   (reconstruct-tx-from-log args))
-  
+
 

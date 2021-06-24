@@ -98,8 +98,8 @@
     (mu/merge event-common
               presence-hello-args)]
    [:presence/editing
-     (mu/merge event-common
-               presence-editing)]
+    (mu/merge event-common
+              presence-editing)]
    [:datascript/create-page
     (mu/merge event-common
               datascript-create-page)]
@@ -225,6 +225,7 @@
   [:map
    [:username string?]])
 
+
 (def presence-online
   [:map
    [:event/args
@@ -237,8 +238,10 @@
     [:vector
      user]]])
 
+
 (def presence-offline
   presence-online)
+
 
 (def presence-broadcast-editing
   [:map

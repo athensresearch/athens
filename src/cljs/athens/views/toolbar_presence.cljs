@@ -1,14 +1,14 @@
 (ns athens.views.toolbar-presence
   (:require
-   ["@material-ui/core/Popover" :as Popover]
-   ["@material-ui/icons/Link" :default Link]
-   [athens.style :as style]
-   [athens.db :as db]
-   [athens.views.buttons :refer [button]]
-   [clojure.string :as str]
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/icons/Link" :default Link]
+    [athens.db :as db]
+    [athens.style :as style]
+    [athens.views.buttons :refer [button]]
+    [clojure.string :as str]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
@@ -36,30 +36,32 @@
    "Demeter"
    "Athena"
    "Apollo"])
-   ;;"Artemis"
-   ;;"Ares"
-   ;;"Aphrodite"
-   ;;"Hephaestus"
-   ;;"Hermes"
-   ;;"Hestia"
-   ;;"Dionysus"
-   ;;"Hades"])
+
+
+;; "Artemis"
+;; "Ares"
+;; "Aphrodite"
+;; "Hephaestus"
+;; "Hermes"
+;; "Hestia"
+;; "Dionysus"
+;; "Hades"])
 
 
 (def BLOCK-UIDS
-  ["" ;; on page, not block
-   "6b8c28b09" ;; poseidon
-   "ed9f20b26" ;; way down
-   "8b66a56f3" ;; different page
-   "4135c0ecb" ;; different page on a block
+  ["" ; on page, not block
+   "6b8c28b09" ; poseidon
+   "ed9f20b26" ; way down
+   "8b66a56f3" ; different page
+   "4135c0ecb" ; different page on a block
    ""])
 
 
 (def MEMBERS
   (mapv
-   (fn [username color uid]
-     {:username username :color color :block/uid uid})
-   NAMES PALETTE BLOCK-UIDS))
+    (fn [username color uid]
+      {:username username :color color :block/uid uid})
+    NAMES PALETTE BLOCK-UIDS))
 
 
 ;; re-frame subs
@@ -96,7 +98,7 @@
   :<- [:presence/users-with-page-data]
   :<- [:current-route/name]
   :<- [:current-route/uid]
-  (fn [[users current-route-name current-route-uid ] _]
+  (fn [[users current-route-name current-route-uid] _]
     (case current-route-name
 
       :page
@@ -105,6 +107,7 @@
                users)
 
       [])))
+
 
 (rf/reg-sub
   :presence/diff-page
@@ -121,25 +124,28 @@
 
       users)))
 
-;;; re-frame events
-;@(re-frame.core/subscribe [:presence/users])
-;@(re-frame.core/subscribe [:presence/users-with-page-data])
+
+;; re-frame events
+;; @(re-frame.core/subscribe [:presence/users])
+;; @(re-frame.core/subscribe [:presence/users-with-page-data])
 @(re-frame.core/subscribe [:current-route/name])
-;
-;(let [current-uid @(re-frame.core/subscribe [:current-route/uid])
-;      users @(re-frame.core/subscribe [:presence/users-with-page-data])]
-;  (filterv (fn [user]
-;             (prn current-uid (:page/uid user))
-;             (and current-uid
-;                  (not= current-uid (:page/uid user))))
-;           users))
+
+
+;;
+;; (let [current-uid @(re-frame.core/subscribe [:current-route/uid])
+;;      users @(re-frame.core/subscribe [:presence/users-with-page-data])]
+;;  (filterv (fn [user]
+;;             (prn current-uid (:page/uid user))
+;;             (and current-uid
+;;                  (not= current-uid (:page/uid user))))
+;;           users))
 
 
 
 (rf/reg-event-db
   :presence/all-online
   (fn [db [_ users]]
-     (assoc db :presence/users users)))
+    (assoc db :presence/users users)))
 
 
 (rf/reg-event-db
@@ -157,6 +163,7 @@
                                      (not= username (:username user)))
                                    users)))))
 
+
 (rf/reg-sub
   :presence/has-presence
   :<- [:presence/users-with-page-data]
@@ -166,23 +173,24 @@
                 users)
         first)))
 
-;(update @re-frame.db/app-db :presence/users conj {:hi 1})
-;
-;;(update-in @re-frame.db/app-db [:presence/users "jeff's linux (development)"] dissoc)
-;(update @(rf/subscribe [:presence/users-with-page-data-as-map]) dissoc "jeff's linux (development)")
-;
-;(dissoc @(rf/subscribe [:presence/users-with-page-data-as-map]) "jeff's linux (development)")
-;
-;(dissoc @re-frame.db/app-db :presence/users)
-;
+
+;; (update @re-frame.db/app-db :presence/users conj {:hi 1})
+;;
+;; (update-in @re-frame.db/app-db [:presence/users "jeff's linux (development)"] dissoc)
+;; (update @(rf/subscribe [:presence/users-with-page-data-as-map]) dissoc "jeff's linux (development)")
+;;
+;; (dissoc @(rf/subscribe [:presence/users-with-page-data-as-map]) "jeff's linux (development)")
+;;
+;; (dissoc @re-frame.db/app-db :presence/users)
+;;
 ;; user joins presence
-  ;; conj :presence/users
+;; conj :presence/users
 
 ;; user joins presence
-  ;; disj :presence/users
+;; disj :presence/users
 
 ;; user navigates to new block
-  ;; update-in :presence/users
+;; update-in :presence/users
 ;; user navigates to new page
 ;; user leaves block, i.e. nil :editing/uid
 
@@ -198,7 +206,6 @@
                           {:class "user-avatar"})
                props)
    children])
-
 
 
 (defn avatar-el
@@ -229,19 +236,18 @@
        initials]])))
 
 
-
 (def avatar-stack-style
   {:display "flex"
    ::stylefy/manual [[:svg {:width "1.5rem"
                             :height "1.5rem"}
-                      ; In a stack, each sequential item sucks in the spacing
-                      ; from the item before it
+                      ;; In a stack, each sequential item sucks in the spacing
+                      ;; from the item before it
                       ["&:not(:first-child)" {:margin-left "-0.8rem"}]
-                      ; All but the last get a slice masked out for readability
-                      ;
-                      ; I'm not clear on why 1.55rem / 1.1rem work in this case
-                      ; It'd be nice to have a simpler masking method
-                      ; or a better-constructed string with some documentation
+                      ;; All but the last get a slice masked out for readability
+                      ;;
+                      ;; I'm not clear on why 1.55rem / 1.1rem work in this case
+                      ;; It'd be nice to have a simpler masking method
+                      ;; or a better-constructed string with some documentation
                       ["&:not(:last-child)" {:mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"
                                              :-webkit-mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"}]]]})
 
@@ -272,7 +278,6 @@
                        :justify-content "space-between"
                        :align-items "center"})
    children])
-
 
 
 (defn list-section-header-el
@@ -315,18 +320,20 @@
    :transition "backdrop-filter 0.1s ease"
    :cursor "default"
    ::stylefy/manual [[:svg {:margin-right "0.25rem"}]]})
-   ;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
-                     ;;[:&:hover {:background (style/color :body-text-color :opacity-lower)}]
-                     ;;[:&:active
-                     ;; :&:hover:active
-                     ;; :&.is-active {:color (style/color :body-text-color)
-                     ;;               :background (style/color :body-text-color :opacity-lower)}]
-                     ;;[:&:active
-                     ;; :&:hover:active
-                     ;; :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
-                     ;;[:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
-                     ;;                                 :background (style/color :body-text-color :opacity-lower)
-                     ;;                                 :cursor "default"}]]})
+
+
+;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
+;; [:&:hover {:background (style/color :body-text-color :opacity-lower)}]
+;; [:&:active
+;; :&:hover:active
+;; :&.is-active {:color (style/color :body-text-color)
+;;               :background (style/color :body-text-color :opacity-lower)}]
+;; [:&:active
+;; :&:hover:active
+;; :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
+;; [:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
+;;                                 :background (style/color :body-text-color :opacity-lower)
+;;                                 :cursor "default"}]]})
 
 
 
@@ -340,60 +347,60 @@
 (defn toolbar-presence
   []
   (r/with-let [ele (r/atom nil)]
-    (let [users (rf/subscribe [:presence/users-with-page-data])
-          same-page-users (rf/subscribe [:presence/same-page])
-          diff-page-users (rf/subscribe [:presence/diff-page])
-          current-route-name (rf/subscribe [:current-route/name])]
-      [:<>
+              (let [users (rf/subscribe [:presence/users-with-page-data])
+                    same-page-users (rf/subscribe [:presence/same-page])
+                    diff-page-users (rf/subscribe [:presence/diff-page])
+                    current-route-name (rf/subscribe [:current-route/name])]
+                [:<>
 
-       ;; Preview
-       [button {:on-click #(reset! ele (.-currentTarget %))}
-        [avatar-stack-el
-         (cond
+                 ;; Preview
+                 [button {:on-click #(reset! ele (.-currentTarget %))}
+                  [avatar-stack-el
+                   (cond
 
-           (= @current-route-name :page)
-           [:<>
-            ;; same page
-            (for [user @same-page-users]
-              [avatar-el user {:filled true}])
-            ;; diff page but online
-            (for [user @diff-page-users]
-              [avatar-el user {:filled false}])]
+                     (= @current-route-name :page)
+                     [:<>
+                      ;; same page
+                      (for [user @same-page-users]
+                        [avatar-el user {:filled true}])
+                      ;; diff page but online
+                      (for [user @diff-page-users]
+                        [avatar-el user {:filled false}])]
 
-           ;;; TODO: capture what page user is scrolled to on Daily Notes
-           ;(= @current-route-name :home)
-           ;[:div "TODO"]
+                     ;; TODO: capture what page user is scrolled to on Daily Notes
+                     ;; (= @current-route-name :home)
+                     ;; [:div "TODO"]
 
-           ;; default to showing all users
-           :else (for [user @users]
-                   [avatar-el user {:filled false}]))]]
+                     ;; default to showing all users
+                     :else (for [user @users]
+                             [avatar-el user {:filled false}]))]]
 
-       ;; Dropdown
-       [m-popover
-        {:open            (boolean (and @ele))
-         :anchorEl        @ele
-         :onClose         #(reset! ele nil)
-         :anchorOrigin    #js{:vertical   "bottom"
-                              :horizontal "center"}
-         :transformOrigin #js{:vertical   "top"
-                              :horizontal "center"}}
-        [list-header-el
-         [list-header-url-el "ath.ns/34op5fds0a"]
-         [button [:> Link]]]
+                 ;; Dropdown
+                 [m-popover
+                  {:open            (boolean (and @ele))
+                   :anchorEl        @ele
+                   :onClose         #(reset! ele nil)
+                   :anchorOrigin    #js{:vertical   "bottom"
+                                        :horizontal "center"}
+                   :transformOrigin #js{:vertical   "top"
+                                        :horizontal "center"}}
+                  [list-header-el
+                   [list-header-url-el "ath.ns/34op5fds0a"]
+                   [button [:> Link]]]
 
-        [list-el
-         ;; On same page
+                  [list-el
+                   ;; On same page
 
-         (when-not (empty? @same-page-users)
-           [:<>
-            [list-section-header-el "On This Page"]
-            (for [user @same-page-users]
-              [member-item-el user {:filled true}])
-            [list-separator-el]])
+                   (when-not (empty? @same-page-users)
+                     [:<>
+                      [list-section-header-el "On This Page"]
+                      (for [user @same-page-users]
+                        [member-item-el user {:filled true}])
+                      [list-separator-el]])
 
-         ;; Online, different page
-         (for [user @diff-page-users]
-           [member-item-el user {:filled false}])]]])))
+                   ;; Online, different page
+                   (for [user @diff-page-users]
+                     [member-item-el user {:filled false}])]]])))
 
 
 ;; inline

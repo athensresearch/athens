@@ -367,7 +367,7 @@
                         "1em")]
         [:div {:class ["block-content"
                        (when is-presence "is-locked")]
-        :style {:font-size font-size}}
+               :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) editing?)

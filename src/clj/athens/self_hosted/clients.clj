@@ -71,13 +71,16 @@
     (log/debug channel "get-client-username" username)
     username))
 
+
 (defn get-clients
   []
   @clients)
 
+
 (defn get-clients-usernames
   []
   (vals @clients))
+
 
 (defn remove-client!
   [channel]
