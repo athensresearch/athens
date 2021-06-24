@@ -10,6 +10,7 @@
 (def DB-INDEX "index.transit")
 (def IMAGES-DIR-NAME "images")
 
+
 (def documents-athens-dir
   (let [DOC-PATH (.getPath app "documents")]
     (.resolve path DOC-PATH "athens")))

@@ -1,4 +1,4 @@
-(ns athens.views.filesystem
+(ns athens.electron.db-modal
   (:require
     ["@material-ui/icons/AddBox" :default AddBox]
     ["@material-ui/icons/Close" :default Close]

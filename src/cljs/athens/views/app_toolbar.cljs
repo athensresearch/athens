@@ -18,13 +18,13 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    [athens.electron.db-menu.core :refer [db-menu]]
+    [athens.electron.db-modal :as db-modal]
     [athens.router :as router]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
-    [athens.electron.db-menu.core :refer [db-menu]]
-    [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
     [re-frame.core :refer [subscribe dispatch]]
@@ -197,7 +197,7 @@
     (fn []
       [:<>
        (when @merge-open?
-         [filesystem/merge-modal merge-open?])
+         [db-modal/merge-modal merge-open?])
        [:header (merge (use-style app-header-style
                                   {:class (app-classes {:os os
                                                         :electron? electron?

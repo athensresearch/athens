@@ -2,8 +2,8 @@
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
-    [athens.electron.window]
     [athens.electron.utils :as utils]
+    [athens.electron.window]
     [athens.patterns :as patterns]
     [athens.util :as util]
     [cljs.reader :refer [read-string]]

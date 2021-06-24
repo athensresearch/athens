@@ -2,8 +2,8 @@
   (:require
     ["@material-ui/icons/Link" :default Link]
     [athens.electron.core :as electron]
-    [athens.style :refer [color]]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
+    [athens.style :refer [color]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 

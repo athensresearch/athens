@@ -1,10 +1,12 @@
 (ns athens.electron.dialogs
-  (:require [athens.electron.utils :as utils]
-            [athens.athens-datoms :as athens-datoms]
-            [athens.db :as db]
-            [re-frame.core :as rf]
-            [datascript.core :as d]
-            [datascript.transit :as dt]))
+  (:require
+    [athens.athens-datoms :as athens-datoms]
+    [athens.db :as db]
+    [athens.electron.utils :as utils]
+    [datascript.core :as d]
+    [datascript.transit :as dt]
+    [re-frame.core :as rf]))
+
 
 (def electron (js/require "electron"))
 (def remote (.. electron -remote))

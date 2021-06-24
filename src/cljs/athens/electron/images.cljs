@@ -1,6 +1,7 @@
 (ns athens.electron.images
-  (:require [re-frame.core :as rf]
-            [athens.db :as db]))
+  (:require
+    [athens.db :as db]
+    [re-frame.core :as rf]))
 
 
 (def electron (js/require "electron"))
@@ -11,6 +12,7 @@
 (def remote (.. electron -remote))
 (def dialog (.. remote -dialog))
 (def IMAGES-DIR-NAME "images")
+
 
 ;; Image Paste
 (defn save-image
