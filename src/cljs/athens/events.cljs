@@ -916,9 +916,11 @@
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        ;; TODO remote
-        (throw (js/Error. (str ":split-block-to-children remote not implemented, yet")))))
-    ))
+        {:fx [[:dispatch [:remote/split-block-to-children {:uid      uid
+                                                           :value    value
+                                                           :index    index
+                                                           :new-uid  new-uid
+                                                           :embed-id embed-id}]]]}))))
 
 
 (defn bump-up

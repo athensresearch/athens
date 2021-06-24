@@ -337,6 +337,36 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-split-block-to-children
+  (fn [{db :db} [_ {:keys [event-id embed-id] :as args}]]
+    (js/console.debug ":remote/followup-split-block-to-children args" (pr-str args))
+    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
+          {:keys [new-uid]} (:event/args event)]
+      (js/console.debug ":remote/followup-split-block-to-children new-uid:" new-uid
+                        ", embed-id" embed-id)
+      {:fx [[:dispatch [:editing/uid (str new-uid (when embed-id
+                                                    (str "-embed-" embed-id)))]]]})))
+
+
+(rf/reg-event-fx
+  :remote/split-block-to-children
+  (fn [{db :db} [_ {:keys [uid value index new-uid embed-id] :as args}]]
+    (js/console.debug ":remote/split-block-to-children args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      event} (common-events/build-split-block-to-children-event last-seen-tx
+                                                                              uid
+                                                                              value
+                                                                              index
+                                                                              new-uid)
+          followup-fx      [[:dispatch [:remote/followup-split-block-to-children {:event-id event-id
+                                                                                  :embed-id embed-id}]]]]
+      (js/console.debug ":remote/split-block-to-children event" (pr-str event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
     (let [last-seen-tx         (:remote/last-seen-tx db)
