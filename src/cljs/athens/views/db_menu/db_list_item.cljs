@@ -5,7 +5,7 @@
     [athens.views.db-menu.db-icon :refer [db-icon]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]
-    [athens.electron :as electron]))
+    [athens.electron.core :as electron]))
 
 
 (def db-list-item-style

@@ -1,4 +1,4 @@
-(ns athens.electron
+(ns athens.electron.core
   (:require
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]

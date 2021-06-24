@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
-    [athens.electron :as electron]
+    [athens.electron.core :as electron]
     [athens.db :as dba]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]

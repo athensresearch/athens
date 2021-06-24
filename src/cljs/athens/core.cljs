@@ -8,7 +8,7 @@
     [athens.config :as config]
     [athens.db :refer [dsdb]]
     [athens.effects]
-    [athens.electron]
+    [athens.electron.core]
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
@@ -82,7 +82,7 @@
   "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
   []
   (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron/remote)
+    (let [curWindow        (.getCurrentWindow athens.electron.core/remote)
           [lastx lasty]    (util/get-window-size)]
       (.setSize curWindow lastx lasty)
       (.center curWindow)

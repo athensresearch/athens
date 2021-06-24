@@ -6,7 +6,7 @@
     ["@material-ui/icons/Group" :default Group]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Storage" :default Storage]
-    [athens.electron :as electron]
+    [athens.electron.core :as electron]
     [athens.events :as events]
     [athens.style :refer [color]]
     [athens.subs]
