@@ -3,7 +3,7 @@
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
     [athens.db :as dba]
-    [athens.electron.core :as electron]
+    [athens.electron.dialogs :as dialogs]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]
     [athens.views.db-menu.db-icon :refer [db-icon]]
@@ -86,7 +86,7 @@
        [button "Copy Link"]
        [button "Remove"]]
       [:<>
-       [button {:onClick #(electron/move-dialog!)} "Move"]
+       [button {:onClick #(dialogs/move-dialog!)} "Move"]
        ;; [button {:onClick "Rename"]
        [button {:onClick #(if (= 1 (count all-dbs))
                             (js/alert "Can't remove last db from the list")

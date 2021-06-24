@@ -3,11 +3,12 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.electron.window]
+    [athens.electron.utils :as utils]
     [athens.patterns :as patterns]
     [athens.util :as util]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
-    [datascript.transit :as dt :refer [write-transit-str]]
+    [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
     [re-frame.core :as rf]))
@@ -20,154 +21,13 @@
   (def electron (js/require "electron"))
   (def remote (.. electron -remote))
 
-  (def dialog (.. remote -dialog))
-  (def app (.. remote -app))
 
   (def fs (js/require "fs"))
   (def path (js/require "path"))
   (def stream (js/require "stream"))
 
 
-  (def DB-INDEX "index.transit")
-  (def IMAGES-DIR-NAME "images")
-
-  (def documents-athens-dir
-    (let [DOC-PATH (.getPath app "documents")]
-      (.resolve path DOC-PATH "athens")))
-
   ;; Filesystem Dialogs
-
-
-  (defn move-dialog!
-    "If new-dir/athens already exists, no-op and alert user.
-    Else copy db to new db location. When there is an images folder, copy /images folder and all images.
-      file:// image urls in block/string don't get updated, so if original images are deleted, links will be broken."
-    []
-    (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
-          new-dir (first res)]
-      (when new-dir
-        (let [curr-db-filepath @(rf/subscribe [:db/filepath])
-              base-dir         (.dirname path curr-db-filepath)
-              base-dir-name    (.basename path base-dir)
-              curr-dir-images  (.resolve path base-dir IMAGES-DIR-NAME)
-              new-dir          (.resolve path new-dir base-dir-name)
-              new-dir-images   (.resolve path new-dir IMAGES-DIR-NAME)
-              new-db-filepath  (.resolve path new-dir DB-INDEX)]
-          (if (.existsSync fs new-dir)
-            (js/alert (str "Directory " new-dir " already exists, sorry."))
-            (do (.mkdirSync fs new-dir)
-                (.copyFileSync fs curr-db-filepath new-db-filepath)
-                (rf/dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
-                (rf/dispatch [:db/update-filepath new-db-filepath])
-                (when (.existsSync fs curr-dir-images)
-                  (.mkdirSync fs new-dir-images)
-                  (let [imgs (->> (.readdirSync fs curr-dir-images)
-                                  array-seq
-                                  (map (fn [x]
-                                         [(.join path curr-dir-images x)
-                                          (.join path new-dir-images x)])))]
-                    (doseq [[curr new] imgs]
-                      (.copyFileSync fs curr new))))))))))
-
-
-  (defn open-dialog!
-    "Allow user to open db elsewhere from filesystem."
-    []
-    (let [res       (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
-                                                          :filters    [{:name "Transit" :extensions ["transit"]}]}))
-          open-file (first res)]
-      (when (and open-file (.existsSync fs open-file))
-        (let [read-db (.readFileSync fs open-file)
-              db      (dt/read-transit-str read-db)]
-          (rf/dispatch-sync [:remote-graph/set-conf :default? false])
-          (rf/dispatch-sync [:init-rfdb])
-          (rf/dispatch [:local-storage/create-db-picker-list])
-          (rf/dispatch [:fs/watch open-file])
-          (rf/dispatch [:reset-conn db])
-          (rf/dispatch [:db/update-filepath open-file])
-          (rf/dispatch [:db-picker/add-new-db open-file])
-          (rf/dispatch [:loading/unset])))))
-
-
-  ;; mkdir db-location/name/
-  ;; mkdir db-location/name/images
-  ;; write db-location/name/index.transit
-  (defn create-dialog!
-    "Create a new database."
-    [db-name]
-    (let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
-          db-location (first res)]
-      (when (and db-location (not-empty db-name))
-        (let [db          (d/empty-db db/schema)
-              dir         (.resolve path db-location db-name)
-              dir-images  (.resolve path dir IMAGES-DIR-NAME)
-              db-filepath (.resolve path dir DB-INDEX)]
-          (if (.existsSync fs dir)
-            (js/alert (str "Directory " dir " already exists, sorry."))
-            (do
-              (rf/dispatch-sync [:init-rfdb])
-              (rf/dispatch [:local-storage/create-db-picker-list])
-              (.mkdirSync fs dir)
-              (.mkdirSync fs dir-images)
-              (.writeFileSync fs db-filepath (dt/write-transit-str db))
-              (rf/dispatch [:fs/watch db-filepath])
-              (rf/dispatch [:db/update-filepath db-filepath])
-              (rf/dispatch [:db-picker/add-new-db db-filepath])
-              (rf/dispatch [:reset-conn db])
-              (rf/dispatch [:transact athens-datoms/datoms])
-              (rf/dispatch [:loading/unset])))))))
-
-
-  ;; Image Paste
-  (defn save-image
-    ([item extension]
-     (save-image "" "" item extension))
-    ([head tail item extension]
-     (let [curr-db-filepath @(rf/subscribe [:db/filepath])
-           _                (prn head tail curr-db-filepath item extension)
-           curr-db-dir      @(rf/subscribe [:db/filepath-dir])
-           img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
-           base-dir         (.dirname path curr-db-filepath)
-           base-dir-name    (.basename path base-dir)
-           file             (.getAsFile item)
-           img-filename     (.resolve path img-dir (str "img-" base-dir-name "-" (util/gen-block-uid) "." extension))
-           reader           (js/FileReader.)
-           new-str          (str head "![](" "file://" img-filename ")" tail)
-           cb               (fn [e]
-                              (let [img-data (as->
-                                               (.. e -target -result) x
-                                               (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
-                                               (js/Buffer. x "base64"))]
-                                (when-not (.existsSync fs img-dir)
-                                  (.mkdirSync fs img-dir))
-                                (.writeFileSync fs img-filename img-data)))]
-       (set! (.. reader -onload) cb)
-       (.readAsDataURL reader file)
-       new-str)))
-
-
-  (defn dnd-image
-    [target-uid drag-target item extension]
-    (let [new-str   (save-image item extension)
-          {:block/keys [order]} (db/get-block [:block/uid target-uid])
-          parent    (db/get-parent [:block/uid target-uid])
-          block     (db/get-block [:block/uid target-uid])
-          new-block {:block/uid (util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
-          tx-data   (if (= drag-target :child)
-                      (let [reindex          (db/inc-after (:db/id block) -1)
-                            new-children     (conj reindex new-block)
-                            new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
-                        new-target-block)
-                      (let [index        (case drag-target
-                                           :above (dec order)
-                                           :below order)
-                            reindex      (db/inc-after (:db/id parent) index)
-                            new-children (conj reindex new-block)
-                            new-parent   {:db/id (:db/id parent) :block/children new-children}]
-                        new-parent))]
-      ;; delay because you want to create block *after* the file has been saved to filesystem
-      ;; otherwise, <img> is created too fast, and no image is rendered
-      (js/setTimeout #(rf/dispatch [:transact [tx-data]]) 50)))
 
 
   ;; Subs
@@ -348,7 +208,7 @@
      (rf/inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
                                          :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
-      (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
+      (let [default-db-path (.resolve path utils/documents-athens-dir utils/DB-INDEX)]
         (cond
           (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
           ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
@@ -379,11 +239,11 @@
   (rf/reg-event-fx
     :fs/create-new-db
     (fn []
-      (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
-            db-images   (.resolve path documents-athens-dir IMAGES-DIR-NAME)]
-        (create-dir-if-needed! documents-athens-dir)
+      (let [db-filepath (.resolve path utils/documents-athens-dir utils/DB-INDEX)
+            db-images   (.resolve path utils/documents-athens-dir utils/IMAGES-DIR-NAME)]
+        (create-dir-if-needed! utils/documents-athens-dir)
         (create-dir-if-needed! db-images)
-        {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
+        {:fs/write!  [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
                       [:transact athens-datoms/datoms]
                       [:db-picker/add-new-db db-filepath]]})))

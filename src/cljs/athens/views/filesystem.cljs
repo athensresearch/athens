@@ -6,7 +6,7 @@
     ["@material-ui/icons/Group" :default Group]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Storage" :default Storage]
-    [athens.electron.core :as electron]
+    [athens.electron.dialogs :as dialogs]
     [athens.events :as events]
     [athens.style :refer [color]]
     [athens.subs]
@@ -190,11 +190,11 @@
                      :align-items     "center"
                      :width           "80%"})
     [button {:primary  true
-             :on-click #(electron/open-dialog!)}
+             :on-click #(dialogs/open-dialog!)}
      "Open"]
     [button {:disabled @loading
              :primary  true
-             :on-click #(electron/move-dialog!)}
+             :on-click #(dialogs/move-dialog!)}
      "Move"]]])
 
 
@@ -216,7 +216,7 @@
     [:h5 "New Location"]
     [button {:primary  true
              :disabled (clojure.string/blank? (:input @state))
-             :on-click #(electron/create-dialog! (:input @state))}
+             :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
 
 
