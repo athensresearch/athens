@@ -10,7 +10,7 @@
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
     [goog.functions :refer [debounce]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
+    [re-frame.core :as rf]))
 
 
 ;; XXX: most of these operations are effectful. They _should_ be re-written with effects, but feels like too much boilerplate.
@@ -46,7 +46,7 @@
     (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
           new-dir (first res)]
       (when new-dir
-        (let [curr-db-filepath @(subscribe [:db/filepath])
+        (let [curr-db-filepath @(rf/subscribe [:db/filepath])
               base-dir         (.dirname path curr-db-filepath)
               base-dir-name    (.basename path base-dir)
               curr-dir-images  (.resolve path base-dir IMAGES-DIR-NAME)
@@ -57,8 +57,8 @@
             (js/alert (str "Directory " new-dir " already exists, sorry."))
             (do (.mkdirSync fs new-dir)
                 (.copyFileSync fs curr-db-filepath new-db-filepath)
-                (dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
-                (dispatch [:db/update-filepath new-db-filepath])
+                (rf/dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
+                (rf/dispatch [:db/update-filepath new-db-filepath])
                 (when (.existsSync fs curr-dir-images)
                   (.mkdirSync fs new-dir-images)
                   (let [imgs (->> (.readdirSync fs curr-dir-images)
@@ -79,14 +79,14 @@
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
               db      (dt/read-transit-str read-db)]
-          (dispatch-sync [:remote-graph/set-conf :default? false])
-          (dispatch-sync [:init-rfdb])
-          (dispatch [:local-storage/create-db-picker-list])
-          (dispatch [:fs/watch open-file])
-          (dispatch [:reset-conn db])
-          (dispatch [:db/update-filepath open-file])
-          (dispatch [:db-picker/add-new-db open-file])
-          (dispatch [:loading/unset])))))
+          (rf/dispatch-sync [:remote-graph/set-conf :default? false])
+          (rf/dispatch-sync [:init-rfdb])
+          (rf/dispatch [:local-storage/create-db-picker-list])
+          (rf/dispatch [:fs/watch open-file])
+          (rf/dispatch [:reset-conn db])
+          (rf/dispatch [:db/update-filepath open-file])
+          (rf/dispatch [:db-picker/add-new-db open-file])
+          (rf/dispatch [:loading/unset])))))
 
 
   ;; mkdir db-location/name/
@@ -105,17 +105,17 @@
           (if (.existsSync fs dir)
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
-              (dispatch-sync [:init-rfdb])
-              (dispatch [:local-storage/create-db-picker-list])
+              (rf/dispatch-sync [:init-rfdb])
+              (rf/dispatch [:local-storage/create-db-picker-list])
               (.mkdirSync fs dir)
               (.mkdirSync fs dir-images)
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
-              (dispatch [:fs/watch db-filepath])
-              (dispatch [:db/update-filepath db-filepath])
-              (dispatch [:db-picker/add-new-db db-filepath])
-              (dispatch [:reset-conn db])
-              (dispatch [:transact athens-datoms/datoms])
-              (dispatch [:loading/unset])))))))
+              (rf/dispatch [:fs/watch db-filepath])
+              (rf/dispatch [:db/update-filepath db-filepath])
+              (rf/dispatch [:db-picker/add-new-db db-filepath])
+              (rf/dispatch [:reset-conn db])
+              (rf/dispatch [:transact athens-datoms/datoms])
+              (rf/dispatch [:loading/unset])))))))
 
 
   ;; Image Paste
@@ -123,9 +123,9 @@
     ([item extension]
      (save-image "" "" item extension))
     ([head tail item extension]
-     (let [curr-db-filepath @(subscribe [:db/filepath])
+     (let [curr-db-filepath @(rf/subscribe [:db/filepath])
            _                (prn head tail curr-db-filepath item extension)
-           curr-db-dir      @(subscribe [:db/filepath-dir])
+           curr-db-dir      @(rf/subscribe [:db/filepath-dir])
            img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
            base-dir         (.dirname path curr-db-filepath)
            base-dir-name    (.basename path base-dir)
@@ -167,37 +167,37 @@
                         new-parent))]
       ;; delay because you want to create block *after* the file has been saved to filesystem
       ;; otherwise, <img> is created too fast, and no image is rendered
-      (js/setTimeout #(dispatch [:transact [tx-data]]) 50)))
+      (js/setTimeout #(rf/dispatch [:transact [tx-data]]) 50)))
 
 
   ;; Subs
 
-  (reg-sub
+  (rf/reg-sub
     :db/mtime
     (fn [db _]
       (:db/mtime db)))
 
 
-  (reg-sub
+  (rf/reg-sub
     :db/filepath
     (fn [db _]
       (:db/filepath db)))
 
 
-  (reg-sub
+  (rf/reg-sub
     :db/filepath-dir
     (fn [db _]
       (.dirname path (:db/filepath db))))
 
 
   ;; create sub in athens.subs so web-version of Athens works
-  ;; (reg-sub
+  ;; (rf/reg-sub
   ;;  :db/remote-graph-conf
   ;;  (fn [db _]
   ;;    (:db/remote-graph-conf db)))
 
 
-  (reg-sub
+  (rf/reg-sub
     :db/remote-graph
     (fn [db _]
       (:db/remote-graph db)))
@@ -206,7 +206,7 @@
 
   ;; Subs
 
-  (reg-sub
+  (rf/reg-sub
     :db-picker/all-dbs
     (fn [db _]
       (:db-picker/all-dbs db)))
@@ -236,7 +236,7 @@
 
   ;; Events
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db-picker/add-new-db
     (fn [{:keys [db]} [_ dbpath]]
       "Add a new to db picker list.
@@ -256,7 +256,7 @@
              :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :local-storage/set-db-picker-list
     (fn [{:keys [db]} _]
       "Save current db-picker list to local storage. Why using `pr-str`? Checkout
@@ -265,7 +265,7 @@
       (let [current-db-list (:db-picker/all-dbs db)]
         {:local-storage/set! ["db-picker/all-dbs" (pr-str current-db-list)]})))
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :local-storage/create-db-picker-list
     (fn [{:keys [db]} _]
       "Check if local storage contains db-picker list.
@@ -278,7 +278,7 @@
           {:fx [[:dispatch [:db-picker/add-new-db current-db-filepath]]]}
           {:db (assoc db :db-picker/all-dbs val)}))))
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db-picker/remove-db-from-list
     (fn [{:keys [db]} [_ db-path]]
       "Remove the selected db from db-list. Update local storage value with the new db list"
@@ -290,14 +290,14 @@
          :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db-picker/move-db
     (fn [_ [_ previous-path new-path]]
       "Move db from current location."
       {:dispatch-n [[:db-picker/remove-db-from-list previous-path]
                     [:db-picker/add-new-db new-path]]}))
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db-picker/select-new-db
     (fn [{:keys [db]} [_ db-path synced?]]
       "Select a new db from db list.
@@ -312,7 +312,7 @@
           :else                             {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
                                                           [:db-picker/remove-db-from-list db-path]]}))))
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db-picker/delete-db
     (fn [{:keys [db]} [_ db-filepath]]
       "Delete selected db.
@@ -334,7 +334,7 @@
 
   ;; ==================== db- picker end ==========================
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :fs/open-dialog
     (fn [{:keys [db]} _]
       (js/alert (str "No DB found at " (:db/filepath db) "."
@@ -342,11 +342,11 @@
       {:dispatch-n [[:modal/toggle]]}))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :local-storage/get-db-filepath
-    [(inject-cofx :local-storage "db/filepath")
-     (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
-                                      :key    :remote-graph-conf})]
+    [(rf/inject-cofx :local-storage "db/filepath")
+     (rf/inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
+                                         :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
       (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
         (cond
@@ -357,9 +357,9 @@
           :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :local-storage/navigate
-    [(inject-cofx :local-storage "current-route/uid")]
+    [(rf/inject-cofx :local-storage "current-route/uid")]
     (fn [{:keys [local-storage]} _]
       {:dispatch [:navigate {:page {:id local-storage}}]}))
 
@@ -376,7 +376,7 @@
   ;; If new db is created add
   ;; 1. This db to all-dbs list
   ;; 2. Make this db active
-  (reg-event-fx
+  (rf/reg-event-fx
     :fs/create-new-db
     (fn []
       (let [db-filepath (.resolve path documents-athens-dir DB-INDEX)
@@ -389,14 +389,14 @@
                       [:db-picker/add-new-db db-filepath]]})))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db/retract-athens-pages
     (fn []
       {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
                                     (db/retract-page-recursively "Changelog"))]}))
 
 
-  (reg-event-fx
+  (rf/reg-event-fx
     :db/transact-athens-pages
     (fn []
       {:dispatch [:transact athens-datoms/datoms]}))
@@ -406,7 +406,7 @@
   (defn sync-db-from-fs
     "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
     [filepath _filename]
-    (let [prev-mtime @(subscribe [:db/mtime])
+    (let [prev-mtime @(rf/subscribe [:db/mtime])
           curr-mtime (.-mtime (.statSync fs filepath))
           newer?     (< prev-mtime curr-mtime)]
       (when newer?
@@ -417,10 +417,10 @@
                                                  "\n\n"
                                                  "Accept changes?"))]
           (when confirm
-            (dispatch [:db/update-mtime curr-mtime])
+            (rf/dispatch [:db/update-mtime curr-mtime])
             (let [read-db (.readFileSync fs filepath)
                   db      (dt/read-transit-str read-db)]
-              (dispatch [:reset-conn db])))))))
+              (rf/dispatch [:reset-conn db])))))))
 
 
   (def debounce-sync-db-from-fs
@@ -430,7 +430,7 @@
   ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
   ;; Watching db file directly doesn't always work, so watch directory and regex match.
   ;; Debounce because files can be changed multiple times per save.
-  (reg-event-fx
+  (rf/reg-event-fx
     :fs/watch
     (fn [_ [_ filepath]]
       (let [dirpath (.dirname path filepath)]
@@ -444,7 +444,7 @@
       {}))
 
 
-  (reg-event-db
+  (rf/reg-event-db
     :db/update-mtime
     (fn [db [_ mtime1]]
       (let [{:db/keys [filepath]} db
@@ -461,7 +461,7 @@
   ;; open or create a new starter db
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
-  (reg-event-fx
+  (rf/reg-event-fx
     :boot/desktop
     (fn [_ _]
       {:db         db/rfdb
@@ -471,14 +471,14 @@
                                       :dispatch-fn (fn [[_ filepath]]
                                                      (cond
                                                        ;; No database path found in localStorage. Creating new one
-                                                       (nil? filepath) (dispatch [:fs/create-new-db])
+                                                       (nil? filepath) (rf/dispatch [:fs/create-new-db])
                                                        ;; Database found in local storage and filesystem:
                                                        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                        db      (dt/read-transit-str read-db)]
-                                                                                   (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db])
-                                                                                   (dispatch [:local-storage/create-db-picker-list]))
-                                                       :else (dispatch [:fs/open-dialog])))}
+                                                                                   (rf/dispatch [:fs/watch filepath])
+                                                                                   (rf/dispatch [:reset-conn db])
+                                                                                   (rf/dispatch [:local-storage/create-db-picker-list]))
+                                                       :else (rf/dispatch [:fs/open-dialog])))}
 
                                      ;; remote graph
                                      {:when        :seen?
@@ -536,9 +536,9 @@
                                                                             ;; give all blocks empty string - clears refs
                                                                             ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
                                                                             ;; update schema version, so this doesn't need to happen again
-                                                                            (dispatch [:transact blocks-temp])
-                                                                            (dispatch [:transact blocks-orig])
-                                                                            (dispatch [:transact [[:db/add -1 :schema/version 1]]]))
+                                                                            (rf/dispatch [:transact blocks-temp])
+                                                                            (rf/dispatch [:transact blocks-orig])
+                                                                            (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
                                                          (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
                                                                             (case schema-version
                                                                               1 (prn (str "Schema version " schema-version))
@@ -546,7 +546,7 @@
                                                          (< 1 schema-cnt)
                                                          (js/alert (js/Error (str "Multiple schema versions: " schemas))))
 
-                                                       (dispatch [:loading/unset])))
+                                                       (rf/dispatch [:loading/unset])))
                                       :halt?       true}]}}))
 
 
@@ -566,8 +566,8 @@
     If the write operation succeeds, a backup is created and index.transit is overwritten.
     User should eventually have MANY backups files. It's their job to manage these backups :)"
     [copy?]
-    (when-not @(subscribe [:socket-status])
-      (let [filepath     @(subscribe [:db/filepath])
+    (when-not @(rf/subscribe [:socket-status])
+      (let [filepath     @(rf/subscribe [:db/filepath])
             data         (dt/write-transit-str @db/dsdb)
             r            (.. stream -Readable (from data))
             dirname      (.dirname path filepath)
@@ -588,8 +588,8 @@
                           (when copy?
                             (.. fs (copyFileSync bkp-filepath filepath))
                             (let [mtime (.-mtime (.statSync fs filepath))]
-                              (dispatch-sync [:db/update-mtime mtime])
-                              (dispatch [:db/sync])))))
+                              (rf/dispatch-sync [:db/update-mtime mtime])
+                              (rf/dispatch [:db/sync])))))
         (.pipe r w))))
 
 
@@ -609,7 +609,7 @@
     (write-db false))
 
 
-  (reg-fx
+  (rf/reg-fx
     :fs/write!
     (fn []
       (debounce-write-db true))))
