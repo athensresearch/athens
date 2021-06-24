@@ -26,7 +26,8 @@
 (reg-event-db
   :init-rfdb
   (fn [_ _]
-    db/rfdb))
+      db/rfdb))
+
 
 
 (reg-event-fx

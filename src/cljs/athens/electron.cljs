@@ -58,6 +58,7 @@
             (js/alert (str "Directory " new-dir " already exists, sorry."))
             (do (.mkdirSync fs new-dir)
                 (.copyFileSync fs curr-db-filepath new-db-filepath)
+                (dispatch [:db-picker/move-db curr-db-filepath new-db-filepath])
                 (dispatch [:db/update-filepath new-db-filepath])
                 (when (.existsSync fs curr-dir-images)
                   (.mkdirSync fs new-dir-images)
@@ -81,10 +82,11 @@
               db      (dt/read-transit-str read-db)]
           (dispatch-sync [:remote-graph/set-conf :default? false])
           (dispatch-sync [:init-rfdb])
+          (dispatch [:local-storage/create-db-picker-list])
           (dispatch [:fs/watch open-file])
           (dispatch [:reset-conn db])
           (dispatch [:db/update-filepath open-file])
-          (dispatch [:remote-graph-conf/load])
+          (dispatch [:db-picker/add-new-db open-file])
           (dispatch [:loading/unset])))))
 
 
@@ -105,11 +107,13 @@
             (js/alert (str "Directory " dir " already exists, sorry."))
             (do
               (dispatch-sync [:init-rfdb])
+              (dispatch [:local-storage/create-db-picker-list])
               (.mkdirSync fs dir)
               (.mkdirSync fs dir-images)
               (.writeFileSync fs db-filepath (dt/write-transit-str db))
               (dispatch [:fs/watch db-filepath])
               (dispatch [:db/update-filepath db-filepath])
+              (dispatch [:db-picker/add-new-db db-filepath])
               (dispatch [:reset-conn db])
               (dispatch [:transact athens-datoms/datoms])
               (dispatch [:loading/unset])))))))
@@ -200,9 +204,9 @@
       (:db/remote-graph db)))
 
   (reg-sub
-    :win-maximized?
-    (fn [db _]
-      (:win-maximized? db)))
+  :win-maximized?
+  (fn [db _]
+    (:win-maximized? db)))
 
   (reg-sub
     :win-fullscreen?
@@ -213,10 +217,138 @@
     :win-focused?
     (fn [db _]
       (:win-focused? db)))
+  
+  ;; ------- db -picker related implementation--------------------------------
+
+  ;; Subs
+
+  (reg-sub
+    :db-picker/all-dbs
+    (fn [db _]
+      (:db-picker/all-dbs db)))
+
+  ;; helper functions
+
+  (defn get-db-name
+    "From a dbpath find out db name.
+     e.g : /home/sid597/Desktop/athens db/test db/index.transit --> test db"
+    [dbpath]
+    (.basename path (.dirname path dbpath)))
+
+  (defn check-duplicate-db
+    "Check if a db is already in the list.
+     Implementation thoughts
+      - Should this be done whenever a new db is added or should we maintain a
+        set universally and check that?
+      - No performance issues if this is done on every new db addition because
+        not many dbs would be made frequently to cause performance issue. What
+        about merging 2 large dbs? Not there yet, but in that case also calculating
+        the set of all paths is O(n).
+      - Also re-frame is in-memory so saving data which can be easily calculated is
+        not a good idea I think"
+    [db-list check-path]
+    (seq (filter #(= check-path (:path %)) db-list)))
 
 
   ;; Events
 
+  (reg-event-fx
+    :db-picker/add-new-db
+    (fn [{:keys [db]} [_ dbpath]]
+      "Add a new to db picker list.
+       Can be invoked when a db is added, opened, moved, selected or removed.
+       Update local storage value with the new db list"
+      (let [current-db-list (:db-picker/all-dbs db)
+            duplicate?       (check-duplicate-db
+                               current-db-list
+                               dbpath)]
+        (if duplicate?
+          {:fx [[:dispatch [:alert/js (str "Database already in the list")]]]}
+          (let [dbname  (get-db-name dbpath)
+                newdb   {:path dbpath
+                         :name dbname}
+                all-dbs (conj current-db-list newdb)]
+            {:db       (assoc db :db-picker/all-dbs all-dbs)
+             :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))))
+
+
+  (reg-event-fx
+      :local-storage/set-db-picker-list
+      (fn [{:keys [db]} _]
+        "Save current db-picker list to local storage. Why using `pr-str`? Checkout
+         this link for discussion on how to serialize data to store"
+        ;; https://stackoverflow.com/questions/67821181/how-to-set-and-get-a-vector-in-local-storage
+        (let [current-db-list (:db-picker/all-dbs db)]
+          {:local-storage/set! ["db-picker/all-dbs" (pr-str current-db-list)]})))
+
+  (reg-event-fx
+    :local-storage/create-db-picker-list
+    (fn [{:keys [db]} _]
+      "Check if local storage contains db-picker list.
+       If not it means this is the first time opening Athens or local storage was
+       cleared, if this is the case we update db-picker list with the current running db."
+      (let [val                 (cljs.reader/read-string
+                                  (js/localStorage.getItem "db-picker/all-dbs"))
+            current-db-filepath (:db/filepath db)]
+        (if (nil? val)
+          {:fx [[:dispatch [:db-picker/add-new-db current-db-filepath]]]}
+          {:db (assoc db :db-picker/all-dbs val)}))))
+
+  (reg-event-fx
+    :db-picker/remove-db-from-list
+    (fn [{:keys [db]} [_ db-path]]
+      "Remove the selected db from db-list. Update local storage value with the new db list"
+      (let [current-db-list (:db-picker/all-dbs db)
+            new-db-list     (into [] (filter
+                                       (fn [db-list-item] (not= db-path (:path db-list-item)))
+                                       current-db-list))]
+        {:db       (assoc db :db-picker/all-dbs new-db-list)
+         :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))
+
+
+  (reg-event-fx
+    :db-picker/move-db
+    (fn [_ [_ previous-path new-path]]
+      "Move db from current location."
+      {:dispatch-n [[:db-picker/remove-db-from-list previous-path]
+                    [:db-picker/add-new-db new-path]]}))
+
+  (reg-event-fx
+    :db-picker/select-new-db
+    (fn [{:keys [db]} [_ db-path synced?]]
+      "Select a new db from db list.
+      If the selected db is deleted from disk then show an alert describing the
+      situation and remove this db from db list. Prevent selecting a db when sync
+      is happening, instead show an alert describing the situation."
+      (let [file-exists? (and db-path (.existsSync fs db-path))]
+        (cond
+          (and file-exists? synced?)        {:dispatch-n [[:db/update-filepath db-path]
+                                                          [:boot/desktop]]}
+          (and file-exists? (not synced?))  {:fx   [[:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]]]}
+          :else                             {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
+                                                          [:db-picker/remove-db-from-list db-path]]}))))
+
+  (reg-event-fx
+    :db-picker/delete-db
+    (fn [{:keys [db]} [_ db-filepath]]
+      "Delete selected db.
+      Delete the selected db and set the first db in the updated db list as active.
+      Another approach could be to keep state of last visited db before the current
+      one, and when the current db is deleted switch to previous one. This approach
+      is comparatively more complex but would improve UX, we are leaving this one
+      out in current scope.
+
+      `select-new-db` event call has 2nd argument (synced) as true because one
+      is deleting a db so to them it does not matter if the db is synced or not."
+
+      ;;TODO implement delete db from filesystem not implemented
+      ;;so that we can test without accidently deleting real db
+      (let [new-list         (:db-picker/all-dbs db)
+            next-db-filepath (:path ( nth new-list 0))]
+        {:fx   [[:dispatch [:db-picker/select-new-db next-db-filepath true]]
+                [:local-storage/set! ["db-picker/all-dbs" new-list]]]})))
+
+ ;; ==================== db- picker end ==========================
 
   (reg-event-fx
     :fs/open-dialog
@@ -256,6 +388,10 @@
   ;; Documents/athens
   ;; ├── images
   ;; └── index.transit
+
+  ;; If new db is created add
+  ;; 1. This db to all-dbs list
+  ;; 2. Make this db active
   (reg-event-fx
     :fs/create-new-db
     (fn []
@@ -265,7 +401,8 @@
         (create-dir-if-needed! db-images)
         {:fs/write!  [db-filepath (write-transit-str (d/empty-db db/schema))]
          :dispatch-n [[:db/update-filepath db-filepath]
-                      [:transact athens-datoms/datoms]]})))
+                      [:transact athens-datoms/datoms]
+                      [:db-picker/add-new-db db-filepath]]})))
 
 
   (reg-event-fx
@@ -355,8 +492,8 @@
                                                        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
                                                                                        db      (dt/read-transit-str read-db)]
                                                                                    (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
-                                                       ;; Database found in localStorage but not on filesystem
+                                                                                   (dispatch [:reset-conn db])
+                                                                                   (dispatch [:local-storage/create-db-picker-list]))
                                                        :else (dispatch [:fs/open-dialog])))}
 
                                      ;; remote graph

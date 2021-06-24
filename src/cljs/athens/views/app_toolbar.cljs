@@ -2,18 +2,13 @@
   (:require
     ["@material-ui/core/SvgIcon" :default SvgIcon]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/CheckCircle" :default CheckCircle]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/Menu" :default Menu]
-    ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
-    ["@material-ui/icons/Storage" :default Storage]
-    ["@material-ui/icons/Sync" :default Sync]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
@@ -23,6 +18,7 @@
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
+    [athens.views.db-menu.core :refer [db-menu]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
@@ -155,15 +151,6 @@
    :block-size "auto"})
 
 
-(def sync-icon-style
-  {:background (color :background-minus-2)
-   :border-radius "100%"
-   :padding 0
-   :margin 0
-   :height "12px !important"
-   :width "12px !important"})
-
-
 (stylefy/keyframes "fade-in"
                    [:from
                     {:opacity 0}]
@@ -206,6 +193,7 @@
                                                         :win-maximized? @win-maximized?})})
                        (unzoom))
         [:div (use-style app-header-control-section-style)
+         [db-menu]
          [button {:active @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
@@ -255,8 +243,6 @@
                      :active   (= @route-name :settings)}
              [:> Settings]]
 
-            [button {:on-click #(dispatch [:modal/toggle])
-                     :title "Choose Database"}
              [:div {:style {:display "flex"}}
               [:> Storage {:style {:align-self "center"}}]
               [:div {:style {:margin-left "-10px"
