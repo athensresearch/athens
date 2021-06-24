@@ -1,9 +1,9 @@
-(ns athens.views.db-menu.db-list-item
+(ns athens.electron.db-menu.db-list-item
   (:require
     ["@material-ui/icons/Link" :default Link]
     [athens.electron.core :as electron]
     [athens.style :refer [color]]
-    [athens.views.db-menu.db-icon :refer [db-icon]]
+    [athens.electron.db-menu.db-icon :refer [db-icon]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 

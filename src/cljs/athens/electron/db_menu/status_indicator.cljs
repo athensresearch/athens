@@ -1,4 +1,4 @@
-(ns athens.views.db-menu.status-indicator
+(ns athens.electron.db-menu.status-indicator
   (:require
     ["@material-ui/icons/CheckCircle" :default CheckCircle]
     ["@material-ui/icons/Error" :default Error]

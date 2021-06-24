@@ -1,13 +1,13 @@
-(ns athens.views.db-menu.core
+(ns athens.electron.db-menu.core
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
-    [athens.db :as dba]
+    [athens.db :as db]
     [athens.electron.dialogs :as dialogs]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.views.buttons :refer [button]]
-    [athens.views.db-menu.db-icon :refer [db-icon]]
-    [athens.views.db-menu.db-list-item :refer [db-list-item]]
+    [athens.electron.db-menu.db-icon :refer [db-icon]]
+    [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]

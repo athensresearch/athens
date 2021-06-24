@@ -23,7 +23,7 @@
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
-    [athens.views.db-menu.core :refer [db-menu]]
+    [athens.electron.db-menu.core :refer [db-menu]]
     [athens.views.filesystem :as filesystem]
     [athens.views.presence :as presence]
     [athens.ws-client :as ws]
