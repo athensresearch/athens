@@ -367,6 +367,35 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-unindent
+  (fn [{db :db} [_ {:keys [event-id embed-id start end] :as args}]]
+    (js/console.debug ":remote/followup-unindent args" (pr-str args))
+    (let [{:keys [event]} (get-event-acceptance-info db event-id)
+          {:keys [uid]}   (:event/args event)]
+      (js/console.debug ":remote/followup-unindent uid:" uid
+                        ", embed-id:" embed-id)
+      {:fx [[:dispatch [:editing/uid (str uid (when embed-id
+                                                (str "-embed-" embed-id)))]]
+            [:set-cursor-position [uid start end]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unindent
+  (fn [{db :db} [_ {:keys [uid value start end embed-id] :as args}]]
+    (js/console.debug ":remote/unindent args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      event} (common-events/build-unindent-event last-seen-tx uid value)
+          followup-fx      [[:dispatch [:remote/followup-unindent {:event-id event-id
+                                                                   :embed-id embed-id
+                                                                   :start    start
+                                                                   :end      end}]]]]
+      (js/console.debug ":remote/unindent event" (pr-str event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
     (let [last-seen-tx         (:remote/last-seen-tx db)

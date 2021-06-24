@@ -55,6 +55,18 @@
             order)))
 
 
+(defn dec-after
+  [db eid order]
+  (->> (d/q '[:find ?ch ?new-o
+              :in $ % ?p ?at
+              :keys db/id block/order
+              :where (dec-after ?p ?at ?ch ?new-o)]
+            db
+            rules
+            eid
+            order)))
+
+
 (defn get-children-uids-recursively
   "Get list of children UIDs for given block `uid` (including the root block's UID)"
   [db uid]

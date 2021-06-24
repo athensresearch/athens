@@ -180,6 +180,32 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/unindent
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/unindent args" (pr-str args))
+  (let [{:keys [uid
+                value]}             args
+        {block-order :block/order}  (common-db/get-block db [:block/uid uid])
+        {parent-eid   :db/id
+         parent-uid   :block/uid
+         parent-order :block/order} (common-db/get-parent db [:block/uid uid])
+        {grandpa-eid :db/id}        (common-db/get-parent db [:block/uid parent-uid])
+        new-block                   {:block/uid    uid
+                                     :block/order  (inc parent-order)
+                                     :block/string value}
+        reindex-grandpa             (concat [new-block]
+                                            (common-db/inc-after db grandpa-eid parent-order))
+        reindex-parent              (common-db/dec-after db parent-eid block-order)
+        new-parent                  {:db/id          parent-eid
+                                     :block/children reindex-parent}
+        retract                     [:db/retract parent-eid :block/children [:block/uid uid]]
+        new-grandpa                 {:db/id          grandpa-eid
+                                     :block/children reindex-grandpa}
+        tx-data                     [retract new-parent new-grandpa]]
+    (println "resolver :datascript/unindent tx-data" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
   [_db {:event/keys [args]}]
   (let [{:keys [uid

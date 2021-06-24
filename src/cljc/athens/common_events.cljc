@@ -177,6 +177,19 @@
                      :new-uid new-uid}}))
 
 
+(defn build-unindent-event
+  "Builds `:datascript/unindent` event with:
+  - `uid`: `:block/uid` of triggering block
+  - `value`: `:block/string` of triggering block"
+  [last-tx uid value]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unindent
+     :event/args    {:uid   uid
+                     :value value}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

@@ -15,6 +15,8 @@
    :datascript/add-child
    :datascript/open-block-add-child
    :datascript/split-block
+   :datascript/split-block-to-children
+   :datascript/unindent
    :datascript/paste-verbatim])
 
 
@@ -82,6 +84,14 @@
      [:new-uid string?]]]])
 
 
+(def datascript-unindent
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:value string?]]]])
+
+
 (def datascript-paste-verbatim
   [:map
    [:event/args
@@ -118,6 +128,12 @@
    [:datascript/split-block
     (mu/merge event-common
               datascript-split-block)]
+   [:datascript/split-block-to-children
+    (mu/merge event-common
+              datascript-split-block)] ; same args as `datascript-split-block`
+   [:datascript/unindent
+    (mu/merge event-common
+              datascript-unindent)]
    [:datascript/paste-verbatim
     (mu/merge event-common
               datascript-paste-verbatim)]])

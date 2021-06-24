@@ -1,5 +1,6 @@
 (ns athens.events
   (:require
+    [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
     [athens.db                            :as db :refer [dec-after inc-after minus-after plus-after retract-uid-recursively]]
@@ -1094,7 +1095,10 @@
                                                            :new-uid new-uid}]
 
                                 (and (empty? value) embed-id (not is-parent-root-embed?))
-                                [:unindent uid d-key-down context-root-uid]
+                                [:unindent {:uid              uid
+                                            :d-key-down       d-key-down
+                                            :context-root-uid context-root-uid
+                                            :embed-id         embed-id}]
 
                                 (and (empty? value) embed-id is-parent-root-embed?)
                                 [:enter/new-block {:block    block
@@ -1110,7 +1114,10 @@
                                                      :embed-id embed-id}]
 
                                 (empty? value)
-                                [:unindent uid d-key-down context-root-uid]
+                                [:unindent {:uid              uid
+                                            :d-key-down       d-key-down
+                                            :context-root-uid context-root-uid
+                                            :embed-id         embed-id}]
 
                                 (and (zero? start) value)
                                 [:enter/bump-up uid new-uid])]
@@ -1195,43 +1202,40 @@
     (indent-multi (mapv (comp first db/uid-and-embed-id) uids))))
 
 
-(defn unindent
-  "If parent is context-root or has node/title (date page), no-op.
-  Otherwise, block becomes direct older sibling of parent (parent-order +1). reindex parent and grandparent.
-   - inc-after for grandparent
-   - dec-after for parent"
-  [uid d-key-down context-root-uid]
-  (let [[o-uid embed-id]      (db/uid-and-embed-id uid)
-        parent                (db/get-parent [:block/uid o-uid])
-        is-parent-root-embed? (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 (str (:block/uid parent) "-embed-" embed-id))
-        {:keys [value start end]} d-key-down]
-    (cond
-      is-parent-root-embed? nil
-      (:node/title parent) nil
-      (= (:block/uid parent) context-root-uid) nil
-      :else (let [block           (db/get-block [:block/uid o-uid])
-                  grandpa         (db/get-parent (:db/id parent))
-                  new-block       {:block/uid o-uid :block/order (inc (:block/order parent)) :block/string value}
-                  reindex-grandpa (->> (inc-after (:db/id grandpa) (:block/order parent))
-                                       (concat [new-block]))
-                  reindex-parent  (dec-after (:db/id parent) (:block/order block))
-                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
-                  retract         [:db/retract (:db/id parent) :block/children [:block/uid o-uid]]
-                  new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         [retract new-parent new-grandpa]]
-              {:dispatch            [:transact tx-data]
-               :set-cursor-position [uid start end]}))))
-
-
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ uid d-event]]
-    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
-      (unindent uid d-event context-root-uid))))
+  (fn [{rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+    (js/console.debug ":unindent args" (pr-str args))
+    (let [local?                    (not (client/open?))
+          parent                    (common-db/get-parent @db/dsdb
+                                                          (common-db/e-by-av @db/dsdb :block/uid uid))
+          is-parent-root-embed?     (= (some-> d-key-down
+                                               :target
+                                               (.. (closest ".block-embed"))
+                                               (. -firstChild)
+                                               (.getAttribute "data-uid"))
+                                       (str (:block/uid parent) "-embed-" embed-id))
+          do-nothing?               (or is-parent-root-embed?
+                                        (:node/title parent)
+                                        (= context-root-uid (:block/uid parent)))
+          {:keys [value start end]} d-key-down]
+      (js/console.debug ":unindent local?" local?
+                        ", do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        (if local?
+          (let [unindent-event (common-events/build-unindent-event -1
+                                                                   uid
+                                                                   value)
+                tx             (resolver/resolve-event-to-tx @db/dsdb unindent-event)]
+            (js/console.debug ":unindent tx:" (pr-str tx))
+            {:fx [[:dispatch-n [[:transact tx]
+                                [:editing/uid (str uid (when embed-id
+                                                         (str "-embed-" embed-id)))]]]
+                  [:set-cursor-position [uid start end]]]})
+          {:fx [[:dispatch [:remote/unindent (merge (select-keys args [:uid :embed-id])
+                                                    {:start start
+                                                     :end   end
+                                                     :value value})]]]})))))
 
 
 (defn unindent-multi

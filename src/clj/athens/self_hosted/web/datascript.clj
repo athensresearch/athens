@@ -17,6 +17,8 @@
     :datascript/open-block-add-child
     :datascript/add-child
     :datascript/split-block
+    :datascript/split-block-to-children
+    :datascript/unindent
     ;; TODO: all the events
     })
 
