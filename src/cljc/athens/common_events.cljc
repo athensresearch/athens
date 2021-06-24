@@ -160,6 +160,23 @@
                      :new-uid new-uid}}))
 
 
+(defn build-split-block-to-children-event
+  "Builds `:datascript/split-block-to-children` event with:
+  - `uid`: `:block/uid` of block to split
+  - `value`: Current `:block/string` of block splitted
+  - `index`: index of the split
+  - `new-uid`: `:block/uid` of new block"
+  [last-tx uid value index new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/split-block-to-children
+     :event/args    {:uid     uid
+                     :value   value
+                     :index   index
+                     :new-uid new-uid}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

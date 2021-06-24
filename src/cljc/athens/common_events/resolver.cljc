@@ -155,6 +155,31 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/split-block-to-children
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/split-block-to-children" (pr-str args))
+  (let [{:keys [uid
+                value
+                index
+                new-uid]} args
+        {:db/keys [id]}   (common-db/get-block db [:block/uid uid])
+        head              (subs value 0 index)
+        tail              (subs value index)
+        new-block         {:db/id        -1
+                           :block/order  0
+                           :block/uid    new-uid
+                           :block/open   true
+                           :block/string tail}
+        reindex           (concat [new-block]
+                                  (common-db/inc-after db id -1))
+        tx-data           [{:db/id          id
+                            :block/string   head
+                            :block/children reindex
+                            :edit/time      (now-ts)}]]
+    (println "resolver :datascript/split-block-to-children tx-data" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
   [_db {:event/keys [args]}]
   (let [{:keys [uid

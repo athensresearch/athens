@@ -212,3 +212,44 @@
           (t/is (= {:block/uid   child-1-uid
                     :block/order 1}
                    child-1)))))))
+
+
+(t/deftest split-block-to-children-test
+  (t/testing "Just splitting text, no link management involved"
+    (let [parent-uid  "test-parent-1-uid"
+          child-1-uid "test-child-1-1-uid"
+          child-2-uid "test-child-1-2-uid"
+          parent-text "abc123"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children {:db/id          -2
+                                         :block/uid      parent-uid
+                                         :block/string   parent-text
+                                         :block/order    0
+                                         :block/children {:db/id          -3
+                                                          :block/uid      child-1-uid
+                                                          :block/string   ""
+                                                          :block/order    0
+                                                          :block/children []}}}]]
+      (d/transact @fixture/connection setup-txs)
+      (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+            child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+            split-event   (common-events/build-split-block-to-children-event -1
+                                                                             parent-uid
+                                                                             parent-text
+                                                                             3
+                                                                             child-2-uid)
+            split-txs     (resolver/resolve-event-to-tx @@fixture/connection split-event)]
+        (t/is (= 1 (-> parent-block :block/children count)))
+        (t/is (= [(select-keys child-1-block [:block/uid :block/order])]
+                 (:block/children parent-block)))
+
+        (d/transact @fixture/connection split-txs)
+        (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
+          (t/is (= "abc" (:block/string parent-block)))
+          (t/is (= "123" (:block/string child-2-block)))))))
+  ;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
+  )

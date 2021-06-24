@@ -781,7 +781,6 @@
     {:dispatch [:transact (inverse-tx true)]}))
 
 
-
 (defn prev-block-uid-without-presence-recursively
   "base case: prev block
   recursive case: keep going until no longer present"
@@ -901,32 +900,25 @@
     {:dispatch [:transact tx-data]}))
 
 
-(defn split-block-to-children
-  "Takes a block uid, its value, and the index to split the value string.
-  It sets the value of the block to the head of (subs val 0 index)
-  It then creates a new child block with the tail of the string set as its value and sets editing to that block."
-  [uid val index new-uid]
-  (let [block (db/get-block [:block/uid uid])
-        head (subs val 0 index)
-        tail (subs val index)
-        new-block {:db/id        -1
-                   :block/order  0
-                   :block/uid    new-uid
-                   :block/open   true
-                   :block/string tail}
-        reindex (->> (inc-after (:db/id block) -1)
-                     (concat [new-block]))]
-    {:fx [[:dispatch [:transact [{:db/id (:db/id block) :block/string head :edit/time (now-ts)}
-                                 {:db/id (:db/id block)
-                                  :block/children reindex}]]]
-          [:dispatch [:editing/uid new-uid]]]}))
-
-
 (reg-event-fx
   :split-block-to-children
-  (fn [_ [_ uid val index new-uid :as args]]
+  (fn [_ [_ {:keys [uid value index new-uid embed-id] :as args}]]
     (js/console.debug ":split-block-to-children" (pr-str args))
-    (split-block-to-children uid val index (or new-uid (gen-block-uid)))))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":split-block-to-children local?" local?)
+      (if local?
+        (let [split-block-to-children-event (common-events/build-split-block-to-children-event -1
+                                                                                               uid
+                                                                                               value
+                                                                                               index
+                                                                                               new-uid)
+              tx                            (resolver/resolve-event-to-tx @db/dsdb split-block-to-children-event)]
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        ;; TODO remote
+        (throw (js/Error. (str ":split-block-to-children remote not implemented, yet")))))
+    ))
 
 
 (defn bump-up
@@ -1094,7 +1086,10 @@
                                 (and (:block/open block)
                                      embed-id root-embed?
                                      (not= start (count value)))
-                                [:split-block-to-children uid value start new-uid]
+                                [:split-block-to-children {:uid     uid
+                                                           :value   value
+                                                           :index   start
+                                                           :new-uid new-uid}]
 
                                 (and (empty? value) embed-id (not is-parent-root-embed?))
                                 [:unindent uid d-key-down context-root-uid]
