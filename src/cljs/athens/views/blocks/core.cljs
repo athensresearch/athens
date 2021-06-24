@@ -13,7 +13,6 @@
     [athens.views.blocks.toggle :as toggle]
     [athens.views.blocks.tooltip :as tooltip]
     [athens.views.buttons :as buttons]
-    [athens.views.presence :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]
@@ -255,8 +254,6 @@
            :on-drag-over      (fn [e] (block-drag-over e block state))
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
-
-          [presence/presence-popover-info uid {:inline? true}]
 
           (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 

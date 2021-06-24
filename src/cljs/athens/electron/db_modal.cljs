@@ -14,7 +14,6 @@
     [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
-    [athens.ws-client :as ws-client]
     [cljs.reader :refer [read-string]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -76,25 +75,6 @@
                       [:&.active {:background (color :background-plus-2)
                                   :z-index "5"
                                   :box-shadow [["0 1px 5px" (color :shadow-color)]]}]]]})
-
-
-(rf/reg-event-db
-  :remote-graph/set-conf
-  (fn [db [_ key val]]
-    (let [n-rgc (-> db :db/remote-graph-conf (assoc key val))]
-      (js/localStorage.setItem "db/remote-graph-conf" n-rgc)
-      (assoc db :db/remote-graph-conf n-rgc))))
-
-
-(rf/reg-event-db
-  :remote-graph-conf/load
-  (fn [db _]
-    (let [remote-conf (some->> "db/remote-graph-conf"
-                               js/localStorage.getItem read-string)]
-      (assoc db :db/remote-graph-conf remote-conf))))
-
-
-(dispatch [:remote-graph-conf/load])
 
 
 (defn file-cb
@@ -219,36 +199,33 @@
              :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
 
+[{:label       "Remote address"
+  :key         :address
+  :placeholder "Remote server address"}
+ {:label       "Token"
+  :input-type  "password"
+  :key         :token
+  :placeholder "Secret token"}]
 
 (defn join-remote-comp
-  [remote-graph-conf]
-  [:<>
-   (->> [{:label       "Remote address"
-          :key         :address
-          :placeholder "Remote server address"}
-         {:label       "Token"
-          :input-type  "password"
-          :key         :token
-          :placeholder "Secret token"}]
-        (map (fn [{:keys [label key placeholder input-type]}]
-               ^{:key key}
-               [:div {:style {:width  "100%" :margin-top "10px"}}
-                [:h5 label]
-                [:div {:style {:margin          "5px 0"
-                               :display         "flex"
-                               :justify-content "space-between"}}
-                 [textinput/textinput {:style       {:flex-grow 1
-                                                     :padding   "5px"}
-                                       :type        (or input-type "text")
-                                       :value       (key @remote-graph-conf)
-                                       :placeholder placeholder
-                                       :on-change   #(rf/dispatch [:remote-graph/set-conf key (js-event->val %)])}]]]))
-        doall)
-   [button {:primary  true
-            :style    {:margin-top "0.5rem"}
-            :on-click #(ws-client/start-socket! (assoc @remote-graph-conf
-                                                       :reload-on-init? true))}
-    "Join"]])
+  []
+  (let [address (r/atom "")]
+    [:<>
+     [:div {:style {:width "100%" :margin-top "10px"}}
+      [:h5 "Remote address"]
+      [:div {:style           {:margin "5px 0"}
+             :display         "flex"
+             :justify-content "space-between"}]
+      [textinput/textinput {:style   {:flex-grow 1}
+                            :padding "5px"}
+       :type "text"
+       :value @address
+       :placeholder "Remote server address"
+       :on-change #(reset! address %)]]
+     [button {:primary  true
+              :style    {:margin-top "0.5rem"}
+              :on-click #(prn "Db MODAL")}
+      "Join"]]))
 
 
 (defn window
@@ -260,7 +237,6 @@
                             (when-not @loading
                               (dispatch [:modal/toggle])))
         el (.. js/document (querySelector "#app"))
-        remote-graph-conf (subscribe [:db/remote-graph-conf])
         db-filepath       (subscribe [:db/filepath])
         state             (r/atom {:input     ""
                                    :tab-value 0})]
@@ -289,7 +265,7 @@
                                       [:span "Join"]]]
                                     (cond
                                       (= 2 (:tab-value @state))
-                                      [join-remote-comp remote-graph-conf]
+                                      [join-remote-comp]
 
                                       (= 1 (:tab-value @state))
                                       [create-new-local state]

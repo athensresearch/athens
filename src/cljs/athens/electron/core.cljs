@@ -50,18 +50,6 @@
       (.dirname path (:db/filepath db))))
 
 
-  ;; create sub in athens.subs so web-version of Athens works
-  ;; (rf/reg-sub
-  ;;  :db/remote-graph-conf
-  ;;  (fn [db _]
-  ;;    (:db/remote-graph-conf db)))
-
-
-  (rf/reg-sub
-    :db/remote-graph
-    (fn [db _]
-      (:db/remote-graph db)))
-
   ;; ------- db -picker related implementation--------------------------------
 
   ;; Subs
@@ -205,8 +193,8 @@
   (rf/reg-event-fx
     :local-storage/get-db-filepath
     [(rf/inject-cofx :local-storage "db/filepath")
-     (rf/inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
-                                         :key    :remote-graph-conf})]
+     #_(rf/inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
+                                           :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
       (let [default-db-path (.resolve path utils/documents-athens-dir utils/DB-INDEX)]
         (cond
@@ -426,31 +414,30 @@
     If the write operation succeeds, a backup is created and index.transit is overwritten.
     User should eventually have MANY backups files. It's their job to manage these backups :)"
     [copy?]
-    (when-not @(rf/subscribe [:socket-status])
-      (let [filepath     @(rf/subscribe [:db/filepath])
-            data         (dt/write-transit-str @db/dsdb)
-            r            (.. stream -Readable (from data))
-            dirname      (.dirname path filepath)
-            time         (.. (js/Date.) getTime)
-            bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
-            bkp-filepath (.resolve path dirname bkp-filename)
-            w            (.createWriteStream fs bkp-filepath)
-            error-cb     (fn [err]
-                           (when err
-                             (js/alert (js/Error. err))
-                             (js/console.error (js/Error. err))))]
-        (.setEncoding r "utf8")
-        (.on r "error" error-cb)
-        (.on w "error" error-cb)
-        (.on w "finish" (fn []
-                          ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
-                          ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
-                          (when copy?
-                            (.. fs (copyFileSync bkp-filepath filepath))
-                            (let [mtime (.-mtime (.statSync fs filepath))]
-                              (rf/dispatch-sync [:db/update-mtime mtime])
-                              (rf/dispatch [:db/sync])))))
-        (.pipe r w))))
+    (let [filepath     @(rf/subscribe [:db/filepath])
+          data         (dt/write-transit-str @db/dsdb)
+          r            (.. stream -Readable (from data))
+          dirname      (.dirname path filepath)
+          time         (.. (js/Date.) getTime)
+          bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
+          bkp-filepath (.resolve path dirname bkp-filename)
+          w            (.createWriteStream fs bkp-filepath)
+          error-cb     (fn [err]
+                         (when err
+                           (js/alert (js/Error. err))
+                           (js/console.error (js/Error. err))))]
+      (.setEncoding r "utf8")
+      (.on r "error" error-cb)
+      (.on w "error" error-cb)
+      (.on w "finish" (fn []
+                        ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
+                        ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
+                        (when copy?
+                          (.. fs (copyFileSync bkp-filepath filepath))
+                          (let [mtime (.-mtime (.statSync fs filepath))]
+                            (rf/dispatch-sync [:db/update-mtime mtime])
+                            (rf/dispatch [:db/sync])))))
+      (.pipe r w)))
 
 
   (def debounce-write-db

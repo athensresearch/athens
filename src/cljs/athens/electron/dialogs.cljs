@@ -56,7 +56,6 @@
     (when (and open-file (.existsSync fs open-file))
       (let [read-db (.readFileSync fs open-file)
             db      (dt/read-transit-str read-db)]
-        (rf/dispatch-sync [:remote-graph/set-conf :default? false])
         (rf/dispatch-sync [:init-rfdb])
         (rf/dispatch [:local-storage/create-db-picker-list])
         (rf/dispatch [:fs/watch open-file])
