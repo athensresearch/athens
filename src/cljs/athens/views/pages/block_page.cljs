@@ -30,10 +30,7 @@
    :letter-spacing  "-0.03em"
    :word-break      "break-word"
    :line-height     "1.4em"
-   ::stylefy/manual [[:textarea {:display "none"}]
-                     [:&:hover [:textarea {:display "block"
-                                           :z-index 1}]]
-                     [:textarea {:-webkit-appearance "none"
+   ::stylefy/manual [[:textarea {:-webkit-appearance "none"
                                  :cursor             "text"
                                  :resize             "none"
                                  :transform          "translate3d(0,0,0)"
@@ -41,10 +38,6 @@
                                  :font-weight        "inherit"
                                  :padding            "0"
                                  :letter-spacing     "inherit"
-                                 :position           "absolute"
-                                 :top                "0"
-                                 :left               "0"
-                                 :right              "0"
                                  :width              "100%"
                                  :min-height         "100%"
                                  :caret-color        (color :link-color)
@@ -55,14 +48,16 @@
                                  :border-radius      "0.25rem"
                                  :transition         "opacity 0.15s ease"
                                  :border             "0"
-                                 :opacity            "0"
-                                 :font-family        "inherit"}]
+                                 :font-family        "inherit"
+                                 :visibility         "hidden"
+                                 :position           "absolute"}]
+                     [:textarea ["::-webkit-scrollbar" {:display "none"}]]
                      [:textarea:focus
-                      :.is-editing {:outline "none"
-                                    :z-index 3
-                                    :display "block"
-                                    :opacity "1"}]
-                     [(selectors/+ :.is-editing :span) {:opacity 0}]]})
+                      :.is-editing {:outline    "none"
+                                    :visibility "visible"
+                                    :position   "relative"}]
+                     [(selectors/+ :.is-editing :span) {:visibility "hidden"
+                                                        :position   "absolute"}]]})
 
 
 ;; Helpers

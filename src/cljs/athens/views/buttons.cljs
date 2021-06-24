@@ -39,7 +39,9 @@
    :align-items      "center"
    :color            (color :body-text-color)
    :background-color "transparent"
-   :transition       "all 0.075s ease"
+   :transition-property "filter, background, color, opacity"
+   :transition-duration "0.075s"
+   :transition-timing-function "ease"
    ::stylefy/manual [[:&:hover {:background (color :body-text-color :opacity-lower)}]
                      [:&:active
                       :&:hover:active

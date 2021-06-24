@@ -84,6 +84,10 @@
       (util/shortcut-key? meta ctrl) (condp = key-code
                                        KeyCodes.S (dispatch [:save])
 
+                                       KeyCodes.EQUALS (dispatch [:zoom/in])
+                                       KeyCodes.DASH (dispatch [:zoom/out])
+                                       KeyCodes.ZERO (dispatch [:zoom/reset])
+
                                        KeyCodes.K (dispatch [:athena/toggle])
 
                                        KeyCodes.G (dispatch [:devtool/toggle])

@@ -1,7 +1,10 @@
+^:cljstyle/ignore
 (ns athens.main.core
   (:require
-    ["electron" :refer [app BrowserWindow ipcMain shell]]
-    ["electron-updater" :refer [autoUpdater]]))
+    ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
+    ["electron-updater" :refer [autoUpdater]]
+    [athens.menu :refer [menu-template]]
+    [athens.util :refer [ipcMainChannels]]))
 
 
 (def log (js/require "electron-log"))
@@ -26,16 +29,47 @@
     (.. ^js @main-window -webContents (send text))))
 
 
+(defn init-electron-handlers
+  []
+  (doto ipcMain
+    (.handle (:toggle-max-or-min-win-channel ipcMainChannels)
+             (fn [_ toggle-min?]
+               (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                 (if toggle-min?
+                   (if (.isMinimized active-win)
+                     (.restore active-win)
+                     (.minimize active-win))
+                   (if (.isMaximized active-win)
+                     (.unmaximize active-win)
+                     (.maximize active-win))))))
+    (.handle (:close-win-channel ipcMainChannels)
+             (fn []
+               (.quit app)))
+    (.handle (:exit-fullscreen-win-channel ipcMainChannels)
+             (fn []
+               (when-let [active-win (.getFocusedWindow BrowserWindow)]
+                 (.setFullScreen active-win false)))))
+
+  ;; Future intent to refactor statup to use startup and teardown effects
+  ;; Below is an example of the teardown effect for this init fn
+  ;; #(doall (.removeHandler ipcMain toggle-max-or-min-win-channel)
+  ;;         (.removeHandler ipcMain close-win-channel)
+  ;;         (.removeHandler ipcMain exit-fullscreen-win-channel))
+  )
+
+
 (defn init-browser
   []
   (reset! main-window (BrowserWindow.
                         (clj->js {:width 800
                                   :height 600
-                                  :minWidth 400
+                                  :minWidth 800 ; Minimum width before clipping in toolbar
                                   :minHeight 300
                                   :backgroundColor "#1A1A1A"
                                   :autoHideMenuBar true
-                                  :enableRemoteModule true
+                                  :frame false
+                                  :titleBarStyle "hidden"
+                                  :trafficLightPosition {:x 19, :y 36}
                                   :webPreferences {:contextIsolation false
                                                    :nodeIntegration true
                                                    :worldSafeExecuteJavaScript true
@@ -97,6 +131,11 @@
          (.. autoUpdater downloadUpdate))))
 
 
+(defn init-menu
+  []
+  (.setApplicationMenu Menu (.buildFromTemplate Menu menu-template)))
+
+
 (defn main
   []
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
@@ -106,6 +145,8 @@
                           (init-browser))))
   (.on app "ready" (fn []
                      (init-ipcMain)
+                     (init-menu)
                      (init-browser)
+                     (init-electron-handlers)
                      (init-updater)
                      (.. autoUpdater checkForUpdates))))

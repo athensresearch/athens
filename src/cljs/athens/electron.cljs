@@ -3,7 +3,8 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.patterns :as patterns]
-    [athens.util :as util]
+    [athens.style :refer [zoom-level-min zoom-level-max]]
+    [athens.util :as util :refer [ipcMainChannels]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -18,10 +19,10 @@
 
   (def electron (js/require "electron"))
   (def remote (.. electron -remote))
+  (def ipcRenderer (.. electron -ipcRenderer))
 
   (def dialog (.. remote -dialog))
   (def app (.. remote -app))
-
 
   (def fs (js/require "fs"))
   (def path (js/require "path"))
@@ -172,7 +173,6 @@
 
   ;; Subs
 
-
   (reg-sub
     :db/mtime
     (fn [db _]
@@ -203,6 +203,21 @@
     (fn [db _]
       (:db/remote-graph db)))
 
+  (reg-sub
+  :win-maximized?
+  (fn [db _]
+    (:win-maximized? db)))
+
+  (reg-sub
+    :win-fullscreen?
+    (fn [db _]
+      (:win-fullscreen? db)))
+
+  (reg-sub
+    :win-focused?
+    (fn [db _]
+      (:win-focused? db)))
+  
   ;; ------- db -picker related implementation--------------------------------
 
   ;; Subs
@@ -233,6 +248,7 @@
         not a good idea I think"
     [db-list check-path]
     (seq (filter #(= check-path (:path %)) db-list)))
+
 
   ;; Events
 
@@ -502,6 +518,12 @@
                                         :dispatch-n [[:db/retract-athens-pages]
                                                      [:db/transact-athens-pages]]}
 
+                                     ;; bind windows toolbar electron buttons
+                                     {:when       :seen-any-of?
+                                      :events     [:fs/create-new-db :reset-conn]
+                                      :dispatch   [:bind-win-listeners]}
+
+
                                      {:when        :seen-any-of?
                                       :events      [:fs/create-new-db :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
@@ -542,6 +564,66 @@
 
                                                        (dispatch [:loading/unset])))
                                       :halt?       true}]}}))
+
+
+  (reg-event-fx
+    :toggle-max-min-win
+    (fn [_ [_ toggle-min?]]
+      {:invoke-win! {:channel (:toggle-max-or-min-win-channel ipcMainChannels)
+                     :arg (clj->js toggle-min?)}}))
+
+  (reg-event-fx
+    :bind-win-listeners
+    (fn [_ _]
+      {:bind-win-listeners! {}}))
+
+  (reg-event-fx
+    :exit-fullscreen-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:exit-fullscreen-win-channel ipcMainChannels)}}))
+
+  (reg-event-fx
+    :close-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:close-win-channel ipcMainChannels)}}))
+
+  (reg-event-db
+    :toggle-win-maximized
+    (fn [db [_ maximized?]]
+      (assoc db :win-maximized? maximized?)))
+
+  (reg-event-db
+    :toggle-win-fullscreen
+    (fn [db [_ fullscreen?]]
+      (assoc db :win-fullscreen? fullscreen?)))
+
+  (reg-event-db
+    :toggle-win-focused
+    (fn [db [_ focused?]]
+      (assoc db :win-focused? focused?)))
+
+
+  ;; Zoom
+
+  (reg-event-db
+    :zoom/in
+    (fn [db _]
+      (update db :zoom-level #(min (inc %) zoom-level-max))))
+
+  (reg-event-db
+    :zoom/out
+    (fn [db _]
+      (update db :zoom-level #(max (dec %) zoom-level-min))))
+
+  (reg-event-db
+    :zoom/set
+    (fn [db [_ level]]
+      (assoc db :zoom-level level)))
+
+  (reg-event-db
+    :zoom/reset
+    (fn [db _]
+      (assoc db :zoom-level 0)))
 
 
   ;; Effects
@@ -603,4 +685,29 @@
   (reg-fx
     :fs/write!
     (fn []
-      (debounce-write-db true))))
+      (debounce-write-db true)))
+
+  (reg-fx
+    :invoke-win!
+    (fn [{:keys [channel arg]} _]
+      (if arg
+        (.. ipcRenderer (invoke channel arg))
+        (.. ipcRenderer (invoke channel)))))
+
+  (reg-fx
+    :close-win!
+    (fn []
+      (let [window (.. electron -BrowserWindow getFocusedWindow)]
+        (.close window))))
+
+  (reg-fx
+    :bind-win-listeners!
+    (fn []
+      (let [active-win (.getCurrentWindow remote)]
+        (doto ^js/BrowserWindow active-win
+          (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
+          (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
+          (.on "blur" #(dispatch-sync [:toggle-win-focused false]))
+          (.on "focus" #(dispatch-sync [:toggle-win-focused true]))
+          (.on "enter-full-screen" #(dispatch-sync [:toggle-win-fullscreen true]))
+          (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false])))))))

@@ -65,7 +65,6 @@
                                       'toggle bullet content refs'
                                       'below below below below'"
                                     :border-radius "0.5rem"
-                                    :transition "all 0.1s ease"
                                     :position "relative"}
                       [:button.block-edit-toggle {:position "absolute"
                                                   :appearance "none"
