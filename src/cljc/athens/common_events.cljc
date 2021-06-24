@@ -219,9 +219,9 @@
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/all-online
-     :event/args    (mapv (fn [username]
-                            {:username username})
-                          clients)}))
+     :event/args    (into {} (mapv (fn [username]
+                                     {:username username})
+                                   clients))}))
 
 
 (defn build-presence-offline-event

@@ -401,28 +401,6 @@
   (map->WSClient {:url url}))
 
 
-;; re-frame
-
-(rf/reg-fx
-  :presence/send-editing
-  (fn [uid]
-    (send! (common-events/build-presence-editing-event 42
-                                                       (:name @(rf/subscribe [:user]))
-                                                       uid))))
-
-
-(rf/reg-event-db
-  :presence/update-editing
-  (fn [db [_ {:keys [username block/uid]}]]
-    (update db :presence/users (fn [users]
-                                 (mapv
-                                   (fn [user]
-                                     (if (= username (:username user))
-                                       (assoc user :block/uid uid)
-                                       user))
-                                   users)))))
-
-
 ;; REPL Testing
 (comment
 

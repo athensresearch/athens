@@ -57,12 +57,8 @@
                :theme/dark          false
                :zoom-level          1
                :graph-conf          default-graph-conf
-               :presence/users      [{:username "Zeus", :color "#DDA74C", :block/uid "f8de04e0f"}
-                                     {:username "Poseidon", :color "#C45042", :block/uid "87ba25e9d"}
-                                     {:username "Hera", :color "#611A58", :block/uid "7c2b4b308"}
-                                     {:username "Demeter", :color "#21A469", :block/uid "e0d06f525"}
-                                     {:username "Athena", :color "#009FB8", :block/uid "4135c0ecb"}
-                                     {:username "Apollo", :color "#0062BE", :block/uid "f24df1ea6"}]})
+               :presence            {}})
+
 
 
 ;; -- JSON Parsing ----------------------------------------------------

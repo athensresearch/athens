@@ -13,8 +13,7 @@
     [athens.views.blocks.toggle :as toggle]
     [athens.views.blocks.tooltip :as tooltip]
     [athens.views.buttons :as buttons]
-    ;; [athens.views.presence :as presence]
-    [athens.views.toolbar-presence :as toolbar-presence]
+    [athens.self-hosted.presence.views :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]
@@ -276,8 +275,7 @@
            [tooltip/tooltip-el uid-sanitized-block state]
            [content/block-content-el block state is-presence]
 
-           #_[presence/presence-popover-info uid {:inline? true}]
-           [toolbar-presence/inline-presence uid]
+           [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el (count _refs) uid])]
