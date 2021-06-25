@@ -685,10 +685,10 @@
   "uid -> Current block
    state -> Look at state atom in block-el"
   [uid state]
-  (let [{:string/keys [local previous]} @state
-        eid (e-by-av :block/uid uid)]
-    (when (and (not= local previous) eid)
-      (swap! state assoc :string/previous local)
-      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
-            tx-data          [new-block-string]]
-        (dispatch [:transact tx-data])))))
+  (let [{:string/keys [local
+                       previous]} @state
+        callback                  #(swap! state assoc :string/previous local)]
+    (dispatch [:block/save {:uid        uid
+                            :old-string previous
+                            :new-string local
+                            :callback   callback}])))

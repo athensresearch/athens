@@ -225,6 +225,29 @@
 ;; - Block related
 
 (rf/reg-event-fx
+  :remote/followup-block-save
+  (fn [{_db :db} [_ {:keys [event-id callback]}]]
+    (js/console.debug ":remote/followup-block-save" event-id)
+    {:fx [[:invoke-callback callback]
+          [:dispatch [:remote/unregister-followup event-id]]]}))
+
+
+(rf/reg-event-fx
+  :remote/block-save
+  (fn [{db :db} [_ {:keys [uid new-string callback]}]]
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      event} (common-events/build-block-save-event last-seen-tx
+                                                                 uid
+                                                                 new-string)
+          followup-fx      [[:dispatch [:remote/followup-block-save {:event-id event-id
+                                                                     :callback callback}]]]]
+      (js/console.debug ":remote/block-stave" (pr-str event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/followup-new-block
   (fn [{db :db} [_ {:keys [event-id embed-id]}]]
     (js/console.debug ":remote/followup-new-block" event-id)

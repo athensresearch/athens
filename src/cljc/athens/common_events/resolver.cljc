@@ -72,6 +72,18 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/block-save
+  [_db {:event/keys [args]}]
+  (let [{:keys [uid
+                new-string]} args
+        new-block-string     {:db/id        [:block/uid uid]
+                              :block/string new-string}
+        tx-data              [new-block-string]]
+    (println ":datascript/block-save" (pr-str args)
+             "=>" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/new-block
   [db {:event/keys [args]}]
   (let [{:keys [parent-eid

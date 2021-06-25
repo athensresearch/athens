@@ -11,6 +11,7 @@
    :presence/editing
    :datascript/create-page
    :datascript/delete-page
+   :datascript/block-save
    :datascript/new-block
    :datascript/add-child
    :datascript/open-block-add-child
@@ -40,6 +41,7 @@
     [:map
      [:username string?]
      ;; how to make block/uid string? or nil?
+     ;; why would it be `nil?`
      #_[:block/uid  string?]]]])
 
 
@@ -56,6 +58,14 @@
    [:event/args
     [:map
      [:uid string?]]]])
+
+
+(def datascript-block-save
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:new-string string?]]]])
 
 
 (def datascript-new-block
@@ -117,6 +127,9 @@
    [:datascript/delete-page
     (mu/merge event-common
               datascript-delete-page)]
+   [:datascript/block-save
+    (mu/merge event-common
+              datascript-block-save)]
    [:datascript/new-block
     (mu/merge event-common
               datascript-new-block)]

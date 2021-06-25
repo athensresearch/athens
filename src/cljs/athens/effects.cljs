@@ -436,3 +436,7 @@
         (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))
 
 
+(rf/reg-fx
+  :invoke-callback
+  (fn [callback]
+    (callback)))

@@ -8,7 +8,7 @@
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid now-ts]]
+    [athens.util                          :refer [gen-block-uid]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
@@ -922,6 +922,33 @@
                                                            :index    index
                                                            :new-uid  new-uid
                                                            :embed-id embed-id}]]]}))))
+
+
+(reg-event-fx
+  :block/save
+  (fn [_ [_ {:keys [uid old-string new-string callback] :as args}]]
+    (js/console.debug ":block/save args" (pr-str args))
+    (let [local?      (not (client/open?))
+          block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
+          do-nothing? (or (not block-eid)
+                          ;; TODO Question to Jeff: shold we really ignore save event if entity doesn't exists?
+                          ;; Seems like correct thing to do would be to create entity
+                          ;; Do you know why?
+                          ;; /giphy but why?
+                          (= old-string new-string))]
+      (js/console.debug ":block/save local?" local?
+                        ", do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        (if local?
+          (let [block-save-event (common-events/build-block-save-event -1
+                                                                       uid
+                                                                       new-string)
+                block-save-tx    (resolver/resolve-event-to-tx @db/dsdb block-save-event)]
+            {:fx [[:dispatch [:transact block-save-tx]]
+                  [:invoke-callback callback]]})
+          {:fx [[:dispatch [:remote/block-save {:uid        uid
+                                                :new-string new-string
+                                                :callback   callback}]]]})))))
 
 
 (reg-event-fx

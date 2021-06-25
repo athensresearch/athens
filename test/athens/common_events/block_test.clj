@@ -11,6 +11,31 @@
 (t/use-fixtures :each fixture/integration-test-fixture)
 
 
+(t/deftest block-save-test
+  (t/testing "Saving block string"
+    (let [block-uid   "test-block-uid"
+          string-init "start test string"
+          string-new  "new test string"
+          setup-tx    [{:db/id          -1
+                        :block/uid      block-uid
+                        :block/string   string-init
+                        :block/order    0
+                        :block/children []}]]
+      (d/transact @fixture/connection setup-tx)
+      (let [block-save-event             (common-events/build-block-save-event -1
+                                                                               block-uid
+                                                                               string-new)
+            block-save-txs               (resolver/resolve-event-to-tx @@fixture/connection
+                                                                       block-save-event)
+            {block-string :block/string} (common-db/get-block @@fixture/connection
+                                                              [:block/uid  block-uid])]
+        (t/is (= string-init block-string))
+        (d/transact @fixture/connection block-save-txs)
+        (let [{new-block-string :block/string} (common-db/get-block @@fixture/connection
+                                                                    [:block/uid  block-uid])]
+          (t/is (= string-new new-block-string)))))))
+
+
 (t/deftest new-block-tests
   (t/testing "Adding new block to new page"
     (let [page-1-uid  "page-1-uid"
