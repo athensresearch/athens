@@ -1,18 +1,18 @@
 (ns athens.self-hosted.presence.views
   (:require
-   ["@material-ui/core/Popover" :as Popover]
-   ["@material-ui/icons/Link" :default Link]
-   [athens.style :as style]
-   [athens.db :as db]
-   [athens.views.buttons :refer [button]]
-   [athens.self-hosted.presence.events]
-   [athens.self-hosted.presence.subs]
-   [athens.self-hosted.presence.fx]
-   [athens.self-hosted.presence.utils :as utils]
-   [clojure.string :as str]
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/icons/Link" :default Link]
+    [athens.db :as db]
+    [athens.self-hosted.presence.events]
+    [athens.self-hosted.presence.fx]
+    [athens.self-hosted.presence.subs]
+    [athens.self-hosted.presence.utils :as utils]
+    [athens.style :as style]
+    [athens.views.buttons :refer [button]]
+    [clojure.string :as str]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
@@ -62,7 +62,6 @@
        initials]])))
 
 
-
 (def ^:private avatar-stack-style
   {:display "flex"
    ::stylefy/manual [[:svg {:width "1.5rem"
@@ -105,7 +104,6 @@
                        :justify-content "space-between"
                        :align-items "center"})
    children])
-
 
 
 (defn- list-section-header-el
@@ -176,65 +174,66 @@
 (defn toolbar-presence-el
   []
   (r/with-let [ele (r/atom nil)]
-    (let [users (rf/subscribe [:presence/users-with-page-data])
-          same-page-users (rf/subscribe [:presence/same-page])
-          diff-page-users (rf/subscribe [:presence/diff-page])
-          current-route-name (rf/subscribe [:current-route/name])]
-      [:<>
+              (let [users (rf/subscribe [:presence/users-with-page-data])
+                    same-page-users (rf/subscribe [:presence/same-page])
+                    diff-page-users (rf/subscribe [:presence/diff-page])
+                    current-route-name (rf/subscribe [:current-route/name])]
+                [:<>
 
-       ;; Preview
-       [button {:on-click #(reset! ele (.-currentTarget %))}
-        [avatar-stack-el
-         (cond
+                 ;; Preview
+                 [button {:on-click #(reset! ele (.-currentTarget %))}
+                  [avatar-stack-el
+                   (cond
 
-           (= @current-route-name :page)
-           [:<>
-            ;; same page
-            (for [[username user] @same-page-users]
-              ^{:key username}
-              [avatar-el user {:filled true}])
-            ;; diff page but online
-            (for [[username user] @diff-page-users]
-              ^{:key username}
-              [avatar-el user {:filled false}])]
+                     (= @current-route-name :page)
+                     [:<>
+                      ;; same page
+                      (for [[username user] @same-page-users]
+                        ^{:key username}
+                        [avatar-el user {:filled true}])
+                      ;; diff page but online
+                      (for [[username user] @diff-page-users]
+                        ^{:key username}
+                        [avatar-el user {:filled false}])]
 
-           ;;; TODO: capture what page user is scrolled to on Daily Notes
-           ;(= @current-route-name :home)
-           ;[:div "TODO"]
+                     ;; TODO: capture what page user is scrolled to on Daily Notes
+                     ;; (= @current-route-name :home)
+                     ;; [:div "TODO"]
 
-           ;; default to showing all users
-           :else (for [[username user] @users]
-                   ^{:key username}
-                   [avatar-el user {:filled false}]))]]
+                     ;; default to showing all users
+                     :else (for [[username user] @users]
+                             ^{:key username}
+                             [avatar-el user {:filled false}]))]]
 
-       ;; Dropdown
-       [m-popover
-        {:open            (boolean (and @ele))
-         :anchorEl        @ele
-         :onClose         #(reset! ele nil)
-         :anchorOrigin    #js{:vertical   "bottom"
-                              :horizontal "center"}
-         :transformOrigin #js{:vertical   "top"
-                              :horizontal "center"}}
-        [list-header-el
-         [list-header-url-el "ath.ns/34op5fds0a"]
-         [button [:> Link]]]
+                 ;; Dropdown
+                 [m-popover
+                  {:open            (boolean (and @ele))
+                   :anchorEl        @ele
+                   :onClose         #(reset! ele nil)
+                   :anchorOrigin    #js{:vertical   "bottom"
+                                        :horizontal "center"}
+                   :transformOrigin #js{:vertical   "top"
+                                        :horizontal "center"}}
+                  [list-header-el
+                   [list-header-url-el "ath.ns/34op5fds0a"]
+                   [button [:> Link]]]
 
-        [list-el
-         ;; On same page
+                  [list-el
+                   ;; On same page
 
-         (when-not (empty? @same-page-users)
-           [:<>
-            [list-section-header-el "On This Page"]
-            (for [[username user] @same-page-users]
-              ^{:key username}
-              [member-item-el user {:filled true}])
-            [list-separator-el]])
+                   (when-not (empty? @same-page-users)
+                     [:<>
+                      [list-section-header-el "On This Page"]
+                      (for [[username user] @same-page-users]
+                        ^{:key username}
+                        [member-item-el user {:filled true}])
+                      [list-separator-el]])
 
-         ;; Online, different page
-         (for [[username user] @diff-page-users]
-           ^{:key username}
-           [member-item-el user {:filled false}])]]])))
+                   ;; Online, different page
+                   (for [[username user] @diff-page-users]
+                     ^{:key username}
+                     [member-item-el user {:filled false}])]]])))
+
 
 ;; inline
 
