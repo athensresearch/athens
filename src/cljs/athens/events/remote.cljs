@@ -396,6 +396,34 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-bump-up
+  (fn [{db :db} [_ {:keys [event-id embed-id] :as args}]]
+    (js/console.debug ":remote/followup-bump-up args" (pr-str args))
+    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
+          {:keys [new-uid]} (:event/args event)]
+      (js/console.debug ":remote/followup-bump-up new-uid:" new-uid
+                        ", embed-id:" embed-id)
+      {:fx [[:dispatch [:editing/uid (str new-uid (when embed-id
+                                                    (str "-embed-" embed-id)))]]]})))
+
+
+(rf/reg-event-fx
+  :remote/bump-up
+  (fn [{db :db} [_ {:keys [uid new-uid embed-id] :as args}]]
+    (js/console.debug ":remote/bump-up args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      event} (common-events/build-bump-up-event last-seen-tx
+                                                              uid
+                                                              new-uid)
+          followup-fx [[:dispatch [:remote/followup-bump-up {:event-id event-id
+                                                             :embed-id embed-id}]]]]
+      (js/console.debug ":remote/bump-up event" (pr-str event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remeote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/paste-verbatim
   (fn [{db :db} [_ uid text start value]]
     (let [last-seen-tx         (:remote/last-seen-tx db)

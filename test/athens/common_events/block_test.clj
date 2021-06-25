@@ -288,3 +288,50 @@
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])]
           (t/is (= 0 (-> parent-block :block/children count)))
           (t/is (= 1 (:block/order child-1-block))))))))
+
+
+(t/deftest bump-up-test
+  (t/testing "Testing bump up simple case"
+    (let [parent-uid   "test-parent-1-uid"
+          child-1-uid  "test-child-1-uid"
+          child-2-uid  "test-child-2-uid"
+          child-1-text "testing 123"
+          setup-txs    [{:db/id          -1
+                         :node/title     "test page"
+                         :block/uid      "page-uid"
+                         :block/children {:db/id          -2
+                                          :block/uid      parent-uid
+                                          :block/string   ""
+                                          :block/order    0
+                                          :block/children {:db/id          -3
+                                                           :block/uid      child-1-uid
+                                                           :block/string   child-1-text
+                                                           :block/order    0
+                                                           :block/children []}}}]]
+      (d/transact @fixture/connection setup-txs)
+      (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+            child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+            bump-up-event (common-events/build-bump-up-event -1
+                                                             child-1-uid
+                                                             child-2-uid)
+            bump-up-txs   (resolver/resolve-event-to-tx @@fixture/connection
+                                                        bump-up-event)]
+        ;; before -> parent has 1 child
+        (t/is (= 1 (-> parent-block :block/children count)))
+        (t/is (= child-1-text (:block/string child-1-block)))
+        (d/transact @fixture/connection bump-up-txs)
+        (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              kids          (:block/children parent-block)
+              child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
+          ;; after bump-up
+          (t/is (= 2 (count kids)))
+          (t/is (= [(select-keys child-1-block
+                                 [:block/uid :block/order])
+                    (select-keys child-2-block
+                                 [:block/uid :block/order])]
+                   kids))
+          (t/is (= child-1-text (:block/string child-1-block)))
+          (t/is (= 1 (:block/order child-1-block)))
+          (t/is (= "" (:block/string child-2-block)))
+          (t/is (= 0 (:block/order child-2-block))))))))

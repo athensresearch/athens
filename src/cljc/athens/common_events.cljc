@@ -190,6 +190,19 @@
                      :value value}}))
 
 
+(defn build-bump-up-event
+  "Builds `:datascript/bump-up` event with:
+  - `uid`: `:block/uid` of trigerring block
+  - `new-uid`: new `:block/uid`"
+  [last-tx uid new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/bump-up
+     :event/args    {:uid     uid
+                     :new-uid new-uid}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

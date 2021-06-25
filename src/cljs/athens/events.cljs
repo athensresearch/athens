@@ -924,23 +924,6 @@
                                                            :embed-id embed-id}]]]}))))
 
 
-(defn bump-up
-  "If user presses enter at the start of non-empty string, push that block down and
-  and start editing a new block in the position of originating block - 'bump up' "
-  [uid new-uid]
-  (let [parent    (db/get-parent [:block/uid uid])
-        block     (db/get-block [:block/uid uid])
-        new-block {:db/id        -1
-                   :block/order  (:block/order block)
-                   :block/uid    new-uid
-                   :block/open   true
-                   :block/string ""}
-        reindex   (->> (inc-after (:db/id parent) (dec (:block/order block)))
-                       (concat [new-block]))]
-    {:dispatch [:transact [{:db/id          (:db/id parent)
-                            :block/children reindex}]]}))
-
-
 (reg-event-fx
   :enter/new-block
   (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
@@ -1004,8 +987,20 @@
 
 (reg-event-fx
   :enter/bump-up
-  (fn [_ [_ uid new-uid]]
-    (bump-up uid new-uid)))
+  (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
+    (js/console.debug ":enter/bump-up args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":enter/bump-up local?" local?)
+      (if local?
+        (let [bump-up-event (common-events/build-bump-up-event -1
+                                                               uid
+                                                               new-uid)
+              tx            (resolver/resolve-event-to-tx @db/dsdb bump-up-event)]
+          (js/console.debug ":enter/bump-up tx:" (pr-str tx))
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        {:fx [[:dispatch [:remote/bump-up args]]]}))))
 
 
 (reg-event-fx
@@ -1120,7 +1115,9 @@
                                             :embed-id         embed-id}]
 
                                 (and (zero? start) value)
-                                [:enter/bump-up uid new-uid])]
+                                [:enter/bump-up {:uid      uid
+                                                 :new-uid  new-uid
+                                                 :embed-id embed-id}])]
     (js/console.debug "[Enter] ->" (pr-str event))
     {:dispatch-n [event
                   (when-not (= event [:no-op])
