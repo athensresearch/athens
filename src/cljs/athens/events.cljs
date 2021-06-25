@@ -1119,11 +1119,7 @@
                                                  :new-uid  new-uid
                                                  :embed-id embed-id}])]
     (js/console.debug "[Enter] ->" (pr-str event))
-    {:dispatch-n [event
-                  (when-not (= event [:no-op])
-                    ;; TODO when `:enter/*` events are ported to common events, individual events will execute followup so dispatching `:editing/uid` is going to be unnecessary
-                    [:editing/uid (cond-> (if (= (first event) :unindent) uid new-uid)
-                                    embed-id (str "-embed-" embed-id))])]}))
+    {:fx [[:dispatch event]]}))
 
 
 (reg-event-fx
