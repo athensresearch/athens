@@ -365,6 +365,30 @@
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 
+(rf/reg-event-fx
+  :remote/followup-indent
+  (fn [{db :db} [_ {:keys [event-id start end] :as args}]]
+    (js/console.debug ":remote/followup-indent args" (pr-str args))
+    (let [{:keys [event]} (get-event-acceptance-info db event-id)
+          {:keys [uid]}   (:event/args event)]
+      (js/console.debug ":remote/followup-indent uid:" uid)
+      {:fx [[:set-cursor-position [uid start end]]]})))
+
+
+(rf/reg-event-fx
+  :remote/indent
+  (fn [{db :db} [_ {:keys [uid value start end] :as args}]]
+    (js/console.debug ":remote/indent args" (pr-str args))
+    (let [last-seen-tx        (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      event}    (common-events/build-indent-event last-seen-tx uid value)
+          followup-fx         [[:dispatch [:remote/followup-indent {:event-id event-id
+                                                                    :start    start
+                                                                    :end      end}]]]]
+      (js/console.debug ":remote/indent event" (pr-str event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! event]]]]})))
+
 
 (rf/reg-event-fx
   :remote/followup-unindent
