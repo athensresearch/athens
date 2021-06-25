@@ -375,7 +375,9 @@
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent editing-uid d-key-down])
-        (dispatch [:indent editing-uid d-key-down])))))
+        (dispatch [:indent
+                   {:uid        editing-uid
+                    :d-key-down d-key-down}])))))
 
 
 (defn handle-escape

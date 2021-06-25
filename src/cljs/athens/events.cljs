@@ -1164,8 +1164,24 @@
 
 (reg-event-fx
   :indent
-  (fn [_ [_ uid d-event]]
-    (indent uid d-event)))
+  (fn [_ [_ {:keys [uid d-key-down] :as args}]]
+    (js/console.debug ":indent" args)
+    (let [local?                    (not (client/open?))
+          block                     (common-db/get-block @db/dsdb
+                                                         (common-db/e-by-av @db/dsdb :block/uid uid))
+          block-zero?               (zero? (:block/order block))
+          {:keys [value start end]} d-key-down]
+      (js/console.debug ":indent local?" local?
+                        ", block-zero?" block-zero?)
+      (when-not block-zero?
+        (if local?
+          (let [indent-event (common-events/build-indent-event -1
+                                                               uid
+                                                               value)
+                tx           (resolver/resolve-event-to-tx @db/dsdb indent-event)]
+            (js/console.debug ":indent tx:" (pr-str tx))
+            {:fx [[:dispatch-n [[:transact tx]]]]})
+          (js/console.warn ":indent not there for remote"))))))
 
 
 (defn indent-multi

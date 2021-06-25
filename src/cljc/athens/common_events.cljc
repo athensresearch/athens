@@ -190,6 +190,19 @@
                      :value value}}))
 
 
+(defn build-indent-event
+  "Builds `: indent` event with:
+  - `uid`  : `:block/uid` of triggering block
+  - `value`: `:block/string` of triggering block"
+  [last-tx uid value]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/indent
+     :event/args    {:uid   uid
+                     :value value}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event
