@@ -123,17 +123,20 @@
      [:start nat-int?]
      [:value string?]]]])
 
+
 (def datascript-page-add-shortcut
   [:map
    [:event/args
     [:map
      [:uid string?]]]])
 
+
 (def datascript-page-remove-shortcut
   [:map
    [:event/args
     [:map
      [:uid string?]]]])
+
 
 (def event
   [:multi {:dispatch :event/type}

@@ -232,23 +232,24 @@
 
 
 (rf/reg-event-fx
- :remote/page-add-shortcut
- (fn [{db :db} [_ uid]]
-   (let [last-seen-tx       (:remote/last-seen-tx db)
-         add-shortcut-event (common-events/build-page-add-shortcut last-seen-tx uid)]
-     (js/console.debug ":remote/page-add-shortcut:" (pr-str add-shortcut-event))
-     {:fx [[:dispatch [:remote/send-event! add-shortcut-event]]
-           [:dispatch [:remote/page-reindex-left-sidebar]]]})))
+  :remote/page-add-shortcut
+  (fn [{db :db} [_ uid]]
+    (let [last-seen-tx       (:remote/last-seen-tx db)
+          add-shortcut-event (common-events/build-page-add-shortcut last-seen-tx uid)]
+      (js/console.debug ":remote/page-add-shortcut:" (pr-str add-shortcut-event))
+      {:fx [[:dispatch [:remote/send-event! add-shortcut-event]]
+            [:dispatch [:remote/page-reindex-left-sidebar]]]})))
 
 
 (rf/reg-event-fx
- :remote/page-remove-shortcut
- (fn [{db :db} [_ uid]]
-   (let [last-seen-tx          (:remote/last-seen-tx db)  
-         remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
-     (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
-     {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]
-           [:dispatch [:remote/page-reindex-left-sidebar]]]})))
+  :remote/page-remove-shortcut
+  (fn [{db :db} [_ uid]]
+    (let [last-seen-tx          (:remote/last-seen-tx db)
+          remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
+      (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
+      {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]
+            [:dispatch [:remote/page-reindex-left-sidebar]]]})))
+
 
 ;; - Block related
 

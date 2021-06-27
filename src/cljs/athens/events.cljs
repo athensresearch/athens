@@ -692,9 +692,9 @@
   (fn [_ _]
     {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked."}
     (js/console.debug ":page/reindex-left-sidebar")
-      (let [reindex-left-sidebar-event (common-events/build-page-reindex-left-sidebar -1)
-            tx-data                    (resolver/resolve-event-to-tx @db/dsdb reindex-left-sidebar-event)]
-        {:fx [[:dispatch [:transact tx-data]]]})))
+    (let [reindex-left-sidebar-event (common-events/build-page-reindex-left-sidebar -1)
+          tx-data                    (resolver/resolve-event-to-tx @db/dsdb reindex-left-sidebar-event)]
+      {:fx [[:dispatch [:transact tx-data]]]})))
 
 
 (reg-event-fx
@@ -702,12 +702,12 @@
   (fn [_ [_ uid]]
     (js/console.debug ":page/add-shortcut:" uid)
     (if-let [local? (not (client/open?))]
-     (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
-           tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
-       (js/console.debug ":page/add-shortcut: local?" local?)
-       {:fx [[:dispatch [:transact tx-data]]
-             [:dispatch [:page/reindex-left-sidebar]]]})
-     {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
+      (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
+            tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
+        (js/console.debug ":page/add-shortcut: local?" local?)
+        {:fx [[:dispatch [:transact tx-data]]
+              [:dispatch [:page/reindex-left-sidebar]]]})
+      {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
 
 
 (reg-event-fx
@@ -717,7 +717,7 @@
     (if-let [local? (not (client/open?))]
       (let [remove-shortcut-event (common-events/build-page-remove-shortcut -1 uid)
             tx-data               (resolver/resolve-event-to-tx @db/dsdb remove-shortcut-event)]
-          (js/console.debug ":page/remove-shortcut:" local?)
+        (js/console.debug ":page/remove-shortcut:" local?)
         {:fx [[:dispatch [:transact tx-data]]
               [:dispatch [:page/reindex-left-sidebar]]]})
       {:fx [[:dispatch [:remote/page-remove-shortcut uid]]]})))

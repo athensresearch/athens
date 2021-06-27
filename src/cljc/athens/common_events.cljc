@@ -202,12 +202,14 @@
      :event/args    {:uid   uid
                      :value value}}))
 
+
 (defn build-page-reindex-left-sidebar
   [last-tx]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/page-reindex-left-sidebar}))
+
 
 (defn build-page-add-shortcut
   [last-tx uid]
@@ -249,6 +251,7 @@
      :event/last-tx last-tx
      :event/type    :datascript/page-remove-shortcut
      :event/args    {:uid uid}}))
+
 
 ;; - presence events
 
