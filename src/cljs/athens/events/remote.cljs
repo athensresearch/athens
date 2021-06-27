@@ -221,7 +221,7 @@
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
       {:fx [[:dispatch [:remote/send-event! page-delete-event]]]})))
 
-;; TODO: fix not valid event
+
 (rf/reg-event-fx
   :remote/page-reindex-left-sidebar
   (fn [{db :db} _]

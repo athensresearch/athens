@@ -284,7 +284,7 @@
     tx-data))
 
 (defmethod resolve-event-to-tx :datascript/page-reindex-left-sidebar
-  [db]
+  [db _]
   (let [tx-data            (->> (d/q '[:find [(pull ?e [*]) ...]
                                        :where
                                        [?e :page/sidebar _]]
@@ -304,7 +304,7 @@
                                     db) 1)
         tx-data            [{:block/uid uid :page/sidebar sidebar-ents-count}]]
     tx-data))
-  
+
   (defmethod resolve-event-to-tx :datascript/page-remove-shortcut
     [_ {:event/keys [args]}]
     (let [{:keys [uid]}      args
