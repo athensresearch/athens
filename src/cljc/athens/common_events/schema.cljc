@@ -19,7 +19,8 @@
    :datascript/split-block-to-children
    :datascript/unindent
    :datascript/paste-verbatim
-   :datascript/indent])
+   :datascript/indent
+   :datascript/page-add-shortcut])
 
 
 (def event-common
@@ -122,6 +123,12 @@
      [:value string?]]]])
 
 
+(def datascript-page-add-shortcut
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
 (def event
   [:multi {:dispatch :event/type}
    [:presence/hello
@@ -159,7 +166,10 @@
               datascript-unindent)]
    [:datascript/paste-verbatim
     (mu/merge event-common
-              datascript-paste-verbatim)]])
+              datascript-paste-verbatim)]
+   [:datascript/page-add-shortcut
+    (mu/merge event-common
+              datascript-page-add-shortcut)]])
 
 
 (def valid-event?

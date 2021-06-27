@@ -704,12 +704,14 @@
 (reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents-count (or (d/q '[:find (count ?e) .
-                                        :where
-                                        [?e :page/sidebar _]]
-                                      @db/dsdb) 1)]
-      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar sidebar-ents-count}]]]
-            [:dispatch [:page/reindex-left-sidebar]]]})))
+    (js/console.debug ":page/add-shortcut:" uid)
+    (if-let [local? (not (client/open?))]
+     (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
+           tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
+       (js/console.debug ":page/add-shortcut: local?" local?)
+       {:fx [[:dispatch [:transact tx-data]]
+             [:dispatch [:page/reindex-left-sidebar]]]})
+     {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
 
 
 (reg-event-fx

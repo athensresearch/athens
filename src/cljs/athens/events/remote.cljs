@@ -221,6 +221,14 @@
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
       {:fx [[:dispatch [:remote/send-event! page-delete-event]]]})))
 
+(rf/reg-event-db
+ :remote/page-add-shortcut
+ (fn [{db :db} [_ uid]]
+   (let [last-seen-tx       (:remote/last-seen-tx db)
+         add-shortcut-event (common-events/build-page-add-shortcut last-seen-tx uid)]
+     (js/console.debug ":remote/page-add-shortcut:" (pr-str add-shortcut-event))
+     {:fx [[:dispatch [:remote/send-event! add-shortcut-event]]
+           #_[:dispatch [:page/reindex-left-sidebar]]]})))
 
 ;; - Block related
 

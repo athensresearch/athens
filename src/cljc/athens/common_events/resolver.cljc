@@ -282,3 +282,13 @@
         tx-data      [{:db/id        [:block/uid uid]
                        :block/string new-string}]]
     tx-data))
+
+(defmethod resolve-event-to-tx :datascript/page-add-shortcut
+  [db {:event/keys [args]}]
+  (let [{:keys [uid]}      args
+        sidebar-ents-count (or (d/q '[:find (count ?e) .
+                                      :where
+                                      [?e :page/sidebar _]]
+                                    db) 1)
+        tx-data            [{:block/uid uid :page/sidebar sidebar-ents-count}]]
+    tx-data))
