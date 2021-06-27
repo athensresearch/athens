@@ -690,15 +690,11 @@
 (reg-event-fx
   :page/reindex-left-sidebar
   (fn [_ _]
-    {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
-    (let [sidebar-ents (->> (d/q '[:find [(pull ?e [*]) ...]
-                                   :where
-                                   [?e :page/sidebar _]]
-                                 @db/dsdb)
-                            (sort-by :page/sidebar)
-                            (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                            vec)]
-      {:fx [[:dispatch [:transact sidebar-ents]]]})))
+    {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked."}
+    (js/console.debug ":page/reindex-left-sidebar")
+      (let [reindex-left-sidebar-event (common-events/build-page-reindex-left-sidebar -1)
+            tx-data                    (resolver/resolve-event-to-tx @db/dsdb reindex-left-sidebar-event)]
+        {:fx [[:dispatch [:transact tx-data]]]})))
 
 
 (reg-event-fx
@@ -717,8 +713,14 @@
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]
-          [:dispatch [:page/reindex-left-sidebar]]]}))
+    (js/console.debug ":page/remove-shortcut:" uid)
+    (if-let [local? (not (client/open?))]
+      (let [remove-shortcut-event (common-events/build-page-remove-shortcut -1 uid)
+            tx-data               (resolver/resolve-event-to-tx @db/dsdb remove-shortcut-event)]
+          (js/console.debug ":page/remove-shortcut:" local?)
+        {:fx [[:dispatch [:transact tx-data]]
+              [:dispatch [:page/reindex-left-sidebar]]]})
+      {:fx [[:dispatch [:remote/page-remove-shortcut uid]]]})))
 
 
 (reg-event-fx

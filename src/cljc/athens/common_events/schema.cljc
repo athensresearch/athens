@@ -20,7 +20,8 @@
    :datascript/unindent
    :datascript/paste-verbatim
    :datascript/indent
-   :datascript/page-add-shortcut])
+   :datascript/page-add-shortcut
+   :datascript/page-remove-shortcut])
 
 
 (def event-common
@@ -122,8 +123,13 @@
      [:start nat-int?]
      [:value string?]]]])
 
-
 (def datascript-page-add-shortcut
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
+(def datascript-page-remove-shortcut
   [:map
    [:event/args
     [:map
@@ -169,7 +175,10 @@
               datascript-paste-verbatim)]
    [:datascript/page-add-shortcut
     (mu/merge event-common
-              datascript-page-add-shortcut)]])
+              datascript-page-add-shortcut)]
+   [:datascript/page-remove-shortcut
+    (mu/merge event-common
+              datascript-page-remove-shortcut)]])
 
 
 (def valid-event?

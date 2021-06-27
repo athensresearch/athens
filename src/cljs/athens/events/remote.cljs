@@ -221,14 +221,34 @@
       (js/console.debug ":remote/page-delete" (pr-str page-delete-event))
       {:fx [[:dispatch [:remote/send-event! page-delete-event]]]})))
 
-(rf/reg-event-db
+;; TODO: fix not valid event
+(rf/reg-event-fx
+  :remote/page-reindex-left-sidebar
+  (fn [{db :db} _]
+    (let [last-seen-tx               (:remote/last-seen-tx db)
+          reindex-left-sidebar-event (common-events/build-page-reindex-left-sidebar last-seen-tx)]
+      (js/console.debug ":remote/page-reindex-left-sidebar: local?" (pr-str reindex-left-sidebar-event))
+      {:fx [[:dispatch [:remote/send-event! reindex-left-sidebar-event]]]})))
+
+
+(rf/reg-event-fx
  :remote/page-add-shortcut
  (fn [{db :db} [_ uid]]
    (let [last-seen-tx       (:remote/last-seen-tx db)
          add-shortcut-event (common-events/build-page-add-shortcut last-seen-tx uid)]
      (js/console.debug ":remote/page-add-shortcut:" (pr-str add-shortcut-event))
      {:fx [[:dispatch [:remote/send-event! add-shortcut-event]]
-           #_[:dispatch [:page/reindex-left-sidebar]]]})))
+           [:dispatch [:remote/page-reindex-left-sidebar]]]})))
+
+
+(rf/reg-event-fx
+ :remote/page-remove-shortcut
+ (fn [{db :db} [_ uid]]
+   (let [last-seen-tx          (:remote/last-seen-tx db)  
+         remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
+     (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
+     {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]
+           [:dispatch [:remote/page-reindex-left-sidebar]]]})))
 
 ;; - Block related
 

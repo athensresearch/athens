@@ -283,12 +283,30 @@
                        :block/string new-string}]]
     tx-data))
 
+(defmethod resolve-event-to-tx :datascript/page-reindex-left-sidebar
+  [db]
+  (let [tx-data            (->> (d/q '[:find [(pull ?e [*]) ...]
+                                       :where
+                                       [?e :page/sidebar _]]
+                                     db)
+                                (sort-by :page/sidebar)
+                                (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                vec)]
+    tx-data))
+
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
   [db {:event/keys [args]}]
   (let [{:keys [uid]}      args
-        sidebar-ents-count (or (d/q '[:find (count ?e) .
+        sidebar-ents-count 1 ;; TODO: fix the class error
+                          #_(or (d/q '[:find (count ?e) .
                                       :where
                                       [?e :page/sidebar _]]
                                     db) 1)
         tx-data            [{:block/uid uid :page/sidebar sidebar-ents-count}]]
     tx-data))
+  
+  (defmethod resolve-event-to-tx :datascript/page-remove-shortcut
+    [_ {:event/keys [args]}]
+    (let [{:keys [uid]}      args
+          tx-data            [[:db/retract [:block/uid uid] :page/sidebar]]]
+      tx-data))
