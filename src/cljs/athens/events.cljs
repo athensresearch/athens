@@ -1140,7 +1140,7 @@
   (fn [_ [_ {:keys [uid d-key-down] :as args}]]
     (js/console.debug ":indent" args)
     (let [local?                    (not (client/open?))
-          block                     (common-db/get-block @db/dsdb (:block/uid uid))
+          block                     (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?               (zero? (:block/order block))
           {:keys [value start end]} d-key-down]
       (js/console.debug ":indent local?" local?
