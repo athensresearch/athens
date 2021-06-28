@@ -2,10 +2,11 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.patterns          :as patterns]
-    [clojure.string           :as string]
-    #?(:clj  [datahike.api    :as d]
-       :cljs [datascript.core :as d])))
+    [athens.patterns               :as patterns]
+    [clojure.string                :as string]
+    #?(:clj [clojure.tools.logging :as log])
+    #?(:clj  [datahike.api         :as d]
+       :cljs [datascript.core      :as d])))
 
 
 (defn e-by-av
@@ -131,3 +132,38 @@
        first
        :db/id
        (get-block db)))
+
+
+(defn linkmaker
+  "Maintains linked nature of Knowledge Graph.
+
+  Returns Datascript transactions to be transacted in order to maintain links.
+
+  Arguments:
+  - `db`: Current Datascript/Datahike DB value
+  - `input-tx`: Grapth structure modifying TX, analyzed for link updates
+
+  Named after [Keymaker](https://en.wikipedia.org/wiki/Keymaker). "
+  [db input-tx]
+  (try
+    (let [tx-report (d/with db input-tx)
+          ;; requirements:
+          ;; *p1*: page created -> check if something refers to it, update refs
+          ;; *p2*: page deleted -> do we need to update `:block/refs`, since we're deleting page entity, probably not
+          ;;                       also check *b6* for all child blocks
+          ;; *p3*: page rename -> find references to old page title, update blocks with new title, update refs
+          ;;                      also check if something refers to new title already, update refs
+          ;; *b1*: block has new page ref -> update page refs
+          ;; *b2*: block doesn't have page ref anymore -> update page refs
+          ;; *b3*: block has new block ref -> update target block refs
+          ;; *b4*: block doesn't have block ref anymore -> update target block refs
+          ;; *b5*: block created -> check *b1* & *b3*
+          ;; *b6*: block deleted -> check *b2* & *b4*
+          ])
+    (catch #?(:cljs js/Error
+              :clj Exception) e
+      #?(:cljs (do
+                 (js/alert (str "Software failure, sorry. Please let us know about it.\n"
+                                (str e)))
+                 (js/console.error "Linkmaker failure." e))
+         :clj (log/error "Linkmaker failure." e)))))
