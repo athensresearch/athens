@@ -265,22 +265,18 @@
 
 (defn remote-username-comp
   []
-  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
-        remote?           (:default? remote-graph-conf)]
-    [setting-wrapper
-     (when (not remote?) {:disabled true})
-     [:<>
-      [:header
-       [:h3 "Username"]
-       [:span.glance (:name @(subscribe [:user/current]))]]
-      [:main
-       [textinput/textinput {:type         "text"
-                             :placeholder  "Username"
-                             :disabled     (not remote?)
-                             :on-blur      handle-user-name-change
-                             :defaultValue (:name @(subscribe [:user/current]))}]
-       [:aside
-        [:p "For now, a username is only needed if you are connected to a server."]]]]]))
+  [setting-wrapper
+   [:<>
+    [:header
+     [:h3 "Username"]
+     [:span.glance (:name @(subscribe [:user/current]))]]
+    [:main
+     [textinput/textinput {:type         "text"
+                           :placeholder  "Username"
+                           :on-blur      handle-user-name-change
+                           :defaultValue (:name @(subscribe [:user/current]))}]
+     [:aside
+      [:p "For now, a username is only needed if you are connected to a server."]]]]])
 
 
 (defn page

@@ -1,15 +1,21 @@
 (ns athens.coeffects
   (:require
-    [re-frame.core :refer [reg-cofx]]))
+    [re-frame.core :as rf]))
 
 
-(reg-cofx
-  :local-storage
+(rf/reg-cofx
+  :local-storage/get
   (fn [cofx key]
-    (assoc cofx :local-storage (js/localStorage.getItem key))))
+    (assoc cofx :local-storage (or
+                                 (js/localStorage.getItem (str key))
+                                 (js/localStorage.getItem key)))))
 
 
-(reg-cofx
-  :local-storage-map
-  (fn [cofx {:keys [ls-key key]}]
-    (assoc cofx key (js/localStorage.getItem ls-key))))
+(rf/reg-fx
+  :local-storage/set
+  (fn [[key value]]
+    (let [key (str key)]
+      (if (some? value)
+        (.setItem js/localStorage key #_(t/write (t/writer :json-verbose) value))
+        ;; Specifying `nil` as value removes the key instead.
+        (.removeItem js/localStorage key)))))
