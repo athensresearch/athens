@@ -1,7 +1,6 @@
 (ns athens.effects
   (:require
     [athens.config :as config]
-    [athens.datsync-utils :as dat-s]
     [athens.db :as db]
     [athens.util :as util]
     [athens.walk :as walk]
@@ -9,7 +8,6 @@
     [cljs.core.async :refer [go <!]]
     [cljs.pprint :refer [pprint]]
     [clojure.string :as str]
-    [dat.sync.client]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
