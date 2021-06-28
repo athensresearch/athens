@@ -28,7 +28,7 @@ lein run
 
 This will start HTTP server on port 3010, unless you've modified `src/clj/config.edn`.
 
-Also nRELP server is started on port 8877, unless you've modified `src/clj/config.edn`.
+Also nREPL server is started on port 8877, unless you've modified `src/clj/config.edn`.
 
 ### Developing Athens Self-Hosted Server
 
