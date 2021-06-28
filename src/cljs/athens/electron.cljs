@@ -6,6 +6,7 @@
     [athens.style :refer [zoom-level-min zoom-level-max]]
     [athens.util :as util :refer [ipcMainChannels]]
     [cljs.reader :refer [read-string]]
+    [clojure.core.async :as async]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -340,6 +341,48 @@
   ;; open or create a new starter db
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
+
+  (defn write-db-index
+    [file filepath]
+    (async/go
+      (when-not (exists? (fs.writeFileSync filepath file))
+        (js/alert "Backup file correctly restored, click Ok to re-start")
+        (js/setTimeout #(dispatch [:boot/desktop]) 50))))
+
+  ;; Create new index.transit db
+  (defn create-db-index
+    [file filepath]
+    (fs.writeFile filepath file (fn [e] (dispatch [:fs/open-dialog]))))
+
+  ;; Open-dialog-box
+  (defn open-dialog-index
+    "Allow user to open a Backup file."
+    [filepath]
+    (js/alert "Your index.transit is corrupted, please open up a backup")
+    (let [res  (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
+                                                     :filters    [{:name "Transit" :extensions ["transit.bkp"]}]}))
+          open-file (first res)]
+      (when (and open-file (.existsSync fs open-file))
+        (let [read-db (.readFileSync fs open-file)
+              db-file (try (dt/read-transit-str read-db)
+                           (catch  :default e (do (js/console.error (js/Error. e)) (open-dialog-index filepath))))]
+          (if (= (:schema db-file) db/schema)
+            ((write-db-index read-db filepath)) (open-dialog-index filepath))))
+      (let [confirmed? (js/window.confirm (str "No file selected. Would you like to create a new db?"))]
+        (if confirmed?
+          (create-db-index "[]" filepath)
+          (open-dialog-index filepath)))))
+
+  ;; Handle index.transit
+  (defn handle-index-transit
+    [filepath]
+    (let [read-db (.readFileSync fs filepath)
+          db-file (try (dt/read-transit-str read-db)
+                       (catch :default e (do (js/console.error (js/Error. e)) (open-dialog-index filepath))))]
+      (when (not= (:schema db-file) db/schema) (open-dialog-index filepath))
+      (dispatch [:fs/watch filepath])
+      (dispatch [:reset-conn db-file])))
+
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
@@ -352,10 +395,7 @@
                                                        ;; No database path found in localStorage. Creating new one
                                                        (nil? filepath) (dispatch [:fs/create-new-db])
                                                        ;; Database found in local storage and filesystem:
-                                                       (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                       db      (dt/read-transit-str read-db)]
-                                                                                   (dispatch [:fs/watch filepath])
-                                                                                   (dispatch [:reset-conn db]))
+                                                       (.existsSync fs filepath) (handle-index-transit filepath)
                                                        ;; Database found in localStorage but not on filesystem
                                                        :else (dispatch [:fs/open-dialog])))}
 
