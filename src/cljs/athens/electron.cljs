@@ -5,6 +5,7 @@
     [athens.patterns :as patterns]
     [athens.util :as util]
     [cljs.reader :refer [read-string]]
+    [clojure.core.async :as async]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
     [day8.re-frame.async-flow-fx]
@@ -325,20 +326,20 @@
   ;; open or create a new starter db
 
   ;; Watch filesystem, e.g. in case db is updated via Dropbox sync
-  
-  ;; Update index.transit    
-  (defn write-db-index 
+
+  (defn write-db-index
     [file filepath]
-    (go
-      (when-not (exists? (fs.writeFileSync filepath file))  
-        (js/alert "Backup file correctly restored, click Ok to re-start") 
+    (async/go
+      (when-not (exists? (fs.writeFileSync filepath file))
+        (js/alert "Backup file correctly restored, click Ok to re-start")
         (js/setTimeout #(dispatch [:boot/desktop]) 50))))
-   
+
   ;; Create new index.transit db
-  (defn create-db-index 
+  (defn create-db-index
     [file filepath]
     (fs.writeFile filepath file (fn [e] (dispatch [:fs/open-dialog]))))
-    
+
+  ;; Open-dialog-box
   (defn open-dialog-index
     "Allow user to open a Backup file."
     [filepath]
@@ -349,30 +350,24 @@
       (when (and open-file (.existsSync fs open-file))
         (let [read-db (.readFileSync fs open-file)
               db-file (try (dt/read-transit-str read-db)
-                           (catch  :default e 
-                             (do
-                               (js/console.error (js/Error. e))
-                               (open-dialog-index filepath))))]
+                           (catch  :default e (do (js/console.error (js/Error. e)) (open-dialog-index filepath))))]
           (if (= (:schema db-file) db/schema)
             ((write-db-index read-db filepath)) (open-dialog-index filepath))))
       (let [confirmed? (js/window.confirm (str "No file selected. Would you like to create a new db?"))]
         (if confirmed?
           (create-db-index "[]" filepath)
           (open-dialog-index filepath)))))
-          
-  ;; Handle index.transit 
-  (defn handle-index-transit 
-    [filepath]  
+
+  ;; Handle index.transit
+  (defn handle-index-transit
+    [filepath]
     (let [read-db (.readFileSync fs filepath)
           db-file (try (dt/read-transit-str read-db)
-                       (catch :default e 
-                         (do 
-                           (js/console.error (js/Error. e))
-                           (open-dialog-index filepath))))]
-       (when (not= (:schema db-file) db/schema) (open-dialog-index filepath))
-       (dispatch [:fs/watch filepath])
-       (dispatch [:reset-conn db-file])))
-  
+                       (catch :default e (do (js/console.error (js/Error. e)) (open-dialog-index filepath))))]
+      (when (not= (:schema db-file) db/schema) (open-dialog-index filepath))
+      (dispatch [:fs/watch filepath])
+      (dispatch [:reset-conn db-file])))
+
   (reg-event-fx
     :boot/desktop
     (fn [_ _]
