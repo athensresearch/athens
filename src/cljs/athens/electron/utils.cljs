@@ -1,12 +1,19 @@
 (ns athens.electron.utils)
 
 
+;; Documents/athens
+;; ├── images
+;; └── index.transit
+
+
+
 (def electron (js/require "electron"))
 (def remote (.. electron -remote))
 (def app (.. remote -app))
 (def dialog (.. remote -dialog))
 (def path (js/require "path"))
 (def fs (js/require "fs"))
+
 
 (def DB-INDEX "index.transit")
 (def IMAGES-DIR-NAME "images")

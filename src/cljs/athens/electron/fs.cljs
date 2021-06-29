@@ -14,10 +14,6 @@
 (def stream (js/require "stream"))
 
 
-;; Documents/athens
-;; ├── images
-;; └── index.transit
-
 ;; If new db is created add
 ;; 1. This db to all-dbs list
 ;; 2. Make this db active
@@ -75,6 +71,36 @@
                               (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
                                 (debounce-sync-db-from-fs filepath filename))))))
     {}))
+
+
+;; TODO: parameterize so that can extend images-dir and db-filepath from filepath
+(rf/reg-event-fx
+  :fs/create-and-watch
+  (fn [{:keys [db]} [_ db-filepath]]
+    (let [default-dir (utils/default-dir)
+          images-dir (utils/default-image-dir-path)
+          db-filepath (utils/default-db-dir-path)]
+      (utils/create-dir-if-needed! default-dir)
+      (utils/create-dir-if-needed! images-dir)
+      {:db                (assoc db :db/filepath db-filepath)
+       :local-storage/set [:db/filepath db-filepath]
+       :fs/write!         [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
+       :dispatch-n        [#_[:db/update-filepath db-filepath]
+                           [:reset-conn athens-datoms/datoms]
+                           [:db-picker/add-new-db db-filepath]]})))
+
+
+(rf/reg-event-fx
+  :fs/read-and-watch
+  (fn [{:keys [db]} [_ db-filepath]]
+    (let [read-db (.readFileSync fs db-filepath)
+          db (dt/read-transit-str read-db)]
+      {:db (assoc db :db/filepath db-filepath)
+       :local-storage/set [:db/filepath db-filepath]
+       ;:local-storage/set! ["db/filepath" db-filepath]
+       :dispatch-n [#_[:db/update-filepath db-filepath]
+                    [:reset-conn athens-datoms/datoms]
+                    [:db-picker/add-new-db db-filepath]]})))
 
 
 (rf/reg-event-db

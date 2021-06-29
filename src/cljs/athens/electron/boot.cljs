@@ -31,54 +31,47 @@
           default-db-path (utils/default-db-dir-path)
           db-exists-on-fs? (.existsSync fs default-db-path)
 
-          db-filepath (cond
+          first-event (cond
 
                         ;; No filepath found in local storage, but an existing db at default db location suggests a dev chromium is running with a different local storage. Use default filepath
                         (and (nil? db-filepath)
                              db-exists-on-fs?)
-                        default-db-path
+                        [:db/read-and-watch default-db-path]
 
-                        ;; No filepath found in local storage and nothing found at default db location. Create new db at default location, reset-conn, and add to db-list
-                        (nil? db-filepath) [:fs/create-new-db db-filepath]
+                        ;; Filepath not found in local storage and nothing found at default db location. Create new db at default location, reset-conn, and add to db-list
+                        (and (nil? db-filepath)
+                             (not db-exists-on-fs?))
+                        [:fs/create-and-watch default-db-path]
 
                         ;; Filepath found in local storage and on filesystem. Watch filepath, load db, and add to local-storage list.
                         ;; Actually this is redundant. We don't need db/filepath if we have db-picker/all-dbs
                         (and db-filepath
                              db-exists-on-fs?)
-                        [[:fs/watch db-filepath]
-                         #_[:reset-conn db-filepath]]
+                        [:fs/read-and-watch db-filepath]
 
-                        :else [:fs/open-dialog])]
+                        ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
+                        :else
+                        (and db-filepath
+                             (not db-exists-on-fs?))
+                        [:fs/open-dialog])]
 
-      ;; Filepath found in local storage but no db is found. Open open-dialog.
 
-
-
-
-      (prn "0" db-filepath)
       (cond
-        (nil? db-filepath)
-        db-filepath)
+        ;; No database path found in localStorage. Creating new one
+        (nil? filepath) (rf/dispatch [:fs/create-new-db])
+        ;; Database found in local storage and filesystem:
+        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
+                                        db (dt/read-transit-str read-db)]
+                                    (rf/dispatch [:fs/watch filepath])
+                                    (rf/dispatch [:reset-conn db])
+                                    (rf/dispatch [:local-storage/create-db-picker-list]))
+        :else (rf/dispatch [:fs/open-dialog]))
 
-
+      ;; output => [:reset-conn] OR [:fs/create-new-db]
 
       {:db         db/rfdb
-       :async-flow {:first-dispatch [:local-storage/get-db-filepath]
-                    :rules          [#_{:when        :seen?
-                                        :events      :db/update-filepath
-                                        :dispatch-fn (fn [[_ filepath]]
-                                                       (cond
-                                                         ;; No database path found in localStorage. Creating new one
-                                                         (nil? filepath) (rf/dispatch [:fs/create-new-db])
-                                                         ;; Database found in local storage and filesystem:
-                                                         (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                                                                         db (dt/read-transit-str read-db)]
-                                                                                     (rf/dispatch [:fs/watch filepath])
-                                                                                     (rf/dispatch [:reset-conn db])
-                                                                                     (rf/dispatch [:local-storage/create-db-picker-list]))
-                                                         :else (rf/dispatch [:fs/open-dialog])))}
-
-                                     ;; if first time, go to Daily Pages and open left-sidebar
+       :async-flow {:first-dispatch first-event
+                    :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-new-db
                                       :dispatch-n [[:navigate :home]

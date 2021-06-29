@@ -29,11 +29,11 @@
     db/rfdb))
 
 
-(reg-event-fx
-  :db/update-filepath
-  (fn [{:keys [db]} [_ filepath]]
-    {:db (assoc db :db/filepath filepath)
-     :local-storage/set! ["db/filepath" filepath]}))
+#_(reg-event-fx
+    :db/update-filepath
+    (fn [{:keys [db]} [_ filepath]]
+      {:db (assoc db :db/filepath filepath)
+       :local-storage/set! ["db/filepath" filepath]}))
 
 
 (reg-event-db

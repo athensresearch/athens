@@ -78,11 +78,24 @@
   (js/Number (js/localStorage.getItem "debounce-save-time")))
 
 
+(defn init-user
+  []
+  (or (js/localStorage.getItem "user/name"
+       "Socrates")))
+
+
+;(re-frame.core/reg-sub
+;  :user/current
+;  (fn [db _]
+;    (:user db)))
+
+
 (defn init-state
   []
-  {:email         (init-email)
-   :monitoring    (init-monitoring)
-   :backup-time (init-backup-time)})
+  {:email       (init-email)
+   :monitoring  (init-monitoring)
+   :backup-time (init-backup-time)
+   :user        (init-user)})
 
 
 (defn handle-reset-email
@@ -269,12 +282,12 @@
    [:<>
     [:header
      [:h3 "Username"]
-     [:span.glance (:name @(subscribe [:user/current]))]]
+     [:span.glance "TMP" #_(:name @(subscribe [:user/current]))]]
     [:main
      [textinput/textinput {:type         "text"
                            :placeholder  "Username"
                            :on-blur      handle-user-name-change
-                           :defaultValue (:name @(subscribe [:user/current]))}]
+                           :defaultValue "TMP" #_(:name @(subscribe [:user/current]))}]
      [:aside
       [:p "For now, a username is only needed if you are connected to a server."]]]]])
 
