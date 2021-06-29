@@ -8,7 +8,6 @@
 
 
 (def fs (js/require "fs"))
-(def path (js/require "path"))
 
 
 #_(rf/reg-event-fx
@@ -23,17 +22,13 @@
           :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
-(defn default-db-path!
-  []
-  (.resolve path utils/documents-athens-dir utils/DB-INDEX))
-
 (rf/reg-event-fx
   :boot/desktop
   [#_(rf/inject-cofx :local-storage/get :athens/state)
    (rf/inject-cofx :local-storage/get "db/filepath")]
   (fn [cofx _]
     (let [{db-filepath :local-storage} cofx
-          default-db-path (default-db-path!)
+          default-db-path (utils/default-db-dir-path)
           db-exists-on-fs? (.existsSync fs default-db-path)
 
           db-filepath (cond

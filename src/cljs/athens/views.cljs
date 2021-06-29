@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
-    [athens.electron.db-modal :as filesystem]
+    [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
     [athens.subs]
     [athens.util :refer [get-os electron?]]
@@ -84,12 +84,12 @@
            msg]])
        [athena-component]
        (cond
-         (and @loading @modal) [filesystem/window]
+         (and @loading @modal) [db-modal/window]
 
          @loading [initial-spinner-component]
 
          :else [:<>
-                (when @modal [filesystem/window])
+                (when @modal [db-modal/window])
                 [:div (use-style app-wrapper-style
                                  {:class [(case os
                                             :windows "os-windows"

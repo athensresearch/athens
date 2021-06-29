@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
-    [athens.electron.core :as electron]
+    [athens.electron.fs :as fs]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
@@ -145,7 +145,7 @@
   [e s]
   (let [value (.. e -target -value)]
     (swap! s assoc :backup-time value)
-    (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
+    (set! fs/debounce-write-db (goog-functions/debounce fs/write-db (* 1000 value)))
     (js/localStorage.setItem "debounce-save-time" value)))
 
 

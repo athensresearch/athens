@@ -15,6 +15,15 @@
 (def path (js/require "path"))
 
 
+
+(rf/reg-event-fx
+  :fs/open-dialog
+  (fn [{:keys [db]} _]
+    (js/alert (str "No DB found at " (:db/filepath db) "."
+                   "\nPlease open or create a new db."))
+    {:dispatch-n [[:modal/toggle]]}))
+
+
 (defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
   Else copy db to new db location. When there is an images folder, copy /images folder and all images.
