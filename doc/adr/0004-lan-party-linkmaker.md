@@ -27,6 +27,8 @@ We'd like this mechanism to be shared between Single-Player and Lan-Party modes 
  - *p3*: page rename
    - -> find references to old page title, update blocks with new title, update refs
    - -> also check if something refers to new title already, update refs
+ - *p4*: page merge
+   - -> blocks stay the same, old page refs and page links need to be updated
  - *b1*: block has new page ref
    - -> update page refs
  - *b2*: block doesn't have page ref anymore
@@ -41,6 +43,9 @@ We'd like this mechanism to be shared between Single-Player and Lan-Party modes 
  - *b6*: block deleted
    - -> check *b2*
    - -> check *b4*
+
+**Linkmaker** should preserve behavior of `walk-transact`.  
+We want to have it tested, so we can rely on it.
 
 ## Consequences
 
