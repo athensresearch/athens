@@ -244,6 +244,7 @@
      :event/args    {:uid     uid
                      :new-uid new-uid}}))
 
+
 (defn build-page-remove-shortcut
   [last-tx uid]
   (let [event-id (gen-event-id)]

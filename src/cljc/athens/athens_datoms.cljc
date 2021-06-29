@@ -5,7 +5,7 @@
 (def datoms
   [{:block/uid "0",
     :node/title "Welcome",
-    :page/sidebar 999,
+    :page/sidebar 0,
     :block/children [#:block{:uid "ee770c334",
                              :string "Welcome to Athens, Open-Source Networked Thought!",
                              :open true,
@@ -285,7 +285,7 @@
 (def lan-datoms
   [{:block/uid "0",
     :node/title "Welcome",
-    :page/sidebar 999,
+    :page/sidebar 0,
     :block/children [#:block{:uid "ee770c334",
                              :string "Welcome to Athens Lan Party, Open-Source Collaborative Networked Thought!",
                              :open true,
