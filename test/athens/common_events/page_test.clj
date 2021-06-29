@@ -157,7 +157,6 @@
                            @@fixture/connection test-uid))))))
 
   (test/testing "Reindex page shortcut"
-    (println "reindex page shortcut")
     (let [test-uid-1   "test-page-uid-1"
           test-title-1 "test page title 1"
           test-uid-2   "test-page-uid-2"
@@ -165,66 +164,66 @@
           test-uid-3   "test-page-uid-3"
           test-title-3 "test page title 3"]
 
-      ;; create new page
-      (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
-      (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
-      (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+      (test/testing "Reindex page shortcut after adding page shortcut"
+        (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
+        (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
+        (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      ;; add page 1 to the left sidebar and reindex
-      (->> (common-events/build-page-add-shortcut -1 test-uid-1)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        ;; add page 1 to the left sidebar and reindex
+        (->> (common-events/build-page-add-shortcut -1 test-uid-1)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      (->> (common-events/build-page-reindex-left-sidebar -1)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        (->> (common-events/build-page-reindex-left-sidebar -1)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      ;; add page 2 to the left sidebar and reindex
-      (->> (common-events/build-page-add-shortcut -1 test-uid-2)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        ;; add page 2 to the left sidebar and reindex
+        (->> (common-events/build-page-add-shortcut -1 test-uid-2)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      (->> (common-events/build-page-reindex-left-sidebar -1)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        (->> (common-events/build-page-reindex-left-sidebar -1)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      ;; add page 3 to the left sidebar and reindex
-      (->> (common-events/build-page-add-shortcut -1 test-uid-3)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        ;; add page 3 to the left sidebar and reindex
+        (->> (common-events/build-page-add-shortcut -1 test-uid-3)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      (->> (common-events/build-page-reindex-left-sidebar -1)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+        (->> (common-events/build-page-reindex-left-sidebar -1)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
-                                     :where
-                                     [?e :page/sidebar _]]
-                                   @@fixture/connection)
-                              (sort-by (comp :page/sidebar first))
-                              (into []))]
-        (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
-        (test/is (= test-uid-2 (get-in page-sidebar [2 0 :block/uid])) "test-uid-1 should be in index 2")
-        (test/is (= test-uid-3 (get-in page-sidebar [3 0 :block/uid])) "test-uid-1 should be in index 3"))
+        (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
+                                       :where
+                                       [?e :page/sidebar _]]
+                                     @@fixture/connection)
+                                (sort-by (comp :page/sidebar first))
+                                (into []))]
+          (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
+          (test/is (= test-uid-2 (get-in page-sidebar [2 0 :block/uid])) "test-uid-1 should be in index 2")
+          (test/is (= test-uid-3 (get-in page-sidebar [3 0 :block/uid])) "test-uid-1 should be in index 3")))
 
-      ;; remove page 2 from the left sidebar and reindex
-      (->> (common-events/build-page-remove-shortcut -1 test-uid-2)
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
+      (test/testing "Reindex page shortcut after removing a shortcut"
+        (->> (common-events/build-page-remove-shortcut -1 test-uid-2)
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection))
 
-      (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
-                                     :where
-                                     [?e :page/sidebar _]]
-                                   @@fixture/connection)
-                              (sort-by (comp :page/sidebar first))
-                              (into []))]
-        (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
-        (test/is (= test-uid-3 (get-in page-sidebar [2 0 :block/uid])) "test-uid-3 should be in index 2")
-        (test/is (empty? (filter #(= (comp :block/uid first %) test-uid-2) page-sidebar)) "test-uid-2 should not be in the vector")))))
+        (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
+                                       :where
+                                       [?e :page/sidebar _]]
+                                     @@fixture/connection)
+                                (sort-by (comp :page/sidebar first))
+                                (into []))]
+          (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
+          (test/is (= test-uid-3 (get-in page-sidebar [2 0 :block/uid])) "test-uid-3 should be in index 2")
+          (test/is (empty? (filter #(= (comp :block/uid first %) test-uid-2) page-sidebar)) "test-uid-2 should not be in the vector"))))))
 
