@@ -164,17 +164,20 @@
           test-uid-3   "test-page-uid-3"
           test-title-3 "test page title 3"]
 
-      (test/testing "Reindex page shortcut after adding page shortcut"
-        (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
-        (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
-        (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+      ;; create new pages   
+      (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection))
 
+      (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection))
+
+      (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection))
+
+      (test/testing "Reindex page shortcut after adding page shortcut"
         ;; add page 1 to the left sidebar and reindex
         (->> (common-events/build-page-add-shortcut -1 test-uid-1)
              (resolver/resolve-event-to-tx @@fixture/connection)
