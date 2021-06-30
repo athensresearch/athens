@@ -33,6 +33,21 @@ Problems with local-storage state:
 * appearance
   * dark/light mode
   * screen width (not merged yet)
+    
+
+### Existing Solutions
+
+- https://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/effects.cljs?L15-29&subtree=true 
+  - Our implementation could be as simple as a pair of cofx/fx. No library actually needed.
+  - Doesn't let you persist or get multiple keys at once.
+- https://github.com/akiroz/re-frame-storage
+  - Automatically persists the values you want. Don't have to create duplicate `:db` and `:fx`
+  - Persists multiple keys easily.
+  - There is a single `:persistent` key
+- https://github.com/deg/re-frame-storage-fx 
+  - Handles both local-storage and session-storage (not used yet).
+  - `get`s multiple keys easily.
+
 
 
 ## Decision

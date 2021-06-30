@@ -26,11 +26,3 @@
     * Recently opened databases
       * Most recently opened
       * Entire List
-
-
-Jeff: I feel like it'd be easiest to just have one big `athens/settings` map that stores all localStorage values. Update re-frame app-db, then update localStorage as needed. When application boots, read in those settings.
-- https://github.com/akiroz/re-frame-storage 
-- https://github.com/deg/re-frame-storage-fx
-- https://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/effects.cljs?L15-29&subtree=true
-
-`init-state` from settings should take place in boot.cljs
