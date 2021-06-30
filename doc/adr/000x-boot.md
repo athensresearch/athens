@@ -18,9 +18,6 @@ Problems with local-storage state:
 
 ### Local Storage State
 
-* [State](https://github.com/athensresearch/athens/issues/997)
-
-
 * settings
     * backup timer
     * usage/diagnostics
@@ -37,7 +34,7 @@ Problems with local-storage state:
 
 ### Existing Solutions
 
-- https://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/effects.cljs?L15-29&subtree=true 
+- [blulegenes](shttps://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/effects.cljs?L15-29&subtree=true)
   - Our implementation could be as simple as a pair of cofx/fx. No library actually needed.
   - Doesn't let you persist or get multiple keys at once.
 - https://github.com/akiroz/re-frame-storage
@@ -52,11 +49,17 @@ Problems with local-storage state:
 
 ## Decision
 
-- Would it be better to have one big `athens/settings` map or to have separate key/val pairs in local-storage?
-- How do we upgrade/migrate from `db/filepath` to `db-picker/all-dbs` ?
-- What if a user needs to pull multiple values from local-storage? The current cofx adds a `:local-storage` key, but this would be overwritten if multiple values were `get`
+After first chat with Sid and Alex, the current approach is to create a single nested map for all values that need to be persisted to localStorage.
 
+Pros:
+
+- We have one data structure to work with. This means we can stick to `.edn` as much as we want to until the final serialized state (probably transit-json). One monolithic data structure makes portability easier in the future, for instance, if we stored all these settings in `settings.json` (like VS Code), `config.edn`, or in a SQL/NoSQL table.
+- We can easily read in multiple values via cofx at once. The bluegenes approach only gives the coeffects one `:local-storage` key, which means multiple `get`s would overwrite this key.
+
+Cons:
+
+- It is harder to manipulate local-storage values directly from the Dev Console. Probably mainly only Athens devs would have to work around this nested, serialized data structure, but overall probably not a big deal.
 
 ## Consequences
 
-
+How do we upgrade/migrate from `db/filepath` to `db-picker/all-dbs` ?
