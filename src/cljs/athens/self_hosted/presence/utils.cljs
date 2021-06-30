@@ -1,5 +1,6 @@
 (ns athens.self-hosted.presence.utils)
 
+
 ;; colors do not persist across sessions
 ;; colors are not shared between users
 
@@ -19,22 +20,24 @@
    "Demeter"
    "Athena"
    "Apollo"])
-;;"Artemis"
-;;"Ares"
-;;"Aphrodite"
-;;"Hephaestus"
-;;"Hermes"
-;;"Hestia"
-;;"Dionysus"
-;;"Hades"])
+
+
+;; "Artemis"
+;; "Ares"
+;; "Aphrodite"
+;; "Hephaestus"
+;; "Hermes"
+;; "Hestia"
+;; "Dionysus"
+;; "Hades"])
 
 
 (def BLOCK-UIDS
-  ["" ;; on page, not block
-   "6b8c28b09" ;; poseidon
-   "ed9f20b26" ;; way down
-   "8b66a56f3" ;; different page
-   "4135c0ecb" ;; different page on a block
+  ["" ; on page, not block
+   "6b8c28b09" ; poseidon
+   "ed9f20b26" ; way down
+   "8b66a56f3" ; different page
+   "4135c0ecb" ; different page on a block
    ""])
 
 

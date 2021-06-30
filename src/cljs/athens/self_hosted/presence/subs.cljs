@@ -1,6 +1,7 @@
 (ns athens.self-hosted.presence.subs
-  (:require [athens.db :as db]
-            [re-frame.core :as rf]))
+  (:require
+    [athens.db :as db]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-sub
@@ -25,7 +26,7 @@
   :<- [:presence/users-with-page-data]
   :<- [:current-route/name]
   :<- [:current-route/uid]
-  (fn [[users current-route-name current-route-uid ] _]
+  (fn [[users current-route-name current-route-uid] _]
     (case current-route-name
 
       :page
@@ -50,6 +51,7 @@
                         users))
 
       users)))
+
 
 (rf/reg-sub
   :presence/has-presence

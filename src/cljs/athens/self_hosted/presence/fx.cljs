@@ -1,8 +1,9 @@
 (ns athens.self-hosted.presence.fx
-  (:require [athens.db :as db]
-            [athens.self-hosted.client :as client]
-            [athens.common-events :as common-events]
-            [re-frame.core :as rf]))
+  (:require
+    [athens.common-events :as common-events]
+    [athens.db :as db]
+    [athens.self-hosted.client :as client]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-fx

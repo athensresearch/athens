@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.electron :as electron]
+    [athens.self-hosted.presence.views :as presence]
     [athens.style :as style]
     [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
@@ -13,7 +14,6 @@
     [athens.views.blocks.toggle :as toggle]
     [athens.views.blocks.tooltip :as tooltip]
     [athens.views.buttons :as buttons]
-    [athens.self-hosted.presence.views :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]

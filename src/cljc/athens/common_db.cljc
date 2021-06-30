@@ -2,10 +2,13 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.patterns          :as patterns]
-    [clojure.string           :as string]
-    #?(:clj  [datahike.api    :as d]
-       :cljs [datascript.core :as d])))
+    [athens.patterns               :as patterns]
+    ;; TODO only for debugging while WIP
+    #?(:clj [clojure.pprint        :as pprint])
+    [clojure.string                :as string]
+    #?(:clj [clojure.tools.logging :as log])
+    #?(:clj  [datahike.api         :as d]
+       :cljs [datascript.core      :as d])))
 
 
 (defn e-by-av
@@ -149,3 +152,82 @@
                        uid)
         older-sib (get-block db [:block/uid sib-uid])]
     older-sib))
+
+
+(defn sort-block-children
+  [block]
+  (if-let [children (seq (:block/children block))]
+    (assoc block :block/children
+           (vec (sort-by :block/order (map sort-block-children children))))
+    block))
+
+
+(def block-document-pull-vector
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
+
+
+(def node-document-pull-vector
+  (-> block-document-pull-vector
+      (conj :node/title :page/sidebar)))
+
+
+(defn get-page-document
+  "Retrieves whole page 'document', meaning with children."
+  [db eid]
+  (-> db
+      (d/pull node-document-pull-vector eid)
+      sort-block-children))
+
+
+(defn linkmaker
+  "Maintains linked nature of Knowledge Graph.
+
+  Returns Datascript transactions to be transacted in order to maintain links.
+
+  Arguments:
+  - `db`: Current Datascript/Datahike DB value
+  - `input-tx`: Grapth structure modifying TX, analyzed for link updates
+
+  Named after [Keymaker](https://en.wikipedia.org/wiki/Keymaker). "
+  [db input-tx]
+  (try
+    (let [{:keys [db-before
+                  db-after
+                  tx-data
+                  tempids]
+           :as   tx-report} (d/with db input-tx)
+          ;; requirements:
+          ;; *p1*: page created -> check if something refers to it, update refs
+          ;; *p2*: page deleted -> do we need to update `:block/refs`, since we're deleting page entity, probably not
+          ;;                       also check *b6* for all child blocks
+          ;; *p3*: page rename -> find references to old page title, update blocks with new title, update refs
+          ;;                      also check if something refers to new title already, update refs
+          ;; *b1*: block has new page ref -> update page refs
+          ;; *b2*: block doesn't have page ref anymore -> update page refs
+          ;; *b3*: block has new block ref -> update target block refs
+          ;; *b4*: block doesn't have block ref anymore -> update target block refs
+          ;; *b5*: block created -> check *b1* & *b3*
+          ;; *b6*: block deleted -> check *b2* & *b4*
+
+          ;; *b1*
+          new-blocks->strings (->> tx-data
+                                   (filter (fn [[_eid attr _value _tx added?]]
+                                             (and added?
+                                                  (= :block/string attr))))
+                                   (reduce (fn [acc [eid _attr value _tx _added?]]
+                                             (assoc acc eid value))
+                                           {}))]
+      (println "linkmaker: new-blocks->strings" (pr-str new-blocks->strings))
+      ;; TODO remove pprint when done building Linkmaker
+      #?(:clj ; can't print `tx-report` from Datascript (it's before & after are printed literally)
+         (println "linkmaker: tx-report:" (with-out-str (pprint/pprint tx-report))))
+      ;; TODO for new behave like identity
+      input-tx)
+    (catch #?(:cljs js/Error
+              :clj Exception) e
+      #?(:cljs (do
+                 (js/alert (str "Software failure, sorry. Please let us know about it.\n"
+                                (str e)))
+                 (js/console.error "Linkmaker failure." e))
+         :clj (log/error "Linkmaker failure." e)))))
+

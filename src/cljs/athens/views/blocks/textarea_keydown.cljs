@@ -371,10 +371,15 @@
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [:selected/items])
-        editing-uid                    @(subscribe [:editing/uid])]
+        editing-uid                    @(subscribe [:editing/uid])
+        current-root-uid               @(subscribe [:current-route/uid])
+        [_ embed-id]                   (db/uid-and-embed-id editing-uid)]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent editing-uid d-key-down])
+        (dispatch [:unindent {:uid              editing-uid
+                              :d-key-down       d-key-down
+                              :context-root-uid current-root-uid
+                              :embed-id         embed-id}])
         (dispatch [:indent
                    {:uid        editing-uid
                     :d-key-down d-key-down}])))))

@@ -102,6 +102,19 @@
 ;;   - block events
 ;;     NOTE: `new-uid` is always passed from the caller,
 ;;           it would be safer to generate it during resolution
+(defn build-block-save-event
+  "Builds `:datascript/block-save` event with:
+  - `uid`: `:block/uid` of block to save
+  - `new-string`: new value for `:block/string`"
+  [last-tx uid new-string]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/block-save
+     :event/args    {:uid        uid
+                     :new-string new-string}}))
+
+
 (defn build-new-block-event
   "Builds `:datascript/new-block` event with:
   - `parent-eid`: `:db/id` of parent node
@@ -201,6 +214,18 @@
      :event/type    :datascript/indent
      :event/args    {:uid   uid
                      :value value}}))
+
+(defn build-bump-up-event
+  "Builds `:datascript/bump-up` event with:
+  - `uid`: `:block/uid` of trigerring block
+  - `new-uid`: new `:block/uid`"
+  [last-tx uid new-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/bump-up
+     :event/args    {:uid     uid
+                     :new-uid new-uid}}))
 
 
 ;; - presence events

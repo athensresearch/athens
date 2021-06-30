@@ -1,6 +1,7 @@
 (ns athens.self-hosted.presence.events
-  (:require [re-frame.core :as rf]
-            [athens.self-hosted.presence.utils :as utils]))
+  (:require
+    [athens.self-hosted.presence.utils :as utils]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-event-db

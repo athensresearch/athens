@@ -13,6 +13,7 @@
   #{:datascript/paste-verbatim
     :datascript/create-page
     :datascript/delete-page
+    :datascript/block-save
     :datascript/new-block
     :datascript/open-block-add-child
     :datascript/add-child

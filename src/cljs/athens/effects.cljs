@@ -1,5 +1,6 @@
 (ns athens.effects
   (:require
+    [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.config               :as config]
     [athens.datsync-utils        :as dat-s]
@@ -270,6 +271,10 @@
 (rf/reg-fx
   :transact!
   (fn [tx-data]
+    ;; 🎶 Sia "Cheap Thrills"
+    (let [txs (common-db/linkmaker @db/dsdb tx-data)]
+      (js/console.debug ":transact! after linkmaker" (pr-str txs)))
+    ;; TODO: remove when linkmaker is doing it's job
     (walk-transact tx-data)))
 
 
@@ -436,3 +441,7 @@
         (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))
 
 
+(rf/reg-fx
+  :invoke-callback
+  (fn [callback]
+    (callback)))

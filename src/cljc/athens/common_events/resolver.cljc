@@ -72,6 +72,18 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/block-save
+  [_db {:event/keys [args]}]
+  (let [{:keys [uid
+                new-string]} args
+        new-block-string     {:db/id        [:block/uid uid]
+                              :block/string new-string}
+        tx-data              [new-block-string]]
+    (println ":datascript/block-save" (pr-str args)
+             "=>" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/new-block
   [db {:event/keys [args]}]
   (let [{:keys [parent-eid
@@ -227,6 +239,28 @@
                                      :block/children reindex-grandpa}
         tx-data                     [retract new-parent new-grandpa]]
     (println "resolver :datascript/unindent tx-data" (pr-str tx-data))
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/bump-up
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/bump-up args" (pr-str args))
+  (let [{:keys [uid
+                new-uid]}          args
+        {block-order :block/order} (common-db/get-block db [:block/uid uid])
+        {parent-eid :db/id}        (common-db/get-parent db [:block/uid uid])
+        new-block                  {:db/id        -1
+                                    :block/order  block-order
+                                    :block/uid    new-uid
+                                    :block/open   true
+                                    :block/string ""}
+        reindex                    (concat [new-block]
+                                           (common-db/inc-after db
+                                                                parent-eid
+                                                                (dec block-order)))
+        tx-data                    [{:db/id          parent-eid
+                                     :block/children reindex}]]
+    (println "resolver :datascript/bump-up tx-data" (pr-str tx-data))
     tx-data))
 
 
