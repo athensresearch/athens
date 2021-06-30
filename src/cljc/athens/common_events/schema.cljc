@@ -18,7 +18,8 @@
    :datascript/split-block
    :datascript/split-block-to-children
    :datascript/unindent
-   :datascript/paste-verbatim])
+   :datascript/paste-verbatim
+   :datascript/indent])
 
 
 (def event-common
@@ -93,6 +94,14 @@
      [:value string?]
      [:index int?]
      [:new-uid string?]]]])
+
+
+(def datascript-indent
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:value string?]]]])
 
 
 (def datascript-unindent

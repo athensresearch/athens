@@ -20,8 +20,9 @@
     :datascript/split-block
     :datascript/split-block-to-children
     :datascript/unindent
+    :datascript/indent})
     ;; TODO: all the events
-    })
+
 
 
 (defn transact!

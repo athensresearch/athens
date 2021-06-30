@@ -380,7 +380,9 @@
                               :d-key-down       d-key-down
                               :context-root-uid current-root-uid
                               :embed-id         embed-id}])
-        (dispatch [:indent editing-uid d-key-down])))))
+        (dispatch [:indent
+                   {:uid        editing-uid
+                    :d-key-down d-key-down}])))))
 
 
 (defn handle-escape

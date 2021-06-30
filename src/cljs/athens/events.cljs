@@ -1155,37 +1155,28 @@
     (enter rfdb uid d-event)))
 
 
-(defn indent
-  "When indenting a single block:
-  - retract block from parent
-  - make block the last child of older sibling
-  - reindex parent
-  Only indent a block if it is not the zeroth block (first child).
-
-  Uses `value` to update block/string as well. Otherwise, if user changes block string and indents, the local string
-  is reset to original value, since it has not been unfocused yet (which is currently the transaction that updates the string)."
-  [uid d-key-down]
-  (let [{:keys [value start end]} d-key-down
-        [o-uid _embed-id] (db/uid-and-embed-id uid)
-        block             (db/get-block [:block/uid o-uid])
-        block-zero?       (zero? (:block/order block))]
-    (when-not block-zero?
-      (let [parent        (db/get-parent [:block/uid o-uid])
-            older-sib     (db/get-older-sib o-uid)
-            new-block     {:db/id (:db/id block) :block/order (count (:block/children older-sib)) :block/string value}
-            reindex       (dec-after (:db/id parent) (:block/order block))
-            retract       [:db/retract (:db/id parent) :block/children (:db/id block)]
-            new-older-sib {:db/id (:db/id older-sib) :block/children [new-block] :block/open true}
-            new-parent    {:db/id (:db/id parent) :block/children reindex}
-            tx-data       [retract new-older-sib new-parent]]
-        {:dispatch            [:transact tx-data]
-         :set-cursor-position [uid start end]}))))
-
-
 (reg-event-fx
   :indent
-  (fn [_ [_ uid d-event]]
-    (indent uid d-event)))
+  (fn [_ [_ {:keys [uid d-key-down] :as args}]]
+    (js/console.debug ":indent" args)
+    (let [local?                    (not (client/open?))
+          block                     (common-db/get-block @db/dsdb [:block/uid uid])
+          block-zero?               (zero? (:block/order block))
+          {:keys [value start end]} d-key-down]
+      (js/console.debug ":indent local?" local?
+                        ", block-zero?" block-zero?)
+      (when-not block-zero?
+        (if local?
+          (let [indent-event (common-events/build-indent-event -1
+                                                               uid
+                                                               value)
+                tx           (resolver/resolve-event-to-tx @db/dsdb indent-event)]
+            (js/console.debug ":indent tx:" (pr-str tx))
+            {:fx [[:dispatch-n [[:transact tx]]]]})
+          {:fx [[:dispatch [:remote/indent (merge (select-keys args [:uid])
+                                                  {:start start
+                                                   :end   end
+                                                   :value value})]]]})))))
 
 
 (defn indent-multi

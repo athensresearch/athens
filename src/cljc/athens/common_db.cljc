@@ -136,6 +136,24 @@
        (get-block db)))
 
 
+(defn get-older-sib
+  [db uid]
+  (let [sib-uid   (d/q '[:find ?uid .
+                         :in $ % ?target-uid
+                         :where
+                         (siblings ?target-uid ?sib)
+                         [?target-e :block/uid ?target-uid]
+                         [?target-e :block/order ?target-o]
+                         [(dec ?target-o) ?prev-sib-order]
+                         [?sib :block/order ?prev-sib-order]
+                         [?sib :block/uid ?uid]]
+                       db
+                       rules
+                       uid)
+        older-sib (get-block db [:block/uid sib-uid])]
+    older-sib))
+
+
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -212,3 +230,4 @@
                                 (str e)))
                  (js/console.error "Linkmaker failure." e))
          :clj (log/error "Linkmaker failure." e)))))
+

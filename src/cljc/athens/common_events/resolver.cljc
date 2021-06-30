@@ -192,6 +192,30 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/indent
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/indent args" (pr-str args))
+  (let [{:keys [uid
+                value]}            args
+        {block-eid :db/id
+         block-order :block/order} (common-db/get-block db [:block/uid uid])
+        {parent-eid :db/id}        (common-db/get-parent db [:block/uid uid])
+        older-sib                  (common-db/get-older-sib db uid)
+        new-block                  {:db/id block-eid
+                                    :block/order (count (:block/children older-sib))
+                                    :block/string value}
+        reindex                    (common-db/dec-after db parent-eid block-order)
+        retract                    [:db/retract parent-eid
+                                    :block/children block-eid]
+        new-older-sib              {:db/id (:db/id older-sib)
+                                    :block/children [new-block]
+                                    :block/open true}
+        new-parent                 {:db/id parent-eid :block/children reindex}
+        tx-data                    [retract new-older-sib new-parent]]
+    (println "resolver :datascript/indent tx-data" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/unindent
   [db {:event/keys [args]}]
   (println "resolver :datascript/unindent args" (pr-str args))

@@ -69,9 +69,9 @@
                                              :block/uid child-2-uid)
               children (d/q query-children @@fixture/connection page-1-eid)]
           (t/is (seq children))
-          (t/is (= #{[child-1-eid] [child-2-eid]} children))))))
+          (t/is (= #{[child-1-eid] [child-2-eid]} children)))))))
   ;; TODO more test cases for `:datascript/new-block` event
-  )
+
 
 
 (t/deftest split-block-tests
@@ -146,9 +146,9 @@
           (t/is (= {:block/uid    child-1-uid
                     :block/order  0
                     :block/string (subs child-1-init-value 0 2)}
-                   child-1))))))
+                   child-1)))))))
   ;; TODO: test case of moving page links and block refs
-  )
+
 
 
 (t/deftest add-child-tests
@@ -275,9 +275,9 @@
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
           (t/is (= "abc" (:block/string parent-block)))
-          (t/is (= "123" (:block/string child-2-block)))))))
+          (t/is (= "123" (:block/string child-2-block))))))))
   ;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
-  )
+
 
 
 (t/deftest unindent-test
@@ -315,7 +315,42 @@
           (t/is (= 1 (:block/order child-1-block))))))))
 
 
-(t/deftest bump-up-test
+(t/deftest indent-test
+  (t/testing "Just indent already"
+    (let [parent-uid  "test-parent-1-uid"
+          child-1-uid "test-child-1-1-uid"
+          child-text  "abc123"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children [{:db/id          -2
+                                          :block/uid      parent-uid
+                                          :block/string   ""
+                                          :block/order    0}
+                                         {:db/id          -3
+                                          :block/uid      child-1-uid
+                                          :block/string   child-text
+                                          :block/order    1
+                                          :block/children []}]}]]
+      (d/transact @fixture/connection setup-txs)
+      (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+            child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+            indent-event   (common-events/build-indent-event -1
+                                                              child-1-uid
+                                                              child-text)
+            indent-txs   (resolver/resolve-event-to-tx @@fixture/connection indent-event)]
+        (t/is (= 0 (-> parent-block :block/children count)))
+        (t/is (= 1 (:block/order child-1-block)))
+
+
+        (d/transact @fixture/connection indent-txs)
+        (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])]
+          (t/is (= 1 (-> parent-block :block/children count)))
+          (t/is (= [(select-keys child-1-block [:block/uid :block/order])]
+                   (:block/children parent-block))))))))
+
+
   (t/testing "Testing bump up simple case"
     (let [parent-uid   "test-parent-1-uid"
           child-1-uid  "test-child-1-uid"
