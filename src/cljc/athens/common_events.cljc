@@ -232,6 +232,15 @@
                      :value value}}))
 
 
+(defn build-page-remove-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-remove-shortcut
+     :event/args    {:uid uid}}))
+
+
 (defn build-bump-up-event
   "Builds `:datascript/bump-up` event with:
   - `uid`: `:block/uid` of trigerring block
@@ -243,15 +252,6 @@
      :event/type    :datascript/bump-up
      :event/args    {:uid     uid
                      :new-uid new-uid}}))
-
-
-(defn build-page-remove-shortcut
-  [last-tx uid]
-  (let [event-id (gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/page-remove-shortcut
-     :event/args    {:uid uid}}))
 
 
 ;; - presence events
