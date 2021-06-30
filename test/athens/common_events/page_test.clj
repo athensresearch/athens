@@ -110,123 +110,87 @@
 
 
 (test/deftest page-shortcut
-  (test/testing "Add page shortcut"
-    (let [test-uid           "test-page-uid-1"
-          test-title         "test page title 1"
-          create-page-event  (common-events/build-page-create-event -1 test-uid test-title)
-          create-page-txs    (resolver/resolve-event-to-tx @@fixture/connection
-                                                           create-page-event)
-          add-shortcut-event (common-events/build-page-add-shortcut -1 test-uid)
-          add-shortcut-txs   (resolver/resolve-event-to-tx @@fixture/connection add-shortcut-event)]
+  (let [test-uid-0    "0"
+        test-title-0  "Welcome"
+        test-uid-1    "test-uid-1"
+        test-title-1  "test-title-1"
+        test-uid-2    "test-uid-2"
+        test-title-2  "test-title-2"
+        test-uid-3    "test-uid-3"
+        test-title-3  "test-title-3"]
 
-      ;; create a new page
-      (d/transact @fixture/connection create-page-txs)
-      ;; add the new page to the left sidebar
-      (d/transact @fixture/connection add-shortcut-txs)
+    ;; create new pages   
+    (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
 
-      (test/is
-        (not-empty (d/q '[:find (pull ?e [:page/sidebar])
-                          :in $ ?uid
-                          :where
-                          [?e :block/uid ?uid]]
-                        @@fixture/connection test-uid)))))
+    (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
 
-  (test/testing "Remove page shortcut"
-    (let [test-uid              "test-page-uid-1"
-          test-title            "test page title 1"
-          create-page-event     (common-events/build-page-create-event -1 test-uid test-title)
-          create-page-txs       (resolver/resolve-event-to-tx @@fixture/connection
-                                                              create-page-event)
-          add-shortcut-event    (common-events/build-page-add-shortcut -1 test-uid)
-          add-shortcut-txs      (resolver/resolve-event-to-tx @@fixture/connection add-shortcut-event)
-          remove-shortcut-event (common-events/build-page-remove-shortcut -1 test-uid)
-          remove-shortcut-txs   (resolver/resolve-event-to-tx @@fixture/connection remove-shortcut-event)]
+    (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
 
-      ;; create a new page
-      (d/transact @fixture/connection create-page-txs)
-      ;; add the new page to the left sidebar
-      (d/transact @fixture/connection add-shortcut-txs)
-      ;; remove the new page from the left sidebar
-      (d/transact @fixture/connection remove-shortcut-txs)
+    (test/testing "Add page shortcut"
 
-      (test/is
-        (nil? (ffirst (d/q '[:find (pull ?e [:page/sidebar])
-                             :in $ ?uid
-                             :where
-                             [?e :block/uid ?uid]]
-                           @@fixture/connection test-uid))))))
-
-  (test/testing "Reindex page shortcut"
-    (let [test-uid-1   "test-page-uid-1"
-          test-title-1 "test page title 1"
-          test-uid-2   "test-page-uid-2"
-          test-title-2 "test page title 2"
-          test-uid-3   "test-page-uid-3"
-          test-title-3 "test page title 3"]
-
-      ;; create new pages   
-      (->> (common-events/build-page-create-event -1 test-uid-1 test-title-1)
+      (->> (common-events/build-page-add-shortcut -1 test-uid-1)
            (resolver/resolve-event-to-tx @@fixture/connection)
            (d/transact @fixture/connection))
 
-      (->> (common-events/build-page-create-event -1 test-uid-2 test-title-2)
+      (->> (common-events/build-page-add-shortcut -1 test-uid-2)
            (resolver/resolve-event-to-tx @@fixture/connection)
            (d/transact @fixture/connection))
 
-      (->> (common-events/build-page-create-event -1 test-uid-3 test-title-3)
+      (->> (common-events/build-page-add-shortcut -1 test-uid-3)
            (resolver/resolve-event-to-tx @@fixture/connection)
            (d/transact @fixture/connection))
 
-      (test/testing "Reindex page shortcut after adding page shortcut"
-        ;; add page 1 to the left sidebar and reindex
-        (->> (common-events/build-page-add-shortcut -1 test-uid-1)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+      (let [page-sidebar (->> (d/q '[:find (pull ?e [*])
+                                     :where
+                                     [?e :page/sidebar]]
+                                   @@fixture/connection)
+                              (sort-by (comp :page/sidebar first)))]
 
-        (->> (common-events/build-page-reindex-left-sidebar -1)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+        (test/is
+          (->> (map (comp :block/uid first) page-sidebar)
+               (every? #{test-uid-0 test-uid-1 test-uid-2 test-uid-3}))
+          "check if every :block/uid (incl. the :block/uid of Welcome page) is in page-sidebar")
 
-        ;; add page 2 to the left sidebar and reindex
-        (->> (common-events/build-page-add-shortcut -1 test-uid-2)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+        (test/is
+          (->> (map-indexed (fn [i title]
+                              (= title (-> page-sidebar
+                                           (nth i)
+                                           first
+                                           :node/title)))
+                            [test-title-0 test-title-1 test-title-2 test-title-3])
+               (every? true?))
+          "check if the page shortcuts are ordered based on when a page is added")))
 
-        (->> (common-events/build-page-reindex-left-sidebar -1)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
 
-        ;; add page 3 to the left sidebar and reindex
-        (->> (common-events/build-page-add-shortcut -1 test-uid-3)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+    (test/testing "Remove page shortcut"
 
-        (->> (common-events/build-page-reindex-left-sidebar -1)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
+      (->> (common-events/build-page-remove-shortcut -1 test-uid-1)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection))
 
-        (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
-                                       :where
-                                       [?e :page/sidebar _]]
-                                     @@fixture/connection)
-                                (sort-by (comp :page/sidebar first))
-                                (into []))]
-          (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
-          (test/is (= test-uid-2 (get-in page-sidebar [2 0 :block/uid])) "test-uid-1 should be in index 2")
-          (test/is (= test-uid-3 (get-in page-sidebar [3 0 :block/uid])) "test-uid-1 should be in index 3")))
+      (let [page-sidebar (->> (d/q '[:find (pull ?e [*])
+                                     :where
+                                     [?e :page/sidebar]]
+                                   @@fixture/connection)
+                              (sort-by (comp :page/sidebar first)))]
+        (test/is
+          (->> (map (comp :block/uid first) page-sidebar)
+               (not-any? #{test-uid-1}))
+          "check if the page is removed from the shortcuts")
 
-      (test/testing "Reindex page shortcut after removing a shortcut"
-        (->> (common-events/build-page-remove-shortcut -1 test-uid-2)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
-
-        (let [page-sidebar (->> (d/q '[:find (pull ?e [:page/sidebar :block/uid])
-                                       :where
-                                       [?e :page/sidebar _]]
-                                     @@fixture/connection)
-                                (sort-by (comp :page/sidebar first))
-                                (into []))]
-          (test/is (= test-uid-1 (get-in page-sidebar [1 0 :block/uid])) "test-uid-1 should be in index 1")
-          (test/is (= test-uid-3 (get-in page-sidebar [2 0 :block/uid])) "test-uid-3 should be in index 2")
-          (test/is (empty? (filter #(= (comp :block/uid first %) test-uid-2) page-sidebar)) "test-uid-2 should not be in the vector"))))))
+        (test/is
+          (->> (map-indexed (fn [i title]
+                              (= title (-> page-sidebar
+                                           (nth i)
+                                           first
+                                           :node/title)))
+                            [test-title-0 test-title-2 test-title-3])
+               (every? true?))
+          "check if the page shortcuts are still ordered after removing a page")))))
 

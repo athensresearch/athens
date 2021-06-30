@@ -284,31 +284,32 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/page-reindex-left-sidebar
-  [db _]
-  (let [tx-data            (->> (d/q '[:find [(pull ?e [*]) ...]
-                                       :where
-                                       [?e :page/sidebar _]]
-                                     db)
-                                (sort-by :page/sidebar)
-                                (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                vec)]
-    tx-data))
-
-
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
   [db {:event/keys [args]}]
-  (let [{:keys [uid]}      args
-        sidebar-ents-count (or (d/q '[:find (count ?e) .
-                                      :where
-                                      [?e :page/sidebar _]]
-                                    db) 1)
-        tx-data            [{:block/uid uid :page/sidebar sidebar-ents-count}]]
+  (let [{:keys [uid]}        args
+        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
+                                         :where
+                                         [?e :page/sidebar _]]
+                                       db)
+                                  (sort-by :page/sidebar)
+                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                  vec)
+        add-shortcut-tx      {:block/uid uid :page/sidebar (or (count reindex-shortcut-txs) 1)}
+        tx-data              (conj reindex-shortcut-txs add-shortcut-tx)]
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/page-remove-shortcut
-  [_ {:event/keys [args]}]
-  (let [{:keys [uid]}      args
-        tx-data            [[:db/retract [:block/uid uid] :page/sidebar]]]
+  [db {:event/keys [args]}]
+  (let [{:keys [uid]}        args
+        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
+                                         :where
+                                         [?e :page/sidebar _]]
+                                       db)
+                                  (remove #(= uid (:block/uid %)))
+                                  (sort-by :page/sidebar)
+                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                  vec)
+        remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
+        tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
     tx-data))
