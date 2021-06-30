@@ -1172,7 +1172,8 @@
                                                                value)
                 tx           (resolver/resolve-event-to-tx @db/dsdb indent-event)]
             (js/console.debug ":indent tx:" (pr-str tx))
-            {:fx [[:dispatch-n [[:transact tx]]]]})
+            {:fx [[:dispatch            [:transact tx]
+                   :set-cursor-position [uid start end]]]})
           {:fx [[:dispatch [:remote/indent (merge (select-keys args [:uid])
                                                   {:start start
                                                    :end   end
