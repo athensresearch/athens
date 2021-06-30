@@ -121,20 +121,20 @@
 
     ;; create new pages
     (run!
-     #(->> (common-events/build-page-create-event -1 (first %) (second %))
-           (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection))
-     [[test-uid-1 test-title-1]
-      [test-uid-2 test-title-2]
-      [test-uid-3 test-title-3]])
+      #(->> (common-events/build-page-create-event -1 (first %) (second %))
+            (resolver/resolve-event-to-tx @@fixture/connection)
+            (d/transact @fixture/connection))
+      [[test-uid-1 test-title-1]
+       [test-uid-2 test-title-2]
+       [test-uid-3 test-title-3]])
 
     (test/testing "Add page shortcut"
 
       (run!
-       #(->> (common-events/build-page-add-shortcut -1 %)
-             (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection))
-       [test-uid-0 test-uid-1 test-uid-2 test-uid-3])
+        #(->> (common-events/build-page-add-shortcut -1 %)
+              (resolver/resolve-event-to-tx @@fixture/connection)
+              (d/transact @fixture/connection))
+        [test-uid-0 test-uid-1 test-uid-2 test-uid-3])
 
       (let [page-sidebar (->> (d/q '[:find (pull ?e [*])
                                      :where
@@ -143,19 +143,19 @@
                               (sort-by (comp :page/sidebar first)))]
 
         (test/is
-         (->> (map (comp :block/uid first) page-sidebar)
-              (every? #{test-uid-0 test-uid-1 test-uid-2 test-uid-3}))
-         "check if every :block/uid (incl. the :block/uid of Welcome page) is in page-sidebar")
+          (->> (map (comp :block/uid first) page-sidebar)
+               (every? #{test-uid-0 test-uid-1 test-uid-2 test-uid-3}))
+          "check if every :block/uid (incl. the :block/uid of Welcome page) is in page-sidebar")
 
         (test/is
-         (->> (map-indexed (fn [i title]
-                             (= title (-> page-sidebar
-                                          (nth i)
-                                          first
-                                          :node/title)))
-                           [test-title-0 test-title-1 test-title-2 test-title-3])
-              (every? true?))
-         "check if the page shortcuts are ordered based on when a page is added")))
+          (->> (map-indexed (fn [i title]
+                              (= title (-> page-sidebar
+                                           (nth i)
+                                           first
+                                           :node/title)))
+                            [test-title-0 test-title-1 test-title-2 test-title-3])
+               (every? true?))
+          "check if the page shortcuts are ordered based on when a page is added")))
 
 
     (test/testing "Remove page shortcut"
