@@ -1,6 +1,6 @@
-# x. Record architecture decisions
+# x. Local Storage
 
-Date: 2021-04-04
+Date: 2021-07-01
 
 ## Status
 
@@ -16,7 +16,7 @@ Problems with local-storage state:
 - We should be using the same local-storage API for getting and setting, but we have specific local-storage events and effects, e.g. `:local-storage/`
 - Sometimes we get and set data to localStorage API, bypassing re-frame entirely. This happens mainly in `settings`, where we read and write to localStorage for username, email, monitoring, and backup time.
 
-### Local Storage State
+### Examples
 
 * settings
     * backup timer
@@ -25,13 +25,12 @@ Problems with local-storage state:
       * OpenCollective email
       * username (used by RTC)
 * Recently opened databases
-    * Most recently opened (can now be derived from Entire List)
     * Entire List
+    * Most recently opened (can now be derived from Entire List)
 * appearance
   * dark/light mode
   * screen width (not merged yet)
     
-
 ### Existing Solutions
 
 - [blulegenes](shttps://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/effects.cljs?L15-29&subtree=true)
