@@ -48,7 +48,7 @@
     :db/valueType   :db.type/boolean
     :db/cardinality :db.cardinality/one}
    {:db/ident       :block/order
-    :db/valueType   :db.type/long
+    :db/valueType   :db.type/number
     :db/cardinality :db.cardinality/one}
    {:db/ident       :from-history
     :db/valueType   :db.type/boolean

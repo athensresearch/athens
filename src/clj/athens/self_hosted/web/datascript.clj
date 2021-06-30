@@ -9,6 +9,8 @@
       ExceptionInfo)))
 
 
+;; TODO: all the events
+
 (def supported-event-types
   #{:datascript/paste-verbatim
     :datascript/create-page
@@ -21,8 +23,6 @@
     :datascript/split-block-to-children
     :datascript/unindent
     :datascript/indent})
-    ;; TODO: all the events
-
 
 
 (defn transact!

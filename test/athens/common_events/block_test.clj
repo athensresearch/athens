@@ -323,22 +323,22 @@
           setup-txs   [{:db/id          -1
                         :node/title     "test page"
                         :block/uid      "page-uid"
-                        :block/children [{:db/id          -2
-                                          :block/uid      parent-uid
-                                          :block/string   ""
-                                          :block/order    0}
+                        :block/children [{:db/id        -2
+                                          :block/uid    parent-uid
+                                          :block/string ""
+                                          :block/order  0}
                                          {:db/id          -3
                                           :block/uid      child-1-uid
                                           :block/string   child-text
                                           :block/order    1
                                           :block/children []}]}]]
       (d/transact @fixture/connection setup-txs)
-      (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
-            child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
-            indent-event   (common-events/build-indent-event -1
-                                                              child-1-uid
-                                                              child-text)
-            indent-txs   (resolver/resolve-event-to-tx @@fixture/connection indent-event)]
+      (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+            child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+            indent-event  (common-events/build-indent-event -1
+                                                            child-1-uid
+                                                            child-text)
+            indent-txs    (resolver/resolve-event-to-tx @@fixture/connection indent-event)]
         (t/is (= 0 (-> parent-block :block/children count)))
         (t/is (= 1 (:block/order child-1-block)))
 
@@ -351,6 +351,7 @@
                    (:block/children parent-block))))))))
 
 
+(t/deftest bump-up-test
   (t/testing "Testing bump up simple case"
     (let [parent-uid   "test-parent-1-uid"
           child-1-uid  "test-child-1-uid"

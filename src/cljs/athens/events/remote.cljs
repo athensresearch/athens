@@ -388,6 +388,7 @@
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 
+
 (rf/reg-event-fx
   :remote/followup-indent
   (fn [{db :db} [_ {:keys [event-id start end] :as args}]]

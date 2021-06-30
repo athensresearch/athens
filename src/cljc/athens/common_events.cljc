@@ -215,6 +215,7 @@
      :event/args    {:uid   uid
                      :value value}}))
 
+
 (defn build-bump-up-event
   "Builds `:datascript/bump-up` event with:
   - `uid`: `:block/uid` of trigerring block
