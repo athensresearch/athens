@@ -6,16 +6,42 @@
 (rf/reg-cofx
   :local-storage/get
   (fn [cofx key]
-    (assoc cofx :local-storage (or
-                                 (js/localStorage.getItem (str key))
-                                 (js/localStorage.getItem key)))))
+    (cond
+      (keyword? key)
+      (assoc cofx :local-storage (-> key
+                                     str
+                                     js/localStorage.getItem
+                                     cljs.reader/read-string))
+
+      (string? key)
+      (assoc cofx :local-storage (-> key
+                                     js/localStorage.getItem))
+
+      :else (js/alert (js/Error. "local-storage/get failed")))))
 
 
+
+(defn ls-key
+  [key]
+  (str key))
+
+
+(defn ls-value
+  [value]
+  (if (string? value)
+    value
+    (pr-str value)))
+
+
+;; Key: Expects a keyword or string. Try to pass in keyword, but supporting
+;; "key" -> "key" but :ns/key -> ":ns/key"
+;; Value
 (rf/reg-fx
   :local-storage/set
   (fn [[key value]]
-    (let [key (str key)]
+    (let [key (ls-key key)
+          value (ls-value value)]
       (if (some? value)
-        (.setItem js/localStorage key #_(t/write (t/writer :json-verbose) value))
+        (.setItem js/localStorage key value)
         ;; Specifying `nil` as value removes the key instead.
         (.removeItem js/localStorage key)))))

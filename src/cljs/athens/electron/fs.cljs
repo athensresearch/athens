@@ -93,14 +93,13 @@
 (rf/reg-event-fx
   :fs/read-and-watch
   (fn [{:keys [db]} [_ db-filepath]]
-    (let [read-db (.readFileSync fs db-filepath)
-          db (dt/read-transit-str read-db)]
-      {:db (assoc db :db/filepath db-filepath)
-       :local-storage/set [:db/filepath db-filepath]
-       ;:local-storage/set! ["db/filepath" db-filepath]
-       :dispatch-n [#_[:db/update-filepath db-filepath]
-                    [:reset-conn athens-datoms/datoms]
-                    [:db-picker/add-new-db db-filepath]]})))
+    (let [datoms (-> (.readFileSync fs db-filepath)
+                     dt/read-transit-str)]
+      {:db                (assoc db :db/filepath db-filepath)
+       :local-storage/set [:db/filepath (pr-str db-filepath)]
+       :dispatch-n        [#_[:db/update-filepath db-filepath]
+                           [:reset-conn datoms]
+                           [:db-picker/add-new-db db-filepath]]})))
 
 
 (rf/reg-event-db

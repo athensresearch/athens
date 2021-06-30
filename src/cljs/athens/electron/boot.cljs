@@ -24,8 +24,7 @@
 
 (rf/reg-event-fx
   :boot/desktop
-  [#_(rf/inject-cofx :local-storage/get :athens/state)
-   (rf/inject-cofx :local-storage/get "db/filepath")]
+  [(rf/inject-cofx :local-storage/get "db/filepath")]
   (fn [cofx _]
     (let [{db-filepath :local-storage} cofx
           default-db-path (utils/default-db-dir-path)
@@ -33,41 +32,40 @@
 
           first-event (cond
 
-                        ;; No filepath found in local storage, but an existing db at default db location suggests a dev chromium is running with a different local storage. Use default filepath
+                        ;; Filepath not found in local storage, but db found at default default-db-path
+                        ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
                         (and (nil? db-filepath)
                              db-exists-on-fs?)
                         [:db/read-and-watch default-db-path]
 
-                        ;; Filepath not found in local storage and nothing found at default db location. Create new db at default location, reset-conn, and add to db-list
+                        ;; Filepath not found in local storage, no db found at default-db-location
+                        ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
                         (and (nil? db-filepath)
                              (not db-exists-on-fs?))
                         [:fs/create-and-watch default-db-path]
 
-                        ;; Filepath found in local storage and on filesystem. Watch filepath, load db, and add to local-storage list.
-                        ;; Actually this is redundant. We don't need db/filepath if we have db-picker/all-dbs
+                        ;; Filepath found in local storage and on filesystem.
+                        ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
                         (and db-filepath
                              db-exists-on-fs?)
                         [:fs/read-and-watch db-filepath]
 
                         ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
-                        :else
-                        (and db-filepath
-                             (not db-exists-on-fs?))
-                        [:fs/open-dialog])]
+                        :else [:fs/open-dialog])]
 
 
-      (cond
-        ;; No database path found in localStorage. Creating new one
-        (nil? filepath) (rf/dispatch [:fs/create-new-db])
-        ;; Database found in local storage and filesystem:
-        (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                        db (dt/read-transit-str read-db)]
-                                    (rf/dispatch [:fs/watch filepath])
-                                    (rf/dispatch [:reset-conn db])
-                                    (rf/dispatch [:local-storage/create-db-picker-list]))
-        :else (rf/dispatch [:fs/open-dialog]))
+      #_(cond
+          ;; No database path found in localStorage. Creating new one
+          (nil? filepath) (rf/dispatch [:fs/create-new-db])
+          ;; Database found in local storage and filesystem:
+          (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
+                                          db (dt/read-transit-str read-db)]
+                                      (rf/dispatch [:fs/watch filepath])
+                                      (rf/dispatch [:reset-conn db])
+                                      (rf/dispatch [:local-storage/create-db-picker-list]))
+          :else (rf/dispatch [:fs/open-dialog]))
 
-      ;; output => [:reset-conn] OR [:fs/create-new-db]
+      ;; output => [:reset-conn] OR [:fs/create-new-db] OR :local-storage/create-db-picker-list
 
       {:db         db/rfdb
        :async-flow {:first-dispatch first-event
@@ -95,46 +93,46 @@
                                         :dispatch [:bind-win-listeners]}
 
 
-                                     #_{:when        :seen-any-of?
-                                        :events      [:fs/create-new-db :reset-conn]
-                                        ;; if schema is nil, update to 1 and reparse all block/string's for links
-                                        :dispatch-fn (fn [_]
-                                                       (let [schemas (d/q '[:find ?e ?v
-                                                                            :where [?e :schema/version ?v]]
-                                                                          @db/dsdb)
-                                                             schema-cnt (count schemas)]
-                                                         (cond
-                                                           (= 0 schema-cnt) (let [linked-ref-pattern (patterns/linked ".*")
-                                                                                  blocks-with-plain-links (d/q '[:find ?u ?s
-                                                                                                                 :keys block/uid block/string
-                                                                                                                 :in $ ?pattern
-                                                                                                                 :where
-                                                                                                                 [?e :block/uid ?u]
-                                                                                                                 [?e :block/string ?s]
-                                                                                                                 [(re-find ?pattern ?s)]]
-                                                                                                               @db/dsdb
-                                                                                                               linked-ref-pattern)
-                                                                                  blocks-orig (map (fn [{:block/keys [uid string]}]
-                                                                                                     {:db/id [:block/uid uid] :block/string string})
-                                                                                                   blocks-with-plain-links)
-                                                                                  blocks-temp (map (fn [{:block/keys [uid]}]
-                                                                                                     {:db/id [:block/uid uid] :block/string ""})
-                                                                                                   blocks-with-plain-links)]
-                                                                              ;; give all blocks empty string - clears refs
-                                                                              ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
-                                                                              ;; update schema version, so this doesn't need to happen again
-                                                                              (rf/dispatch [:transact blocks-temp])
-                                                                              (rf/dispatch [:transact blocks-orig])
-                                                                              (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
-                                                           (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
-                                                                              (case schema-version
-                                                                                1 (prn (str "Schema version " schema-version))
-                                                                                (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
-                                                           (< 1 schema-cnt)
-                                                           (js/alert (js/Error (str "Multiple schema versions: " schemas))))
+                                     {:when        :seen-any-of?
+                                      :events      [:fs/create-new-db :reset-conn]
+                                      ;; if schema is nil, update to 1 and reparse all block/string's for links
+                                      :dispatch-fn (fn [_]
+                                                     (let [schemas (d/q '[:find ?e ?v
+                                                                          :where [?e :schema/version ?v]]
+                                                                        @db/dsdb)
+                                                           schema-cnt (count schemas)]
+                                                       (cond
+                                                         (= 0 schema-cnt) (let [linked-ref-pattern (patterns/linked ".*")
+                                                                                blocks-with-plain-links (d/q '[:find ?u ?s
+                                                                                                               :keys block/uid block/string
+                                                                                                               :in $ ?pattern
+                                                                                                               :where
+                                                                                                               [?e :block/uid ?u]
+                                                                                                               [?e :block/string ?s]
+                                                                                                               [(re-find ?pattern ?s)]]
+                                                                                                             @db/dsdb
+                                                                                                             linked-ref-pattern)
+                                                                                blocks-orig (map (fn [{:block/keys [uid string]}]
+                                                                                                   {:db/id [:block/uid uid] :block/string string})
+                                                                                                 blocks-with-plain-links)
+                                                                                blocks-temp (map (fn [{:block/keys [uid]}]
+                                                                                                   {:db/id [:block/uid uid] :block/string ""})
+                                                                                                 blocks-with-plain-links)]
+                                                                            ;; give all blocks empty string - clears refs
+                                                                            ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
+                                                                            ;; update schema version, so this doesn't need to happen again
+                                                                            (rf/dispatch [:transact blocks-temp])
+                                                                            (rf/dispatch [:transact blocks-orig])
+                                                                            (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
+                                                         (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
+                                                                            (case schema-version
+                                                                              1 (prn (str "Schema version " schema-version))
+                                                                              (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
+                                                         (< 1 schema-cnt)
+                                                         (js/alert (js/Error (str "Multiple schema versions: " schemas))))
 
-                                                         (rf/dispatch [:loading/unset])))
-                                        :halt?       true}]}})))
+                                                       (rf/dispatch [:loading/unset])))
+                                      :halt?       true}]}})))
 
 
 

@@ -53,8 +53,8 @@
               newdb   {:path dbpath
                        :name dbname}
               all-dbs (conj current-db-list newdb)]
-          {:db       (assoc db :db-picker/all-dbs all-dbs)
-           :fx [[:dispatch [:local-storage/set-db-picker-list]]]})))))
+          {:db                (assoc db :db-picker/all-dbs all-dbs)
+           :local-storage/set [:db-picker/all-dbs all-dbs]})))))
 
 
 (rf/reg-event-fx
