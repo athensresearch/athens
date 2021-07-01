@@ -24,6 +24,12 @@
   #?(:clj (subs (.toString (UUID/randomUUID)) 27)
      :cljs (subs (str (random-uuid)) 27)))
 
+(defn between
+  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
+  [s t x]
+  (if (< s t)
+    (and (< s x) (< x t))
+    (and (< t x) (< x s))))
 
 ;; TODO start using this resolution in handlers
 (defmulti resolve-event-to-tx
@@ -353,4 +359,30 @@
                                   vec)
         remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
         tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
+  [db {:event/keys [args]}]
+  (let [{:keys [source-order target-order]}  args
+        source-eid  (d/q '[:find ?e .
+                           :in $ ?source-order
+                           :where [?e :page/sidebar ?source-order]]
+                         db source-order)
+        new-source  {:db/id source-eid :page/sidebar (if (< source-order target-order)
+                                                       (dec target-order)
+                                                       target-order)}
+        inc-or-dec  (if (< source-order target-order) dec inc)
+        tx-data     (->> (d/q '[:find ?shortcut ?new-order
+                                :keys db/id page/sidebar
+                                :in $ ?source-order ?target-order ?between ?inc-or-dec
+                                :where
+                                [?shortcut :page/sidebar ?order]
+                                [(?between ?source-order ?target-order ?order)]
+                                [(?inc-or-dec ?order) ?new-order]]
+                              db source-order (if (< source-order target-order)
+                                                target-order
+                                                (dec target-order))
+                              between inc-or-dec)
+                         (concat [new-source]))]
     tx-data))
