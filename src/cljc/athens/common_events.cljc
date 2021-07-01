@@ -203,8 +203,21 @@
                      :value value}}))
 
 
+(defn build-unindent-multi-event
+  "Builds `:datascript/unindent-multi` event with:
+  - `uids`: `:block/uid` of selected blocks"
+  [last-tx uids f-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unindent-multi
+     :event/args    {:uids   uids
+                     :f-uid  f-uid}}))
+
+
+
 (defn build-indent-event
-  "Builds `: indent` event with:
+  "Builds `: `datascript/indent` event with:
   - `uid`  : `:block/uid` of triggering block
   - `value`: `:block/string` of triggering block"
   [last-tx uid value]
@@ -216,8 +229,8 @@
                      :value value}}))
 
 (defn build-indent-multi-event
-  "Builds `: indent` event with:
-  - `uids`  : `:block/uid` of selected blocks block
+  "Builds `: `:datascript/indent-multi` event with:
+  - `uids`  : `:block/uid` of selected blocks
   - `blocks`:  seq contaning block data of all the selected blocks"
   [last-tx uids blocks]
   (let [event-id (gen-event-id)]

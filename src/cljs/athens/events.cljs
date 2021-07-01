@@ -1188,8 +1188,8 @@
     (let [local?                   (not (client/open?))
           sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids) ;; TODO Is this the best way to do this?
           dsdb                     @db/dsdb
-          same-parent?             (common-db/same-parent? @db/dsdb sanitized-selected-uids)
-          blocks                   (map #(common-db/get-block @db/dsdb [:block/uid %]) sanitized-selected-uids)
+          same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
+          blocks                   (map #(common-db/get-block dsdb [:block/uid %]) sanitized-selected-uids)
           block-zero?              (zero? (:block/order (first blocks)))]
       (when (and same-parent? (not block-zero?))
         (if local?
@@ -1240,57 +1240,35 @@
                                                      :value value})]]]})))))
 
 
-(defn unindent-multi
-  "Do not do anything if root block child or if blocks are not siblings.
-  Otherwise, retract and assert new parent for each block, and reindex parent and grandparent."
-  [uids context-root-uid]
-  (let [[f-uid f-embed-id]    (-> uids first db/uid-and-embed-id)
-        parent                (db/get-parent [:block/uid f-uid])
-        same-parent?          (db/same-parent? uids)
-        ;; when all selected items are from same embed block
-        ;; check if immediate parent is root-embed
-        is-parent-root-embed? (when same-parent?
-                                (some-> "#editable-uid-"
-                                        (str f-uid "-embed-" f-embed-id)
-                                        js/document.querySelector
-                                        (.. (closest ".block-embed"))
-                                        (. -firstChild)
-                                        (.getAttribute "data-uid")
-                                        (= (str (:block/uid parent) "-embed-" f-embed-id))))]
-    (cond
-      (:node/title parent)                     nil
-      (= (:block/uid parent) context-root-uid) nil
-      (not same-parent?)                       nil
-      ;; if all selected are from same embed block with root embed
-      ;; as parent un-indent should do nothing -- blocks will disappear from embed and
-      ;; have to manually navigate to block to see the un-indented blocks
-      (and same-parent? is-parent-root-embed?) nil
-      :else (let [grandpa         (db/get-parent (:db/id parent))
-                  sanitized-uids  (map (comp
-                                         first
-                                         db/uid-and-embed-id) uids)
-                  blocks          (map #(db/get-block [:block/uid %]) sanitized-uids)
-                  o-parent        (:block/order parent)
-                  n-blocks        (count blocks)
-                  last-block      (last blocks)
-                  reindex-parent  (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
-                  new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
-                                               sanitized-uids)
-                  reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
-                                       (concat new-blocks))
-                  retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
-                                        blocks)
-                  new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         (conj retracts new-parent new-grandpa)]
-              {:fx [[:dispatch [:transact tx-data]]]}))))
-
-
 (reg-event-fx
   :unindent/multi
-  (fn [{rfdb :db} [_ uids]]
-    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
-      (unindent-multi uids context-root-uid))))
+  (fn [{rfdb :db} [_ {:keys [uids]}]]
+    (js/console.debug ":unindent/multi" uids)
+    (let [local?                      (not (client/open?))
+          [f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
+          {parent-title :node/title
+           parent-uid   :block/uid}   (common-db/get-parent @db/dsdb [:block/uid f-uid])
+          same-parent?                (common-db/same-parent? @db/dsdb uids)
+          is-parent-root-embed?       (when same-parent?
+                                        (some-> "#editable-uid-"
+                                                (str f-uid "-embed-" f-embed-id)
+                                                js/document.querySelector
+                                                (.. (closest ".block-embed"))
+                                                (. -firstChild)
+                                                (.getAttribute "data-uid")
+                                                (= (str parent-uid "-embed-" f-embed-id))))
+          context-root-uid            (get-in rfdb [:current-route :path-params :id])
+          do-nothing?                 (or parent-title
+                                          (not same-parent?)
+                                          (and same-parent? is-parent-root-embed?)
+                                          (= parent-uid context-root-uid))]
+      (when-not do-nothing?
+        (if local?
+          (let [unindent-multi-event  (common-events/build-unindent-multi-event -1
+                                                                                uids
+                                                                                f-uid)
+                tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
+            {:fx [[:dispatch [:transact tx]]]}))))))
 
 
 (defn drop-link-child

@@ -277,6 +277,41 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/unindent-multi
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/unindent-multi args" args)
+  (let [{:keys [uids
+                f-uid]}              args
+        {parent-order :block/order
+         parent-eid   :db/id}        (common-db/get-parent db [:block/uid f-uid])
+        sanitized-uids               (map (comp
+                                            first
+                                            common-db/uid-and-embed-id) uids)
+        blocks                       (map #(common-db/get-block db [:block/uid %]) sanitized-uids)
+        n-blocks                     (count blocks)
+        last-block-order             (:block/order (last blocks))
+        reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
+        new-parent                   {:db/id parent-eid
+                                      :block/children reindex-parent}
+        new-blocks                   (map-indexed (fn [idx uid] {:block/uid uid
+                                                                 :block/order (+ idx (inc parent-order))})
+                                                  sanitized-uids)
+        {grandpa-eid :db/id}          (common-db/get-parent db parent-eid)
+        reindex-grandpa               (concat
+                                        new-blocks
+                                        (common-db/plus-after db grandpa-eid parent-order n-blocks))
+        retracts                      (mapv (fn [x] [:db/retract parent-eid
+                                                     :block/children (:db/id x)])
+                                            blocks)
+        new-grandpa                    {:db/id          grandpa-eid
+                                        :block/children reindex-grandpa}
+        tx-data                        (conj retracts new-parent new-grandpa)]
+    (println "resolver :datascript/unindent-multi tx-data" tx-data)
+    tx-data))
+
+
+
+
 (defmethod resolve-event-to-tx :datascript/bump-up
   [db {:event/keys [args]}]
   (println "resolver :datascript/bump-up args" (pr-str args))

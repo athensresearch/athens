@@ -20,7 +20,8 @@
    :datascript/unindent
    :datascript/paste-verbatim
    :datascript/indent
-   :datascript/indent-multi])
+   :datascript/indent-multi
+   :datascript/unindent-multi])
 
 
 (def event-common
@@ -119,6 +120,14 @@
     [:map
      [:uid string?]
      [:value string?]]]])
+
+
+(def datascript-unindent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids vector?]]]])
+
 
 
 (def datascript-paste-verbatim

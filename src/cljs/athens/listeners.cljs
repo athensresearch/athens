@@ -41,7 +41,7 @@
           tab? (do
                  (.preventDefault e)
                  (if shift
-                   (dispatch [:unindent/multi selected-items])
+                   (dispatch [:unindent/multi {:uids selected-items}])
                    (dispatch [:indent/multi {:uids selected-items}])))
           (and shift up?) (dispatch [:selected/up selected-items])
           (and shift down?) (dispatch [:selected/down selected-items])

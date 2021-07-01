@@ -21,12 +21,13 @@
     :datascript/split-block-to-children
     :datascript/unindent
     :datascript/indent
-    :datascript/indent-multi})
+    :datascript/indent-multi
+    :datascript/unindent-multi})
     ;; TODO: all the events
 
 
 
-(defn transact!
+(debfn transact!
   "Transact with Datahike.
 
   Returns event accepte/rejected response.

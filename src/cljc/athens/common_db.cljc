@@ -214,6 +214,19 @@
             x)))
 
 
+(defn plus-after
+  [db eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            db
+            rules
+            eid
+            order
+            x)))
+
+
 (defn linkmaker
   "Maintains linked nature of Knowledge Graph.
 
