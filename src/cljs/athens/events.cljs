@@ -1264,6 +1264,8 @@
                                           (not same-parent?)
                                           (and same-parent? is-parent-root-embed?)
                                           (= parent-uid context-root-uid))]
+      (js/console.debug ":unindent-multi local?" local?
+                        ", do-nothing?"          do-nothing?)
       (when-not do-nothing?
         (if local?
           (let [unindent-multi-event  (common-events/build-unindent-multi-event -1

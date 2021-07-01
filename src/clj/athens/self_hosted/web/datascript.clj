@@ -27,7 +27,7 @@
 
 
 
-(debfn transact!
+(defn transact!
   "Transact with Datahike.
 
   Returns event accepte/rejected response.

@@ -126,7 +126,8 @@
   [:map
    [:event/args
     [:map
-     [:uids vector?]]]])
+     [:uids  vector?
+      :f-uid string?]]]])
 
 
 

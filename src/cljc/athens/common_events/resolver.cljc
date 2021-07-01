@@ -243,7 +243,6 @@
           tx-data              (conj retracts
                                      new-older-sib
                                      new-parent)]
-    (println "retracts " retracts)
     (println "resolver :datascript/indent tx-data" (pr-str args))
     tx-data))
 
@@ -293,14 +292,14 @@
         reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
         new-parent                   {:db/id parent-eid
                                       :block/children reindex-parent}
-        new-blocks                   (map-indexed (fn [idx uid] {:block/uid uid
+        new-blocks                   (map-indexed (fn [idx uid] {:block/uid   uid
                                                                  :block/order (+ idx (inc parent-order))})
                                                   sanitized-uids)
         {grandpa-eid :db/id}          (common-db/get-parent db parent-eid)
         reindex-grandpa               (concat
                                         new-blocks
                                         (common-db/plus-after db grandpa-eid parent-order n-blocks))
-        retracts                      (mapv (fn [x] [:db/retract parent-eid
+        retracts                      (mapv (fn [x] [:db/retract     parent-eid
                                                      :block/children (:db/id x)])
                                             blocks)
         new-grandpa                    {:db/id          grandpa-eid

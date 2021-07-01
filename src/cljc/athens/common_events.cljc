@@ -205,7 +205,8 @@
 
 (defn build-unindent-multi-event
   "Builds `:datascript/unindent-multi` event with:
-  - `uids`: `:block/uid` of selected blocks"
+  - `uids` : `:block/uid` of selected blocks
+  - `f-uid`: uid after passing through `uid-and-embed-id` function"
   [last-tx uids f-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
