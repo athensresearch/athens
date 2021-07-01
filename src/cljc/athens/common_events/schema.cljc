@@ -181,8 +181,7 @@
               datascript-page-add-shortcut)]
    [:datascript/page-remove-shortcut
     (mu/merge event-common
-              datascript-page-remove-shortcut)]
-   [:datascript/page-reindex-left-sidebar event-common]])
+              datascript-page-remove-shortcut)]])
 
 
 (def valid-event?
