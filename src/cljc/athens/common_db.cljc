@@ -2,9 +2,9 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
+    [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
-    ;; TODO only for debugging while WIP
-    #?(:clj [clojure.pprint        :as pprint])
+    [clojure.set                   :as set]
     [clojure.string                :as string]
     #?(:clj [clojure.tools.logging :as log])
     #?(:clj  [datahike.api         :as d]
@@ -16,6 +16,13 @@
   (-> (d/datoms db :avet a v)
       first
       :e))
+
+
+(defn v-by-ea
+  [db e a]
+  (-> (d/datoms db :eavt e a)
+      first
+      :v))
 
 
 (def rules
@@ -121,6 +128,7 @@
                :block/order
                :block/string
                :block/open
+               :block/refs
                {:block/children [:block/uid
                                  :block/order]}]
           eid))
@@ -227,6 +235,23 @@
             x)))
 
 
+(defn- extract-tag-values
+  "Extracts `tag` values with `extractor-fn` from parser AST."
+  [ast tag extractor-fn]
+  (->> (tree-seq vector? extractor-fn ast)
+       (filter vector?)
+       (keep #(when (= tag (first %))
+                (extractor-fn %)))
+       set))
+
+
+(defn- extract-page-links
+  "Extracts from parser AST `:page-link`s"
+  [ast]
+  (extract-tag-values ast :page-link second))
+
+
+
 (defn linkmaker
   "Maintains linked nature of Knowledge Graph.
 
@@ -258,19 +283,85 @@
           ;; *b6*: block deleted -> check *b2* & *b4*
 
           ;; *b1*
-          new-blocks->strings (->> tx-data
-                                   (filter (fn [[_eid attr _value _tx added?]]
-                                             (and added?
-                                                  (= :block/string attr))))
-                                   (reduce (fn [acc [eid _attr value _tx _added?]]
-                                             (assoc acc eid value))
-                                           {}))]
-      (println "linkmaker: new-blocks->strings" (pr-str new-blocks->strings))
-      ;; TODO remove pprint when done building Linkmaker
-      #?(:clj ; can't print `tx-report` from Datascript (it's before & after are printed literally)
-         (println "linkmaker: tx-report:" (with-out-str (pprint/pprint tx-report))))
-      ;; TODO for new behave like identity
-      input-tx)
+          block-eid->new-strings    (->> tx-data
+                                         (filter (fn [[_eid attr _value _tx added?]]
+                                                   (and added?
+                                                        (= :block/string attr))))
+                                         (reduce (fn [acc [eid _attr value _tx _added?]]
+                                                   (assoc acc eid value))
+                                                 {}))
+          block-eid->old-strings    (->> tx-data
+                                         (filter (fn [[_eid attr _value _tx added?]]
+                                                   (and (not added?)
+                                                        (= :block/string attr))))
+                                         (reduce (fn [acc [eid _attr value _tx _added?]]
+                                                   (assoc acc eid value))
+                                                 {}))
+          block-eid->old-strings    (merge block-eid->old-strings
+                                           (->> (keys block-eid->new-strings)
+                                                (map (fn [block-eid]
+                                                       (when-let [block-string (v-by-ea db-before block-eid :block/string)]
+                                                         [block-eid block-string])))
+                                                (into {})))
+          block-eid->new-structure  (zipmap (keys block-eid->new-strings)
+                                            (map parser/parse-to-ast
+                                                 (vals block-eid->new-strings)))
+          block-eid->old-structure  (zipmap (keys block-eid->old-strings)
+                                            (map parser/parse-to-ast
+                                                 (vals block-eid->old-strings)))
+          block-eid->new-page-links (zipmap (keys block-eid->new-structure)
+                                            (map extract-page-links
+                                                 (vals block-eid->new-structure)))
+          block-eid->old-page-links (zipmap (keys block-eid->old-structure)
+                                            (map extract-page-links
+                                                 (vals block-eid->old-structure)))
+          block-eid->page-remove    (->> (for [[block-eid old-pages] block-eid->old-page-links
+                                               :let                  [new-pages (get block-eid->new-page-links
+                                                                                     block-eid
+                                                                                     #{})]]
+                                           [block-eid (set/difference old-pages new-pages)])
+                                         (remove (comp empty? second))
+                                         (into {}))
+          block-eid->page-add       (->> (for [[block-eid new-pages] block-eid->new-page-links
+                                               :let                  [old-pages (get block-eid->old-page-links
+                                                                                     block-eid
+                                                                                     #{})]]
+                                           [block-eid (set/difference new-pages old-pages)])
+                                         (remove (comp empty? second))
+                                         (into {}))
+          linkmaker-info            (merge {}
+                                           (when (seq block-eid->page-remove)
+                                             {:retracts (mapcat (fn [[block-eid page-titles]]
+                                                                  (for [page-title page-titles]
+                                                                    [:db/retract
+                                                                     block-eid
+                                                                     :block/refs
+                                                                     [:node/title page-title]]))
+                                                                block-eid->page-remove)})
+                                           (when (seq block-eid->page-add)
+                                             {:asserts (mapcat (fn [[block-eid page-titles]]
+                                                                 (for [page-title page-titles]
+                                                                   [:db/add
+                                                                    block-eid
+                                                                    :block/refs
+                                                                    [:node/title page-title]]))
+                                                               block-eid->page-add)}))
+          linkmaker-txs             (apply conj (into [] (:asserts linkmaker-info))
+                                           (:retracts linkmaker-info))
+          with-linkmaker-txs        (apply conj input-tx linkmaker-txs)]
+      (println "linkmaker:"
+               "\ntx-data:" (pr-str tx-data)
+               "\nblock-eid->old-strings:" (pr-str block-eid->old-strings)
+               "\nblock-eid->new-strings:" (pr-str block-eid->new-strings)
+               "\nblock-eid->old-structure:" (pr-str block-eid->old-structure)
+               "\nblock-eid->new-structure:" (pr-str block-eid->new-structure)
+               "\nblock-eid->old-page-links:" (pr-str block-eid->old-page-links)
+               "\nblock-eid->new-page-links:" (pr-str block-eid->new-page-links)
+               "\nblock-eid->page-remote:" (pr-str block-eid->page-remove)
+               "\nblock-eid->page-add:" (pr-str block-eid->page-add)
+               "\nlinkmaker-info:" (pr-str linkmaker-info)
+               "\nlinkmaker-txs:" (pr-str linkmaker-txs))
+      with-linkmaker-txs)
     (catch #?(:cljs js/Error
               :clj Exception) e
       #?(:cljs (do

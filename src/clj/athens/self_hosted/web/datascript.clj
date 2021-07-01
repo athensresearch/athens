@@ -9,6 +9,8 @@
       ExceptionInfo)))
 
 
+;; TODO: all the events
+
 (def supported-event-types
   #{:datascript/paste-verbatim
     :datascript/create-page
@@ -23,8 +25,10 @@
     :datascript/indent
     :datascript/indent-multi
     :datascript/unindent-multi})
+    :datascript/page-add-shortcut
+    :datascript/page-remove-shortcut
     ;; TODO: all the events
-
+    })
 
 
 (defn transact!

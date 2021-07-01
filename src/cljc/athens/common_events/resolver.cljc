@@ -351,3 +351,34 @@
         tx-data      [{:db/id        [:block/uid uid]
                        :block/string new-string}]]
     tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/page-add-shortcut
+  [db {:event/keys [args]}]
+  (let [{:keys [uid]}        args
+        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
+                                         :where
+                                         [?e :page/sidebar _]]
+                                       db)
+                                  (sort-by :page/sidebar)
+                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                  vec)
+        add-shortcut-tx      {:block/uid uid :page/sidebar (or (count reindex-shortcut-txs) 1)}
+        tx-data              (conj reindex-shortcut-txs add-shortcut-tx)]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/page-remove-shortcut
+  [db {:event/keys [args]}]
+  (let [{:keys [uid]}        args
+        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
+                                         :where
+                                         [?e :page/sidebar _]]
+                                       db)
+                                  (remove #(= uid (:block/uid %)))
+                                  (sort-by :page/sidebar)
+                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                  vec)
+        remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
+        tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
+    tx-data))

@@ -688,35 +688,27 @@
 
 
 (reg-event-fx
-  :page/reindex-left-sidebar
-  (fn [_ _]
-    {:doc "This is used in the `left-sidebar` to smooth out duplicate `:page/sidebar` values when bookmarked. "}
-    (let [sidebar-ents (->> (d/q '[:find [(pull ?e [*]) ...]
-                                   :where
-                                   [?e :page/sidebar _]]
-                                 @db/dsdb)
-                            (sort-by :page/sidebar)
-                            (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                            vec)]
-      {:fx [[:dispatch [:transact sidebar-ents]]]})))
-
-
-(reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (let [sidebar-ents-count (or (d/q '[:find (count ?e) .
-                                        :where
-                                        [?e :page/sidebar _]]
-                                      @db/dsdb) 1)]
-      {:fx [[:dispatch [:transact [{:block/uid uid :page/sidebar sidebar-ents-count}]]]
-            [:dispatch [:page/reindex-left-sidebar]]]})))
+    (js/console.debug ":page/add-shortcut:" uid)
+    (if-let [local? (not (client/open?))]
+      (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
+            tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
+        (js/console.debug ":page/add-shortcut: local?" local?)
+        {:fx [[:dispatch [:transact tx-data]]]})
+      {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
 
 
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:transact [[:db/retract [:block/uid uid] :page/sidebar]]]]
-          [:dispatch [:page/reindex-left-sidebar]]]}))
+    (js/console.debug ":page/remove-shortcut:" uid)
+    (if-let [local? (not (client/open?))]
+      (let [remove-shortcut-event (common-events/build-page-remove-shortcut -1 uid)
+            tx-data               (resolver/resolve-event-to-tx @db/dsdb remove-shortcut-event)]
+        (js/console.debug ":page/remove-shortcut:" local?)
+        {:fx [[:dispatch [:transact tx-data]]]})
+      {:fx [[:dispatch [:remote/page-remove-shortcut uid]]]})))
 
 
 (reg-event-fx

@@ -216,6 +216,23 @@
                      :f-uid  f-uid}}))
 
 
+(defn build-page-add-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-add-shortcut
+     :event/args    {:uid uid}}))
+
+
+(defn build-page-remove-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-remove-shortcut
+     :event/args    {:uid uid}}))
+
 
 (defn build-indent-event
   "Builds `: `datascript/indent` event with:
@@ -229,6 +246,7 @@
      :event/args    {:uid   uid
                      :value value}}))
 
+
 (defn build-indent-multi-event
   "Builds `: `:datascript/indent-multi` event with:
   - `uids`  : `:block/uid` of selected blocks
@@ -240,7 +258,6 @@
      :event/type    :datascript/indent-multi
      :event/args    {:uids   uids
                      :blocks blocks}}))
-
 
 
 (defn build-bump-up-event

@@ -22,6 +22,8 @@
    :datascript/indent
    :datascript/indent-multi
    :datascript/unindent-multi])
+   :datascript/page-add-shortcut
+   :datascript/page-remove-shortcut])
 
 
 (def event-common
@@ -141,6 +143,20 @@
      [:value string?]]]])
 
 
+(def datascript-page-add-shortcut
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
+
+(def datascript-page-remove-shortcut
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
+
 (def event
   [:multi {:dispatch :event/type}
    [:presence/hello
@@ -178,7 +194,13 @@
               datascript-unindent)]
    [:datascript/paste-verbatim
     (mu/merge event-common
-              datascript-paste-verbatim)]])
+              datascript-paste-verbatim)]
+   [:datascript/page-add-shortcut
+    (mu/merge event-common
+              datascript-page-add-shortcut)]
+   [:datascript/page-remove-shortcut
+    (mu/merge event-common
+              datascript-page-remove-shortcut)]])
 
 
 (def valid-event?
