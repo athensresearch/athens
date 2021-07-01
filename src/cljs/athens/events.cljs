@@ -1180,38 +1180,28 @@
                                                    :value value})]]]})))))
 
 
-(defn indent-multi
-  "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child).
-
-  older-sib is the current older-sib, before indent happens, AKA the new parent.
-  new-parent is current parent, not older-sib. new-parent becomes grandparent.
-  Reindex parent, add blocks to end of older-sib."
-  [uids]
-  (let [blocks       (map #(db/get-block [:block/uid %]) uids)
-        same-parent? (db/same-parent? uids)
-        n-blocks     (count blocks)
-        first-block  (first blocks)
-        last-block   (last blocks)
-        block-zero?  (-> first-block :block/order zero?)]
-    (when (and same-parent? (not block-zero?))
-      (let [parent        (db/get-parent [:block/uid (first uids)])
-            older-sib     (db/get-older-sib (first uids))
-            n-sib         (count (:block/children older-sib))
-            new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
-                                       blocks)
-            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks :block/open true}
-            reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-            new-parent    {:db/id (:db/id parent) :block/children reindex}
-            retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
-                                blocks)
-            tx-data       (conj retracts new-older-sib new-parent)]
-        {:fx [[:dispatch [:transact tx-data]]]}))))
-
 
 (reg-event-fx
   :indent/multi
-  (fn [_ [_ uids]]
-    (indent-multi (mapv (comp first db/uid-and-embed-id) uids))))
+  (fn [_ [_ {:keys [uids]}]]
+    (js/console.debug ":indent/multi" uids)
+    (let [local?                   (not (client/open?))
+          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids) ;; TODO Is this the best way to do this?
+          dsdb                     @db/dsdb
+          same-parent?             (common-db/same-parent? @db/dsdb sanitized-selected-uids)
+          blocks                   (map #(common-db/get-block @db/dsdb [:block/uid %]) sanitized-selected-uids)
+          block-zero?              (zero? (:block/order (first blocks)))]
+      (when (and same-parent? (not block-zero?))
+        (if local?
+          (let [indent-multi-event  (common-events/build-indent-multi-event -1
+                                                                            sanitized-selected-uids
+                                                                            blocks)
+                tx                  (resolver/resolve-event-to-tx dsdb indent-multi-event)]
+            (js/console.debug ":indent/multi local?" local?
+                              ", same-parent?"       same-parent?
+                              ", not block-zero?"    (not  block-zero?))
+            {:fx [[:dispatch [:transact tx]]]})
+          (println "Not local"))))))
 
 
 (reg-event-fx

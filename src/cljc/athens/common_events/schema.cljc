@@ -19,7 +19,8 @@
    :datascript/split-block-to-children
    :datascript/unindent
    :datascript/paste-verbatim
-   :datascript/indent])
+   :datascript/indent
+   :datascript/indent-multi])
 
 
 (def event-common
@@ -102,6 +103,14 @@
     [:map
      [:uid string?]
      [:value string?]]]])
+
+(def datascript-indent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids   vector?
+      :blocks seq?]]]])
+
 
 
 (def datascript-unindent

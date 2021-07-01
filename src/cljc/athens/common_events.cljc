@@ -215,6 +215,20 @@
      :event/args    {:uid   uid
                      :value value}}))
 
+(defn build-indent-multi-event
+  "Builds `: indent` event with:
+  - `uids`  : `:block/uid` of selected blocks block
+  - `blocks`:  seq contaning block data of all the selected blocks"
+  [last-tx uids blocks]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/indent-multi
+     :event/args    {:uids   uids
+                     :blocks blocks}}))
+
+
+
 (defn build-bump-up-event
   "Builds `:datascript/bump-up` event with:
   - `uid`: `:block/uid` of trigerring block

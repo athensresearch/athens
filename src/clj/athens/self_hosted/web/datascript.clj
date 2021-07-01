@@ -20,7 +20,8 @@
     :datascript/split-block
     :datascript/split-block-to-children
     :datascript/unindent
-    :datascript/indent})
+    :datascript/indent
+    :datascript/indent-multi})
     ;; TODO: all the events
 
 
