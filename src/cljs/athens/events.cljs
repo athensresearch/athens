@@ -1201,7 +1201,9 @@
                               ", same-parent?"       same-parent?
                               ", not block-zero?"    (not  block-zero?))
             {:fx [[:dispatch [:transact tx]]]})
-          (println "Not local"))))))
+          {:fx [[:dispatch [:remote/indent-multi {:uids   sanitized-selected-uids
+                                                  :blocks blocks}]]]})))))
+
 
 
 (reg-event-fx
@@ -1268,7 +1270,9 @@
                                                                                 uids
                                                                                 f-uid)
                 tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
-            {:fx [[:dispatch [:transact tx]]]}))))))
+            {:fx [[:dispatch [:transact tx]]]})
+          {:fx [[:dispatch [:remote/unindent-multi {:uids  uids
+                                                    :f-uid f-uid}]]]})))))
 
 
 (defn drop-link-child

@@ -412,6 +412,15 @@
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 
+(rf/reg-event-fx
+  :remote/indent-multi
+  (fn [{db :db} [_ {:keys [uids blocks] :as args}]]
+    (js/console.debug ":remote/indent-multi args" args)
+    (let [last-seen-tx        (:remote/last-seen-tx db)
+          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids blocks)]
+      (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
+
 
 (rf/reg-event-fx
   :remote/followup-unindent
@@ -440,6 +449,17 @@
       (js/console.debug ":remote/unindent event" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
+
+
+
+(rf/reg-event-fx
+  :remote/unindent-multi
+  (fn [{db :db} [_ {:keys [uids f-uid] :as args}]]
+    (js/console.debug ":remote/unindent-multi args" args)
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids f-uid)]
+      (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
 
 
 (rf/reg-event-fx
