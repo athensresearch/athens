@@ -70,7 +70,9 @@
               children (d/q query-children @@fixture/connection page-1-eid)]
           (t/is (seq children))
           (t/is (= #{[child-1-eid] [child-2-eid]} children)))))))
-  ;; TODO more test cases for `:datascript/new-block` event
+
+
+;; TODO more test cases for `:datascript/new-block` event
 
 
 
@@ -147,7 +149,9 @@
                     :block/order  0
                     :block/string (subs child-1-init-value 0 2)}
                    child-1)))))))
-  ;; TODO: test case of moving page links and block refs
+
+
+;; TODO: test case of moving page links and block refs
 
 
 
@@ -276,7 +280,9 @@
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
           (t/is (= "abc" (:block/string parent-block)))
           (t/is (= "123" (:block/string child-2-block))))))))
-  ;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
+
+
+;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
 
 
 

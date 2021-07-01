@@ -219,6 +219,7 @@
      :event/type    :datascript/page-add-shortcut
      :event/args    {:uid uid}}))
 
+
 (defn build-indent-event
   "Builds `: indent` event with:
   - `uid`  : `:block/uid` of triggering block
