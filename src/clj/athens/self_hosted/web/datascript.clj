@@ -22,7 +22,11 @@
     :datascript/split-block
     :datascript/split-block-to-children
     :datascript/unindent
-    :datascript/indent})
+    :datascript/indent
+    :datascript/page-add-shortcut
+    :datascript/page-remove-shortcut
+    ;; TODO: all the events
+    })
 
 
 (defn transact!

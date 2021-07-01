@@ -203,6 +203,23 @@
                      :value value}}))
 
 
+(defn build-page-add-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-add-shortcut
+     :event/args    {:uid uid}}))
+
+
+(defn build-page-remove-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-remove-shortcut
+     :event/args    {:uid uid}}))
+
 (defn build-indent-event
   "Builds `: indent` event with:
   - `uid`  : `:block/uid` of triggering block
