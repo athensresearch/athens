@@ -1191,15 +1191,16 @@
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
           blocks                   (map #(common-db/get-block dsdb [:block/uid %]) sanitized-selected-uids)
           block-zero?              (zero? (:block/order (first blocks)))]
+      (js/console.debug ":indent/multi local?"       local?
+                              ", same-parent?"       same-parent?
+                              ", not block-zero?"    (not  block-zero?))
       (when (and same-parent? (not block-zero?))
         (if local?
           (let [indent-multi-event  (common-events/build-indent-multi-event -1
                                                                             sanitized-selected-uids
                                                                             blocks)
                 tx                  (resolver/resolve-event-to-tx dsdb indent-multi-event)]
-            (js/console.debug ":indent/multi local?" local?
-                              ", same-parent?"       same-parent?
-                              ", not block-zero?"    (not  block-zero?))
+            (js/console.debug ":indent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/indent-multi {:uids   sanitized-selected-uids
                                                   :blocks blocks}]]]})))))
@@ -1264,7 +1265,7 @@
                                           (not same-parent?)
                                           (and same-parent? is-parent-root-embed?)
                                           (= parent-uid context-root-uid))]
-      (js/console.debug ":unindent-multi local?" local?
+      (js/console.debug ":unindent/multi local?" local?
                         ", do-nothing?"          do-nothing?)
       (when-not do-nothing?
         (if local?
@@ -1272,6 +1273,7 @@
                                                                                 uids
                                                                                 f-uid)
                 tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
+            (js/console.debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/unindent-multi {:uids  uids
                                                     :f-uid f-uid}]]]})))))

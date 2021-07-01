@@ -290,7 +290,7 @@
         n-blocks                     (count blocks)
         last-block-order             (:block/order (last blocks))
         reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
-        new-parent                   {:db/id parent-eid
+        new-parent                   {:db/id          parent-eid
                                       :block/children reindex-parent}
         new-blocks                   (map-indexed (fn [idx uid] {:block/uid   uid
                                                                  :block/order (+ idx (inc parent-order))})
