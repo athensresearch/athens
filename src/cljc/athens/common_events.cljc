@@ -203,14 +203,6 @@
                      :value value}}))
 
 
-(defn build-page-reindex-left-sidebar
-  [last-tx]
-  (let [event-id (gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/page-reindex-left-sidebar}))
-
-
 (defn build-page-add-shortcut
   [last-tx uid]
   (let [event-id (gen-event-id)]
@@ -219,6 +211,14 @@
      :event/type    :datascript/page-add-shortcut
      :event/args    {:uid uid}}))
 
+
+(defn build-page-remove-shortcut
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/page-remove-shortcut
+     :event/args    {:uid uid}}))
 
 (defn build-indent-event
   "Builds `: indent` event with:
@@ -231,15 +231,6 @@
      :event/type    :datascript/indent
      :event/args    {:uid   uid
                      :value value}}))
-
-
-(defn build-page-remove-shortcut
-  [last-tx uid]
-  (let [event-id (gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/page-remove-shortcut
-     :event/args    {:uid uid}}))
 
 
 (defn build-bump-up-event

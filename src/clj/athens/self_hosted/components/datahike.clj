@@ -57,7 +57,7 @@
     :db/valueType   :db.type/boolean
     :db/cardinality :db.cardinality/one}
    {:db/ident       :page/sidebar
-    :db/valueType   :db.type/bigint
+    :db/valueType   :db.type/long
     :db/cardinality :db.cardinality/one}])
 
 
