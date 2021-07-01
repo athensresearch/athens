@@ -49,14 +49,18 @@
       (let [target-page (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])
             add-link-tx [{:db/id        [:block/uid testing-block-uid]
                           :block/string (str "[[" target-page-title "]]")}]]
-        (t/is (empty? (:block/refs target-page)))
+        (t/is (empty? (:block/_refs target-page)))
 
         (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
-        (let [{testing-block-eid :db/id} (common-db/get-block @@fixture/connection [:block/uid testing-block-uid])
-              {block-refs :block/refs}   (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
+        (let [{testing-block-eid :db/id
+               block-refs        :block/refs} (common-db/get-block @@fixture/connection [:block/uid testing-block-uid])
+              {target-page-eid :db/id
+               page-refs       :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
           ;; assert that we do have new ref
+          (t/is (seq page-refs))
           (t/is (seq block-refs))
-          (t/is (= [{:db/id testing-block-eid}] block-refs))))))
+          (t/is (= [{:db/id testing-block-eid}] page-refs))
+          (t/is (= [{:db/id target-page-eid}] block-refs))))))
 
   (t/testing "New page reference to not existing page in block")
 
@@ -97,15 +101,15 @@
 
       (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
 
-      (let [{testing-block-1-eid :db/id}     (common-db/get-block @@fixture/connection [:block/uid testing-block-1-uid])
-            {target-page-1-refs :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-            {target-page-2-refs :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])
-            split-block-event                (common-events/build-split-block-event -1
-                                                                                    testing-block-1-uid
-                                                                                    testing-block-1-string
-                                                                                    split-index
-                                                                                    testing-block-2-uid)
-            split-block-tx                   (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
+      (let [{testing-block-1-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-1-uid])
+            {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
+            {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])
+            split-block-event                 (common-events/build-split-block-event -1
+                                                                                     testing-block-1-uid
+                                                                                     testing-block-1-string
+                                                                                     split-index
+                                                                                     testing-block-2-uid)
+            split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
         ;; assert that target pages has no `:block/refs` to start with
         (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
         (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
@@ -113,8 +117,8 @@
         ;; apply split-block
         (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection split-block-tx))
         (let [{testing-block-2-eid :db/id}     (common-db/get-block @@fixture/connection [:block/uid testing-block-2-uid])
-              {target-page-1-refs :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-              {target-page-2-refs :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])]
+              {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
+              {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])]
           ;; assert that we do have new ref
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
           (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs)))))))

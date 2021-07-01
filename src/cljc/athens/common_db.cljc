@@ -128,6 +128,7 @@
                :block/order
                :block/string
                :block/open
+               :block/refs
                {:block/children [:block/uid
                                  :block/order]}]
           eid))
@@ -284,17 +285,17 @@
                                              {:retracts (mapcat (fn [[block-eid page-titles]]
                                                                   (for [page-title page-titles]
                                                                     [:db/retract
-                                                                     [:node/title page-title]
+                                                                     block-eid
                                                                      :block/refs
-                                                                     block-eid]))
+                                                                     [:node/title page-title]]))
                                                                 block-eid->page-remove)})
                                            (when (seq block-eid->page-add)
                                              {:asserts (mapcat (fn [[block-eid page-titles]]
                                                                  (for [page-title page-titles]
                                                                    [:db/add
-                                                                    [:node/title page-title]
+                                                                    block-eid
                                                                     :block/refs
-                                                                    block-eid]))
+                                                                    [:node/title page-title]]))
                                                                block-eid->page-add)}))
           linkmaker-txs             (apply conj (into [] (:asserts linkmaker-info))
                                            (:retracts linkmaker-info))
