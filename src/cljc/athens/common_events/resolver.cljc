@@ -24,12 +24,14 @@
   #?(:clj (subs (.toString (UUID/randomUUID)) 27)
      :cljs (subs (str (random-uuid)) 27)))
 
+
 (defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
   [s t x]
   (if (< s t)
     (and (< s x) (< x t))
     (and (< t x) (< x s))))
+
 
 ;; TODO start using this resolution in handlers
 (defmulti resolve-event-to-tx
@@ -386,6 +388,7 @@
                               between inc-or-dec)
                          (concat [new-source]))]
     tx-data))
+
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
   [db {:event/keys [args]}]

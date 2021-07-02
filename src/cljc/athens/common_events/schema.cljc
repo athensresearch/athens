@@ -150,12 +150,14 @@
     [:map
      [:uid string?]]]])
 
+
 (def datascript-left-sidebar-drop-above
   [:map
-    [:event/args
-      [:map
-        [:source-order int?]
-        [:target-order int?]]]])
+   [:event/args
+    [:map
+     [:source-order int?]
+     [:target-order int?]]]])
+
 
 (def datascript-left-sidebar-drop-below
   [:map
@@ -163,6 +165,7 @@
     [:map
      [:source-order int?]
      [:target-order int?]]]])
+
 
 (def event
   [:multi {:dispatch :event/type}
@@ -217,12 +220,12 @@
    [:datascript/page-remove-shortcut
     (mu/merge event-common
               datascript-page-remove-shortcut)]
-  [:datascript/left-sidebar-drop-above
-   (mu/merge event-common
-             datascript-left-sidebar-drop-above)]
-  [:datascript/left-sidebar-drop-below
-   (mu/merge event-common
-             datascript-left-sidebar-drop-below)]])
+   [:datascript/left-sidebar-drop-above
+    (mu/merge event-common
+              datascript-left-sidebar-drop-above)]
+   [:datascript/left-sidebar-drop-below
+    (mu/merge event-common
+              datascript-left-sidebar-drop-below)]])
 
 
 (def valid-event?

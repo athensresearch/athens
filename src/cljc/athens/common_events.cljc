@@ -280,6 +280,7 @@
      :event/args    {:uid     uid
                      :new-uid new-uid}}))
 
+
 (defn build-left-sidebar-drop-above
   "Builds `:datascript/left-sidebar-drop-above` event with:
   - `source-order`: original position on the left sidebar
@@ -292,6 +293,7 @@
      :event/args    {:source-order source-order
                      :target-order target-order}}))
 
+
 (defn build-left-sidebar-drop-below
   "Builds `:datascript/left-sidebar-drop-below` event with:
   - `source-order`: original position on the left sidebar
@@ -303,6 +305,7 @@
      :event/type    :datascript/left-sidebar-drop-below
      :event/args    {:source-order source-order
                      :target-order target-order}}))
+
 
 ;; - presence events
 
