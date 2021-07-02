@@ -292,6 +292,18 @@
      :event/args    {:source-order source-order
                      :target-order target-order}}))
 
+(defn build-left-sidebar-drop-below
+  "Builds `:datascript/left-sidebar-drop-below` event with:
+  - `source-order`: original position on the left sidebar
+  - `target-order`: new position on the left sidebar"
+  [last-tx source-order target-order]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/left-sidebar-drop-below
+     :event/args    {:source-order source-order
+                     :target-order target-order}}))
+
 ;; - presence events
 
 (defn build-presence-hello-event

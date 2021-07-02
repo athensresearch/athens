@@ -728,15 +728,15 @@
 
 
 (reg-event-fx
-  :page/add-shortcut
-  (fn [_ [_ uid]]
-    (js/console.debug ":page/add-shortcut:" uid)
-    (if-let [local? (not (client/open?))]
-      (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
-            tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
-        (js/console.debug ":page/add-shortcut: local?" local?)
-        {:fx [[:dispatch [:transact tx-data]]]})
-      {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
+ :page/add-shortcut
+ (fn [_ [_ uid]]
+   (js/console.debug ":page/add-shortcut:" uid)
+   (if-let [local? (not (client/open?))]
+     (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
+           tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
+       (js/console.debug ":page/add-shortcut: local?" local?)
+       {:fx [[:dispatch [:transact tx-data]]]})
+     {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
 
 
 (reg-event-fx
@@ -749,6 +749,30 @@
         (js/console.debug ":page/remove-shortcut:" local?)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/page-remove-shortcut uid]]]})))
+
+
+(reg-event-fx
+ :left-sidebar/drop-above
+ (fn [_ [_ source-order target-order]]
+   (js/console.debug ":left-sidebar/drop-above")
+   (if-let [local? (not (client/open?))]
+     (let [left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above -1 source-order target-order)
+           tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-above-event)]
+       (js/console.debug ":left-sidebar/drop-above local?" local?)
+       {:fx [[:dispatch [:transact tx-data]]]})
+     {:fx [[:dispatch [:remote/left-sidebar-drop-above source-order target-order]]]})))
+
+
+(reg-event-fx
+ :left-sidebar/drop-below
+ (fn [_ [_ source-order target-order]]
+   (js/console.debug ":left-sidebar/drop-below")
+   (if-let [local? (not (client/open?))]
+     (let [left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below -1 source-order target-order)
+           tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-below-event)]
+       (js/console.debug ":left-sidebar/drop-below local?" local?)
+       {:fx [[:dispatch [:transact tx-data]]]})
+     {:fx [[:dispatch [:remote/left-sidebar-drop-below]]]})))
 
 
 (reg-event-fx
@@ -1855,23 +1879,12 @@
                                       db/dsdb
                                       (common-events/build-paste-verbatim-event -1 uid text start value))]]]}
 
-        {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))(
+        {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))
 
 
-(reg-event-fx
- :left-sidebar/drop-above
- (fn-traced [_ [_ source-order target-order]]
-            (js/console.debug ":left-sidebar/drop-above")
-            (if-let [local? (not (client/open?))]
-              (let [left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above -1 source-order target-order)
-                    tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-above-event)]
-                (js/console.debug ":left-sidebar/drop-above local?" local?)
-                {:fx [[:dispatch [:transact tx-data]]]})
-              ;; TODO: add remote
-              {:fx [[:dispatch [:remote/left-sidebar-drop-above]]]})))
 
 
-(defn left-sidebar-drop-below
+#_(defn left-sidebar-drop-below
   [s-order t-order]
   (let [source-eid (d/q '[:find ?e .
                           :in $ ?s-order
@@ -1890,7 +1903,7 @@
     new-indices))
 
 
-(reg-event-fx
+#_(reg-event-fx
   :left-sidebar/drop-below
   (fn-traced [_ [_ source-order target-order]]
              {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))

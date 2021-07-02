@@ -386,3 +386,22 @@
                               between inc-or-dec)
                          (concat [new-source]))]
     tx-data))
+
+(defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
+  [db {:event/keys [args]}]
+  (let [{:keys [source-order target-order]}  args
+        source-eid (d/q '[:find ?e .
+                          :in $ ?source-order
+                          :where [?e :page/sidebar ?source-order]]
+                        db source-order)
+        new-source {:db/id source-eid :page/sidebar target-order}
+        tx-data (->> (d/q '[:find ?shortcut ?new-order
+                            :keys db/id page/sidebar
+                            :in $ ?source-order ?target-order ?between
+                            :where
+                            [?shortcut :page/sidebar ?order]
+                            [(?between ?source-order ?target-order ?order)]
+                            [(dec ?order) ?new-order]]
+                          db source-order (inc target-order) between)
+                     (concat [new-source]))]
+    tx-data))

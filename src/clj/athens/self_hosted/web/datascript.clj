@@ -27,6 +27,7 @@
     :datascript/indent
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
+    :datascript/left-sidebar-drop-above
     ;; TODO: all the events
     })
 
