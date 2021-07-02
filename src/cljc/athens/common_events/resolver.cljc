@@ -53,6 +53,47 @@
     [page-tx]))
 
 
+(defmethod resolve-event-to-tx :datascript/rename-page
+  [db {:event/keys [args]}]
+  (let [{:keys [uid
+                old-name
+                new-name]} args
+        linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
+        linked-ref-blocks  (mapcat second linked-refs)
+        new-linked-refs    (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        new-page           {:db/id      [:block/uid uid]
+                            :node/title new-name}
+        new-datoms         (concat [new-page] new-linked-refs)]
+    (println ":datascript/rename-page args:" (pr-str args)
+             "=>" (pr-str new-datoms))
+    new-datoms))
+
+
+(defmethod resolve-event-to-tx :datascript/merge-page
+  [db {:event/keys [args]}]
+  (let [{:keys [uid
+                old-name
+                new-name]}              args
+        linked-refs                     (common-db/get-linked-refs-by-page-title db old-name)
+        linked-ref-blocks               (mapcat second linked-refs)
+        new-linked-refs                 (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        {old-page-kids :block/children} (common-db/get-page-document db [:block/uid uid])
+        new-parent-uid                  (common-db/get-page-uid-by-title db new-name)
+        existing-page-block-count       (common-db/existing-block-count db new-name)
+        reindex                         (map (fn [{:block/keys [order uid]}]
+                                               {:db/id           [:block/uid uid]
+                                                :block/order     (+ order existing-page-block-count)
+                                                :block/_children [:block/uid new-parent-uid]})
+                                       old-page-kids)
+        delete-page                     [:db/retractEntity [:block/uid uid]]
+        new-datoms                      (concat [delete-page]
+                                          new-linked-refs
+                                          reindex)]
+    (println ":datascript/merge-page args:" (pr-str args)
+             "=>" (pr-str new-datoms))
+    new-datoms))
+
+
 (defmethod resolve-event-to-tx :datascript/delete-page
   [db {:event/keys [args]}]
   (let [{uid :uid}         args

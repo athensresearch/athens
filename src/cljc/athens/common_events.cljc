@@ -70,6 +70,47 @@
                      :title title}}))
 
 
+(defn build-page-rename-event
+  "Builds `:datascript/page-rename` event with:
+  - `uid`: of page to rename,
+  - `old-name`: Old page name
+  - `new-name`: New page name"
+  [last-tx uid old-name new-name]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/rename-page
+     :event/args    {:uid      uid
+                     :old-name old-name
+                     :new-name new-name}}))
+
+
+(defn build-page-merge-event
+  "Builds `:datascript/page-merge` event with:
+  - `uid`: `:block/uid` of page being renamed
+  - `old-name`: old page name
+  - `new-name`: new page name"
+  [last-tx uid old-name new-name]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/merge-page
+     :event/args    {:uid      uid
+                     :old-name old-name
+                     :new-name new-name}}))
+
+
+(defn build-page-delete-event
+  "Builds `:datascript/page-delete` event with:
+  - `uid`: of page to be deleted."
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/delete-page
+     :event/args    {:uid uid}}))
+
+
 ;; TODO: Do we need `value` here? can't we discover it during event resolution?
 (defn build-paste-verbatim-event
   "Builds `:datascript/paste-verbatim` evnt with:
@@ -86,17 +127,6 @@
                      :text  text
                      :start start
                      :value value}}))
-
-
-(defn build-page-delete-event
-  "Builds `:datascript/page-delete` event with:
-  - `uid`: of page to be deleted."
-  [last-tx uid]
-  (let [event-id (gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/delete-page
-     :event/args    {:uid uid}}))
 
 
 ;;   - block events
@@ -219,6 +249,7 @@
      :event/last-tx last-tx
      :event/type    :datascript/page-remove-shortcut
      :event/args    {:uid uid}}))
+
 
 (defn build-indent-event
   "Builds `: indent` event with:

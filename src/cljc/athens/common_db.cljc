@@ -179,12 +179,107 @@
       (conj :node/title :page/sidebar)))
 
 
+(defn get-page-uid-by-title
+  "Finds page `:block/uid` by `page-title`."
+  [db page-title]
+  (d/q '[:find ?uid .
+         :in $ ?title
+         :where
+         [?eid :node/title ?title]
+         [?eid :block/uid ?uid]]
+       db
+       page-title))
+
+
+(defn existing-block-count
+  "Count is used to reindex blocks after merge."
+  [db local-title]
+  (count (d/q '[:find [?ch ...]
+                :in $ ?t
+                :where
+                [?e :node/title ?t]
+                [?e :block/children ?ch]]
+              db local-title)))
+
+
+(defn map-new-refs
+  "Find and replace linked ref with new linked ref, based on title change."
+  [linked-refs old-title new-title]
+  (map (fn [{:block/keys [uid string]}]
+         (let [new-str (string/replace string
+                                       (patterns/linked old-title)
+                                       (str "$1$3$4" new-title "$2$5"))]
+           {:db/id        [:block/uid uid]
+            :block/string new-str}))
+       linked-refs))
+
+
 (defn get-page-document
   "Retrieves whole page 'document', meaning with children."
   [db eid]
   (-> db
       (d/pull node-document-pull-vector eid)
       sort-block-children))
+
+
+(defn- shape-parent-query
+  "Normalize path from deeply nested block to root node."
+  [pull-results]
+  (->> (loop [b   pull-results
+              res []]
+         (if (:node/title b)
+           (conj res b)
+           (recur (first (:block/_children b))
+                  (conj res (dissoc b :block/_children)))))
+       rest
+       reverse
+       vec))
+
+
+(defn get-block-document
+  [db id]
+  (->> (d/pull db block-document-pull-vector id)
+       sort-block-children))
+
+
+(defn get-parents-recursively
+  [db eid]
+  (->> (d/pull db '[:db/id :node/title :block/uid :block/string {:block/_children ...}] eid)
+       shape-parent-query))
+
+
+(defn merge-parents-and-block
+  [db ref-ids]
+  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively db v)))
+                           {}
+                           ref-ids)
+        blocks (map (fn [id] (get-block-document db id)) ref-ids)]
+    (mapv
+      (fn [block]
+        (merge block {:block/parents (get parents (:db/id block))}))
+      blocks)))
+
+
+(defn group-by-parent
+  [blocks]
+  (group-by (fn [x]
+              (-> x
+                  :block/parents
+                  first
+                  :node/title))
+            blocks))
+
+
+(defn get-linked-refs-by-page-title
+  [db page-title]
+  (->> (d/pull db '[* :block/_refs] [:node/title page-title])
+       :block/_refs
+       (mapv :db/id)
+       (merge-parents-and-block db)
+       group-by-parent
+       (sort-by :db/id)
+       vec
+       rseq))
 
 
 (defn- extract-tag-values

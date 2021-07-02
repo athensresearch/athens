@@ -673,6 +673,44 @@
 
 
 (reg-event-fx
+  :page/rename
+  (fn [_db [_ {:keys [page-uid old-name new-name callback] :as args}]]
+    (let [local? (not (client/open?))]
+      (js/console.debug ":page/rename local?" local? ", args:" (pr-str (select-keys args [:page-uid
+                                                                                          :old-name
+                                                                                          :new-name])))
+      (if local?
+        (let [page-rename-event (common-events/build-page-rename-event -1
+                                                                       page-uid
+                                                                       old-name
+                                                                       new-name)
+              page-rename-tx    (resolver/resolve-event-to-tx @db/dsdb page-rename-event)]
+          (js/console.debug ":page/rename txs:" (pr-str page-rename-tx))
+          {:fx [[:dispatch [:transact page-rename-tx]]
+                [:invoke-callback callback]]})
+        (throw (js/Error. ":page/rename remote not implemented, yet"))))))
+
+
+(reg-event-fx
+  :page/merge
+  (fn [_db [_ {:keys [page-uid old-name new-name callback] :as args}]]
+    (let [local? (not (client/open?))]
+      (js/console.debug ":page/merge local?" local? ", args:" (pr-str (select-keys args [:page-uid
+                                                                                         :old-name
+                                                                                         :new-name])))
+      (if local?
+        (let [page-merge-event (common-events/build-page-merge-event -1
+                                                                     page-uid
+                                                                     old-name
+                                                                     new-name)
+              page-merge-tx    (resolver/resolve-event-to-tx @db/dsdb page-merge-event)]
+          (js/console.debug ":page/merge txs:" (pr-str page-merge-tx))
+          {:fx [[:dispatch [:transact page-merge-tx]]
+                [:invoke-callback callback]]})
+        (throw (js/Error. ":page/merge remote not implemented, yet"))))))
+
+
+(reg-event-fx
   :page/delete
   (fn [_ [_ uid _title]]
     (js/console.debug ":page/delete:" uid)

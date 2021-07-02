@@ -9,9 +9,9 @@
     ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    [athens.common-db :as common-db]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-    [athens.patterns :as patterns]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
@@ -243,40 +243,6 @@
     (swap! state assoc :title/local value)))
 
 
-(defn map-new-refs
-  "Find and replace linked ref with new linked ref, based on title change."
-  [linked-refs old-title new-title]
-  (map (fn [{:block/keys [uid string]}]
-         (let [new-str (str/replace string
-                                    (patterns/linked old-title)
-                                    (str "$1$3$4" new-title "$2$5"))]
-           {:db/id [:block/uid uid]
-            :block/string new-str}))
-       linked-refs))
-
-
-(defn get-existing-page
-  "?uid used for navigate-uid. Go to existing page following the merge."
-  [local-title]
-  (d/q '[:find ?uid .
-         :in $ ?t
-         :where
-         [?e :node/title ?t]
-         [?e :block/uid ?uid]]
-       @db/dsdb local-title))
-
-
-(defn existing-block-count
-  "Count is used to reindex blocks after merge."
-  [local-title]
-  (count (d/q '[:find [?ch ...]
-                :in $ ?t
-                :where
-                [?e :node/title ?t]
-                [?e :block/children ?ch]]
-              @db/dsdb local-title)))
-
-
 (declare init-state)
 
 
@@ -287,34 +253,34 @@
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state
   The current blocks will be at the end of the existing page."
-  [node state linked-refs]
-  (let [{dbid :db/id children :block/children} node
-        {:keys [title/initial title/local]} @state]
-    (when (not= initial local)
-      (let [existing-page     (get-existing-page local)
-            linked-ref-blocks (mapcat second linked-refs)
-            new-linked-refs   (map-new-refs linked-ref-blocks initial local)]
-        (if (empty? existing-page)
-          (let [new-page   {:db/id dbid :node/title local}
-                new-datoms (concat [new-page] new-linked-refs)]
-            (swap! state assoc :title/initial local)
-            (dispatch [:transact new-datoms]))
-          (let [new-parent-uid            existing-page
-                existing-page-block-count (existing-block-count local)
-                reindex                   (map (fn [{:block/keys [order uid]}]
-                                                 {:db/id           [:block/uid uid]
-                                                  :block/order     (+ order existing-page-block-count)
-                                                  :block/_children [:block/uid new-parent-uid]})
-                                               children)
-                delete-page               [:db/retractEntity dbid]
-                new-datoms                (concat [delete-page]
-                                                  new-linked-refs
-                                                  reindex)
-                cancel-fn                 #(swap! state merge init-state)
-                confirm-fn                (fn []
-                                            (navigate-uid new-parent-uid)
-                                            (dispatch [:transact new-datoms])
-                                            (cancel-fn))]
+  [node state]
+  (let [{page-uid :block/uid} node
+        {:title/keys [initial
+                      local]} @state
+        do-nothing?           (= initial local)]
+    (js/console.debug "handle-blur: do-nothing?" do-nothing?
+                      ", local:" (pr-str local)
+                      ", page-uid:" page-uid)
+    (when-not do-nothing?
+      (let [existing-page-uid (common-db/get-page-uid-by-title @db/dsdb local)
+            merge?            (not (nil?  existing-page-uid))]
+        (js/console.debug "new-page-name:" (pr-str local)
+                          ", existing-page-uid:" (pr-str existing-page-uid))
+        (if-not merge?
+          (dispatch [:page/rename {:page-uid page-uid
+                                   :old-name initial
+                                   :new-name local
+                                   :callback #(swap! state assoc :title/initial local)}])
+
+          (let [cancel-fn  #(swap! state merge init-state)
+                confirm-fn (fn []
+                             (navigate-uid existing-page-uid)
+                             (dispatch [:page/merge {:page-uid page-uid
+                                                     :old-name initial
+                                                     :new-name local
+                                                     :callback cancel-fn}]))]
+            ;; display alert
+            ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
                    :alert/show true
                    :alert/message (str "\"" local "\"" " already exists, merge pages?")
@@ -581,7 +547,7 @@
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
                                 (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state linked-refs))
+                              (handle-blur node state))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)

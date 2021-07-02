@@ -10,6 +10,8 @@
    :presence/hello
    :presence/editing
    :datascript/create-page
+   :datascript/rename-page
+   :datascript/merge-page
    :datascript/delete-page
    :datascript/block-save
    :datascript/new-block
@@ -61,6 +63,15 @@
    [:event/args
     [:map
      [:uid string?]]]])
+
+
+(def datascript-rename-page
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:odl-name string?]
+     [:new-name string?]]]])
 
 
 (def datascript-block-save
@@ -149,6 +160,12 @@
    [:datascript/create-page
     (mu/merge event-common
               datascript-create-page)]
+   [:datascript/rename-page
+    (mu/merge event-common
+              datascript-rename-page)]
+   [:datascript/merge-page
+    (mu/merge event-common
+              datascript-rename-page)] ; Same args as `datascript-rename-page`
    [:datascript/delete-page
     (mu/merge event-common
               datascript-delete-page)]
@@ -170,6 +187,9 @@
    [:datascript/split-block-to-children
     (mu/merge event-common
               datascript-split-block)] ; same args as `datascript-split-block`
+   [:datascript/indent
+    (mu/merge event-common
+              datascript-indent)]
    [:datascript/unindent
     (mu/merge event-common
               datascript-unindent)]
