@@ -285,6 +285,40 @@
 ;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
 
 
+(t/deftest unindent-test
+  (t/testing "Just unindent already"
+    (let [parent-uid  "test-parent-1-uid"
+          child-1-uid "test-child-1-1-uid"
+          child-text  "abc123"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children {:db/id          -2
+                                         :block/uid      parent-uid
+                                         :block/string   ""
+                                         :block/order    0
+                                         :block/children {:db/id          -3
+                                                          :block/uid      child-1-uid
+                                                          :block/string   child-text
+                                                          :block/order    0
+                                                          :block/children []}}}]]
+      (d/transact @fixture/connection setup-txs)
+      (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+            child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+            unindent-event (common-events/build-unindent-event -1
+                                                               child-1-uid
+                                                               child-text)
+            unindent-txs   (resolver/resolve-event-to-tx @@fixture/connection unindent-event)]
+        (t/is (= 1 (-> parent-block :block/children count)))
+        (t/is (= [(select-keys child-1-block [:block/uid :block/order])]
+                 (:block/children parent-block)))
+
+        (d/transact @fixture/connection unindent-txs)
+        (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])]
+          (t/is (= 0 (-> parent-block :block/children count)))
+          (t/is (= 1 (:block/order child-1-block))))))))
+
 
 (t/deftest unindent-multi-test
   (t/testing "Just unindent multiple blocks already"
