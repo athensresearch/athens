@@ -772,7 +772,7 @@
            tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-below-event)]
        (js/console.debug ":left-sidebar/drop-below local?" local?)
        {:fx [[:dispatch [:transact tx-data]]]})
-     {:fx [[:dispatch [:remote/left-sidebar-drop-below]]]})))
+     {:fx [[:dispatch [:remote/left-sidebar-drop-below source-order target-order]]]})))
 
 
 (reg-event-fx

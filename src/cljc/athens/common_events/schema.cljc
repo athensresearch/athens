@@ -24,7 +24,8 @@
    :datascript/indent
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
-   :datascript/left-sidebar-drop-above])
+   :datascript/left-sidebar-drop-above
+   :datascript/left-sidebar-drop-below])
 
 
 (def event-common
@@ -156,6 +157,13 @@
         [:source-order int?]
         [:target-order int?]]]])
 
+(def datascript-left-sidebar-drop-below
+  [:map
+   [:event/args
+    [:map
+     [:source-order int?]
+     [:target-order int?]]]])
+
 (def event
   [:multi {:dispatch :event/type}
    [:presence/hello
@@ -211,7 +219,10 @@
               datascript-page-remove-shortcut)]
   [:datascript/left-sidebar-drop-above
    (mu/merge event-common
-             datascript-left-sidebar-drop-above)]])
+             datascript-left-sidebar-drop-above)]
+  [:datascript/left-sidebar-drop-below
+   (mu/merge event-common
+             datascript-left-sidebar-drop-below)]])
 
 
 (def valid-event?

@@ -28,6 +28,7 @@
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
+    :datascript/left-sidebar-drop-below
     ;; TODO: all the events
     })
 
