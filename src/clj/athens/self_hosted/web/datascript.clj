@@ -24,11 +24,10 @@
     :datascript/unindent
     :datascript/indent
     :datascript/indent-multi
-    :datascript/unindent-multi})
+    :datascript/unindent-multi
     :datascript/page-add-shortcut
-    :datascript/page-remove-shortcut
+    :datascript/page-remove-shortcut})
     ;; TODO: all the events
-    })
 
 
 (defn transact!
