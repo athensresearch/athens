@@ -1484,32 +1484,22 @@
     {:dispatch [:transact (drop-same-parent kind source parent target)]}))
 
 
-(defn drop-diff-parent
-  "- Give source-block target-block's order.
-  - inc-after target
-  - dec-after source"
-  [kind source source-parent target target-parent]
-  (let [t-order               (:block/order target)
-        new-block             {:db/id (:db/id source) :block/order (if (= kind :above)
-                                                                     t-order
-                                                                     (inc t-order))}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
-                                   (concat [new-block]))
-        retract               [:db/retract (:db/id source-parent) :block/children (:db/id source)]
-        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
-    [retract
-     new-source-parent
-     new-target-parent]))
-
 
 (reg-event-fx
   :drop/diff
-  (fn [_ [_ kind source source-parent target target-parent]]
-    {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop/diff args" args)
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-diff-event (common-events/build-drop-diff-event -1
+                                                                   drag-target
+                                                                   source-uid
+                                                                   target-uid)
+              tx              (resolver/resolve-event-to-tx drop-diff-event)]
+          (js/console.debug ":drop/diff tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-diff args]]]}))))
+
 
 
 (defn drop-multi-same-parent-all

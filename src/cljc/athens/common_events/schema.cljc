@@ -24,7 +24,8 @@
    :datascript/indent
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
-   :datascript/drop-child])
+   :datascript/drop-child
+   :datascript/drop-diff])
 
 
 (def event-common
@@ -156,6 +157,15 @@
     [:map
      [:source-uid string?
       :target-eid string?]]]])
+
+(def datascript-drop-diff
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-eid  string?]]]])
+
 
 
 (def event

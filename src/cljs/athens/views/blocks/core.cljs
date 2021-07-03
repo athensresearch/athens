@@ -156,7 +156,9 @@
                         (and (= effect-allowed "move") (= drag-target :child))    [:drop/child {:source-uid source-uid
                                                                                                 :target-uid target-uid}]
                         (and (= effect-allowed "move") same-parent?)              [:drop/same drag-target source source-parent target]
-                        (and (= effect-allowed "move") (not same-parent?))        [:drop/diff drag-target source source-parent target target-parent]
+                        (and (= effect-allowed "move") (not same-parent?))        [:drop/diff {:drag-target drag-target
+                                                                                               :source-uid  source-uid
+                                                                                               :target-uid  target-uid}]
                         (and (= effect-allowed "link") (= drag-target :child))    [:drop-link/child source target]
                         (and (= effect-allowed "link") same-parent?)              [:drop-link/same drag-target source source-parent target]
                         (and (= effect-allowed "link") (not same-parent?))        [:drop-link/diff drag-target source target target-parent])]

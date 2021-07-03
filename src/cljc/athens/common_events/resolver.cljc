@@ -375,5 +375,38 @@
         tx-data                            [retract
                                             new-source-parent
                                             new-target-parent]]
-    (println "resolver :datascript/drop-event tx-data" (pr-str tx-data))
+    (println "resolver :datascript/drop-child tx-data" (pr-str tx-data))
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/drop-diff
+  [db {:event/keys [args]}]
+  (let [{:keys [drag-target
+                source-uid
+                target-uid]}                args
+        {source-block-eid   :db/id
+         source-block-order :block/order}   (common-db/get-block  db [:block/uid source-uid])
+        {source-parent-eid  :db/id}         (common-db/get-parent db [:block/uid source-uid])
+        {target-block-order :block/order}   (common-db/get-block  db [:block/uid target-uid])
+        {target-parent-eid  :db/id}         (common-db/get-parent db [:block/uid target-uid])
+        new-block                           {:db/id       source-block-eid
+                                             :block/order (if (= drag-target :above)
+                                                            target-block-order
+                                                            (inc target-block-order))}
+        reindex-source-parent               (common-db/dec-after db source-parent-eid source-block-order)
+        reindex-target-parent               (concat
+                                              [new-block]
+                                              (common-db/inc-after db target-parent-eid (if (= drag-target :above)
+                                                                                           (dec target-block-order)
+                                                                                           target-block-order)))
+        retract                             [:db/retract     source-parent-eid
+                                             :block/children source-block-eid]
+        new-source-parent                   {:db/id          source-parent-eid
+                                             :block/children reindex-source-parent}
+        new-target-parent                   {:db/id          target-parent-eid
+                                             :block/children reindex-target-parent}
+        tx-data                             [retract
+                                             new-source-parent
+                                             new-target-parent]]
+    (js/console.debug "resolver :datascript/drof-diff tx-data" (pr-str tx-data))
     tx-data))

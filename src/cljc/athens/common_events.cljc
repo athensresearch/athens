@@ -281,13 +281,28 @@
   "Builds `:datascript/drop-child` event with:
   - `source-uid` : uid of the source block
   - `target-eid` : `:db/id` of the target block"
-  [last-tx source-uid target-uid]
+  [last-tx source-uid target-eid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-child
      :event/args    {:source-uid source-uid
-                     :target-eid target-uid}}))
+                     :target-eid target-eid}}))
+
+
+(defn build-drop-diff-event
+  "Builds `:datascript/drop-diff` event with:
+  - `source-uid` : uid of the source block
+  - `target-uid` : uid of the target block
+  - `drag-target`: defines where is the block dragged it can be :above, :below, :child"
+  [last-tx drag-target source-uid target-uid ]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-child
+     :event/args    {:source-uid  source-uid
+                     :target-uid  target-uid
+                     :drag-target drag-target}}))
 
 
 ;; - presence events
