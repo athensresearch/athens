@@ -280,7 +280,7 @@
   (fn [{db :db} [_ uid]]
     (let [last-seen-tx          (:remote/last-seen-tx db)
           remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
-      (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
+      (js/console.debug ":remote/page-remove-shortcut:" (pr-str remove-shortcut-event))
       {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]]})))
 
 
@@ -300,6 +300,23 @@
           left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below last-seen-tx source-order target-order)]
       (js/console.debug ":remote/left-sidebar-drop-below" (pr-str left-sidebar-drop-below-event))
       {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-below-event]]]})))
+
+(rf/reg-event-fx
+  :remote/unlinked-references-link
+  (fn [{db :db} [_ {:block/keys [string uid]} title]]
+    (let [last-seen-tx                   (:remote/last-seen-tx db)
+          unlinked-references-link-event (common-events/unlinked-references-link last-seen-tx uid string title)]
+      (js/console.debug ":remote/unlinked-references-link:" (pr-str unlinked-references-link-event))
+      {:fx [[:dispatch [:remote/send-event! unlinked-references-link-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unlinked-references-link-all
+  (fn [{db :db} [_ unlinked-refs title]]
+    (let [last-seen-tx                       (:remote/last-seen-tx db)
+          unlinked-references-link-all-event (common-events/unlinked-references-link-all last-seen-tx unlinked-refs title)]
+      (js/console.debug ":remote/unlinked-references-link-all:" (pr-str unlinked-references-link-all-event))
+      {:fx [[:dispatch [:remote/send-event! unlinked-references-link-all-event]]]})))
 
 
 ;; - Block related

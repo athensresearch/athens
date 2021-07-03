@@ -29,6 +29,8 @@
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
+    :datascript/unlinked-references-link
+    :datascript/unlinked-references-link-all
     ;; TODO: all the events
     })
 

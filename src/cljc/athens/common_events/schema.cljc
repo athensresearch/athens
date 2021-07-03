@@ -25,7 +25,9 @@
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
-   :datascript/left-sidebar-drop-below])
+   :datascript/left-sidebar-drop-below
+   :datascript/unlinked-references-link
+   :datascript/unlinked-references-link-all])
 
 
 (def event-common
@@ -165,6 +167,21 @@
     [:map
      [:source-order int?]
      [:target-order int?]]]])
+(def datascript-unlinked-references-link
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:string string?]
+     [:title string?]]]])
+
+
+(def datascript-unlinked-references-link-all
+  [:map
+   [:event/args
+    [:map
+     [:unlinked-refs seq?]
+     [:title string?]]]])
 
 
 (def event
@@ -225,7 +242,13 @@
               datascript-left-sidebar-drop-above)]
    [:datascript/left-sidebar-drop-below
     (mu/merge event-common
-              datascript-left-sidebar-drop-below)]])
+              datascript-left-sidebar-drop-below)]
+   [:datascript/unlinked-references-link
+    (mu/merge event-common
+              datascript-unlinked-references-link)]
+   [:datascript/unlinked-references-link-all
+    (mu/merge event-common
+              datascript-unlinked-references-link-all)]])
 
 
 (def valid-event?
