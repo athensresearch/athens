@@ -379,7 +379,7 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/drop-diff
+(defmethod resolve-event-to-tx :datascript/drop-diff-parent
   [db {:event/keys [args]}]
   (let [{:keys [drag-target
                 source-uid

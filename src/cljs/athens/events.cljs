@@ -1486,19 +1486,19 @@
 
 
 (reg-event-fx
-  :drop/diff
+  :drop/diff-parent
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (js/console.debug ":drop/diff args" args)
+    (js/console.debug ":drop/diff-parent args" args)
     (let [local? (not (client/open?))]
       (if local?
-        (let [drop-diff-event (common-events/build-drop-diff-event -1
-                                                                   drag-target
-                                                                   source-uid
-                                                                   target-uid)
-              tx              (resolver/resolve-event-to-tx drop-diff-event)]
-          (js/console.debug ":drop/diff tx" tx)
+        (let [drop-diff-parent-event (common-events/build-drop-diff-parent-event -1
+                                                                                 drag-target
+                                                                                 source-uid
+                                                                                 target-uid)
+              tx              (resolver/resolve-event-to-tx drop-diff-parent-event)]
+          (js/console.debug ":drop/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/drop-diff args]]]}))))
+        {:fx [[:dispatch [:remote/drop-diff-parent args]]]}))))
 
 
 
