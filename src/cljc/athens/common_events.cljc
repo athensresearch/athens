@@ -277,6 +277,19 @@
                      :new-uid new-uid}}))
 
 
+(defn build-drop-child-event
+  "Builds `:datascript/drop-child` event with:
+  - `source-uid` : uid of the source block
+  - `target-eid` : `:db/id` of the target block"
+  [last-tx source-uid target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-child
+     :event/args    {:source-uid source-uid
+                     :target-eid target-uid}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

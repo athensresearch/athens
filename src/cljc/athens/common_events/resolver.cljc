@@ -354,3 +354,26 @@
         remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
         tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
     tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/drop-child
+  [db {:event/keys [args]}]
+  (let [{:keys [source-uid
+                target-eid]} args
+        {source-block-order :block/order}  (common-db/get-block  db [:block/uid source-uid])
+        {source-parent-eid :db/id}         (common-db/get-parent db [:block/uid source-uid])
+        new-source-block                   {:block/uid   source-uid
+                                            :block/order 0}
+        reindex-source-parent              (common-db/dec-after db source-parent-eid source-block-order)
+        reindex-target-parent              (common-db/inc-after db target-eid -1)
+        retract                            [:db/retract     source-parent-eid
+                                            :block/children [:block/uid source-uid]]
+        new-source-parent                  {:db/id          source-parent-eid
+                                            :block/children reindex-source-parent}
+        new-target-parent                  {:db/id          target-eid
+                                            :block/children (conj reindex-target-parent new-source-block)}
+        tx-data                            [retract
+                                            new-source-parent
+                                            new-target-parent]]
+    (println "resolver :datascript/drop-event tx-data" (pr-str tx-data))
+    tx-data))

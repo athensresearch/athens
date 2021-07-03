@@ -23,7 +23,8 @@
    :datascript/paste-verbatim
    :datascript/indent
    :datascript/page-add-shortcut
-   :datascript/page-remove-shortcut])
+   :datascript/page-remove-shortcut
+   :datascript/drop-child])
 
 
 (def event-common
@@ -147,6 +148,14 @@
    [:event/args
     [:map
      [:uid string?]]]])
+
+
+(def datascript-drop-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uid string?
+      :target-eid string?]]]])
 
 
 (def event

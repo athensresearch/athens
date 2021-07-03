@@ -1,25 +1,26 @@
 (ns athens.views.blocks.core
   (:require
-    [athens.db :as db]
-    [athens.electron :as electron]
-    [athens.self-hosted.presence.views :as presence]
-    [athens.style :as style]
-    [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
+    [athens.db                               :as db]
+    [athens.electron                         :as electron]
+    [athens.self-hosted.presence.views       :as presence]
+    [athens.style                            :as style]
+    [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
-    [athens.views.blocks.autocomplete-slash :as autocomplete-slash]
-    [athens.views.blocks.bullet :as bullet]
-    [athens.views.blocks.content :as content]
-    [athens.views.blocks.context-menu :as context-menu]
+    [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
+    [athens.views.blocks.bullet              :as bullet]
+    [athens.views.blocks.content             :as content]
+    [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.toggle :as toggle]
-    [athens.views.blocks.tooltip :as tooltip]
-    [athens.views.buttons :as buttons]
+    [athens.views.blocks.toggle              :as toggle]
+    [athens.views.blocks.tooltip             :as tooltip]
+    [athens.views.buttons                    :as buttons]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [com.rpl.specter :as s]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [com.rpl.specter                         :as s]
+    [re-frame.core                           :as rf]
+    [reagent.core                            :as r]
+    [stylefy.core                            :as stylefy]
+    [athens.common-db                        :as common-db]))
 
 
 ;; Styles
@@ -143,34 +144,51 @@
       (swap! state assoc :drag-target target))))
 
 
+(defn drop-bullet
+  [source-uid target-uid drag-target effect-allowed]
+  (let [dsdb          @db/dsdb
+        source        (common-db/get-block  dsdb [:block/uid source-uid])
+        target        (common-db/get-block  dsdb [:block/uid target-uid])
+        source-parent (common-db/get-parent dsdb [:block/uid source-uid])
+        target-parent (common-db/get-parent dsdb [:block/uid target-uid])
+        same-parent?  (= source-parent target-parent)
+        event         (cond
+                        (and (= effect-allowed "move") (= drag-target :child))    [:drop/child {:source-uid source-uid
+                                                                                                :target-uid target-uid}]
+                        (and (= effect-allowed "move") same-parent?)              [:drop/same drag-target source source-parent target]
+                        (and (= effect-allowed "move") (not same-parent?))        [:drop/diff drag-target source source-parent target target-parent]
+                        (and (= effect-allowed "link") (= drag-target :child))    [:drop-link/child source target]
+                        (and (= effect-allowed "link") same-parent?)              [:drop-link/same drag-target source source-parent target]
+                        (and (= effect-allowed "link") (not same-parent?))        [:drop-link/diff drag-target source target target-parent])]
+    (println ".event" event)
+    (rf/dispatch event)))
+
 (defn block-drop
   "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
   [e block state]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         [target-uid _]          (db/uid-and-embed-id target-uid)
-        {:keys [drag-target]} @state
-        source-uid     (.. e -dataTransfer (getData "text/plain"))
-        effect-allowed (.. e -dataTransfer -effectAllowed)
-
-        items          (array-seq (.. e -dataTransfer -items))
-        item           (first items)
-        datatype       (.. item -type)
-
-        img-regex      #"(?i)^image/(p?jpeg|gif|png)$"
-
-        valid-text-drop     (and (not (nil? drag-target))
-                                 (not= source-uid target-uid)
-                                 (or (= effect-allowed "link")
-                                     (= effect-allowed "move")))
-        selected-items @(rf/subscribe [:selected/items])]
+        {:keys [drag-target]}   @state
+        source-uid              (.. e -dataTransfer (getData "text/plain"))
+        effect-allowed          (.. e -dataTransfer -effectAllowed)
+        items                   (array-seq (.. e -dataTransfer -items))
+        item                    (first items)
+        datatype                (.. item -type)
+        img-regex               #"(?i)^image/(p?jpeg|gif|png)$"
+        valid-text-drop         (and (not (nil? drag-target))
+                                     (not= source-uid target-uid)
+                                     (or (= effect-allowed "link")
+                                         (= effect-allowed "move")))
+        selected-items           @(rf/subscribe [:selected/items])]
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
                                      (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
-                                           (rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
+                                           (drop-bullet source-uid target-uid drag-target effect-allowed)
+                                           #_(rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
                                            (rf/dispatch [:drop-multi selected-items target-uid drag-target]))))
 
     (rf/dispatch [:mouse-down/unset])

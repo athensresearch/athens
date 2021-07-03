@@ -499,3 +499,14 @@
                                                                          start
                                                                          value)]
       {:fx [[:dispatch [:remote/send-event! paste-verbatim-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-child
+  (fn [{db :db} [_ source-uid target-eid]]
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-child-event (common-events/build-drop-child-event last-seen-tx
+                                                                 source-uid
+                                                                 target-eid)]
+      (js/console.debug ":remote/drop-child event" drop-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-child-event]]]})))

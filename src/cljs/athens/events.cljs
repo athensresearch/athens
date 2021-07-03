@@ -1419,25 +1419,20 @@
     {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
 
 
-(defn drop-child
-  "Order will always be 0"
-  [source source-parent target]
-  (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (inc-after (:db/id target) -1)
-        retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
-        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
-        tx-data               [retract
-                               new-source-parent
-                               new-target-parent]]
-    tx-data))
-
-
 (reg-event-fx
   :drop/child
-  (fn [_ [_ source source-parent target]]
-    {:dispatch [:transact (drop-child source source-parent target)]}))
+  (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":drop/child args" (pr-str args))
+    (let [local?               (not (client/open?))
+          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+      (if local?
+        (let [drop-child-event (common-events/build-drop-child-event -1
+                                                                     source-uid
+                                                                     target-eid)
+              tx               (resolver/resolve-event-to-tx @db/dsdb drop-child-event)]
+          (js/console.debug ":drop/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-child source-uid target-eid]]]}))))
 
 
 (defn between
@@ -1515,29 +1510,6 @@
   :drop/diff
   (fn [_ [_ kind source source-parent target target-parent]]
     {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
-
-
-(defn drop-bullet
-  [source-uid target-uid kind effect-allowed]
-  (let [source        (db/get-block [:block/uid source-uid])
-        target        (db/get-block [:block/uid target-uid])
-        source-parent (db/get-parent [:block/uid source-uid])
-        target-parent (db/get-parent [:block/uid target-uid])
-        same-parent?  (= source-parent target-parent)
-        event         (cond
-                        (and (= effect-allowed "move") (= kind :child)) [:drop/child source source-parent target]
-                        (and (= effect-allowed "move") same-parent?) [:drop/same kind source source-parent target]
-                        (and (= effect-allowed "move") (not same-parent?)) [:drop/diff kind source source-parent target target-parent]
-                        (and (= effect-allowed "link") (= kind :child)) [:drop-link/child source target]
-                        (and (= effect-allowed "link") same-parent?) [:drop-link/same kind source source-parent target]
-                        (and (= effect-allowed "link") (not same-parent?)) [:drop-link/diff kind source target target-parent])]
-    {:dispatch event}))
-
-
-(reg-event-fx
-  :drop
-  (fn [_ [_ source-uid target-uid kind effect-allowed]]
-    (drop-bullet source-uid target-uid kind effect-allowed)))
 
 
 (defn drop-multi-same-parent-all
