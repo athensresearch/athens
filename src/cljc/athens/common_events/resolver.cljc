@@ -359,7 +359,7 @@
 (defmethod resolve-event-to-tx :datascript/drop-child
   [db {:event/keys [args]}]
   (let [{:keys [source-uid
-                target-eid]} args
+                target-eid]}               args
         {source-block-order :block/order}  (common-db/get-block  db [:block/uid source-uid])
         {source-parent-eid :db/id}         (common-db/get-parent db [:block/uid source-uid])
         new-source-block                   {:block/uid   source-uid
@@ -376,6 +376,25 @@
                                             new-source-parent
                                             new-target-parent]]
     (println "resolver :datascript/drop-child tx-data" (pr-str tx-data))
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/drop-link-child
+  [db {:event/keys [args]}]
+  (let [{:keys [source-uid
+                target-eid]}               args
+        new-uid                            (gen-block-uid)
+        new-string                         (str "((" source-uid "))")
+        new-source-block                   {:block/uid    new-uid
+                                            :block-string new-string
+                                            :block/order  0
+                                            :block.open   true}
+        reindex-target-parent              (common-db/inc-after db target-eid -1)
+        new-target-parent                  {:db/id          target-eid
+                                            :block/children (conj reindex-target-parent new-source-block)}
+        tx-data                            [new-source-block
+                                            new-target-parent]]
+    (println "resolver :datascript/drop-link-child tx-data" (pr-str tx-data))
     tx-data))
 
 

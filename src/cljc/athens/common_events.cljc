@@ -290,6 +290,19 @@
                      :target-eid target-eid}}))
 
 
+(defn build-drop-link-child-event
+  "Builds `:datascript/drop-link-child` event with:
+  - `source-uid` : uid of the source block
+  - `target-eid` : `:db/id` of the target block"
+  [last-tx source-uid target-eid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-link-child
+     :event/args    {:source-uid source-uid
+                     :target-eid target-eid}}))
+
+
 (defn build-drop-diff-parent-event
   "Builds `:datascript/drop-diff-parent` event with:
   - `source-uid` : uid of the source block

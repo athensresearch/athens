@@ -1333,23 +1333,20 @@
       (unindent-multi uids context-root-uid))))
 
 
-(defn drop-link-child
-  "Create a new block with the reference to the source block, as a child"
-  [source target]
-  (let [new-uid               (gen-block-uid)
-        new-string            (str "((" (source :block/uid) "))")
-        new-source-block      {:block/uid new-uid :block/string new-string :block/order 0 :block/open true}
-        reindex-target-parent (inc-after (:db/id target) -1)
-        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
-        tx-data               [new-source-block
-                               new-target-parent]]
-    tx-data))
-
-
 (reg-event-fx
   :drop-link/child
-  (fn [_ [_ source target]]
-    {:dispatch [:transact (drop-link-child source target)]}))
+  (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":drop-link/child args" (pr-str args))
+    (let [local?               (not (client/open?))
+          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+      (if local?
+        (let [drop-link-child-event (common-events/build-drop-link-child-event -1
+                                                                               source-uid
+                                                                               target-eid)
+              tx               (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
+          (js/console.debug ":drop-link/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-link-child source-uid target-eid]]]}))))
 
 
 (defn drop-link-same-parent
