@@ -26,7 +26,8 @@
    :datascript/page-remove-shortcut
    :datascript/drop-child
    :datascript/drop-link-child
-   :datascript/drop-diff-parent])
+   :datascript/drop-diff-parent
+   :datascript/drop-link-diff-parent])
 
 
 (def event-common
@@ -176,6 +177,14 @@
       :source-uid  string?
       :target-eid  string?]]]])
 
+
+(def datascript-drop-link-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-eid  string?]]]])
 
 
 (def event

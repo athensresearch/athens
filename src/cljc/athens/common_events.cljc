@@ -318,6 +318,21 @@
                      :drag-target drag-target}}))
 
 
+(defn build-drop-link-diff-parent-event
+  "Builds `:datascript/drop-link-diff-parent` event with:
+  - `source-uid` : uid of the source block
+  - `target-uid` : uid of the target block
+  - `drag-target`: defines where is the block dragged it can be :above, :below, :child"
+  [last-tx drag-target source-uid target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-link-diff-parent
+     :event/args    {:source-uid  source-uid
+                     :target-uid  target-uid
+                     :drag-target drag-target}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

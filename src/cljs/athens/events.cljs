@@ -1393,27 +1393,20 @@
     {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
 
 
-(defn drop-link-diff-parent
-  "Add a link to the source block and reorder the target"
-  [kind source target target-parent]
-  (let [new-uid             (gen-block-uid)
-        new-string          (str "((" (source :block/uid) "))")
-        t-order               (:block/order target)
-        new-block             {:block/uid new-uid :block/string new-string :block/order (if (= kind :above)
-                                                                                          t-order
-                                                                                          (inc t-order))}
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
-                                   (concat [new-block]))
-        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
-    [new-target-parent]))
-
-
 (reg-event-fx
-  :drop-link/diff
-  (fn [_ [_ kind source target target-parent]]
-    {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
+  :drop-link/diff-parent
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop-link/diff-parent args" args)
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-link-diff-parent-event (common-events/build-drop-link-diff-parent-event -1
+                                                                                           drag-target
+                                                                                           source-uid
+                                                                                           target-uid)
+              tx              (resolver/resolve-event-to-tx drop-link-diff-parent-event)]
+          (js/console.debug ":drop-link/diff-parent tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))
 
 
 (reg-event-fx

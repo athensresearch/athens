@@ -163,7 +163,9 @@
                         (and (= effect-allowed "link") (= drag-target :child))    [:drop-link/child {:source-uid source-uid
                                                                                                      :target-uid target-uid}]
                         (and (= effect-allowed "link") same-parent?)              [:drop-link/same drag-target source source-parent target]
-                        (and (= effect-allowed "link") (not same-parent?))        [:drop-link/diff drag-target source target target-parent])]
+                        (and (= effect-allowed "link") (not same-parent?))        [:drop-link/diff {:drag-target drag-target
+                                                                                                    :source-uid  source-uid
+                                                                                                    :target-uid  target-uid}])]
     (println ".event" event)
     (rf/dispatch event)))
 

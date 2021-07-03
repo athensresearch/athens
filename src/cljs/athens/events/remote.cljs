@@ -533,3 +533,15 @@
                                                                               target-uid)]
       (js/console.debug ":remote/drop-diff-parent event" drop-diff-parent-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-parent-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-diff-parent
+  (fn [{db :db} [_ drag-target source-uid target-uid]]
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-link-diff-parent-event  (common-events/build-drop-link-diff-parent-event last-seen-tx
+                                                                                        drag-target
+                                                                                        source-uid
+                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-link-diff-parent event" drop-link-diff-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-diff-parent-event]]]})))
