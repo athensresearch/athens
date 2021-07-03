@@ -307,6 +307,34 @@
                      :new-uid new-uid}}))
 
 
+(defn unlinked-references-link
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `uid`:  `:block/uid` of the block with unlinked reference
+  - `string `: content of the block
+  - `title  `: title of the page"
+  [last-tx uid string title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link
+     :event/args    {:uid    uid
+                     :string string
+                     :title  title}}))
+
+
+(defn unlinked-references-link-all
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `unlinked-refs`:  vector of blocks with unlinked refs
+  - `title        `: title of the page"
+  [last-tx unlinked-refs title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link-all
+     :event/args    {:unlinked-refs unlinked-refs
+                     :title         title}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

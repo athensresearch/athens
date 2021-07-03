@@ -407,4 +407,24 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
+      tx-data))
+      
+(defmethod resolve-event-to-tx :datascript/unlinked-references-link
+  [_ {:event/keys [args]}]
+  (let [{:keys [uid string title]} args
+        ignore-case-title          (re-pattern (str "(?i)" title))
+        new-str                    (string/replace string ignore-case-title (str "[[" title "]]"))
+        tx-data                    [{:db/id [:block/uid uid] :block/string new-str}]]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/unlinked-references-link-all
+  [_ {:event/keys [args]}]
+  (let [{:keys [unlinked-refs title]} args
+        tx-data (->> unlinked-refs
+                     (mapcat second)
+                     (map (fn [{:block/keys [string uid]}]
+                            (let [ignore-case-title (re-pattern (str "(?i)" title))
+                                  new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                              {:db/id [:block/uid uid] :block/string new-str}))))]
     tx-data))
