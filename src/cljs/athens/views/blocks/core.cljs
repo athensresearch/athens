@@ -19,8 +19,7 @@
     [com.rpl.specter                         :as s]
     [re-frame.core                           :as rf]
     [reagent.core                            :as r]
-    [stylefy.core                            :as stylefy]
-    [athens.common-db                        :as common-db]))
+    [stylefy.core                            :as stylefy]))
 
 
 ;; Styles
@@ -145,32 +144,99 @@
 
 
 (defn drop-bullet
-  [source-uid target-uid drag-target effect-allowed]
-  (let [dsdb          @db/dsdb
-        source        (common-db/get-block  dsdb [:block/uid source-uid])
-        target        (common-db/get-block  dsdb [:block/uid target-uid])
-        source-parent (common-db/get-parent dsdb [:block/uid source-uid])
-        target-parent (common-db/get-parent dsdb [:block/uid target-uid])
-        same-parent?  (= source-parent target-parent)
-        event         (cond
-                        (and (= effect-allowed "move") (= drag-target :child))    [:drop/child {:source-uid source-uid
-                                                                                                :target-uid target-uid}]
-                        (and (= effect-allowed "move") same-parent?)              [:drop/same drag-target source source-parent target]
+  "
+  Terminology :
+    - DnD               : This is short for Dragged and dropped.
+    - Zero level blocks : Refers to top level blocks in a page.
+    - source-uid        : The block which is being dropped.
+    - target-uid        : The block on which source is being dropped.
+    - drag-target       : Where is the block being dragged see `types of events` section below.
+    - action-allowed    : There can be 2 types of actions.
+        - `link` action : When a block is dragged and dropped by dragging a bullet while
+                         `shift` key is pressed to create a block link.
+        - `move` action : When a block is dragged and dropped to other part of Athens page.
 
-                        (and (= effect-allowed "move") (not same-parent?))        [:drop/diff-parent {:drag-target drag-target
-                                                                                                      :source-uid  source-uid
-                                                                                                      :target-uid  target-uid}]
-                        (and (= effect-allowed "link") (= drag-target :child))    [:drop-link/child {:source-uid source-uid
-                                                                                                     :target-uid target-uid}]
-                        (and (= effect-allowed "link") same-parent?)              [:drop-link/same drag-target source source-parent target]
-                        (and (= effect-allowed "link") (not same-parent?))        [:drop-link/diff {:drag-target drag-target
-                                                                                                    :source-uid  source-uid
-                                                                                                    :target-uid  target-uid}])]
+  Types of events :
+    - `:drop/same-parent`  : When a block that is under some parent (including Zero level blocks) is DnD
+                             under that same parent this event is fired. In case of Zero level blocks if one
+                             of this level blocks changes their relative position this event is fired.
+    - `:drop/child`        : When a block is DnD as the first child of some other block this event is fired
+    - `:drop/diff-parent`  : When a block that is under some parent is DnD to some other place not under the
+                             current parent this event is fired. If a block is DnD as the first block in page
+                             it is considered `:drop/diff-parent` event."
+
+  [source-uid target-uid drag-target action-allowed]
+  (let [source                     (db/get-block  [:block/uid source-uid])
+        target                     (db/get-block  [:block/uid target-uid])
+        source-parent              (db/get-parent [:block/uid source-uid])
+        target-parent              (db/get-parent [:block/uid target-uid])
+        drag-target-child?         (= drag-target :child)
+        drag-target-same-parent?   (= source-parent target-parent)
+        drag-target-diff-parent?   (not drag-target-same-parent?)
+        move-action                (= action-allowed "move")
+        link-action                (= action-allowed "link")
+        event         (cond
+                        (and move-action drag-target-child?)       [:drop/child {:source-uid source-uid
+                                                                                 :target-uid target-uid}]
+                        (and move-action drag-target-same-parent?) [:drop/same drag-target source source-parent target]
+
+                        (and move-action drag-target-diff-parent?) [:drop/diff-parent {:drag-target drag-target
+                                                                                       :source-uid  source-uid
+                                                                                       :target-uid  target-uid}]
+                        (and link-action drag-target-child?)       [:drop-link/child {:source-uid source-uid
+                                                                                      :target-uid target-uid}]
+                        (and link-action drag-target-same-parent?) [:drop-link/same drag-target source source-parent target]
+                        (and link-action drag-target-diff-parent?) [:drop-link/diff {:drag-target drag-target
+                                                                                     :source-uid  source-uid
+                                                                                     :target-uid  target-uid}])]
     (println ".event" event)
     (rf/dispatch event)))
 
+
+(defn drop-bullet-multi
+  "
+  Terminology :
+    - DnD               : This is short for Dragged and dropped
+    - Zero level blocks : Refers to top level blocks in a page.
+    - source-uids       : Uids of the blocks which are being dropped
+    - target-uid        : Uid of the block on which source is being dropped
+
+  Types of events :
+    - `:drop-multi/same-source` : When the selected blocks have same parent and are DnD under some other block
+                                  this event is fired.
+    - `:drop-multi/same-all`    : When the selected blocks have same parent and are DnD under the same parent
+                                  this event is fired. This also applies if on selects multiple Zero level blocks
+                                  and change the order among other Zero level blocks.
+    - `:drop/child`             : When the selected blocks are DnD as the first child of some other block this event is fired
+    - `:drop/diff-parent`       : When the selected blocks don't have same parent and are DnD under some other block this
+                                  event is fired."
+  [source-uids target-uid drag-target]
+  (let [source-uids          (mapv (comp first db/uid-and-embed-id) source-uids)
+        target-uid           (first (db/uid-and-embed-id target-uid))
+        same-all?            (db/same-parent? (conj source-uids target-uid))
+        same-parent-source?  (db/same-parent? source-uids)
+        diff-parents-source? (not same-parent-source?)
+        target               (db/get-block [:block/uid target-uid])
+        first-source-uid     (first source-uids)
+        first-source-parent  (db/get-parent [:block/uid first-source-uid])
+        target-parent        (db/get-parent [:block/uid target-uid])
+        event                (cond
+                               (= drag-target :child) [:drop-multi/child {:source-uids source-uids
+                                                                          :target-uid  target-uid}]
+                               same-all?              [:drop-multi/same-all drag-target source-uids first-source-parent target]
+                               diff-parents-source?   [:drop-multi/diff-source drag-target source-uids target target-parent]
+                               same-parent-source?    [:drop-multi/same-source drag-target source-uids first-source-parent target target-parent])]
+    (println ".event" event)
+    (rf/dispatch [:selected/clear-items])
+    (rf/dispatch event)
+    {:fx [[:dispatch [:selected/clear-items]]
+          [:dispatch event]]}))
+
+
 (defn block-drop
-  "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+  "Handle dom drop events, read more about drop events at:
+  : https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+
   [e block state]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
@@ -195,7 +261,8 @@
                                          (if (empty? selected-items)
                                            (drop-bullet source-uid target-uid drag-target effect-allowed)
                                            #_(rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
-                                           (rf/dispatch [:drop-multi selected-items target-uid drag-target]))))
+                                           #_(rf/dispatch [:drop-multi selected-items target-uid drag-target])
+                                           (drop-bullet-multi selected-items target-uid drag-target))))
 
     (rf/dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))

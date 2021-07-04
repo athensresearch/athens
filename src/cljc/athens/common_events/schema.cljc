@@ -25,6 +25,7 @@
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/drop-child
+   :datascript/drop-multi-child
    :datascript/drop-link-child
    :datascript/drop-diff-parent
    :datascript/drop-link-diff-parent])
@@ -158,7 +159,15 @@
    [:event/args
     [:map
      [:source-uid string?
-      :target-eid string?]]]])
+      :target-eid int?]]]])
+
+
+(def datascript-drop-multi-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uids vector?
+      :target-eid  int?]]]])
 
 
 (def datascript-drop-link-child
@@ -166,7 +175,7 @@
    [:event/args
     [:map
      [:source-uid string?
-      :target-eid string?]]]])
+      :target-eid int?]]]])
 
 
 (def datascript-drop-diff-parent
@@ -175,7 +184,7 @@
     [:map
      [:drag-target keyword?
       :source-uid  string?
-      :target-eid  string?]]]])
+      :target-eid  int?]]]])
 
 
 (def datascript-drop-link-diff-parent
@@ -184,7 +193,7 @@
     [:map
      [:drag-target keyword?
       :source-uid  string?
-      :target-eid  string?]]]])
+      :target-eid  int?]]]])
 
 
 (def event

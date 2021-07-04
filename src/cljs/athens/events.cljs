@@ -1188,6 +1188,10 @@
 (reg-event-fx
   :indent
   (fn [_ [_ {:keys [uid d-key-down] :as args}]]
+    "- `block-zero`: The first block in a page
+     - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
+                     the local string  is reset to original value, since it has not been unfocused yet (which is currently the
+                     transaction that updates the string). "
     (js/console.debug ":indent" args)
     (let [local?                    (not (client/open?))
           block                     (common-db/get-block @db/dsdb [:block/uid uid])
@@ -1202,8 +1206,8 @@
                                                                value)
                 tx           (resolver/resolve-event-to-tx @db/dsdb indent-event)]
             (js/console.debug ":indent tx:" (pr-str tx))
-            {:fx [[:dispatch            [:transact tx]
-                   :set-cursor-position [uid start end]]]})
+            {:fx [[:dispatch            [:transact tx]]
+                  [:set-cursor-position [uid start end]]]})
           {:fx [[:dispatch [:remote/indent (merge (select-keys args [:uid])
                                                   {:start start
                                                    :end   end
@@ -1485,7 +1489,7 @@
                                                                                  drag-target
                                                                                  source-uid
                                                                                  target-uid)
-              tx              (resolver/resolve-event-to-tx drop-diff-parent-event)]
+              tx              (resolver/resolve-event-to-tx @db/dsdb drop-diff-parent-event)]
           (js/console.debug ":drop/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-diff-parent args]]]}))))
@@ -1604,31 +1608,20 @@
     tx-data))
 
 
-(defn drop-multi-child
-  [source-uids target]
-  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
-        source-parents        (mapv #(db/get-parent [:block/uid %]) source-uids)
-        last-source           (last source-blocks)
-        last-s-order          (:block/order last-source)
-        last-s-parent         (last source-parents)
-        new-source-blocks     (map-indexed (fn [idx x] {:block/uid (:block/uid x) :block/order idx})
-                                           source-blocks)
-        n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
-        reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
-        reindex-target-parent (plus-after (:db/id target) -1 n)
-        retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
-                                    source-uids
-                                    source-parents)
-        new-source-parent     {:db/id (:db/id last-s-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target) :block/children (concat reindex-target-parent new-source-blocks)}
-        tx-data               (conj retracts new-source-parent new-target-parent)]
-    tx-data))
-
-
 (reg-event-fx
   :drop-multi/child
-  (fn [_ [_ source-uid target]]
-    {:dispatch [:transact (drop-multi-child source-uid target)]}))
+  (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
+    (js/console.debug ":drop-multi/child args" (pr-str args))
+    (let [local?               (not (client/open?))
+          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+      (if local?
+        (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
+                                                                                 source-uids
+                                                                                 target-eid)
+              tx                     (resolver/resolve-event-to-tx @db/dsdb drop-multi-child-event)]
+          (js/console.debug ":drop-multi/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-child source-uids target-eid]]]}))))
 
 
 (reg-event-fx

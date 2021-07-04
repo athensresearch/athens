@@ -379,6 +379,44 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/drop-multi-child
+  [db {:event/keys [args]}]
+  (let [{:keys [source-uids
+                target-eid]}                args
+        source-blocks                       (mapv #(common-db/get-block  db [:block/uid %]) source-uids)
+        source-parents                      (mapv #(common-db/get-parent db [:block/uid %]) source-uids)
+        last-source-order                   (:block/order (last source-blocks))
+        {last-source-parent-uid :block/uid
+         last-source-parent-eid :db/id}     (last source-parents)
+        new-source-blocks                   (map-indexed (fn [idx x] {:block/uid   (:block/uid x)
+                                                                      :block/order idx})
+                                                         source-blocks)
+        n                                   (count (filter (fn [x] (= (:block/uid x) last-source-parent-uid))
+                                                           source-parents))
+        reindex-source-parent               (common-db/minus-after db
+                                                                   last-source-parent-eid
+                                                                   last-source-order
+                                                                   n)
+        reindex-target-parent               (common-db/plus-after  db
+                                                                   target-eid
+                                                                   -1
+                                                                   n)
+        retracts                            (mapv (fn [uid parent] [:db/retract     (:db/id parent)
+                                                                    :block/children [:block/uid uid]])
+                                                  source-uids
+                                                  source-parents)
+        new-source-parent                   {:db/id          last-source-parent-eid
+                                             :block/children reindex-source-parent}
+        new-target-parent                   {:db/id          target-eid
+                                             :block/children (concat reindex-target-parent
+                                                                     new-source-blocks)}
+        tx-data                             (conj retracts
+                                                  new-source-parent
+                                                  new-target-parent)]
+    (println "resolver :datascript/drop-multi-child tx-data" (pr-str tx-data))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/drop-link-child
   [db {:event/keys [args]}]
   (let [{:keys [source-uid
