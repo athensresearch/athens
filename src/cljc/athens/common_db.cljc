@@ -282,6 +282,21 @@
        rseq))
 
 
+(defn get-data
+  [db pattern]
+  (->> pattern
+       (get-ref-ids db)
+       (merge-parents-and-block db)
+       group-by-parent
+       seq))
+
+
+(defn get-unlinked-references
+  "For node-page references UI."
+  [db title]
+  (->> title patterns/unlinked (get-data db)))
+
+
 (defn- extract-tag-values
   "Extracts `tag` values with `extractor-fn` from parser AST."
   [ast tag extractor-fn]
