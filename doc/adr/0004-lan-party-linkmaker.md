@@ -20,7 +20,13 @@ Page titles and block strings can contain refs, represented as a string.
 
 The string format for a page ref is it's title enclosed in double brackets.
 The string format for a block ref is it's block uid enclosed in double parenthesis.
-Since a page title can contain other refs, a page ref can result in multiple refs. 
+
+Worth keeping in mind that a page title can contain other refs and thus adding a page ref can result in multiple refs.
+For instance, the `Foo [[Bar]] ((baz))` page title, when referred to in a string as `[[Foo [[Bar]] ((baz))]]`,
+will result in 3 entries in `:block/refs`:
+- one ref to the page with title `Foo [[Bar]] ((baz))`
+- one ref to the page with title `Bar`
+- one ref to the block with uid `baz`
 
 Common events will use existing refs to effect structural changes, including the update of `:block/string` and `:node/title`. 
 Linkmaker has as sole responsibility to update `:block/refs` in response to `:block/string` and `:node/title` changes.
@@ -46,8 +52,13 @@ Linkmaker never updates either `:block/string` or `:block/title`.
    - -> functionally the same as *p3*
  - *b1*: block creation
    - -> it is possible to have unresolved refs to this block due to *m3*
-     - checking this on every block creation is functionally the same as full text search
-     - this case is ignored for the sake of performance, but can be revisited
+     - e.g. this case:
+       - user inputs `((foo))` in a block string
+       - block uid `foo` does not exist in db
+       - later block with uid `foo` is added to db
+     - checking this on every block creation requires either searching all strings in the db (slow), or
+     saving indexed information about unresolved refs on the db (extra complexity)
+     - this case is ignored for the sake of simplicity and how infrequent it should be, but can be revisited later
    - -> otherwise functionally the same as *b2*
  - *b2*: block string edit
    - -> block edit event will create missing pages that are referenced
