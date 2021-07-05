@@ -284,10 +284,10 @@
 
 (defn- extract-tag-values
   "Extracts `tag` values with `extractor-fn` from parser AST."
-  [ast tag extractor-fn]
+  [ast tag-selector extractor-fn]
   (->> (tree-seq vector? extractor-fn ast)
        (filter vector?)
-       (keep #(when (= tag (first %))
+       (keep #(when (tag-selector (first %))
                 (extractor-fn %)))
        set))
 
@@ -295,16 +295,33 @@
 (defn- extract-page-links
   "Extracts from parser AST `:page-link`s"
   [ast]
-  (extract-tag-values ast :page-link #(cond
-                                        (and (vector? %)
-                                             (< 2 (count %)))
-                                        (nth % 2)
-                                        (and (vector? %)
-                                             (< 1 (count %)))
-                                        (nth % 1)
-                                        :else
-                                        %)))
+  (extract-tag-values ast #{:page-link} #(cond
+                                            (and (vector? %)
+                                                 (< 2 (count %)))
+                                            (nth % 2)
+                                            (and (vector? %)
+                                                 (< 1 (count %)))
+                                            (nth % 1)
+                                            :else
+                                            %)))
 
+(defn string->lookup-refs [s]
+  "Given string s, compute the set of refs expressed as Datalog lookup refs."
+  (let [ast (parser/parse-to-ast s)
+        block-lookups (into #{}
+                            (map (fn [uid] [:block/uid uid]))
+                            (extract-tag-values ast #{:block-ref} second))
+        page-lookups (into #{}
+                           (map (fn [title] [:node/title title]))
+                           (extract-tag-values ast #{:page-link :hashtag} second))]
+    (set/union block-lookups page-lookups)))
+
+(comment
+  (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
+;; => #{[:node/title "two"] [:block/uid "three"] [:node/title "four"] [:node/title "five "]}
+  (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
+;; => [:block [:paragraph "one " [:page-link "two"] " " [:block-ref "three"] " " [:hashtag "four"] " " [:hashtag "five " [:page-link "six"]]]]
+  )
 
 (defn linkmaker
   "Maintains linked nature of Knowledge Graph.

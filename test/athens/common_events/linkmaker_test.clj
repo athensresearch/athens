@@ -11,6 +11,62 @@
 (t/use-fixtures :each fixture/integration-test-fixture)
 
 
+(t/deftest string->lookup-refs
+  (t/testing "Doesn't find refs if none are there"
+    (t/are [x] (empty? (common-db/string->lookup-refs x))
+      ""
+      "one"
+      "[one]"
+      "[ [one]]"
+      "[[one"
+      "one]]"))
+  (t/testing "Finds page refs"
+    (t/are [x y] (= (common-db/string->lookup-refs x) y)
+      "[[one]]"            #{[:node/title "one"]}
+      "[[one]] two"        #{[:node/title "one"]}
+      "one [[two three]]"  #{[:node/title "two three"]}
+      "#one"               #{[:node/title "one"]}
+      "#[[one]]"           #{[:node/title "one"]}
+      "one #[[two three]]" #{[:node/title "two three"]}
+      "[[one]] #two [[three four]] #[[five six]]"
+      #{[:node/title "one"] [:node/title "two"] [:node/title "three four"] [:node/title "five six"]}))
+  (t/testing "Finds block refs"
+    (t/are [x y] (= (common-db/string->lookup-refs x) y)
+      "((one))"            #{[:block/uid "one"]}
+      "one ((two))"        #{[:block/uid "two"]}
+      "((one)) two"        #{[:block/uid "one"]}
+      "((one)) ((two))"    #{[:block/uid "one"] [:block/uid "two"]}))
+  (t/testing "Finds mixed page and block refs"
+    (t/is (= (common-db/string->lookup-refs "((one)) [[two]] ((three)) #[[four]]")
+             #{[:block/uid "one"] [:node/title "two"] [:block/uid "three"] [:node/title "four"]})))
+  ;; broken, need improved parser
+  #_(t/testing "Finds nested refs inside page refs"
+    (t/are [x y] (= (common-db/string->lookup-refs x) y)
+      "[[one [[two]]]]"     #{[:node/title "one [[two]]"] [:node/title "two"]}
+      "#[[one #two three]]" #{[:node/title "one #two #three"] [:node/title "two"] [:node/title "three"]}
+      "one [[#two #three]]" #{[:node/title "#two #three"] [:node/title "two"] [:node/title "three"]}
+      "[[truly [[madly [[deeply [[nested]]]]]]]]"
+      #{[:node/title "truly [[madly [[deeply [[nested]]]]]]"]
+        [:node/title "madly [[deeply [[nested]]]]"]
+        [:node/title "deeply [[nested]]"]
+        [:node/title "nested"]})))
+
+(comment
+  (string->lookup-refs))
+
+(t/deftest eid->lookup-ref
+  (t/testing "Returns nil if the entity doesn't exist")
+  (t/testing "Returns :node/title lookup if present")
+  (t/testing "Returns :block/uid lookup if present")
+  (t/testing "Returns :node/title lookup if both :node/title and :block/uid are present"))
+
+(t/deftest update-refs-tx
+  (t/testing "Returns empty tx if the sets are empty")
+  (t/testing "Returns empty tx if the nothing changes between the sets")
+  (t/testing "Adds refs")
+  (t/testing "Removes refs")
+  (t/testing "Adds and removes refs in the same tx"))
+
 (t/deftest p1-page-created
   (t/testing "New page created, nothing referring to it")
 
