@@ -70,7 +70,7 @@
    [:event/args
     [:map
      [:uid string?]
-     [:odl-name string?]
+     [:old-name string?]
      [:new-name string?]]]])
 
 

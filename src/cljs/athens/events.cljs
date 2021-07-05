@@ -688,7 +688,8 @@
           (js/console.debug ":page/rename txs:" (pr-str page-rename-tx))
           {:fx [[:dispatch [:transact page-rename-tx]]
                 [:invoke-callback callback]]})
-        (throw (js/Error. ":page/rename remote not implemented, yet"))))))
+        {:fx [[:dispatch
+               [:remote/page-rename page-uid old-name new-name callback]]]}))))
 
 
 (reg-event-fx
