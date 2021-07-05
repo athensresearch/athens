@@ -235,6 +235,28 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-page-merge
+  (fn [{db :db} [_ event-id callback]]
+    (js/console.debug ":remote/followup-page-merge" event-id)
+    {:fx [[:invoke-callback callback]]}))
+
+
+(rf/reg-event-fx
+  :remote/page-merge
+  (fn [{db :db} [_ uid old-name new-name callback]]
+    (let [last-seen-tx                (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      page-merge-event} (common-events/build-page-merge-event last-seen-tx
+                                                                            uid
+                                                                            old-name
+                                                                            new-name)
+          followup-fx                 [[:dispatch [:remote/followup-page-merge event-id callback]]]]
+      (js/console.debug ":remote/page-merge" (pr-str page-merge-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! page-merge-event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/page-delete
   (fn [{db :db} [_ uid]]
     (let [last-seen-tx      (:remote/last-seen-tx db)

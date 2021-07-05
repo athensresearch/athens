@@ -708,7 +708,8 @@
           (js/console.debug ":page/merge txs:" (pr-str page-merge-tx))
           {:fx [[:dispatch [:transact page-merge-tx]]
                 [:invoke-callback callback]]})
-        (throw (js/Error. ":page/merge remote not implemented, yet"))))))
+        {:fx [[:dispatch
+               [:remote/page-merge page-uid old-name new-name callback]]]}))))
 
 
 (reg-event-fx

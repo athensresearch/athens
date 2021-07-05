@@ -15,6 +15,7 @@
   #{:datascript/paste-verbatim
     :datascript/create-page
     :datascript/rename-page
+    :datascript/merge-page
     :datascript/delete-page
     :datascript/block-save
     :datascript/new-block
