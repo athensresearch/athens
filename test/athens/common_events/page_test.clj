@@ -93,6 +93,91 @@
           (test/is (= test-string-to block-string)))))))
 
 
+(test/deftest merge-page
+  (test/testing "simple case, no string representations need updating"
+    (let [test-page-from-uid "test-page-1-1-uid"
+          test-title-from    "test page 1 title from"
+          test-page-to-uid   "test-page-1-2-uid"
+          test-title-to      "test page 1 title to"
+          test-block-1-uid   "test-block-1-1-uid"
+          test-block-2-uid   "test-block-1-2-uid"
+          setup-txs          [{:db/id          -1
+                               :node/title     test-title-from
+                               :block/uid      test-page-from-uid
+                               :block/children [{:db/id          -2
+                                                 :block/uid      test-block-1-uid
+                                                 :block/string   ""
+                                                 :block/order    0
+                                                 :block/children []}]}
+                              {:db/id          -3
+                               :node/title     test-title-to
+                               :block/uid      test-page-to-uid
+                               :block/children [{:db/id          -4
+                                                 :block/uid      test-block-2-uid
+                                                 :block/string   ""
+                                                 :block/order    0
+                                                 :block/children []}]}]]
+      ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
+      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
+            merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
+                                                         (common-events/build-page-merge-event -1
+                                                                                               test-page-from-uid
+                                                                                               test-title-from
+                                                                                               test-title-to))]
+        (test/is (= test-page-from-uid uid-by-title))
+        (d/transact @fixture/connection merge-page-txs)
+        (let [{kids :block/children} (common-db/get-page-document @@fixture/connection [:node/title test-title-to])]
+          (test/is (thrown-with-msg? ExceptionInfo #"Nothing found for entity id"
+                     (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (test/is (= 2 (count kids)))
+          (test/is (= test-page-from-uid uid-by-title))))))
+
+  (test/testing "complex case, where we need to update string representations as well"
+    (let [test-page-from-uid "test-page-2-1-uid"
+          test-title-from    "test page 2 title from"
+          test-page-to-uid   "test-page-2-2-uid"
+          test-title-to      "test page 2 title to"
+          test-block-1-uid   "test-block-2-1-uid"
+          test-block-2-uid   "test-block-2-2-uid"
+          test-string-from   (str "[[" test-title-from "]]")
+          test-string-to     (str "[[" test-title-to "]]")
+          setup-txs          [{:db/id          -1
+                               :node/title     test-title-from
+                               :block/uid      test-page-from-uid
+                               :block/children [{:db/id          -2
+                                                 :block/uid      test-block-1-uid
+                                                 :block/string   test-string-from
+                                                 :block/order    0
+                                                 :block/children []}]}
+                              {:db/id          -3
+                               :node/title     test-title-to
+                               :block/uid      test-page-to-uid
+                               :block/children [{:db/id          -4
+                                                 :block/uid      test-block-2-uid
+                                                 :block/string   test-string-from
+                                                 :block/order    0
+                                                 :block/children []}]}]]
+      ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
+      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
+            merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
+                                                         (common-events/build-page-merge-event -1
+                                                                                               test-page-from-uid
+                                                                                               test-title-from
+                                                                                               test-title-to))]
+        (test/is (= test-page-from-uid uid-by-title))
+        (d/transact @fixture/connection merge-page-txs)
+        (let [{kids :block/children} (common-db/get-page-document @@fixture/connection [:node/title test-title-to])
+              uid-by-title           (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
+              block-string           (common-db/v-by-ea @@fixture/connection [:block/uid test-block-1-uid] :block/string)]
+          (test/is (thrown-with-msg? ExceptionInfo #"Nothing found for entity id"
+                     (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (test/is (= 2 (count kids)))
+          (test/is (= test-page-to-uid uid-by-title))
+          (test/is (= test-string-to block-string)))))))
+
+
 (test/deftest delete-page
   (test/testing "Deleting page with no references"
     (let [test-uid          "test-page-uid-1"
