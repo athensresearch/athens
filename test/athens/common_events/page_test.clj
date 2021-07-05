@@ -5,7 +5,10 @@
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
     [clojure.test                  :as test]
-    [datahike.api                  :as d]))
+    [datahike.api                  :as d])
+  (:import
+    (clojure.lang
+      ExceptionInfo)))
 
 
 (test/use-fixtures :each fixture/integration-test-fixture)
@@ -82,10 +85,10 @@
                                                                                                  test-title-to))]
         (test/is (= test-page-uid uid-by-title))
         (d/transact @fixture/connection rename-page-txs)
-        (let [uid-by-old-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
-              uid-by-title     (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
-              block-string     (common-db/v-by-ea @@fixture/connection [:block/uid test-block-uid] :block/string)]
-          (test/is (not= uid-by-title uid-by-old-title))
+        (let [uid-by-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
+              block-string (common-db/v-by-ea @@fixture/connection [:block/uid test-block-uid] :block/string)]
+          (test/is (thrown-with-msg? ExceptionInfo #"Nothing found for entity id"
+                     (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (test/is (= test-page-uid uid-by-title))
           (test/is (= test-string-to block-string)))))))
 
