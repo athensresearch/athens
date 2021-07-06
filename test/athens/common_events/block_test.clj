@@ -339,11 +339,11 @@
                                                            :block/string   child-1-text
                                                            :block/order    0
                                                            :block/children []}
-                                                           {:db/id          -4
-                                                            :block/uid      child-2-uid
-                                                            :block/string   child-2-text
-                                                            :block/order    1
-                                                            :block/children []}]}}]]
+                                                          {:db/id          -4
+                                                           :block/uid      child-2-uid
+                                                           :block/string   child-2-text
+                                                           :block/order    1
+                                                           :block/children []}]}}]]
       (d/transact @fixture/connection setup-txs)
       (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
@@ -435,15 +435,13 @@
             child-1-block        (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             child-2-block        (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
             uids                 [child-1-uid child-2-uid]
-            blocks               (seq [child-1-block child-2-block])
             indent-multi-event   (common-events/build-indent-multi-event -1
-                                                             uids
-                                                             blocks)
+                                                                         uids)
+
             indent-multi-txs   (resolver/resolve-event-to-tx @@fixture/connection indent-multi-event)]
         (t/is (= 0 (-> parent-block :block/children count)))
         (t/is (= 1 (:block/order child-1-block)))
         (t/is (= 2 (:block/order child-2-block)))
-
 
         (d/transact @fixture/connection indent-multi-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])

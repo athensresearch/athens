@@ -200,7 +200,7 @@
   [db uids]
   (println "same parent")
   (let [parents (->> uids
-                     (mapv (comp first uid-and-embed-id)) ;; TODO Check if this is needed?
+                     (mapv (comp first uid-and-embed-id))
                      (d/q '[:find ?parents
                             :in $ [?uids ...]
                             :where

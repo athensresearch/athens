@@ -1178,24 +1178,23 @@
   (fn [_ [_ {:keys [uids]}]]
     (js/console.debug ":indent/multi" uids)
     (let [local?                   (not (client/open?))
-          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids) ;; TODO Is this the best way to do this?
+          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           dsdb                     @db/dsdb
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
-          blocks                   (map #(common-db/get-block dsdb [:block/uid %]) sanitized-selected-uids)
-          block-zero?              (zero? (:block/order (first blocks)))]
+          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
+          block-zero?              (zero? first-block-order)]
       (js/console.debug ":indent/multi local?"       local?
                               ", same-parent?"       same-parent?
                               ", not block-zero?"    (not  block-zero?))
       (when (and same-parent? (not block-zero?))
         (if local?
           (let [indent-multi-event  (common-events/build-indent-multi-event -1
-                                                                            sanitized-selected-uids
-                                                                            blocks)
+                                                                            sanitized-selected-uids)
                 tx                  (resolver/resolve-event-to-tx dsdb indent-multi-event)]
             (js/console.debug ":indent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
-          {:fx [[:dispatch [:remote/indent-multi {:uids   sanitized-selected-uids
-                                                  :blocks blocks}]]]})))))
+          {:fx [[:dispatch [:remote/indent-multi {:uids sanitized-selected-uids}]]]})))))
+
 
 
 

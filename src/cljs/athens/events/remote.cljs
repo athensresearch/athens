@@ -433,10 +433,10 @@
 
 (rf/reg-event-fx
   :remote/indent-multi
-  (fn [{db :db} [_ {:keys [uids blocks] :as args}]]
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
     (js/console.debug ":remote/indent-multi args" args)
     (let [last-seen-tx        (:remote/last-seen-tx db)
-          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids blocks)]
+          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids)]
       (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
       {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
 
