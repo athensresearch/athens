@@ -71,16 +71,31 @@
       (t/is (= [:node/title "the pageblock"] (common-db/eid->lookup-ref db 103))))))
 
 (t/deftest update-refs-tx
-  (t/testing "Returns empty tx if the sets are empty")
-  (t/testing "Returns empty tx if the nothing changes between the sets")
-  (t/testing "Adds refs")
-  (t/testing "Removes refs")
-  (t/testing "Adds and removes refs in the same tx"))
+  (let [ref       [:block/uid "uid"]
+        block-foo [:block/uid "foo"]
+        page-foo  [:page/title "foo"]
+        block-bar [:block/uid "bar"]
+        page-bar  [:page/title "bar"]
+        add-ref   (fn [x] [:db/add ref :block/refs x])
+        rm-ref    (fn [x] [:db/retract ref :block/refs x])]
+    (t/testing "Returns empty tx if the sets are empty"
+      (t/is (empty? (common-db/update-refs-tx ref #{} #{}))))
+    (t/testing "Returns empty tx if the nothing changes between the sets"
+      (t/is (empty? (common-db/update-refs-tx ref #{block-foo page-bar} #{block-foo page-bar}))))
+    (t/testing "Adds refs"
+      (t/is (= #{(add-ref block-foo) (add-ref block-bar)}
+               (common-db/update-refs-tx ref #{page-foo page-bar} #{page-foo page-bar block-foo block-bar}))))
+    (t/testing "Removes refs"
+      (t/is (= #{(rm-ref block-foo) (rm-ref page-foo)}
+               (common-db/update-refs-tx ref #{page-bar page-foo block-foo} #{page-bar}))))
+    (t/testing "Adds and removes refs in the same tx"
+      (t/is (= #{(rm-ref block-foo) (rm-ref page-foo) (add-ref page-bar)}
+               (common-db/update-refs-tx ref #{block-bar page-foo block-foo} #{block-bar page-bar}))))))
 
 (comment
   (string->lookup-refs)
   (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
-  )
+  (update-refs-tx))
 
 
 (t/deftest p1-page-created

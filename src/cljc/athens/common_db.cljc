@@ -6,6 +6,7 @@
     [athens.patterns               :as patterns]
     [clojure.set                   :as set]
     [clojure.string                :as string]
+    [clojure.data                  :as data]
     #?(:clj [clojure.tools.logging :as log])
     #?(:clj  [datahike.api         :as d]
        :cljs [datascript.core      :as d])))
@@ -316,18 +317,26 @@
                            (extract-tag-values ast #{:page-link :hashtag} second))]
     (set/union block-lookups page-lookups)))
 
-(comment
-  (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
-;; => #{[:node/title "two"] [:block/uid "three"] [:node/title "four"] [:node/title "five "]}
-  (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
-;; => [:block [:paragraph "one " [:page-link "two"] " " [:block-ref "three"] " " [:hashtag "four"] " " [:hashtag "five " [:page-link "six"]]]]
-  )
-
 (defn eid->lookup-ref [db eid]
+  "Return the page or block lookup ref for entity eid."
   (let [ent       (d/entity db eid)
         lookup-by #(-> %1 (select-keys [%2]) vec first)]
     (or (lookup-by ent :node/title)
         (lookup-by ent :block/uid))))
+
+(defn update-refs-tx [lookup-ref before after]
+  "Return the tx that will update lookup ref's :block/refs from before to after.
+   Both before and after should be sets of lookup refs."
+  (let [[only-before only-after] (data/diff before after)
+        to-tx (fn [type ref] [type lookup-ref :block/refs ref])]
+    (set (concat (map (partial to-tx :db/retract) only-before)
+                 (map (partial to-tx :db/add) only-after)))))
+
+(comment
+  (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
+  (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
+  (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]})
+  )
 
 (defn linkmaker
   "Maintains linked nature of Knowledge Graph.
