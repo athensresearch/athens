@@ -51,14 +51,24 @@
         [:node/title "deeply [[nested]]"]
         [:node/title "nested"]})))
 
-(comment
-  (string->lookup-refs))
-
 (t/deftest eid->lookup-ref
-  (t/testing "Returns nil if the entity doesn't exist")
-  (t/testing "Returns :node/title lookup if present")
-  (t/testing "Returns :block/uid lookup if present")
-  (t/testing "Returns :node/title lookup if both :node/title and :block/uid are present"))
+  (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
+        block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
+        pageblock [{:db/id 103 :block/uid "pageblock" :node/title "the pageblock" :block/string "the pageblock"}]
+        neither   [{:db/id 104 :create/time 1}]
+        _         (d/transact @fixture/connection (concat page block pageblock neither))
+        db        @@fixture/connection]
+    (d/transact @fixture/connection (concat page block pageblock neither))
+    (t/testing "Returns nil if the entity doesn't exist"
+      (t/is (nil? (common-db/eid->lookup-ref db 200))))
+    (t/testing "Returns nil if the entity doesn't have :node/title or :block/uid"
+      (t/is (nil? (common-db/eid->lookup-ref db 104))))
+    (t/testing "Returns :node/title lookup if present"
+      (t/is (= [:node/title "the page"] (common-db/eid->lookup-ref db 101))))
+    (t/testing "Returns :block/uid lookup if present"
+      (t/is (= [:block/uid "block"] (common-db/eid->lookup-ref db 102))))
+    (t/testing "Returns :node/title lookup if both :node/title and :block/uid are present"
+      (t/is (= [:node/title "the pageblock"] (common-db/eid->lookup-ref db 103))))))
 
 (t/deftest update-refs-tx
   (t/testing "Returns empty tx if the sets are empty")
@@ -66,6 +76,12 @@
   (t/testing "Adds refs")
   (t/testing "Removes refs")
   (t/testing "Adds and removes refs in the same tx"))
+
+(comment
+  (string->lookup-refs)
+  (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
+  )
+
 
 (t/deftest p1-page-created
   (t/testing "New page created, nothing referring to it")

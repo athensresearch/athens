@@ -323,6 +323,12 @@
 ;; => [:block [:paragraph "one " [:page-link "two"] " " [:block-ref "three"] " " [:hashtag "four"] " " [:hashtag "five " [:page-link "six"]]]]
   )
 
+(defn eid->lookup-ref [db eid]
+  (let [ent       (d/entity db eid)
+        lookup-by #(-> %1 (select-keys [%2]) vec first)]
+    (or (lookup-by ent :node/title)
+        (lookup-by ent :block/uid))))
+
 (defn linkmaker
   "Maintains linked nature of Knowledge Graph.
 
