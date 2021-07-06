@@ -295,7 +295,15 @@
 (defn- extract-page-links
   "Extracts from parser AST `:page-link`s"
   [ast]
-  (extract-tag-values ast :page-link second))
+  (extract-tag-values ast :page-link #(cond
+                                        (and (vector? %)
+                                             (< 2 (count %)))
+                                        (nth % 2)
+                                        (and (vector? %)
+                                             (< 1 (count %)))
+                                        (nth % 1)
+                                        :else
+                                        %)))
 
 
 (defn linkmaker

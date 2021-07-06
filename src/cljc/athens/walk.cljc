@@ -15,17 +15,17 @@
   [string]
   (let [data (atom {})]
     (parse/transform
-      {:page-link (fn [& title]
+      {:page-link (fn [{_from :from} & title]
                     (let [inner-title (str/join "" title)]
                       (swap! data update :node/titles #(conj % inner-title))
                       (swap! data update :page/refs #(conj % [:node/title inner-title]))
                       (str "[[" inner-title "]]")))
-       :hashtag   (fn [& title]
+       :hashtag   (fn [{_from :from} & title]
                     (let [inner-title (str/join "" title)]
                       (swap! data update :node/titles #(conj % inner-title))
                       (swap! data update :page/refs #(conj % [:node/title inner-title]))
                       (str "#" inner-title)))
-       :block-ref (fn [uid] (swap! data update :block/refs #(conj % uid)))}
+       :block-ref (fn [{_from :from} uid] (swap! data update :block/refs #(conj % uid)))}
       (parser/parse-to-ast string))
     #?(:cljs
        (js/console.log "walk-string" (pr-str @data)))
