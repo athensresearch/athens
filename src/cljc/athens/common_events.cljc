@@ -280,40 +280,40 @@
 (defn build-drop-child-event
   "Builds `:datascript/drop-child` event with:
   - `source-uid` : uid of the source block
-  - `target-eid` : `:db/id` of the target block"
-  [last-tx source-uid target-eid]
+  - `target-uid` : uid of the target block"
+  [last-tx source-uid target-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-child
      :event/args    {:source-uid source-uid
-                     :target-eid target-eid}}))
+                     :target-uid target-uid}}))
 
 
 (defn build-drop-multi-child-event
   "Builds `:datascript/drop-multi-child` event with:
   - `source-uids` : Vector of uids of the selected source blocks
-  - `target-eid`  : `:db/id` of the target block"
-  [last-tx source-uids target-eid]
+  - `target-uid`  : uid of the target block"
+  [last-tx source-uids target-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-child
      :event/args    {:source-uids source-uids
-                     :target-eid  target-eid}}))
+                     :target-uid  target-uid}}))
 
 
 (defn build-drop-link-child-event
   "Builds `:datascript/drop-link-child` event with:
   - `source-uid` : uid of the source block
-  - `target-eid` : `:db/id` of the target block"
-  [last-tx source-uid target-eid]
+  - `target-uid` : uid of the target block"
+  [last-tx source-uid target-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-link-child
      :event/args    {:source-uid source-uid
-                     :target-eid target-eid}}))
+                     :target-eid target-uid}}))
 
 
 (defn build-drop-diff-parent-event

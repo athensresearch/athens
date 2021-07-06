@@ -159,7 +159,7 @@
    [:event/args
     [:map
      [:source-uid string?
-      :target-eid int?]]]])
+      :target-uid string?]]]])
 
 
 (def datascript-drop-multi-child
@@ -167,7 +167,7 @@
    [:event/args
     [:map
      [:source-uids vector?
-      :target-eid  int?]]]])
+      :target-uid  string?]]]])
 
 
 (def datascript-drop-link-child
@@ -175,7 +175,7 @@
    [:event/args
     [:map
      [:source-uid string?
-      :target-eid int?]]]])
+      :target-uid string?]]]])
 
 
 (def datascript-drop-diff-parent
@@ -184,7 +184,7 @@
     [:map
      [:drag-target keyword?
       :source-uid  string?
-      :target-eid  int?]]]])
+      :target-uid  string?]]]])
 
 
 (def datascript-drop-link-diff-parent
@@ -193,7 +193,7 @@
     [:map
      [:drag-target keyword?
       :source-uid  string?
-      :target-eid  int?]]]])
+      :target-uid  string?]]]])
 
 
 (def event

@@ -1341,16 +1341,15 @@
   :drop-link/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop-link/child args" (pr-str args))
-    (let [local?               (not (client/open?))
-          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+    (let [local?               (not (client/open?))]
       (if local?
         (let [drop-link-child-event (common-events/build-drop-link-child-event -1
                                                                                source-uid
-                                                                               target-eid)
+                                                                               target-uid)
               tx               (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
           (js/console.debug ":drop-link/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/drop-link-child source-uid target-eid]]]}))))
+        {:fx [[:dispatch [:remote/drop-link-child source-uid target-uid]]]}))))
 
 
 (defn drop-link-same-parent
@@ -1417,16 +1416,15 @@
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop/child args" (pr-str args))
-    (let [local?               (not (client/open?))
-          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+    (let [local?               (not (client/open?))]
       (if local?
         (let [drop-child-event (common-events/build-drop-child-event -1
                                                                      source-uid
-                                                                     target-eid)
+                                                                     target-uid)
               tx               (resolver/resolve-event-to-tx @db/dsdb drop-child-event)]
           (js/console.debug ":drop/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/drop-child source-uid target-eid]]]}))))
+        {:fx [[:dispatch [:remote/drop-child source-uid target-uid]]]}))))
 
 
 (defn between
@@ -1612,16 +1610,15 @@
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (js/console.debug ":drop-multi/child args" (pr-str args))
-    (let [local?               (not (client/open?))
-          {target-eid :db/id}  (common-db/get-block  @db/dsdb [:block/uid target-uid])]
+    (let [local?               (not (client/open?))]
       (if local?
         (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
                                                                                  source-uids
-                                                                                 target-eid)
+                                                                                 target-uid)
               tx                     (resolver/resolve-event-to-tx @db/dsdb drop-multi-child-event)]
           (js/console.debug ":drop-multi/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/drop-multi-child source-uids target-eid]]]}))))
+        {:fx [[:dispatch [:remote/drop-multi-child source-uids target-uid]]]}))))
 
 
 (reg-event-fx

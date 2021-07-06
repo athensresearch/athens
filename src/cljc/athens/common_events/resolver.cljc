@@ -84,7 +84,7 @@
                                                {:db/id           [:block/uid uid]
                                                 :block/order     (+ order existing-page-block-count)
                                                 :block/_children [:block/uid new-parent-uid]})
-                                       old-page-kids)
+                                         old-page-kids)
         delete-page                     [:db/retractEntity [:block/uid uid]]
         new-datoms                      (concat [delete-page]
                                           new-linked-refs
@@ -358,8 +358,10 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-child
   [db {:event/keys [args]}]
+  (println "resolver :datascript/drop-child args" (pr-str args))
   (let [{:keys [source-uid
-                target-eid]}               args
+                target-uid]}               args
+        {target-eid :db/id}                (common-db/get-block  db [:block/uid target-uid])
         {source-block-order :block/order}  (common-db/get-block  db [:block/uid source-uid])
         {source-parent-eid :db/id}         (common-db/get-parent db [:block/uid source-uid])
         new-source-block                   {:block/uid   source-uid
@@ -381,8 +383,10 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-child
   [db {:event/keys [args]}]
+  (println "resolver :datascript/drop-multi-child args" (pr-str args))
   (let [{:keys [source-uids
-                target-eid]}                args
+                target-uid]}                args
+        {target-eid :db/id}                 (common-db/get-block  db [:block/uid target-uid])
         source-blocks                       (mapv #(common-db/get-block  db [:block/uid %]) source-uids)
         source-parents                      (mapv #(common-db/get-parent db [:block/uid %]) source-uids)
         last-source-order                   (:block/order (last source-blocks))
@@ -419,8 +423,10 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-link-child
   [db {:event/keys [args]}]
+  (println "resolver :datascript/drop-link-child args" (pr-str args))
   (let [{:keys [source-uid
-                target-eid]}               args
+                target-uid]}               args
+        {target-eid :db/id}                (common-db/get-block  db [:block/uid target-uid])
         new-uid                            (gen-block-uid)
         new-string                         (str "((" source-uid "))")
         new-source-block                   {:block/uid    new-uid
@@ -438,6 +444,7 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-diff-parent
   [db {:event/keys [args]}]
+  (println "resolver :datascript/drop-diff-parent args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}                args
@@ -471,6 +478,7 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-link-diff-parent
   [db {:event/keys [args]}]
+  (println "resolver :datascript/drop-link-diff-parent args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}                args
