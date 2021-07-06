@@ -410,8 +410,10 @@
                                           :block/string   str
                                           :block/order    i
                                           :block/children []})
-                                       [child-1 child-2 child-3 child-4])}]
-        _block-txs (d/transact @fixture/connection setup-txs)]
+                                       [child-1 child-2 child-3 child-4])}]]
+
+    ;; create blocks
+    (d/transact @fixture/connection setup-txs)
 
     (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
                                       :in $ ?uid
@@ -426,20 +428,22 @@
         (every? (set (mapv first [child-1 child-2 child-3 child-4])) page-1-children)
         "check if every blocks are added"))
 
-    (let [_unlinked-refs-txs (run!
-                               (fn [[uid string]]
-                                 (->> (common-events/unlinked-references-link -1 uid string "Test")
-                                      (resolver/resolve-event-to-tx @@fixture/connection)
-                                      (d/transact @fixture/connection)))
-                               [child-1 child-2 child-3 child-4])
-          linked-blocks      (->> (d/q '[:find (pull ?c [*])
-                                         :in $ ?uid
-                                         :where
-                                         [?e :block/uid ?uid]
-                                         [?e :block/children ?c]]
-                                       @@fixture/connection page-1-uid)
-                                  flatten
-                                  (mapv :block/string))]
+    ;; unlinked refs transaction
+    (run!
+      (fn [[uid string]]
+        (->> (common-events/build-unlinked-references-link -1 uid string "Test")
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection)))
+      [child-1 child-2 child-3 child-4])
+
+    (let [linked-blocks (->> (d/q '[:find (pull ?c [*])
+                                    :in $ ?uid
+                                    :where
+                                    [?e :block/uid ?uid]
+                                    [?e :block/children ?c]]
+                                  @@fixture/connection page-1-uid)
+                             flatten
+                             (mapv :block/string))]
       (test/is
         (= ["at[[Test]]" "[[Test]]" "at[[Test]]" "[[Test]]"] linked-blocks)))))
 
@@ -461,8 +465,10 @@
                                           :block/string   str
                                           :block/order    i
                                           :block/children []})
-                                       [child-1 child-2 child-3 child-4])}]
-        _block-txs (d/transact @fixture/connection setup-txs)]
+                                       [child-1 child-2 child-3 child-4])}]]
+
+    ;; block transaction
+    (d/transact @fixture/connection setup-txs)
 
     (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
                                       :in $ ?uid
@@ -477,15 +483,18 @@
         (every? (set (mapv first [child-1 child-2 child-3 child-4])) page-1-children)
         "check if every blocks are added"))
 
+
     (let [unlinked-refs          (common-db/get-unlinked-references
                                    @@fixture/connection
                                    (string/escape page-1-title (let [esc-chars "()*&^%$#![]"]
                                                                  (zipmap esc-chars
-                                                                         (map #(str "\\" %) esc-chars))))) ; same as escape-str in athens.util
-          _unlinked-refs-all-txs (->> (common-events/unlinked-references-link-all -1 unlinked-refs page-1-title)
-                                      (resolver/resolve-event-to-tx @@fixture/connection)
-                                      (d/transact @fixture/connection))
-          linked-blocks          (->> (d/q '[:find (pull ?c [*])
+                                                                         (map #(str "\\" %) esc-chars)))))] ; same as escape-str in athens.util
+      ;; link unlinked refs all transaction
+      (->> (common-events/build-unlinked-references-link-all -1 unlinked-refs page-1-title)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection)))
+
+    (let [linked-blocks          (->> (d/q '[:find (pull ?c [*])
                                              :in $ ?uid
                                              :where
                                              [?e :block/uid ?uid]

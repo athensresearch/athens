@@ -307,7 +307,7 @@
                      :new-uid new-uid}}))
 
 
-(defn unlinked-references-link
+(defn build-unlinked-references-link
   "Builds `:datascript/unlinked-references-link` event with:
   - `uid`:  `:block/uid` of the block with unlinked reference
   - `string `: content of the block
@@ -322,7 +322,7 @@
                      :title  title}}))
 
 
-(defn unlinked-references-link-all
+(defn build-unlinked-references-link-all
   "Builds `:datascript/unlinked-references-link` event with:
   - `unlinked-refs`:  vector of blocks with unlinked refs
   - `title        `: title of the page"

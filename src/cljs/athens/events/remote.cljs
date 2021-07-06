@@ -305,7 +305,7 @@
   :remote/unlinked-references-link
   (fn [{db :db} [_ {:block/keys [string uid]} title]]
     (let [last-seen-tx                   (:remote/last-seen-tx db)
-          unlinked-references-link-event (common-events/unlinked-references-link last-seen-tx uid string title)]
+          unlinked-references-link-event (common-events/build-unlinked-references-link last-seen-tx uid string title)]
       (js/console.debug ":remote/unlinked-references-link:" (pr-str unlinked-references-link-event))
       {:fx [[:dispatch [:remote/send-event! unlinked-references-link-event]]]})))
 
@@ -314,7 +314,7 @@
   :remote/unlinked-references-link-all
   (fn [{db :db} [_ unlinked-refs title]]
     (let [last-seen-tx                       (:remote/last-seen-tx db)
-          unlinked-references-link-all-event (common-events/unlinked-references-link-all last-seen-tx unlinked-refs title)]
+          unlinked-references-link-all-event (common-events/build-unlinked-references-link-all last-seen-tx unlinked-refs title)]
       (js/console.debug ":remote/unlinked-references-link-all:" (pr-str unlinked-references-link-all-event))
       {:fx [[:dispatch [:remote/send-event! unlinked-references-link-all-event]]]})))
 
