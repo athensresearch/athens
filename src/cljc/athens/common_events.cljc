@@ -57,6 +57,18 @@
                      :tempids tempids}}))
 
 
+;; undo-redo events
+
+(defn build-undo-redo-event
+  "Builds `:datascript/undo-redo`"
+  [last-tx redo?]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/undo-redo
+     :event/args    {:redo? redo?}}))
+
+
 ;;   - page events
 
 (defn build-page-create-event

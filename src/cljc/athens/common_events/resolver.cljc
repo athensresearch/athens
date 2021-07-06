@@ -408,3 +408,36 @@
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
     tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/undo-redo
+  [db-history {:event/keys [args]}]
+  (let [{:keys [redo?]}  args
+        [tx-m-id datoms] (cond->> @db-history
+                           redo? reverse
+                           true (some (fn [[tx bool datoms]]
+                                        (and ((if redo? not (complement not)) bool) [tx datoms]))))]
+
+    (reset! db-history (->> @db-history
+                            (map (fn [[tx-id bool datoms]]
+                                   (if (= tx-id tx-m-id)
+                                     [tx-id redo? datoms]
+                                     [tx-id bool datoms])))
+                            doall))
+
+    (cond->> datoms
+      (not redo?) reverse
+      true (map (fn [datom]
+                  (let [[id attr val _txn sig?] (vec datom)]
+                    [(cond
+                       (and sig? (not redo?)) :db/retract
+                       (and (not sig?) (not redo?)) :db/add
+                       (and sig? redo?) :db/add
+                       (and (not sig?) redo?) :db/retract)
+                     id attr val])))
+      ;; Caveat -- we need a way to signal history watcher if this txn is relevant
+      ;;     - send a dummy datom, this will get added to user's data
+      ;;     - we can easily filter it out while writing to fs but it will have a perf penalty
+      ;;     - Unless we are exporting transit to a common format, this can stay(only one datom -- point 2 mentioned above)
+      ;;           - although a filter while exporting is more strategic -- once in a while op, compared to fs write(very frequent)
+      true (concat [[:db/add "new" :from-undo-redo true]]))))
