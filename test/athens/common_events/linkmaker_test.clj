@@ -8,7 +8,7 @@
     [datahike.api                  :as d]))
 
 
-(t/use-fixtures :each fixture/integration-test-fixture)
+(t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
 (t/deftest string->lookup-refs

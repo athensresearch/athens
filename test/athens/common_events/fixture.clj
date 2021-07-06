@@ -12,16 +12,22 @@
   {:store {:backend :mem
            :id      "default"}})
 
+(def seed-datoms
+  athens-datoms/lan-datoms)
+
 
 (defn integration-test-fixture
   ([test-fn]
-   (integration-test-fixture in-mem-config test-fn))
+   (integration-test-fixture seed-datoms in-mem-config test-fn))
 
-  ([config test-fn]
+  ([datoms test-fn]
+   (integration-test-fixture datoms in-mem-config test-fn))
+
+  ([datoms config test-fn]
    (d/create-database config)
    (let [conn (d/connect config)]
      (d/transact conn athens-datahike/schema)
-     (d/transact conn athens-datoms/lan-datoms)
+     (d/transact conn datoms)
      (reset! connection conn)
 
      (test-fn)
