@@ -1882,31 +1882,6 @@
         {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))
 
 
-#_(defn left-sidebar-drop-below
-  [s-order t-order]
-  (let [source-eid (d/q '[:find ?e .
-                          :in $ ?s-order
-                          :where [?e :page/sidebar ?s-order]]
-                        @db/dsdb s-order)
-        new-source {:db/id source-eid :page/sidebar t-order}
-        new-indices (->> (d/q '[:find ?shortcut ?new-order
-                                :keys db/id page/sidebar
-                                :in $ ?s-order ?t-order ?between
-                                :where
-                                [?shortcut :page/sidebar ?order]
-                                [(?between ?s-order ?t-order ?order)]
-                                [(dec ?order) ?new-order]]
-                              @db/dsdb s-order (inc t-order) between)
-                         (concat [new-source]))]
-    new-indices))
-
-
-#_(reg-event-fx
-  :left-sidebar/drop-below
-  (fn-traced [_ [_ source-order target-order]]
-             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
-
-
 (defn link-unlinked-reference
   "Ignores case. If title is `test`:
   test 1     -> [[test 1]]

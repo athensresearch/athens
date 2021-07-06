@@ -64,10 +64,12 @@
              (every? true?))
         "check if the page-shortcuts are added based on the sequence of the moment they're added"))
 
-    (let [_left-sidebar-drop-above-event (->> (common-events/build-left-sidebar-drop-above -1 2 0)
-                                              (resolver/resolve-event-to-tx @@fixture/connection)
-                                              (d/transact @fixture/connection))
-          page-shortcut                  (->> (d/q '[:find (pull ?e [*])
+    ;; left-sidebar-drop-above-event
+    (->> (common-events/build-left-sidebar-drop-above -1 2 0)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
+
+    (let [page-shortcut                  (->> (d/q '[:find (pull ?e [*])
                                                      :where
                                                      [?e :page/sidebar]]
                                                    @@fixture/connection)
@@ -83,10 +85,12 @@
              (every? true?))
         "check if the page-shortcut is correctly dropped above and become the first item"))
 
-    (let [_left-sidebar-drop-above-event (->> (common-events/build-left-sidebar-drop-above -1 2 1)
-                                              (resolver/resolve-event-to-tx @@fixture/connection)
-                                              (d/transact @fixture/connection))
-          page-shortcut                  (->> (d/q '[:find (pull ?e [*])
+    ;; left-sidebar-drop-above-event
+    (->> (common-events/build-left-sidebar-drop-above -1 2 1)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
+
+    (let [page-shortcut                  (->> (d/q '[:find (pull ?e [*])
                                                      :where
                                                      [?e :page/sidebar]]
                                                    @@fixture/connection)
@@ -157,10 +161,12 @@
              (every? true?))
         "check if the page-shortcuts are added based on the sequence of the moment they're added"))
 
-    (let [_left-sidebar-drop-below-event (->> (common-events/build-left-sidebar-drop-below -1 0 2)
-                                              (resolver/resolve-event-to-tx @@fixture/connection)
-                                              (d/transact @fixture/connection))
-          page-shortcut                  (->> (d/q '[:find (pull ?e [*])
+    ;; left-sidebar-drop-below-event
+    (->> (common-events/build-left-sidebar-drop-below -1 0 2)
+         (resolver/resolve-event-to-tx @@fixture/connection)
+         (d/transact @fixture/connection))
+
+    (let [page-shortcut                  (->> (d/q '[:find (pull ?e [*])
                                                      :where
                                                      [?e :page/sidebar]]
                                                    @@fixture/connection)

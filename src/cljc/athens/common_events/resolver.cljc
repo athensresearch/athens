@@ -92,11 +92,11 @@
                                                {:db/id           [:block/uid uid]
                                                 :block/order     (+ order existing-page-block-count)
                                                 :block/_children [:block/uid new-parent-uid]})
-                                       old-page-kids)
+                                             old-page-kids)
         delete-page                     [:db/retractEntity [:block/uid uid]]
         new-datoms                      (concat [delete-page]
-                                          new-linked-refs
-                                          reindex)]
+                                                new-linked-refs
+                                                reindex)]
     (println ":datascript/merge-page args:" (pr-str args)
              "=>" (pr-str new-datoms))
     new-datoms))
