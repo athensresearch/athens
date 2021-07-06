@@ -752,6 +752,30 @@
 
 
 (reg-event-fx
+  :left-sidebar/drop-above
+  (fn [_ [_ source-order target-order]]
+    (js/console.debug ":left-sidebar/drop-above")
+    (if-let [local? (not (client/open?))]
+      (let [left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above -1 source-order target-order)
+            tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-above-event)]
+        (js/console.debug ":left-sidebar/drop-above local?" local?)
+        {:fx [[:dispatch [:transact tx-data]]]})
+      {:fx [[:dispatch [:remote/left-sidebar-drop-above source-order target-order]]]})))
+
+
+(reg-event-fx
+  :left-sidebar/drop-below
+  (fn [_ [_ source-order target-order]]
+    (js/console.debug ":left-sidebar/drop-below")
+    (if-let [local? (not (client/open?))]
+      (let [left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below -1 source-order target-order)
+            tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-below-event)]
+        (js/console.debug ":left-sidebar/drop-below local?" local?)
+        {:fx [[:dispatch [:transact tx-data]]]})
+      {:fx [[:dispatch [:remote/left-sidebar-drop-below source-order target-order]]]})))
+
+
+(reg-event-fx
   :save
   (fn [_ _]
     {:fs/write! nil}))
@@ -1856,62 +1880,6 @@
                                       (common-events/build-paste-verbatim-event -1 uid text start value))]]]}
 
         {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))
-
-
-(defn left-sidebar-drop-above
-  [s-order t-order]
-  (let [source-eid (d/q '[:find ?e .
-                          :in $ ?s-order
-                          :where [?e :page/sidebar ?s-order]]
-                        @db/dsdb s-order)
-        new-source {:db/id source-eid :page/sidebar (if (< s-order t-order)
-                                                      (dec t-order)
-                                                      t-order)}
-        inc-or-dec (if (< s-order t-order) dec inc)
-        new-indices (->> (d/q '[:find ?shortcut ?new-order
-                                :keys db/id page/sidebar
-                                :in $ ?s-order ?t-order ?between ?inc-or-dec
-                                :where
-                                [?shortcut :page/sidebar ?order]
-                                [(?between ?s-order ?t-order ?order)]
-                                [(?inc-or-dec ?order) ?new-order]]
-                              @db/dsdb s-order (if (< s-order t-order)
-                                                 t-order
-                                                 (dec t-order))
-                              between inc-or-dec)
-                         (concat [new-source]))]
-    new-indices))
-
-
-(reg-event-fx
-  :left-sidebar/drop-above
-  (fn-traced [_ [_ source-order target-order]]
-             {:dispatch [:transact (left-sidebar-drop-above source-order target-order)]}))
-
-
-(defn left-sidebar-drop-below
-  [s-order t-order]
-  (let [source-eid (d/q '[:find ?e .
-                          :in $ ?s-order
-                          :where [?e :page/sidebar ?s-order]]
-                        @db/dsdb s-order)
-        new-source {:db/id source-eid :page/sidebar t-order}
-        new-indices (->> (d/q '[:find ?shortcut ?new-order
-                                :keys db/id page/sidebar
-                                :in $ ?s-order ?t-order ?between
-                                :where
-                                [?shortcut :page/sidebar ?order]
-                                [(?between ?s-order ?t-order ?order)]
-                                [(dec ?order) ?new-order]]
-                              @db/dsdb s-order (inc t-order) between)
-                         (concat [new-source]))]
-    new-indices))
-
-
-(reg-event-fx
-  :left-sidebar/drop-below
-  (fn-traced [_ [_ source-order target-order]]
-             {:dispatch [:transact (left-sidebar-drop-below source-order target-order)]}))
 
 
 (defn link-unlinked-reference

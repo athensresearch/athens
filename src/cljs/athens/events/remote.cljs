@@ -284,6 +284,24 @@
       {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]]})))
 
 
+(rf/reg-event-fx
+  :remote/left-sidebar-drop-above
+  (fn [{db :db} [_ source-order target-order]]
+    (let [last-seen-tx                  (:remote/last-seen-tx db)
+          left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above last-seen-tx source-order target-order)]
+      (js/console.debug ":remote/left-sidebar-drop-above" (pr-str left-sidebar-drop-above-event))
+      {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-above-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/left-sidebar-drop-below
+  (fn [{db :db} [_ source-order target-order]]
+    (let [last-seen-tx                  (:remote/last-seen-tx db)
+          left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below last-seen-tx source-order target-order)]
+      (js/console.debug ":remote/left-sidebar-drop-below" (pr-str left-sidebar-drop-below-event))
+      {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-below-event]]]})))
+
+
 ;; - Block related
 
 (rf/reg-event-fx

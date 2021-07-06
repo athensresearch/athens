@@ -234,6 +234,8 @@
 
 
 (defn build-page-add-shortcut
+  "Builds `:datascript/page-add-shortcut` event with:
+  - `uid`: `:block/uid` of triggering block"
   [last-tx uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
@@ -243,12 +245,40 @@
 
 
 (defn build-page-remove-shortcut
+  "Builds `:datascript/page-remove-shortcut` event with:
+  - `uid`: `:block/uid` of triggering block"
   [last-tx uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/page-remove-shortcut
      :event/args    {:uid uid}}))
+
+
+(defn build-left-sidebar-drop-above
+  "Builds `:datascript/left-sidebar-drop-above` event with:
+  - `source-order`: original position on the left sidebar
+  - `target-order`: new position on the left sidebar"
+  [last-tx source-order target-order]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/left-sidebar-drop-above
+     :event/args    {:source-order source-order
+                     :target-order target-order}}))
+
+
+(defn build-left-sidebar-drop-below
+  "Builds `:datascript/left-sidebar-drop-below` event with:
+  - `source-order`: original position on the left sidebar
+  - `target-order`: new position on the left sidebar"
+  [last-tx source-order target-order]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/left-sidebar-drop-below
+     :event/args    {:source-order source-order
+                     :target-order target-order}}))
 
 
 (defn build-indent-event
