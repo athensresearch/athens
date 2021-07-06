@@ -430,15 +430,14 @@
         new-uid                            (gen-block-uid)
         new-string                         (str "((" source-uid "))")
         new-source-block                   {:block/uid    new-uid
-                                            :block-string new-string
+                                            :block/string new-string
                                             :block/order  0
-                                            :block.open   true}
+                                            :block/open   true}
         reindex-target-parent              (common-db/inc-after db target-eid -1)
         new-target-parent                  {:db/id          target-eid
                                             :block/children (conj reindex-target-parent new-source-block)}
         tx-data                            [new-source-block
                                             new-target-parent]]
-    (println "resolver :datascript/drop-link-child tx-data" (pr-str tx-data))
     tx-data))
 
 
@@ -472,7 +471,7 @@
         tx-data                             [retract
                                              new-source-parent
                                              new-target-parent]]
-    (js/console.debug "resolver :datascript/drop-diff-parent tx-data" (pr-str tx-data))
+    (println "resolver :datascript/drop-diff-parent tx-data" (pr-str tx-data))
     tx-data))
 
 
@@ -486,11 +485,11 @@
         {target-parent-eid  :db/id}         (common-db/get-parent db [:block/uid target-uid])
         new-uid                             (gen-block-uid)
         new-string                          (str "((" source-uid "))")
-        new-block                           {:db/id        new-uid
-                                             :block/string new-string
-                                             :block/order  (if (= drag-target :above)
-                                                             target-block-order
-                                                             (inc target-block-order))}
+        new-block                           {:block/uid        new-uid
+                                             :block/string     new-string
+                                             :block/order      (if (= drag-target :above)
+                                                                 target-block-order
+                                                                 (inc target-block-order))}
         reindex-target-parent               (concat
                                               [new-block]
                                               (common-db/inc-after db target-parent-eid (if (= drag-target :above)
@@ -499,5 +498,5 @@
         new-target-parent                   {:db/id          target-parent-eid
                                              :block/children reindex-target-parent}
         tx-data                             [new-target-parent]]
-    (js/console.debug "resolver :datascript/drop-link-diff-parent tx-data" (pr-str tx-data))
+    (println "resolver :datascript/drop-link-diff-parent tx-data" (pr-str tx-data))
     tx-data))

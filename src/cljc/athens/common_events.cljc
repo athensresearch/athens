@@ -313,7 +313,7 @@
      :event/last-tx last-tx
      :event/type    :datascript/drop-link-child
      :event/args    {:source-uid source-uid
-                     :target-eid target-uid}}))
+                     :target-uid target-uid}}))
 
 
 (defn build-drop-diff-parent-event

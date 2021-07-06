@@ -402,3 +402,182 @@
           (t/is (= 1 (:block/order child-1-block)))
           (t/is (= "" (:block/string child-2-block)))
           (t/is (= 0 (:block/order child-2-block))))))))
+
+"Test cases for :
+
+ -drop/diff-parent
+   Start:
+    -a
+     -b
+    -c
+   end:
+    -a
+     -b
+     -c
+
+ -Drop/link-diff-parent
+   Start:
+    -a
+    -b
+     -c
+   end:
+    -a
+    -b
+     -c
+     -a"
+
+
+(t/deftest drop-child-test
+ "Basic Case:
+    Start with :
+      -a
+      -b
+    End:
+      -a
+        -b"
+  (t/testing "Drop child test"
+    (let [target-uid  "test-target-uid"
+          target-text "a"
+          source-uid  "test-source-uid"
+          source-text "b"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children [{:db/id          -2
+                                          :block/uid      target-uid
+                                          :block/string   target-text
+                                          :block/order    0
+                                          :block/children []}
+                                         {:db/id          -3
+                                          :block/uid      source-uid
+                                          :block/string   source-text
+                                          :block/order    1
+                                          :block/children []}]}]]
+
+
+      (d/transact @fixture/connection setup-txs)
+      (let [source-block (common-db/get-block @@fixture/connection [:block/uid source-uid])
+            target-block (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            drop-child-event     (common-events/build-drop-child-event -1
+                                                                       source-uid
+                                                                       target-uid)
+            drop-child-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-child-event)]
+        (t/is (= 0 (-> target-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-block)))
+
+        (d/transact @fixture/connection drop-child-txs)
+        (let [source-block (common-db/get-block @@fixture/connection [:block/uid source-uid])
+              target-block (common-db/get-block @@fixture/connection [:block/uid target-uid])]
+          (t/is (= 1 (-> target-block :block/children count)))
+          (t/is (= [(select-keys source-block [:block/uid :block/order])]
+                   (:block/children target-block))))))))
+
+
+(t/deftest drop-multi-child-test
+  "Basic Case:
+       -a
+       -b
+       -c
+     End:
+       -a
+         -b
+         -c"
+  (t/testing "Drop multiple child test"
+    (let [target-uid    "test-target-uid"
+          target-text   "a"
+          source-1-uid  "test-source-1-uid"
+          source-1-text "b"
+          source-2-uid  "test-source-2-uid"
+          source-2-text "c"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children [{:db/id          -2
+                                          :block/uid      target-uid
+                                          :block/string   target-text
+                                          :block/order    0
+                                          :block/children []}
+                                         {:db/id          -3
+                                          :block/uid      source-1-uid
+                                          :block/string   source-1-text
+                                          :block/order    1
+                                          :block/children []}
+                                         {:db/id          -4
+                                          :block/uid      source-2-uid
+                                          :block/string   source-2-text
+                                          :block/order    2
+                                          :block/children []}]}]]
+
+      (d/transact @fixture/connection setup-txs)
+      (let [target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+            source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
+            source-uids              [source-1-uid source-2-uid]
+            drop-multi-child-event   (common-events/build-drop-multi-child-event -1
+                                                                           source-uids
+                                                                           target-uid)
+            drop-child-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-multi-child-event)]
+        (t/is (= 0 (-> target-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-1-block)))
+        (t/is (= 2 (:block/order source-2-block)))
+
+
+        (d/transact @fixture/connection drop-child-txs)
+        (let [target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
+              source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+              source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])]
+
+          (t/is (= 2 (-> target-block :block/children count)))
+          (t/is (= [(select-keys source-1-block [:block/uid :block/order])
+                    (select-keys source-2-block [:block/uid :block/order])]
+                   (:block/children target-block))))))))
+
+
+(t/deftest drop-link-child-test
+  "Basic Case:
+       -a
+       -b
+     End:
+       -a
+         -b
+       -b"
+  (t/testing "Drop link child test"
+    (let [target-uid    "test-target-uid"
+          target-text   "a"
+          source-1-uid  "test-source-1-uid"
+          source-1-text "b"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children [{:db/id          -2
+                                          :block/uid      target-uid
+                                          :block/string   target-text
+                                          :block/order    0
+                                          :block/children []}
+                                         {:db/id          -3
+                                          :block/uid      source-1-uid
+                                          :block/string   source-1-text
+                                          :block/order    1
+                                          :block/children []}]}]]
+      (d/transact @fixture/connection setup-txs)
+      (let [target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            source-1-block          (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+            drop-link-child-event   (common-events/build-drop-link-child-event -1
+                                                                               source-1-uid
+                                                                               target-uid)
+            drop-link-child-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-link-child-event)]
+        (t/is (= 0 (-> target-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-1-block)))
+
+        (d/transact @fixture/connection drop-link-child-txs)
+        (let [target-block       (common-db/get-block @@fixture/connection [:block/uid target-uid])
+              source-1-link-str  (str "((" source-1-uid "))")
+              linked-child-1-uid   (last (common-db/get-children-uids-recursively @@fixture/connection target-uid))
+              linked-child-1-str   (:block/string (common-db/get-block @@fixture/connection [:block/uid linked-child-1-uid]))]
+
+          (t/is (= 1 (-> target-block :block/children count)))
+          (t/is (= source-1-link-str
+                   linked-child-1-str)))))))

@@ -186,9 +186,9 @@
                         (and link-action drag-target-child?)       [:drop-link/child {:source-uid source-uid
                                                                                       :target-uid target-uid}]
                         (and link-action drag-target-same-parent?) [:drop-link/same drag-target source source-parent target]
-                        (and link-action drag-target-diff-parent?) [:drop-link/diff {:drag-target drag-target
-                                                                                     :source-uid  source-uid
-                                                                                     :target-uid  target-uid}])]
+                        (and link-action drag-target-diff-parent?) [:drop-link/diff-parent {:drag-target drag-target
+                                                                                            :source-uid  source-uid
+                                                                                            :target-uid  target-uid}])]
     (println ".event" event)
     (rf/dispatch event)))
 
