@@ -407,8 +407,9 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
-      tx-data))
-      
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/unlinked-references-link
   [_ {:event/keys [args]}]
   (let [{:keys [uid string title]} args
