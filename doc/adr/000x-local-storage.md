@@ -59,6 +59,15 @@ Cons:
 
 - It is harder to manipulate local-storage values directly from the Dev Console. Probably mainly only Athens devs would have to work around this nested, serialized data structure, but overall probably not a big deal.
 
+### Implementation
+
+- Use init-rfdb with `nil` values or empty values if a collection. Try to make sure all key value pairs are present. [Bluegenes example](https://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/db.cljc?subtree=true)
+- Read in local-storage on `boot`. Go through db logic, based on whether a db exists or not in settings or on filesystem.
+- Apply additional settings, such as appearance (screen width, light/dark mode)
+- When updating app-db, developer is given responsibility to also pass an effect to persist values, e.g. `:persist`.
+- Make sure user can `get` and `set` multiple values at once.
+
+
 ## Consequences
 
 How do we upgrade/migrate from `db/filepath` to `db-picker/all-dbs` ?

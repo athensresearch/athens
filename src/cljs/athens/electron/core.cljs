@@ -35,8 +35,7 @@
   (rf/reg-sub
     :db/filepath
     (fn [db _]
-      (:db/filepath db)))
-
+      (-> db :athens/persist :db/filepath)))
 
   (rf/reg-sub
     :db/filepath-dir

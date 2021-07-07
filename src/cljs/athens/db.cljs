@@ -31,9 +31,35 @@
 
 ;; -- re-frame -----------------------------------------------------------
 
-(defonce rfdb {:user                {:name "TMP"}
-
-               :db/filepath         nil
+(defonce rfdb {:athens/persist      {:db-picker/all-dbs {}
+                                     #_{"/home/jeff/Documents/alex/index.transit" {:last-open     '#inst"2021-06-30T18:35:38.277-00:00"
+                                                                                   :last-modified '#inst"2021-06-30T18:35:38.277-00:00"
+                                                                                   :path          "/home/jeff/Documents/alex/index.transit"
+                                                                                   :name          "alex"
+                                                                                   :remote?       false
+                                                                                   :synced?       true}
+                                        "http://192.168.0.0"                      {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
+                                                                                   :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
+                                                                                   :path          "http://192.168.0.0"
+                                                                                   :name          "192.168.0.0"
+                                                                                   :password      "x"
+                                                                                   :remote?       true
+                                                                                   :synced        false}
+                                        "athensresarch.org/company-x"             {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
+                                                                                   :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
+                                                                                   :path          "athensresarch.org/company-x"
+                                                                                   :name          "athensresarch.org/company-x"
+                                                                                   :password      "x"
+                                                                                   :remote?       true
+                                                                                   :synced        false}}
+                                     :db/filepath nil
+                                     :user {:name nil
+                                            :email nil
+                                            :authed nil}
+                                     :settings {:monitoring nil
+                                                :backup-time nil}
+                                     :appearance {:width nil
+                                                  :theme nil}}
                :db/synced           true
                :db/mtime            nil
                :current-route       nil
@@ -55,8 +81,7 @@
                :selected/items      #{}
                :theme/dark          false
                :zoom-level          1
-               :graph-conf          default-graph-conf
-               :db-picker/all-dbs   []}) ; all-dbs is a vector of map
+               :graph-conf          default-graph-conf})
 
 
 ;; -- JSON Parsing ----------------------------------------------------

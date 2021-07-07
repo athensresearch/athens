@@ -27,17 +27,39 @@
 
 
 ;; make this a subscription handler, and subscribe to this in db-menu
+#_(def dummy-all-dbs
+    [{:name "Athens Test Remote DB"
+      :path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com"
+      :token "x"
+      :is-remote true}
+     {:name "My DB"
+      :path "/Users/coolUser/Documents/athens/index.transit"
+      :is-remote false}
+     {:name "Top Secret"
+      :path "/Users/coolUser/Documents/athens2/index.transit"
+      :is-remote false}])
+
 (def dummy-all-dbs
-  [{:name "Athens Test Remote DB"
-    :path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com"
-    :token "x"
-    :is-remote true}
-   {:name "My DB"
-    :path "/Users/coolUser/Documents/athens/index.transit"
-    :is-remote false}
-   {:name "Top Secret"
-    :path "/Users/coolUser/Documents/athens2/index.transit"
-    :is-remote false}])
+  {"/home/jeff/Documents/alex/index.transit" {:last-open     '#inst"2021-06-30T18:35:38.277-00:00"
+                                              :last-modified '#inst"2021-06-30T18:35:38.277-00:00"
+                                              :path          "/home/jeff/Documents/alex/index.transit"
+                                              :name          "alex"
+                                              :remote?       false
+                                              :synced?       true}
+   "http://192.168.0.0"                      {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
+                                              :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
+                                              :path          "http://192.168.0.0"
+                                              :name          "192.168.0.0"
+                                              :password      "x"
+                                              :remote?       true
+                                              :synced        false}
+   "athensresarch.org/company-x"             {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
+                                              :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
+                                              :path          "athensresarch.org/company-x"
+                                              :name          "athensresarch.org/company-x"
+                                              :password      "x"
+                                              :remote?       true
+                                              :synced        false}})
 
 
 ;; Style
@@ -79,21 +101,20 @@
 
 (defn current-db-tools
   ([{:keys [db]} all-dbs]
-   [:div (use-style current-db-tools-style)
-    (if (:is-remote db)
-      [:<>
-       [button "Import"]
-       [button "Copy Link"]
-       [button "Remove"]]
-      [:<>
-       [button {:onClick #(dialogs/move-dialog!)} "Move"]
-       ;; [button {:onClick "Rename"]
-       [button {:onClick #(if (= 1 (count all-dbs))
-                            (js/alert "Can't remove last db from the list")
-                            (do
-                              (dispatch [:db-picker/remove-db-from-list (:path db)])
-                              (dispatch [:db-picker/delete-db (:path db)])))}
-        "Delete"]])]))
+   (let [[key db] db]
+     [:div (use-style current-db-tools-style)
+      (if (:is-remote db)
+        [:<>
+         [button "Import"]
+         [button "Copy Link"]
+         [button "Remove"]]
+        [:<>
+         [button {:onClick #(dialogs/move-dialog!)} "Move"]
+         ;; [button {:onClick "Rename"]
+         [button {:onClick #(if (= 1 (count all-dbs))
+                              (js/alert "Can't remove last db from the list")
+                              (dispatch [:db-picker/delete-db (:path db)]))}
+          "Delete"]])])))
 
 
 (defn db-menu
@@ -101,8 +122,10 @@
   (r/with-let [ele (r/atom nil)]
               (let [current-db-path  @(subscribe [:db/filepath])
                     all-dbs          @(subscribe [:db-picker/all-dbs])
-                    active-db        (first (filter #(= (:path %) current-db-path) all-dbs))
+                    #_#_#_#_active-db        (first (filter #(= (:path %) current-db-path) all-dbs))
                     inactive-dbs     (filter #(not= (:path %) current-db-path) all-dbs)
+                    active-db (first all-dbs)
+                    inactive-dbs (next all-dbs)
                     sync-status      (if @(subscribe [:db/synced])
                                        :running
                                        :synchronising)]
@@ -111,7 +134,7 @@
                  [button {:class [(when @ele "is-active")]
                           :on-click #(reset! ele (.-currentTarget %))
                           :style db-menu-button-style}
-                  [db-icon {:db active-db
+                  [db-icon {:db     (second active-db)
                             :status sync-status}]]
                  ;; Dropdown menu
                  [m-popover
@@ -132,13 +155,13 @@
                    [:<>
                     ;; Show active DB first
                     [:div (use-style current-db-area-style)
-                     [db-list-item {:db active-db
+                     [db-list-item {:db (second active-db)
                                     :is-current true
-                                    :key (:path active-db)}]
+                                    :key (:path (second active-db))}]
                      [current-db-tools {:db active-db} all-dbs]]
                     ;; Show all inactive DBs and a separator
                     (doall
-                      (for [db inactive-dbs]
+                      (for [[key db] inactive-dbs]
                         [db-list-item {:db db
                                        :is-current false
                                        :key (:path db)}]))

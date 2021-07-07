@@ -63,15 +63,8 @@
                                                         :filters    [{:name "Transit" :extensions ["transit"]}]}))
         open-file (first res)]
     (when (and open-file (.existsSync fs open-file))
-      (let [read-db (.readFileSync fs open-file)
-            db      (dt/read-transit-str read-db)]
-        (rf/dispatch-sync [:init-rfdb])
-        (rf/dispatch [:local-storage/create-db-picker-list])
-        (rf/dispatch [:fs/watch open-file])
-        (rf/dispatch [:reset-conn db])
-        (rf/dispatch [:db/update-filepath open-file])
-        (rf/dispatch [:db-picker/add-new-db open-file])
-        (rf/dispatch [:loading/unset])))))
+      (rf/dispatch-sync [:db-picker/add-new-db open-file])
+      (rf/dispatch-sync [:db-picker/select-new-db open-file @(rf/subscribe [:db/synced])]))))
 
 
 ;; mkdir db-location/name/
@@ -80,24 +73,24 @@
 (defn create-dialog!
   "Create a new database."
   [db-name]
-  (let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
-        db-location (first res)]
-    (when (and db-location (not-empty db-name))
-      (let [db          (d/empty-db db/schema)
-            dir         (.resolve path db-location db-name)
-            dir-images  (.resolve path dir utils/IMAGES-DIR-NAME)
-            db-filepath (.resolve path dir utils/DB-INDEX)]
-        (if (.existsSync fs dir)
-          (js/alert (str "Directory " dir " already exists, sorry."))
-          (do
-            (rf/dispatch-sync [:init-rfdb])
-            (rf/dispatch [:local-storage/create-db-picker-list])
-            (.mkdirSync fs dir)
-            (.mkdirSync fs dir-images)
-            (.writeFileSync fs db-filepath (dt/write-transit-str db))
-            (rf/dispatch [:fs/watch db-filepath])
-            (rf/dispatch [:db/update-filepath db-filepath])
-            (rf/dispatch [:db-picker/add-new-db db-filepath])
-            (rf/dispatch [:reset-conn db])
-            (rf/dispatch [:transact athens-datoms/datoms])
-            (rf/dispatch [:loading/unset])))))))
+  #_(let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
+          db-location (first res)]
+      (when (and db-location (not-empty db-name))
+        (let [db          (d/empty-db db/schema)
+              dir         (.resolve path db-location db-name)
+              dir-images  (.resolve path dir utils/IMAGES-DIR-NAME)
+              db-filepath (.resolve path dir utils/DB-INDEX)]
+          (if (.existsSync fs dir)
+            (js/alert (str "Directory " dir " already exists, sorry."))
+            (do
+              (rf/dispatch-sync [:init-rfdb])
+              (rf/dispatch [:local-storage/create-db-picker-list])
+              (.mkdirSync fs dir)
+              (.mkdirSync fs dir-images)
+              (.writeFileSync fs db-filepath (dt/write-transit-str db))
+              (rf/dispatch [:fs/watch db-filepath])
+              (rf/dispatch [:db/update-filepath db-filepath])
+              (rf/dispatch [:db-picker/add-new-db db-filepath])
+              (rf/dispatch [:reset-conn db])
+              (rf/dispatch [:transact athens-datoms/datoms])
+              (rf/dispatch [:loading/unset])))))))

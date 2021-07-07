@@ -22,52 +22,46 @@
           :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
+(defn- init-app-db
+  [app-db persist]
+  (merge app-db {:athens/persist persist}))
+
+
 (rf/reg-event-fx
   :boot/desktop
-  [(rf/inject-cofx :local-storage/get "db/filepath")]
-  (fn [cofx _]
-    (let [{db-filepath :local-storage} cofx
-          default-db-path (utils/default-db-dir-path)
+  [(rf/inject-cofx :local-storage :athens/persist)]
+  (fn [{:keys [local-storage] :as _cofx} _]
+    (let [init-app-db      (init-app-db db/rfdb local-storage)
+          {:keys [db/filepath]} local-storage
+          default-db-path  (utils/default-db-dir-path)
           db-exists-on-fs? (.existsSync fs default-db-path)
+          first-event      (cond
 
-          first-event (cond
+                             ;; Filepath not found in local storage, but db found at default default-db-path
+                             ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
+                             (and (nil? filepath)
+                                  db-exists-on-fs?)
+                             [:fs/add-read-and-watch default-db-path]
 
-                        ;; Filepath not found in local storage, but db found at default default-db-path
-                        ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
-                        (and (nil? db-filepath)
-                             db-exists-on-fs?)
-                        [:db/read-and-watch default-db-path]
+                             ;; Filepath not found in local storage, no db found at default-db-location
+                             ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
+                             (and (nil? filepath)
+                                  (not db-exists-on-fs?))
+                             [:fs/create-and-watch default-db-path]
 
-                        ;; Filepath not found in local storage, no db found at default-db-location
-                        ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
-                        (and (nil? db-filepath)
-                             (not db-exists-on-fs?))
-                        [:fs/create-and-watch default-db-path]
+                             ;; Filepath found in local storage and on filesystem.
+                             ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
+                             (and filepath
+                                  db-exists-on-fs?)
+                             [:fs/read-and-watch filepath]
 
-                        ;; Filepath found in local storage and on filesystem.
-                        ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
-                        (and db-filepath
-                             db-exists-on-fs?)
-                        [:fs/read-and-watch db-filepath]
+                             ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
+                             :else [:fs/open-dialog])]
 
-                        ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
-                        :else [:fs/open-dialog])]
-
-
-      #_(cond
-          ;; No database path found in localStorage. Creating new one
-          (nil? filepath) (rf/dispatch [:fs/create-new-db])
-          ;; Database found in local storage and filesystem:
-          (.existsSync fs filepath) (let [read-db (.readFileSync fs filepath)
-                                          db (dt/read-transit-str read-db)]
-                                      (rf/dispatch [:fs/watch filepath])
-                                      (rf/dispatch [:reset-conn db])
-                                      (rf/dispatch [:local-storage/create-db-picker-list]))
-          :else (rf/dispatch [:fs/open-dialog]))
 
       ;; output => [:reset-conn] OR [:fs/create-new-db] OR :local-storage/create-db-picker-list
 
-      {:db         db/rfdb
+      {:db         init-app-db
        :async-flow {:first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?

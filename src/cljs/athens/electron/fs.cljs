@@ -80,26 +80,23 @@
     (let [default-dir (utils/default-dir)
           images-dir (utils/default-image-dir-path)
           db-filepath (utils/default-db-dir-path)]
-      (utils/create-dir-if-needed! default-dir)
-      (utils/create-dir-if-needed! images-dir)
-      {:db                (assoc db :db/filepath db-filepath)
-       :local-storage/set [:db/filepath db-filepath]
-       :fs/write!         [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
-       :dispatch-n        [#_[:db/update-filepath db-filepath]
-                           [:reset-conn athens-datoms/datoms]
-                           [:db-picker/add-new-db db-filepath]]})))
+      (prn "CREATE"))))
+      ;(utils/create-dir-if-needed! default-dir)
+      ;(utils/create-dir-if-needed! images-dir)
+      ;{:db                (assoc db :db/filepath db-filepath)
+      ; :local-storage/set [:db/filepath db-filepath]
+      ; :fs/write!         [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
+      ; :dispatch-n        [#_[:db/update-filepath db-filepath]
+      ;                     [:reset-conn athens-datoms/datoms]
+      ;                     [:db-picker/add-new-db db-filepath]]})))
 
 
 (rf/reg-event-fx
   :fs/read-and-watch
-  (fn [{:keys [db]} [_ db-filepath]]
+  (fn [{:keys [_db]} [_ db-filepath]]
     (let [datoms (-> (.readFileSync fs db-filepath)
                      dt/read-transit-str)]
-      {:db                (assoc db :db/filepath db-filepath)
-       :local-storage/set [:db/filepath (pr-str db-filepath)]
-       :dispatch-n        [#_[:db/update-filepath db-filepath]
-                           [:reset-conn datoms]
-                           [:db-picker/add-new-db db-filepath]]})))
+      {:dispatch-n [[:reset-conn datoms]]})))
 
 
 (rf/reg-event-db

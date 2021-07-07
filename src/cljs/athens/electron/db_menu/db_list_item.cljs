@@ -60,8 +60,5 @@
      [:div.body.is-current
       [db-list-item-content {:db db}]]
      [:button.body.button {:onClick
-                           #(dispatch
-                              [:db-picker/select-new-db
-                               (:path db)
-                               @(subscribe [:db/synced])])}
+                           #(dispatch [:db-picker/select-new-db (:path db) @(subscribe [:db/synced])])}
       [db-list-item-content {:db db}]])])
