@@ -285,36 +285,50 @@
 
 (defn- extract-tag-values
   "Extracts `tag` values with `extractor-fn` from parser AST."
-  [ast tag-selector extractor-fn]
-  (->> (tree-seq vector? extractor-fn ast)
-       (filter vector?)
-       (keep #(when (tag-selector (first %))
-                (extractor-fn %)))
-       set))
-
+  ([ast tag-selector extractor-fn]
+   (->> (tree-seq vector? extractor-fn ast)
+        (filter vector?)
+        (keep #(when (tag-selector (first %))
+                 (extractor-fn %)))
+        set))
+  ([ast tag-selector children-fn extractor-fn]
+   (->> (tree-seq vector? children-fn ast)
+        (filter vector?)
+        (keep #(when (tag-selector (first %))
+                 (extractor-fn %)))
+        set)))
 
 (defn- extract-page-links
   "Extracts from parser AST `:page-link`s"
   [ast]
   (extract-tag-values ast #{:page-link} #(cond
-                                            (and (vector? %)
-                                                 (< 2 (count %)))
-                                            (nth % 2)
-                                            (and (vector? %)
-                                                 (< 1 (count %)))
-                                            (nth % 1)
-                                            :else
-                                            %)))
+                                          (and (vector? %)
+                                               (< 2 (count %)))
+                                          (nth % 2)
+                                          (and (vector? %)
+                                               (< 1 (count %)))
+                                          (nth % 1)
+                                          :else
+                                          %)))
+
+(defn strip-markup [s start end]
+  (when (and (string/starts-with? s start)
+             (string/ends-with? s end))
+    (subs s (count start) (- (count s) (count end)))))
 
 (defn string->lookup-refs [s]
   "Given string s, compute the set of refs expressed as Datalog lookup refs."
   (let [ast (parser/parse-to-ast s)
+        block-ref-str->uid #(strip-markup % "((" "))")
+        page-ref-str->title #(or (strip-markup % "#[[" "]]")
+                                 (strip-markup % "[[" "]]")
+                                 (strip-markup % "#" ""))
         block-lookups (into #{}
                             (map (fn [uid] [:block/uid uid]))
-                            (extract-tag-values ast #{:block-ref} second))
+                            (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
         page-lookups (into #{}
                            (map (fn [title] [:node/title title]))
-                           (extract-tag-values ast #{:page-link :hashtag} second))]
+                           (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
     (set/union block-lookups page-lookups)))
 
 (defn eid->lookup-ref [db eid]

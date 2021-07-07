@@ -40,11 +40,12 @@
     (t/is (= (common-db/string->lookup-refs "((one)) [[two]] ((three)) #[[four]]")
              #{[:block/uid "one"] [:node/title "two"] [:block/uid "three"] [:node/title "four"]})))
   ;; broken, need improved parser
-  #_(t/testing "Finds nested refs inside page refs"
+  (t/testing "Finds nested refs inside page refs"
     (t/are [x y] (= (common-db/string->lookup-refs x) y)
       "[[one [[two]]]]"     #{[:node/title "one [[two]]"] [:node/title "two"]}
-      "#[[one #two three]]" #{[:node/title "one #two #three"] [:node/title "two"] [:node/title "three"]}
-      "one [[#two #three]]" #{[:node/title "#two #three"] [:node/title "two"] [:node/title "three"]}
+      ;; broken on the parser
+      #_#_"#[[one #two three]]" #{[:node/title "one #two #three"] [:node/title "two"] [:node/title "three"]}
+      #_#_"one [[#two #[[three four]]]]" #{[:node/title "#two #three"] [:node/title "two"] [:node/title "three four"]}
       "[[truly [[madly [[deeply [[nested]]]]]]]]"
       #{[:node/title "truly [[madly [[deeply [[nested]]]]]]"]
         [:node/title "madly [[deeply [[nested]]]]"]
