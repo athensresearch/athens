@@ -1386,7 +1386,7 @@
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop/child args" (pr-str args))
-    (let [local?               (not (client/open?))]
+    (let [local? (not (client/open?))]
       (if local?
         (let [drop-child-event (common-events/build-drop-child-event -1
                                                                      source-uid
@@ -1401,7 +1401,7 @@
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (js/console.debug ":drop-multi/child args" (pr-str args))
-    (let [local?               (not (client/open?))]
+    (let [local? (not (client/open?))]
       (if local?
         (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
                                                                                  source-uids
@@ -1416,12 +1416,12 @@
   :drop-link/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop-link/child args" (pr-str args))
-    (let [local?               (not (client/open?))]
+    (let [local? (not (client/open?))]
       (if local?
         (let [drop-link-child-event (common-events/build-drop-link-child-event -1
                                                                                source-uid
                                                                                target-uid)
-              tx               (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
+              tx                    (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
           (js/console.debug ":drop-link/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-child args]]]}))))
@@ -1437,7 +1437,7 @@
                                                                                  drag-target
                                                                                  source-uid
                                                                                  target-uid)
-              tx              (resolver/resolve-event-to-tx @db/dsdb drop-diff-parent-event)]
+              tx                     (resolver/resolve-event-to-tx @db/dsdb drop-diff-parent-event)]
           (js/console.debug ":drop/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-diff-parent args]]]}))))
@@ -1453,7 +1453,7 @@
                                                                                            drag-target
                                                                                            source-uid
                                                                                            target-uid)
-              tx              (resolver/resolve-event-to-tx @db/dsdb drop-link-diff-parent-event)]
+              tx                          (resolver/resolve-event-to-tx @db/dsdb drop-link-diff-parent-event)]
           (js/console.debug ":drop-link/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))

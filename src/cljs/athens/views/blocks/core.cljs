@@ -150,11 +150,13 @@
     - Zero level blocks : Refers to top level blocks in a page.
     - source-uid        : The block which is being dropped.
     - target-uid        : The block on which source is being dropped.
-    - drag-target       : Where is the block being dragged see `types of events` section below.
+    - drag-target       : Represents where the block is being dragged. It can be :child meaning
+                          dragged as a child, :above meaning the source block is dropped above the
+                          target block, :below meaning the source block is dropped below the target block.
     - action-allowed    : There can be 2 types of actions.
-        - `link` action : When a block is dragged and dropped by dragging a bullet while
+        - `link` action : When a block is DnD by dragging a bullet while
                          `shift` key is pressed to create a block link.
-        - `move` action : When a block is dragged and dropped to other part of Athens page.
+        - `move` action : When a block is DnD to other part of Athens page.
 
   Types of events :
     - `:drop/same-parent`  : When a block that is under some parent (including Zero level blocks) is DnD
@@ -189,7 +191,7 @@
                         (and link-action drag-target-diff-parent?) [:drop-link/diff-parent {:drag-target drag-target
                                                                                             :source-uid  source-uid
                                                                                             :target-uid  target-uid}])]
-    (println ".event" event)
+    (println ".event" event) ;; TODO Remove this after all drop events are ported
     (rf/dispatch event)))
 
 
@@ -207,8 +209,8 @@
     - `:drop-multi/same-all`    : When the selected blocks have same parent and are DnD under the same parent
                                   this event is fired. This also applies if on selects multiple Zero level blocks
                                   and change the order among other Zero level blocks.
-    - `:drop/child`             : When the selected blocks are DnD as the first child of some other block this event is fired
-    - `:drop/diff-parent`       : When the selected blocks don't have same parent and are DnD under some other block this
+    - `:drop-multi/child`       : When the selected blocks are DnD as the first child of some other block this event is fired
+    - `:drop-multi/diff-source` : When the selected blocks don't have same parent and are DnD under some other block this
                                   event is fired."
   [source-uids target-uid drag-target]
   (let [source-uids          (mapv (comp first db/uid-and-embed-id) source-uids)
@@ -228,9 +230,8 @@
                                same-parent-source?    [:drop-multi/same-source drag-target source-uids first-source-parent target target-parent])]
     (println ".event" event)
     (rf/dispatch [:selected/clear-items])
-    (rf/dispatch event)
-    {:fx [[:dispatch [:selected/clear-items]]
-          [:dispatch event]]}))
+    (rf/dispatch event)))
+
 
 
 (defn block-drop
@@ -260,8 +261,6 @@
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (drop-bullet source-uid target-uid drag-target effect-allowed)
-                                           #_(rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
-                                           #_(rf/dispatch [:drop-multi selected-items target-uid drag-target])
                                            (drop-bullet-multi selected-items target-uid drag-target))))
 
     (rf/dispatch [:mouse-down/unset])

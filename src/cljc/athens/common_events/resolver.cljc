@@ -436,8 +436,8 @@
         reindex-target-parent              (common-db/inc-after db target-eid -1)
         new-target-parent                  {:db/id          target-eid
                                             :block/children (conj reindex-target-parent new-source-block)}
-        tx-data                            [new-source-block
-                                            new-target-parent]]
+        tx-data                            [new-target-parent]]
+    (println "resolver :datascript/drop-link-child tx-data" (pr-str tx-data))
     tx-data))
 
 
@@ -460,8 +460,8 @@
         reindex-target-parent               (concat
                                               [new-block]
                                               (common-db/inc-after db target-parent-eid (if (= drag-target :above)
-                                                                                           (dec target-block-order)
-                                                                                           target-block-order)))
+                                                                                          (dec target-block-order)
+                                                                                          target-block-order)))
         retract                             [:db/retract     source-parent-eid
                                              :block/children source-block-eid]
         new-source-parent                   {:db/id          source-parent-eid
