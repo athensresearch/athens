@@ -199,33 +199,62 @@
              :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
 
-[{:label       "Remote address"
-  :key         :address
-  :placeholder "Remote server address"}
- {:label       "Token"
-  :input-type  "password"
-  :key         :token
-  :placeholder "Secret token"}]
 
 (defn join-remote-comp
   []
-  (let [address (r/atom "")]
+  (let [address (r/atom "")
+        password (r/atom "")]
     [:<>
-     [:div {:style {:width "100%" :margin-top "10px"}}
-      [:h5 "Remote address"]
-      [:div {:style           {:margin "5px 0"}
-             :display         "flex"
-             :justify-content "space-between"}]
-      [textinput/textinput {:style   {:flex-grow 1}
-                            :padding "5px"}
-       :type "text"
-       :value @address
-       :placeholder "Remote server address"
-       :on-change #(reset! address %)]]
+     (->>
+          [:div {:style {:width  "100%" :margin-top "10px"}}
+           [:h5 "Remote Address"]
+           [:div {:style {:margin          "5px 0"
+                          :display         "flex"
+                          :justify-content "space-between"}}
+            [textinput/textinput {:style       {:flex-grow 1
+                                                :padding   "5px"}
+                                  :type        "text"
+                                  :value       @address
+                                  :placeholder "Remote server address"
+                                  :on-change   #(prn "TODO" %)}]]
+           [:h5 "Password"]
+           [:div {:style {:margin          "5px 0"
+                          :display         "flex"
+                          :justify-content "space-between"}}
+            [textinput/textinput {:style       {:flex-grow 1
+                                                :padding   "5px"}
+                                  :type        "text"
+                                  :value       @password
+                                  :placeholder "Password"
+                                  :on-change   #(prn "TODO" %)}]]]
+          doall)
      [button {:primary  true
               :style    {:margin-top "0.5rem"}
-              :on-click #(prn "Db MODAL")}
+              :on-click #(prn "TODO pass address and password to athens.core.lan_on()")}
       "Join"]]))
+
+
+#_(defn join-remote-comp
+    []
+    (let [address (r/atom "")]
+      [:<>
+       [:div {:style {:width "100%" :margin-top "10px"}}
+        [:h5 "Remote address"]
+        [:div {:style           {:margin "5px 0"}
+               :display         "flex"
+               :justify-content "space-between"}]
+
+        [textinput/textinput {:style   {:flex-grow 1}
+                              :padding "5px"}
+         :type "text"
+         :value @address
+         :placeholder "Remote server address"
+         :on-change #(reset! address %)]]
+
+       [button {:primary  true
+                :style    {:margin-top "0.5rem"}
+                :on-click #(prn "Db MODAL")}
+        "Join"]]))
 
 
 (defn window
