@@ -284,37 +284,22 @@
 
 
 (defn- extract-tag-values
-  "Extracts `tag` values with `extractor-fn` from parser AST."
-  ([ast tag-selector extractor-fn]
-   (->> (tree-seq vector? extractor-fn ast)
-        (filter vector?)
-        (keep #(when (tag-selector (first %))
-                 (extractor-fn %)))
-        set))
-  ([ast tag-selector children-fn extractor-fn]
-   (->> (tree-seq vector? children-fn ast)
-        (filter vector?)
-        (keep #(when (tag-selector (first %))
-                 (extractor-fn %)))
-        set)))
+  "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
+  [ast tag-selector children-fn extractor-fn]
+  (->> (tree-seq vector? children-fn ast)
+       (filter vector?)
+       (keep #(when (tag-selector (first %))
+                (extractor-fn %)))
+       set))
 
-(defn- extract-page-links
-  "Extracts from parser AST `:page-link`s"
-  [ast]
-  (extract-tag-values ast #{:page-link} #(cond
-                                          (and (vector? %)
-                                               (< 2 (count %)))
-                                          (nth % 2)
-                                          (and (vector? %)
-                                               (< 1 (count %)))
-                                          (nth % 1)
-                                          :else
-                                          %)))
 
 (defn strip-markup [s start end]
+  "Remove `start` and `end` from s if present.
+   Returns nil if markup was not present."
   (when (and (string/starts-with? s start)
              (string/ends-with? s end))
     (subs s (count start) (- (count s) (count end)))))
+
 
 (defn string->lookup-refs [s]
   "Given string s, compute the set of refs expressed as Datalog lookup refs."
@@ -331,12 +316,14 @@
                            (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
     (set/union block-lookups page-lookups)))
 
+
 (defn eid->lookup-ref [db eid]
   "Return the page or block lookup ref for entity eid."
   (let [ent       (d/entity db eid)
         lookup-by #(-> %1 (select-keys [%2]) vec first)]
     (or (lookup-by ent :node/title)
         (lookup-by ent :block/uid))))
+
 
 (defn update-refs-tx [lookup-ref before after]
   "Return the tx that will update lookup ref's :block/refs from before to after.
@@ -346,14 +333,28 @@
     (set (concat (map (partial to-tx :db/retract) only-before)
                  (map (partial to-tx :db/add) only-after)))))
 
+
 (comment
   (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
   (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
   (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]})
   )
 
+
+(defn block-refs-as-lookup-refs [db eid-or-lookup-ref]
+  (when-some [ent (d/entity db eid-or-lookup-ref)]
+    (into #{} (comp (mapcat second)
+                    (map :db/id)
+                    (map (partial eid->lookup-ref db)))
+          (d/pull db '[:block/refs] (:db/id ent)))))
+
+
+(defn- parseable-string-datom? [[eid attr value]]
+  (when (#{:block/string :node/title} attr)
+    [eid value]))
+
 (defn linkmaker
-  "Maintains linked nature of Knowledge Graph.
+  "Maintains the linked nature of Knowledge Graph.
 
   Returns Datascript transactions to be transacted in order to maintain links.
 
@@ -366,107 +367,33 @@
   (try
     (let [{:keys [db-before
                   db-after
-                  tx-data
-                  tempids]
-           :as   tx-report} (d/with db input-tx)
-          ;; requirements:
-          ;; *p1*: page created -> check if something refers to it, update refs
-          ;; *p2*: page deleted -> do we need to update `:block/refs`, since we're deleting page entity, probably not
-          ;;                       also check *b6* for all child blocks
-          ;; *p3*: page rename -> find references to old page title, update blocks with new title, update refs
-          ;;                      also check if something refers to new title already, update refs
-          ;; *b1*: block has new page ref -> update page refs
-          ;; *b2*: block doesn't have page ref anymore -> update page refs
-          ;; *b3*: block has new block ref -> update target block refs
-          ;; *b4*: block doesn't have block ref anymore -> update target block refs
-          ;; *b5*: block created -> check *b1* & *b3*
-          ;; *b6*: block deleted -> check *b2* & *b4*
-
-          ;; *b1*
-          block-eid->new-strings    (->> tx-data
-                                         (filter (fn [[_eid attr _value _tx added?]]
-                                                   (and added?
-                                                        (= :block/string attr))))
-                                         (reduce (fn [acc [eid _attr value _tx _added?]]
-                                                   (assoc acc eid value))
-                                                 {}))
-          block-eid->old-strings    (->> tx-data
-                                         (filter (fn [[_eid attr _value _tx added?]]
-                                                   (and (not added?)
-                                                        (= :block/string attr))))
-                                         (reduce (fn [acc [eid _attr value _tx _added?]]
-                                                   (assoc acc eid value))
-                                                 {}))
-          block-eid->old-strings    (merge block-eid->old-strings
-                                           (->> (keys block-eid->new-strings)
-                                                (map (fn [block-eid]
-                                                       (when-let [block-string (v-by-ea db-before block-eid :block/string)]
-                                                         [block-eid block-string])))
-                                                (into {})))
-          block-eid->new-structure  (zipmap (keys block-eid->new-strings)
-                                            (map parser/parse-to-ast
-                                                 (vals block-eid->new-strings)))
-          block-eid->old-structure  (zipmap (keys block-eid->old-strings)
-                                            (map parser/parse-to-ast
-                                                 (vals block-eid->old-strings)))
-          block-eid->new-page-links (zipmap (keys block-eid->new-structure)
-                                            (map extract-page-links
-                                                 (vals block-eid->new-structure)))
-          block-eid->old-page-links (zipmap (keys block-eid->old-structure)
-                                            (map extract-page-links
-                                                 (vals block-eid->old-structure)))
-          block-eid->page-remove    (->> (for [[block-eid old-pages] block-eid->old-page-links
-                                               :let                  [new-pages (get block-eid->new-page-links
-                                                                                     block-eid
-                                                                                     #{})]]
-                                           [block-eid (set/difference old-pages new-pages)])
-                                         (remove (comp empty? second))
-                                         (into {}))
-          block-eid->page-add       (->> (for [[block-eid new-pages] block-eid->new-page-links
-                                               :let                  [old-pages (get block-eid->old-page-links
-                                                                                     block-eid
-                                                                                     #{})]]
-                                           [block-eid (set/difference new-pages old-pages)])
-                                         (remove (comp empty? second))
-                                         (into {}))
-          linkmaker-info            (merge {}
-                                           (when (seq block-eid->page-remove)
-                                             {:retracts (mapcat (fn [[block-eid page-titles]]
-                                                                  (for [page-title page-titles]
-                                                                    [:db/retract
-                                                                     block-eid
-                                                                     :block/refs
-                                                                     [:node/title page-title]]))
-                                                                block-eid->page-remove)})
-                                           (when (seq block-eid->page-add)
-                                             {:asserts (mapcat (fn [[block-eid page-titles]]
-                                                                 (for [page-title page-titles]
-                                                                   [:db/add
-                                                                    block-eid
-                                                                    :block/refs
-                                                                    [:node/title page-title]]))
-                                                               block-eid->page-add)}))
-          linkmaker-txs             (apply conj (into [] (:asserts linkmaker-info))
-                                           (:retracts linkmaker-info))
-          with-linkmaker-txs        (apply conj input-tx linkmaker-txs)]
+                  tx-data]}  (d/with db input-tx)
+          linkmaker-txs      (into []
+                                   (comp (keep parseable-string-datom?)
+                                         (mapcat (fn [[eid string]]
+                                                   (println "eid string" eid string)
+                                                   (let [lookup-ref (eid->lookup-ref db-after eid)
+                                                         before     (block-refs-as-lookup-refs db-before lookup-ref)
+                                                         after      (string->lookup-refs string)]
+                                                     (println "lookup-ref"  lookup-ref)
+                                                     (println "before" before)
+                                                     (println "after" after)
+                                                     (update-refs-tx lookup-ref before after)))))
+                                   tx-data)
+          with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
       (println "linkmaker:"
                "\ntx-data:" (pr-str tx-data)
-               "\nblock-eid->old-strings:" (pr-str block-eid->old-strings)
-               "\nblock-eid->new-strings:" (pr-str block-eid->new-strings)
-               "\nblock-eid->old-structure:" (pr-str block-eid->old-structure)
-               "\nblock-eid->new-structure:" (pr-str block-eid->new-structure)
-               "\nblock-eid->old-page-links:" (pr-str block-eid->old-page-links)
-               "\nblock-eid->new-page-links:" (pr-str block-eid->new-page-links)
-               "\nblock-eid->page-remote:" (pr-str block-eid->page-remove)
-               "\nblock-eid->page-add:" (pr-str block-eid->page-add)
-               "\nlinkmaker-info:" (pr-str linkmaker-info)
                "\nlinkmaker-txs:" (pr-str linkmaker-txs))
       with-linkmaker-txs)
-    (catch #?(:cljs js/Error
+    (catch #?(:cljs :default
               :clj Exception) e
-      #?(:cljs (do
-                 (js/alert (str "Software failure, sorry. Please let us know about it.\n"
-                                (str e)))
-                 (js/console.error "Linkmaker failure." e))
-         :clj (log/error "Linkmaker failure." e)))))
+      (do
+        #?(:cljs (do
+                   (js/alert (str "Software failure, sorry. Please let us know about it.\n"
+                                  (str e)))
+                   (js/console.error "Linkmaker failure." e))
+           :clj (do (log/error "Linkmaker failure." e)))
+        ;; Return the original, un-modified, input tx so that transactions can still move forward.
+        ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
+        input-tx))))
 

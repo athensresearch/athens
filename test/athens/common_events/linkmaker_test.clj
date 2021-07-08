@@ -59,7 +59,6 @@
         neither   [{:db/id 104 :create/time 1}]
         _         (d/transact @fixture/connection (concat page block pageblock neither))
         db        @@fixture/connection]
-    (d/transact @fixture/connection (concat page block pageblock neither))
     (t/testing "Returns nil if the entity doesn't exist"
       (t/is (nil? (common-db/eid->lookup-ref db 200))))
     (t/testing "Returns nil if the entity doesn't have :node/title or :block/uid"
@@ -93,10 +92,19 @@
       (t/is (= #{(rm-ref block-foo) (rm-ref page-foo) (add-ref page-bar)}
                (common-db/update-refs-tx ref #{block-bar page-foo block-foo} #{block-bar page-bar}))))))
 
-(comment
-  (string->lookup-refs)
-  (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
-  (update-refs-tx))
+(t/deftest block-refs-as-lookup-refs
+  (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
+        block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
+        refblock  [{:db/id 103 :block/uid "refblock" :block/string "the refblock"
+                    :block/refs [{:db/id 101} {:db/id 102} {:db/id 103}]}]
+        _         (d/transact @fixture/connection (concat page block refblock))
+        db        @@fixture/connection]
+    (t/testing "Returns empty if the entity doesn't have refs"
+      (t/is (empty? (common-db/block-refs-as-lookup-refs db 101))))
+    (t/testing "Returns ref lookups for each ref"
+      (t/is (= #{[:node/title "the page"] [:block/uid "block"] [:block/uid "refblock"]} (common-db/block-refs-as-lookup-refs db 103))))))
+
+
 
 
 (t/deftest p1-page-created
@@ -210,3 +218,10 @@
           ;; assert that we do have new ref
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
           (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs)))))))
+
+(comment
+  (string->lookup-refs)
+  (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
+  (update-refs-tx)
+  (t/test-vars [#'athens.common-events.linkmaker-test/block-refs-as-lookup-refs])
+  (t/test-vars [#'athens.common-events.linkmaker-test/b1-block-with-new-page-ref]))
