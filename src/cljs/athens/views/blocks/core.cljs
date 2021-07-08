@@ -226,7 +226,13 @@
                                (= drag-target :child) [:drop-multi/child {:source-uids source-uids
                                                                           :target-uid  target-uid}]
                                same-all?              [:drop-multi/same-all drag-target source-uids first-source-parent target]
-                               diff-parents-source?   [:drop-multi/diff-source drag-target source-uids target target-parent]
+                               #_diff-parents-source?   #_[:drop-multi/diff-source {:drag-target drag-target
+                                                                                    :source-uids  source-uids
+                                                                                    :target-uid  target-uid}]
+                               diff-parents-source?   [:drop-multi/diff-source drag-target
+                                                                                 source-uids
+                                                                                  target
+                                                       target-parent]
                                same-parent-source?    [:drop-multi/same-source drag-target source-uids first-source-parent target target-parent])]
     (println ".event" event) ;; TODO Remove this after all events are ported
     (rf/dispatch [:selected/clear-items])
