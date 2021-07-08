@@ -52,6 +52,7 @@
         [:node/title "deeply [[nested]]"]
         [:node/title "nested"]})))
 
+
 (t/deftest eid->lookup-ref
   (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
@@ -69,6 +70,7 @@
       (t/is (= [:block/uid "block"] (common-db/eid->lookup-ref db 102))))
     (t/testing "Returns :node/title lookup if both :node/title and :block/uid are present"
       (t/is (= [:node/title "the pageblock"] (common-db/eid->lookup-ref db 103))))))
+
 
 (t/deftest update-refs-tx
   (let [ref       [:block/uid "uid"]
@@ -92,6 +94,7 @@
       (t/is (= #{(rm-ref block-foo) (rm-ref page-foo) (add-ref page-bar)}
                (common-db/update-refs-tx ref #{block-bar page-foo block-foo} #{block-bar page-bar}))))))
 
+
 (t/deftest block-refs-as-lookup-refs
   (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
@@ -105,22 +108,23 @@
       (t/is (= #{[:node/title "the page"] [:block/uid "block"] [:block/uid "refblock"]} (common-db/block-refs-as-lookup-refs db 103))))))
 
 
-
+;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
 
 (t/deftest p1-page-created
-  (t/testing "New page created, nothing referring to it")
-
-  (t/testing "New page created, references found and updated"
-             ;; This actually is very unlikely in current setup,
-             ;; because when page link (to not existing page) is encountered in updated block
-             ;; we're creating page.
-             ))
+  (t/testing "New page, with refs on page title"))
 
 
-;; 
+(t/deftest p2-page-deleted
+  (t/testing "Page delete, with refs to page"))
 
-(t/deftest b1-block-with-new-page-ref
-  (t/testing "New page reference to existing page in block"
+
+(t/deftest p3-page-rename
+  (t/testing "Page rename, with refs to page")
+  (t/testing "Page rename, with refs on page title"))
+
+
+(t/deftest b2-block-edit
+  (t/testing "Block edit, with refs on block string"
     (let [target-page-uid   "target-page-1-1-uid"
           target-page-title "Target Page Title 1 1"
           source-page-uid   "source-page-1-1-uid"
@@ -156,68 +160,75 @@
           (t/is (seq page-refs))
           (t/is (seq block-refs))
           (t/is (= [{:db/id testing-block-eid}] page-refs))
-          (t/is (= [{:db/id target-page-eid}] block-refs))))))
+          (t/is (= [{:db/id target-page-eid}] block-refs)))))
 
-  (t/testing "New page reference to not existing page in block")
+    (t/testing "Block split, 1st Page link stays in 1st block, and 2nd Page link goes to a new block"
+      (let [target-page-1-uid   "target-page-3-1-uid"
+            target-page-1-title "Target Page Title 3 1"
+            target-page-2-uid   "target-page-3-2-uid"
+            target-page-2-title "Target Page Title 3 2"
 
-  (t/testing "We're splitting block so 1st Page link stays in 1st block, and 2nd Page link goes to a new block"
-    (let [target-page-1-uid   "target-page-3-1-uid"
-          target-page-1-title "Target Page Title 3 1"
-          target-page-2-uid   "target-page-3-2-uid"
-          target-page-2-title "Target Page Title 3 2"
+            source-page-uid        "source-page-3-1-uid"
+            source-page-title      "Source Page Title 3 1"
+            testing-block-1-uid    "testing-block-3-1-uid"
+            testing-block-1-string (str "[[" target-page-1-title "]]"
+                                        "[[" target-page-2-title "]]")
+            split-index            (count (str "[[" target-page-1-title "]]"))
+            testing-block-2-uid    "testing-block-3-2-uid"
+            setup-tx               [{:db/id          -1
+                                     :node/title     target-page-1-title
+                                     :block/uid      target-page-1-uid
+                                     :block/children [{:db/id        -2
+                                                       :block/uid    "irrelevant-1"
+                                                       :block/string ""
+                                                       :block/order  0}]}
+                                    {:db/id          -3
+                                     :node/title     target-page-2-title
+                                     :block/uid      target-page-2-uid
+                                     :block/children [{:db/id        -4
+                                                       :block/uid    "irrelevant-2"
+                                                       :block/string ""
+                                                       :block/order  0}]}
+                                    {:db/id          -5
+                                     :node/title     source-page-title
+                                     :block/uid      source-page-uid
+                                     :block/children [{:db/id        -6
+                                                       :block/uid    testing-block-1-uid
+                                                       :block/string testing-block-1-string
+                                                       :block/order  0}]}]]
 
-          source-page-uid        "source-page-3-1-uid"
-          source-page-title      "Source Page Title 3 1"
-          testing-block-1-uid    "testing-block-3-1-uid"
-          testing-block-1-string (str "[[" target-page-1-title "]]"
-                                      "[[" target-page-2-title "]]")
-          split-index            (count (str "[[" target-page-1-title "]]"))
-          testing-block-2-uid    "testing-block-3-2-uid"
-          setup-tx               [{:db/id          -1
-                                   :node/title     target-page-1-title
-                                   :block/uid      target-page-1-uid
-                                   :block/children [{:db/id        -2
-                                                     :block/uid    "irrelevant-1"
-                                                     :block/string ""
-                                                     :block/order  0}]}
-                                  {:db/id          -3
-                                   :node/title     target-page-2-title
-                                   :block/uid      target-page-2-uid
-                                   :block/children [{:db/id        -4
-                                                     :block/uid    "irrelevant-2"
-                                                     :block/string ""
-                                                     :block/order  0}]}
-                                  {:db/id          -5
-                                   :node/title     source-page-title
-                                   :block/uid      source-page-uid
-                                   :block/children [{:db/id        -6
-                                                     :block/uid    testing-block-1-uid
-                                                     :block/string testing-block-1-string
-                                                     :block/order  0}]}]]
+        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
 
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
-
-      (let [{testing-block-1-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-1-uid])
-            {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-            {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])
-            split-block-event                 (common-events/build-split-block-event -1
-                                                                                     testing-block-1-uid
-                                                                                     testing-block-1-string
-                                                                                     split-index
-                                                                                     testing-block-2-uid)
-            split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
-        ;; assert that target pages has no `:block/refs` to start with
-        (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
-        (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
-
-        ;; apply split-block
-        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection split-block-tx))
-        (let [{testing-block-2-eid :db/id}     (common-db/get-block @@fixture/connection [:block/uid testing-block-2-uid])
+        (let [{testing-block-1-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-1-uid])
               {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-              {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])]
-          ;; assert that we do have new ref
+              {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])
+              split-block-event                 (common-events/build-split-block-event -1
+                                                                                       testing-block-1-uid
+                                                                                       testing-block-1-string
+                                                                                       split-index
+                                                                                       testing-block-2-uid)
+              split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
+          ;; assert that target pages has no `:block/refs` to start with
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
-          (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs)))))))
+          (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
+
+          ;; apply split-block
+          (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection split-block-tx))
+          (let [{testing-block-2-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-2-uid])
+                {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
+                {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])]
+            ;; assert that we do have new ref
+            (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
+            (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs))))))))
+
+
+(t/deftest b3-block-delete
+  (t/testing "Block deleted, with refs to block"))
+
+
+(t/deftest m3-unresolved-refs
+  (t/testing "Block edit, with unresolved refs"))
+
 
 (comment
   (string->lookup-refs)
