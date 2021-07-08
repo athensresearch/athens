@@ -360,6 +360,64 @@
                      :target-uid  target-uid
                      :drag-target drag-target}}))
 
+(defn build-drop-same-event
+  "Builds `:datascript/drop-same` event with:
+  - `source-uid` : uid of the source block
+  - `target-uid` : uid of the target block"
+  [last-tx drag-target source-uid target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-same
+     :event/args    {:drag-target drag-target
+                     :source-uid  source-uid
+                     :target-uid  target-uid}}))
+
+
+(defn build-drop-multi-same-source-event
+  "Builds `:datascript/drop-multi-same-source` event with:
+  - `source-uids` : Vector of uids of the selected source blocks
+  - `target-uid` : uid of the target block
+  - `drag-target`: defines where is the block dragged it can be :above, :below, :child"
+  [last-tx drag-target source-uids target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-multi-same-source
+     :event/args    {:source-uids  source-uids
+                     :target-uid   target-uid
+                     :drag-target  drag-target}}))
+
+
+(defn build-drop-multi-same-all-event
+  "Builds `:datascript/drop-multi-same-all` event with:
+  - `source-uids` : Vector of uids of the selected source blocks
+  - `target-uid` : uid of the target block
+  - `drag-target`: defines where is the block dragged it can be :above, :below, :child"
+  [last-tx drag-target source-uids target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-multi-same-all
+     :event/args    {:source-uids  source-uids
+                     :target-uid   target-uid
+                     :drag-target  drag-target}}))
+
+
+(defn build-drop-link-same-parent-event
+  "Builds `:datascript/drop-link-same` event with:
+  - `source-uid` : Vector of uids of the selected source blocks
+  - `target-uid` : uid of the target block
+  - `drag-target`: defines where is the block dragged it can be :above, :below, :child"
+  [last-tx drag-target source-uid target-uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/drop-link-same-parent
+     :event/args    {:source-uid  source-uid
+                     :target-uid   target-uid
+                     :drag-target  drag-target}}))
+
 
 ;; - presence events
 

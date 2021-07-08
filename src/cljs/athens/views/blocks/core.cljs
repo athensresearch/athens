@@ -180,14 +180,18 @@
         event         (cond
                         (and move-action drag-target-child?)       [:drop/child {:source-uid source-uid
                                                                                  :target-uid target-uid}]
-                        (and move-action drag-target-same-parent?) [:drop/same drag-target source source-parent target]
+                        (and move-action drag-target-same-parent?) [:drop/same {:drag-target drag-target
+                                                                                :source-uid  source-uid
+                                                                                :target-uid  target-uid}]
 
                         (and move-action drag-target-diff-parent?) [:drop/diff-parent {:drag-target drag-target
                                                                                        :source-uid  source-uid
                                                                                        :target-uid  target-uid}]
                         (and link-action drag-target-child?)       [:drop-link/child {:source-uid source-uid
                                                                                       :target-uid target-uid}]
-                        (and link-action drag-target-same-parent?) [:drop-link/same drag-target source source-parent target]
+                        (and link-action drag-target-same-parent?) [:drop-link/same-parent {:drag-target drag-target
+                                                                                            :source-uid  source-uid
+                                                                                            :target-uid  target-uid}]
                         (and link-action drag-target-diff-parent?) [:drop-link/diff-parent {:drag-target drag-target
                                                                                             :source-uid  source-uid
                                                                                             :target-uid  target-uid}])]
@@ -225,7 +229,9 @@
         event                (cond
                                (= drag-target :child) [:drop-multi/child {:source-uids source-uids
                                                                           :target-uid  target-uid}]
-                               same-all?              [:drop-multi/same-all drag-target source-uids first-source-parent target]
+                               same-all?              [:drop-multi/same-all {:drag-target drag-target
+                                                                             :source-uids source-uids
+                                                                             :target-uid  target-uid}]
                                #_diff-parents-source?   #_[:drop-multi/diff-source {:drag-target drag-target
                                                                                     :source-uids  source-uids
                                                                                     :target-uid  target-uid}]
@@ -233,7 +239,9 @@
                                                                                  source-uids
                                                                                   target
                                                        target-parent]
-                               same-parent-source?    [:drop-multi/same-source drag-target source-uids first-source-parent target target-parent])]
+                               same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
+                                                                                :source-uids source-uids
+                                                                                :target-uid  target-uid}])]
     (println ".event" event) ;; TODO Remove this after all events are ported
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))

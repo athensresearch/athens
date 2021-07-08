@@ -239,6 +239,32 @@
             order
             x)))
 
+
+(defn between
+  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
+  [s t x]
+  (if (< s t)
+    (and (< s x) (< x t))
+    (and (< t x) (< x s))))
+
+
+(defn reindex-blocks-between-bounds
+  [db inc-or-dec parent-eid lower-bound upper-bound n]
+  (println "reindex block")
+  (d/q '[:find ?ch ?new-order
+         :keys db/id block/order
+         :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
+         :where
+         (between ?parent ?lower-bound ?upper-bound ?ch ?order)
+         [(?+or- ?order ?n) ?new-order]]
+       db
+       rules
+       inc-or-dec
+       parent-eid
+       lower-bound
+       upper-bound
+       n))
+
 (defn get-page-document
   "Retrieves whole page 'document', meaning with children."
   [db eid]

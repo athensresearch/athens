@@ -28,7 +28,11 @@
    :datascript/drop-multi-child
    :datascript/drop-link-child
    :datascript/drop-diff-parent
-   :datascript/drop-link-diff-parent])
+   :datascript/drop-link-diff-parent
+   :datascript/drop-same
+   :datascript/drop-multi-same-source
+   :datascript/drop-multi-same-all
+   :datascript/drop-link-same-parent])
 
 
 (def event-common
@@ -197,6 +201,42 @@
 
 
 (def datascript-drop-link-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-same
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-multi-same-source
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-multi-same-all
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-link-same
   [:map
    [:event/args
     [:map
