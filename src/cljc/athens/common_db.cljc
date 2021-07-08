@@ -293,16 +293,18 @@
        set))
 
 
-(defn strip-markup [s start end]
+(defn strip-markup
   "Remove `start` and `end` from s if present.
    Returns nil if markup was not present."
+  [s start end]
   (when (and (string/starts-with? s start)
              (string/ends-with? s end))
     (subs s (count start) (- (count s) (count end)))))
 
 
-(defn string->lookup-refs [s]
+(defn string->lookup-refs
   "Given string s, compute the set of refs expressed as Datalog lookup refs."
+  [s]
   (let [ast (parser/parse-to-ast s)
         block-ref-str->uid #(strip-markup % "((" "))")
         page-ref-str->title #(or (strip-markup % "#[[" "]]")
@@ -317,17 +319,20 @@
     (set/union block-lookups page-lookups)))
 
 
-(defn eid->lookup-ref [db eid]
+;;TODO change to always return uid lookup ref
+(defn eid->lookup-ref
   "Return the page or block lookup ref for entity eid."
+  [db eid]
   (let [ent       (d/entity db eid)
         lookup-by #(-> %1 (select-keys [%2]) vec first)]
     (or (lookup-by ent :node/title)
         (lookup-by ent :block/uid))))
 
 
-(defn update-refs-tx [lookup-ref before after]
+(defn update-refs-tx
   "Return the tx that will update lookup ref's :block/refs from before to after.
    Both before and after should be sets of lookup refs."
+  [lookup-ref before after]
   (let [[only-before only-after] (data/diff before after)
         to-tx (fn [type ref] [type lookup-ref :block/refs ref])]
     (set (concat (map (partial to-tx :db/retract) only-before)
