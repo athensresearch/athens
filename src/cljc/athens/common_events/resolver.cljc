@@ -366,14 +366,19 @@
         {source-parent-eid :db/id}         (common-db/get-parent db [:block/uid source-uid])
         new-source-block                   {:block/uid   source-uid
                                             :block/order 0}
-        reindex-source-parent              (common-db/dec-after db source-parent-eid source-block-order)
-        reindex-target-parent              (common-db/inc-after db target-eid -1)
+        reindex-source-parent              (common-db/dec-after db
+                                                                source-parent-eid
+                                                                source-block-order)
+        reindex-target-parent              (common-db/inc-after db
+                                                                target-eid
+                                                                -1)
         retract                            [:db/retract     source-parent-eid
                                             :block/children [:block/uid source-uid]]
         new-source-parent                  {:db/id          source-parent-eid
                                             :block/children reindex-source-parent}
         new-target-parent                  {:db/id          target-eid
-                                            :block/children (conj reindex-target-parent new-source-block)}
+                                            :block/children (conj reindex-target-parent
+                                                                  new-source-block)}
         tx-data                            [retract
                                             new-source-parent
                                             new-target-parent]]
@@ -383,13 +388,20 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-child
   [db {:event/keys [args]}]
+  "Drop multiple selected blocks as child to some other block
+   - source-parent: The block from which all the blocks are selected and removed
+   - target-parent: The block under which all the blocks are dropped
+   - DnD          : Short for dragged and dropped
+   After the selected blocks are DnD we need to reindex the remaining children of source-parent
+   and target-parent as a result all the children of source-parent have their order decreased
+   and the previous children under target-parent have their block order increased "
   (println "resolver :datascript/drop-multi-child args" (pr-str args))
   (let [{:keys [source-uids
                 target-uid]}                args
         {target-eid :db/id}                 (common-db/get-block  db [:block/uid target-uid])
         source-blocks                       (mapv #(common-db/get-block  db [:block/uid %]) source-uids)
         source-parents                      (mapv #(common-db/get-parent db [:block/uid %]) source-uids)
-        last-source-order                   (:block/order (last source-blocks))
+        {last-source-order :block/order}    (last source-blocks)
         {last-source-parent-uid :block/uid
          last-source-parent-eid :db/id}     (last source-parents)
         new-source-blocks                   (map-indexed (fn [idx x] {:block/uid   (:block/uid x)
@@ -435,7 +447,8 @@
                                             :block/open   true}
         reindex-target-parent              (common-db/inc-after db target-eid -1)
         new-target-parent                  {:db/id          target-eid
-                                            :block/children (conj reindex-target-parent new-source-block)}
+                                            :block/children (conj reindex-target-parent
+                                                                  new-source-block)}
         tx-data                            [new-target-parent]]
     (println "resolver :datascript/drop-link-child tx-data" (pr-str tx-data))
     tx-data))
@@ -443,6 +456,15 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-diff-parent
   [db {:event/keys [args]}]
+  "Drop selected block under some other block not as a child
+   - source-parent: The block from which the block is selected and removed
+   - target-parent: The block under which all the blocks are dropped
+   - DnD          : Short for dragged and dropped
+   - After the selected block is DnD we need to reindex the remaining children of source-parent
+     and target-parent as a result all the children of source-parent have their order decreased
+     and the previous children under target-parent have their block order increased
+   - drag-target affects the calculation of till which block all the blocks under source-parent or
+     target-parent need to be re-indexed."
   (println "resolver :datascript/drop-diff-parent args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
@@ -456,12 +478,16 @@
                                              :block/order (if (= drag-target :above)
                                                             target-block-order
                                                             (inc target-block-order))}
-        reindex-source-parent               (common-db/dec-after db source-parent-eid source-block-order)
+        reindex-source-parent               (common-db/dec-after db
+                                                                 source-parent-eid
+                                                                 source-block-order)
         reindex-target-parent               (concat
                                               [new-block]
-                                              (common-db/inc-after db target-parent-eid (if (= drag-target :above)
-                                                                                          (dec target-block-order)
-                                                                                          target-block-order)))
+                                              (common-db/inc-after db
+                                                                   target-parent-eid
+                                                                   (if (= drag-target :above)
+                                                                     (dec target-block-order)
+                                                                     target-block-order)))
         retract                             [:db/retract     source-parent-eid
                                              :block/children source-block-eid]
         new-source-parent                   {:db/id          source-parent-eid
@@ -492,9 +518,11 @@
                                                                  (inc target-block-order))}
         reindex-target-parent               (concat
                                               [new-block]
-                                              (common-db/inc-after db target-parent-eid (if (= drag-target :above)
-                                                                                          (dec target-block-order)
-                                                                                          target-block-order)))
+                                              (common-db/inc-after db
+                                                                   target-parent-eid
+                                                                   (if (= drag-target :above)
+                                                                     (dec target-block-order)
+                                                                     target-block-order)))
         new-target-parent                   {:db/id          target-parent-eid
                                              :block/children reindex-target-parent}
         tx-data                             [new-target-parent]]

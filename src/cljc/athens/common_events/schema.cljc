@@ -166,7 +166,7 @@
   [:map
    [:event/args
     [:map
-     [:source-uids vector?
+     [:source-uids [:vector string?]
       :target-uid  string?]]]])
 
 
