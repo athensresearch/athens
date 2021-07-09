@@ -110,8 +110,38 @@
 
 ;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
 
-(t/deftest p1-page-created
-  (t/testing "New page, with refs on page title"))
+(t/deftest p1-page-create
+  (t/testing "New page, with refs on page title"
+    (let [target-page-uid   "target-page-1-1-uid"
+          target-page-title "Target Page Title 1 1"
+          target-block-uid  "target-block-1-1-uid"
+          setup-tx          [{:db/id          -1
+                              :node/title     target-page-title
+                              :block/uid      target-page-uid
+                              :block/children [{:db/id        -2
+                                                :block/uid    target-block-uid
+                                                :block/string ""
+                                                :block/order  0}]}]]
+      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
+      (let [test-page-title (str "test page [[" target-page-title "]] and ((" target-block-uid "))")
+            test-page-uid   "test-page-uid"
+            add-link-tx     [{:block/uid    test-page-uid
+                              :block/string test-page-title}]]
+
+        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
+        (let [{testing-block-eid :db/id
+               block-refs        :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid test-page-uid])
+              {target-block-eid :db/id
+               block-backrefs   :block/_refs} (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
+              {target-page-eid :db/id
+               page-backrefs   :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
+          ;; assert that we do have new refs
+          (t/is (seq page-backrefs))
+          (t/is (seq block-backrefs))
+          (t/is (seq block-refs))
+          (t/is (= [{:db/id testing-block-eid}] page-backrefs))
+          (t/is (= [{:db/id testing-block-eid}] block-backrefs))
+          (t/is (= #{{:db/id target-page-eid} {:db/id target-block-eid}} (set block-refs))))))))
 
 
 (t/deftest p2-page-deleted
@@ -242,4 +272,6 @@
   (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
   (update-refs-tx)
   (t/test-vars [#'athens.common-events.linkmaker-test/block-refs-as-lookup-refs])
+  (t/test-vars [#'athens.common-events.linkmaker-test/p1-page-create])
+
   (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit]))
