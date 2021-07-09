@@ -607,7 +607,7 @@
                     "abc#not-hashtag"
                     [:paragraph
                      [:text-run "abc#not-hashtag"]]))
-  
+
   (t/testing "components (Athens extension)"
     (util/parses-to sut/inline-parser->ast
 

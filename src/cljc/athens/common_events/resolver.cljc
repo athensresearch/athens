@@ -410,6 +410,20 @@
     tx-data))
 
 
+;; resetting ds-conn re-computes all subs and is the cause
+;;    for huge delays when undo/redo is pressed
+;; here is another alternative strategy for undo/redo
+;; Core ideas are inspired from here https://tonsky.me/blog/datascript-internals/
+;;    1. db-before + tx-data = db-after
+;;    2. DataScript DB contains only currently relevant datoms.
+;; 1 is the math that is happening here when you undo/redo but in a much more performant way
+;; 2 asserts that even if you are reapplying same txn over and over only relevant ones will be present
+;;    - and overall size of transit file does not increase
+;; Note: only relevant txns(ones that user deliberately made, not undo/redo ones) go into history
+;; Note: Once session is lost(App is closed) edit history is also lost
+;; Also cmd + z -> cmd + z -> edit something --- future(cmd + shift + z) doesn't work
+;;    - as there is no logical way to assert the future when past has changed hence history is reset
+;;    - very similar to intelli-j edit model or any editor's undo/redo mechanism for that matter
 (defmethod resolve-event-to-tx :datascript/undo-redo
   [db-history {:event/keys [args]}]
   (let [{:keys [redo?]}  args
