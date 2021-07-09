@@ -146,11 +146,13 @@
                                                 :block/string ""
                                                 :block/order  0}]}]]
       (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
-      ;; assert that target page has no `:block/refs` to start with
-      (let [target-page (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])
-            add-link-tx [{:db/id        [:block/uid testing-block-uid]
-                          :block/string (str "[[" target-page-title "]] and ((" target-block-uid "))")}]]
+      ;; assert that target page and block has no `:block/refs` to start with
+      (let [target-page  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])
+            target-block (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
+            add-link-tx  [{:db/id        [:block/uid testing-block-uid]
+                           :block/string (str "[[" target-page-title "]] and ((" target-block-uid "))")}]]
         (t/is (empty? (:block/_refs target-page)))
+        (t/is (empty? (:block/_refs target-block)))
 
         (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
         (let [{testing-block-eid :db/id
