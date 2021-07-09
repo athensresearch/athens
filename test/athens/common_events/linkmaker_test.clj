@@ -115,11 +115,9 @@
     (let [target-page-uid   "target-page-1-1-uid"
           target-page-title "Target Page Title 1 1"
           target-block-uid  "target-block-1-1-uid"
-          setup-tx          [{:db/id          -1
-                              :node/title     target-page-title
+          setup-tx          [{:node/title     target-page-title
                               :block/uid      target-page-uid
-                              :block/children [{:db/id        -2
-                                                :block/uid    target-block-uid
+                              :block/children [{:block/uid    target-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}]]
       (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
@@ -135,7 +133,7 @@
                block-backrefs   :block/_refs} (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
               {target-page-eid :db/id
                page-backrefs   :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
-          ;; assert that we do have new refs
+          ;; Assert that we do have new refs.
           (t/is (seq page-backrefs))
           (t/is (seq block-backrefs))
           (t/is (seq block-refs))
@@ -144,8 +142,31 @@
           (t/is (= #{{:db/id target-page-eid} {:db/id target-block-eid}} (set block-refs))))))))
 
 
-(t/deftest p2-page-deleted
-  (t/testing "Page delete, with refs to page"))
+(t/deftest p2-page-delete
+  (t/testing "Page delete, with refs to page"
+    (let [target-page-title "Target page"
+          target-page-uid   "target-page-uid"
+          test-block-uid    "test-block-uid"
+          test-page-uid     "test-page-uid"
+          setup-tx          [{:node/title target-page-title
+                              :block/uid  target-page-uid}
+                             {:block/uid      test-page-uid
+                              :node/title     (str "[[" target-page-title "]]")
+                              :block/children [{:block/uid    test-block-uid
+                                                :block/string (str "[[" target-page-title "]]")
+                                                :block/order  0}]}]]
+
+      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
+      (let [delete-page-event (common-events/build-page-delete-event -1 target-page-uid)
+            delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
+
+        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection delete-page-txs))
+        (let [{block-refs :block/refs} (common-db/get-block @@fixture/connection [:block/uid test-block-uid])
+              {page-refs :block/refs}  (common-db/get-page-document @@fixture/connection [:block/uid test-page-uid])]
+          ;; Assert that we don't have any refs.
+          ;; Linkmaker doesn't actually do anything in this case, but the datalog database should remove them.
+          (t/is (empty? page-refs))
+          (t/is (empty? block-refs)))))))
 
 
 (t/deftest p3-page-rename
@@ -161,18 +182,14 @@
           source-page-uid   "source-page-1-1-uid"
           source-page-title "Source Page Title 1 1"
           testing-block-uid "testing-block-1-1-uid"
-          setup-tx          [{:db/id          -1
-                              :node/title     target-page-title
+          setup-tx          [{:node/title     target-page-title
                               :block/uid      target-page-uid
-                              :block/children [{:db/id        -2
-                                                :block/uid    target-block-uid
+                              :block/children [{:block/uid    target-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}
-                             {:db/id          -3
-                              :node/title     source-page-title
+                             {:node/title     source-page-title
                               :block/uid      source-page-uid
-                              :block/children [{:db/id        -4
-                                                :block/uid    testing-block-uid
+                              :block/children [{:block/uid    testing-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}]]
       (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
@@ -212,25 +229,19 @@
                                         "[[" target-page-2-title "]]")
             split-index            (count (str "[[" target-page-1-title "]]"))
             testing-block-2-uid    "testing-block-3-2-uid"
-            setup-tx               [{:db/id          -1
-                                     :node/title     target-page-1-title
+            setup-tx               [{:node/title     target-page-1-title
                                      :block/uid      target-page-1-uid
-                                     :block/children [{:db/id        -2
-                                                       :block/uid    "irrelevant-1"
+                                     :block/children [{:block/uid    "irrelevant-1"
                                                        :block/string ""
                                                        :block/order  0}]}
-                                    {:db/id          -3
-                                     :node/title     target-page-2-title
+                                    {:node/title     target-page-2-title
                                      :block/uid      target-page-2-uid
-                                     :block/children [{:db/id        -4
-                                                       :block/uid    "irrelevant-2"
+                                     :block/children [{:block/uid    "irrelevant-2"
                                                        :block/string ""
                                                        :block/order  0}]}
-                                    {:db/id          -5
-                                     :node/title     source-page-title
+                                    {:node/title     source-page-title
                                      :block/uid      source-page-uid
-                                     :block/children [{:db/id        -6
-                                                       :block/uid    testing-block-1-uid
+                                     :block/children [{:block/uid    testing-block-1-uid
                                                        :block/string testing-block-1-string
                                                        :block/order  0}]}]]
 
@@ -273,5 +284,5 @@
   (update-refs-tx)
   (t/test-vars [#'athens.common-events.linkmaker-test/block-refs-as-lookup-refs])
   (t/test-vars [#'athens.common-events.linkmaker-test/p1-page-create])
-
+  (t/test-vars [#'athens.common-events.linkmaker-test/p2-page-delete])
   (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit]))
