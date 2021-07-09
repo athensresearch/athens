@@ -127,6 +127,7 @@
   (t/testing "Block edit, with refs on block string"
     (let [target-page-uid   "target-page-1-1-uid"
           target-page-title "Target Page Title 1 1"
+          target-block-uid  "target-block-1-1-uid"
           source-page-uid   "source-page-1-1-uid"
           source-page-title "Source Page Title 1 1"
           testing-block-uid "testing-block-1-1-uid"
@@ -134,7 +135,7 @@
                               :node/title     target-page-title
                               :block/uid      target-page-uid
                               :block/children [{:db/id        -2
-                                                :block/uid    "irrelevant-1-1"
+                                                :block/uid    target-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}
                              {:db/id          -3
@@ -148,19 +149,23 @@
       ;; assert that target page has no `:block/refs` to start with
       (let [target-page (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])
             add-link-tx [{:db/id        [:block/uid testing-block-uid]
-                          :block/string (str "[[" target-page-title "]]")}]]
+                          :block/string (str "[[" target-page-title "]] and ((" target-block-uid "))")}]]
         (t/is (empty? (:block/_refs target-page)))
 
         (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
         (let [{testing-block-eid :db/id
                block-refs        :block/refs} (common-db/get-block @@fixture/connection [:block/uid testing-block-uid])
+              {target-block-eid :db/id
+               block-backrefs   :block/_refs} (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
               {target-page-eid :db/id
-               page-refs       :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
-          ;; assert that we do have new ref
-          (t/is (seq page-refs))
+               page-backrefs   :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
+          ;; assert that we do have new refs
+          (t/is (seq page-backrefs))
+          (t/is (seq block-backrefs))
           (t/is (seq block-refs))
-          (t/is (= [{:db/id testing-block-eid}] page-refs))
-          (t/is (= [{:db/id target-page-eid}] block-refs)))))
+          (t/is (= [{:db/id testing-block-eid}] page-backrefs))
+          (t/is (= [{:db/id testing-block-eid}] block-backrefs))
+          (t/is (= #{{:db/id target-page-eid} {:db/id target-block-eid}} (set block-refs))))))
 
     (t/testing "Block split, 1st Page link stays in 1st block, and 2nd Page link goes to a new block"
       (let [target-page-1-uid   "target-page-3-1-uid"
@@ -235,4 +240,4 @@
   (t/test-vars [#'athens.common-events.linkmaker-test/eid->lookup-ref])
   (update-refs-tx)
   (t/test-vars [#'athens.common-events.linkmaker-test/block-refs-as-lookup-refs])
-  (t/test-vars [#'athens.common-events.linkmaker-test/b1-block-with-new-page-ref]))
+  (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit]))

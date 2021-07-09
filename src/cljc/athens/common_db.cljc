@@ -130,6 +130,7 @@
                :block/string
                :block/open
                :block/refs
+               :block/_refs
                {:block/children [:block/uid
                                  :block/order]}]
           eid))
