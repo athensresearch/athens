@@ -28,6 +28,37 @@
       (clients/broadcast! presence-offline-event))))
 
 
+(defn- valid-event-handler
+  "Processes valid event received from the client."
+  [datahike channel username {:event/keys [id type] :as data}]
+  (if (and (nil? username)
+           (not= :presence/hello type))
+    (do
+      (log/warn channel "Message out of order, didn't say :presence/hello.")
+      (clients/send! channel (common-events/build-event-rejected id
+                                                                 :introduce-yourself
+                                                                 {:protocol-error :client-not-introduced})))
+    (let [result (cond
+                   (contains? presence/supported-event-types type)
+                   (presence/presence-handler (:conn datahike) channel data)
+
+                   (contains? datascript/supported-event-types type)
+                   (datascript/datascript-handler (:conn datahike) channel data)
+
+                   :else
+                   (do
+                     (log/error "receive-handler, unsupported event:" (pr-str type))
+                     (common-events/build-event-rejected id
+                                                         (str "Unsupported event: " type)
+                                                         {:unsupported-type type})))]
+      (merge {:event/id id}
+             result))))
+
+
+(def ^:private forwardable-events
+  datascript/supported-event-types)
+
+
 (defn- make-receive-handler
   [datahike]
   (fn receive-handler
@@ -38,35 +69,21 @@
       (if-not (schema/valid-event? data)
         (let [explanation (schema/explain-event data)]
           (log/warn channel "invalid event received:" explanation)
-          (clients/send! channel {:event/id      (:event/id data)
-                                  :event/status  :rejected
-                                  :reject/reason explanation}))
-        (do
-          (log/debug channel "decoded event" (pr-str data))
-          (if (and (nil? username)
-                   (not= :presence/hello (:event/type data)))
-            (do
-              (log/warn channel "Message out of order, didn't say :presence/hello.")
-              (clients/send! channel {:event/id      (:event/id data)
-                                      :event/status  :rejected
-                                      :reject/reason :introduce-yourself}))
-            (let [{:event/keys [id
-                                type]} data
-                  result               (cond
-                                         (contains? presence/supported-event-types type)
-                                         (presence/presence-handler (:conn datahike) channel data)
-
-                                         (contains? datascript/supported-event-types type)
-                                         (datascript/datascript-handler (:conn datahike) channel data)
-
-                                         :else
-                                         (do
-                                           (log/error "receive-handler, unsupported event:" (pr-str type))
-                                           (common-events/build-event-rejected id
-                                                                               (str "Unsupported event: " type)
-                                                                               {:unsupported-type type})))]
-              (clients/send! channel (merge {:event/id id}
-                                            result)))))))))
+          (clients/send! channel (common-events/build-event-rejected (:event/id data)
+                                                                     (str "Invalid event: " (pr-str data))
+                                                                     explanation)))
+        (let [{:event/keys [id type]} data]
+          (log/debug channel "decoded valid event" (pr-str data))
+          (let [{:event/keys [status]
+                 :as         result} (valid-event-handler datahike channel username data)]
+            (log/debug channel "<- event processed, result:" (pr-str result))
+            ;; forward to everyone if accepted
+            (when (and (= :accepted status)
+                       (contains? forwardable-events type))
+              (log/debug "Forwarding to everyone accepted event:" (pr-str data))
+              (clients/broadcast! data))
+            ;; acknowledge
+            (clients/send! channel result)))))))
 
 
 (defn- make-websocket-handler

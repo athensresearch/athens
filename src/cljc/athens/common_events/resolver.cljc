@@ -19,12 +19,6 @@
      :cljs (.getTime (js/Date.))))
 
 
-(defn- gen-block-uid
-  []
-  #?(:clj (subs (.toString (UUID/randomUUID)) 27)
-     :cljs (subs (str (random-uuid)) 27)))
-
-
 (defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
   [s t x]
@@ -41,20 +35,20 @@
 
 (defmethod resolve-event-to-tx :datascript/create-page
   [_db {:event/keys [args]}]
-  (let [{:keys [uid
+  (let [{:keys [page-uid
+                block-uid
                 title]} args
         now             (now-ts)
-        child-uid       (gen-block-uid)
         child           {:db/id        -2
                          :block/string ""
-                         :block/uid    child-uid
+                         :block/uid    block-uid
                          :block/order  0
                          :block/open   true
                          :create/time  now
                          :edit/time    now}
         page-tx         {:db/id          -1
                          :node/title     title
-                         :block/uid      uid
+                         :block/uid      page-uid
                          :block/children [child]
                          :create/time    now
                          :edit/time      now}]

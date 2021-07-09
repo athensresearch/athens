@@ -525,10 +525,12 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (athens.util/gen-block-uid)
+                                            block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/create link page-uid block-uid])
+                                        ;; TODO #1392: this should be handled by followup event
+                                        (js/setTimeout #(router/navigate-uid block-uid e) 50))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
@@ -537,10 +539,12 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (athens.util/gen-block-uid)
+                                            block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/create link page-uid block-uid])
+                                        ;; TODO #1392: this should be handled by followup event
+                                        (js/setTimeout #(router/navigate-uid block-uid e) 50))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

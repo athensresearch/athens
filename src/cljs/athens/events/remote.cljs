@@ -1,12 +1,13 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
-    [athens.common-events        :as common-events]
-    [athens.common-events.schema :as schema]
-    [athens.db                   :as db]
-    [malli.core                  :as m]
-    [malli.error                 :as me]
-    [re-frame.core               :as rf]))
+    [athens.common-events          :as common-events]
+    [athens.common-events.resolver :as resolver]
+    [athens.common-events.schema   :as schema]
+    [athens.db                     :as db]
+    [malli.core                    :as m]
+    [malli.error                   :as me]
+    [re-frame.core                 :as rf]))
 
 
 ;; Connection Management
@@ -173,10 +174,20 @@
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]
+        ;; TODO display alert?
         (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))))))
 
 
-;; Remote Datascript related events
+;; Remote graph related events
+
+(rf/reg-event-fx
+  :remote/apply-forwarded-event
+  (fn [{_db :db} [_ event]]
+    (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
+    (let [txs (resolver/resolve-event-to-tx @db/dsdb event)]
+      (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
+      {:fx [[:dispatch [:transact txs]]]})))
+
 
 ;; - Page related
 
@@ -185,26 +196,23 @@
   :remote/followup-page-create
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-page-create" event-id)
-    (let [{:keys [event]} (get-event-acceptance-info db event-id)
-          {:keys [uid]}   (:event/args event)
-          page-id         (db/e-by-av :block/uid uid)
-          page            (db/get-node-document page-id)
-          children        (:block/children page)
-          child-block-uid (-> children
-                              first
-                              :block/uid)]
-      (js/console.log ":remote/followup-page-create, child-block-uid" child-block-uid)
-      {:fx [[:dispatch-n [[:editing/uid child-block-uid]
+    (let [{:keys [event]}     (get-event-acceptance-info db event-id)
+          {:keys [page-uid
+                  block-uid]} (:event/args event)]
+      (js/console.log ":remote/followup-page-create, page-uid" page-uid)
+      {:fx [[:dispatch-n [[:navigate :page page-uid]
+                          [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
   :remote/page-create
-  (fn [{db :db} [_ uid title]]
+  (fn [{db :db} [_ page-uid  block-uid title]]
     (let [last-seen-tx                 (:remote/last-seen-tx db)
           {event-id :event/id
            :as      page-create-event} (common-events/build-page-create-event last-seen-tx
-                                                                              uid
+                                                                              page-uid
+                                                                              block-uid
                                                                               title)
           followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
       (js/console.debug ":remote/page-create" (pr-str page-create-event))

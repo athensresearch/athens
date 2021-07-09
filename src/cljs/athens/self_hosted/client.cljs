@@ -6,9 +6,13 @@
     [athens.db                   :as db]
     [clojure.set                 :as set]
     [cognitect.transit           :as transit]
+    [com.cognitect.transit.types :as ty]
     [com.stuartsierra.component  :as component]
     [datascript.core             :as d]
     [re-frame.core               :as rf]))
+
+
+(extend-type ty/UUID IUUID)
 
 
 ;; TODO: make configurable
@@ -137,30 +141,31 @@
 
 
 (defn- awaited-response-handler
-  [req-event {:event/keys [id status] :as packet}]
-  (js/console.log "WSClient: response " (pr-str packet)
-                  "to awaited event" (pr-str req-event))
-  (swap! awaiting-response dissoc id)
-  ;; is valid response?
-  (if (schema/valid-event-response? packet)
-    (do
-      (js/console.debug "Received valid response.")
-      (condp = status
-        :accepted
-        (let [{:accepted/keys [tx-id]} packet]
-          (js/console.log "Event" id "accepted in tx" tx-id)
-          (rf/dispatch [:remote/accept-event {:event-id id
-                                              :tx-id    tx-id}]))
-        :rejected
-        (let [{:reject/keys [reason data]} packet]
-          (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-          (rf/dispatch [:remote/reject-event {:event-id id
-                                              :reason   reason
-                                              :data     data}]))))
-    (let [explanation (schema/explain-event-response packet)]
-      (js/console.warn "Received invalid response:" (pr-str explanation))
-      (rf/dispatch [:remote/fail-event {:event-id id
-                                        :reason   explanation}]))))
+  [{:event/keys [id status] :as packet}]
+  (let [req-event (get @awaiting-response id)]
+    (js/console.log "WSClient: response " (pr-str packet)
+                    "to awaited event" (pr-str req-event))
+    (swap! awaiting-response dissoc id)
+    ;; is valid response?
+    (if (schema/valid-event-response? packet)
+      (do
+        (js/console.debug "Received valid response.")
+        (condp = status
+          :accepted
+          (let [{:accepted/keys [tx-id]} packet]
+            (js/console.log "Event" id "accepted in tx" tx-id)
+            (rf/dispatch [:remote/accept-event {:event-id id
+                                                :tx-id    tx-id}]))
+          :rejected
+          (let [{:reject/keys [reason data]} packet]
+            (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
+            (rf/dispatch [:remote/reject-event {:event-id id
+                                                :reason   reason
+                                                :data     data}]))))
+      (let [explanation (schema/explain-event-response packet)]
+        (js/console.warn "Received invalid response:" (pr-str explanation))
+        (rf/dispatch [:remote/fail-event {:event-id id
+                                          :reason   explanation}])))))
 
 
 (defn- local-eid
@@ -305,19 +310,42 @@
   (rf/dispatch [:presence/update-editing args]))
 
 
+(defn- forwarded-event-handler
+  [args]
+  (js/console.log "Forwarded event:" (pr-str args))
+  (rf/dispatch [:remote/apply-forwarded-event args]))
+
+
 (defn- server-event-handler
   [{:event/keys [id last-tx type args] :as packet}]
-  (js/console.log "<-" id ", last-tx:" last-tx ", type:" type)
+  (js/console.log "<-" id "(" (implements? IUUID id) ")" ", last-tx:" last-tx ", type:" type)
   (js/console.debug "WSClient: server event:" (pr-str packet))
   (if (schema/valid-server-event? packet)
 
-    (condp = type
-      :datascript/tx-log (ds-tx-log-handler args)
-      :datascript/db-dump (db-dump-handler last-tx args)
-      :presence/online (presence-online-handler args)
-      :presence/all-online (presence-all-online-handler args)
-      :presence/offline (presence-offline-handler args)
-      :presence/broadcast-editing (presence-receive-editing args))
+    (condp contains? type
+      #{:datascript/tx-log} (ds-tx-log-handler args)
+      #{:datascript/db-dump} (db-dump-handler last-tx args)
+      #{:presence/online} (presence-online-handler args)
+      #{:presence/all-online} (presence-all-online-handler args)
+      #{:presence/offline} (presence-offline-handler args)
+      #{:presence/broadcast-editing} (presence-receive-editing args)
+      #{:datascript/create-page
+        :datascript/rename-page
+        :datascript/merge-page
+        :datascript/delete-page
+        :datascript/block-save
+        :datascript/new-block
+        :datascript/add-child
+        :datascript/open-block-add-child
+        :datascript/split-block
+        :datascript/split-block-to-children
+        :datascript/unindent
+        :datascript/paste-verbatim
+        :datascript/indent
+        :datascript/page-add-shortcut
+        :datascript/page-remove-shortcut
+        :datascript/left-sidebar-drop-above
+        :datascript/left-sidebar-drop-below} (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
@@ -336,19 +364,16 @@
 
 (defn- message-handler
   [event]
-  (let [packet    (->> event
-                       .-data
-                       (transit/read
-                         (transit/reader
-                           :json
-                           {:handlers
-                            {:datom datom-reader}})))
-        {:event/keys
-         [id]}    packet
-        req-event (get @awaiting-response id)]
+  (let [packet (->> event
+                    .-data
+                    (transit/read
+                      (transit/reader
+                        :json
+                        {:handlers
+                         {:datom datom-reader}})))]
     (js/console.log "message-handler" (pr-str packet))
-    (if req-event
-      (awaited-response-handler req-event packet)
+    (if (schema/valid-event-response? packet)
+      (awaited-response-handler packet)
       (server-event-handler packet))))
 
 

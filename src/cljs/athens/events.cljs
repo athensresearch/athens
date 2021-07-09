@@ -525,22 +525,24 @@
 (reg-event-fx
   :daily-note/prev
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items (fn [items]
-                                                 (into [uid] items)))]
+    (let [new-db    (update db :daily-notes/items (fn [items]
+                                                    (into [uid] items)))
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create title uid block-uid]}))))
 
 
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items conj uid)]
+    (let [new-db    (update db :daily-notes/items conj uid)
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create title uid block-uid]}))))
 
 
 (reg-event-fx
@@ -652,24 +654,21 @@
 
 (reg-event-fx
   :page/create
-  (fn [_ [_ title uid]]
-    (js/console.debug ":page/create" title uid)
+  (fn [_ [_ title page-uid block-uid]]
+    (js/console.debug ":page/create" title page-uid block-uid)
     (let [local? (not (client/open?))]
       (js/console.debug ":page/create local?" local?)
       (if local?
         (let [create-page-event (common-events/build-page-create-event -1
-                                                                       uid
+                                                                       page-uid
+                                                                       block-uid
                                                                        title)
-              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)
-              child-uid         (-> tx
-                                    first ; page
-                                    :block/children
-                                    first ; 1st child
-                                    :block/uid)]
+              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              [:editing/uid child-uid]]]]})
+                              [:navigate :page {:id page-uid}]
+                              [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
-               [:remote/page-create uid title]]]}))))
+               [:remote/page-create page-uid block-uid title]]]}))))
 
 
 (reg-event-fx

@@ -1,12 +1,23 @@
 (ns athens.common-events
-  "Event as Verbs executed on Knowledge Graph")
+  "Event as Verbs executed on Knowledge Graph"
+  #?(:clj
+     (:import
+       (java.util
+         UUID))))
 
 
 ;; helpers
 
+#?(:clj
+   (defn random-uuid
+     "CLJ shim for CLJS `random-uuid`."
+     []
+     (UUID/randomUUID)))
+
+
 (defn- gen-event-id
   []
-  (str (gensym "eid-")))
+  (random-uuid))
 
 
 ;; building events
@@ -60,14 +71,15 @@
 ;;   - page events
 
 (defn build-page-create-event
-  "Builds `:datascript/create-page` event with `uid` and `title` of page."
-  [last-tx uid title]
+  "Builds `:datascript/create-page` event with `page-uid`, `block-uid` and `title` of page."
+  [last-tx page-uid block-uid title]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/create-page
-     :event/args    {:uid   uid
-                     :title title}}))
+     :event/args    {:page-uid  page-uid
+                     :block-uid block-uid
+                     :title     title}}))
 
 
 (defn build-page-rename-event
@@ -336,9 +348,9 @@
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/all-online
-     :event/args    (into {} (mapv (fn [username]
-                                     {:username username})
-                                   clients))}))
+     :event/args     (mapv (fn [username]
+                             {:username username})
+                           clients)}))
 
 
 (defn build-presence-offline-event

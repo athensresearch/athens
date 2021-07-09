@@ -1,9 +1,10 @@
 (ns athens.self-hosted.clients
   "Client comms"
   (:require
-    [clojure.tools.logging :as log]
-    [cognitect.transit                 :as transit]
-    [org.httpkit.server                :as http])
+    [athens.common-events.schema :as schema]
+    [clojure.tools.logging       :as log]
+    [cognitect.transit           :as transit]
+    [org.httpkit.server          :as http])
   (:import
     (datahike.datom
       Datom)
@@ -40,12 +41,19 @@
 
 
 ;; Public send API
-;; TODO: validate send messages from source
 (defn send!
   "Send data to a client via `channel`"
   [channel data]
   (log/debug "->" (get @clients channel) ", data:" (pr-str data))
-  (http/send! channel (->transit data)))
+  (let [valid-event-response? (schema/valid-event-response? data)
+        valid-server-event?   (schema/valid-server-event? data)]
+    (if (or valid-event-response?
+            valid-server-event?)
+      (http/send! channel (->transit data))
+      ;; TODO internal failure mode, collect in reporting
+      (log/error "->" (get @clients channel) ", invalid schema:"
+                 "event-response take:" (str (schema/explain-event-response data))
+                 ", server-event take:" (str (schema/explain-server-event data))))))
 
 
 (defn broadcast!
