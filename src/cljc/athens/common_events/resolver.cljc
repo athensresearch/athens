@@ -665,7 +665,7 @@
         source-blocks                     (mapv #(common-db/get-block db [:block/uid %]) source-uids)
         first-source-order                (:block/order (first source-blocks))
         last-source-order                 (:block/order (last source-blocks))
-        {target-block-order :block.order} (common-db/get-block db [:block/uid target-uid])
+        {target-block-order :block/order} (common-db/get-block db [:block/uid target-uid])
         {first-source-parent-eid :db/id}  (common-db/get-parent db [:block/uid (first source-uids)])
         target-above-source?              (< target-block-order first-source-order)
         inc-or-dec                        (if target-above-source? + -)

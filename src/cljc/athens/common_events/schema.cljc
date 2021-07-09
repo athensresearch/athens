@@ -223,7 +223,7 @@
    [:event/args
     [:map
      [:drag-target keyword?
-      :source-uid  string?
+      :source-uids [:vector string?]
       :target-uid  string?]]]])
 
 
@@ -232,7 +232,7 @@
    [:event/args
     [:map
      [:drag-target keyword?
-      :source-uid  string?
+      :source-uids [:vector string?]
       :target-uid  string?]]]])
 
 
