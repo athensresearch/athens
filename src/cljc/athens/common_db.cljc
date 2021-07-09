@@ -320,14 +320,13 @@
     (set/union block-lookups page-lookups)))
 
 
-;;TODO change to always return uid lookup ref
 (defn eid->lookup-ref
-  "Return the page or block lookup ref for entity eid."
+  "Return the :block/uid based lookup ref for entity eid in db."
   [db eid]
-  (let [ent       (d/entity db eid)
-        lookup-by #(-> %1 (select-keys [%2]) vec first)]
-    (or (lookup-by ent :node/title)
-        (lookup-by ent :block/uid))))
+  (-> (d/entity db eid)
+      (select-keys [:block/uid])
+      seq
+      first))
 
 
 (defn update-refs-tx

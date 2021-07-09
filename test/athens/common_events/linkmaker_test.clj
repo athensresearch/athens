@@ -64,12 +64,12 @@
       (t/is (nil? (common-db/eid->lookup-ref db 200))))
     (t/testing "Returns nil if the entity doesn't have :node/title or :block/uid"
       (t/is (nil? (common-db/eid->lookup-ref db 104))))
-    (t/testing "Returns :node/title lookup if present"
-      (t/is (= [:node/title "the page"] (common-db/eid->lookup-ref db 101))))
-    (t/testing "Returns :block/uid lookup if present"
+    (t/testing "Returns :block/uid lookup ref for pages"
+      (t/is (= [:block/uid "page"] (common-db/eid->lookup-ref db 101))))
+    (t/testing "Returns :block/uid lookup ref for blocks"
       (t/is (= [:block/uid "block"] (common-db/eid->lookup-ref db 102))))
-    (t/testing "Returns :node/title lookup if both :node/title and :block/uid are present"
-      (t/is (= [:node/title "the pageblock"] (common-db/eid->lookup-ref db 103))))))
+    (t/testing "Returns :block/uid lookup ref even if both :node/title and :block/uid are present"
+      (t/is (= [:block/uid "pageblock"] (common-db/eid->lookup-ref db 103))))))
 
 
 (t/deftest update-refs-tx
@@ -105,7 +105,7 @@
     (t/testing "Returns empty if the entity doesn't have refs"
       (t/is (empty? (common-db/block-refs-as-lookup-refs db 101))))
     (t/testing "Returns ref lookups for each ref"
-      (t/is (= #{[:node/title "the page"] [:block/uid "block"] [:block/uid "refblock"]} (common-db/block-refs-as-lookup-refs db 103))))))
+      (t/is (= #{[:block/uid "page"] [:block/uid "block"] [:block/uid "refblock"]} (common-db/block-refs-as-lookup-refs db 103))))))
 
 
 ;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
