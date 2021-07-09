@@ -111,7 +111,7 @@
   [:map
    [:event/args
     [:map
-     [:uids   vector?]]]])
+     [:uids [:vector string?]]]]])
 
 
 (def datascript-unindent
@@ -126,8 +126,8 @@
   [:map
    [:event/args
     [:map
-     [:uids  vector?
-      :f-uid string?]]]])
+     [:uids      [:vector string?]
+      :first-uid string?]]]])
 
 
 

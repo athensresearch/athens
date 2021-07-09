@@ -470,13 +470,12 @@
                           [:remote/send-event! event]]]]})))
 
 
-
 (rf/reg-event-fx
   :remote/unindent-multi
-  (fn [{db :db} [_ {:keys [uids f-uid] :as args}]]
+  (fn [{db :db} [_ {:keys [uids first-uid] :as args}]]
     (js/console.debug ":remote/unindent-multi args" args)
     (let [last-seen-tx           (:remote/last-seen-tx db)
-          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids f-uid)]
+          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids first-uid)]
       (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
       {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
 

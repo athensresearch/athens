@@ -1240,9 +1240,12 @@
     (js/console.debug ":unindent/multi" uids)
     (let [local?                      (not (client/open?))
           [f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
+          sanitized-selected-uids     (map (comp
+                                             first
+                                             common-db/uid-and-embed-id) uids)
           {parent-title :node/title
            parent-uid   :block/uid}   (common-db/get-parent @db/dsdb [:block/uid f-uid])
-          same-parent?                (common-db/same-parent? @db/dsdb uids)
+          same-parent?                (common-db/same-parent? @db/dsdb sanitized-selected-uids)
           is-parent-root-embed?       (when same-parent?
                                         (some-> "#editable-uid-"
                                                 (str f-uid "-embed-" f-embed-id)
@@ -1261,13 +1264,13 @@
       (when-not do-nothing?
         (if local?
           (let [unindent-multi-event  (common-events/build-unindent-multi-event -1
-                                                                                uids
+                                                                                sanitized-selected-uids
                                                                                 f-uid)
                 tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
             (js/console.debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
-          {:fx [[:dispatch [:remote/unindent-multi {:uids  uids
-                                                    :f-uid f-uid}]]]})))))
+          {:fx [[:dispatch [:remote/unindent-multi {:uids      sanitized-selected-uids
+                                                    :first-uid f-uid}]]]})))))
 
 
 (defn drop-link-child
