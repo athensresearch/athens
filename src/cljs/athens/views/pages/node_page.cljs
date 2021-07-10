@@ -65,7 +65,8 @@
   {:position "relative"})
 
 
-(def title-style
+(defn title-style
+  [is-editing?]
   {:position "relative"
    :overflow "visible"
    :flex-grow "1"
@@ -74,35 +75,30 @@
    :white-space "pre-line"
    :word-break "break-word"
    :line-height "1.40em"
-   ::stylefy/manual [[:textarea {:-webkit-appearance "none"
-                                 :cursor             "text"
-                                 :resize             "none"
-                                 :transform          "translate3d(0,0,0)"
-                                 :color              "inherit"
-                                 :font-weight        "inherit"
-                                 :padding            "0"
-                                 :letter-spacing     "inherit"
-                                 :width              "100%"
-                                 :min-height         "100%"
-                                 :caret-color        (color :link-color)
-                                 :background         "transparent"
-                                 :margin             "0"
-                                 :font-size          "inherit"
-                                 :line-height        "inherit"
-                                 :border-radius      "0.25rem"
-                                 :transition         "opacity 0.15s ease"
-                                 :border             "0"
-                                 :font-family        "inherit"
-                                 :visibility         "hidden"
-                                 :position           "absolute"}]
-                     [:textarea ["::-webkit-scrollbar" {:display "none"}]]
-                     [:textarea:focus
-                      :.is-editing {:outline    "none"
-                                    :visibility "visible"
-                                    :position   "relative"}]
-                     [:abbr {:z-index 4}]
-                     [(selectors/+ :.is-editing :span) {:visibility "hidden"
-                                                        :position   "absolute"}]]})
+   ::stylefy/manual [[:&:hover {:cursor "text"}]
+                     [:span {:position (if is-editing? "absolute" "relative")
+                             :background (color :background-color)
+                             :display (when is-editing? "none")}]
+                     [:textarea {:-webkit-appearance "none"
+                                 :resize "none"
+                                 :color "inherit"
+                                 :font-weight "inherit"
+                                 :padding "0"
+                                 :letter-spacing "inherit"
+                                 :width "100%"
+                                 :caret-color (color :link-color)
+                                 :background (color :background-color)
+                                 :margin "0"
+                                 :font-size "inherit"
+                                 :line-height "inherit"
+                                 :border-radius "0.25rem"
+                                 :border "0"
+                                 :font-family "inherit"
+                                 :outline "none"
+                                 :position (if is-editing? "relative" "absolute")
+                                 :visibility (if is-editing? "visible" "hidden")}]
+                     [:textarea::-webkit-scrollbar {:display "none"}]
+                     [:abbr {:z-index 4}]]})
 
 
 (def references-style {:margin-top "3em"})
@@ -143,7 +139,7 @@
 
 (def references-group-block-style
   {:border-top [["1px solid " (color :border-color)]]
-   :width "100%"
+   :width      "100%"
    :padding-block-start "1em"
    :margin-block-start "1em"
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
@@ -560,7 +556,7 @@
           ;; Dropdown
           [menu-dropdown node daily-note?]
 
-          [:h1 (use-style title-style
+          [:h1 (use-style (title-style (= editing-uid uid))
                           {:data-uid uid
                            :class    "page-header"
                            :on-click (fn [e]
@@ -570,13 +566,10 @@
                                          (dispatch [:editing/uid uid])))})
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
-
-
            (when-not daily-note?
              [autosize/textarea
               {:value       (:title/local @state)
                :id          (str "editable-uid-" uid)
-               :class       (when (= editing-uid uid) "is-editing")
                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
@@ -584,6 +577,7 @@
                               (handle-blur node state linked-refs))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
+
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
            (if (str/blank? (:title/local @state))
              [:wbr]
