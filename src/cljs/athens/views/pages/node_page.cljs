@@ -26,7 +26,6 @@
     [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
-    [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
