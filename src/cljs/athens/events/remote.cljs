@@ -194,27 +194,29 @@
 
 (rf/reg-event-fx
   :remote/followup-page-create
-  (fn [{db :db} [_ event-id]]
+  (fn [{db :db} [_ event-id shift?]]
     (js/console.debug ":remote/followup-page-create" event-id)
     (let [{:keys [event]}     (get-event-acceptance-info db event-id)
           {:keys [page-uid
                   block-uid]} (:event/args event)]
       (js/console.log ":remote/followup-page-create, page-uid" page-uid)
-      {:fx [[:dispatch-n [[:navigate :page page-uid]
+      {:fx [[:dispatch-n [(if shift?
+                            [:right-sidebar/open-item page-uid]
+                            [:navigate :page {:id page-uid}])
                           [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
   :remote/page-create
-  (fn [{db :db} [_ page-uid  block-uid title]]
+  (fn [{db :db} [_ page-uid  block-uid title shift?]]
     (let [last-seen-tx                 (:remote/last-seen-tx db)
           {event-id :event/id
            :as      page-create-event} (common-events/build-page-create-event last-seen-tx
                                                                               page-uid
                                                                               block-uid
                                                                               title)
-          followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
+          followup-fx                  [[:dispatch [:remote/followup-page-create event-id shift?]]]]
       (js/console.debug ":remote/page-create" (pr-str page-create-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! page-create-event]]]]})))

@@ -197,11 +197,10 @@
                                  (js/console.debug "athena key down" (pr-str {:page-uid  page-uid
                                                                               :block-uid block-uid
                                                                               :title     query}))
-                                 (dispatch [:page/create query page-uid block-uid])
-                                 (if shift
-                                   (js/setTimeout #(dispatch [:right-sidebar/open-item page-uid]) 500)
-                                   ;; TODO #1392: this should be handled by followup event
-                                   (navigate-uid block-uid)))
+                                 (dispatch [:page/create {:title     query
+                                                          :page-uid  page-uid
+                                                          :block-uid block-uid
+                                                          :shift?    shift}]))
                                ;; if shift: open in right-sidebar
                                shift
                                (do (dispatch [:athena/toggle])
@@ -285,72 +284,70 @@
                                           (not (.. @ref (contains (.. e -target)))))
                                  (dispatch [:athena/toggle])))]
     (r/create-class
-      {:display-name           "athena"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn []
-                                 (let [open?          @(subscribe [:athena/open])
-                                       s              (r/atom {:index   0
-                                                               :query   nil
-                                                               :results []})
-                                       search-handler (create-search-handler s)]
-                                   (when open?
-                                     [:div.athena (use-style container-style
-                                                             {:ref #(reset! ref %)})
-                                      [:header {:style {:position "relative"}}
-                                       [:input (use-style athena-input-style
-                                                          {:type        "search"
-                                                           :id          "athena-input"
-                                                           :auto-focus  true
-                                                           :required    true
-                                                           :placeholder "Find or Create Page"
-                                                           :on-change   (fn [e] (search-handler (.. e -target -value)))
-                                                           :on-key-down (fn [e] (key-down-handler e s))})]
-                                       [:button (use-style search-cancel-button-style
-                                                           {:on-click #(set! (.-value (getElement "athena-input")))})
-                                        [:> Close]]]
-                                      [results-el s]
-                                      [(fn []
-                                         (let [{:keys [results query index]} @s]
-                                           [:div (use-style results-list-style)
-                                            (doall
-                                              (for [[i x] (map-indexed list results)
-                                                    :let  [parent (:block/parent x)
-                                                           title  (or (:node/title parent) (:node/title x))
-                                                           uid    (or (:block/uid parent) (:block/uid x))
-                                                           string (:block/string x)]]
-                                                (if (nil? x)
-                                                  ^{:key i}
-                                                  [:div (use-style result-style {:on-click (fn [_]
-                                                                                             (let [page-uid  (gen-block-uid)
-                                                                                                   block-uid (gen-block-uid)]
-                                                                                               (dispatch [:athena/toggle])
-                                                                                               (dispatch [:page/create query page-uid block-uid])
-                                                                                               ;; TODO(agentydragon): Open the new page in sidebar if Shift is pressed.
-                                                                                               ;; (navigate-uid uid e) does not work, because the page does not exist yet.
-                                                                                               ;; TODO #1392: this should be handled by followup event
-                                                                                               (navigate-uid block-uid)))
-                                                                                 :class    (when (= i index) "selected")})
+     {:display-name           "athena"
+      :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+      :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+      :reagent-render         (fn []
+                                (let [open?          @(subscribe [:athena/open])
+                                      s              (r/atom {:index   0
+                                                              :query   nil
+                                                              :results []})
+                                      search-handler (create-search-handler s)]
+                                  (when open?
+                                    [:div.athena (use-style container-style
+                                                            {:ref #(reset! ref %)})
+                                     [:header {:style {:position "relative"}}
+                                      [:input (use-style athena-input-style
+                                                         {:type        "search"
+                                                          :id          "athena-input"
+                                                          :auto-focus  true
+                                                          :required    true
+                                                          :placeholder "Find or Create Page"
+                                                          :on-change   (fn [e] (search-handler (.. e -target -value)))
+                                                          :on-key-down (fn [e] (key-down-handler e s))})]
+                                      [:button (use-style search-cancel-button-style
+                                                          {:on-click #(set! (.-value (getElement "athena-input")))})
+                                       [:> Close]]]
+                                     [results-el s]
+                                     [(fn []
+                                        (let [{:keys [results query index]} @s]
+                                          [:div (use-style results-list-style)
+                                           (doall
+                                            (for [[i x] (map-indexed list results)
+                                                  :let  [parent (:block/parent x)
+                                                         title  (or (:node/title parent) (:node/title x))
+                                                         uid    (or (:block/uid parent) (:block/uid x))
+                                                         string (:block/string x)]]
+                                              (if (nil? x)
+                                                ^{:key i}
+                                                [:div (use-style result-style {:on-click (fn [_]
+                                                                                           (let [page-uid  (gen-block-uid)
+                                                                                                 block-uid (gen-block-uid)]
+                                                                                             (dispatch [:athena/toggle])
+                                                                                             (dispatch [:page/create {:title     query
+                                                                                                                      :page-uid  page-uid
+                                                                                                                      :block-uid block-uid}])))
+                                                                               :class    (when (= i index) "selected")})
 
-                                                   [:div (use-style result-body-style)
-                                                    [:h4.title (use-sub-style result-style :title)
-                                                     [:b "Create Page: "]
-                                                     query]]
-                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class Create)]]]
+                                                 [:div (use-style result-body-style)
+                                                  [:h4.title (use-sub-style result-style :title)
+                                                   [:b "Create Page: "]
+                                                   query]]
+                                                 [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class Create)]]]
 
-                                                  [:div (use-style result-style {:key      i
-                                                                                 :on-click (fn [e]
-                                                                                             (let [selected-page {:node/title   title
-                                                                                                                  :block/uid    uid
-                                                                                                                  :block/string string
-                                                                                                                  :query        query}]
-                                                                                               (dispatch [:athena/toggle])
-                                                                                               (dispatch [:athena/update-recent-items selected-page])
-                                                                                               (navigate-uid uid e)))
-                                                                                 :class    (when (= i index) "selected")})
-                                                   [:div (use-style result-body-style)
+                                                [:div (use-style result-style {:key      i
+                                                                               :on-click (fn [e]
+                                                                                           (let [selected-page {:node/title   title
+                                                                                                                :block/uid    uid
+                                                                                                                :block/string string
+                                                                                                                :query        query}]
+                                                                                             (dispatch [:athena/toggle])
+                                                                                             (dispatch [:athena/update-recent-items selected-page])
+                                                                                             (navigate-uid uid e)))
+                                                                               :class    (when (= i index) "selected")})
+                                                 [:div (use-style result-body-style)
 
-                                                    [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
-                                                    (when string
-                                                      [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
-                                                   [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]])))]))]])))})))
+                                                  [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
+                                                  (when string
+                                                    [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
+                                                 [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]])))]))]])))})))

@@ -483,6 +483,7 @@
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
                                                           (dispatch [:selected/add-items children]))
+
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
@@ -528,9 +529,10 @@
                                       (let [page-uid  (athens.util/gen-block-uid)
                                             block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link page-uid block-uid])
-                                        ;; TODO #1392: this should be handled by followup event
-                                        (js/setTimeout #(router/navigate-uid block-uid e) 50))))
+                                        (dispatch [:page/create {:title     link
+                                                                 :page-uid  page-uid
+                                                                 :block-uid block-uid
+                                                                 :shift?    shift}]))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
@@ -542,9 +544,10 @@
                                       (let [page-uid  (athens.util/gen-block-uid)
                                             block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link page-uid block-uid])
-                                        ;; TODO #1392: this should be handled by followup event
-                                        (js/setTimeout #(router/navigate-uid block-uid e) 50))))
+                                        (dispatch [:page/create {:title     link
+                                                                 :page-uid  page-uid
+                                                                 :block-uid block-uid
+                                                                 :shift?    shift}]))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

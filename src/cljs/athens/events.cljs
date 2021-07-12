@@ -531,7 +531,9 @@
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
         {:db       new-db
-         :dispatch [:page/create title uid block-uid]}))))
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
@@ -542,7 +544,9 @@
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
         {:db       new-db
-         :dispatch [:page/create title uid block-uid]}))))
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
@@ -654,8 +658,8 @@
 
 (reg-event-fx
   :page/create
-  (fn [_ [_ title page-uid block-uid]]
-    (js/console.debug ":page/create" title page-uid block-uid)
+  (fn [_ [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
+    (js/console.debug ":page/create args" (pr-str args))
     (let [local? (not (client/open?))]
       (js/console.debug ":page/create local?" local?)
       (if local?
@@ -665,10 +669,12 @@
                                                                        title)
               tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              [:navigate :page {:id page-uid}]
+                              (if shift?
+                                [:right-sidebar/open-item page-uid]
+                                [:navigate :page {:id page-uid}])
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
-               [:remote/page-create page-uid block-uid title]]]}))))
+               [:remote/page-create page-uid block-uid title shift?]]]}))))
 
 
 (reg-event-fx
