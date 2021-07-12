@@ -179,7 +179,37 @@
 
 
 (t/deftest p3-page-rename
-  (t/testing "Page rename, with refs to page")
+  (t/testing "Page rename, with refs to page"
+    (let [target-page-title "Target page"
+          target-page-uid   "target-page-uid"
+          test-block-uid    "test-block-uid"
+          test-page-uid     "test-page-uid"
+          setup-tx          [{:node/title target-page-title
+                              :block/uid  target-page-uid}
+                             {:block/uid      test-page-uid
+                              :node/title     (str "[[" target-page-title "]]")
+                              :block/children [{:block/uid    test-block-uid
+                                                :block/string (str "[[" target-page-title "]]")
+                                                :block/order  0}]}]]
+
+      (transact-with-linkmaker setup-tx)
+      (let [{original-block-refs :block/refs} (get-block test-block-uid)
+            {original-page-refs :block/refs}  (get-page test-page-uid)
+            target-page-new-title             "Target page new"
+            rename-page-event                 (common-events/build-page-rename-event -1 target-page-uid target-page-title target-page-new-title)
+            rename-page-txs                   (resolver/resolve-event-to-tx @@fixture/connection rename-page-event)]
+
+        ;; Page should have refs to it.
+        (t/is (seq original-block-refs))
+        (t/is (seq original-page-refs))
+
+        (transact-with-linkmaker rename-page-txs)
+        (let [{block-refs :block/refs} (get-block test-block-uid)
+              {page-refs :block/refs}  (get-page test-page-uid)]
+          ;; Refs should be the same as before the rename.
+          (t/is (= original-block-refs block-refs))
+          (t/is (= original-page-refs page-refs))))))
+
   (t/testing "Page rename, with refs on page title"))
 
 
@@ -294,4 +324,5 @@
   (t/test-vars [#'athens.common-events.linkmaker-test/block-refs-as-lookup-refs])
   (t/test-vars [#'athens.common-events.linkmaker-test/p1-page-create])
   (t/test-vars [#'athens.common-events.linkmaker-test/p2-page-delete])
+  (t/test-vars [#'athens.common-events.linkmaker-test/p3-page-rename])
   (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit]))
