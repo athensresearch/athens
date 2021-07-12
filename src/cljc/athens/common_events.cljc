@@ -205,15 +205,13 @@
 
 (defn build-unindent-multi-event
   "Builds `:datascript/unindent-multi` event with:
-  - `uids` : `:block/uid` of selected blocks
-  - `first-uid`: first uid in uids that is passed through `uid-and-embed-id` function"
-  [last-tx uids f-uid]
+  - `uids` : `:block/uid` of selected blocks"
+  [last-tx uids]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/unindent-multi
-     :event/args    {:uids       uids
-                     :first-uid  f-uid}}))
+     :event/args    {:uids uids}}))
 
 
 (defn build-page-add-shortcut
