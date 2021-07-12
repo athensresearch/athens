@@ -1524,77 +1524,52 @@
         {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
 
 
+
 (defn drop-multi-diff-source-parents
   "Only reindex after last target. plus-after"
   [kind source-uids target target-parent]
-  (let [filtered-children (->> (d/q '[:find ?children-uid ?o
-                                      :keys block/uid block/order
-                                      :in $ % ?target-uid ?not-contains? ?source-uids
-                                      :where
-                                      (siblings ?target-uid ?children-e)
-                                      [?children-e :block/uid ?children-uid]
-                                      [(?not-contains? ?source-uids ?children-uid)]
-                                      [?children-e :block/order ?o]]
-                                    @db/dsdb db/rules (:block/uid target) db/not-contains? (set source-uids))
-                               (sort-by :block/order)
-                               (mapv #(:block/uid %)))
-        t-order (:block/order target)
-        index (cond
-                (= kind :above) t-order
-                (and (= kind :below) (db/last-child? (:block/uid target))) t-order
-                (= kind :below) (inc t-order))
-        n (count filtered-children)
-        head (subvec filtered-children 0 index)
-        tail (subvec filtered-children index n)
-        new-vec (concat head source-uids tail)
-        new-source-uids (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
-        source-parents (mapv #(db/get-parent [:block/uid %]) source-uids)
-        source-blocks (mapv #(db/get-block [:block/uid %]) source-uids)
-        last-s-parent (last source-parents)
-        last-s-order (:block/order (last source-blocks))
-        n (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
+  (let [filtered-children          (->> (d/q '[:find ?children-uid ?o
+                                               :keys block/uid block/order
+                                               :in $ % ?target-uid ?not-contains? ?source-uids
+                                               :where
+                                               (siblings ?target-uid ?children-e)
+                                               [?children-e :block/uid ?children-uid]
+                                               [(?not-contains? ?source-uids ?children-uid)]
+                                               [?children-e :block/order ?o]]
+                                             @db/dsdb db/rules (:block/uid target) db/not-contains? (set source-uids))
+                                        (sort-by :block/order)
+                                        (mapv #(:block/uid %)))
+        t-order                    (:block/order target)
+        index                      (cond
+                                     (= kind :above) t-order
+                                     (and (= kind :below) (db/last-child? (:block/uid target))) t-order
+                                     (= kind :below) (inc t-order))
+        n                          (count filtered-children)
+        head                       (subvec filtered-children 0 index)
+        tail                       (subvec filtered-children index n)
+        new-vec                    (concat head source-uids tail)
+        new-source-uids            (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        source-blocks              (mapv #(db/get-block [:block/uid %]) source-uids)
+        last-s-parent              (last source-parents)
+        last-s-order               (:block/order (last source-blocks))
+        n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
         reindex-last-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
-        source-parents (mapv #(db/get-parent [:block/uid %]) source-uids)
-        retracts (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
-                       source-uids
-                       source-parents)
-        new-target-parent {:db/id (:db/id target-parent) :block/children new-source-uids}
+        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
+        retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
+                                         source-uids
+                                         source-parents)
+        new-target-parent          {:db/id (:db/id target-parent) :block/children new-source-uids}
         ;; need to reindex last-source-parent but requires more index management depending on the level of the target parent
-        new-source-parent {:db/id (:db/id last-s-parent) :block/children reindex-last-source-parent}
-        tx-data (conj retracts new-target-parent #_new-source-parent)]
-    (println "==============================")
-    (println "source uids" source-uids)
-    (println "filtered children" filtered-children)
-    (println "new vec" new-vec)
-    (println "new source uids" new-source-uids)
-    (println "retracts" retracts)
-    (println "new-target-parent" new-target-parent)
-    (println "new-source-parent" new-source-parent)
-    (println "==============================")
+        new-source-parent          {:db/id (:db/id last-s-parent) :block/children reindex-last-source-parent}
+        tx-data                    (conj retracts new-target-parent #_new-source-parent)]
     (identity new-source-parent)
     tx-data))
-
 
 (reg-event-fx
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
-
-#_(reg-event-fx
-    :drop-multi/diff-parent
-    (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-      (js/console.debug ":drop-multi/diff-parent args" args)
-      (let [local? (not (client/open?))]
-        (if local?
-          (let [drop-multi-diff-parent-event (common-events/build-drop-multi-diff-parent-event -1
-                                                                                               drag-target
-                                                                                               source-uid
-                                                                                               target-uid)
-                tx              (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-parent-event)]
-            (js/console.debug ":drop/diff-multi-parent tx" tx)
-            {:fx [[:dispatch [:transact tx]]]})
-          {:fx [[:dispatch [:remote/drop-multi-diff-parent args]]]}))))
-
 
 
 (defn drop-bullet-multi

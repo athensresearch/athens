@@ -191,15 +191,6 @@
       :target-uid  string?]]]])
 
 
-(def datascript-drop-multi-diff-parent
-  [:map
-   [:event/args
-    [:map
-     [:drag-target keyword?
-      :source-uids vector?
-      :target-eid  int?]]]])
-
-
 (def datascript-drop-link-diff-parent
   [:map
    [:event/args
