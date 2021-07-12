@@ -388,13 +388,13 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-child
   [db {:event/keys [args]}]
-  "Drop multiple selected blocks as child to some other block
-   - source-parent: The block from which all the blocks are selected and removed
-   - target-parent: The block under which all the blocks are dropped
-   - DnD          : Short for dragged and dropped
-   After the selected blocks are DnD we need to reindex the remaining children of source-parent
-   and target-parent as a result all the children of source-parent have their order decreased
-   and the previous children under target-parent have their block order increased "
+  ;; Drop multiple selected blocks as child to some other block
+  ;; - source-parent: The block from which all the blocks are selected and removed
+  ;; - target-parent: The block under which all the blocks are dropped
+  ;; - DnD          : Short for dragged and dropped
+  ;; After the selected blocks are DnD we need to reindex the remaining children of source-parent
+  ;; and target-parent as a result all the children of source-parent have their order decreased
+  ;; and the previous children under target-parent have their block order increased
   (println "resolver :datascript/drop-multi-child args" (pr-str args))
   (let [{:keys [source-uids
                 target-uid]}                args
@@ -456,15 +456,15 @@
 
 (defmethod resolve-event-to-tx :datascript/drop-diff-parent
   [db {:event/keys [args]}]
-  "Drop selected block under some other block not as a child
-   - source-parent: The block from which the block is selected and removed
-   - target-parent: The block under which all the blocks are dropped
-   - DnD          : Short for dragged and dropped
-   - After the selected block is DnD we need to reindex the remaining children of source-parent
-     and target-parent as a result all the children of source-parent have their order decreased
-     and the previous children under target-parent have their block order increased
-   - drag-target affects the calculation of till which block all the blocks under source-parent or
-     target-parent need to be re-indexed."
+  ;; Drop selected block under some other block not as a child
+  ;; - source-parent: The block from which the block is selected and removed
+  ;; - target-parent: The block under which all the blocks are dropped
+  ;; - DnD          : Short for dragged and dropped
+  ;; After the selected block is DnD we need to reindex the remaining children of source-parent
+  ;; and target-parent as a result all the children of source-parent have their order decreased
+  ;; and the previous children under target-parent have their block order increased
+  ;; drag-target affects the calculation of till which block all the blocks under source-parent or
+  ;; target-parent need to be re-indexed.
   (println "resolver :datascript/drop-diff-parent args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
