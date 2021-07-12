@@ -67,8 +67,7 @@
                 old-name
                 new-name]} args
         linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
-        linked-ref-blocks  (mapcat second linked-refs)
-        new-linked-refs    (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        new-linked-refs    (common-db/map-new-refs linked-refs old-name new-name)
         new-page           {:db/id      [:block/uid uid]
                             :node/title new-name}
         new-datoms         (concat [new-page] new-linked-refs)]
@@ -83,8 +82,7 @@
                 old-name
                 new-name]}              args
         linked-refs                     (common-db/get-linked-refs-by-page-title db old-name)
-        linked-ref-blocks               (mapcat second linked-refs)
-        new-linked-refs                 (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        new-linked-refs                 (common-db/map-new-refs linked-refs old-name new-name)
         {old-page-kids :block/children} (common-db/get-page-document db [:block/uid uid])
         new-parent-uid                  (common-db/get-page-uid-by-title db new-name)
         existing-page-block-count       (common-db/existing-block-count db new-name)

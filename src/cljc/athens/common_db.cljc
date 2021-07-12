@@ -207,12 +207,15 @@
 (defn map-new-refs
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
-  (map (fn [{:block/keys [uid string]}]
-         (let [new-str (string/replace string
+  (map (fn [{:block/keys [uid string] :node/keys [title]}]
+         (let [[string kw] (if title
+                             [title :node/title]
+                             [string :block/string])
+               new-str (string/replace string
                                        (patterns/linked old-title)
                                        (str "$1$3$4" new-title "$2$5"))]
-           {:db/id        [:block/uid uid]
-            :block/string new-str}))
+           {:db/id [:block/uid uid]
+            kw     new-str}))
        linked-refs))
 
 
@@ -277,11 +280,7 @@
   (->> (d/pull db '[* :block/_refs] [:node/title page-title])
        :block/_refs
        (mapv :db/id)
-       (merge-parents-and-block db)
-       group-by-parent
-       (sort-by :db/id)
-       vec
-       rseq))
+       (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
 
 
 (defn- extract-tag-values
