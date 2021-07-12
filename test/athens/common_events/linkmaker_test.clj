@@ -157,12 +157,13 @@
           target-page-uid   "target-page-uid"
           test-block-uid    "test-block-uid"
           test-page-uid     "test-page-uid"
+          ref-str           (str "ref to [[" target-page-title "]]")
           setup-tx          [{:node/title target-page-title
                               :block/uid  target-page-uid}
                              {:block/uid      test-page-uid
-                              :node/title     (str "[[" target-page-title "]]")
+                              :node/title     ref-str
                               :block/children [{:block/uid    test-block-uid
-                                                :block/string (str "[[" target-page-title "]]")
+                                                :block/string ref-str
                                                 :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
@@ -184,12 +185,13 @@
           target-page-uid   "target-page-uid"
           test-block-uid    "test-block-uid"
           test-page-uid     "test-page-uid"
+          ref-str           (str "ref to [[" target-page-title "]]")
           setup-tx          [{:node/title target-page-title
                               :block/uid  target-page-uid}
                              {:block/uid      test-page-uid
-                              :node/title     (str "[[" target-page-title "]]")
+                              :node/title     ref-str
                               :block/children [{:block/uid    test-block-uid
-                                                :block/string (str "[[" target-page-title "]]")
+                                                :block/string ref-str
                                                 :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
@@ -210,7 +212,37 @@
           (t/is (= original-block-refs block-refs))
           (t/is (= original-page-refs page-refs))))))
 
-  (t/testing "Page rename, with refs on page title"))
+  (t/testing "Page rename, with refs on page title"
+    (let [test-block-uid    "test-block-uid"
+          test-page-uid     "test-page-uid"
+          test-page-title   "Test page"
+          target-page-uid   "target-page-uid"
+          target-page-title (str "ref to [[" test-page-title "]]")
+          setup-tx          [{:block/uid      test-page-uid
+                              :node/title     test-page-title
+                              :block/children [{:block/uid    test-block-uid
+                                                :block/string "test block"
+                                                :block/order  0}]}
+                             {:node/title target-page-title
+                              :block/uid  target-page-uid}]]
+
+      (transact-with-linkmaker setup-tx)
+      (let [{block-backrefs :block/_refs} (get-block test-block-uid)
+            {page-backrefs :block/_refs}  (get-page test-page-uid)
+            target-page-new-title             (str "ref to ((" test-block-uid "))")
+            rename-page-event                 (common-events/build-page-rename-event -1 target-page-uid target-page-title target-page-new-title)
+            rename-page-txs                   (resolver/resolve-event-to-tx @@fixture/connection rename-page-event)]
+
+        ;; Page should have ref to block, but not to page.
+        (t/is (not (seq block-backrefs)))
+        (t/is (seq page-backrefs))
+
+        (transact-with-linkmaker rename-page-txs)
+        (let [{block-backrefs :block/_refs} (get-block test-block-uid)
+              {page-backrefs :block/_refs}  (get-page test-page-uid)]
+          ;; Page should have ref to page, but not to block.
+          (t/is (seq block-backrefs))
+          (t/is (not (seq page-backrefs))))))))
 
 
 (t/deftest b2-block-edit
