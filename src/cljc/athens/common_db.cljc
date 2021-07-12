@@ -360,9 +360,19 @@
         [string]))
 
 
-(defn- parseable-string-datom? [[eid attr value]]
+(defn- parseable-string-datom [[eid attr value]]
   (when (#{:block/string :node/title} attr)
     [eid value]))
+
+(defn linkmaker-error-handler [e input-tx]
+  #?(:cljs (do
+             (js/alert (str "Software failure, sorry. Please let us know about it.\n"
+                            (str e)))
+             (js/console.error "Linkmaker failure." e))
+     :clj (do (log/error "Linkmaker failure." e)))
+  ;; Return the original, un-modified, input tx so that transactions can still move forward.
+  ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
+  input-tx)
 
 (defn linkmaker
   "Maintains the linked nature of Knowledge Graph.
@@ -371,43 +381,50 @@
 
   Arguments:
   - `db`: Current Datascript/Datahike DB value
-  - `input-tx`: Grapth structure modifying TX, analyzed for link updates
+  - `input-tx` (optional): Graph structure modifying TX, analyzed for link updates
+
+  If `input-tx` is provided, linkmaker will only update links related to that tx.
+  If `input-tx` is not provided, all links in the db are checked for updates.
 
   Named after [Keymaker](https://en.wikipedia.org/wiki/Keymaker). "
 
-  ;;TODO: arity one linkmaker creates all missing links in db
-
-  [db input-tx]
-  (try
-    (let [{:keys [db-before
-                  db-after
-                  tx-data]}  (d/with db input-tx)
-          linkmaker-txs      (into []
-                                   (comp (keep parseable-string-datom?)
-                                         (mapcat (fn [[eid string]]
-                                                   (println "eid string" eid string)
-                                                   (let [lookup-ref (eid->lookup-ref db-after eid)
-                                                         before     (block-refs-as-lookup-refs db-before lookup-ref)
-                                                         after      (string-as-lookup-refs db-after string)]
-                                                     (println "lookup-ref"  lookup-ref)
-                                                     (println "before" before)
-                                                     (println "after" after)
-                                                     (update-refs-tx lookup-ref before after)))))
-                                   tx-data)
-          with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
-      (println "linkmaker:"
-               "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
+  ([db]
+   (try
+     (let [linkmaker-txs (into []
+                               (comp (keep parseable-string-datom)
+                                     (mapcat (fn [[eid string]]
+                                               (let [lookup-ref (eid->lookup-ref db eid)
+                                                     before     (block-refs-as-lookup-refs db lookup-ref)
+                                                     after      (string-as-lookup-refs db string)]
+                                                 (update-refs-tx lookup-ref before after)))))
+                               (d/datoms db :eavt))]
+      #_(println "linkmaker:"
+               "\nall:" (with-out-str (clojure.pprint/pprint (d/datoms db :eavt)))
                "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
-      with-linkmaker-txs)
-    (catch #?(:cljs :default
-              :clj Exception) e
-      (do
-        #?(:cljs (do
-                   (js/alert (str "Software failure, sorry. Please let us know about it.\n"
-                                  (str e)))
-                   (js/console.error "Linkmaker failure." e))
-           :clj (do (log/error "Linkmaker failure." e)))
-        ;; Return the original, un-modified, input tx so that transactions can still move forward.
-        ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
-        input-tx))))
+      linkmaker-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (linkmaker-error-handler e []))))
+
+  ([db input-tx]
+   (try
+     (let [{:keys [db-before
+                   db-after
+                   tx-data]}  (d/with db input-tx)
+           linkmaker-txs      (into []
+                                    (comp (keep parseable-string-datom)
+                                          (mapcat (fn [[eid string]]
+                                                    (let [lookup-ref (eid->lookup-ref db-after eid)
+                                                          before     (block-refs-as-lookup-refs db-before lookup-ref)
+                                                          after      (string-as-lookup-refs db-after string)]
+                                                      (update-refs-tx lookup-ref before after)))))
+                                    tx-data)
+           with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
+       #_(println "linkmaker:"
+                "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
+                "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
+       with-linkmaker-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (linkmaker-error-handler e [])))))
 

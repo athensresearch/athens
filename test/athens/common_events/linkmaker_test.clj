@@ -109,6 +109,7 @@
 
 
 ;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
+;; Redundant scenarios are not tested.
 
 (defn transact-with-linkmaker [tx-data]
   (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection tx-data)))
@@ -386,6 +387,49 @@
         (t/is (empty? (:block/_refs test-page)))
         (t/is (empty? (:block/_refs test-block)))))))
 
+(t/deftest m4-fix-db
+  (t/testing "Broken/missing refs in db"
+    (let [target-page-uid      "target-page-1-1-uid"
+          target-page-title    "Target Page Title 1 1"
+          target-block-uid     "target-block-1-1-uid"
+          source-page-uid      "source-page-1-1-uid"
+          source-page-title    "Source Page Title 1 1"
+          testing-block-uid    "testing-block-1-1-uid"
+          testing-block-string (str "[[" target-page-title "]] and ((" target-block-uid "))")
+          setup-tx             [{:node/title     target-page-title
+                                 :block/uid      target-page-uid
+                                 :block/children [{:block/uid    target-block-uid
+                                                   :block/string ""
+                                                   :block/order  0}]}
+                                {:node/title     source-page-title
+                                 :block/uid      source-page-uid
+                                 :block/children [{:block/uid    testing-block-uid
+                                                   :block/string testing-block-string
+                                                   :block/order  0}]}]]
+      ;; Transact without linkmaker.
+      (d/transact @fixture/connection setup-tx)
+      ;; Assert that target page and block has no `:block/refs` to start with.
+      (let [target-page  (get-page target-page-uid)
+            target-block (get-block target-block-uid)
+            add-links-tx  (common-db/linkmaker @@fixture/connection)]
+        (t/is (empty? (:block/_refs target-page)))
+        (t/is (empty? (:block/_refs target-block)))
+
+        (d/transact @fixture/connection add-links-tx)
+        (let [{testing-block-eid :db/id
+               block-refs        :block/refs} (get-block testing-block-uid)
+              {target-block-eid :db/id
+               block-backrefs   :block/_refs} (get-block target-block-uid)
+              {target-page-eid :db/id
+               page-backrefs   :block/_refs}  (get-page target-page-uid)]
+          ;; Assert that we do have new refs.
+          (t/is (seq page-backrefs))
+          (t/is (seq block-backrefs))
+          (t/is (seq block-refs))
+          (t/is (= [{:db/id testing-block-eid}] page-backrefs))
+          (t/is (= [{:db/id testing-block-eid}] block-backrefs))
+          (t/is (= #{{:db/id target-page-eid} {:db/id target-block-eid}} (set block-refs))))))))
+
 
 (comment
   (string->lookup-refs)
@@ -397,4 +441,5 @@
   (t/test-vars [#'athens.common-events.linkmaker-test/p3-page-rename])
   (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit])
   (t/test-vars [#'athens.common-events.linkmaker-test/b3-block-delete])
-  (t/test-vars [#'athens.common-events.linkmaker-test/m3-unresolved-refs]))
+  (t/test-vars [#'athens.common-events.linkmaker-test/m3-unresolved-refs])
+  (t/test-vars [#'athens.common-events.linkmaker-test/m4-fix-db]))

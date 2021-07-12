@@ -74,6 +74,8 @@ Linkmaker never updates either `:block/string` or `:block/title`.
    - -> these are ignored and not added to refs
      - this cover cases such as intentional usage of double parens without block uid
      - this can enable instances of the *p1* corner case (page created that is already ref'd)
+ - *m4*: db contains broken/missing refs
+   - -> linkmaker recomputes all refs for the db
 
 In short, all cases where a string changes (either `:block/string` or `:node/title`) trigger *m1*, *m2*, *m3*, causing a ref delta to be computed.
 
