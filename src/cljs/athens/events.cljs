@@ -1269,7 +1269,7 @@
                 tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
             (js/console.debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
-          {:fx [[:dispatch [:remote/unindent-multi {:uids      sanitized-selected-uids}]]]})))))
+          {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
 

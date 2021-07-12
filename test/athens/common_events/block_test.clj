@@ -350,7 +350,7 @@
             child-2-block  (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
             uids           [child-1-uid child-2-uid]
             unindent-multi-event (common-events/build-unindent-multi-event -1
-                                                                     uids)
+                                                                           uids)
             unindent-multi-txs   (resolver/resolve-event-to-tx @@fixture/connection unindent-multi-event)]
         (t/is (= 2 (-> parent-block :block/children count)))
         (t/is (= [(select-keys child-1-block [:block/uid :block/order])
