@@ -110,6 +110,15 @@
 
 ;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
 
+(defn transact-with-linkmaker [tx-data]
+  (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection tx-data)))
+
+(defn get-block [uid]
+  (common-db/get-block @@fixture/connection [:block/uid uid]))
+
+(defn get-page [uid]
+  (common-db/get-page-document @@fixture/connection [:block/uid uid]))
+
 (t/deftest p1-page-create
   (t/testing "New page, with refs on page title"
     (let [target-page-uid   "target-page-1-1-uid"
@@ -120,19 +129,19 @@
                               :block/children [{:block/uid    target-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}]]
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
+      (transact-with-linkmaker setup-tx)
       (let [test-page-title (str "test page [[" target-page-title "]] and ((" target-block-uid "))")
             test-page-uid   "test-page-uid"
             add-link-tx     [{:block/uid    test-page-uid
                               :block/string test-page-title}]]
 
-        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
+        (transact-with-linkmaker add-link-tx)
         (let [{testing-block-eid :db/id
-               block-refs        :block/refs} (common-db/get-page-document @@fixture/connection [:block/uid test-page-uid])
+               block-refs        :block/refs} (get-page test-page-uid)
               {target-block-eid :db/id
-               block-backrefs   :block/_refs} (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
+               block-backrefs   :block/_refs} (get-block target-block-uid)
               {target-page-eid :db/id
-               page-backrefs   :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
+               page-backrefs   :block/_refs}  (get-page target-page-uid)]
           ;; Assert that we do have new refs.
           (t/is (seq page-backrefs))
           (t/is (seq block-backrefs))
@@ -156,13 +165,13 @@
                                                 :block/string (str "[[" target-page-title "]]")
                                                 :block/order  0}]}]]
 
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
+      (transact-with-linkmaker setup-tx)
       (let [delete-page-event (common-events/build-page-delete-event -1 target-page-uid)
             delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
 
-        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection delete-page-txs))
-        (let [{block-refs :block/refs} (common-db/get-block @@fixture/connection [:block/uid test-block-uid])
-              {page-refs :block/refs}  (common-db/get-page-document @@fixture/connection [:block/uid test-page-uid])]
+        (transact-with-linkmaker delete-page-txs)
+        (let [{block-refs :block/refs} (get-block test-block-uid)
+              {page-refs :block/refs}  (get-page test-page-uid)]
           ;; Assert that we don't have any refs.
           ;; Linkmaker doesn't actually do anything in this case, but the datalog database should remove them.
           (t/is (empty? page-refs))
@@ -192,23 +201,23 @@
                               :block/children [{:block/uid    testing-block-uid
                                                 :block/string ""
                                                 :block/order  0}]}]]
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
-      ;; assert that target page and block has no `:block/refs` to start with
-      (let [target-page  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])
-            target-block (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
+      (transact-with-linkmaker setup-tx)
+      ;; Assert that target page and block has no `:block/refs` to start with.
+      (let [target-page  (get-page target-page-uid)
+            target-block (get-block target-block-uid)
             add-link-tx  [{:db/id        [:block/uid testing-block-uid]
                            :block/string (str "[[" target-page-title "]] and ((" target-block-uid "))")}]]
         (t/is (empty? (:block/_refs target-page)))
         (t/is (empty? (:block/_refs target-block)))
 
-        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection add-link-tx))
+        (transact-with-linkmaker add-link-tx)
         (let [{testing-block-eid :db/id
-               block-refs        :block/refs} (common-db/get-block @@fixture/connection [:block/uid testing-block-uid])
+               block-refs        :block/refs} (get-block testing-block-uid)
               {target-block-eid :db/id
-               block-backrefs   :block/_refs} (common-db/get-block @@fixture/connection [:block/uid target-block-uid])
+               block-backrefs   :block/_refs} (get-block target-block-uid)
               {target-page-eid :db/id
-               page-backrefs   :block/_refs}  (common-db/get-page-document @@fixture/connection [:block/uid target-page-uid])]
-          ;; assert that we do have new refs
+               page-backrefs   :block/_refs}  (get-page target-page-uid)]
+          ;; Assert that we do have new refs.
           (t/is (seq page-backrefs))
           (t/is (seq block-backrefs))
           (t/is (seq block-refs))
@@ -245,11 +254,11 @@
                                                        :block/string testing-block-1-string
                                                        :block/order  0}]}]]
 
-        (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-tx))
+        (transact-with-linkmaker setup-tx)
 
-        (let [{testing-block-1-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-1-uid])
-              {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-              {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])
+        (let [{testing-block-1-eid :db/id}      (get-block testing-block-1-uid)
+              {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
+              {target-page-2-refs :block/_refs} (get-page target-page-2-uid)
               split-block-event                 (common-events/build-split-block-event -1
                                                                                        testing-block-1-uid
                                                                                        testing-block-1-string
@@ -261,10 +270,10 @@
           (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
 
           ;; apply split-block
-          (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection split-block-tx))
-          (let [{testing-block-2-eid :db/id}      (common-db/get-block @@fixture/connection [:block/uid testing-block-2-uid])
-                {target-page-1-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-1-uid])
-                {target-page-2-refs :block/_refs} (common-db/get-page-document @@fixture/connection [:block/uid target-page-2-uid])]
+          (transact-with-linkmaker split-block-tx)
+          (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)
+                {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
+                {target-page-2-refs :block/_refs} (get-page target-page-2-uid)]
             ;; assert that we do have new ref
             (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
             (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs))))))))
