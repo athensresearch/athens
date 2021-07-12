@@ -342,11 +342,49 @@
 
 
 (t/deftest b3-block-delete
-  (t/testing "Block deleted, with refs to block"))
+  (t/testing "Block deleted, with refs to block"
+    ;; The block delete event is not yet migrated to common events.
+    #_(let [target-block-string "Target block"
+          target-block-uid   "target-block-uid"
+          test-block-uid    "test-block-uid"
+          test-page-uid     "test-page-uid"
+         ref-str           (str "ref to ((" target-block-uid "))")
+         setup-tx          [{:block/uid  target-block-uid
+                             :block/string target-block-string}
+                             {:block/uid      test-page-uid
+                              :node/title     ref-str
+                              :block/children [{:block/uid    test-block-uid
+                                                :block/string ref-str
+                                                :block/order  0}]}]]
+
+      (transact-with-linkmaker setup-tx)
+      (let [delete-page-event (common-events/build-block-delete-event -1 target-block-uid)
+            delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
+
+        (transact-with-linkmaker delete-page-txs)
+        (let [{block-refs :block/refs} (get-block test-block-uid)
+              {page-refs :block/refs}  (get-page test-page-uid)]
+          ;; Assert that we don't have any refs.
+          ;; Linkmaker doesn't actually do anything in this case, but the datalog database should remove them.
+          (t/is (empty? page-refs))
+          (t/is (empty? block-refs)))))))
 
 
 (t/deftest m3-unresolved-refs
-  (t/testing "Block edit, with unresolved refs"))
+  (t/testing "Block and page edit, with unresolved refs"
+    (let [test-page-uid "test-page-uid"
+          test-block-uid  "test-block-uid"
+          setup-tx          [{:node/title     "refs to [[missing page]] and ((missing-block))"
+                              :block/uid      test-page-uid
+                              :block/children [{:block/uid    test-block-uid
+                                                :block/string "refs to [[another missing page]] and ((another missing block))"
+                                                :block/order  0}]}]]
+      (transact-with-linkmaker setup-tx)
+      ;; Assert that target page and block has no `:block/refs`.
+      (let [test-page  (get-page test-page-uid)
+            test-block (get-block test-block-uid)]
+        (t/is (empty? (:block/_refs test-page)))
+        (t/is (empty? (:block/_refs test-block)))))))
 
 
 (comment
@@ -357,4 +395,6 @@
   (t/test-vars [#'athens.common-events.linkmaker-test/p1-page-create])
   (t/test-vars [#'athens.common-events.linkmaker-test/p2-page-delete])
   (t/test-vars [#'athens.common-events.linkmaker-test/p3-page-rename])
-  (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit]))
+  (t/test-vars [#'athens.common-events.linkmaker-test/b2-block-edit])
+  (t/test-vars [#'athens.common-events.linkmaker-test/b3-block-delete])
+  (t/test-vars [#'athens.common-events.linkmaker-test/m3-unresolved-refs]))
