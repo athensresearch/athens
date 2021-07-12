@@ -320,13 +320,14 @@
 
 
 (defn eid->lookup-ref
-  "Return the :block/uid based lookup ref for entity eid in db."
+  "Return the :block/uid based lookup ref for entity eid in db.
+   eid can be either an entity id or a lookup ref.
+   Returns nil if there's no entity, or if entity does not have :block/uid."
   [db eid]
   (-> (d/entity db eid)
       (select-keys [:block/uid])
       seq
       first))
-
 
 (defn update-refs-tx
   "Return the tx that will update lookup ref's :block/refs from before to after.
@@ -352,6 +353,12 @@
                     (map (partial eid->lookup-ref db)))
           (d/pull db '[:block/refs] (:db/id ent)))))
 
+(defn string-as-lookup-refs [db string]
+  (into #{} (comp (mapcat string->lookup-refs)
+                  (map (partial eid->lookup-ref db))
+                  (remove nil?))
+        [string]))
+
 
 (defn- parseable-string-datom? [[eid attr value]]
   (when (#{:block/string :node/title} attr)
@@ -367,6 +374,9 @@
   - `input-tx`: Grapth structure modifying TX, analyzed for link updates
 
   Named after [Keymaker](https://en.wikipedia.org/wiki/Keymaker). "
+
+  ;;TODO: arity one linkmaker creates all missing links in db
+
   [db input-tx]
   (try
     (let [{:keys [db-before
@@ -378,7 +388,7 @@
                                                    (println "eid string" eid string)
                                                    (let [lookup-ref (eid->lookup-ref db-after eid)
                                                          before     (block-refs-as-lookup-refs db-before lookup-ref)
-                                                         after      (string->lookup-refs string)]
+                                                         after      (string-as-lookup-refs db-after string)]
                                                      (println "lookup-ref"  lookup-ref)
                                                      (println "before" before)
                                                      (println "after" after)
@@ -386,8 +396,8 @@
                                    tx-data)
           with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
       (println "linkmaker:"
-               "\ntx-data:" (pr-str tx-data)
-               "\nlinkmaker-txs:" (pr-str linkmaker-txs))
+               "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
+               "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
       with-linkmaker-txs)
     (catch #?(:cljs :default
               :clj Exception) e
