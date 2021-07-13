@@ -182,7 +182,24 @@
   [:map
    [:event/args
     [:map
-     [:unlinked-refs seq?]
+     [:unlinked-refs
+      [:sequential
+       [:vector
+        [:cat
+         string?
+         [:vector
+          [:map
+           [:block/string string?]
+           [:block/refs vector?]
+           [:block/uid string?]
+           [:block/open boolean?]
+           [:db/id int?]
+           [:block/order int?]
+           [:block/parents
+            [:map
+             [:db/id int?]
+             [:node/title string?]
+             [:block/uid string?]]]]]]]]]
      [:title string?]]]])
 
 
