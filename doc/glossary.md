@@ -10,19 +10,3 @@
     * `db/filepath`
     * `db-picker/all-dbs`
 
-* [State](https://github.com/athensresearch/athens/issues/997)
-  * Use datascript for blocks, pages, and graphs.
-  * Use re-frame for UI state.
-  * Use localStorage for persistent application state. Also write re-frame bindings so views can more easily subscribe and dipatch updates to these values.
-    * appearance
-      * dark/light mode
-      * screen width
-    * settings
-      * backup timer
-      * usage/diagnostics
-    * user
-      * OpenCollective email
-      * username
-    * Recently opened databases
-      * Most recently opened
-      * Entire List

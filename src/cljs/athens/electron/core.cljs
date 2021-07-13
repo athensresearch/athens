@@ -43,26 +43,10 @@
       (.dirname path (:db/filepath db))))
 
 
-
-  (rf/reg-event-fx
-    :local-storage/navigate
-    [(rf/inject-cofx :local-storage "current-route/uid")]
-    (fn [{:keys [local-storage]} _]
-      {:dispatch [:navigate {:page {:id local-storage}}]}))
-
-
-
-
   (rf/reg-event-fx
     :db/retract-athens-pages
     (fn []
       {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
-                                    (db/retract-page-recursively "Changelog"))]}))
-
-
-  (rf/reg-event-fx
-    :db/transact-athens-pages
-    (fn []
-      {:dispatch [:transact athens-datoms/datoms]})))
+                                    (db/retract-page-recursively "Changelog"))]})))
 
 

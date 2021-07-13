@@ -234,29 +234,6 @@
       "Join"]]))
 
 
-#_(defn join-remote-comp
-    []
-    (let [address (r/atom "")]
-      [:<>
-       [:div {:style {:width "100%" :margin-top "10px"}}
-        [:h5 "Remote address"]
-        [:div {:style           {:margin "5px 0"}
-               :display         "flex"
-               :justify-content "space-between"}]
-
-        [textinput/textinput {:style   {:flex-grow 1}
-                              :padding "5px"}
-         :type "text"
-         :value @address
-         :placeholder "Remote server address"
-         :on-change #(reset! address %)]]
-
-       [button {:primary  true
-                :style    {:margin-top "0.5rem"}
-                :on-click #(prn "Db MODAL")}
-        "Join"]]))
-
-
 (defn window
   "If loading is true, then that means the user has opened the modal and the db was not found on the filesystem.
   If loading is false, do not allow user to exit modal, and show slightly different UI."

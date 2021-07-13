@@ -64,7 +64,7 @@ Cons:
 - Use init-rfdb with `nil` values or empty values if a collection. Try to make sure all key value pairs are present. [Bluegenes example](https://sourcegraph.com/github.com/intermine/bluegenes@dev/-/blob/src/cljs/bluegenes/db.cljc?subtree=true)
 - Read in local-storage on `boot`. Go through db logic, based on whether a db exists or not in settings or on filesystem.
 - Apply additional settings, such as appearance (screen width, light/dark mode)
-- When updating app-db, developer is given responsibility to also pass an effect to persist values, e.g. `:persist`.
+- Write interceptor with :after key that looks at app-db. If :athens/persist key in app-db is updated, update local-storage. See https://day8.github.io/re-frame/Interceptors/
 - Make sure user can `get` and `set` multiple values at once.
 
 

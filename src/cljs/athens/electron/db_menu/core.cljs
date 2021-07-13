@@ -20,25 +20,6 @@
 (def m-popover (r/adapt-react-class (.-default Popover)))
 
 
-;; temporary local defs
-
-;; Save last visited db in local storage and get current-db path from local storage on startup
-(def current-db-path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com")
-
-
-;; make this a subscription handler, and subscribe to this in db-menu
-#_(def dummy-all-dbs
-    [{:name "Athens Test Remote DB"
-      :path "ec2-3-16-89-123.us-east-2.compute.amazonaws.com"
-      :token "x"
-      :is-remote true}
-     {:name "My DB"
-      :path "/Users/coolUser/Documents/athens/index.transit"
-      :is-remote false}
-     {:name "Top Secret"
-      :path "/Users/coolUser/Documents/athens2/index.transit"
-      :is-remote false}])
-
 (def dummy-all-dbs
   {"/home/jeff/Documents/alex/index.transit" {:last-open     '#inst"2021-06-30T18:35:38.277-00:00"
                                               :last-modified '#inst"2021-06-30T18:35:38.277-00:00"
@@ -122,8 +103,6 @@
   (r/with-let [ele (r/atom nil)]
               (let [current-db-path  @(subscribe [:db/filepath])
                     all-dbs          @(subscribe [:db-picker/all-dbs])
-                    #_#_#_#_active-db        (first (filter #(= (:path %) current-db-path) all-dbs))
-                    inactive-dbs     (filter #(not= (:path %) current-db-path) all-dbs)
                     active-db (first all-dbs)
                     inactive-dbs (next all-dbs)
                     sync-status      (if @(subscribe [:db/synced])
