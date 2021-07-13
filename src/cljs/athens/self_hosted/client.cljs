@@ -317,8 +317,7 @@
 
 
 (defn- server-event-handler
-  [{:event/keys [id last-tx type args] :as packet}]
-  (js/console.log "<-" id "(" (implements? IUUID id) ")" ", last-tx:" last-tx ", type:" type)
+  [{:event/keys [_id last-tx type args] :as packet}]
   (js/console.debug "WSClient: server event:" (pr-str packet))
   (if (schema/valid-server-event? packet)
 
