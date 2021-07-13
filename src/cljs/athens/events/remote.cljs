@@ -304,7 +304,7 @@
 
 (rf/reg-event-fx
   :remote/unlinked-references-link
-  (fn [{db :db} [_ {:block/keys [string uid]} title]]
+  (fn [{db :db} [_ string uid title]]
     (let [last-seen-tx                   (:remote/last-seen-tx db)
           unlinked-references-link-event (common-events/build-unlinked-references-link last-seen-tx uid string title)]
       (js/console.debug ":remote/unlinked-references-link:" (pr-str unlinked-references-link-event))
