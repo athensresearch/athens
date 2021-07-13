@@ -1041,15 +1041,15 @@
       (js/console.debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
-                                                                   (:db/id block)
+                                                                   (:block/uid block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb add-child-event)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/add-child {:block-eid (:remote/db-id block)
-                                             :new-uid   new-uid
-                                             :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/add-child {:parent-uid (:block/uid block)
+                                             :new-uid    new-uid
+                                             :embed-id   embed-id}]]]}))))
 
 
 (reg-event-fx
@@ -1098,18 +1098,18 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/open-block-add-child local?" local?)
       (if local?
-        (let [block-eid                  (:db/id block)
+        (let [block-uid                  (:block/uid block)
               open-block-add-child-event (common-events/build-open-block-add-child-event -1
-                                                                                         block-eid
+                                                                                         block-uid
                                                                                          new-uid)
               tx                         (resolver/resolve-event-to-tx @db/dsdb open-block-add-child-event)]
           (js/console.debug ":enter/open-block-add-child tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/open-block-add-chilid {:block-eid (:remote/db-id block)
-                                                         :new-uid   new-uid
-                                                         :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/open-block-add-chilid {:parent-uid (:block/uid block)
+                                                         :new-uid    new-uid
+                                                         :embed-id   embed-id}]]]}))))
 
 
 (defn enter

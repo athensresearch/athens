@@ -379,11 +379,11 @@
 
 (rf/reg-event-fx
   :remote/add-child
-  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-add-child-event last-seen-tx
-                                                                          block-eid
+                                                                          parent-uid
                                                                           new-uid)
           followup-fx                [[:dispatch [:remote/followup-add-child {:event-id event-id
                                                                               :embed-id embed-id}]]]]
@@ -406,11 +406,11 @@
 
 (rf/reg-event-fx
   :remote/open-block-add-child
-  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-open-block-add-child-event last-seen-tx
-                                                                                     block-eid
+                                                                                     parent-uid
                                                                                      new-uid)
           followup-fx                [[:dispatch [:remote/followup-open-block-add-child {:event-id event-id
                                                                                          :embed-id embed-id}]]]]

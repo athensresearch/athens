@@ -174,28 +174,28 @@
 
 (defn build-add-child-event
   "Builds `:datascript/add-child` event with:
-  - `eid`: `:db/id` of parent block
-  -`new-uid`: new child's block uid"
-  [last-tx eid new-uid]
+  - `parent-uid`: `:block/uid` of parent block
+  - `new-uid`: new child's block uid"
+  [last-tx parent-uid new-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/add-child
-     :event/args    {:eid     eid
-                     :new-uid new-uid}}))
+     :event/args    {:parent-uid parent-uid
+                     :new-uid    new-uid}}))
 
 
 (defn build-open-block-add-child-event
   "Builds `:datascript/open-block-add-child` event with:
-  - `eid`: `:db/id` of parent block
+  - `parent-uid`: `:block/uid` of parent block
   - `new-uid`: `:block/uid` for new block"
-  [last-tx eid new-uid]
+  [last-tx parent-uid new-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/open-block-add-child
-     :event/args    {:eid     eid
-                     :new-uid new-uid}}))
+     :event/args    {:parent-uid parent-uid
+                     :new-uid    new-uid}}))
 
 
 (defn build-split-block-event

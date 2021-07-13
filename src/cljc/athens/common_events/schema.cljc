@@ -141,7 +141,7 @@
   [:map
    [:event/args
     [:map
-     [:eid int?]
+     [:parent-uid string?]
      [:new-uid string?]]]])
 
 

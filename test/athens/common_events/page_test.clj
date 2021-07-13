@@ -17,7 +17,8 @@
 (test/deftest create-page
   (let [test-title        "test page title"
         test-uid          "test-page-uid-1"
-        create-page-event (common-events/build-page-create-event -1 test-uid test-title)
+        test-block-uid    "test-block-uid-1"
+        create-page-event (common-events/build-page-create-event -1 test-uid test-block-uid test-title)
         txs               (resolver/resolve-event-to-tx @@fixture/connection
                                                         create-page-event)]
     (d/transact @fixture/connection txs)
@@ -181,8 +182,9 @@
 (test/deftest delete-page
   (test/testing "Deleting page with no references"
     (let [test-uid          "test-page-uid-1"
+          test-block-uid    "test-block-uid-1"
           test-title        "test page title 1"
-          create-page-event (common-events/build-page-create-event -1 test-uid test-title)
+          create-page-event (common-events/build-page-create-event -1 test-uid test-block-uid test-title)
           create-page-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                           create-page-event)]
 
@@ -259,20 +261,22 @@
 
 
 (test/deftest add-page-shortcut
-  (let [test-uid-0    "0"
-        test-title-0  "Welcome"
-        test-uid-1    "test-uid-1"
-        test-title-1  "test-title-1"
-        test-uid-2    "test-uid-2"
-        test-title-2  "test-title-2"]
+  (let [test-uid-0       "0"
+        test-title-0     "Welcome"
+        test-uid-1       "test-uid-1"
+        test-block-uid-1 "test-block-uid-1"
+        test-title-1     "test-title-1"
+        test-uid-2       "test-uid-2"
+        test-block-uid-2 "test-block-uid-2"
+        test-title-2     "test-title-2"]
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %))
+      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact @fixture/connection))
-      [[test-uid-1 test-title-1]
-       [test-uid-2 test-title-2]])
+      [[test-uid-1 test-block-uid-1 test-title-1]
+       [test-uid-2 test-block-uid-2 test-title-2]])
 
     (let [pages (->> (d/q '[:find ?b
                             :where
@@ -314,20 +318,22 @@
 
 
 (test/deftest remove-page-shortcut
-  (let [test-uid-0    "0"
-        test-title-0  "Welcome"
-        test-uid-1    "test-uid-1"
-        test-title-1  "test-title-1"
-        test-uid-2    "test-uid-2"
-        test-title-2  "test-title-2"]
+  (let [test-uid-0       "0"
+        test-title-0     "Welcome"
+        test-uid-1       "test-uid-1"
+        test-block-uid-1 "test-block-uid-1"
+        test-title-1     "test-title-1"
+        test-uid-2       "test-uid-2"
+        test-block-uid-2 "test-block-uid-2"
+        test-title-2     "test-title-2"]
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %))
+      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact @fixture/connection))
-      [[test-uid-1 test-title-1]
-       [test-uid-2 test-title-2]])
+      [[test-uid-1 test-block-uid-1 test-title-1]
+       [test-uid-2 test-block-uid-2 test-title-2]])
 
     (let [pages (->> (d/q '[:find ?b
                             :where

@@ -11,20 +11,22 @@
 
 
 (test/deftest left-sidebar-drop-above
-  (let [test-uid-0    "0"
-        test-title-0  "Welcome"
-        test-uid-1    "test-uid-1"
-        test-title-1  "test-title-1"
-        test-uid-2    "test-uid-2"
-        test-title-2  "test-title-2"]
+  (let [test-uid-0       "0"
+        test-title-0     "Welcome"
+        test-uid-1       "test-uid-1"
+        test-block-uid-1 "test-block-uid-1"
+        test-title-1     "test-title-1"
+        test-uid-2       "test-uid-2"
+        test-block-uid-2 "test-block-uid-2"
+        test-title-2     "test-title-2"]
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %))
+      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact @fixture/connection))
-      [[test-uid-1 test-title-1]
-       [test-uid-2 test-title-2]])
+      [[test-uid-1 test-block-uid-1 test-title-1]
+       [test-uid-2 test-block-uid-2 test-title-2]])
 
     (let [pages (->> (d/q '[:find ?b
                             :where
@@ -108,20 +110,22 @@
 
 
 (test/deftest left-sidebar-drop-below
-  (let [test-uid-0    "0"
-        test-title-0  "Welcome"
-        test-uid-1    "test-uid-1"
-        test-title-1  "test-title-1"
-        test-uid-2    "test-uid-2"
-        test-title-2  "test-title-2"]
+  (let [test-uid-0       "0"
+        test-title-0     "Welcome"
+        test-uid-1       "test-uid-1"
+        test-block-uid-1 "test-block-uid-1"
+        test-title-1     "test-title-1"
+        test-uid-2       "test-uid-2"
+        test-block-uid-2 "test-block-uid-2"
+        test-title-2     "test-title-2"]
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %))
+      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact @fixture/connection))
-      [[test-uid-1 test-title-1]
-       [test-uid-2 test-title-2]])
+      [[test-uid-1 test-block-uid-1 test-title-1]
+       [test-uid-2 test-block-uid-2 test-title-2]])
 
     (let [pages (->> (d/q '[:find ?b
                             :where
@@ -166,7 +170,7 @@
          (resolver/resolve-event-to-tx @@fixture/connection)
          (d/transact @fixture/connection))
 
-    (let [page-shortcut                  (->> (d/q '[:find (pull ?e [*])
+    (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
                                                      :where
                                                      [?e :page/sidebar]]
                                                    @@fixture/connection)
