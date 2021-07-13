@@ -1886,10 +1886,10 @@
   :unlinked-references/link
   (fn [_ [_ {:block/keys [string uid]} title]]
     (js/console.debug ":unlinked-references/link:" uid)
-    (if-let [local? (not (client/open?))]
+    (if client/open?
       (let [unlinked-references-link-event (common-events/build-unlinked-references-link -1 uid string title)
             tx-data                        (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-event)]
-        (js/console.debug ":unlinked-references/link: local?" local?)
+        (js/console.debug ":unlinked-references/link:" tx-data)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/unlinked-references-link string uid title]]]})))
 
@@ -1898,15 +1898,9 @@
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
     (js/console.debug ":unlinked-references/link:" title)
-    (if-let [local? (not (client/open?))]
+    (if client/open?
       (let [unlinked-references-link-all-event (common-events/build-unlinked-references-link-all -1 unlinked-refs title)
             tx-data                            (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-all-event)]
-        (def *unlinked unlinked-references-link-all-event)
-        (js/console.debug ":unlinked-references/link: local?" local?)
+        (js/console.debug ":unlinked-references/link:" tx-data)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/unlinked-references-link-all unlinked-refs title]]]})))
-
-
-(comment
-(println *unlinked)
-*e)
