@@ -372,6 +372,7 @@
      :clj (do (log/error "Linkmaker failure." e)))
   ;; Return the original, un-modified, input tx so that transactions can still move forward.
   ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
+  ;; TODO(reporting): report the error type, without any identifiable information.
   input-tx)
 
 (defn linkmaker
