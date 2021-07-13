@@ -31,9 +31,7 @@
                  [stylefy "3.0.0"]
                  [stylefy/reagent "3.0.0"]
                  [tick "0.4.26-alpha"]
-                 [com.rpl/specter "1.1.3"]
-                 [com.taoensso/sente "1.16.2"]
-                 [datsync "0.0.1-alpha2-SNAPSHOT"]]
+                 [com.rpl/specter "1.1.3"]]
 
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]

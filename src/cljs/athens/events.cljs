@@ -29,13 +29,6 @@
     db/rfdb))
 
 
-(reg-event-fx
-  :db/update-filepath
-  (fn [{:keys [db]} [_ filepath]]
-    {:db (assoc db :db/filepath filepath)
-     :local-storage/set! ["db/filepath" filepath]}))
-
-
 (reg-event-db
   :db/sync
   (fn [db [_]]
@@ -556,9 +549,7 @@
            (= (js/localStorage.getItem "theme/dark") "true")
            (assoc :theme/dark true))
 
-     :async-flow {:first-dispatch (if false
-                                    [:local-storage/get-db]
-                                    [:http/get-db])
+     :async-flow {:first-dispatch [:http/get-db]
                   :rules          [{:when :seen?
                                     :events :reset-conn
                                     :dispatch-n [[:loading/unset]
@@ -583,13 +574,6 @@
           new-db (d/db-with (d/empty-db db/schema) datoms)]
       {:fx [[:dispatch [:reset-conn new-db]
              :dispatch [:local-storage/set-db new-db]]]})))
-
-
-(reg-event-fx
-  :local-storage/get-db
-  [(inject-cofx :local-storage "datascript/DB")]
-  (fn [{:keys [local-storage]} _]
-    {:dispatch [:reset-conn (dt/read-transit-str local-storage)]}))
 
 
 (reg-event-fx

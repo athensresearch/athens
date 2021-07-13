@@ -1,15 +1,22 @@
 (ns athens.coeffects
   (:require
-    [re-frame.core :refer [reg-cofx]]))
+    [re-frame.core :as rf]
+    [cognitect.transit :as t]))
 
 
-(reg-cofx
+
+
+;; Athens local-storage is stored in a single nested map with key `:athens/persist`
+(rf/reg-cofx
   :local-storage
-  (fn [cofx key]
-    (assoc cofx :local-storage (js/localStorage.getItem key))))
+  (fn [coeffects key]
+    (let [key (str key)
+          value (t/read (t/reader :json) (.getItem js/localStorage key))]
+      (assoc coeffects :local-storage value))))
 
 
-(reg-cofx
-  :local-storage-map
-  (fn [cofx {:keys [ls-key key]}]
-    (assoc cofx key (js/localStorage.getItem ls-key))))
+;; Serialize entire db whenever running :persist effect
+(rf/reg-fx
+  :persist
+  (fn [{:keys [athens/persist] :as _app-db}]
+    (.setItem js/localStorage :athens/persist (t/write (t/writer :json-verbose) persist))))

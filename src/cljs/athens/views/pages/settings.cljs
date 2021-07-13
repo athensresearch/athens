@@ -2,7 +2,7 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
-    [athens.electron :as electron]
+    [athens.electron.fs :as fs]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
@@ -78,11 +78,24 @@
   (js/Number (js/localStorage.getItem "debounce-save-time")))
 
 
+(defn init-user
+  []
+  (or (js/localStorage.getItem "user/name"
+       "Socrates")))
+
+
+;(re-frame.core/reg-sub
+;  :user/current
+;  (fn [db _]
+;    (:user db)))
+
+
 (defn init-state
   []
-  {:email         (init-email)
-   :monitoring    (init-monitoring)
-   :backup-time (init-backup-time)})
+  {:email       (init-email)
+   :monitoring  (init-monitoring)
+   :backup-time (init-backup-time)
+   :user        (init-user)})
 
 
 (defn handle-reset-email
@@ -145,7 +158,7 @@
   [e s]
   (let [value (.. e -target -value)]
     (swap! s assoc :backup-time value)
-    (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
+    (set! fs/debounce-write-db (goog-functions/debounce fs/write-db (* 1000 value)))
     (js/localStorage.setItem "debounce-save-time" value)))
 
 
@@ -265,22 +278,18 @@
 
 (defn remote-username-comp
   []
-  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
-        remote?           (:default? remote-graph-conf)]
-    [setting-wrapper
-     (when (not remote?) {:disabled true})
-     [:<>
-      [:header
-       [:h3 "Username"]
-       [:span.glance (:name @(subscribe [:user/current]))]]
-      [:main
-       [textinput/textinput {:type         "text"
-                             :placeholder  "Username"
-                             :disabled     (not remote?)
-                             :on-blur      handle-user-name-change
-                             :defaultValue (:name @(subscribe [:user/current]))}]
-       [:aside
-        [:p "For now, a username is only needed if you are connected to a server."]]]]]))
+  [setting-wrapper
+   [:<>
+    [:header
+     [:h3 "Username"]
+     [:span.glance "TMP" #_(:name @(subscribe [:user/current]))]]
+    [:main
+     [textinput/textinput {:type         "text"
+                           :placeholder  "Username"
+                           :on-blur      handle-user-name-change
+                           :defaultValue "TMP" #_(:name @(subscribe [:user/current]))}]
+     [:aside
+      [:p "For now, a username is only needed if you are connected to a server."]]]]])
 
 
 (defn page

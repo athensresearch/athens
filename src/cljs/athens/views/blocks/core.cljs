@@ -1,7 +1,7 @@
 (ns athens.views.blocks.core
   (:require
     [athens.db :as db]
-    [athens.electron :as electron]
+    [athens.electron.images :as images]
     [athens.style :as style]
     [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
@@ -13,7 +13,6 @@
     [athens.views.blocks.toggle :as toggle]
     [athens.views.blocks.tooltip :as tooltip]
     [athens.views.buttons :as buttons]
-    [athens.views.presence :as presence]
     [cljsjs.react]
     [cljsjs.react.dom]
     [com.rpl.specter :as s]
@@ -163,7 +162,7 @@
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
-                                     (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
+                                     (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
@@ -255,8 +254,6 @@
            :on-drag-over      (fn [e] (block-drag-over e block state))
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
-
-          [presence/presence-popover-info uid {:inline? true}]
 
           (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
