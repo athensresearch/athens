@@ -1526,7 +1526,42 @@
 
 
 (defn drop-multi-diff-source-parents
-  "Only reindex after last target. plus-after"
+  "Only reindex after last target. plus-after
+   Used for the selected blocks that have different parents and get dragged and dropped under some other parent
+  Terminology :
+    - drag-target       : Are the selected blocks getting dropped `:above` or `:below` the target block
+    - source-uids       : A vector of uids of all the selected blocks
+    - target-uid        : The uid of block where the blocks are dropped
+    - filtered-children : uids of all the children where the source-uids are to be dropped
+    - index             : Index of the target-block
+    - block level       : All the blocks under same parent are said to be at the same level
+
+  - source block's and target block's parent can be same here
+  - Lets look at an example
+     -1
+       -2
+       -3
+         -0
+         -4
+         -5
+       -6
+       -7
+     -8
+     -9
+
+    Here let's say we want to drag and drop blocks from 4 to 8 then because of how the product works we will have to select
+    block 4,5,6,7 and 8. Now if we analyze the selected blocks we see that there are 3 level of blocks here : (4,5) (6,7) and (8)
+    and all the blocks before 8 are the last blocks on their respective levels and hence we do not reindex the parents of
+    those blocks, we only reindex the parent of last selected block.
+  - How to reindex the last-source-block's parent and target-block's parent?
+    For last-source-block's parent we decrease the block order of all the blocks after last-source-block
+    and in the case of target-block's parent we concat :   all the blocks before the target-block
+                                                         + all the selected blocks
+                                                         + all the blocks after the selected blocks
+    NOTE: target-block's parent and last-source-block's parent can be same, in above example source blocks can be 5,6 and the
+          target block can be 7 this will make both the last-source's parent and target-block's parent 1.
+   "
+
   [kind source-uids target target-parent]
   (let [filtered-children          (->> (d/q '[:find ?children-uid ?o
                                                :keys block/uid block/order
