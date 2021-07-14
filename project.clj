@@ -4,10 +4,10 @@
 
   :url "https://github.com/athensresearch/athens"
 
-  :license {:name "Eclipse Public License - v 1.0"
-            :url "http://www.eclipse.org/legal/epl-v10.html"
+  :license {:name         "Eclipse Public License - v 1.0"
+            :url          "http://www.eclipse.org/legal/epl-v10.html"
             :distribution :repo
-            :comments "same as Clojure"}
+            :comments     "same as Clojure"}
 
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.866"
@@ -33,7 +33,25 @@
                  [tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]
-                 [datsync "0.0.1-alpha2-SNAPSHOT"]]
+                 [datsync "0.0.1-alpha2-SNAPSHOT"]
+                 ;; backend
+                 ;;   logging hell
+                 [org.clojure/tools.logging "1.1.0"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
+                 ;;   IoC
+                 [com.stuartsierra/component "1.0.0"]
+                 ;;   configuration mgmt
+                 [yogthos/config "1.1.7"]
+                 ;;   Datahike
+                 [io.replikativ/datahike "0.3.7-SNAPSHOT"]
+                 ;;   web server
+                 [http-kit "2.5.3"]
+                 [compojure "1.6.2"]
+                 ;;   data validation
+                 [metosin/malli "0.5.1"]
+                 ;;   networked repl
+                 [com.stuartsierra/component.repl "0.2.0"]
+                 [nrepl/nrepl "0.8.3"]]
 
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]
@@ -42,6 +60,8 @@
   :min-lein-version "2.5.3"
 
   :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
+
+  :main athens.self-hosted.core
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
@@ -73,12 +93,18 @@
    {:dependencies [[binaryage/devtools "1.0.3"]
                    [day8.re-frame/re-frame-10x "1.1.1"]
                    [day8.re-frame/tracing "0.6.2"]
-                   [cider/cider-nrepl "0.26.0"]]
-
-    :source-paths ["dev"]}
+                   [day8.re-frame/test "0.1.5"]]
+    :plugins [[cider/cider-nrepl "0.26.0"]]
+    :source-paths ["dev/clj"]}
    :prod
    {:dependencies [[day8.re-frame/tracing-stubs "0.6.2"]]}
    :cljstyle {:dependencies
               [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
 
-  :prep-tasks [])
+  :prep-tasks []
+
+  :repl-options {:init-ns user
+                 :welcome (println "Welcome to Athens Self-Hosted magical world of the REPL!
+
+To start the server `(dev)` & `(start)`.
+To reload server `(reset)`, and to stop `(stop)`")})

@@ -12,6 +12,7 @@
     [athens.events]
     [athens.listeners :as listeners]
     [athens.router :as router]
+    [athens.self-hosted.client :as client]
     [athens.style :as style]
     [athens.subs]
     [athens.util :as util]
@@ -123,3 +124,15 @@
     (rf/dispatch-sync [:boot/web]))
   (dev-setup)
   (mount-root))
+
+
+(defn ^:export lan-on
+  ([] ; TODO take default from configuration
+   (lan-on client/ws-url))
+  ([url]
+   (rf/dispatch [:remote/connect! {:url url}])))
+
+
+(defn ^:export lan-off
+  []
+  (rf/dispatch [:remote/disconnect!]))

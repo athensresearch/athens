@@ -19,12 +19,12 @@
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.router :as router]
+    [athens.self-hosted.presence.views :as presence]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
     [athens.views.filesystem :as filesystem]
-    [athens.views.presence :as presence]
     [athens.ws-client :as ws]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
@@ -238,7 +238,7 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [presence/presence-popover-info]
+            [presence/toolbar-presence-el]
             (when (= @socket-status :closed)
               [button
                {:onClick #(ws/start-socket!

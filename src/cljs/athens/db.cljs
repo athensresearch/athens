@@ -56,7 +56,8 @@
                :selected/items      #{}
                :theme/dark          false
                :zoom-level          1
-               :graph-conf          default-graph-conf})
+               :graph-conf          default-graph-conf
+               :presence            {}})
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -128,14 +129,16 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (def schema
-  {:schema/version {}
-   :block/uid      {:db/unique :db.unique/identity}
-   :node/title     {:db/unique :db.unique/identity}
-   :attrs/lookup   {:db/cardinality :db.cardinality/many}
-   :block/children {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}
-   :block/refs     {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}})
+  {:schema/version      {}
+   :block/uid           {:db/unique :db.unique/identity}
+   :node/title          {:db/unique :db.unique/identity}
+   :attrs/lookup        {:db/cardinality :db.cardinality/many}
+   :block/children      {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/refs          {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/remote-id     {:db/unique :db.unique/identity}
+   :remote/db-id        {:db/unique :db.unique/identity}})
 
 
 (defonce dsdb (d/create-conn schema))
@@ -316,9 +319,18 @@
        shape-parent-query))
 
 
+(defn get-root-parent-page
+  "Returns the root parent page or returns the block because this block is a page."
+  [uid]
+  ;; make sure block first exists
+  (when-let [block (d/entity @dsdb [:block/uid uid])]
+    (let [opt1 (first (get-parents-recursively [:block/uid uid]))]
+      (or opt1 block))))
+
+
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  @(pull dsdb '[:db/id :remote/db-id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
 (defn get-parent
@@ -429,7 +441,7 @@
          (d/datoms @dsdb :aevt :node/title))))))
 
 
-(defn get-root-parent-node
+(defn get-root-parent-node-from-block
   [block]
   (loop [b block]
     (cond
@@ -455,7 +467,7 @@
          (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
          (sequence
            (comp
-             (keep get-root-parent-node)
+             (keep get-root-parent-node-from-block)
              (map #(dissoc % :block/_children)))))))))
 
 
@@ -673,10 +685,10 @@
   "uid -> Current block
    state -> Look at state atom in block-el"
   [uid state]
-  (let [{:string/keys [local previous]} @state
-        eid (e-by-av :block/uid uid)]
-    (when (and (not= local previous) eid)
-      (swap! state assoc :string/previous local)
-      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
-            tx-data          [new-block-string]]
-        (dispatch [:transact tx-data])))))
+  (let [{:string/keys [local
+                       previous]} @state
+        callback                  #(swap! state assoc :string/previous local)]
+    (dispatch [:block/save {:uid        uid
+                            :old-string previous
+                            :new-string local
+                            :callback   callback}])))

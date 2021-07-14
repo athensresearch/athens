@@ -1,23 +1,29 @@
 (ns athens.effects
   (:require
-    [athens.config :as config]
-    [athens.datsync-utils :as dat-s]
-    [athens.db :as db]
-    [athens.util :as util]
-    [athens.walk :as walk]
-    [athens.ws-client :as ws]
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [go <!]]
-    [cljs.pprint :refer [pprint]]
-    [clojure.string :as str]
+    [athens.common-db            :as common-db]
+    [athens.common-events.schema :as schema]
+    [athens.config               :as config]
+    [athens.datsync-utils        :as dat-s]
+    [athens.db                   :as db]
+    [athens.self-hosted.client   :as client]
+    [athens.util                 :as util]
+    [athens.walk                 :as walk]
+    [athens.ws-client            :as ws]
+    [cljs-http.client            :as http]
+    [cljs.core.async             :refer [go <!]]
+    [cljs.pprint                 :refer [pprint]]
+    [clojure.string              :as str]
+    [com.stuartsierra.component  :as component]
     [dat.sync.client]
-    [datascript.core :as d]
-    [datascript.transit :as dt]
+    [datascript.core             :as d]
+    [datascript.transit          :as dt]
     [day8.re-frame.async-flow-fx]
-    [goog.dom.selection :refer [setCursorPosition]]
-    [posh.reagent :as p :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx subscribe]]
-    [stylefy.core :as stylefy]))
+    [goog.dom.selection          :refer [setCursorPosition]]
+    [malli.core                  :as m]
+    [malli.error                 :as me]
+    [posh.reagent                :as p :refer [transact!]]
+    [re-frame.core               :as rf]
+    [stylefy.core                :as stylefy]))
 
 
 ;; Effects
@@ -216,16 +222,17 @@
 
 (defn dev-pprint
   [data]
-  (when config/debug? (pprint data)))
+  (when config/debug?
+    (pprint data)))
 
 
 (defn walk-transact
   [tx-data]
-  (let [socket-status     (subscribe [:socket-status])
-        remote-graph-conf (subscribe [:db/remote-graph-conf])]
+  (let [socket-status     (rf/subscribe [:socket-status])
+        remote-graph-conf (rf/subscribe [:db/remote-graph-conf])]
     (if (= @socket-status :closed)
-      (dispatch [:show-snack-msg
-                 {:msg "Graph is now read only"}])
+      (rf/dispatch [:show-snack-msg
+                    {:msg "Graph is now read only"}])
       (do (dev-pprint "TX RAW INPUTS")                             ; event tx-data
           (dev-pprint tx-data)
           (try
@@ -261,31 +268,35 @@
               (js/console.log "EXCEPTION" e)))))))
 
 
-(reg-fx
+(rf/reg-fx
   :transact!
   (fn [tx-data]
+    ;; 🎶 Sia "Cheap Thrills"
+    (let [txs (common-db/linkmaker @db/dsdb tx-data)]
+      (js/console.debug ":transact! after linkmaker" (pr-str txs)))
+    ;; TODO: remove when linkmaker is doing it's job
     (walk-transact tx-data)))
 
 
-(reg-fx
+(rf/reg-fx
   :reset-conn!
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)))
 
 
-(reg-fx
+(rf/reg-fx
   :local-storage/set!
   (fn [[key value]]
     (js/localStorage.setItem key value)))
 
 
-(reg-fx
+(rf/reg-fx
   :local-storage/set-db!
   (fn [db]
     (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
 
 
-(reg-fx
+(rf/reg-fx
   :http
   (fn [{:keys [url method opts on-success on-failure]}]
     (go
@@ -295,16 +306,16 @@
             res     (<! (http-fn url opts))
             {:keys [success body] :as all} res]
         (if success
-          (dispatch (conj on-success body))
-          (dispatch (conj on-failure all)))))))
+          (rf/dispatch (conj on-success body))
+          (rf/dispatch (conj on-failure all)))))))
 
 
-(reg-fx
+(rf/reg-fx
   :timeout
   (let [timers (atom {})]
     (fn [{:keys [action id event wait]}]
       (case action
-        :start (swap! timers assoc id (js/setTimeout #(dispatch event) wait))
+        :start (swap! timers assoc id (js/setTimeout #(rf/dispatch event) wait))
         :clear (do (js/clearTimeout (get @timers id))
                    (swap! timers dissoc id))))))
 
@@ -323,7 +334,7 @@
 ;;   - element sometimes hasn't been created yet (enter), sometimes has been just destroyed (backspace)
 ;; - uid sometimes nil
 
-(reg-fx
+(rf/reg-fx
   :editing/focus
   (fn [[uid index]]
     (if (nil? uid)
@@ -358,7 +369,7 @@
 ;; think of this + up/down + editing/focus for common up down press
 ;; and cursor goes to apt position rather than last visited point in the block(current)
 ;; inspirations - intelli-j's up/down
-(reg-fx
+(rf/reg-fx
   :set-cursor-position
   (fn [[uid start end]]
     (js/setTimeout (fn []
@@ -369,21 +380,67 @@
                    100)))
 
 
-(reg-fx
+(rf/reg-fx
   :stylefy/tag
   (fn [[tag properties]]
     (stylefy/tag tag properties)))
 
 
-(reg-fx
+(rf/reg-fx
   :alert/js!
   (fn [message]
     (js/alert message)))
 
 
-(reg-fx
+(rf/reg-fx
   :right-sidebar/scroll-top
   (fn []
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
       (when right-sidebar
         (set! (.. right-sidebar -scrollTop) 0)))))
+
+
+;; TODO: temporary, and limits to one client opened.
+(def self-hosted-client (atom nil))
+
+
+(rf/reg-fx
+  :remote/client-connect!
+  (fn [{:keys [url] :as connection-config}]
+    (js/console.debug ":remote/client-connect!" (pr-str connection-config))
+    (when @self-hosted-client
+      (js/console.log ":remote/client-connect! already connected, restarting")
+      (component/stop @self-hosted-client))
+    (js/console.log ":remote/client-connect! connecting")
+    (reset! self-hosted-client (-> url
+                                   client/new-ws-client
+                                   component/start))))
+
+
+(rf/reg-fx
+  :remote/client-disconnect!
+  (fn []
+    (js/console.debug ":remote/client-disconnect!")
+    (when @self-hosted-client
+      (component/stop @self-hosted-client)
+      (reset! self-hosted-client nil))))
+
+
+(rf/reg-fx
+  :remote/send-event-fx!
+  (fn [event]
+    (if (schema/valid-event? event)
+      ;; valid event let's send it
+      (do
+        (js/console.log "Sending event:" (pr-str event))
+        (client/send! event))
+      (let [explanation (-> schema/event
+                            (m/explain event)
+                            (me/humanize))]
+        (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))
+
+
+(rf/reg-fx
+  :invoke-callback
+  (fn [callback]
+    (callback)))

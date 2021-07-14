@@ -19,15 +19,18 @@
     (parses-to sut/block-parser->ast
 
                "# Heading"
-               [:block [:heading {:n 1}
+               [:block [:heading {:n    1
+                                  :from "# Heading"}
                         [:paragraph-text "Heading"]]]
 
                "# Heading\n\n"
-               [:block [:heading {:n 1}
+               [:block [:heading {:n    1
+                                  :from "# Heading"}
                         [:paragraph-text "Heading"]]]
 
                "### Heading\n"
-               [:block [:heading {:n 3}
+               [:block [:heading {:n    3
+                                  :from "### Heading"}
                         [:paragraph-text "Heading"]]]))
 
   (t/testing "that thematic-breaks are parsed"
@@ -45,15 +48,15 @@
     (parses-to sut/block-parser->ast
 
                "    some code"
-               [:block [:indented-code-block
+               [:block [:indented-code-block {:from "    some code"}
                         [:code-text "some code"]]]
 
                "    multiline\n    code"
-               [:block [:indented-code-block
+               [:block [:indented-code-block {:from "    multiline\n    code"}
                         [:code-text "multiline\ncode"]]]
 
                "    multiline\n    code\n      with indentation"
-               [:block [:indented-code-block
+               [:block [:indented-code-block {:from "    multiline\n    code\n      with indentation"}
                         [:code-text "multiline\ncode\n  with indentation"]]]))
 
   (t/testing "that fenced-code-blocks are parsed"
@@ -105,7 +108,8 @@
 
                "    aaa\nbbb" ; or code block is triggered
                [:block
-                [:indented-code-block [:code-text "aaa"]]
+                [:indented-code-block {:from "    aaa"}
+                 [:code-text "aaa"]]
                 [:paragraph-text "bbb"]]))
 
   (t/testing "that block-quote is parsed"
@@ -116,7 +120,9 @@
 > bar
 > baz"
                [:block [:block-quote
-                        [:heading {:n 1} [:paragraph-text "Foo"]]
+                        [:heading {:n    1
+                                   :from "# Foo"}
+                         [:paragraph-text "Foo"]]
                         [:paragraph-text "bar\nbaz"]]]
 
                ;; spaces after `>` can be omitted
@@ -124,7 +130,9 @@
 >bar
 > baz"
                [:block [:block-quote
-                        [:heading {:n 1} [:paragraph-text "Foo"]]
+                        [:heading {:n    1
+                                   :from "# Foo"}
+                         [:paragraph-text "Foo"]]
                         [:paragraph-text "bar\nbaz"]]]
 
                ;; The > characters can be indented 1-3 spaces
@@ -132,14 +140,19 @@
    > bar
  > baz"
                [:block [:block-quote
-                        [:heading {:n 1} [:paragraph-text "Foo"]]
+                        [:heading {:n    1
+                                   :from "# Foo"}
+                         [:paragraph-text "Foo"]]
                         [:paragraph-text "bar\nbaz"]]]
 
                ;; Four spaces gives us a code block:
                "    > # Foo
     > bar
     > baz"
-               [:block [:indented-code-block [:code-text "> # Foo\n> bar\n> baz"]]]
+               [:block [:indented-code-block {:from "    > # Foo
+    > bar
+    > baz"}
+                        [:code-text "> # Foo\n> bar\n> baz"]]]
 
                ;; block quote is a container for other blocks
                "> aaa
@@ -168,7 +181,8 @@
 
 >    not code"
                [:block
-                [:block-quote [:indented-code-block [:code-text "code"]]]
+                [:block-quote [:indented-code-block {:from "    code"}
+                               [:code-text "code"]]]
                 [:block-quote [:paragraph-text "not code"]]]
 
                "> ```code\n> more```
@@ -447,28 +461,33 @@
                ;; just a block-ref
                "((block-id))"
                [:paragraph
-                [:block-ref "block-id"]]
+                [:block-ref {:from "((block-id))"}
+                 "block-id"]]
 
                ;; in a middle of text-run
                "Text with ((block-id)) a block"
                [:paragraph
                 [:text-run "Text with "]
-                [:block-ref "block-id"]
+                [:block-ref {:from "((block-id))"}
+                 "block-id"]
                 [:text-run " a block"]]
 
                "And ((block-id1)) multiple ((block-id2)) times"
                [:paragraph
                 [:text-run "And "]
-                [:block-ref "block-id1"]
+                [:block-ref {:from "((block-id1))"}
+                 "block-id1"]
                 [:text-run " multiple "]
-                [:block-ref "block-id2"]
+                [:block-ref {:from "((block-id2))"}
+                 "block-id2"]
                 [:text-run " times"]]
 
                ;; block refs can appear in words
                "a((block-id))b"
                [:paragraph
                 [:text-run "a"]
-                [:block-ref "block-id"]
+                [:block-ref {:from "((block-id))"}
+                 "block-id"]
                 [:text-run "b"]]))
 
   (t/testing "hard line breaks"
@@ -500,12 +519,14 @@
     (parses-to sut/inline-parser->ast
                "[[Page Title]]"
                [:paragraph
-                [:page-link "Page Title"]]
+                [:page-link {:from "[[Page Title]]"}
+                 "Page Title"]]
 
                "In a middle [[Page Title]] of text"
                [:paragraph
                 [:text-run "In a middle "]
-                [:page-link "Page Title"]
+                [:page-link {:from "[[Page Title]]"}
+                 "Page Title"]
                 [:text-run " of text"]]
 
                ;; But not when surrounded by word
@@ -523,26 +544,32 @@
                ;; apparently nesting page links is a thing
                "[[nesting [[nested]]]]"
                [:paragraph
-                [:page-link "nesting "
-                 [:page-link "nested"]]]
+                [:page-link {:from "[[nesting [[nested]]]]"}
+                 "nesting "
+                 [:page-link {:from "[[nested]]"}
+                  "nested"]]]
 
                ;; Multiple page links in one blok
                "[[one]] and [[two]]"
                [:paragraph
-                [:page-link "one"]
+                [:page-link {:from "[[one]]"}
+                 "one"]
                 [:text-run " and "]
-                [:page-link "two"]]))
+                [:page-link {:from "[[two]]"}
+                 "two"]]))
 
   (t/testing "hashtags (Athens extension)"
     (parses-to sut/inline-parser->ast
                "#[[Page Title]]"
                [:paragraph
-                [:hashtag "Page Title"]]
+                [:hashtag {:from "#[[Page Title]]"}
+                 "Page Title"]]
 
                "In a middle #[[Page Title]] of text"
                [:paragraph
                 [:text-run "In a middle "]
-                [:hashtag "Page Title"]
+                [:hashtag {:from "#[[Page Title]]"}
+                 "Page Title"]
                 [:text-run " of text"]]
 
                ;; But not when surrounded by word
@@ -560,13 +587,15 @@
                ;; hashtags can also be without `[[]]`
                "#simple"
                [:paragraph
-                [:hashtag "simple"]]
+                [:hashtag {:from "#simple"}
+                 "simple"]]
 
                ;; can be in a middle of a text run
                "abc #simple def"
                [:paragraph
                 [:text-run "abc "]
-                [:hashtag "simple"]
+                [:hashtag {:from "#simple"}
+                 "simple"]
                 [:text-run " def"]]
 
                ;; but not in a word run
@@ -585,13 +614,15 @@
                ;; page link component
                "{{[[DONE]]}} components"
                [:paragraph
-                [:component "[[DONE]]" [:page-link "DONE"]]
+                [:component "[[DONE]]" [:page-link {:from "[[DONE]]"}
+                                        "DONE"]]
                 [:text-run " components"]]
 
                ;; block ref in component
                "{{((abc))}}"
                [:paragraph
-                [:component "((abc))" [:block-ref "abc"]]]))
+                [:component "((abc))" [:block-ref {:from "((abc))"}
+                                       "abc"]]]))
 
   (t/testing "LaTeX (Athens extension)"
     (parses-to sut/inline-parser->ast
@@ -678,14 +709,15 @@ praeterea cadentem [iacebas Lucifer
 nostris](http://oconcipit.io/tamen-vestibus). Et et quandoquidem pavens, fiat
 specie Achivi suus publica Marte extimuit. Ferro domos suras."
                [:block
-                [:heading {:n 1} [:paragraph "Defluxere caelesti omnia"]]
-                [:heading
-                 {:n 2}
+                [:heading {:n    1
+                           :from "# Defluxere caelesti omnia"}
+                 [:paragraph "Defluxere caelesti omnia"]]
+                [:heading {:n    2
+                           :from "## Vixque acrior praedelassat vixque iussit quam speciem"}
                  [:paragraph "Vixque acrior praedelassat vixque iussit quam speciem"]]
                 [:paragraph
                  "Lorem "
-                 [:link
-                  {:text "markdownum deserto", :target "http://est.com/mihicessasse"}]
+                 [:link {:text "markdownum deserto", :target "http://est.com/mihicessasse"}]
                  " tamen, puellae annis"
                  [:newline "\n"]
                  "quaesitae medio ego, et felix, ingestoque ante, Chariclo torum. Epaphi quod qui"
@@ -698,9 +730,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  ","
                  [:newline "\n"]
                  "lacerare gaudia mittere sermonibus. Tuta "
-                 [:link
-                  {:text "auspicio admiremur\nmurmura",
-                   :target "http://www.vires-remittit.net/alcmene-potitur.php"}]
+                 [:link {:text "auspicio admiremur\nmurmura", :target "http://www.vires-remittit.net/alcmene-potitur.php"}]
                  " Troades lilia places"
                  [:newline "\n"]
                  "incubuit carinae, palustres excipit."]
@@ -714,8 +744,8 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  "- Umbra sinuosa femina agitavit regia"
                  [:newline "\n"]
                  "- Ventisque sortibus"]
-                [:heading
-                 {:n 2}
+                [:heading {:n    2
+                           :from "## Agam sed tantum levavit nimiumque bellum recondidit"}
                  [:paragraph "Agam sed tantum levavit nimiumque bellum recondidit"]]
                 [:paragraph
                  "Praeconsumere illuc et dixi iubet risisse: colunt "
@@ -737,12 +767,10 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  ". Quae undas morsa seu iubas"
                  [:newline "\n"]
                  "dimittere? Ab se certaminis exitus lacertis "
-                 [:link
-                  {:text "obsisto\ndicenda",
-                   :target "http://postquamaeratae.io/ferar.html"}]
+                 [:link {:text "obsisto\ndicenda", :target "http://postquamaeratae.io/ferar.html"}]
                  " sagitta iugulum."]
-                [:heading
-                 {:n 2}
+                [:heading {:n    2
+                           :from "## Non flamma hic armorum dulces nec purpureas"}
                  [:paragraph "Non flamma hic armorum dulces nec purpureas"]]
                 [:paragraph
                  "Mea suas vos Troiae non claro satis, illa non. Spectatrix habes; nec has"
@@ -750,13 +778,14 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  "Emathides cantatas, submovit puer pumice ipse, proles innumeris an parem et"
                  [:newline "\n"]
                  "quam."]
-                [:heading {:n 2} [:paragraph "Quos superat voluptas"]]
+                [:heading {:n    2
+                           :from "## Quos superat voluptas"}
+                 [:paragraph "Quos superat voluptas"]]
                 [:paragraph
                  "Aquas in coniuge cornua. Quem dixit Nelei, tibi preces inplicat undis, seu nisi"
                  [:newline "\n"]
                  "nubes, in terrae "
-                 [:link
-                  {:text "contenta mihi tum", :target "http://www.monstravit.org/"}]
+                 [:link {:text "contenta mihi tum", :target "http://www.monstravit.org/"}]
                  " fatus tectis."]
                 [:blockquote
                  [:paragraph
@@ -767,9 +796,7 @@ specie Achivi suus publica Marte extimuit. Ferro domos suras."
                  "Nondum supero in vocavit adspicit nec sine prodidit. Insula fugit alterno"
                  [:newline "\n"]
                  "praeterea cadentem "
-                 [:link
-                  {:text "iacebas Lucifer\nnostris",
-                   :target "http://oconcipit.io/tamen-vestibus"}]
+                 [:link {:text "iacebas Lucifer\nnostris", :target "http://oconcipit.io/tamen-vestibus"}]
                  ". Et et quandoquidem pavens, fiat"
                  [:newline "\n"]
                  "specie Achivi suus publica Marte extimuit. Ferro domos suras."]])))

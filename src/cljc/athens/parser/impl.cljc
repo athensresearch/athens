@@ -56,7 +56,8 @@ inline = recur
            autolink /
            block-ref /
            page-link /
-           hashtag /
+           hashtag-braced /
+           hashtag-naked /
            component /
            latex /
            special-char /
@@ -120,11 +121,12 @@ page-link = <#'(?<!\\w)\\[\\[(?!\\s)'>
             (#'[^\\[\\]\\n]+' | page-link)+
             <#'(?<!\\s)\\]\\](?!\\w)'>
 
-hashtag = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
-          (#'[^\\[\\]\\n]+' | page-link)+
-          <#'(?<!\\s)\\]\\](?!\\w)'>
-        | <#'(?<!\\w)\\#(?!\\s)'>
-          #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+(?!\\w)'
+hashtag-naked = <#'(?<!\\w)\\#(?!\\s)'>
+                #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+(?!\\w)'
+
+hashtag-braced = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
+                 (#'[^\\[\\]\\n]+' | page-link)+
+                 <#'(?<!\\s)\\]\\](?!\\w)'>
 
 component = <#'(?<!\\w)\\{\\{(?!\\s)'>
             (page-link / block-ref / #'.+(?=\\}\\})')
@@ -151,16 +153,19 @@ newline = #'\\n'
 
 (defn- transform-heading
   [atx p-text]
-  [:heading {:n (count atx)}
+  [:heading {:n    (count atx)
+             :from (str atx " " p-text)}
    [:paragraph-text (string/trim p-text)]])
 
 
 (defn- transform-indented-code-block
   [& code-texts]
-  [:indented-code-block
-   [:code-text (->> code-texts
-                    (map second)
-                    (string/join "\n"))]])
+  (let [seconds (map second code-texts)]
+    [:indented-code-block
+     {:from (->> seconds
+                 (map #(str "    " %))
+                 (string/join "\n"))}
+     [:code-text (string/join "\n" seconds)]]))
 
 
 (defn- transform-fenced-code-block
@@ -209,6 +214,42 @@ newline = #'\\n'
   (->> in
        (insta/parse block-parser)
        (insta/transform stage-1-transformations)))
+
+
+(defn- string-representation
+  [& contents]
+  (->> contents
+       (map (fn [content]
+              (if (string? content)
+                content
+                (-> content
+                    second
+                    :from))))
+       string/join))
+
+
+(defn- block-ref-transform
+  [& contents]
+  (apply conj [:block-ref {:from (str "((" (string/join contents) "))")}]
+         contents))
+
+
+(defn- page-link-transform
+  [& contents]
+  (apply conj [:page-link {:from (str "[[" (apply string-representation contents) "]]")}]
+         contents))
+
+
+(defn- hashtag-braced-transform
+  [& contents]
+  (apply conj [:hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
+         contents))
+
+
+(defn- hashtag-naked-transform
+  [& contents]
+  (apply conj [:hashtag {:from (str "#" (string/join contents))}]
+         contents))
 
 
 (defn- walker-hlb-candidate
@@ -316,10 +357,10 @@ newline = #'\\n'
                 (let [[tag text] contents]
                   (cond
                     (= :page-link tag)
-                    (str "[[" text "]]")
+                    (str "[[" (nth contents 2) "]]")
 
                     (= :block-ref tag)
-                    (str "((" text "))")
+                    (str "((" (nth contents 2) "))")
 
                     :else
                     text))
@@ -328,11 +369,15 @@ newline = #'\\n'
 
 
 (def stage-2-internal-transformations
-  {:inline    inline-transform
-   :link      link-transform
-   :image     image-transform
-   :autolink  autolink-transform
-   :component component-transform})
+  {:block-ref      block-ref-transform
+   :page-link      page-link-transform
+   :hashtag-braced hashtag-braced-transform
+   :hashtag-naked  hashtag-naked-transform
+   :inline         inline-transform
+   :link           link-transform
+   :image          image-transform
+   :autolink       autolink-transform
+   :component      component-transform})
 
 
 (defn inline-parser->ast
