@@ -25,14 +25,15 @@
     :datascript/split-block-to-children
     :datascript/unindent
     :datascript/indent
+    :datascript/indent-multi
+    :datascript/unindent-multi
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
     :datascript/unlinked-references-link
-    :datascript/unlinked-references-link-all
+    :datascript/unlinked-references-link-all})
     ;; TODO: all the events
-    })
 
 
 (defn transact!

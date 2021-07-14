@@ -233,6 +233,17 @@
                      :value value}}))
 
 
+(defn build-unindent-multi-event
+  "Builds `:datascript/unindent-multi` event with:
+  - `uids` : `:block/uid` of selected blocks"
+  [last-tx uids]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unindent-multi
+     :event/args    {:uids uids}}))
+
+
 (defn build-page-add-shortcut
   "Builds `:datascript/page-add-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"
@@ -281,8 +292,9 @@
                      :target-order target-order}}))
 
 
+
 (defn build-indent-event
-  "Builds `: indent` event with:
+  "Builds `: `datascript/indent` event with:
   - `uid`  : `:block/uid` of triggering block
   - `value`: `:block/string` of triggering block"
   [last-tx uid value]
@@ -292,6 +304,17 @@
      :event/type    :datascript/indent
      :event/args    {:uid   uid
                      :value value}}))
+
+
+(defn build-indent-multi-event
+  "Builds `: `:datascript/indent-multi` event with:
+  - `uids`  : `:block/uid` of selected blocks"
+  [last-tx uids]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/indent-multi
+     :event/args    {:uids   uids}}))
 
 
 (defn build-bump-up-event

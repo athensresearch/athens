@@ -265,6 +265,37 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/indent-multi
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/indent-multi args" (pr-str args))
+  (let [{:keys [uids]}      args
+        blocks              (map #(common-db/get-block db [:block/uid %]) uids)
+        first-uid           (first uids)
+        n-blocks            (count blocks)
+        last-block-order    (:block/order (last blocks))
+        {parent-eid :db/id} (common-db/get-parent    db [:block/uid first-uid])
+        older-sib           (common-db/get-older-sib db first-uid)
+        n-sib               (count (:block/children older-sib))
+        new-blocks          (map-indexed
+                              (fn [idx x] {:db/id       (:db/id x)
+                                           :block-order (+ idx n-sib)})
+                              blocks)
+        new-older-sib       {:db/id          (:db/id older-sib)
+                             :block/children new-blocks
+                             :block-open     true}
+        reindex             (common-db/minus-after db parent-eid last-block-order n-blocks)
+        new-parent          {:db/id          parent-eid
+                             :block/children reindex}
+        retracts            (mapv (fn [x] [:db/retract     parent-eid
+                                           :block/children (:db/id x)])
+                                  blocks)
+        tx-data              (conj retracts
+                                   new-older-sib
+                                   new-parent)]
+    (println "resolver :datascript/indent tx-data" (pr-str args))
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/unindent
   [db {:event/keys [args]}]
   (println "resolver :datascript/unindent args" (pr-str args))
@@ -288,6 +319,35 @@
                                      :block/children reindex-grandpa}
         tx-data                     [retract new-parent new-grandpa]]
     (println "resolver :datascript/unindent tx-data" (pr-str tx-data))
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/unindent-multi
+  [db {:event/keys [args]}]
+  (println "resolver :datascript/unindent-multi args" args)
+  (let [{:keys [uids]}              args
+        {parent-order :block/order
+         parent-eid   :db/id}        (common-db/get-parent db [:block/uid (first uids)])
+        blocks                       (map #(common-db/get-block db [:block/uid %]) uids)
+        n-blocks                     (count blocks)
+        last-block-order             (:block/order (last blocks))
+        reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
+        new-parent                   {:db/id          parent-eid
+                                      :block/children reindex-parent}
+        new-blocks                   (map-indexed (fn [idx uid] {:block/uid   uid
+                                                                 :block/order (+ idx (inc parent-order))})
+                                                  uids)
+        {grandpa-eid :db/id}          (common-db/get-parent db parent-eid)
+        reindex-grandpa               (concat
+                                        new-blocks
+                                        (common-db/plus-after db grandpa-eid parent-order n-blocks))
+        retracts                      (mapv (fn [x] [:db/retract     parent-eid
+                                                     :block/children (:db/id x)])
+                                            blocks)
+        new-grandpa                    {:db/id          grandpa-eid
+                                        :block/children reindex-grandpa}
+        tx-data                        (conj retracts new-parent new-grandpa)]
+    (println "resolver :datascript/unindent-multi tx-data" tx-data)
     tx-data))
 
 

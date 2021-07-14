@@ -22,6 +22,8 @@
    :datascript/unindent
    :datascript/paste-verbatim
    :datascript/indent
+   :datascript/indent-multi
+   :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
@@ -120,6 +122,12 @@
      [:uid string?]
      [:value string?]]]])
 
+(def datascript-indent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
+
 
 (def datascript-unindent
   [:map
@@ -127,6 +135,15 @@
     [:map
      [:uid string?]
      [:value string?]]]])
+
+
+(def datascript-unindent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
+
+
 
 
 (def datascript-paste-verbatim
