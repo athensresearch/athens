@@ -26,6 +26,11 @@
    :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
+   :datascript/drop-child
+   :datascript/drop-multi-child
+   :datascript/drop-link-child
+   :datascript/drop-diff-parent
+   :datascript/drop-link-diff-parent
    :datascript/left-sidebar-drop-above
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
@@ -167,6 +172,48 @@
    [:event/args
     [:map
      [:uid string?]]]])
+
+
+(def datascript-drop-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uid string?
+      :target-uid string?]]]])
+
+
+(def datascript-drop-multi-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uids [:vector string?]
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-link-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uid string?
+      :target-uid string?]]]])
+
+
+(def datascript-drop-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-link-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
 
 
 (def datascript-left-sidebar-drop-above
