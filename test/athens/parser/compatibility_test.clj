@@ -12,22 +12,39 @@
     [:block [:paragraph "OK? Yes."]]
     "OK? Yes."
 
-    [:block [:paragraph [:page-link "link"]]]
+    [:block [:paragraph [:page-link {:from "[[link]]"} "link"]]]
     "[[link]]"
 
-    [:block [:paragraph "A " [:page-link "link"] "."]]
+    [:block [:paragraph "A " [:page-link {:from "[[link]]"} "link"] "."]]
     "A [[link]]."
 
-    [:block [:paragraph "A " [:page-link "link"] " and another " [:page-link "link"] "."]]
+    [:block
+     [:paragraph
+      "A "
+      [:page-link {:from "[[link]]"}
+       "link"]
+      " and another "
+      [:page-link {:from "[[link]]"}
+       "link"] "."]]
     "A [[link]] and another [[link]]."
 
-    [:block [:paragraph "Some " [:page-link "Nested " [:page-link "Links"]] " and something"]]
+    [:block
+     [:paragraph
+      "Some "
+      [:page-link {:from "[[Nested [[Links]]]]"}
+       "Nested "
+       [:page-link {:from "[[Links]]"}
+        "Links"]]
+      " and something"]]
     "Some [[Nested [[Links]]]] and something"
 
     [:block [:paragraph "[[text"]]
     "[[text"
 
-    [:block [:paragraph [:block-ref "V8_jUYc-k"]]]
+    [:block
+     [:paragraph
+      [:block-ref {:from "((V8_jUYc-k))"}
+       "V8_jUYc-k"]]]
     "((V8_jUYc-k))"
 
     [:block [:paragraph "it’s " [:bold "very"] " important"]]
@@ -61,37 +78,38 @@
 
 (deftest parser-hashtag-tests
   (are [x y] (= x (sut/staged-parser->ast y))
-    [:block [:paragraph "some " [:hashtag "me"] " time"]]
+    [:block [:paragraph "some " [:hashtag {:from "#me"} "me"] " time"]]
     "some #me time"
 
-    [:block [:paragraph "that’s " [:hashtag "very cool"] ", yeah"]]
+    [:block [:paragraph "that’s " [:hashtag {:from "#[[very cool]]"} "very cool"] ", yeah"]]
     "that’s #[[very cool]], yeah"
 
     [:block
      [:paragraph
       "also here's "
-      [:hashtag
+      [:hashtag {:from "#[[nested [[links]]]]"}
        "nested "
-       [:page-link "links"]]
+       [:page-link {:from "[[links]]"}
+        "links"]]
       " in hashtags!"]]
     "also here's #[[nested [[links]]]] in hashtags!"
 
-    [:block [:paragraph "Ends after " [:hashtag "words_are_over"] "!"]]
+    [:block [:paragraph "Ends after " [:hashtag {:from "#words_are_over"} "words_are_over"] "!"]]
     "Ends after #words_are_over!"
 
-    [:block [:paragraph "learn " [:hashtag "官话"] "?"]]
+    [:block [:paragraph "learn " [:hashtag {:from "#官话"} "官话"] "?"]]
     "learn #官话?"
 
-    [:block [:paragraph "learn " [:hashtag "اَلْعَرَبِيَّةُ"] " in a year"]]
+    [:block [:paragraph "learn " [:hashtag {:from "#اَلْعَرَبِيَّةُ"} "اَلْعَرَبِيَّةُ"] " in a year"]]
     "learn #اَلْعَرَبِيَّةُ in a year"))
 
 
 (deftest parser-component-tests
   (are [x y] (= x (sut/staged-parser->ast y))
-    [:block [:paragraph [:component "[[TODO]]" [:page-link "TODO"]] " Pick up groceries"]]
+    [:block [:paragraph [:component "[[TODO]]" [:page-link {:from "[[TODO]]"} "TODO"]] " Pick up groceries"]]
     "{{[[TODO]]}} Pick up groceries"
 
-    [:block [:paragraph [:component "((block-ref-id))" [:block-ref "block-ref-id"]] " amazing block"]]
+    [:block [:paragraph [:component "((block-ref-id))" [:block-ref {:from "((block-ref-id))"} "block-ref-id"]] " amazing block"]]
     "{{((block-ref-id))}} amazing block"
 
     [:block [:paragraph [:component "AnotherComponent" "AnotherComponent"] " Another Content"]]
@@ -134,7 +152,7 @@
 
     ;; URL following a TODO component
     [:block [:paragraph
-             [:component "[[TODO]]" [:page-link "TODO"]]
+             [:component "[[TODO]]" [:page-link {:from "[[TODO]]"} "TODO"]]
              [:text-run
               " read: "
               [:link {:text   "https://www.example.com"
@@ -145,7 +163,7 @@
     ;; TODO should handle `#` part as part of url.
     ;; or rather not qualify `#` in a middle of a world as hashtag
     [:block [:paragraph
-             [:component "[[TODO]]" [:page-link "TODO"]]
+             [:component "[[TODO]]" [:page-link {:from "[[TODO]]"} "TODO"]]
              [:text-run
               " "
               [:link {:text   "https://example.com"

@@ -22,6 +22,8 @@
    :datascript/unindent
    :datascript/paste-verbatim
    :datascript/indent
+   :datascript/indent-multi
+   :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/drop-child
@@ -32,7 +34,9 @@
    :datascript/drop-same
    :datascript/drop-multi-same-source
    :datascript/drop-multi-same-all
-   :datascript/drop-link-same-parent])
+   :datascript/drop-link-same-parent
+   :datascript/left-sidebar-drop-above
+   :datascript/left-sidebar-drop-below])
 
 
 (def event-common
@@ -79,7 +83,7 @@
    [:event/args
     [:map
      [:uid string?]
-     [:odl-name string?]
+     [:old-name string?]
      [:new-name string?]]]])
 
 
@@ -125,6 +129,12 @@
      [:uid string?]
      [:value string?]]]])
 
+(def datascript-indent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
+
 
 (def datascript-unindent
   [:map
@@ -132,6 +142,15 @@
     [:map
      [:uid string?]
      [:value string?]]]])
+
+
+(def datascript-unindent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
+
+
 
 
 (def datascript-paste-verbatim
@@ -170,7 +189,7 @@
   [:map
    [:event/args
     [:map
-     [:source-uids vector?
+     [:source-uids [:vector string?]
       :target-uid  string?]]]])
 
 
@@ -235,6 +254,21 @@
       :source-uid  string?
       :target-uid  string?]]]])
 
+(def datascript-left-sidebar-drop-above
+  [:map
+   [:event/args
+    [:map
+     [:source-order int?]
+     [:target-order int?]]]])
+
+
+(def datascript-left-sidebar-drop-below
+  [:map
+   [:event/args
+    [:map
+     [:source-order int?]
+     [:target-order int?]]]])
+
 
 (def event
   [:multi {:dispatch :event/type}
@@ -288,7 +322,13 @@
               datascript-page-add-shortcut)]
    [:datascript/page-remove-shortcut
     (mu/merge event-common
-              datascript-page-remove-shortcut)]])
+              datascript-page-remove-shortcut)]
+   [:datascript/left-sidebar-drop-above
+    (mu/merge event-common
+              datascript-left-sidebar-drop-above)]
+   [:datascript/left-sidebar-drop-below
+    (mu/merge event-common
+              datascript-left-sidebar-drop-below)]])
 
 
 (def valid-event?
