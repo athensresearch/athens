@@ -346,8 +346,8 @@
 
 (defn build-unlinked-references-link-all
   "Builds `:datascript/unlinked-references-link` event with:
-  - `unlinked-refs`:  vector of blocks with unlinked refs
-  - `title        `: title of the page"
+  - `unlinked-refs`: list of maps that contains the str and id of unlinked refs
+  - `title        `: title of the page in which the unlinked refs will be linked"
   [last-tx unlinked-refs title]
   (let [event-id (gen-event-id)]
     {:event/id      event-id

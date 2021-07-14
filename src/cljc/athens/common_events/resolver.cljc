@@ -604,8 +604,6 @@
     tx-data))
 
 
-
-
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [args]}]
   (let [{:keys [source-order target-order]}  args
