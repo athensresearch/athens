@@ -214,6 +214,31 @@
        linked-refs))
 
 
+(defn minus-after
+  [db eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+            db
+            rules
+            eid
+            order
+            x)))
+
+
+(defn plus-after
+  [db eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            db
+            rules
+            eid
+            order
+            x)))
+
 (defn get-page-document
   "Retrieves whole page 'document', meaning with children."
   [db eid]
@@ -244,30 +269,6 @@
                           db))]
     (= (count parents) 1)))
 
-(defn minus-after
-  [db eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)]
-            db
-            rules
-            eid
-            order
-            x)))
-
-
-(defn plus-after
-  [db eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
-            db
-            rules
-            eid
-            order
-            x)))
 
 (defn- shape-parent-query
   "Normalize path from deeply nested block to root node."
