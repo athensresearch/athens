@@ -769,15 +769,16 @@
         ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
         ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
         ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
-        (let [source-block      (common-db/get-block @@fixture/connection [:block/uid source-uid])
-              source-ref-str    (str"((" source-uid "))")
-              target-block-str  (:block/string (common-db/get-block @@fixture/connection [:block/uid target-uid]))
-              expected-set      #{source-ref-str target-block-str}
-              linked-ref-uid    (last (common-db/get-children-uids-recursively @@fixture/connection target-parent-uid))
-              linked-ref-str    [:block/string (common-db/get-block @@fixture/connection linked-ref-uid)]
-              childrens-str-set #{linked-ref-str target-block-str}
-              union-set         (clojure.set/union expected-set childrens-str-set)]
+        (let [source-ref-str       (str"((" source-uid "))")
+              target-block-str     (:block/string (common-db/get-block @@fixture/connection [:block/uid target-uid]))
+              expected-set         #{source-ref-str target-block-str}
+              linked-ref-uid       (last (common-db/get-children-uids-recursively @@fixture/connection target-parent-uid))
+              linked-ref-str       (:block/string (common-db/get-block @@fixture/connection [:block/uid linked-ref-uid]))
+              childrens-str-set    #{linked-ref-str target-block-str}
+              union-set            (clojure.set/union expected-set childrens-str-set)
+              target-parent-block  (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
 
+          (t/is (= linked-ref-str source-ref-str))
           (t/is (= 2 (-> target-parent-block :block/children count)))
           (t/is (= 2 (count union-set))))))))
 

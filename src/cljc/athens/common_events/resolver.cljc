@@ -595,6 +595,7 @@
                                              :block/children reindex-target-parent}
         tx-data                             [new-target-parent]]
     (println "resolver :datascript/drop-link-diff-parent tx-data" (pr-str tx-data))
+    tx-data))
 
     
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
@@ -640,5 +641,4 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
-
     tx-data))
