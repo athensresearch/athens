@@ -25,12 +25,13 @@
     :datascript/split-block-to-children
     :datascript/unindent
     :datascript/indent
+    :datascript/indent-multi
+    :datascript/unindent-multi
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
-    :datascript/left-sidebar-drop-below
+    :datascript/left-sidebar-drop-below})
     ;; TODO: all the events
-    })
 
 
 (defn transact!
