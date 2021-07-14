@@ -208,20 +208,24 @@
     - target-uid        : Uid of the block on which source is being dropped
 
   Types of events :
-    - `:drop-multi/same-source` : When the selected blocks have same parent and are DnD under some other block
-                                  this event is fired.
-    - `:drop-multi/same-all`    : When the selected blocks have same parent and are DnD under the same parent
-                                  this event is fired. This also applies if on selects multiple Zero level blocks
-                                  and change the order among other Zero level blocks.
-    - `:drop-multi/child`       : When the selected blocks are DnD as the first child of some other block this event is fired
-    - `:drop-multi/diff-source` : When the selected blocks don't have same parent and are DnD under some other block this
-                                  event is fired."
+    - `:drop-multi/same-source`             : When the selected blocks have same parent and are DnD under some other block
+                                              this event is fired.
+    - `:drop-multi/same-all`                : When the selected blocks have same parent and are DnD under the same parent
+                                              this event is fired. This also applies if on selects multiple Zero level blocks
+                                              and change the order among other Zero level blocks.
+    - `:drop-multi/child`                   : When the selected blocks are DnD as the first child of some other block this event is fired
+    - `:drop-multi/diff-source-same-parent` : When the selected blocks don't have same parent + target block and last source block from the
+                                              selected blocks have same parent this event is fired.
+
+    - `:drop-multi/diff-source-same-parent` : When the selected blocks don't have same parent + target block and last source block from the
+                                              selected blocks have different parents this event is fired"
   [source-uids target-uid drag-target]
   (let [source-uids          (mapv (comp first db/uid-and-embed-id) source-uids)
         target-uid           (first (db/uid-and-embed-id target-uid))
         same-all?            (db/same-parent? (conj source-uids target-uid))
         same-parent-source?  (db/same-parent? source-uids)
         diff-parents-source? (not same-parent-source?)
+        diff-same-parents    (db/same-parent? (conj []  (last source-uids) target-uid))
         target               (db/get-block [:block/uid target-uid])
         first-source-uid     (first source-uids)
         first-source-parent  (db/get-parent [:block/uid first-source-uid])
@@ -232,16 +236,19 @@
                                same-all?              [:drop-multi/same-all {:drag-target drag-target
                                                                              :source-uids source-uids
                                                                              :target-uid  target-uid}]
-                               #_diff-parents-source?   #_[:drop-multi/diff-source {:drag-target drag-target
-                                                                                    :source-uids  source-uids
-                                                                                    :target-uid  target-uid}]
-                               diff-parents-source?   [:drop-multi/diff-source drag-target
-                                                                                 source-uids
-                                                                                  target
-                                                       target-parent]
+                               (and diff-same-parents
+                                    diff-parents-source?)   [:drop-multi/diff-source-same-parents {:drag-target drag-target
+                                                                                                   :source-uids  source-uids
+                                                                                                   :target-uid  target-uid}]
+                               (and (not diff-same-parents)
+                                    diff-parents-source?)   [:drop-multi/diff-source drag-target
+                                                                                       source-uids
+                                                                                        target
+                                                             target-parent]
                                same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
                                                                                 :source-uids source-uids
                                                                                 :target-uid  target-uid}])]
+    (println "diff-same-parents " diff-same-parents)
     (println ".event" event) ;; TODO Remove this after all events are ported
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))

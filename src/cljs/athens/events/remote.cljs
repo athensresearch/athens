@@ -550,6 +550,32 @@
       (js/console.debug ":remote/drop-diff-parent event" drop-diff-parent-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-parent-event]]]})))
 
+(rf/reg-event-fx
+  :remote/drop-diff-source-same-parents
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-source-same-parents args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-source-same-parents-event  (common-events/build-drop-diff-source-same-parents-event last-seen-tx
+                                                                                                        drag-target
+                                                                                                        source-uids
+                                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-diff-source-same-parents event" drop-diff-source-same-parents-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-source-same-parents-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-diff-source-diff-parents
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-source-diff-parents args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-source-diff-parents-event  (common-events/build-drop-diff-source-diff-parents-event last-seen-tx
+                                                                                                        drag-target
+                                                                                                        source-uids
+                                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-diff-source-diff-parents event" drop-diff-source-diff-parents-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-source-diff-parents-event]]]})))
+
+
 
 (rf/reg-event-fx
   :remote/drop-link-diff-parent

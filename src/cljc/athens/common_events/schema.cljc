@@ -28,6 +28,8 @@
    :datascript/drop-multi-child
    :datascript/drop-link-child
    :datascript/drop-diff-parent
+   :datascript-drop-diff-source-same-parents
+   :datascript-drop-diff-source-diff-parents
    :datascript/drop-link-diff-parent
    :datascript/drop-same
    :datascript/drop-multi-same-source
@@ -188,6 +190,24 @@
     [:map
      [:drag-target keyword?
       :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-diff-source-same-parents
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uids [:vector string?]
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-diff-source-diff-parents
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uids [:vector string?]
       :target-uid  string?]]]])
 
 

@@ -1606,6 +1606,26 @@
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
 
+(reg-event-fx
+  :drop-multi/diff-source-same-parents
+  (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":drop-multi/diff-source-same-parents args" args)
+    (let [local? (not (client/open?))]
+      (js/console.log "local?" local?)
+      (if local?
+        (let [drop-multi-diff-source-parents-event   (common-events/build-drop-multi-diff-source-same-parents -1
+                                                                                                              drag-target
+                                                                                                              source-uids
+                                                                                                              target-uid)
+              tx                                     (resolver/resolve-event-to-tx drop-multi-diff-source-parents-event)]
+         (js/console.log ":drop-multi-diff-source-same-parents tx" tx)
+         {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-diff-source-diff-parents args]]]}))))
+
+
+
+
+
 
 (defn drop-bullet-multi
   "Cases:
