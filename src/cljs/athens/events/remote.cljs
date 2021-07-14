@@ -213,6 +213,50 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-page-rename
+  (fn [{db :db} [_ event-id callback]]
+    (js/console.debug ":remote/followup-page-rename" event-id)
+    {:fx [[:invoke-callback callback]]}))
+
+
+(rf/reg-event-fx
+  :remote/page-rename
+  (fn [{db :db} [_ uid old-name new-name callback]]
+    (let [last-seen-tx                 (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      page-rename-event} (common-events/build-page-rename-event last-seen-tx
+                                                                              uid
+                                                                              old-name
+                                                                              new-name)
+          followup-fx                  [[:dispatch [:remote/followup-page-rename event-id callback]]]]
+      (js/console.debug ":remote/page-rename" (pr-str page-rename-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! page-rename-event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/followup-page-merge
+  (fn [{db :db} [_ event-id callback]]
+    (js/console.debug ":remote/followup-page-merge" event-id)
+    {:fx [[:invoke-callback callback]]}))
+
+
+(rf/reg-event-fx
+  :remote/page-merge
+  (fn [{db :db} [_ uid old-name new-name callback]]
+    (let [last-seen-tx                (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      page-merge-event} (common-events/build-page-merge-event last-seen-tx
+                                                                            uid
+                                                                            old-name
+                                                                            new-name)
+          followup-fx                 [[:dispatch [:remote/followup-page-merge event-id callback]]]]
+      (js/console.debug ":remote/page-merge" (pr-str page-merge-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! page-merge-event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/page-delete
   (fn [{db :db} [_ uid]]
     (let [last-seen-tx      (:remote/last-seen-tx db)
@@ -238,6 +282,24 @@
           remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
       (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
       {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/left-sidebar-drop-above
+  (fn [{db :db} [_ source-order target-order]]
+    (let [last-seen-tx                  (:remote/last-seen-tx db)
+          left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above last-seen-tx source-order target-order)]
+      (js/console.debug ":remote/left-sidebar-drop-above" (pr-str left-sidebar-drop-above-event))
+      {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-above-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/left-sidebar-drop-below
+  (fn [{db :db} [_ source-order target-order]]
+    (let [last-seen-tx                  (:remote/last-seen-tx db)
+          left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below last-seen-tx source-order target-order)]
+      (js/console.debug ":remote/left-sidebar-drop-below" (pr-str left-sidebar-drop-below-event))
+      {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-below-event]]]})))
 
 
 ;; - Block related
@@ -431,6 +493,15 @@
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 
+(rf/reg-event-fx
+  :remote/indent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/indent-multi args" args)
+    (let [last-seen-tx        (:remote/last-seen-tx db)
+          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
+
 
 (rf/reg-event-fx
   :remote/followup-unindent
@@ -459,6 +530,16 @@
       (js/console.debug ":remote/unindent event" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unindent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/unindent-multi args" args)
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
 
 
 (rf/reg-event-fx

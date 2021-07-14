@@ -186,14 +186,14 @@
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (component (first contents) uid))
-     :page-link            (fn [& title-coll] (render-page-link title-coll))
-     :hashtag              (fn [& title-coll]
+     :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
+     :hashtag              (fn [{_from :from} & title-coll]
                              (let [node (pull-node-from-string title-coll)]
                                [:span (use-style hashtag {:class    "hashtag"
                                                           :on-click #(navigate-uid (:block/uid @node) %)})
                                 [:span {:class "formatting"} "#"]
                                 [:span {:class "contents"} title-coll]]))
-     :block-ref            (fn [ref-uid]
+     :block-ref            (fn [{_from :from} ref-uid]
                              (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
                                (if @block
                                  [:span (use-style block-ref {:class "block-ref"})
@@ -244,7 +244,7 @@
                              [:code text])
      :inline-pre-formatted (fn [text]
                              [:code text])
-     :indented-code-block (fn [code-text]
+     :indented-code-block (fn [{:keys [_from]} code-text]
                             (let [text (second code-text)]
                               [:pre
                                [:code text]]))
