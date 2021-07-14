@@ -433,7 +433,6 @@
       ;; valid event let's send it
       (do
         (js/console.log "Sending event:" (pr-str event))
-        (js/console.warn "TODO: Implement await ACK or Reject for each sent event.")
         (client/send! event))
       (let [explanation (-> schema/event
                             (m/explain event)

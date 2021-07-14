@@ -14,6 +14,8 @@
 (def supported-event-types
   #{:datascript/paste-verbatim
     :datascript/create-page
+    :datascript/rename-page
+    :datascript/merge-page
     :datascript/delete-page
     :datascript/block-save
     :datascript/new-block
@@ -26,7 +28,9 @@
     :datascript/indent-multi
     :datascript/unindent-multi
     :datascript/page-add-shortcut
-    :datascript/page-remove-shortcut})
+    :datascript/page-remove-shortcut
+    :datascript/left-sidebar-drop-above
+    :datascript/left-sidebar-drop-below})
     ;; TODO: all the events
 
 
