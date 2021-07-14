@@ -484,13 +484,17 @@
         "check if every blocks are added"))
 
 
-    (let [unlinked-refs          (common-db/get-unlinked-references
-                                   @@fixture/connection
-                                   (string/escape page-1-title (let [esc-chars "()*&^%$#![]"]
-                                                                 (zipmap esc-chars
-                                                                         (map #(str "\\" %) esc-chars)))))] ; same as escape-str in athens.util
+    (let [unlinked-refs    (common-db/get-unlinked-references
+                             @@fixture/connection
+                             (string/escape page-1-title (let [esc-chars "()*&^%$#![]"]
+                                                           (zipmap
+                                                             esc-chars
+                                                             (map #(str "\\" %) esc-chars)))))  ; same as escape-str in athens.util
+          unlinked-str-ids (->> unlinked-refs
+                                (mapcat second)
+                                (map #(select-keys % [:block/string :block/uid])))]
       ;; link unlinked refs all transaction
-      (->> (common-events/build-unlinked-references-link-all -1 unlinked-refs page-1-title)
+      (->> (common-events/build-unlinked-references-link-all -1 unlinked-str-ids page-1-title)
            (resolver/resolve-event-to-tx @@fixture/connection)
            (d/transact @fixture/connection)))
 

@@ -122,6 +122,7 @@
      [:uid string?]
      [:value string?]]]])
 
+
 (def datascript-indent-multi
   [:map
    [:event/args
@@ -142,8 +143,6 @@
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
-
-
 
 
 (def datascript-paste-verbatim
@@ -201,22 +200,9 @@
     [:map
      [:unlinked-refs
       [:sequential
-       [:vector
-        [:cat
-         string?
-         [:vector
-          [:map
-           [:block/string string?]
-           [:block/refs vector?]
-           [:block/uid string?]
-           [:block/open boolean?]
-           [:db/id int?]
-           [:block/order int?]
-           [:block/parents
-            [:map
-             [:db/id int?]
-             [:node/title string?]
-             [:block/uid string?]]]]]]]]]
+       [:map
+        [:block/string string?]
+        [:block/uid string?]]]]
      [:title string?]]]])
 
 
