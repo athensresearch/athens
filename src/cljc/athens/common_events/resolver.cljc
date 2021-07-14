@@ -277,9 +277,8 @@
   [db {:event/keys [args]}]
   (println "resolver :datascript/unindent-multi args" args)
   (let [{:keys [uids]}              args
-        [uid-if-embed-block _]      (common-db/uid-and-embed-id (first uids))
         {parent-order :block/order
-         parent-eid   :db/id}        (common-db/get-parent db [:block/uid uid-if-embed-block])
+         parent-eid   :db/id}        (common-db/get-parent db [:block/uid (first uids)])
         blocks                       (map #(common-db/get-block db [:block/uid %]) uids)
         n-blocks                     (count blocks)
         last-block-order             (:block/order (last blocks))
