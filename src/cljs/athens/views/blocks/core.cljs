@@ -173,28 +173,28 @@
         source-parent              (db/get-parent [:block/uid source-uid])
         target-parent              (db/get-parent [:block/uid target-uid])
         drag-target-child?         (= drag-target :child)
-        drag-target-same-parent?   (= source-parent target-parent)
-        drag-target-diff-parent?   (not drag-target-same-parent?)
+        drag-target-same-parents?  (= source-parent target-parent)
+        drag-target-diff-parents?  (not drag-target-same-parents?)
         move-action                (= action-allowed "move")
         link-action                (= action-allowed "link")
         event         (cond
                         (and move-action drag-target-child?)       [:drop/child {:source-uid source-uid
                                                                                  :target-uid target-uid}]
-                        (and move-action drag-target-same-parent?) [:drop/same {:drag-target drag-target
-                                                                                :source-uid  source-uid
-                                                                                :target-uid  target-uid}]
+                        (and move-action drag-target-same-parents?) [:drop/same {:drag-target drag-target
+                                                                                 :source-uid  source-uid
+                                                                                 :target-uid  target-uid}]
 
-                        (and move-action drag-target-diff-parent?) [:drop/diff-parent {:drag-target drag-target
-                                                                                       :source-uid  source-uid
-                                                                                       :target-uid  target-uid}]
+                        (and move-action drag-target-diff-parents?) [:drop/diff-parent {:drag-target drag-target
+                                                                                        :source-uid  source-uid
+                                                                                        :target-uid  target-uid}]
                         (and link-action drag-target-child?)       [:drop-link/child {:source-uid source-uid
                                                                                       :target-uid target-uid}]
-                        (and link-action drag-target-same-parent?) [:drop-link/same-parent {:drag-target drag-target
-                                                                                            :source-uid  source-uid
-                                                                                            :target-uid  target-uid}]
-                        (and link-action drag-target-diff-parent?) [:drop-link/diff-parent {:drag-target drag-target
-                                                                                            :source-uid  source-uid
-                                                                                            :target-uid  target-uid}])]
+                        (and link-action drag-target-same-parents?) [:drop-link/same-parent {:drag-target drag-target
+                                                                                             :source-uid  source-uid
+                                                                                             :target-uid  target-uid}]
+                        (and link-action drag-target-diff-parents?) [:drop-link/diff-parent {:drag-target drag-target
+                                                                                             :source-uid  source-uid
+                                                                                             :target-uid  target-uid}])]
     (println ".event" event) ;; TODO Remove this after all drop events are ported
     (rf/dispatch event)))
 
@@ -241,10 +241,9 @@
                                                                                                    :source-uids  source-uids
                                                                                                    :target-uid  target-uid}]
                                (and (not diff-same-parents)
-                                    diff-parents-source?)   [:drop-multi/diff-source drag-target
-                                                                                       source-uids
-                                                                                        target
-                                                             target-parent]
+                                    diff-parents-source?)   [:drop-multi/diff-source-diff-parents {:drag-target drag-target
+                                                                                                   :source-uids  source-uids
+                                                                                                   :target-uid  target-uid}]
                                same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
                                                                                 :source-uids source-uids
                                                                                 :target-uid  target-uid}])]

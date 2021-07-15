@@ -568,6 +568,135 @@
     (println "resolver :datascript/drop-diff-parent tx-data" (pr-str tx-data))
     tx-data))
 
+(defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-diff-parents
+  [db {:event/keys [args]}]
+
+  ;; Used for the selected blocks that have different parents and get dragged and dropped under some other parent
+  ;; Terminology :
+  ;;  - drag-target       : Are the selected blocks getting dropped `:above` or `:below` the target block
+  ;;  - source-uids       : A vector of uids of all the selected blocks
+  ;;  - target-uid        : The uid of block where the blocks are dropped
+  ;;  - filtered-children : uids of all the children where the source-uids are to be dropped
+  ;;  - index             : Index of the target-block
+  ;;  - block level       : All the blocks under same parent are said to be at the same level
+
+  ;;  - source block's and target block's parent can be same here
+  ;;  - Lets look at an example
+  ;;   -1
+  ;;     -2
+  ;;     -3
+  ;;       -0
+  ;;       -4
+  ;;       -5
+  ;;     -6
+  ;;     -7
+  ;;   -8
+  ;;   -9
+  ;; Here let's say we want to drag and drop blocks from 4 to 8 then because of how the product works we will have to select
+  ;; block 4,5,6,7 and 8. Now if we analyze the selected blocks we see that there are 3 level of blocks here : (4,5) (6,7) and (8)
+  ;; and all the blocks before 8 are the last blocks on their respective levels and hence we do not reindex the parents of
+  ;; those blocks, we only reindex the parent of last selected block.
+
+  ;; - How to reindex the last-source-block's parent and target-block's parent?
+  ;;   For last-source-block's parent we decrease the block order of all the blocks after last-source-block
+  ;;   and in the case of target-block's parent we concat :  all the blocks before the target-block
+  ;;                                                       + all the selected blocks
+  ;;                                                       + all the blocks after the selected blocks
+  ;; NOTE: target-block's parent and last-source-block's parent can be same, in above example source blocks can be 5,6 and the
+  ;;      target block can be 7 this will make both the last-source's parent and target-block's parent 1.
+
+  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
+  (let [{:keys [drag-target
+                source-uids
+                target-uid]}                   args
+        {target-block-order :block/order}      (common-db/get-block db [:block/uid target-uid])
+        {target-parent-eid :db/id}             (common-db/get-parent db [:block/uid target-uid])
+        filtered-children                      (->> (common-db/get-children-not-in-selected-uids db
+                                                                                                 target-uid
+                                                                                                 source-uids)
+                                                    (sort-by :block/order)
+                                                    (mapv #(:block/uid %)))
+        index                                  (cond
+                                                 (= drag-target :above) target-block-order
+                                                 (= drag-target :below) (inc target-block-order))
+        total-children                         (count filtered-children)
+        head                                   (subvec filtered-children 0 index)
+        tail                                   (subvec filtered-children index total-children)
+        new-vec                                (concat head
+                                                       source-uids
+                                                       tail)
+        new-source-uids                        (map-indexed (fn [idx uid] {:block/uid uid :block/order idx})
+                                                            new-vec)
+        source-parents                         (mapv #(common-db/get-parent db [:block/uid %])
+                                                     source-uids)
+        {last-source-block-order :block/order} (common-db/get-block db [:block/uid (last source-uids)])
+        {last-source-parent-eid :db/id
+         last-source-parent-uid :block/uid}    (last source-parents)
+        n                                      (count
+                                                 (filter (fn [x] (= (:block/uid x)
+                                                                    last-source-parent-uid))
+                                                         source-parents))
+        reindex-last-source-parent             (common-db/minus-after db
+                                                                      last-source-parent-eid
+                                                                      last-source-block-order
+                                                                      n)
+        retracts                               (mapv
+                                                 (fn [uid parent] [:db/retract     (:db/id parent)
+                                                                   :block/children [:block/uid uid]])
+                                                 source-uids
+                                                 source-parents)
+        new-target-parent                      {:db/id          target-parent-eid
+                                                :block/children new-source-uids}
+        new-source-parent                      {:db/id          last-source-parent-eid
+                                                :block/children reindex-last-source-parent}
+        tx-data                                (conj retracts
+                                                     new-target-parent
+                                                     new-source-parent)]
+    (println "resolver :datascript/drop-multi-diff-source-diff-parents tx-data" tx-data)
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-same-parents
+  [db {:event/keys [args]}]
+  ;; How is this different from the above event?
+  ;; Here we don't need to reindex both the source and target parent because they are both
+  ;; same, so here we just reindex the target's parent and transact that.
+  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
+  (let [{:keys [drag-target
+                source-uids
+                target-uid]}                 args
+        {target-block-order :block/order}    (common-db/get-block db [:block/uid target-uid])
+        {target-parent-eid :db/id}           (common-db/get-parent db [:block/uid target-uid])
+        filtered-children                    (->> (common-db/get-children-not-in-selected-uids db
+                                                                                               target-uid
+                                                                                               source-uids)
+                                                  (sort-by :block/order)
+                                                  (mapv #(:block/uid %)))
+        index                                (cond
+                                               (= drag-target :above) target-block-order
+                                               (= drag-target :below) (inc target-block-order))
+        total-children                       (count filtered-children)
+        head                                 (subvec filtered-children 0 index)
+        tail                                 (subvec filtered-children index total-children)
+        new-vec                              (concat head
+                                                     source-uids
+                                                     tail)
+        new-source-uids                      (map-indexed (fn [idx uid] {:block/uid uid :block/order idx})
+                                                          new-vec)
+        source-parents                       (mapv #(common-db/get-parent db [:block/uid %])
+                                                   source-uids)
+        retracts                             (mapv
+                                               (fn [uid parent] [:db/retract     (:db/id parent)
+                                                                 :block/children [:block/uid uid]])
+                                               source-uids
+                                               source-parents)
+        new-target-parent                    {:db/id          target-parent-eid
+                                              :block/children new-source-uids}
+        tx-data                              (conj retracts
+                                                   new-target-parent)]
+    (println "resolver :datascript/drop-multi-diff-source-same-parents tx-data" tx-data)
+    tx-data))
+
 
 (defmethod resolve-event-to-tx :datascript/drop-link-diff-parent
   [db {:event/keys [args]}]

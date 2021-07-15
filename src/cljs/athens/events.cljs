@@ -1584,17 +1584,31 @@
     (let [local? (not (client/open?))]
       (js/console.log "local?" local?)
       (if local?
-        (let [drop-multi-diff-source-parents-event   (common-events/build-drop-multi-diff-source-same-parents -1
-                                                                                                              drag-target
-                                                                                                              source-uids
-                                                                                                              target-uid)
-              tx                                     (resolver/resolve-event-to-tx drop-multi-diff-source-parents-event)]
+        (let [drop-multi-diff-source-same-parents-event (common-events/build-drop-multi-diff-source-same-parents-event -1
+                                                                                                                       drag-target
+                                                                                                                       source-uids
+                                                                                                                       target-uid)
+              tx                                        (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-source-same-parents-event)]
          (js/console.log ":drop-multi-diff-source-same-parents tx" tx)
          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-diff-source-same-parents args]]]}))))
+
+
+(reg-event-fx
+  :drop-multi/diff-source-diff-parents
+  (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":drop-multi/diff-source-diff-parents args" args)
+    (let [local? (not (client/open?))]
+      (js/console.log "local?" local?)
+      (if local?
+        (let [drop-multi-diff-source-diff-parents-event (common-events/build-drop-multi-diff-source-diff-parents-event -1
+                                                                                                                       drag-target
+                                                                                                                       source-uids
+                                                                                                                       target-uid)
+              tx                                        (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-source-diff-parents-event)]
+          (js/console.log ":drop-multi-diff-source-diff-parents tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-diff-parents args]]]}))))
-
-
-
 
 
 

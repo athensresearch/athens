@@ -380,6 +380,42 @@
                                         :else
                                         %)))
 
+(defn not-contains?
+  [coll v]
+  (not (contains? coll v)))
+
+
+(defn get-children-not-in-selected-uids
+  [db target-block-uid selected-uids]
+  (d/q '[:find ?children-uid ?o
+         :keys block/uid block/order
+         :in $ % ?target-uid ?not-contains? ?source-uids
+         :where
+         (siblings ?target-uid ?children-e)
+         [?children-e :block/uid ?children-uid]
+         [(?not-contains? ?source-uids ?children-uid)]
+         [?children-e :block/order ?o]]
+       db
+       rules
+       target-block-uid
+       not-contains? (set selected-uids)))
+
+
+(defn last-child?
+  [db uid]
+  (->> (d/q '[:find ?sib-uid ?sib-o
+              :in $ % ?uid
+              :where
+              (siblings ?uid ?sib)
+              [?sib :block/uid ?sib-uid]
+              [?sib :block/order ?sib-o]]
+            db
+            rules
+            uid)
+       (sort-by second)
+       last
+       first
+       (= uid)))
 
 
 (defn linkmaker

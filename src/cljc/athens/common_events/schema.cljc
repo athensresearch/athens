@@ -30,8 +30,8 @@
    :datascript/drop-multi-child
    :datascript/drop-link-child
    :datascript/drop-diff-parent
-   :datascript-drop-diff-source-same-parents
-   :datascript-drop-diff-source-diff-parents
+   :datascript-drop-multi-diff-source-same-parents
+   :datascript-drop-multi-diff-source-diff-parents
    :datascript/drop-link-diff-parent
    :datascript/drop-same
    :datascript/drop-multi-same-source
@@ -212,7 +212,7 @@
       :target-uid  string?]]]])
 
 
-(def datascript-drop-diff-source-same-parents
+(def datascript-drop-multi-diff-source-same-parents
   [:map
    [:event/args
     [:map
@@ -221,7 +221,7 @@
       :target-uid  string?]]]])
 
 
-(def datascript-drop-diff-source-diff-parents
+(def datascript-drop-multi-diff-source-diff-parents
   [:map
    [:event/args
     [:map
