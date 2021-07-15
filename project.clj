@@ -43,7 +43,7 @@
                  ;;   configuration mgmt
                  [yogthos/config "1.1.7"]
                  ;;   Datahike
-                 [io.replikativ/datahike "0.3.6"]
+                 [io.replikativ/datahike "0.3.7-SNAPSHOT"]
                  ;;   web server
                  [http-kit "2.5.3"]
                  [compojure "1.6.2"]
