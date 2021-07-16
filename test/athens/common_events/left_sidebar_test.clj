@@ -171,10 +171,10 @@
          (d/transact @fixture/connection))
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
-                                                     :where
-                                                     [?e :page/sidebar]]
-                                                   @@fixture/connection)
-                                              (sort-by (comp :page/sidebar first)))]
+                                    :where
+                                    [?e :page/sidebar]]
+                                  @@fixture/connection)
+                             (sort-by (comp :page/sidebar first)))]
 
       (test/is
         (->> (map-indexed (fn [i title]
