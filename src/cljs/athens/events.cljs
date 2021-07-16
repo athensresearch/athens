@@ -1240,7 +1240,6 @@
                                                    :value value})]]]})))))
 
 
-
 (reg-event-fx
   :indent/multi
   (fn [_ [_ {:keys [uids]}]]
@@ -1252,8 +1251,8 @@
           first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
           block-zero?              (zero? first-block-order)]
       (js/console.debug ":indent/multi local?"       local?
-                              ", same-parent?"       same-parent?
-                              ", not block-zero?"    (not  block-zero?))
+                        ", same-parent?"       same-parent?
+                        ", not block-zero?"    (not  block-zero?))
       (when (and same-parent? (not block-zero?))
         (if local?
           (let [indent-multi-event  (common-events/build-indent-multi-event -1
@@ -1262,8 +1261,6 @@
             (js/console.debug ":indent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/indent-multi {:uids sanitized-selected-uids}]]]})))))
-
-
 
 
 (reg-event-fx
@@ -1340,7 +1337,6 @@
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
-
 (defn drop-link-same-parent
   "Create a new block with the reference to the source block, under the same parent as the source"
   [kind source parent target]
@@ -1383,7 +1379,6 @@
   :drop-link/same
   (fn [_ [_ kind source parent target]]
     {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
-
 
 
 (reg-event-fx
@@ -1461,6 +1456,7 @@
           (js/console.debug ":drop-link/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))
+
 
 (defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
@@ -1621,9 +1617,6 @@
         tx-data                    (conj retracts new-target-parent #_new-source-parent)]
     (identity new-source-parent)
     tx-data))
-
-
-
 
 
 (reg-event-fx

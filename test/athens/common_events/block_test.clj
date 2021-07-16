@@ -364,7 +364,9 @@
           (t/is (= 0 (-> parent-block :block/children count)))
           (t/is (= 1 (:block/order child-1-block)))
           (t/is (= 2 (:block/order child-2-block))))))))
-  ;; TODO More cases with nested blocks inside nested block
+
+
+;; TODO More cases with nested blocks inside nested block
 
 
 (t/deftest indent-test
@@ -500,7 +502,7 @@
 
 
 (t/deftest drop-child-test
- "Basic Case:
+  "Basic Case:
     Start with :
       -a
       -b
@@ -587,8 +589,8 @@
             source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
             source-uids              [source-1-uid source-2-uid]
             drop-multi-child-event   (common-events/build-drop-multi-child-event -1
-                                                                           source-uids
-                                                                           target-uid)
+                                                                                 source-uids
+                                                                                 target-uid)
             drop-child-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-multi-child-event)]
         (t/is (= 0 (-> target-block :block/children count)))
         (t/is (= 0 (:block/order target-block)))
@@ -680,10 +682,10 @@
                                                 :block/string   target-parent-str
                                                 :block/order    0
                                                 :block/children {:db/id          -3
-                                                                   :block/uid      target-uid
-                                                                   :block/string   target-text
-                                                                   :block/order    0
-                                                                   :block/children []}}
+                                                                 :block/uid      target-uid
+                                                                 :block/string   target-text
+                                                                 :block/order    0
+                                                                 :block/children []}}
                                                {:db/id          -4
                                                 :block/uid      source-uid
                                                 :block/string   source-text
@@ -696,9 +698,9 @@
             target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block     (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
             drop-diff-parent-event  (common-events/build-drop-diff-parent-event -1
-                                                                          :below
-                                                                          source-uid
-                                                                          target-uid)
+                                                                                :below
+                                                                                source-uid
+                                                                                target-uid)
             drop-diff-parent-txs    (resolver/resolve-event-to-tx @@fixture/connection drop-diff-parent-event)]
         (t/is (= 1 (-> target-parent-block :block/children count)))
         (t/is (= 0 (:block/order target-block)))
@@ -769,7 +771,7 @@
         ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
         ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
         ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
-        (let [source-ref-str       (str"((" source-uid "))")
+        (let [source-ref-str       (str "((" source-uid "))")
               target-block-str     (:block/string (common-db/get-block @@fixture/connection [:block/uid target-uid]))
               expected-set         #{source-ref-str target-block-str}
               linked-ref-uid       (last (common-db/get-children-uids-recursively @@fixture/connection target-parent-uid))

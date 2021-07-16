@@ -35,7 +35,6 @@
    :datascript/left-sidebar-drop-below])
 
 
-
 (def event-common
   [:map
    [:event/id string?]
@@ -126,6 +125,7 @@
      [:uid string?]
      [:value string?]]]])
 
+
 (def datascript-indent-multi
   [:map
    [:event/args
@@ -146,8 +146,6 @@
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
-
-
 
 
 (def datascript-paste-verbatim
@@ -230,7 +228,6 @@
     [:map
      [:source-order int?]
      [:target-order int?]]]])
-
 
 
 (def event

@@ -275,8 +275,9 @@
         older-sib           (common-db/get-older-sib db first-uid)
         n-sib               (count (:block/children older-sib))
         new-blocks          (map-indexed
-                              (fn [idx x] {:db/id       (:db/id x)
-                                           :block-order (+ idx n-sib)})
+                              (fn [idx x]
+                                {:db/id       (:db/id x)
+                                 :block-order (+ idx n-sib)})
                               blocks)
         new-older-sib       {:db/id          (:db/id older-sib)
                              :block/children new-blocks
@@ -284,8 +285,9 @@
         reindex             (common-db/minus-after db parent-eid last-block-order n-blocks)
         new-parent          {:db/id          parent-eid
                              :block/children reindex}
-        retracts            (mapv (fn [x] [:db/retract     parent-eid
-                                           :block/children (:db/id x)])
+        retracts            (mapv (fn [x]
+                                    [:db/retract     parent-eid
+                                     :block/children (:db/id x)])
                                   blocks)
         tx-data              (conj retracts
                                    new-older-sib
@@ -332,15 +334,17 @@
         reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
         new-parent                   {:db/id          parent-eid
                                       :block/children reindex-parent}
-        new-blocks                   (map-indexed (fn [idx uid] {:block/uid   uid
-                                                                 :block/order (+ idx (inc parent-order))})
+        new-blocks                   (map-indexed (fn [idx uid]
+                                                    {:block/uid   uid
+                                                     :block/order (+ idx (inc parent-order))})
                                                   uids)
         {grandpa-eid :db/id}          (common-db/get-parent db parent-eid)
         reindex-grandpa               (concat
                                         new-blocks
                                         (common-db/plus-after db grandpa-eid parent-order n-blocks))
-        retracts                      (mapv (fn [x] [:db/retract     parent-eid
-                                                     :block/children (:db/id x)])
+        retracts                      (mapv (fn [x]
+                                              [:db/retract     parent-eid
+                                               :block/children (:db/id x)])
                                             blocks)
         new-grandpa                    {:db/id          grandpa-eid
                                         :block/children reindex-grandpa}
@@ -470,8 +474,9 @@
         {last-source-order :block/order}    (last source-blocks)
         {last-source-parent-uid :block/uid
          last-source-parent-eid :db/id}     (last source-parents)
-        new-source-blocks                   (map-indexed (fn [idx x] {:block/uid   (:block/uid x)
-                                                                      :block/order idx})
+        new-source-blocks                   (map-indexed (fn [idx x]
+                                                           {:block/uid   (:block/uid x)
+                                                            :block/order idx})
                                                          source-blocks)
         n                                   (count (filter (fn [x] (= (:block/uid x) last-source-parent-uid))
                                                            source-parents))
@@ -483,8 +488,9 @@
                                                                    target-eid
                                                                    -1
                                                                    n)
-        retracts                            (mapv (fn [uid parent] [:db/retract     (:db/id parent)
-                                                                    :block/children [:block/uid uid]])
+        retracts                            (mapv (fn [uid parent]
+                                                    [:db/retract     (:db/id parent)
+                                                     :block/children [:block/uid uid]])
                                                   source-uids
                                                   source-parents)
         new-source-parent                   {:db/id          last-source-parent-eid
@@ -595,7 +601,7 @@
     (println "resolver :datascript/drop-link-diff-parent tx-data" (pr-str tx-data))
     tx-data))
 
-    
+
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [args]}]
   (let [{:keys [source-order target-order]}  args

@@ -4,9 +4,9 @@
   (:require
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
+    [clojure.data                  :as data]
     [clojure.set                   :as set]
     [clojure.string                :as string]
-    [clojure.data                  :as data]
     #?(:clj [clojure.tools.logging :as log])
     #?(:clj  [datahike.api         :as d]
        :cljs [datascript.core      :as d])))
@@ -244,6 +244,7 @@
             order
             x)))
 
+
 (defn get-page-document
   "Retrieves whole page 'document', meaning with children."
   [db eid]
@@ -331,7 +332,6 @@
        (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
 
 
-
 (defn- extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
@@ -378,6 +378,7 @@
       seq
       first))
 
+
 (defn update-refs-tx
   "Return the tx that will update lookup ref's :block/refs from before to after.
    Both before and after should be sets of lookup refs."
@@ -395,25 +396,31 @@
   )
 
 
-(defn block-refs-as-lookup-refs [db eid-or-lookup-ref]
+(defn block-refs-as-lookup-refs
+  [db eid-or-lookup-ref]
   (when-some [ent (d/entity db eid-or-lookup-ref)]
     (into #{} (comp (mapcat second)
                     (map :db/id)
                     (map (partial eid->lookup-ref db)))
           (d/pull db '[:block/refs] (:db/id ent)))))
 
-(defn string-as-lookup-refs [db string]
+
+(defn string-as-lookup-refs
+  [db string]
   (into #{} (comp (mapcat string->lookup-refs)
                   (map (partial eid->lookup-ref db))
                   (remove nil?))
         [string]))
 
 
-(defn- parseable-string-datom [[eid attr value]]
+(defn- parseable-string-datom
+  [[eid attr value]]
   (when (#{:block/string :node/title} attr)
     [eid value]))
 
-(defn linkmaker-error-handler [e input-tx]
+
+(defn linkmaker-error-handler
+  [e input-tx]
   #?(:cljs (do
              (js/alert (str "Software failure, sorry. Please let us know about it.\n"
                             (str e)))
@@ -449,10 +456,10 @@
                                                      after      (string-as-lookup-refs db string)]
                                                  (update-refs-tx lookup-ref before after)))))
                                (d/datoms db :eavt))]
-      #_(println "linkmaker:"
+       #_(println "linkmaker:"
                "\nall:" (with-out-str (clojure.pprint/pprint (d/datoms db :eavt)))
                "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
-      linkmaker-txs)
+       linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
        (linkmaker-error-handler e []))))

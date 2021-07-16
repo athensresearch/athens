@@ -292,7 +292,6 @@
                      :target-order target-order}}))
 
 
-
 (defn build-indent-event
   "Builds `: `datascript/indent` event with:
   - `uid`  : `:block/uid` of triggering block

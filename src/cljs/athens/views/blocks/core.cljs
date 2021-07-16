@@ -191,7 +191,7 @@
                         (and link-action drag-target-diff-parent?) [:drop-link/diff-parent {:drag-target drag-target
                                                                                             :source-uid  source-uid
                                                                                             :target-uid  target-uid}])]
-    (println ".event" event) ;; TODO Remove this after all drop events are ported
+    (println ".event" event) ; TODO Remove this after all drop events are ported
     (rf/dispatch event)))
 
 
@@ -228,10 +228,9 @@
                                same-all?              [:drop-multi/same-all drag-target source-uids first-source-parent target]
                                diff-parents-source?   [:drop-multi/diff-source drag-target source-uids target target-parent]
                                same-parent-source?    [:drop-multi/same-source drag-target source-uids first-source-parent target target-parent])]
-    (println ".event" event) ;; TODO Remove this after all events are ported
+    (println ".event" event) ; TODO Remove this after all events are ported
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))
-
 
 
 (defn block-drop

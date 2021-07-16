@@ -12,6 +12,7 @@
   {:store {:backend :mem
            :id      "default"}})
 
+
 (def seed-datoms
   athens-datoms/lan-datoms)
 

@@ -493,6 +493,7 @@
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 
+
 (rf/reg-event-fx
   :remote/indent-multi
   (fn [{db :db} [_ {:keys [uids] :as args}]]

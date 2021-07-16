@@ -111,14 +111,20 @@
 ;; See doc/adr/004-lan-party-linkmaker.md for requirements that led to these tests.
 ;; Redundant scenarios are not tested.
 
-(defn transact-with-linkmaker [tx-data]
+(defn transact-with-linkmaker
+  [tx-data]
   (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection tx-data)))
 
-(defn get-block [uid]
+
+(defn get-block
+  [uid]
   (common-db/get-block @@fixture/connection [:block/uid uid]))
 
-(defn get-page [uid]
+
+(defn get-page
+  [uid]
   (common-db/get-page-document @@fixture/connection [:block/uid uid]))
+
 
 (t/deftest p1-page-create
   (t/testing "New page, with refs on page title"
@@ -386,6 +392,7 @@
             test-block (get-block test-block-uid)]
         (t/is (empty? (:block/_refs test-page)))
         (t/is (empty? (:block/_refs test-block)))))))
+
 
 (t/deftest m4-fix-db
   (t/testing "Broken/missing refs in db"
