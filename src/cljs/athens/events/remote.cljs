@@ -224,7 +224,7 @@
 
 (rf/reg-event-fx
   :remote/followup-page-rename
-  (fn [{db :db} [_ event-id callback]]
+  (fn [{_db :db} [_ event-id callback]]
     (js/console.debug ":remote/followup-page-rename" event-id)
     {:fx [[:invoke-callback callback]]}))
 
@@ -246,7 +246,7 @@
 
 (rf/reg-event-fx
   :remote/followup-page-merge
-  (fn [{db :db} [_ event-id callback]]
+  (fn [{_db :db} [_ event-id callback]]
     (js/console.debug ":remote/followup-page-merge" event-id)
     {:fx [[:invoke-callback callback]]}))
 

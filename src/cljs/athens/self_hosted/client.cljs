@@ -460,7 +460,8 @@
   ;; send a `create-page` event
   (send! (common-events/build-page-create-event
           1
-          "test-uid-6"
+          "test-page-uid-6"
+          "test-block-uid-1"
           "Test Page Title 6")))
 
 

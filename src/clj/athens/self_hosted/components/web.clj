@@ -72,7 +72,7 @@
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
-        (let [{:event/keys [id type]} data]
+        (let [{:event/keys [_id type]} data]
           (log/debug channel "decoded valid event" (pr-str data))
           (let [{:event/keys [status]
                  :as         result} (valid-event-handler datahike channel username data)]

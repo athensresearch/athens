@@ -1270,7 +1270,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [{_rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
     (js/console.debug ":unindent args" (pr-str args))
     (let [local?                    (not (client/open?))
           parent                    (common-db/get-parent @db/dsdb
