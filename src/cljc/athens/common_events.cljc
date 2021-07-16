@@ -341,6 +341,34 @@
                      :new-uid new-uid}}))
 
 
+(defn build-unlinked-references-link
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `uid`:  `:block/uid` of the block with unlinked reference
+  - `string `: content of the block
+  - `title  `: title of the page"
+  [last-tx uid string title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link
+     :event/args    {:uid    uid
+                     :string string
+                     :title  title}}))
+
+
+(defn build-unlinked-references-link-all
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `unlinked-refs`: list of maps that contains the :block/string and :block/uid of unlinked refs
+  - `title        `: title of the page in which the unlinked refs will be linked"
+  [last-tx unlinked-refs title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link-all
+     :event/args    {:unlinked-refs unlinked-refs
+                     :title         title}}))
+
+
 (defn build-drop-child-event
   "Builds `:datascript/drop-child` event with:
   - `source-uid` : uid of the source block

@@ -332,6 +332,23 @@
        (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
 
 
+(defn get-data
+  [db pattern]
+  (->> pattern
+       (get-ref-ids db)
+       (merge-parents-and-block db)
+       group-by-parent
+       seq))
+
+
+(defn get-unlinked-references
+  "For node-page references UI."
+  [db title]
+  (->> title
+       patterns/unlinked
+       (get-data db)))
+
+
 (defn- extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
