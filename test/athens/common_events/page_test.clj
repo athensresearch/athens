@@ -4,6 +4,7 @@
     [athens.common-events          :as common-events]
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
+    [clojure.string                :as string]
     [clojure.test                  :as test]
     [datahike.api                  :as d])
   (:import
@@ -391,3 +392,119 @@
                           [test-title-0 test-title-2])
              (every? true?))
         "check if the page shortcuts are still ordered after removing a page"))))
+
+
+(test/deftest link-unlinked-refs
+  (let [page-1-uid "page-1-uid"
+        child-1    ["child-1-uid" "test"]
+        child-2    ["child-2-uid" "Test"]
+        child-3    ["child-3-uid" "attest"]
+        child-4    ["child-4-uid" "atTest"]
+        setup-txs  [{:db/id          -1
+                     :block/uid      page-1-uid
+                     :node/title     "Test"
+                     :block/children (map-indexed
+                                       (fn [i [uid str]]
+                                         {:db/id        (- i -2)
+                                          :block/uid      uid
+                                          :block/string   str
+                                          :block/order    i
+                                          :block/children []})
+                                       [child-1 child-2 child-3 child-4])}]]
+
+    ;; create blocks
+    (d/transact @fixture/connection setup-txs)
+
+    (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
+                                      :in $ ?uid
+                                      :where
+                                      [?e :block/uid ?uid]
+                                      [?e :block/children ?c]]
+                                    @@fixture/connection page-1-uid)
+                               flatten
+                               (map :block/uid))]
+
+      (test/is
+        (every? (set (mapv first [child-1 child-2 child-3 child-4])) page-1-children)
+        "check if every blocks are added"))
+
+    ;; unlinked refs transaction
+    (run!
+      (fn [[uid string]]
+        (->> (common-events/build-unlinked-references-link -1 uid string "Test")
+             (resolver/resolve-event-to-tx @@fixture/connection)
+             (d/transact @fixture/connection)))
+      [child-1 child-2 child-3 child-4])
+
+    (let [linked-blocks (->> (d/q '[:find (pull ?c [*])
+                                    :in $ ?uid
+                                    :where
+                                    [?e :block/uid ?uid]
+                                    [?e :block/children ?c]]
+                                  @@fixture/connection page-1-uid)
+                             flatten
+                             (mapv :block/string))]
+      (test/is
+        (= ["at[[Test]]" "[[Test]]" "at[[Test]]" "[[Test]]"] linked-blocks)))))
+
+
+(test/deftest link-unlinked-refs-all
+  (let [page-1-title "Test"
+        page-1-uid "page-1-uid"
+        child-1    ["child-1-uid" "test"]
+        child-2    ["child-2-uid" "Test"]
+        child-3    ["child-3-uid" "attest"]
+        child-4    ["child-4-uid" "atTest"]
+        setup-txs  [{:db/id          -1
+                     :block/uid      page-1-uid
+                     :node/title     page-1-title
+                     :block/children (map-indexed
+                                       (fn [i [uid str]]
+                                         {:db/id        (- i -2)
+                                          :block/uid      uid
+                                          :block/string   str
+                                          :block/order    i
+                                          :block/children []})
+                                       [child-1 child-2 child-3 child-4])}]]
+
+    ;; block transaction
+    (d/transact @fixture/connection setup-txs)
+
+    (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
+                                      :in $ ?uid
+                                      :where
+                                      [?e :block/uid ?uid]
+                                      [?e :block/children ?c]]
+                                    @@fixture/connection page-1-uid)
+                               flatten
+                               (map :block/uid))]
+
+      (test/is
+        (every? (set (mapv first [child-1 child-2 child-3 child-4])) page-1-children)
+        "check if every blocks are added"))
+
+
+    (let [unlinked-refs    (common-db/get-unlinked-references
+                             @@fixture/connection
+                             (string/escape page-1-title (let [esc-chars "()*&^%$#![]"]
+                                                           (zipmap
+                                                             esc-chars
+                                                             (map #(str "\\" %) esc-chars)))))  ; same as escape-str in athens.util
+          unlinked-str-ids (->> unlinked-refs
+                                (mapcat second)
+                                (map #(select-keys % [:block/string :block/uid])))]
+      ;; link unlinked refs all transaction
+      (->> (common-events/build-unlinked-references-link-all -1 unlinked-str-ids page-1-title)
+           (resolver/resolve-event-to-tx @@fixture/connection)
+           (d/transact @fixture/connection)))
+
+    (let [linked-blocks          (->> (d/q '[:find (pull ?c [*])
+                                             :in $ ?uid
+                                             :where
+                                             [?e :block/uid ?uid]
+                                             [?e :block/children ?c]]
+                                           @@fixture/connection page-1-uid)
+                                      flatten
+                                      (mapv :block/string))]
+      (test/is
+        (= ["at[[Test]]" "[[Test]]" "at[[Test]]" "[[Test]]"] linked-blocks)))))

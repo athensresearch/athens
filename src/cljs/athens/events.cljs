@@ -1796,31 +1796,27 @@
         {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))
 
 
-(defn link-unlinked-reference
-  "Ignores case. If title is `test`:
-  test 1     -> [[test 1]]
-  TEST 10    -> [[test 10]]
-  [[attest]] -> [[at[[test]]`"
-  [string title]
-  (let [ignore-case-title (re-pattern (str "(?i)" title))
-        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
-    new-str))
-
-
 (reg-event-fx
   :unlinked-references/link
-  (fn [_ [_ block title]]
-    (let [{:block/keys [string uid]} block
-          new-str (link-unlinked-reference string title)]
-      {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
+  (fn [_ [_ {:block/keys [string uid]} title]]
+    (js/console.debug ":unlinked-references/link:" uid)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":unlinked-references/link: local?" local?)
+      (if local?
+        (let [unlinked-references-link-event (common-events/build-unlinked-references-link -1 uid string title)
+              tx-data                        (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        {:fx [[:dispatch [:remote/unlinked-references-link string uid title]]]}))))
 
 
 (reg-event-fx
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
-    (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second)
-                               (map (fn [{:block/keys [string uid]}]
-                                      (let [new-str (link-unlinked-reference string title)]
-                                        {:db/id [:block/uid uid] :block/string new-str}))))]
-      {:dispatch [:transact new-str-tx-data]})))
+    (js/console.debug ":unlinked-references/link:" title)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":unlinked-references/link: local?" local?)
+      (if local?
+        (let [unlinked-references-link-all-event (common-events/build-unlinked-references-link-all -1 unlinked-refs title)
+              tx-data                            (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-all-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        {:fx [[:dispatch [:remote/unlinked-references-link-all unlinked-refs title]]]}))))
