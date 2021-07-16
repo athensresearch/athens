@@ -19,6 +19,12 @@
      :cljs (.getTime (js/Date.))))
 
 
+(defn- gen-block-uid
+  []
+  #?(:clj (subs (.toString (UUID/randomUUID)) 27)
+     :cljs (subs (str (random-uuid)) 27)))
+
+
 (defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
   [s t x]
@@ -271,11 +277,11 @@
         new-blocks          (map-indexed
                               (fn [idx x]
                                 {:db/id       (:db/id x)
-                                 :block-order (+ idx n-sib)})
+                                 :block/order (+ idx n-sib)})
                               blocks)
         new-older-sib       {:db/id          (:db/id older-sib)
                              :block/children new-blocks
-                             :block-open     true}
+                             :block/open     true}
         reindex             (common-db/minus-after db parent-eid last-block-order n-blocks)
         new-parent          {:db/id          parent-eid
                              :block/children reindex}
