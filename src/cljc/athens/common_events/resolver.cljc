@@ -41,20 +41,20 @@
 
 (defmethod resolve-event-to-tx :datascript/create-page
   [_db {:event/keys [args]}]
-  (let [{:keys [uid
+  (let [{:keys [page-uid
+                block-uid
                 title]} args
         now             (now-ts)
-        child-uid       (gen-block-uid)
         child           {:db/id        -2
                          :block/string ""
-                         :block/uid    child-uid
+                         :block/uid    block-uid
                          :block/order  0
                          :block/open   true
                          :create/time  now
                          :edit/time    now}
         page-tx         {:db/id          -1
                          :node/title     title
-                         :block/uid      uid
+                         :block/uid      page-uid
                          :block/children [child]
                          :create/time    now
                          :edit/time      now}]
@@ -151,7 +151,7 @@
 
 (defmethod resolve-event-to-tx :datascript/add-child
   [db {:event/keys [args]}]
-  (let [{:keys [eid
+  (let [{:keys [parent-uid
                 new-uid]} args
         new-child         {:db/id        -1
                            :block/uid    new-uid
@@ -159,25 +159,25 @@
                            :block/order  0
                            :block/open   true}
         reindex           (concat [new-child]
-                                  (common-db/inc-after db eid -1))
-        new-block         {:db/id          eid
+                                  (common-db/inc-after db [:block/uid parent-uid] -1))
+        new-block         {:block/uid      parent-uid
                            :block/children reindex}
         tx-data           [new-block]]
-    (println "resolver :datascript/add-child" eid new-uid "=>" (pr-str tx-data))
+    (println "resolver :datascript/add-child" parent-uid new-uid "=>" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/open-block-add-child
   [db {:event/keys [args]}]
-  (let [{:keys [eid
+  (let [{:keys [parent-uid
                 new-uid]} args
-        open-block-tx     [:db/add eid :block/open true]
+        open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
         ;; delegate add-child-tx creation
         add-child-tx      (resolve-event-to-tx db
                                                {:event/type :datascript/add-child
                                                 :event/args args})
         tx-data           (apply conj [open-block-tx] add-child-tx)]
-    (println ":datascript/open-block-add-child" eid new-uid)
+    (println ":datascript/open-block-add-child" parent-uid new-uid)
     tx-data))
 
 
@@ -277,11 +277,11 @@
         new-blocks          (map-indexed
                               (fn [idx x]
                                 {:db/id       (:db/id x)
-                                 :block-order (+ idx n-sib)})
+                                 :block/order (+ idx n-sib)})
                               blocks)
         new-older-sib       {:db/id          (:db/id older-sib)
                              :block/children new-blocks
-                             :block-open     true}
+                             :block/open     true}
         reindex             (common-db/minus-after db parent-eid last-block-order n-blocks)
         new-parent          {:db/id          parent-eid
                              :block/children reindex}

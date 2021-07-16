@@ -525,22 +525,28 @@
 (reg-event-fx
   :daily-note/prev
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items (fn [items]
-                                                 (into [uid] items)))]
+    (let [new-db    (update db :daily-notes/items (fn [items]
+                                                    (into [uid] items)))
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items conj uid)]
+    (let [new-db    (update db :daily-notes/items conj uid)
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
@@ -652,24 +658,23 @@
 
 (reg-event-fx
   :page/create
-  (fn [_ [_ title uid]]
-    (js/console.debug ":page/create" title uid)
+  (fn [_ [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
+    (js/console.debug ":page/create args" (pr-str args))
     (let [local? (not (client/open?))]
       (js/console.debug ":page/create local?" local?)
       (if local?
         (let [create-page-event (common-events/build-page-create-event -1
-                                                                       uid
+                                                                       page-uid
+                                                                       block-uid
                                                                        title)
-              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)
-              child-uid         (-> tx
-                                    first ; page
-                                    :block/children
-                                    first ; 1st child
-                                    :block/uid)]
+              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              [:editing/uid child-uid]]]]})
+                              (if shift?
+                                [:right-sidebar/open-item page-uid]
+                                [:navigate :page {:id page-uid}])
+                              [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
-               [:remote/page-create uid title]]]}))))
+               [:remote/page-create page-uid block-uid title shift?]]]}))))
 
 
 (reg-event-fx
@@ -1036,15 +1041,15 @@
       (js/console.debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
-                                                                   (:db/id block)
+                                                                   (:block/uid block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb add-child-event)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/add-child {:block-eid (:remote/db-id block)
-                                             :new-uid   new-uid
-                                             :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/add-child {:parent-uid (:block/uid block)
+                                             :new-uid    new-uid
+                                             :embed-id   embed-id}]]]}))))
 
 
 (reg-event-fx
@@ -1093,18 +1098,18 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/open-block-add-child local?" local?)
       (if local?
-        (let [block-eid                  (:db/id block)
+        (let [block-uid                  (:block/uid block)
               open-block-add-child-event (common-events/build-open-block-add-child-event -1
-                                                                                         block-eid
+                                                                                         block-uid
                                                                                          new-uid)
               tx                         (resolver/resolve-event-to-tx @db/dsdb open-block-add-child-event)]
           (js/console.debug ":enter/open-block-add-child tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/open-block-add-chilid {:block-eid (:remote/db-id block)
-                                                         :new-uid   new-uid
-                                                         :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/open-block-add-chilid {:parent-uid (:block/uid block)
+                                                         :new-uid    new-uid
+                                                         :embed-id   embed-id}]]]}))))
 
 
 (defn enter
@@ -1265,7 +1270,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [{_rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
     (js/console.debug ":unindent args" (pr-str args))
     (let [local?                    (not (client/open?))
           parent                    (common-db/get-parent @db/dsdb

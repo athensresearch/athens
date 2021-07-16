@@ -168,19 +168,17 @@
                                           :block/order    0
                                           :block/children []}}]]
       (d/transact @fixture/connection setup-txs)
-      (let [eid             (common-db/e-by-av @@fixture/connection
-                                               :block/uid parent-1-uid)
-            add-child-event (common-events/build-add-child-event -1 eid child-1-uid)
+      (let [add-child-event (common-events/build-add-child-event -1 parent-1-uid child-1-uid)
             txs             (resolver/resolve-event-to-tx @@fixture/connection
                                                           add-child-event)
             query-children  '[:find ?children
                               :in $ ?eid
                               :where [?eid :block/children ?children]]]
-        (t/is (= #{} (d/q query-children @@fixture/connection eid)))
+        (t/is (= #{} (d/q query-children @@fixture/connection [:block/uid parent-1-uid])))
         (d/transact @fixture/connection txs)
         (let [child-eid (common-db/e-by-av @@fixture/connection
                                            :block/uid child-1-uid)
-              children  (d/q query-children @@fixture/connection eid)]
+              children  (d/q query-children @@fixture/connection [:block/uid parent-1-uid])]
           (t/is (seq children))
           (t/is (= #{[child-eid]} children))))))
 
@@ -202,14 +200,12 @@
                                                           :block/children []}}}]]
       (d/transact @fixture/connection setup-txs)
 
-      (let [parent-eid      (common-db/e-by-av @@fixture/connection
-                                               :block/uid parent-uid)
-            child-1-eid     (common-db/e-by-av @@fixture/connection
+      (let [child-1-eid     (common-db/e-by-av @@fixture/connection
                                                :block/uid child-1-uid)
             child-1         (d/pull @@fixture/connection
                                     [:block/uid :block/order]
                                     child-1-eid)
-            add-child-event (common-events/build-add-child-event -1 parent-eid child-2-uid)
+            add-child-event (common-events/build-add-child-event -1 parent-uid child-2-uid)
             add-child-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                           add-child-event)
             query-children  '[:find ?child
@@ -217,7 +213,7 @@
                               :where [?eid :block/children ?child]]]
 
         ;; before we add second child, check for 1st one
-        (t/is (= #{[child-1-eid]} (d/q query-children @@fixture/connection parent-eid)))
+        (t/is (= #{[child-1-eid]} (d/q query-children @@fixture/connection [:block/uid parent-uid])))
         (t/is (= {:block/uid   child-1-uid
                   :block/order 0}
                  child-1))
@@ -226,7 +222,7 @@
         (d/transact @fixture/connection add-child-txs)
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
-              children    (d/q query-children @@fixture/connection parent-eid)
+              children    (d/q query-children @@fixture/connection [:block/uid parent-uid])
               child-1     (d/pull @@fixture/connection
                                   [:block/uid :block/order]
                                   child-1-eid)
