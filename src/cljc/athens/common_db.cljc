@@ -4,6 +4,7 @@
   (:require
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
+    [clojure.data                  :as data]
     [clojure.set                   :as set]
     [clojure.string                :as string]
     #?(:clj [clojure.tools.logging :as log])
@@ -129,6 +130,7 @@
                :block/string
                :block/open
                :block/refs
+               :block/_refs
                {:block/children [:block/uid
                                  :block/order]}]
           eid))
@@ -205,13 +207,42 @@
 (defn map-new-refs
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
-  (map (fn [{:block/keys [uid string]}]
-         (let [new-str (string/replace string
+  (map (fn [{:block/keys [uid string] :node/keys [title]}]
+         (let [[string kw] (if title
+                             [title :node/title]
+                             [string :block/string])
+               new-str (string/replace string
                                        (patterns/linked old-title)
                                        (str "$1$3$4" new-title "$2$5"))]
-           {:db/id        [:block/uid uid]
-            :block/string new-str}))
+           {:db/id [:block/uid uid]
+            kw     new-str}))
        linked-refs))
+
+
+(defn minus-after
+  [db eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+            db
+            rules
+            eid
+            order
+            x)))
+
+
+(defn plus-after
+  [db eid order x]
+  (->> (d/q '[:find ?ch ?new-o
+              :keys db/id block/order
+              :in $ % ?p ?at ?x
+              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+            db
+            rules
+            eid
+            order
+            x)))
 
 
 (defn get-page-document
@@ -220,6 +251,29 @@
   (-> db
       (d/pull node-document-pull-vector eid)
       sort-block-children))
+
+
+(defn uid-and-embed-id
+  [uid]
+  (or (some->> uid
+               (re-find #"^(.+)-embed-(.+)")
+               rest vec)
+      [uid nil]))
+
+
+(defn same-parent?
+  "Given a coll of uids, determine if uids are all direct children of the same parent."
+  [db uids]
+  (println "same parent")
+  (let [parents (->> uids
+                     (mapv (comp first uid-and-embed-id))
+                     (d/q '[:find ?parents
+                            :in $ [?uids ...]
+                            :where
+                            [?e :block/uid ?uids]
+                            [?parents :block/children ?e]]
+                          db))]
+    (= (count parents) 1)))
 
 
 (defn- shape-parent-query
@@ -275,152 +329,160 @@
   (->> (d/pull db '[* :block/_refs] [:node/title page-title])
        :block/_refs
        (mapv :db/id)
-       (merge-parents-and-block db)
-       group-by-parent
-       (sort-by :db/id)
-       vec
-       rseq))
+       (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
 
 
 (defn- extract-tag-values
-  "Extracts `tag` values with `extractor-fn` from parser AST."
-  [ast tag extractor-fn]
-  (->> (tree-seq vector? extractor-fn ast)
+  "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
+  [ast tag-selector children-fn extractor-fn]
+  (->> (tree-seq vector? children-fn ast)
        (filter vector?)
-       (keep #(when (= tag (first %))
+       (keep #(when (tag-selector (first %))
                 (extractor-fn %)))
        set))
 
 
-(defn- extract-page-links
-  "Extracts from parser AST `:page-link`s"
-  [ast]
-  (extract-tag-values ast :page-link #(cond
-                                        (and (vector? %)
-                                             (< 2 (count %)))
-                                        (nth % 2)
-                                        (and (vector? %)
-                                             (< 1 (count %)))
-                                        (nth % 1)
-                                        :else
-                                        %)))
+(defn strip-markup
+  "Remove `start` and `end` from s if present.
+   Returns nil if markup was not present."
+  [s start end]
+  (when (and (string/starts-with? s start)
+             (string/ends-with? s end))
+    (subs s (count start) (- (count s) (count end)))))
+
+
+(defn string->lookup-refs
+  "Given string s, compute the set of refs expressed as Datalog lookup refs."
+  [s]
+  (let [ast (parser/parse-to-ast s)
+        block-ref-str->uid #(strip-markup % "((" "))")
+        page-ref-str->title #(or (strip-markup % "#[[" "]]")
+                                 (strip-markup % "[[" "]]")
+                                 (strip-markup % "#" ""))
+        block-lookups (into #{}
+                            (map (fn [uid] [:block/uid uid]))
+                            (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
+        page-lookups (into #{}
+                           (map (fn [title] [:node/title title]))
+                           (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
+    (set/union block-lookups page-lookups)))
+
+
+(defn eid->lookup-ref
+  "Return the :block/uid based lookup ref for entity eid in db.
+   eid can be either an entity id or a lookup ref.
+   Returns nil if there's no entity, or if entity does not have :block/uid."
+  [db eid]
+  (-> (d/entity db eid)
+      (select-keys [:block/uid])
+      seq
+      first))
+
+
+(defn update-refs-tx
+  "Return the tx that will update lookup ref's :block/refs from before to after.
+   Both before and after should be sets of lookup refs."
+  [lookup-ref before after]
+  (let [[only-before only-after] (data/diff before after)
+        to-tx (fn [type ref] [type lookup-ref :block/refs ref])]
+    (set (concat (map (partial to-tx :db/retract) only-before)
+                 (map (partial to-tx :db/add) only-after)))))
+
+
+(comment
+  (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
+  (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
+  (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]})
+  )
+
+
+(defn block-refs-as-lookup-refs
+  [db eid-or-lookup-ref]
+  (when-some [ent (d/entity db eid-or-lookup-ref)]
+    (into #{} (comp (mapcat second)
+                    (map :db/id)
+                    (map (partial eid->lookup-ref db)))
+          (d/pull db '[:block/refs] (:db/id ent)))))
+
+
+(defn string-as-lookup-refs
+  [db string]
+  (into #{} (comp (mapcat string->lookup-refs)
+                  (map (partial eid->lookup-ref db))
+                  (remove nil?))
+        [string]))
+
+
+(defn- parseable-string-datom
+  [[eid attr value]]
+  (when (#{:block/string :node/title} attr)
+    [eid value]))
+
+
+(defn linkmaker-error-handler
+  [e input-tx]
+  #?(:cljs (do
+             (js/alert (str "Software failure, sorry. Please let us know about it.\n"
+                            (str e)))
+             (js/console.error "Linkmaker failure." e))
+     :clj (do (log/error "Linkmaker failure." e)))
+  ;; Return the original, un-modified, input tx so that transactions can still move forward.
+  ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
+  ;; TODO(reporting): report the error type, without any identifiable information.
+  input-tx)
 
 
 (defn linkmaker
-  "Maintains linked nature of Knowledge Graph.
+  "Maintains the linked nature of Knowledge Graph.
 
   Returns Datascript transactions to be transacted in order to maintain links.
 
   Arguments:
   - `db`: Current Datascript/Datahike DB value
-  - `input-tx`: Grapth structure modifying TX, analyzed for link updates
+  - `input-tx` (optional): Graph structure modifying TX, analyzed for link updates
+
+  If `input-tx` is provided, linkmaker will only update links related to that tx.
+  If `input-tx` is not provided, all links in the db are checked for updates.
 
   Named after [Keymaker](https://en.wikipedia.org/wiki/Keymaker). "
-  [db input-tx]
-  (try
-    (let [{:keys [db-before
-                  db-after
-                  tx-data
-                  tempids]
-           :as   tx-report} (d/with db input-tx)
-          ;; requirements:
-          ;; *p1*: page created -> check if something refers to it, update refs
-          ;; *p2*: page deleted -> do we need to update `:block/refs`, since we're deleting page entity, probably not
-          ;;                       also check *b6* for all child blocks
-          ;; *p3*: page rename -> find references to old page title, update blocks with new title, update refs
-          ;;                      also check if something refers to new title already, update refs
-          ;; *b1*: block has new page ref -> update page refs
-          ;; *b2*: block doesn't have page ref anymore -> update page refs
-          ;; *b3*: block has new block ref -> update target block refs
-          ;; *b4*: block doesn't have block ref anymore -> update target block refs
-          ;; *b5*: block created -> check *b1* & *b3*
-          ;; *b6*: block deleted -> check *b2* & *b4*
 
-          ;; *b1*
-          block-eid->new-strings    (->> tx-data
-                                         (filter (fn [[_eid attr _value _tx added?]]
-                                                   (and added?
-                                                        (= :block/string attr))))
-                                         (reduce (fn [acc [eid _attr value _tx _added?]]
-                                                   (assoc acc eid value))
-                                                 {}))
-          block-eid->old-strings    (->> tx-data
-                                         (filter (fn [[_eid attr _value _tx added?]]
-                                                   (and (not added?)
-                                                        (= :block/string attr))))
-                                         (reduce (fn [acc [eid _attr value _tx _added?]]
-                                                   (assoc acc eid value))
-                                                 {}))
-          block-eid->old-strings    (merge block-eid->old-strings
-                                           (->> (keys block-eid->new-strings)
-                                                (map (fn [block-eid]
-                                                       (when-let [block-string (v-by-ea db-before block-eid :block/string)]
-                                                         [block-eid block-string])))
-                                                (into {})))
-          block-eid->new-structure  (zipmap (keys block-eid->new-strings)
-                                            (map parser/parse-to-ast
-                                                 (vals block-eid->new-strings)))
-          block-eid->old-structure  (zipmap (keys block-eid->old-strings)
-                                            (map parser/parse-to-ast
-                                                 (vals block-eid->old-strings)))
-          block-eid->new-page-links (zipmap (keys block-eid->new-structure)
-                                            (map extract-page-links
-                                                 (vals block-eid->new-structure)))
-          block-eid->old-page-links (zipmap (keys block-eid->old-structure)
-                                            (map extract-page-links
-                                                 (vals block-eid->old-structure)))
-          block-eid->page-remove    (->> (for [[block-eid old-pages] block-eid->old-page-links
-                                               :let                  [new-pages (get block-eid->new-page-links
-                                                                                     block-eid
-                                                                                     #{})]]
-                                           [block-eid (set/difference old-pages new-pages)])
-                                         (remove (comp empty? second))
-                                         (into {}))
-          block-eid->page-add       (->> (for [[block-eid new-pages] block-eid->new-page-links
-                                               :let                  [old-pages (get block-eid->old-page-links
-                                                                                     block-eid
-                                                                                     #{})]]
-                                           [block-eid (set/difference new-pages old-pages)])
-                                         (remove (comp empty? second))
-                                         (into {}))
-          linkmaker-info            (merge {}
-                                           (when (seq block-eid->page-remove)
-                                             {:retracts (mapcat (fn [[block-eid page-titles]]
-                                                                  (for [page-title page-titles]
-                                                                    [:db/retract
-                                                                     block-eid
-                                                                     :block/refs
-                                                                     [:node/title page-title]]))
-                                                                block-eid->page-remove)})
-                                           (when (seq block-eid->page-add)
-                                             {:asserts (mapcat (fn [[block-eid page-titles]]
-                                                                 (for [page-title page-titles]
-                                                                   [:db/add
-                                                                    block-eid
-                                                                    :block/refs
-                                                                    [:node/title page-title]]))
-                                                               block-eid->page-add)}))
-          linkmaker-txs             (apply conj (into [] (:asserts linkmaker-info))
-                                           (:retracts linkmaker-info))
-          with-linkmaker-txs        (apply conj input-tx linkmaker-txs)]
-      (println "linkmaker:"
-               "\ntx-data:" (pr-str tx-data)
-               "\nblock-eid->old-strings:" (pr-str block-eid->old-strings)
-               "\nblock-eid->new-strings:" (pr-str block-eid->new-strings)
-               "\nblock-eid->old-structure:" (pr-str block-eid->old-structure)
-               "\nblock-eid->new-structure:" (pr-str block-eid->new-structure)
-               "\nblock-eid->old-page-links:" (pr-str block-eid->old-page-links)
-               "\nblock-eid->new-page-links:" (pr-str block-eid->new-page-links)
-               "\nblock-eid->page-remote:" (pr-str block-eid->page-remove)
-               "\nblock-eid->page-add:" (pr-str block-eid->page-add)
-               "\nlinkmaker-info:" (pr-str linkmaker-info)
-               "\nlinkmaker-txs:" (pr-str linkmaker-txs))
-      with-linkmaker-txs)
-    (catch #?(:cljs js/Error
-              :clj Exception) e
-      #?(:cljs (do
-                 (js/alert (str "Software failure, sorry. Please let us know about it.\n"
-                                (str e)))
-                 (js/console.error "Linkmaker failure." e))
-         :clj (log/error "Linkmaker failure." e)))))
+  ([db]
+   (try
+     (let [linkmaker-txs (into []
+                               (comp (keep parseable-string-datom)
+                                     (mapcat (fn [[eid string]]
+                                               (let [lookup-ref (eid->lookup-ref db eid)
+                                                     before     (block-refs-as-lookup-refs db lookup-ref)
+                                                     after      (string-as-lookup-refs db string)]
+                                                 (update-refs-tx lookup-ref before after)))))
+                               (d/datoms db :eavt))]
+       #_(println "linkmaker:"
+               "\nall:" (with-out-str (clojure.pprint/pprint (d/datoms db :eavt)))
+               "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
+       linkmaker-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (linkmaker-error-handler e []))))
+
+  ([db input-tx]
+   (try
+     (let [{:keys [db-before
+                   db-after
+                   tx-data]}  (d/with db input-tx)
+           linkmaker-txs      (into []
+                                    (comp (keep parseable-string-datom)
+                                          (mapcat (fn [[eid string]]
+                                                    (let [lookup-ref (eid->lookup-ref db-after eid)
+                                                          before     (block-refs-as-lookup-refs db-before lookup-ref)
+                                                          after      (string-as-lookup-refs db-after string)]
+                                                      (update-refs-tx lookup-ref before after)))))
+                                    tx-data)
+           with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
+       #_(println "linkmaker:"
+                "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
+                "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
+       with-linkmaker-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (linkmaker-error-handler e [])))))
 

@@ -1219,6 +1219,10 @@
 (reg-event-fx
   :indent
   (fn [_ [_ {:keys [uid d-key-down] :as args}]]
+    "- `block-zero`: The first block in a page
+     - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
+                     the local string  is reset to original value, since it has not been unfocused yet (which is currently the
+                     transaction that updates the string). "
     (js/console.debug ":indent" args)
     (let [local?                    (not (client/open?))
           block                     (common-db/get-block @db/dsdb [:block/uid uid])
@@ -1241,38 +1245,27 @@
                                                    :value value})]]]})))))
 
 
-(defn indent-multi
-  "Only indent if all blocks are siblings, and first block is not already a zeroth child (root child).
-
-  older-sib is the current older-sib, before indent happens, AKA the new parent.
-  new-parent is current parent, not older-sib. new-parent becomes grandparent.
-  Reindex parent, add blocks to end of older-sib."
-  [uids]
-  (let [blocks       (map #(db/get-block [:block/uid %]) uids)
-        same-parent? (db/same-parent? uids)
-        n-blocks     (count blocks)
-        first-block  (first blocks)
-        last-block   (last blocks)
-        block-zero?  (-> first-block :block/order zero?)]
-    (when (and same-parent? (not block-zero?))
-      (let [parent        (db/get-parent [:block/uid (first uids)])
-            older-sib     (db/get-older-sib (first uids))
-            n-sib         (count (:block/children older-sib))
-            new-blocks    (map-indexed (fn [idx x] {:db/id (:db/id x) :block/order (+ idx n-sib)})
-                                       blocks)
-            new-older-sib {:db/id (:db/id older-sib) :block/children new-blocks :block/open true}
-            reindex       (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-            new-parent    {:db/id (:db/id parent) :block/children reindex}
-            retracts      (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
-                                blocks)
-            tx-data       (conj retracts new-older-sib new-parent)]
-        {:fx [[:dispatch [:transact tx-data]]]}))))
-
-
 (reg-event-fx
   :indent/multi
-  (fn [_ [_ uids]]
-    (indent-multi (mapv (comp first db/uid-and-embed-id) uids))))
+  (fn [_ [_ {:keys [uids]}]]
+    (js/console.debug ":indent/multi" uids)
+    (let [local?                   (not (client/open?))
+          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
+          dsdb                     @db/dsdb
+          same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
+          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
+          block-zero?              (zero? first-block-order)]
+      (js/console.debug ":indent/multi local?"       local?
+                        ", same-parent?"       same-parent?
+                        ", not block-zero?"    (not  block-zero?))
+      (when (and same-parent? (not block-zero?))
+        (if local?
+          (let [indent-multi-event  (common-events/build-indent-multi-event -1
+                                                                            sanitized-selected-uids)
+                tx                  (resolver/resolve-event-to-tx dsdb indent-multi-event)]
+            (js/console.debug ":indent/multi tx" (pr-str tx))
+            {:fx [[:dispatch [:transact tx]]]})
+          {:fx [[:dispatch [:remote/indent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
 (reg-event-fx
@@ -1311,76 +1304,42 @@
                                                      :value value})]]]})))))
 
 
-(defn unindent-multi
-  "Do not do anything if root block child or if blocks are not siblings.
-  Otherwise, retract and assert new parent for each block, and reindex parent and grandparent."
-  [uids context-root-uid]
-  (let [[f-uid f-embed-id]    (-> uids first db/uid-and-embed-id)
-        parent                (db/get-parent [:block/uid f-uid])
-        same-parent?          (db/same-parent? uids)
-        ;; when all selected items are from same embed block
-        ;; check if immediate parent is root-embed
-        is-parent-root-embed? (when same-parent?
-                                (some-> "#editable-uid-"
-                                        (str f-uid "-embed-" f-embed-id)
-                                        js/document.querySelector
-                                        (.. (closest ".block-embed"))
-                                        (. -firstChild)
-                                        (.getAttribute "data-uid")
-                                        (= (str (:block/uid parent) "-embed-" f-embed-id))))]
-    (cond
-      (:node/title parent)                     nil
-      (= (:block/uid parent) context-root-uid) nil
-      (not same-parent?)                       nil
-      ;; if all selected are from same embed block with root embed
-      ;; as parent un-indent should do nothing -- blocks will disappear from embed and
-      ;; have to manually navigate to block to see the un-indented blocks
-      (and same-parent? is-parent-root-embed?) nil
-      :else (let [grandpa         (db/get-parent (:db/id parent))
-                  sanitized-uids  (map (comp
-                                         first
-                                         db/uid-and-embed-id) uids)
-                  blocks          (map #(db/get-block [:block/uid %]) sanitized-uids)
-                  o-parent        (:block/order parent)
-                  n-blocks        (count blocks)
-                  last-block      (last blocks)
-                  reindex-parent  (minus-after (:db/id parent) (:block/order last-block) n-blocks)
-                  new-parent      {:db/id (:db/id parent) :block/children reindex-parent}
-                  new-blocks      (map-indexed (fn [idx uid] {:block/uid uid :block/order (+ idx (inc o-parent))})
-                                               sanitized-uids)
-                  reindex-grandpa (->> (plus-after (:db/id grandpa) (:block/order parent) n-blocks)
-                                       (concat new-blocks))
-                  retracts        (mapv (fn [x] [:db/retract (:db/id parent) :block/children (:db/id x)])
-                                        blocks)
-                  new-grandpa     {:db/id (:db/id grandpa) :block/children reindex-grandpa}
-                  tx-data         (conj retracts new-parent new-grandpa)]
-              {:fx [[:dispatch [:transact tx-data]]]}))))
-
-
 (reg-event-fx
   :unindent/multi
-  (fn [{rfdb :db} [_ uids]]
-    (let [context-root-uid (get-in rfdb [:current-route :path-params :id])]
-      (unindent-multi uids context-root-uid))))
+  (fn [{rfdb :db} [_ {:keys [uids]}]]
+    (js/console.debug ":unindent/multi" uids)
+    (let [local?                      (not (client/open?))
+          [f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
+          sanitized-selected-uids     (map (comp
+                                             first
+                                             common-db/uid-and-embed-id) uids)
+          {parent-title :node/title
+           parent-uid   :block/uid}   (common-db/get-parent @db/dsdb [:block/uid f-uid])
+          same-parent?                (common-db/same-parent? @db/dsdb sanitized-selected-uids)
+          is-parent-root-embed?       (when same-parent?
+                                        (some-> "#editable-uid-"
+                                                (str f-uid "-embed-" f-embed-id)
+                                                js/document.querySelector
+                                                (.. (closest ".block-embed"))
+                                                (. -firstChild)
+                                                (.getAttribute "data-uid")
+                                                (= (str parent-uid "-embed-" f-embed-id))))
+          context-root-uid            (get-in rfdb [:current-route :path-params :id])
+          do-nothing?                 (or parent-title
+                                          (not same-parent?)
+                                          (and same-parent? is-parent-root-embed?)
+                                          (= parent-uid context-root-uid))]
+      (js/console.debug ":unindent/multi local?" local?
+                        ", do-nothing?"          do-nothing?)
+      (when-not do-nothing?
+        (if local?
+          (let [unindent-multi-event  (common-events/build-unindent-multi-event -1
+                                                                                sanitized-selected-uids)
 
-
-(defn drop-link-child
-  "Create a new block with the reference to the source block, as a child"
-  [source target]
-  (let [new-uid               (gen-block-uid)
-        new-string            (str "((" (source :block/uid) "))")
-        new-source-block      {:block/uid new-uid :block/string new-string :block/order 0 :block/open true}
-        reindex-target-parent (inc-after (:db/id target) -1)
-        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
-        tx-data               [new-source-block
-                               new-target-parent]]
-    tx-data))
-
-
-(reg-event-fx
-  :drop-link/child
-  (fn [_ [_ source target]]
-    {:dispatch [:transact (drop-link-child source target)]}))
+                tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
+            (js/console.debug ":unindent/multi tx" (pr-str tx))
+            {:fx [[:dispatch [:transact tx]]]})
+          {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
 (defn drop-link-same-parent
@@ -1427,48 +1386,81 @@
     {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
 
 
-(defn drop-link-diff-parent
-  "Add a link to the source block and reorder the target"
-  [kind source target target-parent]
-  (let [new-uid             (gen-block-uid)
-        new-string          (str "((" (source :block/uid) "))")
-        t-order               (:block/order target)
-        new-block             {:block/uid new-uid :block/string new-string :block/order (if (= kind :above)
-                                                                                          t-order
-                                                                                          (inc t-order))}
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
-                                   (concat [new-block]))
-        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
-    [new-target-parent]))
-
-
-(reg-event-fx
-  :drop-link/diff
-  (fn [_ [_ kind source target target-parent]]
-    {:dispatch [:transact (drop-link-diff-parent kind source target target-parent)]}))
-
-
-(defn drop-child
-  "Order will always be 0"
-  [source source-parent target]
-  (let [new-source-block      {:block/uid (:block/uid source) :block/order 0}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (inc-after (:db/id target) -1)
-        retract               [:db/retract (:db/id source-parent) :block/children [:block/uid (:block/uid source)]]
-        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target) :block/children (conj reindex-target-parent new-source-block)}
-        tx-data               [retract
-                               new-source-parent
-                               new-target-parent]]
-    tx-data))
-
-
 (reg-event-fx
   :drop/child
-  (fn [_ [_ source source-parent target]]
-    {:dispatch [:transact (drop-child source source-parent target)]}))
+  (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":drop/child args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-child-event (common-events/build-drop-child-event -1
+                                                                     source-uid
+                                                                     target-uid)
+              tx               (resolver/resolve-event-to-tx @db/dsdb drop-child-event)]
+          (js/console.debug ":drop/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-child args]]]}))))
+
+
+(reg-event-fx
+  :drop-multi/child
+  (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
+    (js/console.debug ":drop-multi/child args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
+                                                                                 source-uids
+                                                                                 target-uid)
+              tx                     (resolver/resolve-event-to-tx @db/dsdb drop-multi-child-event)]
+          (js/console.debug ":drop-multi/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-child args]]]}))))
+
+
+(reg-event-fx
+  :drop-link/child
+  (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":drop-link/child args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-link-child-event (common-events/build-drop-link-child-event -1
+                                                                               source-uid
+                                                                               target-uid)
+              tx                    (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
+          (js/console.debug ":drop-link/child tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-link-child args]]]}))))
+
+
+(reg-event-fx
+  :drop/diff-parent
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop/diff-parent args" args)
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-diff-parent-event (common-events/build-drop-diff-parent-event -1
+                                                                                 drag-target
+                                                                                 source-uid
+                                                                                 target-uid)
+              tx                     (resolver/resolve-event-to-tx @db/dsdb drop-diff-parent-event)]
+          (js/console.debug ":drop/diff-parent tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-diff-parent args]]]}))))
+
+
+(reg-event-fx
+  :drop-link/diff-parent
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop-link/diff-parent args" args)
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [drop-link-diff-parent-event (common-events/build-drop-link-diff-parent-event -1
+                                                                                           drag-target
+                                                                                           source-uid
+                                                                                           target-uid)
+              tx                          (resolver/resolve-event-to-tx @db/dsdb drop-link-diff-parent-event)]
+          (js/console.debug ":drop-link/diff-parent tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))
 
 
 (defn between
@@ -1518,57 +1510,6 @@
   :drop/same
   (fn [_ [_ kind source parent target]]
     {:dispatch [:transact (drop-same-parent kind source parent target)]}))
-
-
-(defn drop-diff-parent
-  "- Give source-block target-block's order.
-  - inc-after target
-  - dec-after source"
-  [kind source source-parent target target-parent]
-  (let [t-order               (:block/order target)
-        new-block             {:db/id (:db/id source) :block/order (if (= kind :above)
-                                                                     t-order
-                                                                     (inc t-order))}
-        reindex-source-parent (dec-after (:db/id source-parent) (:block/order source))
-        reindex-target-parent (->> (inc-after (:db/id target-parent) (if (= kind :above)
-                                                                       (dec t-order)
-                                                                       t-order))
-                                   (concat [new-block]))
-        retract               [:db/retract (:db/id source-parent) :block/children (:db/id source)]
-        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}]
-    [retract
-     new-source-parent
-     new-target-parent]))
-
-
-(reg-event-fx
-  :drop/diff
-  (fn [_ [_ kind source source-parent target target-parent]]
-    {:dispatch [:transact (drop-diff-parent kind source source-parent target target-parent)]}))
-
-
-(defn drop-bullet
-  [source-uid target-uid kind effect-allowed]
-  (let [source        (db/get-block [:block/uid source-uid])
-        target        (db/get-block [:block/uid target-uid])
-        source-parent (db/get-parent [:block/uid source-uid])
-        target-parent (db/get-parent [:block/uid target-uid])
-        same-parent?  (= source-parent target-parent)
-        event         (cond
-                        (and (= effect-allowed "move") (= kind :child)) [:drop/child source source-parent target]
-                        (and (= effect-allowed "move") same-parent?) [:drop/same kind source source-parent target]
-                        (and (= effect-allowed "move") (not same-parent?)) [:drop/diff kind source source-parent target target-parent]
-                        (and (= effect-allowed "link") (= kind :child)) [:drop-link/child source target]
-                        (and (= effect-allowed "link") same-parent?) [:drop-link/same kind source source-parent target]
-                        (and (= effect-allowed "link") (not same-parent?)) [:drop-link/diff kind source target target-parent])]
-    {:dispatch event}))
-
-
-(reg-event-fx
-  :drop
-  (fn [_ [_ source-uid target-uid kind effect-allowed]]
-    (drop-bullet source-uid target-uid kind effect-allowed)))
 
 
 (defn drop-multi-same-parent-all
@@ -1681,33 +1622,6 @@
         tx-data                    (conj retracts new-target-parent #_new-source-parent)]
     (identity new-source-parent)
     tx-data))
-
-
-(defn drop-multi-child
-  [source-uids target]
-  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
-        source-parents        (mapv #(db/get-parent [:block/uid %]) source-uids)
-        last-source           (last source-blocks)
-        last-s-order          (:block/order last-source)
-        last-s-parent         (last source-parents)
-        new-source-blocks     (map-indexed (fn [idx x] {:block/uid (:block/uid x) :block/order idx})
-                                           source-blocks)
-        n                     (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
-        reindex-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
-        reindex-target-parent (plus-after (:db/id target) -1 n)
-        retracts              (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
-                                    source-uids
-                                    source-parents)
-        new-source-parent     {:db/id (:db/id last-s-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target) :block/children (concat reindex-target-parent new-source-blocks)}
-        tx-data               (conj retracts new-source-parent new-target-parent)]
-    tx-data))
-
-
-(reg-event-fx
-  :drop-multi/child
-  (fn [_ [_ source-uid target]]
-    {:dispatch [:transact (drop-multi-child source-uid target)]}))
 
 
 (reg-event-fx

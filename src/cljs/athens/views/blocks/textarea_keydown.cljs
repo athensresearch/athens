@@ -373,7 +373,7 @@
         selected-items                 @(subscribe [:selected/items])
         editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
-        [_ embed-id]                   (db/uid-and-embed-id editing-uid)]
+        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent {:uid              editing-uid

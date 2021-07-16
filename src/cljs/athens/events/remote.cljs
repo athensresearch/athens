@@ -505,6 +505,16 @@
 
 
 (rf/reg-event-fx
+  :remote/indent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/indent-multi args" args)
+    (let [last-seen-tx        (:remote/last-seen-tx db)
+          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/followup-unindent
   (fn [{db :db} [_ {:keys [event-id embed-id start end] :as args}]]
     (js/console.debug ":remote/followup-unindent args" (pr-str args))
@@ -531,6 +541,16 @@
       (js/console.debug ":remote/unindent event" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unindent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/unindent-multi args" args)
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
 
 
 (rf/reg-event-fx
@@ -571,3 +591,65 @@
                                                                          start
                                                                          value)]
       {:fx [[:dispatch [:remote/send-event! paste-verbatim-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-child
+  (fn [{db :db} [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-child args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-child-event (common-events/build-drop-child-event last-seen-tx
+                                                                 source-uid
+                                                                 target-uid)]
+      (js/console.debug ":remote/drop-child event" drop-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-multi-child
+  (fn [{db :db} [_ {:keys [source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-multi-child args" (pr-str args))
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          drop-multi-child-event (common-events/build-drop-multi-child-event last-seen-tx
+                                                                             source-uids
+                                                                             target-uid)]
+      (js/console.debug ":remote/drop-multi-child event" drop-multi-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-multi-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-child
+  (fn [{db :db} [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-link-child args" (pr-str args))
+    (let [last-seen-tx          (:remote/last-seen-tx db)
+          drop-link-child-event (common-events/build-drop-link-child-event last-seen-tx
+                                                                           source-uid
+                                                                           target-uid)]
+      (js/console.debug ":remote/drop-link-child event" drop-link-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-diff-parent
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-parent args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-parent-event  (common-events/build-drop-diff-parent-event last-seen-tx
+                                                                              drag-target
+                                                                              source-uid
+                                                                              target-uid)]
+      (js/console.debug ":remote/drop-diff-parent event" drop-diff-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-parent-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-diff-parent
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-link-diff-parent args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-link-diff-parent-event  (common-events/build-drop-link-diff-parent-event last-seen-tx
+                                                                                        drag-target
+                                                                                        source-uid
+                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-link-diff-parent event" drop-link-diff-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-diff-parent-event]]]})))
