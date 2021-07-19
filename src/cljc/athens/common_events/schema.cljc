@@ -1,14 +1,28 @@
 (ns athens.common-events.schema
   (:require
-    [malli.core  :as m]
-    [malli.error :as me]
-    [malli.util  :as mu]))
+    #?(:clj
+       [datahike.datom :as datom])
+    [malli.core        :as m]
+    [malli.error       :as me]
+    [malli.util        :as mu]))
 
 
-(def event-type
+(def event-type-presence
   [:enum
    :presence/hello
-   :presence/editing
+   :presence/editing])
+
+
+(def event-type-presence-server
+  [:enum
+   :presence/online
+   :presence/all-online
+   :presence/offline
+   :presence/broadcast-editing])
+
+
+(def event-type-graph
+  [:enum
    :datascript/create-page
    :datascript/rename-page
    :datascript/merge-page
@@ -22,17 +36,55 @@
    :datascript/unindent
    :datascript/paste-verbatim
    :datascript/indent
+   :datascript/indent-multi
+   :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
+   :datascript/drop-child
+   :datascript/drop-multi-child
+   :datascript/drop-link-child
+   :datascript/drop-diff-parent
+   :datascript/drop-link-diff-parent
    :datascript/left-sidebar-drop-above
-   :datascript/left-sidebar-drop-below])
+   :datascript/left-sidebar-drop-below
+   :datascript/unlinked-references-link
+   :datascript/unlinked-references-link-all])
+
+
+(def event-type-graph-server
+  [:enum
+   :datascript/tx-log
+   :datascript/db-dump])
 
 
 (def event-common
   [:map
-   [:event/id string?]
+   [:event/id uuid?]
    [:event/last-tx int?]
-   [:event/type event-type]])
+   [:event/type [:or
+                 event-type-presence
+                 event-type-graph]]])
+
+
+(def event-common-server
+  [:map
+   [:event/id uuid?]
+   [:event/last-tx int?]
+   [:event/type [:or
+                 event-type-graph
+                 event-type-graph-server
+                 event-type-presence-server]]])
+
+
+(defn dispatch
+  ([type args]
+   (dispatch type args false))
+  ([type args server?]
+   [type (mu/merge
+           (if server?
+             event-common-server
+             event-common)
+           args)]))
 
 
 (def presence-hello-args
@@ -56,7 +108,8 @@
   [:map
    [:event/args
     [:map
-     [:uid string?]
+     [:page-uid string?]
+     [:block-uid string?]
      [:title string?]]]])
 
 
@@ -97,7 +150,7 @@
   [:map
    [:event/args
     [:map
-     [:eid int?]
+     [:parent-uid string?]
      [:new-uid string?]]]])
 
 
@@ -119,12 +172,26 @@
      [:value string?]]]])
 
 
+(def datascript-indent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
+
+
 (def datascript-unindent
   [:map
    [:event/args
     [:map
      [:uid string?]
      [:value string?]]]])
+
+
+(def datascript-unindent-multi
+  [:map
+   [:event/args
+    [:map
+     [:uids [:vector string?]]]]])
 
 
 (def datascript-paste-verbatim
@@ -151,6 +218,48 @@
      [:uid string?]]]])
 
 
+(def datascript-drop-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uid string?
+      :target-uid string?]]]])
+
+
+(def datascript-drop-multi-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uids [:vector string?]
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-link-child
+  [:map
+   [:event/args
+    [:map
+     [:source-uid string?
+      :target-uid string?]]]])
+
+
+(def datascript-drop-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-link-diff-parent
+  [:map
+   [:event/args
+    [:map
+     [:drag-target keyword?
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
 (def datascript-left-sidebar-drop-above
   [:map
    [:event/args
@@ -167,65 +276,53 @@
      [:target-order int?]]]])
 
 
+(def datascript-unlinked-references-link
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:string string?]
+     [:title string?]]]])
+
+
+(def datascript-unlinked-references-link-all
+  [:map
+   [:event/args
+    [:map
+     [:unlinked-refs
+      [:sequential
+       [:map
+        [:block/string string?]
+        [:block/uid string?]]]]
+     [:title string?]]]])
+
+
 (def event
   [:multi {:dispatch :event/type}
-   [:presence/hello
-    (mu/merge event-common
-              presence-hello-args)]
-   [:presence/editing
-    (mu/merge event-common
-              presence-editing)]
-   [:datascript/create-page
-    (mu/merge event-common
-              datascript-create-page)]
-   [:datascript/rename-page
-    (mu/merge event-common
-              datascript-rename-page)]
-   [:datascript/merge-page
-    (mu/merge event-common
-              datascript-rename-page)] ; Same args as `datascript-rename-page`
-   [:datascript/delete-page
-    (mu/merge event-common
-              datascript-delete-page)]
-   [:datascript/block-save
-    (mu/merge event-common
-              datascript-block-save)]
-   [:datascript/new-block
-    (mu/merge event-common
-              datascript-new-block)]
-   [:datascript/add-child
-    (mu/merge event-common
-              datascript-add-child)]
-   [:datascript/open-block-add-child
-    (mu/merge event-common
-              datascript-add-child)] ; Same args as `datascript-add-child`
-   [:datascript/split-block
-    (mu/merge event-common
-              datascript-split-block)]
-   [:datascript/split-block-to-children
-    (mu/merge event-common
-              datascript-split-block)] ; same args as `datascript-split-block`
-   [:datascript/indent
-    (mu/merge event-common
-              datascript-indent)]
-   [:datascript/unindent
-    (mu/merge event-common
-              datascript-unindent)]
-   [:datascript/paste-verbatim
-    (mu/merge event-common
-              datascript-paste-verbatim)]
-   [:datascript/page-add-shortcut
-    (mu/merge event-common
-              datascript-page-add-shortcut)]
-   [:datascript/page-remove-shortcut
-    (mu/merge event-common
-              datascript-page-remove-shortcut)]
-   [:datascript/left-sidebar-drop-above
-    (mu/merge event-common
-              datascript-left-sidebar-drop-above)]
-   [:datascript/left-sidebar-drop-below
-    (mu/merge event-common
-              datascript-left-sidebar-drop-below)]])
+   (dispatch :presence/hello presence-hello-args)
+   (dispatch :presence/editing presence-editing)
+   (dispatch :datascript/create-page datascript-create-page)
+   (dispatch :datascript/rename-page datascript-rename-page)
+   ;; Same args as `datascript-rename-page`
+   (dispatch :datascript/merge-page datascript-rename-page)
+   (dispatch :datascript/delete-page datascript-delete-page)
+   (dispatch :datascript/block-save datascript-block-save)
+   (dispatch :datascript/new-block datascript-new-block)
+   (dispatch :datascript/add-child datascript-add-child)
+   ;; Same args as `datascript-add-child`
+   (dispatch :datascript/open-block-add-child datascript-add-child)
+   (dispatch :datascript/split-block datascript-split-block)
+   ;; same args as `datascript-split-block`
+   (dispatch :datascript/split-block-to-children datascript-split-block)
+   (dispatch :datascript/indent datascript-indent)
+   (dispatch :datascript/unindent datascript-unindent)
+   (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
+   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
+   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
+   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
+   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
+   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
+   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)])
 
 
 (def valid-event?
@@ -245,7 +342,7 @@
 
 (def event-response-common
   [:map
-   [:event/id string?]
+   [:event/id uuid?]
    [:event/status event-status]])
 
 
@@ -283,23 +380,6 @@
       (me/humanize)))
 
 
-(def server-event-types
-  [:enum
-   :datascript/tx-log
-   :datascript/db-dump
-   :presence/online
-   :presence/all-online
-   :presence/offline
-   :presence/broadcast-editing])
-
-
-(def server-event-common
-  [:map
-   [:event/id string?]
-   [:event/last-tx int?]
-   [:event/type server-event-types]])
-
-
 (def datom
   [:map
    [:e pos-int?]
@@ -314,7 +394,8 @@
    [:event/args
     [:map
      [:tx-data
-      [:vector datom]]
+      [:vector #?(:clj  [:fn datom/datom?]
+                  :cljs datom)]]
      [:tempids map?]]]])
 
 
@@ -323,7 +404,9 @@
    [:event/args
     [:map
      [:datoms
-      [:sequential datom]]]]])
+      ;; NOTE: this is because after serialization & deserialization data is represented differently
+      [:sequential #?(:clj  [:fn datom/datom?]
+                      :cljs datom)]]]]])
 
 
 (def user
@@ -358,18 +441,38 @@
 
 (def server-event
   [:multi {:dispatch :event/type}
-   [:datascript/tx-log (mu/merge server-event-common
-                                 tx-log)]
-   [:datascript/db-dump (mu/merge server-event-common
-                                  db-dump)]
-   [:presence/online (mu/merge server-event-common
-                               presence-online)]
-   [:presence/all-online (mu/merge server-event-common
-                                   presence-all-online)]
-   [:presence/offline (mu/merge server-event-common
-                                presence-offline)]
-   [:presence/broadcast-editing (mu/merge server-event-common
-                                          presence-broadcast-editing)]])
+   ;; client forwardable events
+   (dispatch :datascript/create-page datascript-create-page true)
+   (dispatch :datascript/rename-page datascript-rename-page true)
+   ;; Same args as `datascript-rename-page`
+   (dispatch :datascript/merge-page datascript-rename-page true)
+   (dispatch :datascript/delete-page datascript-delete-page true)
+   (dispatch :datascript/block-save datascript-block-save true)
+   (dispatch :datascript/new-block datascript-new-block true)
+   (dispatch :datascript/add-child datascript-add-child true)
+   ;; Same args as `datascript-add-child`
+   (dispatch :datascript/open-block-add-child datascript-add-child true)
+   (dispatch :datascript/split-block datascript-split-block true)
+   ;; same args as `datascript-split-block`
+   (dispatch :datascript/split-block-to-children datascript-split-block true)
+   (dispatch :datascript/indent datascript-indent true)
+   (dispatch :datascript/unindent datascript-unindent true)
+   (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
+   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
+   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
+   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
+   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
+   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)
+   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
+
+   ;; server specific graph events
+   (dispatch :datascript/tx-log tx-log true)
+   (dispatch :datascript/db-dump db-dump true)
+   ;; server specific presence events
+   (dispatch :presence/online presence-online true)
+   (dispatch :presence/all-online presence-all-online true)
+   (dispatch :presence/offline presence-offline true)
+   (dispatch :presence/broadcast-editing presence-broadcast-editing true)])
 
 
 (def valid-server-event?

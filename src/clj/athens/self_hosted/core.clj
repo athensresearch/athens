@@ -5,7 +5,6 @@
     [athens.self-hosted.components.config      :as cfg]
     [athens.self-hosted.components.datahike    :as datahike]
     [athens.self-hosted.components.nrepl       :as nrepl]
-    [athens.self-hosted.components.tx-listener :as tx-listener]
     [athens.self-hosted.components.web         :as web]
     [clojure.tools.logging                     :as log]
     [com.stuartsierra.component                :as component]))
@@ -21,8 +20,6 @@
                                   [:config])
     :webserver   (component/using (web/new-web-server)
                                   [:config :datahike])
-    :tx-listener (component/using (tx-listener/new-tx-listener)
-                                  [:datahike :webserver])
     :nrepl       (component/using (nrepl/new-nrepl-server)
                                   [:config])))
 

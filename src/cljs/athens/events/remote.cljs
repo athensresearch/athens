@@ -1,12 +1,13 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
-    [athens.common-events        :as common-events]
-    [athens.common-events.schema :as schema]
-    [athens.db                   :as db]
-    [malli.core                  :as m]
-    [malli.error                 :as me]
-    [re-frame.core               :as rf]))
+    [athens.common-events          :as common-events]
+    [athens.common-events.resolver :as resolver]
+    [athens.common-events.schema   :as schema]
+    [athens.db                     :as db]
+    [malli.core                    :as m]
+    [malli.error                   :as me]
+    [re-frame.core                 :as rf]))
 
 
 ;; Connection Management
@@ -173,40 +174,49 @@
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]
+        ;; TODO display alert?
         (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))))))
 
 
-;; Remote Datascript related events
+;; Remote graph related events
+
+(rf/reg-event-fx
+  :remote/apply-forwarded-event
+  (fn [{_db :db} [_ event]]
+    (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
+    (let [txs (resolver/resolve-event-to-tx @db/dsdb event)]
+      (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
+      {:fx [[:dispatch [:transact txs]]]})))
+
 
 ;; - Page related
 
 
 (rf/reg-event-fx
   :remote/followup-page-create
-  (fn [{db :db} [_ event-id]]
+  (fn [{db :db} [_ event-id shift?]]
     (js/console.debug ":remote/followup-page-create" event-id)
-    (let [{:keys [event]} (get-event-acceptance-info db event-id)
-          {:keys [uid]}   (:event/args event)
-          page-id         (db/e-by-av :block/uid uid)
-          page            (db/get-node-document page-id)
-          children        (:block/children page)
-          child-block-uid (-> children
-                              first
-                              :block/uid)]
-      (js/console.log ":remote/followup-page-create, child-block-uid" child-block-uid)
-      {:fx [[:dispatch-n [[:editing/uid child-block-uid]
+    (let [{:keys [event]}     (get-event-acceptance-info db event-id)
+          {:keys [page-uid
+                  block-uid]} (:event/args event)]
+      (js/console.log ":remote/followup-page-create, page-uid" page-uid)
+      {:fx [[:dispatch-n [(if shift?
+                            [:right-sidebar/open-item page-uid]
+                            [:navigate :page {:id page-uid}])
+                          [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
 
 
 (rf/reg-event-fx
   :remote/page-create
-  (fn [{db :db} [_ uid title]]
+  (fn [{db :db} [_ page-uid  block-uid title shift?]]
     (let [last-seen-tx                 (:remote/last-seen-tx db)
           {event-id :event/id
            :as      page-create-event} (common-events/build-page-create-event last-seen-tx
-                                                                              uid
+                                                                              page-uid
+                                                                              block-uid
                                                                               title)
-          followup-fx                  [[:dispatch [:remote/followup-page-create event-id]]]]
+          followup-fx                  [[:dispatch [:remote/followup-page-create event-id shift?]]]]
       (js/console.debug ":remote/page-create" (pr-str page-create-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! page-create-event]]]]})))
@@ -214,7 +224,7 @@
 
 (rf/reg-event-fx
   :remote/followup-page-rename
-  (fn [{db :db} [_ event-id callback]]
+  (fn [{_db :db} [_ event-id callback]]
     (js/console.debug ":remote/followup-page-rename" event-id)
     {:fx [[:invoke-callback callback]]}))
 
@@ -236,7 +246,7 @@
 
 (rf/reg-event-fx
   :remote/followup-page-merge
-  (fn [{db :db} [_ event-id callback]]
+  (fn [{_db :db} [_ event-id callback]]
     (js/console.debug ":remote/followup-page-merge" event-id)
     {:fx [[:invoke-callback callback]]}))
 
@@ -280,7 +290,7 @@
   (fn [{db :db} [_ uid]]
     (let [last-seen-tx          (:remote/last-seen-tx db)
           remove-shortcut-event (common-events/build-page-remove-shortcut last-seen-tx uid)]
-      (js/console.debug ":page/remove-shortcut:" (pr-str remove-shortcut-event))
+      (js/console.debug ":remote/page-remove-shortcut:" (pr-str remove-shortcut-event))
       {:fx [[:dispatch [:remote/send-event! remove-shortcut-event]]]})))
 
 
@@ -300,6 +310,24 @@
           left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below last-seen-tx source-order target-order)]
       (js/console.debug ":remote/left-sidebar-drop-below" (pr-str left-sidebar-drop-below-event))
       {:fx [[:dispatch [:remote/send-event! left-sidebar-drop-below-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unlinked-references-link
+  (fn [{db :db} [_ string uid title]]
+    (let [last-seen-tx                   (:remote/last-seen-tx db)
+          unlinked-references-link-event (common-events/build-unlinked-references-link last-seen-tx uid string title)]
+      (js/console.debug ":remote/unlinked-references-link:" (pr-str unlinked-references-link-event))
+      {:fx [[:dispatch [:remote/send-event! unlinked-references-link-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unlinked-references-link-all
+  (fn [{db :db} [_ unlinked-refs title]]
+    (let [last-seen-tx                       (:remote/last-seen-tx db)
+          unlinked-references-link-all-event (common-events/build-unlinked-references-link-all last-seen-tx unlinked-refs title)]
+      (js/console.debug ":remote/unlinked-references-link-all:" (pr-str unlinked-references-link-all-event))
+      {:fx [[:dispatch [:remote/send-event! unlinked-references-link-all-event]]]})))
 
 
 ;; - Block related
@@ -369,11 +397,11 @@
 
 (rf/reg-event-fx
   :remote/add-child
-  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-add-child-event last-seen-tx
-                                                                          block-eid
+                                                                          parent-uid
                                                                           new-uid)
           followup-fx                [[:dispatch [:remote/followup-add-child {:event-id event-id
                                                                               :embed-id embed-id}]]]]
@@ -396,11 +424,11 @@
 
 (rf/reg-event-fx
   :remote/open-block-add-child
-  (fn [{db :db} [_ {:keys [block-eid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-open-block-add-child-event last-seen-tx
-                                                                                     block-eid
+                                                                                     parent-uid
                                                                                      new-uid)
           followup-fx                [[:dispatch [:remote/followup-open-block-add-child {:event-id event-id
                                                                                          :embed-id embed-id}]]]]
@@ -495,6 +523,16 @@
 
 
 (rf/reg-event-fx
+  :remote/indent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/indent-multi args" args)
+    (let [last-seen-tx        (:remote/last-seen-tx db)
+          indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/followup-unindent
   (fn [{db :db} [_ {:keys [event-id embed-id start end] :as args}]]
     (js/console.debug ":remote/followup-unindent args" (pr-str args))
@@ -521,6 +559,16 @@
       (js/console.debug ":remote/unindent event" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/unindent-multi
+  (fn [{db :db} [_ {:keys [uids] :as args}]]
+    (js/console.debug ":remote/unindent-multi args" args)
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids)]
+      (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
+      {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
 
 
 (rf/reg-event-fx
@@ -561,3 +609,65 @@
                                                                          start
                                                                          value)]
       {:fx [[:dispatch [:remote/send-event! paste-verbatim-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-child
+  (fn [{db :db} [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-child args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-child-event (common-events/build-drop-child-event last-seen-tx
+                                                                 source-uid
+                                                                 target-uid)]
+      (js/console.debug ":remote/drop-child event" drop-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-multi-child
+  (fn [{db :db} [_ {:keys [source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-multi-child args" (pr-str args))
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          drop-multi-child-event (common-events/build-drop-multi-child-event last-seen-tx
+                                                                             source-uids
+                                                                             target-uid)]
+      (js/console.debug ":remote/drop-multi-child event" drop-multi-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-multi-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-child
+  (fn [{db :db} [_ {:keys [source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-link-child args" (pr-str args))
+    (let [last-seen-tx          (:remote/last-seen-tx db)
+          drop-link-child-event (common-events/build-drop-link-child-event last-seen-tx
+                                                                           source-uid
+                                                                           target-uid)]
+      (js/console.debug ":remote/drop-link-child event" drop-link-child-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-diff-parent
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-parent args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-parent-event  (common-events/build-drop-diff-parent-event last-seen-tx
+                                                                              drag-target
+                                                                              source-uid
+                                                                              target-uid)]
+      (js/console.debug ":remote/drop-diff-parent event" drop-diff-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-parent-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-diff-parent
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":remote/drop-link-diff-parent args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-link-diff-parent-event  (common-events/build-drop-link-diff-parent-event last-seen-tx
+                                                                                        drag-target
+                                                                                        source-uid
+                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-link-diff-parent event" drop-link-diff-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-diff-parent-event]]]})))
