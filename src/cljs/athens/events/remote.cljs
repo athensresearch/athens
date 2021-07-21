@@ -636,7 +636,7 @@
   (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
     (js/console.debug ":remote/drop-diff-source-same-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
-          drop-diff-source-same-parents-event  (common-events/build-drop-diff-source-same-parents-event last-seen-tx
+          drop-diff-source-same-parents-event  (common-events/build-drop-multi-diff-source-same-parents-event last-seen-tx
                                                                                                         drag-target
                                                                                                         source-uids
                                                                                                         target-uid)]
@@ -649,7 +649,7 @@
   (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
     (js/console.debug ":remote/drop-diff-source-diff-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
-          drop-diff-source-diff-parents-event  (common-events/build-drop-diff-source-diff-parents-event last-seen-tx
+          drop-diff-source-diff-parents-event  (common-events/build-drop-multi-diff-source-diff-parents-event last-seen-tx
                                                                                                         drag-target
                                                                                                         source-uids
                                                                                                         target-uid)]

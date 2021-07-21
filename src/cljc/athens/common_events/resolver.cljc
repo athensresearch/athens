@@ -656,44 +656,122 @@
     tx-data))
 
 
+(defn add-new-blocks
+  "Given a vector of blocks add more blocks to it"
+  [current-blocks add-these-blocks add-to-index]
+  (let [current-blocks-count (count current-blocks)
+        end-index            (if (> add-to-index
+                                    current-blocks-count)
+                               current-blocks-count
+                               add-to-index)
+        blocks-vec           (vec current-blocks)
+        head                 (subvec blocks-vec
+                                     0
+                                     end-index)
+        tail                 (subvec blocks-vec
+                                     end-index)
+        new-blocks-vec       (concat head
+                                     add-these-blocks
+                                     tail)]
+    new-blocks-vec))
+
+
+(defn retract
+  "retract blocks"
+  [db selected-uids]
+  (let [parents-of-selected-uids  (mapv
+                                    #(common-db/get-parent db [:block/uid %])
+                                    selected-uids)]
+    (map (fn [uid parent]
+           [:db/retract     (:db/id parent)
+            :block/children [:block/uid uid]])
+         selected-uids
+         parents-of-selected-uids)))
+
+
+(defn reindex
+  "reindex blocks"
+  [blocks start-index-for-reindex end-index-for-reindex base-value]
+  (let [blocks-vec         (vec blocks)
+        head               (subvec blocks-vec
+                                   0
+                                   start-index-for-reindex)
+        blocks-vec-count   (count blocks-vec)
+        end-index          (if (>= end-index-for-reindex
+                                  blocks-vec-count)
+                             blocks-vec-count
+                             (+ 1 end-index-for-reindex))
+        tail               (subvec blocks-vec
+                                   end-index)
+        blocks-to-reindex  (subvec blocks-vec
+                                   start-index-for-reindex
+                                   end-index)
+        reindexed-blocks   (map-indexed
+                             (fn [idx block]
+                               (let [new-order (+ idx base-value)]
+                                 {:block/uid   (:block/uid block)
+                                  :block/order new-order}))
+                             blocks-to-reindex)
+        updated-blocks-vec (concat head
+                                   reindexed-blocks
+                                   tail)]
+    updated-blocks-vec))
+
+
 (defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-same-parents
   [db {:event/keys [args]}]
-  ;; How is this different from the above event?
-  ;; Here we don't need to reindex both the source and target parent because they are both
-  ;; same, so here we just reindex the target's parent and transact that.
-  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
+  ;; Given some selected blocks we need to
+  ;; - Remove these blocks from their parents
+  ;; - Add the selected blocks to some location under the target's parent
+  ;; - Reindex the blocks
+  ;; - Retract the selected blocks
+  (println "resolver :datascript/drop-multi-diff-source-same-parents args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
-                target-uid]}                 args
-        {target-block-order :block/order}    (common-db/get-block db [:block/uid target-uid])
-        {target-parent-eid :db/id}           (common-db/get-parent db [:block/uid target-uid])
-        filtered-children                    (->> (common-db/get-children-not-in-selected-uids db
-                                                                                               target-uid
-                                                                                               source-uids)
-                                                  (sort-by :block/order)
-                                                  (mapv #(:block/uid %)))
-        index                                (cond
-                                               (= drag-target :above) target-block-order
-                                               (= drag-target :below) (inc target-block-order))
-        total-children                       (count filtered-children)
-        head                                 (subvec filtered-children 0 index)
-        tail                                 (subvec filtered-children index total-children)
-        new-vec                              (concat head
-                                                     source-uids
-                                                     tail)
-        new-source-uids                      (map-indexed (fn [idx uid] {:block/uid uid :block/order idx})
-                                                          new-vec)
-        source-parents                       (mapv #(common-db/get-parent db [:block/uid %])
-                                                   source-uids)
-        retracts                             (mapv
-                                               (fn [uid parent] [:db/retract     (:db/id parent)
-                                                                 :block/children [:block/uid uid]])
-                                               source-uids
-                                               source-parents)
-        new-target-parent                    {:db/id          target-parent-eid
-                                              :block/children new-source-uids}
-        tx-data                              (conj retracts
-                                                   new-target-parent)]
+                target-uid]}                    args
+        {target-block-order :block/order}       (common-db/get-block db [:block/uid target-uid])
+        target-index                            (cond
+                                                  (= drag-target :above) target-block-order
+                                                  (= drag-target :below) (inc target-block-order))
+        {target-parent-eid :db/id}               (common-db/get-parent db [:block/uid target-uid])
+        selected-blocks                         (map #(common-db/get-block db [:block/uid %]) source-uids)
+        uid-of-blocks-to-remove-but-not-retract (filter
+                                                  (fn [block-uid]
+                                                    (let [
+                                                          block-parent-eid (:db/id (common-db/get-parent db [:block/uid block-uid]))]
+                                                      (if (= block-parent-eid
+                                                             target-parent-eid)
+                                                        block-uid)))
+                                                  source-uids)
+        first-block-to-remove-order             (:block/order (common-db/get-block db [:block/uid (first uid-of-blocks-to-remove-but-not-retract)]))
+        uid-of-blocks-to-retract                (clojure.set/difference (set source-uids)
+                                                                        (set uid-of-blocks-to-remove-but-not-retract))
+        retracted-blocks                        (retract db uid-of-blocks-to-retract)
+        remove-blocks-under-target-parent       (->> (common-db/get-children-not-in-selected-uids db
+                                                                                                  target-uid
+                                                                                                  uid-of-blocks-to-remove-but-not-retract)
+                                                     (sort-by :block/order))
+        new-target-index                        (if (> first-block-to-remove-order
+                                                       target-index)
+                                                  target-index
+                                                  (- target-index
+                                                     (count uid-of-blocks-to-remove-but-not-retract)))
+        rearranged-blocks                       (add-new-blocks remove-blocks-under-target-parent
+                                                                selected-blocks
+                                                                new-target-index)
+        lower-bound-to-reindex                  (if (> first-block-to-remove-order
+                                                       target-index)
+                                                  target-index
+                                                  first-block-to-remove-order)
+        upper-bound-to-reindex                  (count rearranged-blocks)
+        reindexed-blocks                        (reindex rearranged-blocks
+                                                         lower-bound-to-reindex
+                                                         upper-bound-to-reindex
+                                                         lower-bound-to-reindex)
+        new-parent                               {:db/id          target-parent-eid
+                                                  :block/children reindexed-blocks}
+        tx-data                                  (conj retracted-blocks
+                                                       new-parent)]
     (println "resolver :datascript/drop-multi-diff-source-same-parents tx-data" tx-data)
     tx-data))
 
