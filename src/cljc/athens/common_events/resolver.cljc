@@ -41,20 +41,20 @@
 
 (defmethod resolve-event-to-tx :datascript/create-page
   [_db {:event/keys [args]}]
-  (let [{:keys [uid
+  (let [{:keys [page-uid
+                block-uid
                 title]} args
         now             (now-ts)
-        child-uid       (gen-block-uid)
         child           {:db/id        -2
                          :block/string ""
-                         :block/uid    child-uid
+                         :block/uid    block-uid
                          :block/order  0
                          :block/open   true
                          :create/time  now
                          :edit/time    now}
         page-tx         {:db/id          -1
                          :node/title     title
-                         :block/uid      uid
+                         :block/uid      page-uid
                          :block/children [child]
                          :create/time    now
                          :edit/time      now}]
@@ -67,8 +67,7 @@
                 old-name
                 new-name]} args
         linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
-        linked-ref-blocks  (mapcat second linked-refs)
-        new-linked-refs    (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        new-linked-refs    (common-db/map-new-refs linked-refs old-name new-name)
         new-page           {:db/id      [:block/uid uid]
                             :node/title new-name}
         new-datoms         (concat [new-page] new-linked-refs)]
@@ -83,8 +82,7 @@
                 old-name
                 new-name]}              args
         linked-refs                     (common-db/get-linked-refs-by-page-title db old-name)
-        linked-ref-blocks               (mapcat second linked-refs)
-        new-linked-refs                 (common-db/map-new-refs linked-ref-blocks old-name new-name)
+        new-linked-refs                 (common-db/map-new-refs linked-refs old-name new-name)
         {old-page-kids :block/children} (common-db/get-page-document db [:block/uid uid])
         new-parent-uid                  (common-db/get-page-uid-by-title db new-name)
         existing-page-block-count       (common-db/existing-block-count db new-name)
@@ -153,7 +151,7 @@
 
 (defmethod resolve-event-to-tx :datascript/add-child
   [db {:event/keys [args]}]
-  (let [{:keys [eid
+  (let [{:keys [parent-uid
                 new-uid]} args
         new-child         {:db/id        -1
                            :block/uid    new-uid
@@ -161,25 +159,25 @@
                            :block/order  0
                            :block/open   true}
         reindex           (concat [new-child]
-                                  (common-db/inc-after db eid -1))
-        new-block         {:db/id          eid
+                                  (common-db/inc-after db [:block/uid parent-uid] -1))
+        new-block         {:block/uid      parent-uid
                            :block/children reindex}
         tx-data           [new-block]]
-    (println "resolver :datascript/add-child" eid new-uid "=>" (pr-str tx-data))
+    (println "resolver :datascript/add-child" parent-uid new-uid "=>" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/open-block-add-child
   [db {:event/keys [args]}]
-  (let [{:keys [eid
+  (let [{:keys [parent-uid
                 new-uid]} args
-        open-block-tx     [:db/add eid :block/open true]
+        open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
         ;; delegate add-child-tx creation
         add-child-tx      (resolve-event-to-tx db
                                                {:event/type :datascript/add-child
                                                 :event/args args})
         tx-data           (apply conj [open-block-tx] add-child-tx)]
-    (println ":datascript/open-block-add-child" eid new-uid)
+    (println ":datascript/open-block-add-child" parent-uid new-uid)
     tx-data))
 
 
@@ -277,17 +275,19 @@
         older-sib           (common-db/get-older-sib db first-uid)
         n-sib               (count (:block/children older-sib))
         new-blocks          (map-indexed
-                              (fn [idx x] {:db/id       (:db/id x)
-                                           :block-order (+ idx n-sib)})
+                              (fn [idx x]
+                                {:db/id       (:db/id x)
+                                 :block/order (+ idx n-sib)})
                               blocks)
         new-older-sib       {:db/id          (:db/id older-sib)
                              :block/children new-blocks
-                             :block-open     true}
+                             :block/open     true}
         reindex             (common-db/minus-after db parent-eid last-block-order n-blocks)
         new-parent          {:db/id          parent-eid
                              :block/children reindex}
-        retracts            (mapv (fn [x] [:db/retract     parent-eid
-                                           :block/children (:db/id x)])
+        retracts            (mapv (fn [x]
+                                    [:db/retract     parent-eid
+                                     :block/children (:db/id x)])
                                   blocks)
         tx-data              (conj retracts
                                    new-older-sib
@@ -334,15 +334,17 @@
         reindex-parent               (common-db/minus-after db  parent-eid last-block-order n-blocks)
         new-parent                   {:db/id          parent-eid
                                       :block/children reindex-parent}
-        new-blocks                   (map-indexed (fn [idx uid] {:block/uid   uid
-                                                                 :block/order (+ idx (inc parent-order))})
+        new-blocks                   (map-indexed (fn [idx uid]
+                                                    {:block/uid   uid
+                                                     :block/order (+ idx (inc parent-order))})
                                                   uids)
         {grandpa-eid :db/id}          (common-db/get-parent db parent-eid)
         reindex-grandpa               (concat
                                         new-blocks
                                         (common-db/plus-after db grandpa-eid parent-order n-blocks))
-        retracts                      (mapv (fn [x] [:db/retract     parent-eid
-                                                     :block/children (:db/id x)])
+        retracts                      (mapv (fn [x]
+                                              [:db/retract     parent-eid
+                                               :block/children (:db/id x)])
                                             blocks)
         new-grandpa                    {:db/id          grandpa-eid
                                         :block/children reindex-grandpa}
@@ -472,8 +474,9 @@
         {last-source-order :block/order}    (last source-blocks)
         {last-source-parent-uid :block/uid
          last-source-parent-eid :db/id}     (last source-parents)
-        new-source-blocks                   (map-indexed (fn [idx x] {:block/uid   (:block/uid x)
-                                                                      :block/order idx})
+        new-source-blocks                   (map-indexed (fn [idx x]
+                                                           {:block/uid   (:block/uid x)
+                                                            :block/order idx})
                                                          source-blocks)
         n                                   (count (filter (fn [x] (= (:block/uid x) last-source-parent-uid))
                                                            source-parents))
@@ -485,8 +488,9 @@
                                                                    target-eid
                                                                    -1
                                                                    n)
-        retracts                            (mapv (fn [uid parent] [:db/retract     (:db/id parent)
-                                                                    :block/children [:block/uid uid]])
+        retracts                            (mapv (fn [uid parent]
+                                                    [:db/retract     (:db/id parent)
+                                                     :block/children [:block/uid uid]])
                                                   source-uids
                                                   source-parents)
         new-source-parent                   {:db/id          last-source-parent-eid
@@ -811,7 +815,6 @@
     tx-data))
 
 
-    
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [args]}]
   (let [{:keys [source-order target-order]}  args
@@ -855,4 +858,25 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/unlinked-references-link
+  [_ {:event/keys [args]}]
+  (let [{:keys [uid string title]} args
+        ignore-case-title          (re-pattern (str "(?i)" title))
+        new-str                    (string/replace string ignore-case-title (str "[[" title "]]"))
+        tx-data                    [{:db/id [:block/uid uid] :block/string new-str}]]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/unlinked-references-link-all
+  [_ {:event/keys [args]}]
+  (let [{:keys [unlinked-refs title]} args
+        tx-data (mapv
+                  (fn [{:block/keys [string uid]}]
+                    (let [ignore-case-title (re-pattern (str "(?i)" title))
+                          new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                      {:db/id [:block/uid uid] :block/string new-str}))
+                  unlinked-refs)]
     tx-data))

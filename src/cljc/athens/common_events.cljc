@@ -1,12 +1,23 @@
 (ns athens.common-events
-  "Event as Verbs executed on Knowledge Graph")
+  "Event as Verbs executed on Knowledge Graph"
+  #?(:clj
+     (:import
+       (java.util
+         UUID))))
 
 
 ;; helpers
 
+#?(:clj
+   (defn random-uuid
+     "CLJ shim for CLJS `random-uuid`."
+     []
+     (UUID/randomUUID)))
+
+
 (defn- gen-event-id
   []
-  (str (gensym "eid-")))
+  (random-uuid))
 
 
 ;; building events
@@ -60,14 +71,15 @@
 ;;   - page events
 
 (defn build-page-create-event
-  "Builds `:datascript/create-page` event with `uid` and `title` of page."
-  [last-tx uid title]
+  "Builds `:datascript/create-page` event with `page-uid`, `block-uid` and `title` of page."
+  [last-tx page-uid block-uid title]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/create-page
-     :event/args    {:uid   uid
-                     :title title}}))
+     :event/args    {:page-uid  page-uid
+                     :block-uid block-uid
+                     :title     title}}))
 
 
 (defn build-page-rename-event
@@ -162,28 +174,28 @@
 
 (defn build-add-child-event
   "Builds `:datascript/add-child` event with:
-  - `eid`: `:db/id` of parent block
-  -`new-uid`: new child's block uid"
-  [last-tx eid new-uid]
+  - `parent-uid`: `:block/uid` of parent block
+  - `new-uid`: new child's block uid"
+  [last-tx parent-uid new-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/add-child
-     :event/args    {:eid     eid
-                     :new-uid new-uid}}))
+     :event/args    {:parent-uid parent-uid
+                     :new-uid    new-uid}}))
 
 
 (defn build-open-block-add-child-event
   "Builds `:datascript/open-block-add-child` event with:
-  - `eid`: `:db/id` of parent block
+  - `parent-uid`: `:block/uid` of parent block
   - `new-uid`: `:block/uid` for new block"
-  [last-tx eid new-uid]
+  [last-tx parent-uid new-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/open-block-add-child
-     :event/args    {:eid     eid
-                     :new-uid new-uid}}))
+     :event/args    {:parent-uid parent-uid
+                     :new-uid    new-uid}}))
 
 
 (defn build-split-block-event
@@ -292,7 +304,6 @@
                      :target-order target-order}}))
 
 
-
 (defn build-indent-event
   "Builds `: `datascript/indent` event with:
   - `uid`  : `:block/uid` of triggering block
@@ -328,6 +339,34 @@
      :event/type    :datascript/bump-up
      :event/args    {:uid     uid
                      :new-uid new-uid}}))
+
+
+(defn build-unlinked-references-link
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `uid`:  `:block/uid` of the block with unlinked reference
+  - `string `: content of the block
+  - `title  `: title of the page"
+  [last-tx uid string title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link
+     :event/args    {:uid    uid
+                     :string string
+                     :title  title}}))
+
+
+(defn build-unlinked-references-link-all
+  "Builds `:datascript/unlinked-references-link` event with:
+  - `unlinked-refs`: list of maps that contains the :block/string and :block/uid of unlinked refs
+  - `title        `: title of the page in which the unlinked refs will be linked"
+  [last-tx unlinked-refs title]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/unlinked-references-link-all
+     :event/args    {:unlinked-refs unlinked-refs
+                     :title         title}}))
 
 
 (defn build-drop-child-event
@@ -490,9 +529,9 @@
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/all-online
-     :event/args    (into {} (mapv (fn [username]
-                                     {:username username})
-                                   clients))}))
+     :event/args     (mapv (fn [username]
+                             {:username username})
+                           clients)}))
 
 
 (defn build-presence-offline-event

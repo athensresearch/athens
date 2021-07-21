@@ -483,6 +483,7 @@
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
                                                           (dispatch [:selected/add-items children]))
+
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
@@ -525,10 +526,13 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (athens.util/gen-block-uid)
+                                            block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/create {:title     link
+                                                                 :page-uid  page-uid
+                                                                 :block-uid block-uid
+                                                                 :shift?    shift}]))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
@@ -537,10 +541,13 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (athens.util/gen-block-uid)
+                                            block-uid (athens.util/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/create {:title     link
+                                                                 :page-uid  page-uid
+                                                                 :block-uid block-uid
+                                                                 :shift?    shift}]))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

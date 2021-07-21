@@ -525,22 +525,28 @@
 (reg-event-fx
   :daily-note/prev
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items (fn [items]
-                                                 (into [uid] items)))]
+    (let [new-db    (update db :daily-notes/items (fn [items]
+                                                    (into [uid] items)))
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
   :daily-note/next
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db (update db :daily-notes/items conj uid)]
+    (let [new-db    (update db :daily-notes/items conj uid)
+          block-uid (gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
-        {:db        new-db
-         :dispatch [:page/create title uid]}))))
+        {:db       new-db
+         :dispatch [:page/create {:title     title
+                                  :page-uid  uid
+                                  :block-uid block-uid}]}))))
 
 
 (reg-event-fx
@@ -652,24 +658,23 @@
 
 (reg-event-fx
   :page/create
-  (fn [_ [_ title uid]]
-    (js/console.debug ":page/create" title uid)
+  (fn [_ [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
+    (js/console.debug ":page/create args" (pr-str args))
     (let [local? (not (client/open?))]
       (js/console.debug ":page/create local?" local?)
       (if local?
         (let [create-page-event (common-events/build-page-create-event -1
-                                                                       uid
+                                                                       page-uid
+                                                                       block-uid
                                                                        title)
-              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)
-              child-uid         (-> tx
-                                    first ; page
-                                    :block/children
-                                    first ; 1st child
-                                    :block/uid)]
+              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              [:editing/uid child-uid]]]]})
+                              (if shift?
+                                [:right-sidebar/open-item page-uid]
+                                [:navigate :page {:id page-uid}])
+                              [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
-               [:remote/page-create uid title]]]}))))
+               [:remote/page-create page-uid block-uid title shift?]]]}))))
 
 
 (reg-event-fx
@@ -1036,15 +1041,15 @@
       (js/console.debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
-                                                                   (:db/id block)
+                                                                   (:block/uid block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb add-child-event)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/add-child {:block-eid (:remote/db-id block)
-                                             :new-uid   new-uid
-                                             :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/add-child {:parent-uid (:block/uid block)
+                                             :new-uid    new-uid
+                                             :embed-id   embed-id}]]]}))))
 
 
 (reg-event-fx
@@ -1093,18 +1098,18 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/open-block-add-child local?" local?)
       (if local?
-        (let [block-eid                  (:db/id block)
+        (let [block-uid                  (:block/uid block)
               open-block-add-child-event (common-events/build-open-block-add-child-event -1
-                                                                                         block-eid
+                                                                                         block-uid
                                                                                          new-uid)
               tx                         (resolver/resolve-event-to-tx @db/dsdb open-block-add-child-event)]
           (js/console.debug ":enter/open-block-add-child tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/open-block-add-chilid {:block-eid (:remote/db-id block)
-                                                         :new-uid   new-uid
-                                                         :embed-id  embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/open-block-add-chilid {:parent-uid (:block/uid block)
+                                                         :new-uid    new-uid
+                                                         :embed-id   embed-id}]]]}))))
 
 
 (defn enter
@@ -1240,7 +1245,6 @@
                                                    :value value})]]]})))))
 
 
-
 (reg-event-fx
   :indent/multi
   (fn [_ [_ {:keys [uids]}]]
@@ -1252,8 +1256,8 @@
           first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
           block-zero?              (zero? first-block-order)]
       (js/console.debug ":indent/multi local?"       local?
-                              ", same-parent?"       same-parent?
-                              ", not block-zero?"    (not  block-zero?))
+                        ", same-parent?"       same-parent?
+                        ", not block-zero?"    (not  block-zero?))
       (when (and same-parent? (not block-zero?))
         (if local?
           (let [indent-multi-event  (common-events/build-indent-multi-event -1
@@ -1264,11 +1268,9 @@
           {:fx [[:dispatch [:remote/indent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
-
-
 (reg-event-fx
   :unindent
-  (fn [{rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [{_rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
     (js/console.debug ":unindent args" (pr-str args))
     (let [local?                    (not (client/open?))
           parent                    (common-db/get-parent @db/dsdb
@@ -1338,7 +1340,6 @@
             (js/console.debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
-
 
 
 
@@ -1537,6 +1538,7 @@
     (identity new-source-parent)
     tx-data))
 
+
 (reg-event-fx
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
@@ -1674,31 +1676,27 @@
         {:fx [[:dispatch [:remote/paste-verbatim uid text start value]]]}))))
 
 
-(defn link-unlinked-reference
-  "Ignores case. If title is `test`:
-  test 1     -> [[test 1]]
-  TEST 10    -> [[test 10]]
-  [[attest]] -> [[at[[test]]`"
-  [string title]
-  (let [ignore-case-title (re-pattern (str "(?i)" title))
-        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
-    new-str))
-
-
 (reg-event-fx
   :unlinked-references/link
-  (fn [_ [_ block title]]
-    (let [{:block/keys [string uid]} block
-          new-str (link-unlinked-reference string title)]
-      {:dispatch [:transact [{:db/id [:block/uid uid] :block/string new-str}]]})))
+  (fn [_ [_ {:block/keys [string uid]} title]]
+    (js/console.debug ":unlinked-references/link:" uid)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":unlinked-references/link: local?" local?)
+      (if local?
+        (let [unlinked-references-link-event (common-events/build-unlinked-references-link -1 uid string title)
+              tx-data                        (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        {:fx [[:dispatch [:remote/unlinked-references-link string uid title]]]}))))
 
 
 (reg-event-fx
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
-    (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second)
-                               (map (fn [{:block/keys [string uid]}]
-                                      (let [new-str (link-unlinked-reference string title)]
-                                        {:db/id [:block/uid uid] :block/string new-str}))))]
-      {:dispatch [:transact new-str-tx-data]})))
+    (js/console.debug ":unlinked-references/link:" title)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":unlinked-references/link: local?" local?)
+      (if local?
+        (let [unlinked-references-link-all-event (common-events/build-unlinked-references-link-all -1 unlinked-refs title)
+              tx-data                            (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-all-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        {:fx [[:dispatch [:remote/unlinked-references-link-all unlinked-refs title]]]}))))

@@ -452,8 +452,13 @@
          (when (and unlinked? (not-empty @unlinked-refs))
            [button {:style    {:font-size "14px"}
                     :on-click (fn []
-                                (dispatch [:unlinked-references/link-all @unlinked-refs title])
+                                (let [unlinked-str-ids (->> @unlinked-refs
+                                                            (mapcat second)
+                                                            (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                  (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
+
                                 (swap! state assoc unlinked? false)
+
                                 (reset! unlinked-refs []))}
             "Link All"])]]
        (when (get @state unlinked?)
