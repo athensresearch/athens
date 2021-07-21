@@ -790,25 +790,26 @@
   :undo
   (fn [_ _]
     (js/console.debug ":undo")
-    (if-let [local? (not (client/open?))]
-      (let [undo-event (common-events/build-undo-redo-event -1 false)
-            tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
-        (js/console.log ":undo")
-        (js/console.debug ":undo: local?" local?)
-        {:fx [[:dispatch [:transact tx-data]]]})
-      false)))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":undo: local?" local?)
+      (if local?
+        (let [undo-event (common-events/build-undo-redo-event -1 false)
+              tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        false))))
 
 
 (reg-event-fx
   :redo
   (fn [_ _]
     (js/console.debug ":redo")
-    (if-let [local? (not (client/open?))]
-      (let [redo-event (common-events/build-undo-redo-event -1 true)
-            tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
-        (js/console.debug ":redo: local?" local?)
-        {:fx [[:dispatch [:transact tx-data]]]})
-      false)))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":redo: local?" local?)
+      (if local?
+        (let [redo-event (common-events/build-undo-redo-event -1 true)
+              tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        false))))
 
 
 (defn prev-block-uid-without-presence-recursively

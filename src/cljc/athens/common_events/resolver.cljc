@@ -680,7 +680,8 @@
     (cond->> datoms
       (not redo?) reverse
       true (map (fn [datom]
-                  (let [[id attr val _txn sig?] (vec datom)]
+                  (let [[id attr val _txn sig?] #?(:clj datom
+                                                   :cljs (vec datom))]
                     [(cond
                        (and sig? (not redo?)) :db/retract
                        (and (not sig?) (not redo?)) :db/add
@@ -693,6 +694,7 @@
       ;;     - Unless we are exporting transit to a common format, this can stay(only one datom -- point 2 mentioned above)
       ;;           - although a filter while exporting is more strategic -- once in a while op, compared to fs write(very frequent)
       true (concat [[:db/add "new" :from-undo-redo true]]))))
+
 
 (defmethod resolve-event-to-tx :datascript/unlinked-references-link
   [_ {:event/keys [args]}]
