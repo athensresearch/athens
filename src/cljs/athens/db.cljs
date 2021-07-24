@@ -33,7 +33,6 @@
 
 (defonce rfdb {:user                {:name (or (js/localStorage.getItem "user/name")
                                                "Socrates")}
-
                :db/filepath         nil
                :db/synced           true
                :db/mtime            nil
@@ -53,7 +52,8 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selected/items      #{}
+               :selection           {:items #{}
+                                     :order []}
                :theme/dark          false
                :zoom-level          1
                :graph-conf          default-graph-conf})

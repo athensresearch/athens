@@ -220,7 +220,7 @@
                                                idx
                                                (max start-index end-index))))
                                  (map second)
-                                 (into (or selected-uids #{})))
+                                 (into #{}))
         descendants-uids    (loop [descendants    #{}
                                    ancestors-uids candidate-uids]
                               (if (seq ancestors-uids)
@@ -231,16 +231,27 @@
                                          ancestors-children))
                                 descendants))
         to-remove-uids      (set/intersection selected-uids descendants-uids)
-        selection-new-uids  (set/difference candidate-uids descendants-uids)]
+        selection-new-uids  (set/difference candidate-uids descendants-uids)
+        new-selected-uids   (-> selected-uids
+                                (set/difference to-remove-uids)
+                                (set/union selection-new-uids))
+        selection-order     (->> indexed-uids
+                                 (filter (fn [[_k v]]
+                                           (contains? new-selected-uids v)))
+                                 (mapv second))]
     (when config/debug?
       (js/console.debug (str "selection: " (pr-str selected-uids)
                              ", candidates: " (pr-str candidate-uids)
                              ", descendants: " (pr-str descendants-uids)
                              ", rm: " (pr-str to-remove-uids)
-                             ", add: " (pr-str selection-new-uids))))
+                             ", add: " (pr-str selection-new-uids)))
+      (js/console.debug :find-selected-items (pr-str {:source-uid      source-uid
+                                                      :target-uid      target-uid
+                                                      :selection-order selection-order})))
     (when (and start-index end-index)
       (rf/dispatch [:selected/remove-items to-remove-uids])
-      (rf/dispatch [:selected/add-items selection-new-uids]))))
+      (rf/dispatch [:selected/add-items selection-new-uids])
+      (rf/dispatch [:selected/items-order selection-order]))))
 
 
 ;; Event Handlers
