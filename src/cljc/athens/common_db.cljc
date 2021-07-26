@@ -248,9 +248,7 @@
 (defn between
   "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
   [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
+  (< (min s t) x (max s t)))
 
 
 (defn reindex-blocks-between-bounds

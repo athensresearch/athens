@@ -249,7 +249,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
@@ -258,7 +260,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
@@ -267,7 +271,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
@@ -276,7 +282,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uids [:vector string?]
       :target-uid  string?]]]])
 
@@ -285,7 +293,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uids [:vector string?]
       :target-uid  string?]]]])
 
@@ -294,7 +304,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
