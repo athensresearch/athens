@@ -281,6 +281,7 @@
 ;; TODO reference maintaining test "[[abc]]|[[def]]" -> "[[abc]]", "[[def]]" (and similar)
 
 
+
 (t/deftest unindent-test
   (t/testing "Just unindent already"
     (let [parent-uid  "test-parent-1-uid"
@@ -776,7 +777,288 @@
               union-set            (clojure.set/union expected-set childrens-str-set)
               target-parent-block  (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
 
-          (t/is (= linked-ref-str source-ref-str))
           (t/is (= 2 (-> target-parent-block :block/children count)))
           (t/is (= 2 (count union-set))))))))
 
+(t/deftest drop-same-test
+  "Basic Case:
+     Start with :
+       -a
+         -b
+         -c
+     End:
+       -a
+         -c
+         -b"
+
+  (t/testing "Drop block under same parent test"
+    (let [target-parent-uid "target-parent-uid"
+          target-parent-str "a"
+          target-uid        "test-target-uid"
+          target-text       "b"
+          source-uid        "test-source-uid"
+          source-text       "c"
+          setup-txs         [{:db/id          -1
+                              :node/title     "test page"
+                              :block/uid      "page-uid"
+                              :block/children [{:db/id          -2
+                                                :block/uid      target-parent-uid
+                                                :block/string   target-parent-str
+                                                :block/order    0
+                                                :block/children [{:db/id          -3
+                                                                  :block/uid      target-uid
+                                                                  :block/string   target-text
+                                                                  :block/order    0
+                                                                  :block/children []}
+                                                                 {:db/id          -4
+                                                                  :block/uid      source-uid
+                                                                  :block/string   source-text
+                                                                  :block/order    1
+                                                                  :block/children []}]}]}]]
+
+
+      (d/transact @fixture/connection setup-txs)
+      (let [source-block            (common-db/get-block @@fixture/connection [:block/uid source-uid])
+            target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            target-parent-block     (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+            drop-same-parent-event  (common-events/build-drop-same-event -1
+                                                                         :above
+                                                                         source-uid
+                                                                         target-uid)
+            drop-same-parent-txs    (resolver/resolve-event-to-tx @@fixture/connection drop-same-parent-event)]
+        (t/is (= 2 (-> target-parent-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-block)))
+
+        (d/transact @fixture/connection drop-same-parent-txs)
+        (let [source-block         (common-db/get-block @@fixture/connection [:block/uid source-uid])
+              target-block         (common-db/get-block @@fixture/connection [:block/uid target-uid])
+              target-parent-block  (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
+          (t/is (= 2 (-> target-parent-block :block/children count)))
+          (t/is (= 1 (:block/order target-block)))
+          (t/is (= 0 (:block/order source-block))))))))
+
+
+(t/deftest drop-multi-same-all-test
+  "Basic Case:
+       -a
+         -b
+         -c
+         -d
+     End:
+       -a
+         -c
+         -d
+         -a"
+  (t/testing "Drop multiple blocks inside the same source parent "
+    (let [target-parent-uid  "test-target-parent-uid"
+          target-parent-text "a"
+          target-uid    "test-target-uid"
+          target-text   "b"
+          source-1-uid  "test-source-1-uid"
+          source-1-text "c"
+          source-2-uid  "test-source-2-uid"
+          source-2-text "d"
+          setup-txs   [{:db/id          -1
+                        :node/title     "test page"
+                        :block/uid      "page-uid"
+                        :block/children [{:db/id          -2
+                                          :block/uid      target-parent-uid
+                                          :block/string   target-parent-text
+                                          :block/order    0
+                                          :block/children [{:db/id          -3
+                                                            :block/uid      target-uid
+                                                            :block/string   target-text
+                                                            :block/order    0
+                                                            :block/children []}
+                                                           {:db/id          -4
+                                                            :block/uid      source-1-uid
+                                                            :block/string   source-1-text
+                                                            :block/order    1
+                                                            :block/children []}
+                                                           {:db/id          -5
+                                                            :block/uid      source-2-uid
+                                                            :block/string   source-2-text
+                                                            :block/order    2
+                                                            :block/children []}]}]}]]
+
+      (d/transact @fixture/connection setup-txs)
+      (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+            target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            source-1-block            (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+            source-2-block            (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
+            source-uids               [source-1-uid source-2-uid]
+            drop-multi-same-all-event (common-events/build-drop-multi-same-all-event -1
+                                                                                     :above
+                                                                                     source-uids
+                                                                                     target-uid)
+            drop-same-all-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-multi-same-all-event)]
+        (t/is (= 3 (-> target-parent-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-1-block)))
+        (t/is (= 2 (:block/order source-2-block)))
+
+
+        (d/transact @fixture/connection drop-same-all-txs)
+        (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+              target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
+              source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+              source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])]
+
+          (t/is (= 3 (-> target-parent-block :block/children count)))
+          (t/is (= 2 (:block/order target-block)))
+          (t/is (= 0 (:block/order source-1-block)))
+          (t/is (= 1 (:block/order source-2-block))))))))
+
+
+(t/deftest drop-multi-same-source-test
+  "Basic Case:
+       -a
+         -b
+       -c
+         -d
+         -e
+     End:
+       -a
+         -b
+         -d
+         -e
+       -c"
+  (t/testing "Drop multiple blocks selected from under same parent inside differnt block "
+    (let [target-parent-uid  "test-target-parent-uid"
+          target-parent-text "a"
+          target-uid         "test-target-uid"
+          target-text        "b"
+          source-parent-uid  "test-source-parent-uid"
+          source-parent-text "c"
+          source-1-uid       "test-source-1-uid"
+          source-1-text      "d"
+          source-2-uid       "test-source-2-uid"
+          source-2-text      "e"
+          setup-txs         [{:db/id          -1
+                              :node/title     "test page"
+                              :block/uid      "page-uid"
+                              :block/children [{:db/id          -2
+                                                :block/uid      target-parent-uid
+                                                :block/string   target-parent-text
+                                                :block/order    0
+                                                :block/children {:db/id          -3
+                                                                  :block/uid      target-uid
+                                                                  :block/string   target-text
+                                                                  :block/order    0
+                                                                  :block/children []}}
+                                               {:db/id          -4
+                                                :block/uid      source-parent-uid
+                                                :block/string   source-parent-text
+                                                :block/order    1
+                                                :block/children [{:db/id          -5
+                                                                  :block/uid      source-1-uid
+                                                                  :block/string   source-1-text
+                                                                  :block/order    0
+                                                                  :block/children []}
+                                                                 {:db/id          -6
+                                                                  :block/uid      source-2-uid
+                                                                  :block/string   source-2-text
+                                                                  :block/order    1
+                                                                  :block/children []}]}]}]]
+
+      (d/transact @fixture/connection setup-txs)
+      (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+            target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            source-parent-block       (common-db/get-block @@fixture/connection [:block/uid source-parent-uid])
+            source-1-block            (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+            source-2-block            (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
+            source-uids               [source-1-uid source-2-uid]
+            drop-multi-same-source-event (common-events/build-drop-multi-same-source-event -1
+                                                                                           :below
+                                                                                           source-uids
+                                                                                           target-uid)
+            drop-same-source-txs   (resolver/resolve-event-to-tx @@fixture/connection drop-multi-same-source-event)]
+        (t/is (= 1 (-> target-parent-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 2 (-> source-parent-block :block/children count)))
+        (t/is (= 0 (:block/order source-1-block)))
+        (t/is (= 1 (:block/order source-2-block)))
+
+
+        (d/transact @fixture/connection drop-same-source-txs)
+        (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+              target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
+              source-parent-block       (common-db/get-block @@fixture/connection [:block/uid source-parent-uid])
+              source-1-block            (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
+              source-2-block            (common-db/get-block @@fixture/connection [:block/uid source-2-uid])]
+
+          (t/is (= 3 (-> target-parent-block :block/children count)))
+          (t/is (= 0 (-> source-parent-block :block/children count)))
+          (t/is (= 0 (:block/order target-block)))
+          (t/is (= 1 (:block/order source-1-block)))
+          (t/is (= 2 (:block/order source-2-block))))))))
+
+
+(t/deftest drop-link-same-test
+  "Basic Case:
+     Start with :
+       -a
+         -b
+         -c
+     End:
+       -a
+         -b
+         -c
+         -c
+       "
+
+  (t/testing "Drop a block reference under different parent test"
+    (let [target-parent-uid "target-parent-uid"
+          target-parent-str "a"
+          target-uid        "test-target-uid"
+          target-text       "b"
+          source-uid        "test-source-uid"
+          source-text       "c"
+          setup-txs         [{:db/id          -1
+                              :node/title     "test page"
+                              :block/uid      "page-uid"
+                              :block/children [{:db/id          -2
+                                                :block/uid      target-parent-uid
+                                                :block/string   target-parent-str
+                                                :block/order    0
+                                                :block/children [{:db/id          -3
+                                                                  :block/uid      target-uid
+                                                                  :block/string   target-text
+                                                                  :block/order    0
+                                                                  :block/children []}
+                                                                 {:db/id          -4
+                                                                  :block/uid      source-uid
+                                                                  :block/string   source-text
+                                                                  :block/order    1
+                                                                  :block/children []}]}]}]]
+
+
+      (d/transact @fixture/connection setup-txs)
+      (let [source-block          (common-db/get-block @@fixture/connection [:block/uid source-uid])
+            target-block          (common-db/get-block @@fixture/connection [:block/uid target-uid])
+            target-parent-block   (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
+            drop-link-same-parent-event  (common-events/build-drop-link-same-parent-event -1
+                                                                                   :below
+                                                                                   source-uid
+                                                                                   target-uid)
+            drop-link-same-parent-txs    (resolver/resolve-event-to-tx @@fixture/connection drop-link-same-parent-event)]
+        (t/is (= 2 (-> target-parent-block :block/children count)))
+        (t/is (= 0 (:block/order target-block)))
+        (t/is (= 1 (:block/order source-block)))
+
+
+        (d/transact @fixture/connection drop-link-same-parent-txs)
+        ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
+        ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
+        ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
+        (let [source-ref-str    (str"((" source-uid "))")
+              target-block-str  (:block/string (common-db/get-block @@fixture/connection [:block/uid target-uid]))
+              expected-set      #{source-ref-str target-block-str}
+              linked-ref-uid    (last (common-db/get-children-uids-recursively @@fixture/connection target-parent-uid))
+              linked-ref-str    (:block/string (common-db/get-block @@fixture/connection [:block/uid linked-ref-uid]))
+              childrens-str-set #{linked-ref-str target-block-str}
+              union-set         (clojure.set/union expected-set childrens-str-set)]
+
+          (t/is (= 2 (-> target-parent-block :block/children count)))
+          (t/is (= 2 (count union-set))))))))

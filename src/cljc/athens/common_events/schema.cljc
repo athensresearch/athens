@@ -45,6 +45,10 @@
    :datascript/drop-link-child
    :datascript/drop-diff-parent
    :datascript/drop-link-diff-parent
+   :datascript/drop-same
+   :datascript/drop-multi-same-source
+   :datascript/drop-multi-same-all
+   :datascript/drop-link-same-parent
    :datascript/left-sidebar-drop-above
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
@@ -55,7 +59,6 @@
   [:enum
    :datascript/tx-log
    :datascript/db-dump])
-
 
 (def event-common
   [:map
@@ -246,7 +249,9 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
@@ -255,10 +260,55 @@
   [:map
    [:event/args
     [:map
-     [:drag-target keyword?
+     [:drag-target [:enum
+                    :above
+                    :below]
       :source-uid  string?
       :target-uid  string?]]]])
 
+
+(def datascript-drop-same
+  [:map
+   [:event/args
+    [:map
+     [:drag-target [:enum
+                    :above
+                    :below]
+      :source-uid  string?
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-multi-same-source
+  [:map
+   [:event/args
+    [:map
+     [:drag-target [:enum
+                    :above
+                    :below]
+      :source-uids [:vector string?]
+      :target-uid  string?]]]])
+
+
+(def datascript-drop-multi-same-all
+  [:map
+   [:event/args
+    [:map
+     [:drag-target [:enum
+                    :above
+                    :below]
+      :source-uids [:vector string?]
+      :target-uid  string?]]]])
+
+
+(def datascript-link-same
+  [:map
+   [:event/args
+    [:map
+     [:drag-target [:enum
+                    :above
+                    :below]
+      :source-uid  string?
+      :target-uid  string?]]]])
 
 (def datascript-left-sidebar-drop-above
   [:map
@@ -295,6 +345,7 @@
         [:block/string string?]
         [:block/uid string?]]]]
      [:title string?]]]])
+
 
 
 (def event

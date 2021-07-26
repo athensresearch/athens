@@ -1311,55 +1311,13 @@
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
-(defn drop-link-same-parent
-  "Create a new block with the reference to the source block, under the same parent as the source"
-  [kind source parent target]
-  (let [new-uid             (gen-block-uid)
-        new-string          (str "((" (source :block/uid) "))")
-        s-order             (:block/order source)
-        t-order             (:block/order target)
-        target-above?       (< t-order s-order)
-        +or-                (if target-above? + -)
-        above?                (= kind :above)
-        below?                (= kind :below)
-        lower-bound         (cond
-                              (and above? target-above?) (dec t-order)
-                              (and below? target-above?) t-order
-                              :else s-order)
-        upper-bound         (cond
-                              (and above? (not target-above?)) t-order
-                              (and below? (not target-above?)) (inc t-order)
-                              :else s-order)
-        reindex             (d/q '[:find ?ch ?new-order
-                                   :keys db/id block/order
-                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
-                                   :where
-                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-                                   [(?+or- ?order 1) ?new-order]]
-                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
-        new-source-order    (cond
-                              (and above? target-above?) t-order
-                              (and above? (not target-above?)) (dec t-order)
-                              (and below? target-above?) (inc t-order)
-                              (and below? (not target-above?)) t-order)
-        new-source-block      {:block/uid new-uid :block/string new-string :block/order new-source-order}
-        new-parent-children (concat [new-source-block] reindex)
-        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
-        tx-data             [new-parent]]
-    tx-data))
-
-
-(reg-event-fx
-  :drop-link/same
-  (fn [_ [_ kind source parent target]]
-    {:dispatch [:transact (drop-link-same-parent kind source parent target)]}))
-
 
 (reg-event-fx
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop/child args" (pr-str args))
     (let [local? (not (client/open?))]
+      (js/console.debug ":drop/child local?" local?)
       (if local?
         (let [drop-child-event (common-events/build-drop-child-event -1
                                                                      source-uid
@@ -1375,6 +1333,7 @@
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (js/console.debug ":drop-multi/child args" (pr-str args))
     (let [local? (not (client/open?))]
+      (js/console.debug ":drop-multi/child local?" local?)
       (if local?
         (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
                                                                                  source-uids
@@ -1390,6 +1349,7 @@
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
     (js/console.debug ":drop-link/child args" (pr-str args))
     (let [local? (not (client/open?))]
+      (js/console.debug ":drop-link/child local?" local?)
       (if local?
         (let [drop-link-child-event (common-events/build-drop-link-child-event -1
                                                                                source-uid
@@ -1405,6 +1365,7 @@
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
     (js/console.debug ":drop/diff-parent args" args)
     (let [local? (not (client/open?))]
+      (js/console.debug ":drop/diff-parent local?" local?)
       (if local?
         (let [drop-diff-parent-event (common-events/build-drop-diff-parent-event -1
                                                                                  drag-target
@@ -1421,6 +1382,7 @@
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
     (js/console.debug ":drop-link/diff-parent args" args)
     (let [local? (not (client/open?))]
+      (js/console.debug ":drop-link/diff-parent local?" local?)
       (if local?
         (let [drop-link-diff-parent-event (common-events/build-drop-link-diff-parent-event -1
                                                                                            drag-target
@@ -1432,123 +1394,76 @@
         {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))
 
 
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
-
-
-(defn drop-same-parent
-  [kind source parent target]
-  (let [s-order             (:block/order source)
-        t-order             (:block/order target)
-        target-above?       (< t-order s-order)
-        +or-                (if target-above? + -)
-        above?              (= kind :above)
-        below?              (= kind :below)
-        lower-bound         (cond
-                              (and above? target-above?) (dec t-order)
-                              (and below? target-above?) t-order
-                              :else s-order)
-        upper-bound         (cond
-                              (and above? (not target-above?)) t-order
-                              (and below? (not target-above?)) (inc t-order)
-                              :else s-order)
-        reindex             (d/q '[:find ?ch ?new-order
-                                   :keys db/id block/order
-                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound
-                                   :where
-                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-                                   [(?+or- ?order 1) ?new-order]]
-                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound)
-        new-source-order    (cond
-                              (and above? target-above?) t-order
-                              (and above? (not target-above?)) (dec t-order)
-                              (and below? target-above?) (inc t-order)
-                              (and below? (not target-above?)) t-order)
-        new-source-block    {:db/id (:db/id source) :block/order new-source-order}
-        new-parent-children (concat [new-source-block] reindex)
-        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
-        tx-data             [new-parent]]
-    tx-data))
+(reg-event-fx
+  :drop/same
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop/same args" args)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":drop/same local?" local?)
+      (if local?
+        (let [drop-same-event   (common-events/build-drop-same-event -1
+                                                                     drag-target
+                                                                     source-uid
+                                                                     target-uid)
+              tx                (resolver/resolve-event-to-tx @db/dsdb drop-same-event)]
+          (js/console.debug ":drop/same tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-same args]]]}))))
 
 
 (reg-event-fx
-  :drop/same
-  (fn [_ [_ kind source parent target]]
-    {:dispatch [:transact (drop-same-parent kind source parent target)]}))
+  :drop-multi/same-source
+  (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
+    (js/console.debug ":drop-multi/same-source args" args)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":drop-multi/same-source local?" local?)
+      (if local?
+        (let [drop-multi-same-source-event   (common-events/build-drop-multi-same-source-event -1
+                                                                                               drag-target
+                                                                                               source-uids
+                                                                                               target-uid)
+              tx                (resolver/resolve-event-to-tx @db/dsdb drop-multi-same-source-event)]
+          (js/console.debug ":drop-multi/same-source tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-same-source args]]]}))))
 
 
-(defn drop-multi-same-parent-all
-  [kind source-uids parent target]
-  (let [source-blocks       (mapv #(db/get-block [:block/uid %]) source-uids)
-        f-source            (first source-blocks)
-        l-source            (last source-blocks)
-        f-s-order           (:block/order f-source)
-        l-s-order           (:block/order l-source)
-        t-order             (:block/order target)
-        target-above?       (< t-order f-s-order)
-        +or-                (if target-above? + -)
-        above?              (= kind :above)
-        below?              (= kind :below)
-        lower-bound         (cond
-                              (and above? target-above?) (dec t-order)
-                              (and below? target-above?) t-order
-                              :else l-s-order)
-        upper-bound         (cond
-                              (and above? (not target-above?)) t-order
-                              (and below? (not target-above?)) (inc t-order)
-                              :else f-s-order)
-        n                   (count source-uids)
-        reindex             (d/q '[:find ?ch ?new-order
-                                   :keys db/id block/order
-                                   :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
-                                   :where
-                                   (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-                                   [(?+or- ?order ?n) ?new-order]]
-                                 @db/dsdb db/rules +or- (:db/id parent) lower-bound upper-bound n)
-        new-source-blocks   (if target-above?
-                              (map-indexed (fn [idx x]
-                                             (let [new-order (cond-> (+ idx t-order) below? inc)]
-                                               {:db/id       (:db/id x)
-                                                :block/order new-order}))
-                                           source-blocks)
-                              (map-indexed (fn [idx x]
-                                             (let [new-order (cond-> (- t-order idx) above? dec)]
-                                               {:db/id       (:db/id x)
-                                                :block/order new-order}))
-                                           (reverse source-blocks)))
-        new-parent-children (concat new-source-blocks reindex)
-        new-parent          {:db/id (:db/id parent) :block/children new-parent-children}
-        tx-data             [new-parent]]
-    tx-data))
+(reg-event-fx
+  :drop-multi/same-all
+  (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
+    ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
+    (js/console.debug ":drop-multi/same-all args" args)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":drop-multi/same-all local?" local?)
+      (if local?
+        (let [drop-multi-same-all-event   (common-events/build-drop-multi-same-all-event -1
+                                                                                         drag-target
+                                                                                         source-uids
+                                                                                         target-uid)
+              tx                (resolver/resolve-event-to-tx @db/dsdb drop-multi-same-all-event)]
+          (js/console.debug ":drop-multi/same-all tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-multi-same-all args]]]}))))
 
 
-(defn drop-multi-same-source-parents
-  [kind source-uids source-parent target target-parent]
-  (let [source-blocks         (mapv #(db/get-block [:block/uid %]) source-uids)
-        last-source           (last source-blocks)
-        last-s-order          (:block/order last-source)
-        t-order               (:block/order target)
-        n                     (count source-uids)
-        new-source-blocks     (map-indexed (fn [idx x]
-                                             (let [new-order (if (= kind :above)
-                                                               (+ idx t-order)
-                                                               (inc (+ idx t-order)))]
-                                               {:db/id (:db/id x) :block/order new-order}))
-                                           source-blocks)
-        reindex-source-parent (minus-after (:db/id source-parent) last-s-order n)
-        bound                 (if (= kind :above) (dec t-order) t-order)
-        reindex-target-parent (->> (plus-after (:db/id target-parent) bound n)
-                                   (concat new-source-blocks))
-        retracts              (map (fn [x] [:db/retract (:db/id source-parent) :block/children [:block/uid x]])
-                                   source-uids)
-        new-source-parent     {:db/id (:db/id source-parent) :block/children reindex-source-parent}
-        new-target-parent     {:db/id (:db/id target-parent) :block/children reindex-target-parent}
-        tx-data               (conj retracts new-source-parent new-target-parent)]
-    tx-data))
+(reg-event-fx
+  :drop-link/same-parent
+  (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug ":drop-link/same-parent args" args)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":drop-link/same-parent local?" local?)
+      (if local?
+        (let [drop-link-same-parent-event   (common-events/build-drop-link-same-parent-event -1
+                                                                                             drag-target
+                                                                                             source-uid
+                                                                                             target-uid)
+              tx                (resolver/resolve-event-to-tx @db/dsdb drop-link-same-parent-event)]
+          (js/console.debug ":drop-link/same-parent tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
+
 
 
 (defn drop-multi-diff-source-parents
@@ -1594,50 +1509,10 @@
 
 
 (reg-event-fx
-  :drop-multi/same-all
-  (fn [_ [_ kind source-uids parent target]]
-    {:dispatch [:transact (drop-multi-same-parent-all kind source-uids parent target)]}))
-
-
-(reg-event-fx
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
 
-
-(reg-event-fx
-  :drop-multi/same-source
-  (fn [_ [_ kind source-uids first-source-parent target target-parent]]
-    {:dispatch [:transact (drop-multi-same-source-parents kind source-uids first-source-parent target target-parent)]}))
-
-
-(defn drop-bullet-multi
-  "Cases:
-  - the same 4 cases from drop-bullet
-  - but also if blocks span across multiple parent levels"
-  [source-uids target-uid kind]
-  (let [source-uids          (map (comp first db/uid-and-embed-id) source-uids)
-        target-uid           (first (db/uid-and-embed-id target-uid))
-        same-parent-all?     (db/same-parent? (conj source-uids target-uid))
-        same-parent-source?  (db/same-parent? source-uids)
-        diff-parents-source? (not same-parent-source?)
-        target               (db/get-block [:block/uid target-uid])
-        first-source-uid     (first source-uids)
-        first-source-parent  (db/get-parent [:block/uid first-source-uid])
-        target-parent        (db/get-parent [:block/uid target-uid])
-        event                (cond
-                               (= kind :child) [:drop-multi/child source-uids target]
-                               same-parent-all? [:drop-multi/same-all kind source-uids first-source-parent target]
-                               diff-parents-source? [:drop-multi/diff-source kind source-uids target target-parent]
-                               same-parent-source? [:drop-multi/same-source kind source-uids first-source-parent target target-parent])]
-    {:fx [[:dispatch [:selected/clear-items]]
-          [:dispatch event]]}))
-
-
-(reg-event-fx
-  :drop-multi
-  (fn [_ [_ uids target-uid kind]]
-    (drop-bullet-multi uids target-uid kind)))
 
 
 (defn text-to-blocks
