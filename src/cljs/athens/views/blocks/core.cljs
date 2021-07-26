@@ -247,11 +247,9 @@
                                same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
                                                                                 :source-uids source-uids
                                                                                 :target-uid  target-uid}])]
-    (println "diff-same-parents " diff-same-parents)
     (println ".event" event) ;; TODO Remove this after all events are ported
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))
-
 
 
 (defn block-drop

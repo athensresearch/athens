@@ -4,10 +4,12 @@
     [re-frame.core :as rf]))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :presence/all-online
-  (fn [db [_ users]]
-    (assoc-in db [:presence :users] users)))
+  (fn [_db [_ users]]
+    {:fx [[:dispatch-n (mapv (fn [user-map]
+                               [:presence/add-user user-map])
+                             users)]]}))
 
 
 ;; TODO: what happens if existing user? overrides
