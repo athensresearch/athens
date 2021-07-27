@@ -20,32 +20,70 @@
       "[ [one]]"
       "[[one"
       "one]]"))
+
   (t/testing "Finds page refs"
-    (t/are [x y] (= (common-db/string->lookup-refs x) y)
-      "[[one]]"            #{[:node/title "one"]}
-      "[[one]] two"        #{[:node/title "one"]}
-      "one [[two three]]"  #{[:node/title "two three"]}
-      "#one"               #{[:node/title "one"]}
-      "#[[one]]"           #{[:node/title "one"]}
-      "one #[[two three]]" #{[:node/title "two three"]}
+    (t/are [x y] (= y (common-db/string->lookup-refs x))
+      "[[one]]"
+      #{[:node/title "one"]}
+
+      "[[one]] two"
+      #{[:node/title "one"]}
+
+      "one [[two three]]"
+      #{[:node/title "two three"]}
+
+      "#one"
+      #{[:node/title "one"]}
+
+      "#[[one]]"
+      #{[:node/title "one"]}
+
+      "one #[[two three]]"
+      #{[:node/title "two three"]}
+
       "[[one]] #two [[three four]] #[[five six]]"
-      #{[:node/title "one"] [:node/title "two"] [:node/title "three four"] [:node/title "five six"]}))
+      #{[:node/title "one"]
+        [:node/title "two"]
+        [:node/title "three four"]
+        [:node/title "five six"]}))
+
   (t/testing "Finds block refs"
-    (t/are [x y] (= (common-db/string->lookup-refs x) y)
-      "((one))"            #{[:block/uid "one"]}
-      "one ((two))"        #{[:block/uid "two"]}
-      "((one)) two"        #{[:block/uid "one"]}
-      "((one)) ((two))"    #{[:block/uid "one"] [:block/uid "two"]}))
+    (t/are [x y] (= y (common-db/string->lookup-refs x))
+      "((one))"
+      #{[:block/uid "one"]}
+
+      "one ((two))"
+      #{[:block/uid "two"]}
+
+      "((one)) two"
+      #{[:block/uid "one"]}
+
+      "((one)) ((two))"
+      #{[:block/uid "one"]
+        [:block/uid "two"]}))
+
   (t/testing "Finds mixed page and block refs"
-    (t/is (= (common-db/string->lookup-refs "((one)) [[two]] ((three)) #[[four]]")
-             #{[:block/uid "one"] [:node/title "two"] [:block/uid "three"] [:node/title "four"]})))
-  ;; broken, need improved parser
+    (t/is (= #{[:block/uid "one"]
+               [:node/title "two"]
+               [:block/uid "three"]
+               [:node/title "four"]}
+             (common-db/string->lookup-refs "((one)) [[two]] ((three)) #[[four]]"))))
+
   (t/testing "Finds nested refs inside page refs"
-    (t/are [x y] (= (common-db/string->lookup-refs x) y)
-      "[[one [[two]]]]"     #{[:node/title "one [[two]]"] [:node/title "two"]}
-      ;; broken on the parser
-      #_#_"#[[one #two three]]" #{[:node/title "one #two #three"] [:node/title "two"] [:node/title "three"]}
-      #_#_"one [[#two #[[three four]]]]" #{[:node/title "#two #three"] [:node/title "two"] [:node/title "three four"]}
+    (t/are [x y] (= y (common-db/string->lookup-refs x))
+      "[[one [[two]]]]"
+      #{[:node/title "one [[two]]"]
+        [:node/title "two"]}
+
+      "#[[one #two three]]"
+      #{[:node/title "one #two three"]
+        [:node/title "two"]}
+
+      "one [[#two #[[three four]]]]"
+      #{[:node/title "#two #[[three four]]"]
+        [:node/title "two"]
+        [:node/title "three four"]}
+
       "[[truly [[madly [[deeply [[nested]]]]]]]]"
       #{[:node/title "truly [[madly [[deeply [[nested]]]]]]"]
         [:node/title "madly [[deeply [[nested]]]]"]

@@ -674,6 +674,58 @@
 
 
 (rf/reg-event-fx
+  :remote/drop-same
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug "remote/drop-same args" (pr-str args))
+    (let [last-seen-tx (:remote/last-seen-tx db)
+          drop-same-event (common-events/build-drop-same-event last-seen-tx
+                                                               drag-target
+                                                               source-uid
+                                                               target-uid)]
+      (js/console.debug ":remote/drop-same event" drop-same-event)
+      {:fx [[:dispatch [:remote/send-event! drop-same-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-multi-same-source
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug "remote/drop-multi-same-source args" (pr-str args))
+    (let [last-seen-tx (:remote/last-seen-tx db)
+          drop-multi-same-source-event (common-events/build-drop-multi-same-source-event last-seen-tx
+                                                                                         drag-target
+                                                                                         source-uids
+                                                                                         target-uid)]
+      (js/console.debug ":remote/drop--same- event" drop-multi-same-source-event)
+      {:fx [[:dispatch [:remote/send-event! drop-multi-same-source-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-multi-same-all
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug "remote/drop-multi-same-all args" (pr-str args))
+    (let [last-seen-tx (:remote/last-seen-tx db)
+          drop-multi-same-all-event (common-events/build-drop-multi-same-all-event last-seen-tx
+                                                                                   drag-target
+                                                                                   source-uids
+                                                                                   target-uid)]
+      (js/console.debug ":remote/drop-multi-same-all event" drop-multi-same-all-event)
+      {:fx [[:dispatch [:remote/send-event! drop-multi-same-all-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-link-same-parent
+  (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
+    (js/console.debug "remote/drop-link-same-parent args" (pr-str args))
+    (let [last-seen-tx (:remote/last-seen-tx db)
+          drop-link-same-parent-event (common-events/build-drop-link-same-parent-event last-seen-tx
+                                                                                       drag-target
+                                                                                       source-uid
+                                                                                       target-uid)]
+      (js/console.debug ":remote/drop-link-same-parent event" drop-link-same-parent-event)
+      {:fx [[:dispatch [:remote/send-event! drop-link-same-parent-event]]]})))
+
+
+(rf/reg-event-fx
   :remote/followup-selected-delete
   (fn [{_db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
