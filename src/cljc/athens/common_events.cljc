@@ -454,6 +454,17 @@
                      :drag-target drag-target}}))
 
 
+(defn build-selected-delete-event
+  "Builds `:datascript/selected-delete` event with:
+  - uids : The uids of blocks to be deleted "
+ [last-tx uids]
+ (let [event-id (gen-event-id)]
+   {:event/id      event-id
+    :event/last-tx last-tx
+    :event/type    :datascript/selected-delete
+    :event/args    {:uids uids}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

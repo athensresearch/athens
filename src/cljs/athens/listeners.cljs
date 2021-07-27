@@ -37,7 +37,9 @@
           enter? (do
                    (dispatch [:editing/uid (first selected-items)])
                    (dispatch [:selected/clear-items]))
-          (or bksp? delete?) (dispatch [:selected/delete selected-items])
+          (or bksp? delete?)  (do
+                                (dispatch [:selected/delete selected-items])
+                                (dispatch [:selected/clear-items]))
           tab? (do
                  (.preventDefault e)
                  (if shift
