@@ -891,11 +891,7 @@
                                                                  parent-eid
                                                                  order
                                                                  n)
-        retracted-vec                     (mapv (fn [uid]
-                                                  (let [block-parent (common-db/get-parent db [:block/uid uid])]
-                                                    [:db/retract     (:db/id block-parent)
-                                                     :block/children [:block/uid uid]]))
-                                                uids)
+        retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
         tx-data                           (concat retracted-vec
                                                   reindex)]
     (println "resolver :selected/delete tx-data is " (pr-str tx-data))

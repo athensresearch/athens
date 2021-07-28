@@ -416,7 +416,7 @@
   (fn [_ [_ selected-uids]]
     (js/console.debug ":selected/delete args" selected-uids)
     (let [local?         (not (client/open?))
-          sanitized-uids (map #(first (db/uid-and-embed-id %)) selected-uids)]
+          sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
       (js/console.log "selected/delete local?" local?)
       (if local?
         (let [selected-delete-event (common-events/build-selected-delete-event -1

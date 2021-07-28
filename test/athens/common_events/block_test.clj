@@ -1074,8 +1074,7 @@
        -d"
 
   (t/testing "Delete some blocks"
-    (let [
-          block-1-uid    "block-1-uid"
+    (let [block-1-uid    "block-1-uid"
           block-1-text   "a"
           block-2-uid    "block-2-uid"
           block-2-text   "b"
@@ -1083,25 +1082,20 @@
           block-3-text   "c"
           block-4-uid    "block-4-uid"
           block-4-text   "d"
-          setup-txs         [{:db/id          -1
-                              :node/title     "test page"
+          setup-txs         [{:node/title     "test page"
                               :block/uid      "page-uid"
-                              :block/children [{:db/id          -2
-                                                :block/uid      block-1-uid
+                              :block/children [{:block/uid      block-1-uid
                                                 :block/string   block-1-text
                                                 :block/order    0
-                                                :block/children {:db/id          -3
-                                                                 :block/uid      block-2-uid
+                                                :block/children {:block/uid      block-2-uid
                                                                  :block/string   block-2-text
                                                                  :block/order    0
                                                                  :block/children []}}
-                                               {:db/id          -4
-                                                :block/uid      block-3-uid
+                                               {:block/uid      block-3-uid
                                                 :block/string   block-3-text
                                                 :block/order    1
                                                 :block/children []}
-                                               {:db/id          -5
-                                                :block/uid      block-4-uid
+                                               {:block/uid      block-4-uid
                                                 :block/string   block-4-text
                                                 :block/order    2
                                                 :block/children []}]}]]
@@ -1109,8 +1103,7 @@
 
       (d/transact @fixture/connection setup-txs)
       (let [uids                   [block-2-uid block-3-uid]
-            last-block-parent-uid  (:block/uid (common-db/get-parent @@fixture/connection [:block/uid block-4-uid]))
-            parent-block           (common-db/get-block @@fixture/connection [:block/uid last-block-parent-uid])
+            parent-block           (common-db/get-block @@fixture/connection [:block/uid "page-uid"])
             block-1                (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
             block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])
             selected-delete-event  (common-events/build-selected-delete-event -1
@@ -1121,8 +1114,7 @@
         (t/is (= 2 (:block/order block-4)))
 
         (d/transact @fixture/connection selected-delete-txs)
-        (let [last-block-parent-uid  (:block/uid (common-db/get-parent @@fixture/connection [:block/uid block-4-uid]))
-              parent-block           (common-db/get-block @@fixture/connection [:block/uid last-block-parent-uid])
+        (let [parent-block           (common-db/get-block @@fixture/connection [:block/uid "page-uid"])
               block-1                (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
               block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])]
           (t/is (= 2 (-> parent-block :block/children count)))
