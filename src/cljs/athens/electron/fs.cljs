@@ -96,7 +96,8 @@
   (fn [{:keys [_db]} [_ db-filepath]]
     (let [datoms (-> (.readFileSync fs db-filepath)
                      dt/read-transit-str)]
-      {:dispatch-n [[:reset-conn datoms]]})))
+      {:dispatch-n [[:reset-conn datoms]
+                    [:fs/watch db-filepath]]})))
 
 
 (rf/reg-event-fx
