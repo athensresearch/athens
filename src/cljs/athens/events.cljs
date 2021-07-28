@@ -411,43 +411,21 @@
     (assoc db :selected/items (select-down selected-items))))
 
 
-(defn delete-selected
-  "We know that we only need to dec indices after the last block. The former blocks are necessarily going to remove all
-  tail children, meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings, to
-  determine the minus-after value."
-  [selected-items]
-  (let [last-item (-> selected-items last db/uid-and-embed-id first)
-        selected-sibs-of-last (->> selected-items
-                                   (mapv (comp first db/uid-and-embed-id))
-                                   (d/q '[:find ?sib-uid ?o
-                                          :in $ ?uid [?selected ...]
-                                          :where
-                                          ;; get all siblings of the last block
-                                          [?e :block/uid ?uid]
-                                          [?p :block/children ?e]
-                                          [?p :block/children ?sib]
-                                          [?sib :block/uid ?sib-uid]
-                                          ;; filter selected
-                                          [(= ?sib-uid ?selected)]
-                                          [?sib :block/order ?o]]
-                                        @db/dsdb last-item)
-                                   (sort-by second))
-        [uid order] (last selected-sibs-of-last)
-        parent (db/get-parent [:block/uid uid])
-        n (count selected-sibs-of-last)]
-    (minus-after (:db/id parent) order n)))
-
-
 (reg-event-fx
   :selected/delete
-  (fn [{:keys [db]} [_ selected-items]]
-    (let [sanitize-selected (map (comp first db/uid-and-embed-id) selected-items)
-          retract-vecs      (mapcat #(retract-uid-recursively %) sanitize-selected)
-          reindex-last-selected-parent (delete-selected sanitize-selected)
-          tx-data           (concat retract-vecs reindex-last-selected-parent)]
-      {:fx [[:dispatch [:transact tx-data]]
-            [:dispatch [:editing/uid nil]]]
-       :db (assoc db :selected/items [])})))
+  (fn [_ [_ selected-uids]]
+    (js/console.debug ":selected/delete args" selected-uids)
+    (let [local?         (not (client/open?))
+          sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
+      (js/console.log "selected/delete local?" local?)
+      (if local?
+        (let [selected-delete-event (common-events/build-selected-delete-event -1
+                                                                               sanitized-uids)
+              tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
+          (js/console.debug  ":selected/delete tx" tx)
+          {:fx [[:dispatch-n [[:transact    tx]
+                              [:editing/uid nil]]]]})
+        {:fx [[:dispatch [:remote/selected-delete {:uids selected-uids}]]]}))))
 
 
 ;; Alerts

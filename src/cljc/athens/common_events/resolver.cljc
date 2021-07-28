@@ -861,6 +861,44 @@
     tx-data))
 
 
+(defmethod resolve-event-to-tx :datascript/selected-delete
+  [db {:event/keys [args]}]
+  ;; We know that we only need to dec indices after the last block. The former blocks
+  ;; are necessarily going to remove all tail children, meaning we only need to be
+  ;; concerned with the last N blocks that are selected, adjacent siblings, to
+  ;; determine the minus-after value.
+  (println "resolver :datascript/drop-multi-child args" (pr-str args))
+  (let [{:keys [uids]}                    args
+        selected-sibs-of-last             (->> uids
+                                               (d/q '[:find ?sib-uid ?o
+                                                      :in $ ?uid [?selected ...]
+                                                      :where
+                                                      ;; get all siblings of the last block
+                                                      [?e :block/uid ?uid]
+                                                      [?p :block/children ?e]
+                                                      [?p :block/children ?sib]
+                                                      [?sib :block/uid ?sib-uid]
+                                                      ;; filter selected
+                                                      [(= ?sib-uid ?selected)]
+                                                      [?sib :block/order ?o]]
+                                                    db
+                                                    (last uids))
+                                               (sort-by second))
+        [uid order]                       (last selected-sibs-of-last)
+        parent-eid                        (:db/id (common-db/get-parent db [:block/uid uid]))
+        n                                 (count selected-sibs-of-last)
+        ;; Since the selection is always contiguous, there's only one parent (the last one) whose children need to be reindexed.
+        reindex                           (common-db/minus-after db
+                                                                 parent-eid
+                                                                 order
+                                                                 n)
+        retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
+        tx-data                           (concat retracted-vec
+                                                  reindex)]
+    (println "resolver :selected/delete tx-data is " (pr-str tx-data))
+    tx-data))
+
+
 ;; resetting ds-conn re-computes all subs and is the cause
 ;;    for huge delays when undo/redo is pressed
 ;; here is another alternative strategy for undo/redo
