@@ -99,6 +99,13 @@
       {:dispatch-n [[:reset-conn datoms]]})))
 
 
+(rf/reg-event-fx
+ :fs/add-read-and-watch
+ (fn [_ [_ db-filepath]]
+   {:dispatch-n [[:db-picker/add-new-db db-filepath]
+                 [:fs/read-and-watch db-filepath]]}))
+
+
 (rf/reg-event-db
   :db/update-mtime
   (fn [db [_ mtime1]]
