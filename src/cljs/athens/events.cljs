@@ -411,43 +411,21 @@
     (assoc db :selected/items (select-down selected-items))))
 
 
-(defn delete-selected
-  "We know that we only need to dec indices after the last block. The former blocks are necessarily going to remove all
-  tail children, meaning we only need to be concerned with the last N blocks that are selected, adjacent siblings, to
-  determine the minus-after value."
-  [selected-items]
-  (let [last-item (-> selected-items last db/uid-and-embed-id first)
-        selected-sibs-of-last (->> selected-items
-                                   (mapv (comp first db/uid-and-embed-id))
-                                   (d/q '[:find ?sib-uid ?o
-                                          :in $ ?uid [?selected ...]
-                                          :where
-                                          ;; get all siblings of the last block
-                                          [?e :block/uid ?uid]
-                                          [?p :block/children ?e]
-                                          [?p :block/children ?sib]
-                                          [?sib :block/uid ?sib-uid]
-                                          ;; filter selected
-                                          [(= ?sib-uid ?selected)]
-                                          [?sib :block/order ?o]]
-                                        @db/dsdb last-item)
-                                   (sort-by second))
-        [uid order] (last selected-sibs-of-last)
-        parent (db/get-parent [:block/uid uid])
-        n (count selected-sibs-of-last)]
-    (minus-after (:db/id parent) order n)))
-
-
 (reg-event-fx
   :selected/delete
-  (fn [{:keys [db]} [_ selected-items]]
-    (let [sanitize-selected (map (comp first db/uid-and-embed-id) selected-items)
-          retract-vecs      (mapcat #(retract-uid-recursively %) sanitize-selected)
-          reindex-last-selected-parent (delete-selected sanitize-selected)
-          tx-data           (concat retract-vecs reindex-last-selected-parent)]
-      {:fx [[:dispatch [:transact tx-data]]
-            [:dispatch [:editing/uid nil]]]
-       :db (assoc db :selected/items [])})))
+  (fn [_ [_ selected-uids]]
+    (js/console.debug ":selected/delete args" selected-uids)
+    (let [local?         (not (client/open?))
+          sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
+      (js/console.log "selected/delete local?" local?)
+      (if local?
+        (let [selected-delete-event (common-events/build-selected-delete-event -1
+                                                                               sanitized-uids)
+              tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
+          (js/console.debug  ":selected/delete tx" tx)
+          {:fx [[:dispatch-n [[:transact    tx]
+                              [:editing/uid nil]]]]})
+        {:fx [[:dispatch [:remote/selected-delete {:uids selected-uids}]]]}))))
 
 
 ;; Alerts
@@ -786,61 +764,30 @@
     {:fs/write! nil}))
 
 
-;; resetting ds-conn re-computes all subs and is the cause
-;;    for huge delays when undo/redo is pressed
-;; here is another alternative strategy for undo/redo
-;; Core ideas are inspired from here https://tonsky.me/blog/datascript-internals/
-;;    1. db-before + tx-data = db-after
-;;    2. DataScript DB contains only currently relevant datoms.
-;; 1 is the math that is happening here when you undo/redo but in a much more performant way
-;; 2 asserts that even if you are reapplying same txn over and over only relevant ones will be present
-;;    - and overall size of transit file does not increase
-;; Note: only relevant txns(ones that user deliberately made, not undo/redo ones) go into history
-;; Note: Once session is lost(App is closed) edit history is also lost
-;; Also cmd + z -> cmd + z -> edit something --- future(cmd + shift + z) doesn't work
-;;    - as there is no logical way to assert the future when past has changed hence history is reset
-;;    - very similar to intelli-j edit model or any editor's undo/redo mechanism for that matter
-(defn inverse-tx
-  ([] (inverse-tx false))
-  ([redo?]
-   (let [[tx-m-id datoms] (cond->> @db/history
-                            redo? reverse
-                            true (some (fn [[tx bool datoms]]
-                                         (and ((if redo? not (complement not)) bool) [tx datoms]))))]
-     (reset! db/history (->> @db/history
-                             (map (fn [[tx-id bool datoms]]
-                                    (if (= tx-id tx-m-id)
-                                      [tx-id redo? datoms]
-                                      [tx-id bool datoms])))
-                             doall))
-     (cond->> datoms
-       (not redo?) reverse
-       true (map (fn [datom]
-                   (let [[id attr val _txn sig?] (vec datom)]
-                     [(cond
-                        (and sig? (not redo?)) :db/retract
-                        (and (not sig?) (not redo?)) :db/add
-                        (and sig? redo?) :db/add
-                        (and (not sig?) redo?) :db/retract)
-                      id attr val])))
-       ;; Caveat -- we need a way to signal history watcher if this txn is relevant
-       ;;     - send a dummy datom, this will get added to user's data
-       ;;     - we can easily filter it out while writing to fs but it will have a perf penalty
-       ;;     - Unless we are exporting transit to a common format, this can stay(only one datom -- point 2 mentioned above)
-       ;;           - although a filter while exporting is more strategic -- once in a while op, compared to fs write(very frequent)
-       true (concat [[:db/add "new" :from-undo-redo true]])))))
-
-
 (reg-event-fx
   :undo
   (fn [_ _]
-    {:dispatch [:transact (inverse-tx)]}))
+    (js/console.debug ":undo")
+    (let [local? (not (client/open?))]
+      (js/console.debug ":undo: local?" local?)
+      (if local?
+        (let [undo-event (common-events/build-undo-redo-event -1 false)
+              tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        false))))
 
 
 (reg-event-fx
   :redo
   (fn [_ _]
-    {:dispatch [:transact (inverse-tx true)]}))
+    (js/console.debug ":redo")
+    (let [local? (not (client/open?))]
+      (js/console.debug ":redo: local?" local?)
+      (if local?
+        (let [redo-event (common-events/build-undo-redo-event -1 true)
+              tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
+          {:fx [[:dispatch [:transact tx-data]]]})
+        false))))
 
 
 (defn prev-block-uid-without-presence-recursively
@@ -1496,88 +1443,6 @@
         {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
 
 
-
-(defn drop-multi-diff-source-parents
-  "Only reindex after last target. plus-after
-   Used for the selected blocks that have different parents and get dragged and dropped under some other parent
-  Terminology :
-    - drag-target       : Are the selected blocks getting dropped `:above` or `:below` the target block
-    - source-uids       : A vector of uids of all the selected blocks
-    - target-uid        : The uid of block where the blocks are dropped
-    - filtered-children : uids of all the children where the source-uids are to be dropped
-    - index             : Index of the target-block
-    - block level       : All the blocks under same parent are said to be at the same level
-
-  - source block's and target block's parent can be same here
-  - Lets look at an example
-     -1
-       -2
-       -3
-         -0
-         -4
-         -5
-       -6
-       -7
-     -8
-     -9
-
-    Here let's say we want to drag and drop blocks from 4 to 8 then because of how the product works we will have to select
-    block 4,5,6,7 and 8. Now if we analyze the selected blocks we see that there are 3 level of blocks here : (4,5) (6,7) and (8)
-    and all the blocks before 8 are the last blocks on their respective levels and hence we do not reindex the parents of
-    those blocks, we only reindex the parent of last selected block.
-  - How to reindex the last-source-block's parent and target-block's parent?
-    For last-source-block's parent we decrease the block order of all the blocks after last-source-block
-    and in the case of target-block's parent we concat :   all the blocks before the target-block
-                                                         + all the selected blocks
-                                                         + all the blocks after the selected blocks
-    NOTE: target-block's parent and last-source-block's parent can be same, in above example source blocks can be 5,6 and the
-          target block can be 7 this will make both the last-source's parent and target-block's parent 1.
-   "
-
-  [kind source-uids target target-parent]
-  (let [filtered-children          (->> (d/q '[:find ?children-uid ?o
-                                               :keys block/uid block/order
-                                               :in $ % ?target-uid ?not-contains? ?source-uids
-                                               :where
-                                               (siblings ?target-uid ?children-e)
-                                               [?children-e :block/uid ?children-uid]
-                                               [(?not-contains? ?source-uids ?children-uid)]
-                                               [?children-e :block/order ?o]]
-                                             @db/dsdb db/rules (:block/uid target) db/not-contains? (set source-uids))
-                                        (sort-by :block/order)
-                                        (mapv #(:block/uid %)))
-        t-order                    (:block/order target)
-        index                      (cond
-                                     (= kind :above) t-order
-                                     (and (= kind :below) (db/last-child? (:block/uid target))) t-order
-                                     (= kind :below) (inc t-order))
-        n                          (count filtered-children)
-        head                       (subvec filtered-children 0 index)
-        tail                       (subvec filtered-children index n)
-        new-vec                    (concat head source-uids tail)
-        new-source-uids            (map-indexed (fn [idx uid] {:block/uid uid :block/order idx}) new-vec)
-        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
-        source-blocks              (mapv #(db/get-block [:block/uid %]) source-uids)
-        last-s-parent              (last source-parents)
-        last-s-order               (:block/order (last source-blocks))
-        n                          (count (filter (fn [x] (= (:block/uid x) (:block/uid last-s-parent))) source-parents))
-        reindex-last-source-parent (minus-after (:db/id last-s-parent) last-s-order n)
-        source-parents             (mapv #(db/get-parent [:block/uid %]) source-uids)
-        retracts                   (mapv (fn [uid parent] [:db/retract (:db/id parent) :block/children [:block/uid uid]])
-                                         source-uids
-                                         source-parents)
-        new-target-parent          {:db/id (:db/id target-parent) :block/children new-source-uids}
-        ;; need to reindex last-source-parent but requires more index management depending on the level of the target parent
-        new-source-parent          {:db/id (:db/id last-s-parent) :block/children reindex-last-source-parent}
-        tx-data                    (conj retracts new-target-parent #_new-source-parent)]
-    (identity new-source-parent)
-    tx-data))
-
-
-(reg-event-fx
-  :drop-multi/diff-source
-  (fn [_ [_ kind source-uids target target-parent]]
-    {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
 
 (reg-event-fx
   :drop-multi/diff-source-same-parents

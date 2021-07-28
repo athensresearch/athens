@@ -168,9 +168,7 @@
                              it is considered `:drop/diff-parent` event."
 
   [source-uid target-uid drag-target action-allowed]
-  (let [source                     (db/get-block  [:block/uid source-uid])
-        target                     (db/get-block  [:block/uid target-uid])
-        source-parent              (db/get-parent [:block/uid source-uid])
+  (let [source-parent              (db/get-parent [:block/uid source-uid])
         target-parent              (db/get-parent [:block/uid target-uid])
         drag-target-child?         (= drag-target :child)
         drag-target-same-parents?  (= source-parent target-parent)
@@ -178,8 +176,8 @@
         move-action                (= action-allowed "move")
         link-action                (= action-allowed "link")
         event         (cond
-                        (and move-action drag-target-child?)       [:drop/child {:source-uid source-uid
-                                                                                 :target-uid target-uid}]
+                        (and move-action drag-target-child?)        [:drop/child {:source-uid source-uid
+                                                                                  :target-uid target-uid}]
                         (and move-action drag-target-same-parents?) [:drop/same {:drag-target drag-target
                                                                                  :source-uid  source-uid
                                                                                  :target-uid  target-uid}]
@@ -187,15 +185,14 @@
                         (and move-action drag-target-diff-parents?) [:drop/diff-parent {:drag-target drag-target
                                                                                         :source-uid  source-uid
                                                                                         :target-uid  target-uid}]
-                        (and link-action drag-target-child?)       [:drop-link/child {:source-uid source-uid
-                                                                                      :target-uid target-uid}]
+                        (and link-action drag-target-child?)        [:drop-link/child {:source-uid source-uid
+                                                                                       :target-uid target-uid}]
                         (and link-action drag-target-same-parents?) [:drop-link/same-parent {:drag-target drag-target
                                                                                              :source-uid  source-uid
                                                                                              :target-uid  target-uid}]
                         (and link-action drag-target-diff-parents?) [:drop-link/diff-parent {:drag-target drag-target
                                                                                              :source-uid  source-uid
                                                                                              :target-uid  target-uid}])]
-    (println ".event" event) ;; TODO Remove this after all drop events are ported
     (rf/dispatch event)))
 
 
@@ -226,16 +223,12 @@
         same-parent-source?  (db/same-parent? source-uids)
         diff-parents-source? (not same-parent-source?)
         diff-same-parents    (db/same-parent? (conj []  (last source-uids) target-uid))
-        target               (db/get-block [:block/uid target-uid])
-        first-source-uid     (first source-uids)
-        first-source-parent  (db/get-parent [:block/uid first-source-uid])
-        target-parent        (db/get-parent [:block/uid target-uid])
         event                (cond
-                               (= drag-target :child) [:drop-multi/child {:source-uids source-uids
-                                                                          :target-uid  target-uid}]
-                               same-all?              [:drop-multi/same-all {:drag-target drag-target
-                                                                             :source-uids source-uids
-                                                                             :target-uid  target-uid}]
+                               (= drag-target :child)       [:drop-multi/child {:source-uids source-uids
+                                                                                :target-uid  target-uid}]
+                               same-all?                    [:drop-multi/same-all {:drag-target drag-target
+                                                                                   :source-uids source-uids
+                                                                                   :target-uid  target-uid}]
                                (and diff-same-parents
                                     diff-parents-source?)   [:drop-multi/diff-source-same-parents {:drag-target drag-target
                                                                                                    :source-uids  source-uids
@@ -244,10 +237,10 @@
                                     diff-parents-source?)   [:drop-multi/diff-source-diff-parents {:drag-target drag-target
                                                                                                    :source-uids  source-uids
                                                                                                    :target-uid  target-uid}]
-                               same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
-                                                                                :source-uids source-uids
-                                                                                :target-uid  target-uid}])]
-    (println ".event" event) ;; TODO Remove this after all events are ported
+                               same-parent-source?          [:drop-multi/same-source {:drag-target drag-target
+                                                                                      :source-uids source-uids
+                                                                                      :target-uid  target-uid}])]
+
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))
 

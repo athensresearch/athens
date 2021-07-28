@@ -623,7 +623,6 @@
       {:fx [[:dispatch [:remote/send-event! drop-child-event]]]})))
 
 
-
 (rf/reg-event-fx
   :remote/drop-multi-child
   (fn [{db :db} [_ {:keys [source-uids target-uid] :as args}]]
@@ -659,6 +658,7 @@
                                                                               target-uid)]
       (js/console.debug ":remote/drop-diff-parent event" drop-diff-parent-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-parent-event]]]})))
+
 
 (rf/reg-event-fx
   :remote/drop-diff-source-same-parents
@@ -751,3 +751,23 @@
       (js/console.debug ":remote/drop-link-same-parent event" drop-link-same-parent-event)
       {:fx [[:dispatch [:remote/send-event! drop-link-same-parent-event]]]})))
 
+
+(rf/reg-event-fx
+  :remote/followup-selected-delete
+  (fn [{_db :db} [_ event-id]]
+    (js/console.debug ":remote/followup-selected-delete" event-id)
+    {:fx [:dispatch-n [[:editing/uid nil]
+                       [:remote/unregister-followup event-id]]]}))
+
+
+(rf/reg-event-fx
+  :remote/selected-delete
+  (fn [{db :db} [_ uids]]
+    (let [last-seen-tx                 (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      selected-delete-event} (common-events/build-selected-delete-event last-seen-tx
+                                                                                      uids)
+          followup-fx                  [[:dispatch [:remote/followup-selected-delete event-id]]]]
+      (js/console.debug ":remote/selected-delete" (pr-str selected-delete-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event!       selected-delete-event]]]]})))
