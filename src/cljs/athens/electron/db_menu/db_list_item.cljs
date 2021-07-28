@@ -54,8 +54,8 @@
 
 
 (defn db-list-item
-  [{:keys [db is-current] :as props}]
-  [:div (use-style db-list-item-style props)
+  [{:keys [db is-current]}]
+  [:div (use-style db-list-item-style)
    (if is-current
      [:div.body.is-current
       [db-list-item-content {:db db}]]
