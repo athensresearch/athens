@@ -887,6 +887,7 @@
         [uid order]                       (last selected-sibs-of-last)
         parent-eid                        (:db/id (common-db/get-parent db [:block/uid uid]))
         n                                 (count selected-sibs-of-last)
+        ;; Since the selection is always contiguous, there's only one parent (the last one) whose children need to be reindexed.
         reindex                           (common-db/minus-after db
                                                                  parent-eid
                                                                  order
