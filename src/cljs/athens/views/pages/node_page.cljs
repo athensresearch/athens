@@ -368,7 +368,7 @@
                  [m-popover
                   (merge (use-style dropdown-style)
                          {:style {:font-size "14px"}
-                          :open            @ele
+                          :open            (boolean @ele)
                           :anchorEl        @ele
                           :onClose         #(reset! ele nil)
                           :anchorOrigin    #js{:vertical   "bottom"
