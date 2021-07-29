@@ -78,10 +78,27 @@
   (js/Number (js/localStorage.getItem "debounce-save-time")))
 
 
+(def greek-pantheon
+  #{"Zeus"
+    "Hera"
+    "Poseidon"
+    "Demeter"
+    "Athena"
+    "Apollo"
+    "Artemis"
+    "Ares"
+    "Aphrodite"
+    "Hephaestus"
+    "Hermes"
+    "Dionysus"
+    ;; Technically not part of the Olympians, but a cool guy nonetheless.
+    "Hades"})
+
+
 (defn init-user
   []
   (or (js/localStorage.getItem "user/name"
-       "Socrates")))
+       (rand-nth (vec greek-pantheon)))))
 
 
 ;(re-frame.core/reg-sub
