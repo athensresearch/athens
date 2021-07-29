@@ -1567,13 +1567,15 @@
 (reg-event-fx
   :paste
   (fn [_ [_ uid text]]
+    (println ":paste event triggered")
+    (println ":paste text data" text)
     (let [[uid embed-id]  (db/uid-and-embed-id uid)
           block         (db/get-block [:block/uid uid])
           {:block/keys  [order children open]} block
           {:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
-          block-start?  (zero? start)
+            block-start?  (zero? start)
           parent?       (and children open)
           start-idx     (cond
                           empty-block? order
@@ -1605,6 +1607,21 @@
                             n     (count string)]
                         [:editing/uid (cond-> uid
                                         embed-id (str "-embed-" embed-id)) n]))]})))
+
+
+#_(reg-event-fx
+    :paste
+    (fn [_ [_ {:keys [uid text] :as args}]]
+      (js/console.debug ":paste args" args)
+      (let [local? (not (client/open?))]
+        (if local?
+          (let [paste-event (common-events/build-paste-event -1
+                                                             uid
+                                                             text)
+                tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
+            (js/console.debug ":paste tx" tx)
+            {:fx [[:dispatch [:transact tx]]]})
+          {:fx [[:dispatch [:remote/paste args]]]}))))
 
 
 (reg-event-fx

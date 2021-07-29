@@ -1,6 +1,7 @@
 (ns athens.common-events.resolver
   (:require
     [athens.common-db :as common-db]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
@@ -867,7 +868,7 @@
   ;; are necessarily going to remove all tail children, meaning we only need to be
   ;; concerned with the last N blocks that are selected, adjacent siblings, to
   ;; determine the minus-after value.
-  (println "resolver :datascript/drop-multi-child args" (pr-str args))
+  (println "resolver :datascript/selected-delete args" (pr-str args))
   (let [{:keys [uids]}                    args
         selected-sibs-of-last             (->> uids
                                                (d/q '[:find ?sib-uid ?o
@@ -895,7 +896,7 @@
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
         tx-data                           (concat retracted-vec
                                                   reindex)]
-    (println "resolver :selected/delete tx-data is " (pr-str tx-data))
+    (println "resolver :datascript/selected-delete tx-data is " (pr-str tx-data))
     tx-data))
 
 
@@ -966,3 +967,115 @@
                       {:db/id [:block/uid uid] :block/string new-str}))
                   unlinked-refs)]
     tx-data))
+
+
+(defn text-to-blocks
+  [text uid root-order]
+  (let [;; Split raw text by line
+        lines       (->> (clojure.string/split-lines text)
+                         (filter (comp not clojure.string/blank?)))
+        ;; Count left offset
+        left-counts (->> lines
+                         (map #(re-find #"^\s*(-|\*)?" %))
+                         (map #(-> % first count)))
+        ;; Trim * - and whitespace
+        sanitize    (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
+                         lines)
+        ;; Generate blocks with tempids
+        blocks      (map-indexed (fn [idx x]
+                                   {:db/id        (dec (* -1 idx))
+                                    :block/string x
+                                    :block/open   true
+                                    :block/uid    (gen-block-uid)})
+                                 sanitize)
+        ;; Count blocks
+        n           (count blocks)
+        ;; Assign parents
+        parents     (loop [i   1
+                           res [(first blocks)]]
+                      (if (= n i)
+                        res
+                        ;; Nested loop: worst-case O(n^2)
+                        (recur (inc i)
+                               (loop [j (dec i)]
+                                 ;; If j is negative, that means the loop has been compared to every previous line,
+                                 ;; and there are no previous lines with smaller left-offsets, which means block i
+                                 ;; should be a root block.
+                                 ;; Otherwise, block i's parent is the first block with a smaller left-offset
+                                 (if (neg? j)
+                                   (conj res (nth blocks i))
+                                   (let [curr-count (nth left-counts i)
+                                         prev-count (nth left-counts j nil)]
+                                     (if (< prev-count curr-count)
+                                       (conj res {:db/id          (:db/id (nth blocks j))
+                                                  :block/children (nth blocks i)})
+                                       (recur (dec j)))))))))
+        ;; assign orders for children. order can be local or based on outer context where paste originated
+        ;; if local, look at order within group. if outer, use root-order
+        tx-data     (->> (group-by :db/id parents)
+                         ;; maps smaller than size 8 are ordered, larger are not https://stackoverflow.com/a/15500064
+                         (into (sorted-map-by >))
+                         (mapcat (fn [[_tempid blocks]]
+                                   (loop [order 0
+                                          res   []
+                                          data  blocks]
+                                     (let [{:block/keys [children] :as block} (first data)]
+                                       (cond
+                                         (nil? block) res
+                                         (nil? children) (let [new-res (conj res {:db/id          [:block/uid uid]
+                                                                                  :block/children (assoc block :block/order @root-order)})]
+                                                           (swap! root-order inc)
+                                                           (recur order
+                                                                  new-res
+                                                                  (next data)))
+                                         :else (recur (inc order)
+                                                      (conj res (assoc-in block [:block/children :block/order] order))
+                                                      (next data))))))))]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/paste
+  [db {:event/keys [args]}]
+  ;; Paste based on conditions of block where paste originated from.
+  ;; - If from an empty block, delete block in place and make that location the root
+  ;; - If at text start of non-empty block, prepend block and focus first new root
+  ;; - If anywhere else beyond text start of an OPEN parent block, prepend children
+  ;; - Otherwise append after current block.
+  (println "resolver :datascript/paste args" (pr-str args))
+  (let [{:keys [uid
+                text]}                         args
+        [uid embed-id]                         (common-db/uid-and-embed-id uid)
+        block                                  (common-db/get-block db [:block/uid uid])
+        {:block/keys  [order children open]}   block
+        {:keys [start value]}                  (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
+        empty-block?                           (and (string/blank? value)
+                                                    (empty? children))
+        block-start?                           (zero? start)
+        parent?                                (and children open)
+        start-idx                              (cond
+                                                 empty-block? order
+                                                 block-start? order
+                                                 parent? 0
+                                                 :else (inc order))
+        root-order                             (atom start-idx)
+        parent                                 (cond
+                                                 parent? block
+                                                 :else (common-db/get-parent db [:block/uid uid]))
+        paste-tx-data                          (text-to-blocks text (:block/uid parent) root-order)
+        ;; the delta between root-order and start-idx is how many root blocks were added
+        n                                      (- @root-order start-idx)
+        start-reindex                          (cond
+                                                 block-start? (dec order)
+                                                 parent? -1
+                                                 :else order)
+        amount                                 (cond
+                                                 empty-block? (dec n)
+                                                 :else n)
+        reindex                                (plus-after (:db/id parent) start-reindex amount)
+        tx-data                                (concat reindex
+                                                       paste-tx-data
+                                                       (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
+    (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
+    tx-data))
+
+

@@ -520,6 +520,19 @@
     :event/args    {:uids uids}}))
 
 
+(defn build-paste-event
+  "Builds `:datascript/paste` event with:
+  - uid  : The uid of block to which text is to be pasted
+  - text : The text to be pasted"
+  [last-tx uid text]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/paste
+     :event/args    {:uid  uid
+                     :text text}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event

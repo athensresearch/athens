@@ -53,7 +53,8 @@
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
-   :datascript/selected-delete])
+   :datascript/selected-delete
+   :datascript/paste])
 
 
 (def event-type-graph-server
@@ -354,6 +355,12 @@
      [:uids [:vector string?]]]]])
 
 
+(def datascript-paste
+  [:map
+   [:event/args
+    [:map
+     [:uid  string?
+      :text string?]]]])
 
 (def event
   [:multi {:dispatch :event/type}
