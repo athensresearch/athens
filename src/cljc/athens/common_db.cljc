@@ -373,6 +373,26 @@
        (get-data db)))
 
 
+(defn not-contains?
+  [coll v]
+  (not (contains? coll v)))
+
+
+(defn get-children-not-in-selected-uids
+  [db target-block-uid selected-uids]
+  (d/q '[:find ?children-uid ?o
+         :keys block/uid block/order
+         :in $ % ?target-uid ?not-contains? ?source-uids
+         :where
+         (siblings ?target-uid ?children-e)
+         [?children-e :block/uid ?children-uid]
+         [(?not-contains? ?source-uids ?children-uid)]
+         [?children-e :block/order ?o]]
+       db
+       rules
+       target-block-uid
+       not-contains? (set selected-uids)))
+
 (defn- extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
@@ -433,8 +453,8 @@
 (comment
   (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
   (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
-  (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]})
-  )
+  (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]}))
+
 
 
 (defn block-refs-as-lookup-refs
