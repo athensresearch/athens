@@ -56,20 +56,28 @@
   (debounce sync-db-from-fs 1000))
 
 
+(def watcher
+  "Singleton watcher, can only have one at a given time.
+   Not part of the ReFrame DB because the actual watcher exists, and must be cleaned up, regardless of the DB."
+  (atom nil))
+
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Watching db file directly doesn't always work, so watch directory and regex match.
 ;; Debounce because files can be changed multiple times per save.
 (rf/reg-event-fx
   :fs/watch
   (fn [_ [_ filepath]]
-    (let [dirpath (.dirname path filepath)]
-      (.. fs (watch dirpath (fn [_event filename]
-                              ;; when filename matches last part of filepath
-                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                              (when (re-find #"conflict" (or filename ""))
-                                (throw "Conflict file created by Dropbox"))
-                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                (debounce-sync-db-from-fs filepath filename))))))
+    (swap! watcher
+           (fn [x]
+             (when x (.close x))
+             (let [dirpath (.dirname path filepath)]
+               (.. fs (watch dirpath (fn [_event filename]
+                                       ;; when filename matches last part of filepath
+                                       ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                                       (when (re-find #"conflict" (or filename ""))
+                                         (throw "Conflict file created by Dropbox"))
+                                       (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                         (debounce-sync-db-from-fs filepath filename))))))))
     {}))
 
 
