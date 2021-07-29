@@ -22,7 +22,7 @@
   (fn []
     (let [default-dir (utils/default-dir)
           images-dir (utils/default-image-dir-path)
-          db-filepath (utils/default-db-dir-path)]
+          db-filepath (utils/default-db-path)]
       (utils/create-dir-if-needed! default-dir)
       (utils/create-dir-if-needed! images-dir)
       {:fs/write!  [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
@@ -73,38 +73,37 @@
     {}))
 
 
-;; TODO: parameterize so that can extend images-dir and db-filepath from filepath
 (rf/reg-event-fx
   :fs/create-and-watch
-  (fn [{:keys [db]} [_ db-filepath]]
-    (let [default-dir (utils/default-dir)
-          images-dir (utils/default-image-dir-path)
-          db-filepath (utils/default-db-dir-path)]
-      (prn "CREATE"))))
-      ;(utils/create-dir-if-needed! default-dir)
-      ;(utils/create-dir-if-needed! images-dir)
-      ;{:db                (assoc db :db/filepath db-filepath)
-      ; :local-storage/set [:db/filepath db-filepath]
-      ; :fs/write!         [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
-      ; :dispatch-n        [#_[:db/update-filepath db-filepath]
-      ;                     [:reset-conn athens-datoms/datoms]
-      ;                     [:db-picker/add-new-db db-filepath]]})))
+  (fn [_ [_ {:keys [base-dir images-dir db-path]} :as local-graph]]
+    (let [new-db (d/db-with (d/empty-db db/schema) athens-datoms/datoms)]
+      (utils/create-dir-if-needed! base-dir)
+      (utils/create-dir-if-needed! images-dir)
+      {;; NB: this write only works because :fs/write! is debounced.
+       ;; By the time write-db actually runs, the other dispatches have ran and there's
+       ;; a datascript db to persist.
+       ;; If :fs/write ever changes to not be debounced, this event will need to
+       ;; save a datascript db to the reframe db before :fs/write! is called.
+       :fs/write!  nil
+       :dispatch-n [[:db-picker/add-new-db local-graph]
+                    [:reset-conn new-db]
+                    [:fs/watch db-path]]})))
 
 
 (rf/reg-event-fx
   :fs/read-and-watch
-  (fn [{:keys [_db]} [_ db-filepath]]
-    (let [datoms (-> (.readFileSync fs db-filepath)
+  (fn [_ [_ {:keys [db-path]}]]
+    (let [datoms (-> (.readFileSync fs db-path)
                      dt/read-transit-str)]
       {:dispatch-n [[:reset-conn datoms]
-                    [:fs/watch db-filepath]]})))
-
+                    [:fs/watch db-path]]})))
+ 
 
 (rf/reg-event-fx
  :fs/add-read-and-watch
- (fn [_ [_ db-filepath]]
-   {:dispatch-n [[:db-picker/add-new-db db-filepath]
-                 [:fs/read-and-watch db-filepath]]}))
+ (fn [_ [_ local-graph]]
+   {:dispatch-n [[:db-picker/add-new-db local-graph]
+                 [:fs/read-and-watch local-graph]]}))
 
 
 (rf/reg-event-db
@@ -127,9 +126,11 @@
   "Tries to create a write stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
   If the write operation fails, the backup file is corrupted and no copy is attempted, thus index.transit is assumed to be untouched.
   If the write operation succeeds, a backup is created and index.transit is overwritten.
+  Reading and writing will occur asynchronously.
+  Path and data to be written are retrieved from the reframe db directly, not passed as arguments.
   User should eventually have MANY backups files. It's their job to manage these backups :)"
   [copy?]
-  (let [filepath     @(rf/subscribe [:db/filepath])
+  (let [filepath     @(rf/subscribe [:athens/persist :db/filepath])
         data         (dt/write-transit-str @db/dsdb)
         r            (.. stream -Readable (from data))
         dirname      (.dirname path filepath)
@@ -171,6 +172,9 @@
   (write-db false))
 
 
+;; The write happens asynchronously due to the debounce and write-db both being asynchronous.
+;; write-db also takes the value of dsdb and filepath at the time it actually runs, not when
+;; this is called.
 (rf/reg-fx
   :fs/write!
   (fn []

@@ -21,39 +21,39 @@
   (fn [{:keys [local-storage] :as _cofx} _]
     (let [init-app-db      (init-app-db db/rfdb local-storage)
           {:keys [db/filepath]} local-storage
-          default-db-path  (utils/default-db-dir-path)
-          db-exists-on-fs? (.existsSync fs default-db-path)
+          local-graph      (utils/local-graph (or filepath (utils/default-db-path)))
+          db-exists-on-fs? (utils/local-graph-exists? local-graph)
           first-event      (cond
 
                              ;; Filepath not found in local storage, but db found at default default-db-path
                              ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
                              (and (nil? filepath)
                                   db-exists-on-fs?)
-                             [:fs/add-read-and-watch default-db-path]
+                             [:fs/add-read-and-watch local-graph]
 
                              ;; Filepath not found in local storage, no db found at default-db-location
                              ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
                              (and (nil? filepath)
                                   (not db-exists-on-fs?))
-                             [:fs/create-and-watch default-db-path]
+                             [:fs/create-and-watch local-graph]
 
                              ;; Filepath found in local storage and on filesystem.
                              ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
                              (and filepath
                                   db-exists-on-fs?)
-                             [:fs/read-and-watch filepath]
+                             [:fs/read-and-watch local-graph]
 
                              ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
                              :else [:fs/open-dialog])]
 
 
-      ;; output => [:reset-conn] OR [:fs/create-new-db] OR :local-storage/create-db-picker-list
+      ;; output => [:reset-conn] OR [:fs/create-and-watch] OR :local-storage/create-db-picker-list
 
       {:db         init-app-db
        :async-flow {:first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
-                                      :events     :fs/create-new-db
+                                      :events     :fs/create-and-watch
                                       :dispatch-n [[:navigate :home]
                                                    [:left-sidebar/toggle]]}
 
@@ -65,18 +65,18 @@
 
                                      ;; whether first or nth time, update athens pages
                                      #_{:when       :seen-any-of?
-                                        :events     [:fs/create-new-db :reset-conn]
+                                        :events     [:fs/create-and-watch :reset-conn]
                                         :dispatch-n [[:db/retract-athens-pages]
                                                      [:db/transact-athens-pages]]}
 
                                      ;; bind windows toolbar electron buttons
                                      #_{:when     :seen-any-of?
-                                        :events   [:fs/create-new-db :reset-conn]
+                                        :events   [:fs/create-and-watch :reset-conn]
                                         :dispatch [:bind-win-listeners]}
 
 
                                      {:when        :seen-any-of?
-                                      :events      [:fs/create-new-db :reset-conn]
+                                      :events      [:fs/create-and-watch :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
                                       :dispatch-fn (fn [_]
                                                      (let [schemas (d/q '[:find ?e ?v

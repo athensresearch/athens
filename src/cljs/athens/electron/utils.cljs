@@ -27,7 +27,7 @@
     (.resolve path DOC-PATH "athens")))
 
 
-(defn default-db-dir-path
+(defn default-db-path
   []
   (.resolve path (default-dir) DB-INDEX))
 
@@ -35,6 +35,18 @@
 (defn default-image-dir-path
   []
   (.resolve path (default-dir) IMAGES-DIR-NAME))
+
+
+(defn local-graph
+  [db-path]
+  (let [base-dir (.dirname path db-path)]
+    {:base-dir   base-dir
+     :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
+     :db-path    db-path}))
+
+
+(defn local-graph-exists? [{:keys [db-path]}]
+  (.existsSync fs db-path))
 
 
 (defn create-dir-if-needed!
