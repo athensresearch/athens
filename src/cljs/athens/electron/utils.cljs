@@ -40,13 +40,18 @@
 (defn local-graph
   [db-path]
   (let [base-dir (.dirname path db-path)]
-    {:base-dir   base-dir
+    {:name       (.basename path base-dir)
+     :base-dir   base-dir
      :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
      :db-path    db-path}))
 
 
-(defn local-graph-exists? [{:keys [db-path]}]
+(defn local-graph-db-exists? [{:keys [db-path]}]
   (.existsSync fs db-path))
+
+
+(defn local-graph-dir-exists? [{:keys [base-dir]}]
+  (.existsSync fs base-dir))
 
 
 (defn create-dir-if-needed!

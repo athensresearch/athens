@@ -22,7 +22,7 @@
     (let [init-app-db      (init-app-db db/rfdb local-storage)
           {:keys [db/filepath]} local-storage
           local-graph      (utils/local-graph (or filepath (utils/default-db-path)))
-          db-exists-on-fs? (utils/local-graph-exists? local-graph)
+          db-exists-on-fs? (utils/local-graph-db-exists? local-graph)
           first-event      (cond
 
                              ;; Filepath not found in local storage, but db found at default default-db-path
