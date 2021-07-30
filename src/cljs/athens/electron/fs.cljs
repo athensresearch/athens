@@ -105,7 +105,7 @@
                      dt/read-transit-str)]
       {:dispatch-n [[:reset-conn datoms]
                     [:fs/watch db-path]]})))
- 
+
 
 (rf/reg-event-fx
  :fs/add-read-and-watch
@@ -138,7 +138,7 @@
   Path and data to be written are retrieved from the reframe db directly, not passed as arguments.
   User should eventually have MANY backups files. It's their job to manage these backups :)"
   [copy?]
-  (let [filepath     @(rf/subscribe [:athens/persist :db/filepath])
+  (let [filepath     @(rf/subscribe [:db/filepath])
         data         (dt/write-transit-str @db/dsdb)
         r            (.. stream -Readable (from data))
         dirname      (.dirname path filepath)
