@@ -87,13 +87,8 @@
     (let [new-db (d/db-with (d/empty-db db/schema) athens-datoms/datoms)]
       (utils/create-dir-if-needed! base-dir)
       (utils/create-dir-if-needed! images-dir)
-      {;; NB: this write only works because :fs/write! is debounced.
-       ;; By the time write-db actually runs, the other dispatches have ran and there's
-       ;; a datascript db to persist.
-       ;; If :fs/write ever changes to not be debounced, this event will need to
-       ;; save a datascript db to the reframe db before :fs/write! is called.
-       :fs/write!  nil
-       :dispatch-n [[:db-picker/add-new-db local-graph]
+      (.writeFileSync fs db-path (dt/write-transit-str new-db))
+      {:dispatch-n [[:db-picker/add-new-db local-graph]
                     [:reset-conn new-db]
                     [:fs/watch db-path]]})))
 
