@@ -439,7 +439,7 @@
   "Builds `:datascript/drop-multi-diff-source-same-parents` event with:
   - `source-uids` : Vector of uids of the selected source blocks
   - `target-uid`  : uid of the target block
-  - `drag-target` : defines where is the block dragged it can be :above, :below, :child"
+  - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
@@ -454,7 +454,7 @@
   "Builds `:datascript/drop-multi-diff-source-diff-parents` event with:
   - `source-uids` : Vector of uids of the selected source blocks
   - `target-uid`  : uid of the target block
-  - `drag-target` : defines where is the block dragged it can be :above, :below, :child"
+  - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id

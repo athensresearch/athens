@@ -572,92 +572,6 @@
     (println "resolver :datascript/drop-diff-parent tx-data" (pr-str tx-data))
     tx-data))
 
-(defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-diff-parents
-  [db {:event/keys [args]}]
-
-  ;; Used for the selected blocks that have different parents and get dragged and dropped under some other parent
-  ;; Terminology :
-  ;;  - drag-target       : Are the selected blocks getting dropped `:above` or `:below` the target block
-  ;;  - source-uids       : A vector of uids of all the selected blocks
-  ;;  - target-uid        : The uid of block where the blocks are dropped
-  ;;  - filtered-children : uids of all the children where the source-uids are to be dropped
-  ;;  - index             : Index of the target-block
-  ;;  - block level       : All the blocks under same parent are said to be at the same level
-
-  ;;  - source block's and target block's parent can be same here
-  ;;  - Lets look at an example
-  ;;   -1
-  ;;     -2
-  ;;     -3
-  ;;       -0
-  ;;       -4
-  ;;       -5
-  ;;     -6
-  ;;     -7
-  ;;   -8
-  ;;   -9
-  ;; Here let's say we want to drag and drop blocks from 4 to 8 then because of how the product works we will have to select
-  ;; block 4,5,6,7 and 8. Now if we analyze the selected blocks we see that there are 3 level of blocks here : (4,5) (6,7) and (8)
-  ;; and all the blocks before 8 are the last blocks on their respective levels and hence we do not reindex the parents of
-  ;; those blocks, we only reindex the parent of last selected block.
-
-  ;; - How to reindex the last-source-block's parent and target-block's parent?
-  ;;   For last-source-block's parent we decrease the block order of all the blocks after last-source-block
-  ;;   and in the case of target-block's parent we concat :  all the blocks before the target-block
-  ;;                                                       + all the selected blocks
-  ;;                                                       + all the blocks after the selected blocks
-  ;; NOTE: target-block's parent and last-source-block's parent can be same, in above example source blocks can be 5,6 and the
-  ;;      target block can be 7 this will make both the last-source's parent and target-block's parent 1.
-
-  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
-  (let [{:keys [drag-target
-                source-uids
-                target-uid]}                   args
-        {target-block-order :block/order}      (common-db/get-block db [:block/uid target-uid])
-        {target-parent-eid :db/id}             (common-db/get-parent db [:block/uid target-uid])
-        filtered-children                      (->> (common-db/get-children-not-in-selected-uids db
-                                                                                                 target-uid
-                                                                                                 source-uids)
-                                                    (sort-by :block/order)
-                                                    (mapv #(:block/uid %)))
-        index                                  (cond
-                                                 (= drag-target :above) target-block-order
-                                                 (= drag-target :below) (inc target-block-order))
-        total-children                         (count filtered-children)
-        head                                   (subvec filtered-children 0 index)
-        tail                                   (subvec filtered-children index total-children)
-        new-vec                                (concat head
-                                                       source-uids
-                                                       tail)
-        new-source-uids                        (map-indexed (fn [idx uid] {:block/uid uid :block/order idx})
-                                                            new-vec)
-        source-parents                         (mapv #(common-db/get-parent db [:block/uid %])
-                                                     source-uids)
-        {last-source-block-order :block/order} (common-db/get-block db [:block/uid (last source-uids)])
-        {last-source-parent-eid :db/id
-         last-source-parent-uid :block/uid}    (last source-parents)
-        n                                      (count
-                                                 (filter (fn [x] (= (:block/uid x)
-                                                                    last-source-parent-uid))
-                                                         source-parents))
-        reindex-last-source-parent             (common-db/minus-after db
-                                                                      last-source-parent-eid
-                                                                      last-source-block-order
-                                                                      n)
-        retracts                               (mapv
-                                                 (fn [uid parent] [:db/retract     (:db/id parent)
-                                                                   :block/children [:block/uid uid]])
-                                                 source-uids
-                                                 source-parents)
-        new-target-parent                      {:db/id          target-parent-eid
-                                                :block/children new-source-uids}
-        new-source-parent                      {:db/id          last-source-parent-eid
-                                                :block/children reindex-last-source-parent}
-        tx-data                                (conj retracts
-                                                     new-target-parent
-                                                     new-source-parent)]
-    (println "resolver :datascript/drop-multi-diff-source-diff-parents tx-data" tx-data)
-    tx-data))
 
 
 (defn add-new-blocks
@@ -702,7 +616,7 @@
                                    start-index-for-reindex)
         blocks-vec-count   (count blocks-vec)
         end-index          (if (>= end-index-for-reindex
-                                  blocks-vec-count)
+                                   blocks-vec-count)
                              blocks-vec-count
                              (+ 1 end-index-for-reindex))
         tail               (subvec blocks-vec
@@ -722,23 +636,111 @@
     updated-blocks-vec))
 
 
+(defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-diff-parents
+  [db {:event/keys [args]}]
+
+  ;; Used for the selected blocks that have different parents and get dragged and dropped under some other parent
+  ;; Terminology :
+  ;;  - drag-target       : Are the selected blocks getting dropped `:above` or `:below` the target block
+  ;;  - source-uids       : A vector of uids of all the selected blocks
+  ;;  - target-uid        : The uid of block where the blocks are dropped
+  ;;  - filtered-children : uids of all the children under target-block's parent
+  ;;  - index             : Index of the target-block
+  ;;  - target-parent     : parent of the target-block
+  ;;  - target-index      : This index represents the index where the blocks are to be dropped. To calculate this
+  ;;                        we need to know both the target-block's order and the drag-target, because blocks can be
+  ;;                        dropped above or below the target-block
+  ;;
+  ;; Reindex : We need to reindex the last-selected-block's parent and target's parent
+  ;;           - For target's parent we need to reindex all the children of target-parent after target-index,
+  ;;             the blocks before target-index don't change their index.
+  ;;           - For last-selected-block's parent we need decrease the block order of blocks after the location from where
+  ;;             the last-block was removed.
+  ;; Retract all the selected blocks
+
+  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
+  (let [{:keys [drag-target
+                source-uids
+                target-uid]}                   args
+        selected-blocks                        (map #(common-db/get-block db [:block/uid %]) source-uids)
+        {target-block-order :block/order}      (common-db/get-block db [:block/uid target-uid])
+        {target-parent-eid :db/id
+         target-parent-uid :block/uid}         (common-db/get-parent db [:block/uid target-uid])
+        target-parent-children                 (:block/children (common-db/get-block db [:block/uid target-parent-uid]))
+        index                                  (cond
+                                                 (= drag-target :above) target-block-order
+                                                 (= drag-target :below) (inc target-block-order))
+        new-target-parent-children             (add-new-blocks target-parent-children
+                                                               selected-blocks
+                                                               index)
+        children-count                         (count new-target-parent-children)
+        reindexed-target-parent-blocks         (reindex new-target-parent-children
+                                                        index
+                                                        children-count
+                                                        index)
+        source-parents                         (mapv #(common-db/get-parent db [:block/uid %])
+                                                     source-uids)
+        {last-source-block-order :block/order} (common-db/get-block db [:block/uid (last source-uids)])
+        {last-source-parent-eid :db/id
+         last-source-parent-uid :block/uid}    (last source-parents)
+        n                                      (count
+                                                 (filter (fn [x] (= (:block/uid x)
+                                                                    last-source-parent-uid))
+                                                         source-parents))
+        reindex-last-source-parent             (common-db/minus-after db
+                                                                      last-source-parent-eid
+                                                                      last-source-block-order
+                                                                      n)
+        retracts                               (retract db source-uids)
+        new-target-parent                      {:db/id          target-parent-eid
+                                                :block/children reindexed-target-parent-blocks}
+        new-source-parent                      {:db/id          last-source-parent-eid
+                                                :block/children reindex-last-source-parent}
+        tx-data                                (conj retracts
+                                                     new-target-parent
+                                                     new-source-parent)]
+    (println "resolver :datascript/drop-multi-diff-source-diff-parents tx-data" tx-data)
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-same-parents
   [db {:event/keys [args]}]
-  ;; Given some selected blocks we need to
-  ;; - Remove these blocks from their parents
-  ;; - Add the selected blocks to some location under the target's parent
-  ;; - Reindex the blocks
-  ;; - Retract the selected blocks
+
+  ;; This event is used when multiple blocks are selected with atleast 2 blocks having differnt parents
+  ;; are moved under the same parent as the last-selected-block's parent
+
+  ;; Terminology
+  ;;  target-block        : the block above or below which the selected blocks are to be dropped
+  ;;  last-selected-block : the last block inside the list of selected blocks
+
+  ;; NOTE: In this event both the last-selected-block's parent and target-block's parent are the same,
+  ;;       hence they can be used interchangeably
+
+  ;; Given some selected blocks on a high level we need to
+  ;; - Retract the blocks which don't have same parent as the last-selected-block
+  ;; - Add the selected blocks to some location under the last-selected-block's parent
+  ;; - Reindex the children of last-selected-block's parent
+  ;; - Retract the selected blocks which are not under the last-selected-block's parent
+
+  ;; For reindex think of last-selected-block's parent as a seq of seqs in which we need to :
+  ;;     e.g a parent can look like this : [ block-0 block-1 block-2 ...] note that each block in the list
+  ;;         can themselves have children
+  ;; - remove some blocks
+  ;; - Add blocks (whose count can be greater or less than the blocks removed)
+  ;; - Reindex the seq of blocks after the index where new blocks were added
+
   (println "resolver :datascript/drop-multi-diff-source-same-parents args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
                 target-uid]}                    args
         {target-block-order :block/order}       (common-db/get-block db [:block/uid target-uid])
+        ;; We can also send target-index instead of drag-target this would shift the following calculation to the event side
         target-index                            (cond
                                                   (= drag-target :above) target-block-order
                                                   (= drag-target :below) (inc target-block-order))
         {target-parent-eid :db/id}               (common-db/get-parent db [:block/uid target-uid])
         selected-blocks                         (map #(common-db/get-block db [:block/uid %]) source-uids)
+        ;; find the blocks which have same parent as the target-block's parent
         uid-of-blocks-to-remove-but-not-retract (filter
                                                   (fn [block-uid]
                                                     (let [
@@ -755,6 +757,9 @@
                                                                                                   target-uid
                                                                                                   uid-of-blocks-to-remove-but-not-retract)
                                                      (sort-by :block/order))
+        ;; target index can change after the blocks are removed from the target-parent, this case occurs when the
+        ;; original target index is below the last-selected-block. Now that the last-selected-block is removed
+        ;; this decreases the target index value so we calculate the new value.
         new-target-index                        (if (> first-block-to-remove-order
                                                        target-index)
                                                   target-index
@@ -768,6 +773,9 @@
                                                   target-index
                                                   first-block-to-remove-order)
         upper-bound-to-reindex                  (count rearranged-blocks)
+        ;; reindex all the blocks under the target-parent after either
+        ;; - The target-index if this index was lower than the first block that is removed from target-parent
+        ;; - Or the first block that is removed from the target-parent
         reindexed-blocks                        (reindex rearranged-blocks
                                                          lower-bound-to-reindex
                                                          upper-bound-to-reindex
