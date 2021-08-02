@@ -109,7 +109,7 @@
     (get-in db [:selection :items])))
 
 
-(re-frame/reg-sub
+(rf/reg-sub
   :selected/order
   (fn [db _]
     (get-in db [:selection :order])))
