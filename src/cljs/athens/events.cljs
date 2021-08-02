@@ -1300,7 +1300,6 @@
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
-
 (reg-event-fx
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
@@ -1454,7 +1453,6 @@
         {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
 
 
-
 (defn drop-multi-diff-source-parents
   "Only reindex after last target. plus-after"
   [kind source-uids target target-parent]
@@ -1501,7 +1499,6 @@
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
-
 
 
 (defn text-to-blocks

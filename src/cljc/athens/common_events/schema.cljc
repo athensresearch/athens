@@ -61,6 +61,7 @@
    :datascript/tx-log
    :datascript/db-dump])
 
+
 (def event-common
   [:map
    [:event/id uuid?]
@@ -311,6 +312,7 @@
       :source-uid  string?
       :target-uid  string?]]]])
 
+
 (def datascript-left-sidebar-drop-above
   [:map
    [:event/args
@@ -347,12 +349,12 @@
         [:block/uid string?]]]]
      [:title string?]]]])
 
+
 (def datascript-selected-delete
   [:map
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
-
 
 
 (def event
