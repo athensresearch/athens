@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.90](https://github.com/athensresearch/athens/compare/v1.0.0-beta.89...v1.0.0-beta.90) (2021-08-02)
+
+
+### Bug Fixes
+
+* "open all-pages view" keybinding on Welcome ([#1327](https://github.com/athensresearch/athens/issues/1327)) ([f411c53](https://github.com/athensresearch/athens/commit/f411c53b699e96ca71c52631e652f6dff4fbcf73))
+* Selection fixes. ([#1421](https://github.com/athensresearch/athens/issues/1421)) ([c835c79](https://github.com/athensresearch/athens/commit/c835c793bffa79d98d25007b2b525ce514f9f51f)), closes [#1279](https://github.com/athensresearch/athens/issues/1279)
+
+
+### Enhancements
+
+* **toolbar:** use native operating system toolbar ([#1120](https://github.com/athensresearch/athens/issues/1120)) ([e2c953b](https://github.com/athensresearch/athens/commit/e2c953b5c2bc9257939784499b0755c81b89c89b))
+
 ## [1.0.0-beta.89](https://github.com/athensresearch/athens/compare/v1.0.0-beta.88...v1.0.0-beta.89) (2021-06-09)
 
 
