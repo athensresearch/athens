@@ -21,27 +21,27 @@
   (fn [{:keys [local-storage] :as _cofx} _]
     (let [init-app-db      (init-app-db db/rfdb local-storage)
           {:keys [db/filepath]} local-storage
-          local-graph      (utils/local-graph (or filepath (utils/default-db-path)))
-          db-exists-on-fs? (utils/local-graph-db-exists? local-graph)
+          local-db         (utils/local-db (or filepath (utils/default-db-path)))
+          db-exists-on-fs? (utils/local-db-db-exists? local-db)
           first-event      (cond
 
                              ;; Filepath not found in local storage, but db found at default default-db-path
                              ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
                              (and (nil? filepath)
                                   db-exists-on-fs?)
-                             [:fs/add-read-and-watch local-graph]
+                             [:fs/add-read-and-watch local-db]
 
                              ;; Filepath not found in local storage, no db found at default-db-location
                              ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
                              (and (nil? filepath)
                                   (not db-exists-on-fs?))
-                             [:fs/create-and-watch local-graph]
+                             [:fs/create-and-watch local-db]
 
                              ;; Filepath found in local storage and on filesystem.
                              ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
                              (and filepath
                                   db-exists-on-fs?)
-                             [:fs/read-and-watch local-graph]
+                             [:fs/read-and-watch local-db]
 
                              ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
                              :else [:fs/open-dialog])]

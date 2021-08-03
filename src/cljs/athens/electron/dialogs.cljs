@@ -37,12 +37,12 @@
     (when new-dir
       (let [curr-db-path                  @(rf/subscribe [:db/filepath])
             {name            :name
-             curr-images-dir :images-dir} (utils/local-graph curr-db-path)
+             curr-images-dir :images-dir} (utils/local-db curr-db-path)
             new-db-path                   (.resolve path new-dir name utils/DB-INDEX)
             {new-base-dir   :base-dir
              new-images-dir :images-dir
-             :as            new-graph}    (utils/local-graph new-db-path)]
-        (if (utils/local-graph-dir-exists? new-graph)
+             :as            new-graph}    (utils/local-db new-db-path)]
+        (if (utils/local-db-dir-exists? new-graph)
           (graph-already-exists-alert new-graph)
           (do (.mkdirSync fs new-base-dir)
               (.copyFileSync fs curr-db-path new-db-path)
@@ -76,11 +76,12 @@
         db-location (first res)]
     (when (and db-location (not-empty db-name))
       (let [db-path     (.resolve path db-location name utils/DB-INDEX)
-            local-graph (utils/local-graph db-path)]
-        (if (utils/local-graph-dir-exists? local-graph)
-          (graph-already-exists-alert local-graph)
+            local-db (utils/local-db db-path)]
+        (if (utils/local-db-dir-exists? local-db)
+          (graph-already-exists-alert local-db)
           (do
+            ;; should this just be db-picker/select?
             (rf/dispatch-sync [:init-rfdb])
             (rf/dispatch [:local-storage/create-db-picker-list])
-            (rf/dispatch [:fs/create-and-watch local-graph])
+            (rf/dispatch [:fs/create-and-watch local-db])
             (rf/dispatch [:loading/unset])))))))

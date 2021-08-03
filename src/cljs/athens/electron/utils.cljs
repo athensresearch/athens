@@ -37,7 +37,7 @@
   (.resolve path (default-dir) IMAGES-DIR-NAME))
 
 
-(defn local-graph
+(defn local-db
   [db-path]
   (let [base-dir (.dirname path db-path)]
     {:name       (.basename path base-dir)
@@ -46,11 +46,11 @@
      :db-path    db-path}))
 
 
-(defn local-graph-db-exists? [{:keys [db-path]}]
+(defn local-db-db-exists? [{:keys [db-path]}]
   (.existsSync fs db-path))
 
 
-(defn local-graph-dir-exists? [{:keys [base-dir]}]
+(defn local-db-dir-exists? [{:keys [base-dir]}]
   (.existsSync fs base-dir))
 
 
