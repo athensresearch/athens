@@ -309,31 +309,39 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items (fnil conj #{}) uid)))
+    (update-in db [:selection :items] (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (update db :selected/items disj uid)))
+    (update-in db [:selection :items] disj uid)))
 
 
 (reg-event-db
   :selected/remove-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply disj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply conj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply conj %1 %2) uids)))
+
+
+(reg-event-db
+  :selected/items-order
+  (fn [db [_ items-order]]
+    (assoc-in db [:selection :order] items-order)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items #{})))
+    (-> db
+        (assoc-in [:selection :items] #{})
+        (assoc-in [:selection :order] []))))
 
 
 (defn select-up
@@ -377,7 +385,7 @@
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-up selected-items))))
+    (assoc-in db [:selection :items] (select-up selected-items))))
 
 
 (defn select-down
@@ -408,12 +416,12 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-down selected-items))))
+    (assoc-in db [:selection :items] (select-down selected-items))))
 
 
 (reg-event-fx
   :selected/delete
-  (fn [_ [_ selected-uids]]
+  (fn [{db :db} [_ selected-uids]]
     (js/console.debug ":selected/delete args" selected-uids)
     (let [local?         (not (client/open?))
           sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
@@ -424,7 +432,10 @@
               tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
           (js/console.debug  ":selected/delete tx" tx)
           {:fx [[:dispatch-n [[:transact    tx]
-                              [:editing/uid nil]]]]})
+                              [:editing/uid nil]]]]
+           :db (-> db
+                   (assoc-in [:selection :items] #{})
+                   (assoc-in [:selection :order] []))})
         {:fx [[:dispatch [:remote/selected-delete {:uids selected-uids}]]]}))))
 
 
@@ -1287,7 +1298,6 @@
             (js/console.debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
-
 
 
 (reg-event-fx

@@ -381,7 +381,6 @@
      [:uids [:vector string?]]]]])
 
 
-
 (def event
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello-args)

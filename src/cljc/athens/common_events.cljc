@@ -479,6 +479,7 @@
                      :target-uid  target-uid
                      :drag-target drag-target}}))
 
+
 (defn build-drop-same-event
   "Builds `:datascript/drop-same` event with:
   - `source-uid` : uid of the source block
@@ -542,12 +543,12 @@
 (defn build-selected-delete-event
   "Builds `:datascript/selected-delete` event with:
   - uids : The uids of blocks to be deleted "
- [last-tx uids]
- (let [event-id (gen-event-id)]
-   {:event/id      event-id
-    :event/last-tx last-tx
-    :event/type    :datascript/selected-delete
-    :event/args    {:uids uids}}))
+  [last-tx uids]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/selected-delete
+     :event/args    {:uids uids}}))
 
 
 ;; - presence events

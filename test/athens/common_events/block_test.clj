@@ -924,6 +924,7 @@
           (t/is (= 2 (-> target-parent-block :block/children count)))
           (t/is (= 2 (count union-set))))))))
 
+
 (t/deftest drop-same-test
   "Basic Case:
      Start with :
@@ -1087,10 +1088,10 @@
                                                 :block/string   target-parent-text
                                                 :block/order    0
                                                 :block/children {:db/id          -3
-                                                                  :block/uid      target-uid
-                                                                  :block/string   target-text
-                                                                  :block/order    0
-                                                                  :block/children []}}
+                                                                 :block/uid      target-uid
+                                                                 :block/string   target-text
+                                                                 :block/order    0
+                                                                 :block/children []}}
                                                {:db/id          -4
                                                 :block/uid      source-parent-uid
                                                 :block/string   source-parent-text
@@ -1183,9 +1184,9 @@
             target-block          (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block   (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
             drop-link-same-parent-event  (common-events/build-drop-link-same-parent-event -1
-                                                                                   :below
-                                                                                   source-uid
-                                                                                   target-uid)
+                                                                                          :below
+                                                                                          source-uid
+                                                                                          target-uid)
             drop-link-same-parent-txs    (resolver/resolve-event-to-tx @@fixture/connection drop-link-same-parent-event)]
         (t/is (= 2 (-> target-parent-block :block/children count)))
         (t/is (= 0 (:block/order target-block)))
@@ -1196,7 +1197,7 @@
         ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
         ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
         ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
-        (let [source-ref-str    (str"((" source-uid "))")
+        (let [source-ref-str    (str "((" source-uid "))")
               target-block-str  (:block/string (common-db/get-block @@fixture/connection [:block/uid target-uid]))
               expected-set      #{source-ref-str target-block-str}
               linked-ref-uid    (last (common-db/get-children-uids-recursively @@fixture/connection target-parent-uid))
@@ -1206,6 +1207,7 @@
 
           (t/is (= 2 (-> target-parent-block :block/children count)))
           (t/is (= 2 (count union-set))))))))
+
 
 (t/deftest selected-delete-test
   "Basic Case:

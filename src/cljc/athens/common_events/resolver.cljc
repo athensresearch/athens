@@ -914,15 +914,15 @@
         new-source-blocks                 (if target-above-source?
                                             (map-indexed (fn [idx x]
                                                            (let [new-order (cond-> (+ idx target-block-order)
-                                                                                   drag-target-below?
-                                                                                   inc)]
+                                                                             drag-target-below?
+                                                                             inc)]
                                                              {:db/id       (:db/id x)
                                                               :block/order new-order}))
                                                          source-blocks)
                                             (map-indexed (fn [idx x]
                                                            (let [new-order (cond-> (- target-block-order idx)
-                                                                                   drag-target-above?
-                                                                                   dec)]
+                                                                             drag-target-above?
+                                                                             dec)]
                                                              {:db/id       (:db/id x)
                                                               :block/order new-order}))
                                                          (reverse source-blocks)))
@@ -970,8 +970,9 @@
                                                                      bound
                                                                      n)
                                                (concat new-source-blocks))
-        retracts                          (map (fn [x] [:db/retract     first-source-parent-eid
-                                                        :block/children [:block/uid x]])
+        retracts                          (map (fn [x]
+                                                 [:db/retract     first-source-parent-eid
+                                                  :block/children [:block/uid x]])
                                                source-uids)
         new-source-parent                 {:db/id          first-source-parent-eid
                                            :block/children reindex-source-parent}
