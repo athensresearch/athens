@@ -55,7 +55,7 @@
                :selection           {:items #{}
                                      :order []}
                :theme/dark          false
-               :help/open?          true
+               :help/open?          false
                :zoom-level          1
                :graph-conf          default-graph-conf})
 
