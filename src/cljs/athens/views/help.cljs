@@ -256,6 +256,7 @@
           {:color          (color :body-text-color :opacity-med)
            :text-transform "uppercase"
            :letter-spacing "0.06rem"
+           :margin         0
            :font-weight    600
            :font-size      "100%"
            :padding        "1rem 1.5rem"})
