@@ -82,8 +82,6 @@
              :example     [example "{{[[TODO]]}}$space$text" "Label"]}
             {:description "Inline code"
              :example     [example "`$text`" "Code"]}
-            {:description "Code Block"
-             :example     [example "```$text```" "Code"]}
             {:description "Highlight"
              :example     [example "^^$text^^" "Athens"]}
             {:description "Italicize"
