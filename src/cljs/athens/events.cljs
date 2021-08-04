@@ -1644,3 +1644,19 @@
               tx-data                            (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-all-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
         {:fx [[:dispatch [:remote/unlinked-references-link-all unlinked-refs title]]]}))))
+
+
+(reg-event-fx
+  :block/open
+  (fn [_ [_ {:keys [block-uid open?] :as args}]]
+    (js/console.debug ":block/open args" args)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":block/open local?" local?)
+      (if local?
+        (let [block-open-event   (common-events/build-block-open-event -1
+                                                                       block-uid
+                                                                       open?)
+              tx                (resolver/resolve-event-to-tx @db/dsdb block-open-event)]
+          (js/console.debug ":block/open tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch [:remote/block-open args]]]}))))

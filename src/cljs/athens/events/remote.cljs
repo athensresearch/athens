@@ -774,3 +774,14 @@
       (js/console.debug ":remote/selected-delete" (pr-str selected-delete-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event!       selected-delete-event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/block-open
+  (fn [{db :db} [_ block-uid open?]]
+    (let [last-seen-tx      (:remote/last-seen-tx db)
+          block-open-event  (common-events/build-block-open-event last-seen-tx
+                                                                  block-uid
+                                                                  open?)]
+      (js/console.debug ":remote/block-open" (pr-str block-open-event))
+      {:fx [[:dispatch-n [[:remote/send-event!       block-open-event]]]]})))

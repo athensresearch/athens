@@ -40,8 +40,9 @@
 
 
 (defn toggle
-  [id open]
-  (rf/dispatch [:transact [[:db/add id :block/open (not open)]]]))
+  [block-uid open]
+  (rf/dispatch [:block/open {:block-uid block-uid
+                             :open?     open}]))
 
 
 (defn toggle-el
@@ -56,6 +57,6 @@
                                            (.. e stopPropagation)
                                            (if (true? linked-ref)
                                              (swap! state update :linked-ref/open not)
-                                             (toggle [:block/uid uid] open)))})
+                                             (toggle uid open)))})
    [:> KeyboardArrowDown {:style {:font-size "16px"}}]])
 

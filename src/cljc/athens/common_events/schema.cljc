@@ -55,7 +55,8 @@
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
-   :datascript/selected-delete])
+   :datascript/selected-delete
+   :datascript/block-open])
 
 
 (def event-type-graph-server
@@ -379,6 +380,14 @@
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
+
+
+(def datascript-block-open
+  [:map
+   [:event/args
+    [:map
+     [:block-uid string?
+      :open?     boolean?]]]])
 
 
 (def event

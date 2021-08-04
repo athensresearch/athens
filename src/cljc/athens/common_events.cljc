@@ -551,6 +551,19 @@
      :event/args    {:uids uids}}))
 
 
+(defn build-block-open-event
+  "Builds `:datascript/block-open` event with:
+  - block-uid : The uid of block to be opened
+  - open?     : Bool to set the block state to open or close"
+  [last-tx block-uid open?]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/block-open
+     :event/args    {:block-uid block-uid
+                     :open?     open?}}))
+
+
 ;; - presence events
 
 (defn build-presence-hello-event
