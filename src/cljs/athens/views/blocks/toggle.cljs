@@ -41,6 +41,7 @@
 
 (defn toggle
   [block-uid open]
+  (println "TOGGLE")
   (rf/dispatch [:block/open {:block-uid block-uid
                              :open?     open}]))
 
@@ -57,6 +58,6 @@
                                            (.. e stopPropagation)
                                            (if (true? linked-ref)
                                              (swap! state update :linked-ref/open not)
-                                             (toggle uid open)))})
+                                             (toggle uid (not open))))})
    [:> KeyboardArrowDown {:style {:font-size "16px"}}]])
 
