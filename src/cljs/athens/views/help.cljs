@@ -330,16 +330,17 @@
            (use-style
              {:display "flex"
               :gap     "1rem"
-              :padding "1rem"})
-           [help-link
-            [:> LiveHelp]
-            "Get Help on Discord"]
-           [help-link
-            [:> Error]
-            "Get Help on Discord"]
-           [help-link
-            [:> AddToPhotos]
-            "Get Help on Discord"]]]
+              :padding "1rem"})]]
+           ;; Links at the top of the help. Uncomment when the correct links are obtained.
+           ;;[help-link
+           ;; [:> LiveHelp]
+           ;; "Get Help on Discord"]
+           ;;[help-link
+           ;; [:> Error]
+           ;; "Get Help on Discord"]
+           ;;[help-link
+           ;; [:> AddToPhotos]
+           ;; "Get Help on Discord"]]]
          [:div (use-style {:overflow-y "auto"})
           (for [section content]
             ^{:key section}
