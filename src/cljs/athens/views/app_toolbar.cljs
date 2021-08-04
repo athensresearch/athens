@@ -19,6 +19,7 @@
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    ["@material-ui/core/Tooltip" :default Tooltip]
     [athens.router :as router]
     [athens.style :refer [color unzoom]]
     [athens.subs]
@@ -284,8 +285,9 @@
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
-         [button {:on-click #(dispatch [:help/toggle])}
-          [:> Help]]
+         [:> Tooltip {:title "Help", :arrow true}
+          [:span [button {:on-click #(dispatch [:help/toggle])}
+                  [:> Help]]]]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
