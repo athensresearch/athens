@@ -226,11 +226,15 @@
    :max-width     "calc(100% - 1rem)"
    :border-radius "1rem"
    :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
-   :margin-top    "5vh"})
+   :margin-top    "3.5rem"
+   :max-height    "calc(100vh - 7rem)"
+   :display       "flex"})
 
 (def help-styles
   {:background-color (color :background-color)
    :border-radius    "1.5rem"
+   :display          "flex"
+   :flex-direction   "column"
    :min-width        "500px"})
 
 (def help-header-styles
@@ -318,7 +322,6 @@
   (let [open? @(subscribe [:help/open?])]
     (if open?
       [:> Modal {:open    true
-                 :style   {:overflow-y "auto"}
                  :onClose #(dispatch [:help/toggle])}
        [modal-body
         [:div (use-style help-styles)
@@ -339,14 +342,15 @@
            [help-link
             [:> AddToPhotos]
             "Get Help on Discord"]]]
-         (for [section content]
-           ^{:key section}
-           [help-section (:name section)
-            (for [group (:groups section)]
-              ^{:key group}
-              [help-section-group (:name group)
-               (for [item (:items group)]
-                 ^{:key item}
-                 [help-item item])])])]]])))
+         [:div (use-style {:overflow-y "auto"})
+          (for [section content]
+            ^{:key section}
+            [help-section (:name section)
+             (for [group (:groups section)]
+               ^{:key group}
+               [help-section-group (:name group)
+                (for [item (:items group)]
+                  ^{:key item}
+                  [help-item item])])])]]]])))
 
 
