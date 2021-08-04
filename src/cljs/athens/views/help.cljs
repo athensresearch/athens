@@ -221,6 +221,7 @@
   {:width         "max-content"
    :margin        "auto"
    :background    (color :background-plus-1)
+   :border        (str "1px solid " (color :border-color))
    :max-width     "calc(100% - 1rem)"
    :border-radius "1rem"
    :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
@@ -230,7 +231,7 @@
 
 (def help-styles
   {:background-color (color :background-color)
-   :border-radius    "1.5rem"
+   :border-radius    "1rem"
    :display          "flex"
    :flex-direction   "column"
    :min-width        "500px"})
@@ -238,11 +239,13 @@
 (def help-header-styles
   {:display         "flex"
    :justify-content "space-between"
+   :margin          0
    :align-items     "center"
    :border-bottom   [["1px solid" (color :border-color)]]})
 
 (def help-title
   {:padding   "1rem 1.5rem"
+   :margin    "0"
    :font-size "2rem"
    :color     (color :header-text-color)})
 
@@ -331,16 +334,16 @@
              {:display "flex"
               :gap     "1rem"
               :padding "1rem"})]]
-           ;; Links at the top of the help. Uncomment when the correct links are obtained.
-           ;;[help-link
-           ;; [:> LiveHelp]
-           ;; "Get Help on Discord"]
-           ;;[help-link
-           ;; [:> Error]
-           ;; "Get Help on Discord"]
-           ;;[help-link
-           ;; [:> AddToPhotos]
-           ;; "Get Help on Discord"]]]
+         ;; Links at the top of the help. Uncomment when the correct links are obtained.
+         ;;[help-link
+         ;; [:> LiveHelp]
+         ;; "Get Help on Discord"]
+         ;;[help-link
+         ;; [:> Error]
+         ;; "Get Help on Discord"]
+         ;;[help-link
+         ;; [:> AddToPhotos]
+         ;; "Get Help on Discord"]]]
          [:div (use-style {:overflow-y "auto"})
           (for [section content]
             ^{:key section}
