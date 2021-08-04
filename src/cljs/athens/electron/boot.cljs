@@ -19,32 +19,39 @@
   :boot/desktop
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage] :as _cofx} _]
-    (let [init-app-db      (init-app-db db/rfdb local-storage)
-          {:keys [db/filepath]} local-storage
-          local-db         (utils/local-db (or filepath (utils/default-db-path)))
-          db-exists-on-fs? (utils/local-db-db-exists? local-db)
-          first-event      (cond
+    (let [init-app-db         (init-app-db db/rfdb local-storage)
+          all-dbs             (get-in init-app-db [:athens/persist :db-picker/all-dbs])
+          selected-db         (get-in init-app-db [:athens/persist :db-picker/selected-db])
+          default-db          (utils/local-db (utils/default-db-path))
+          selected-db-exists? (utils/local-db-exists? selected-db)
+          default-db-exists?  (utils/local-db-exists? default-db)
+          first-event         (cond
+                                ;; No selected db but there are dbs listed.
+                                ;; Load the first one.
+                                (and (not selected-db-exists?)
+                                     (seq all-dbs))
+                                [:fs/read-and-watch (-> all-dbs first second)]
 
-                             ;; Filepath not found in local storage, but db found at default default-db-path
-                             ;; Assume user is developing Athens locally. Use default-db-path to avoid overwrite
-                             (and (nil? filepath)
-                                  db-exists-on-fs?)
-                             [:fs/add-read-and-watch local-db]
+                               ;; Selected db not found in local storage, but default db found.
+                               ;; Add default db and load it.
+                                (and (not selected-db-exists?)
+                                     default-db-exists?)
+                                [:fs/add-read-and-watch default-db]
 
-                             ;; Filepath not found in local storage, no db found at default-db-location
-                             ;; Create new db at default-db-location, watch filepath, and add to db-list on re-frame and local-storage
-                             (and (nil? filepath)
-                                  (not db-exists-on-fs?))
-                             [:fs/create-and-watch local-db]
+                                ;; Selected db not found in local storage, no default db found.
+                                ;; Create new db and load it.
+                                (and (not selected-db-exists?)
+                                     (not default-db-exists?))
+                                [:fs/create-and-watch default-db]
 
-                             ;; Filepath found in local storage and on filesystem.
-                             ;; Read and deserialize db, watch filepath, and add to db-list on re-frame and local-storage
-                             (and filepath
-                                  db-exists-on-fs?)
-                             [:fs/read-and-watch local-db]
+                                ;; Selected found in local storage and on filesystem.
+                                ;; Load it.
+                                selected-db-exists?
+                                [:fs/read-and-watch selected-db]
 
-                             ;; Filepath found in local storage but not on filesystem, or no matching condition. Open open-dialog.
-                             :else [:fs/open-dialog])]
+                                ;; Selected db found in local storage but not on filesystem, or no matching condition.
+                                ;; Open open-dialog.
+                                :else [:fs/open-dialog selected-db])]
 
 
       ;; output => [:reset-conn] OR [:fs/create-and-watch] OR :local-storage/create-db-picker-list
@@ -79,12 +86,12 @@
                                       :events      [:fs/create-and-watch :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
                                       :dispatch-fn (fn [_]
-                                                     (let [schemas (d/q '[:find ?e ?v
+                                                     (let [schemas    (d/q '[:find ?e ?v
                                                                           :where [?e :schema/version ?v]]
                                                                         @db/dsdb)
                                                            schema-cnt (count schemas)]
                                                        (cond
-                                                         (= 0 schema-cnt) (let [linked-ref-pattern (patterns/linked ".*")
+                                                         (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
                                                                                 blocks-with-plain-links (d/q '[:find ?u ?s
                                                                                                                :keys block/uid block/string
                                                                                                                :in $ ?pattern
@@ -94,11 +101,11 @@
                                                                                                                [(re-find ?pattern ?s)]]
                                                                                                              @db/dsdb
                                                                                                              linked-ref-pattern)
-                                                                                blocks-orig (map (fn [{:block/keys [uid string]}]
-                                                                                                   {:db/id [:block/uid uid] :block/string string})
+                                                                                blocks-orig             (map (fn [{:block/keys [uid string]}]
+                                                                                                               {:db/id [:block/uid uid] :block/string string})
                                                                                                  blocks-with-plain-links)
-                                                                                blocks-temp (map (fn [{:block/keys [uid]}]
-                                                                                                   {:db/id [:block/uid uid] :block/string ""})
+                                                                                blocks-temp             (map (fn [{:block/keys [uid]}]
+                                                                                                               {:db/id [:block/uid uid] :block/string ""})
                                                                                                  blocks-with-plain-links)]
                                                                             ;; give all blocks empty string - clears refs
                                                                             ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
@@ -114,6 +121,6 @@
                                                          (js/alert (js/Error (str "Multiple schema versions: " schemas))))
 
                                                        (rf/dispatch [:loading/unset])))
-                                      :halt?       true}]}})))
+                                      :halt? true}]}})))
 
 

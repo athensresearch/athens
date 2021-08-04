@@ -27,26 +27,15 @@
   ;; Subs
 
   (rf/reg-sub
-    :db/mtime
-    (fn [db _]
-      (:db/mtime db)))
-
-
-  (rf/reg-sub
-    :db/filepath
-    (fn [db _]
-      (-> db :athens/persist :db/filepath)))
-
-  (rf/reg-sub
-    :db/filepath-dir
-    (fn [db _]
-      (.dirname path (:db/filepath db))))
+   :db/mtime
+   (fn [db _]
+     (:db/mtime db)))
 
 
   (rf/reg-event-fx
-    :db/retract-athens-pages
-    (fn []
-      {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
-                                    (db/retract-page-recursively "Changelog"))]})))
+   :db/retract-athens-pages
+   (fn []
+     {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
+                                   (db/retract-page-recursively "Changelog"))]})))
 
 

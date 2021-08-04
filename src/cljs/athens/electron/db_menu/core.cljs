@@ -82,29 +82,27 @@
 
 (defn current-db-tools
   ([{:keys [db]} all-dbs]
-   (let [[key db] db]
-     [:div (use-style current-db-tools-style)
-      (if (:is-remote db)
-        [:<>
-         [button "Import"]
-         [button "Copy Link"]
-         [button "Remove"]]
-        [:<>
-         [button {:onClick #(dialogs/move-dialog!)} "Move"]
-         ;; [button {:onClick "Rename"]
-         [button {:onClick #(if (= 1 (count all-dbs))
-                              (js/alert "Can't remove last db from the list")
-                              (dispatch [:db-picker/delete-db (:path db)]))}
-          "Delete"]])])))
+   [:div (use-style current-db-tools-style)
+    (if (:is-remote db)
+      [:<>
+       [button "Import"]
+       [button "Copy Link"]
+       [button "Remove"]]
+      [:<>
+       [button {:onClick #(dialogs/move-dialog!)} "Move"]
+       ;; [button {:onClick "Rename"]
+       [button {:onClick #(if (= 1 (count all-dbs))
+                            (js/alert "Can't remove last db from the list")
+                            (dialogs/delete-dialog! db))}
+        "Delete"]])]))
 
 
 (defn db-menu
   []
   (r/with-let [ele (r/atom nil)]
-              (let [current-db-path  @(subscribe [:db/filepath])
-                    all-dbs          @(subscribe [:db-picker/all-dbs])
-                    active-db (first all-dbs)
-                    inactive-dbs (next all-dbs)
+              (let [all-dbs          @(subscribe [:db-picker/all-dbs])
+                    active-db        @(subscribe [:db-picker/selected-db])
+                    inactive-dbs     (dissoc all-dbs (:db-path active-db))
                     sync-status      (if @(subscribe [:db/synced])
                                        :running
                                        :synchronising)]
@@ -113,7 +111,7 @@
                  [button {:class [(when @ele "is-active")]
                           :on-click #(reset! ele (.-currentTarget %))
                           :style db-menu-button-style}
-                  [db-icon {:db     (second active-db)
+                  [db-icon {:db     active-db
                             :status sync-status}]]
                  ;; Dropdown menu
                  [m-popover
@@ -134,16 +132,16 @@
                    [:<>
                     ;; Show active DB first
                     [:div (use-style current-db-area-style)
-                     [db-list-item {:db (second active-db)
+                     [db-list-item {:db active-db
                                     :is-current true
-                                    :key (:path (second active-db))}]
+                                    :key (:db-path active-db)}]
                      [current-db-tools {:db active-db} all-dbs]]
                     ;; Show all inactive DBs and a separator
                     (doall
                       (for [[key db] inactive-dbs]
                         [db-list-item {:db db
                                        :is-current false
-                                       :key (:path db)}]))
+                                       :key key}]))
                     [:hr (use-style menu-separator-style)]
                     ;; Add DB control
                     [button {:on-click #(dispatch [:modal/toggle])}

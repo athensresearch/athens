@@ -157,14 +157,14 @@
 
 
 (defn open-local-comp
-  [loading db-filepath]
+  [loading db]
   [:<>
    [:h5 {:style {:align-self "flex-start"
                  :margin-top "2em"}}
     (if @loading
       "No DB Found At"
       "Current Location")]
-   [:code {:style {:margin "1rem 0 2rem 0"}} @db-filepath]
+   [:code {:style {:margin "1rem 0 2rem 0"}} (:db-path db)]
    [:div (use-style {:display         "flex"
                      :justify-content "space-between"
                      :align-items     "center"
@@ -243,7 +243,7 @@
                             (when-not @loading
                               (dispatch [:modal/toggle])))
         el (.. js/document (querySelector "#app"))
-        db-filepath       (subscribe [:db/filepath])
+        selected-db       (subscribe [:db-picker/selected-db])
         state             (r/atom {:input     ""
                                    :tab-value 0})]
     (fn []
@@ -277,6 +277,6 @@
                                       [create-new-local state]
 
                                       (= 0 (:tab-value @state))
-                                      [open-local-comp loading db-filepath])]
+                                      [open-local-comp loading selected-db])]
                          :on-close close-modal}]])
         el))))

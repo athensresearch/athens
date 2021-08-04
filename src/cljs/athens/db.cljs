@@ -31,16 +31,7 @@
 
 ;; -- re-frame -----------------------------------------------------------
 
-(defonce rfdb {:athens/persist      {:db-picker/all-dbs {}
-                                     :db/filepath nil
-                                     :user {:name nil
-                                            :email nil
-                                            :authed nil}
-                                     :settings {:monitoring nil
-                                                :backup-time nil}
-                                     :appearance {:width nil
-                                                  :theme nil}}
-               :db/synced           true
+(defonce rfdb {:db/synced           true
                :db/mtime            nil
                :current-route       nil
                :loading?            true

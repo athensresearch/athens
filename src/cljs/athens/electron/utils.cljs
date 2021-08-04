@@ -19,25 +19,26 @@
 (def IMAGES-DIR-NAME "images")
 
 
-(defn default-dir
+(defn default-dbs-dir
   "~/Documents on Linux/Mac
   C:\\\\User\\Documents on Windows"
   []
-  (let [DOC-PATH (.getPath app "documents")]
-    (.resolve path DOC-PATH "athens")))
+  (.getPath app "documents"))
+
+
+(defn default-base-dir
+  []
+  (.resolve path (default-dbs-dir) "athens"))
 
 
 (defn default-db-path
   []
-  (.resolve path (default-dir) DB-INDEX))
-
-
-(defn default-image-dir-path
-  []
-  (.resolve path (default-dir) IMAGES-DIR-NAME))
+  (.resolve path (default-base-dir) DB-INDEX))
 
 
 (defn local-db
+  "Returns a map representing a local db.
+   Local dbs are uniquely identified by the db-path."
   [db-path]
   (let [base-dir (.dirname path db-path)]
     {:name       (.basename path base-dir)
@@ -46,12 +47,12 @@
      :db-path    db-path}))
 
 
-(defn local-db-db-exists? [{:keys [db-path]}]
-  (.existsSync fs db-path))
+(defn local-db-exists? [{:keys [db-path] :as db}]
+  (when db (.existsSync fs db-path)))
 
 
-(defn local-db-dir-exists? [{:keys [base-dir]}]
-  (.existsSync fs base-dir))
+(defn local-db-dir-exists? [{:keys [base-dir] :as db}]
+  (when db (.existsSync fs base-dir)))
 
 
 (defn create-dir-if-needed!

@@ -14,22 +14,6 @@
 (def stream (js/require "stream"))
 
 
-;; If new db is created add
-;; 1. This db to all-dbs list
-;; 2. Make this db active
-(rf/reg-event-fx
-  :fs/create-new-db
-  (fn []
-    (let [default-dir (utils/default-dir)
-          images-dir (utils/default-image-dir-path)
-          db-filepath (utils/default-db-path)]
-      (utils/create-dir-if-needed! default-dir)
-      (utils/create-dir-if-needed! images-dir)
-      {:fs/write!  [db-filepath (dt/write-transit-str (d/empty-db db/schema))]
-       :dispatch-n [[:db/update-filepath db-filepath]
-                    [:transact athens-datoms/datoms]
-                    [:db-picker/add-new-db db-filepath]]})))
-
 (declare write-bkp)
 
 (defn sync-db-from-fs
@@ -83,14 +67,12 @@
 
 (rf/reg-event-fx
   :fs/create-and-watch
-  (fn [_ [_ {:keys [base-dir images-dir db-path]} :as local-db]]
+  (fn [_ [_ {:keys [base-dir images-dir db-path] :as local-db}]]
     (let [new-db (d/db-with (d/empty-db db/schema) athens-datoms/datoms)]
       (utils/create-dir-if-needed! base-dir)
       (utils/create-dir-if-needed! images-dir)
       (.writeFileSync fs db-path (dt/write-transit-str new-db))
-      {:dispatch-n [[:db-picker/add-new-db local-db]
-                    [:reset-conn new-db]
-                    [:fs/watch db-path]]})))
+      {:dispatch [:db-picker/add-and-select-db local-db]})))
 
 
 (rf/reg-event-fx
@@ -105,8 +87,7 @@
 (rf/reg-event-fx
  :fs/add-read-and-watch
  (fn [_ [_ local-db]]
-   {:dispatch-n [[:db-picker/add-new-db local-db]
-                 [:fs/read-and-watch local-db]]}))
+   {:dispatch [:db-picker/add-and-select-db local-db]}))
 
 
 (rf/reg-event-db
@@ -133,7 +114,7 @@
   Path and data to be written are retrieved from the reframe db directly, not passed as arguments.
   User should eventually have MANY backups files. It's their job to manage these backups :)"
   [copy?]
-  (let [filepath     @(rf/subscribe [:db/filepath])
+  (let [filepath     (:db-path @(rf/subscribe [:db-picker/selected-db]))
         data         (dt/write-transit-str @db/dsdb)
         r            (.. stream -Readable (from data))
         dirname      (.dirname path filepath)

@@ -17,8 +17,10 @@
 
 (rf/reg-event-fx
   :fs/open-dialog
-  (fn [{:keys [db]} _]
-    (js/alert (str "No DB found at " (:db/filepath db) "."
+  (fn [{:keys [db]} {:keys [db-path]}]
+    (js/alert (str (if db-path
+                     (str "No DB found at " db-path ".")
+                     "No DB found.")
                    "\nPlease open or create a new db."))
     {:dispatch-n [[:modal/toggle]]}))
 
@@ -35,15 +37,18 @@
   (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
         new-dir (first res)]
     (when new-dir
-      (let [curr-db-path                  @(rf/subscribe [:db/filepath])
-            {name            :name
-             curr-images-dir :images-dir} (utils/local-db curr-db-path)
-            new-db-path                   (.resolve path new-dir name utils/DB-INDEX)
+      (let [{name            :name
+             curr-images-dir :images-dir
+             curr-db-path    :db-path
+             curr-base-dir   :base-dir
+             :as             curr-db}    @(rf/subscribe [:db-picker/selected-db])
+            new-db-path                  (.resolve path new-dir name utils/DB-INDEX)
+            ;; Merge the new local db info into the current db to preserve any other information there.
+            new-db                       (merge curr-db (utils/local-db new-db-path))
             {new-base-dir   :base-dir
-             new-images-dir :images-dir
-             :as            new-graph}    (utils/local-db new-db-path)]
-        (if (utils/local-db-dir-exists? new-graph)
-          (graph-already-exists-alert new-graph)
+             new-images-dir :images-dir} new-db]
+        (if (utils/local-db-dir-exists? new-db)
+          (graph-already-exists-alert new-db)
           (do (.mkdirSync fs new-base-dir)
               (.copyFileSync fs curr-db-path new-db-path)
               (when (.existsSync fs curr-images-dir)
@@ -55,8 +60,9 @@
                                         (.join path new-images-dir x)])))]
                   (doseq [[curr new] imgs]
                     (.copyFileSync fs curr new))))
-              (rf/dispatch [:db-picker/move-db curr-db-path new-db-path])
-              (rf/dispatch [:db/update-filepath new-db-path])))))))
+              (.rmSync fs curr-base-dir #js {:recursive true :force true})
+              (rf/dispatch [:db-picker/remove-db curr-db])
+              (rf/dispatch [:db-picker/add-and-select-db new-db])))))))
 
 
 (defn open-dialog!
@@ -66,22 +72,26 @@
                                                         :filters    [{:name "Transit" :extensions ["transit"]}]}))
         open-file (first res)]
     (when (and open-file (.existsSync fs open-file))
-      (rf/dispatch-sync [:db-picker/select-new-db open-file @(rf/subscribe [:db/synced])]))))
+      (rf/dispatch [:db-picker/add-and-select-db (utils/local-db open-file)]))))
 
 
 (defn create-dialog!
   "Create a new database."
   [db-name]
-  (let [res         (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
+  (let [res         (.showOpenDialogSync dialog (clj->js {:defaultPath (utils/default-dbs-dir)
+                                                          :properties  ["openDirectory"]}))
         db-location (first res)]
     (when (and db-location (not-empty db-name))
-      (let [db-path     (.resolve path db-location name utils/DB-INDEX)
+      (let [db-path  (.resolve path db-location db-name utils/DB-INDEX)
             local-db (utils/local-db db-path)]
         (if (utils/local-db-dir-exists? local-db)
           (graph-already-exists-alert local-db)
-          (do
-            ;; should this just be db-picker/select?
-            (rf/dispatch-sync [:init-rfdb])
-            (rf/dispatch [:local-storage/create-db-picker-list])
-            (rf/dispatch [:fs/create-and-watch local-db])
-            (rf/dispatch [:loading/unset])))))))
+          (rf/dispatch [:fs/create-and-watch local-db]))))))
+
+(defn delete-dialog!
+  "Delete an existing database and select the first db of the remaining ones."
+  [{:keys [name base-dir] :as db}]
+  (when (.confirm js/window (str "Do you really want to delete " name "?"))
+    (.rmSync fs base-dir #js {:recursive true :force true})
+    (rf/dispatch [:db-picker/remove-db db])
+    (rf/dispatch [:db-picker/select-most-recent-db])))

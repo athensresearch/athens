@@ -3,11 +3,13 @@
     [athens.electron.boot]
     [athens.electron.fs]
     [athens.electron.window]
+    [athens.electron.utils :as utils]
     [cljs.reader :refer [read-string]]
     [re-frame.core :as rf]))
 
 (def fs (js/require "fs"))
 (def path (js/require "path"))
+
 
 (rf/reg-sub
   :db-picker/all-dbs
@@ -15,70 +17,69 @@
     (-> db :athens/persist :db-picker/all-dbs)))
 
 
-(defn get-db-name
-  "From a dbpath find out db name.
-   e.g : /home/sid597/Desktop/athens db/test db/index.transit --> test db"
-  [dbpath]
-  (.basename path (.dirname path dbpath)))
+(rf/reg-sub
+ :db-picker/selected-db
+ (fn [db _]
+   (-> db :athens/persist :db-picker/selected-db)))
 
 
 (rf/reg-event-fx
-  :db-picker/add-new-db
-  (fn [{:keys [db]} [_ dbpath]]
-    "Add a db picker list. If already exists, just re-open."
-    (let [dbname     (get-db-name dbpath)
-          newdb      {:path dbpath :name dbname}
-          new-app-db (-> db
-                         (assoc-in [:athens/persist :db-picker/all-dbs dbpath] newdb)
-                         (assoc-in [:athens/persist :db/filepath] dbpath))]
-      {:db      new-app-db
-       :persist new-app-db})))
+  :db-picker/add-and-select-db
+  (fn [{:keys [db]} [_ {:keys [db-path] :as added-db}]]
+    "Add a db to the db picker list and select it as the current db.
+     Adding a db with the same db-path will show an alert."
+    (if (get-in db [:athens/persist :db-picker/all-dbs db-path])
+      {:dispatch [:alert/js (str "This Database is already listed as " (:name added-db) ".")]}
+      (let [new-app-db (assoc-in db [:athens/persist :db-picker/all-dbs db-path] added-db)]
+        {:db       new-app-db
+         :persist  new-app-db
+         :dispatch [:db-picker/select-db added-db]}))))
 
 
 (rf/reg-event-fx
-  :db-picker/select-new-db
-  (fn [{:keys [db]} [_ db-path synced?]]
-    "Select a new db from db list.
+  :db-picker/select-db
+  (fn [{:keys [db]} [_ {:keys [db-path] :as selected-db} ignore-sync-check?]]
+    "Select a db from the all db list and reboot the app into it.
+    If the db is no longer in the db picker, alert the user to add it again,
     If the selected db is deleted from disk then show an alert describing the
-    situation and remove this db from db list. Prevent selecting a db when sync
-    is happening, instead show an alert describing the situation."
-    (let [file-exists? (and db-path (.existsSync fs db-path))]
+    situation and remove this db from db list.
+    Unless ignore-sync-check? is true, prevent selecting another db when sync
+    is happening and instead shows an alert."
+    (let [synced?       (or ignore-sync-check? (:db/synced db))
+          db-in-picker? (get-in db [:athens/persist :db-picker/all-dbs db-path])
+          db-exists?    (and db-path (utils/local-db-exists? selected-db))]
       (cond
-        (and file-exists? synced?)
-        {:dispatch-n [[:db-picker/add-new-db db-path]
-                      [:boot/desktop]]}
+        (not db-in-picker?)
+        {:dispatch [:alert/js "Database is no longer listed, please add it again."]}
 
-        (and file-exists? (not synced?))
-        {:fx   [[:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved"]]]}
+        (and db-exists? synced?)
+        (let [new-app-db (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)]
+          {:db       new-app-db
+           :persist  new-app-db
+           :dispatch [:boot/desktop]})
+
+        (and db-exists? (not synced?))
+        {:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved."]}
 
         :else
-        {:dispatch-n [[:alert/js "This database does not exist, removing it from list"]
-                      [:db-picker/delete-db db-path]]}))))
-
-
-(rf/reg-event-fx
-  :db-picker/move-db
-  (fn [_ [_ previous-path new-path]]
-    "Move db from current location."
-    {:dispatch-n [[:db-picker/remove-db-from-list previous-path]
-                  [:db-picker/add-new-db new-path]]}))
-
+        {:dispatch-n [[:alert/js "This database does not exist anymore, removing it from list."]
+                      [:db-picker/remove-db selected-db]]}))))
 
 (rf/reg-event-fx
-  :db-picker/delete-db
-  (fn [{:keys [db]} [_ db-filepath]]
-    "Delete selected db and randomly open another db.
-    Going forward, we should look at most recently opened db before.
+ :db-picker/select-most-recent-db
+ (fn [{:keys [db]} [_]]
+   ;; TODO: this is just getting the first one, not the most recent
+   (let [most-recent-db (second (first (get-in db [:athens/persist :db-picker/all-dbs])))]
+     {:dispatch (if most-recent-db
+                  [:db-picker/select-db most-recent-db]
+                  [:fs/open-dialog])})))
 
-    `select-new-db` event call has 2nd argument (synced) as true because one
-    is deleting a db so to them it does not matter if the db is synced or not."
-    ;; TODO implement delete db from filesystem not implemented
-    ;; so that we can test without accidently deleting real db
-    (let [new-app-db       (update-in db [:athens/persist :db-picker/all-dbs] dissoc db-filepath)
-          next-db-filepath (-> (get-in new-app-db [:athens/persist :db-picker/all-dbs])
-                               ffirst)]
+(rf/reg-event-fx
+  :db-picker/remove-db
+  (fn [{:keys [db]} [_ {:keys [db-path]}]]
+    "Delete a db from the db-picker."
+    (let [new-app-db (update-in db [:athens/persist :db-picker/all-dbs] dissoc db-path)]
       {:db      new-app-db
-       :persist new-app-db
-       :fx      [[:dispatch [:db-picker/select-new-db next-db-filepath true]]]})))
+       :persist new-app-db})))
 
 

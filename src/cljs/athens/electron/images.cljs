@@ -19,14 +19,10 @@
   ([item extension]
    (save-image "" "" item extension))
   ([head tail item extension]
-   (let [curr-db-filepath @(rf/subscribe [:db/filepath])
-         _                (prn head tail curr-db-filepath item extension)
-         curr-db-dir      @(rf/subscribe [:db/filepath-dir])
-         img-dir          (.resolve path curr-db-dir IMAGES-DIR-NAME)
-         base-dir         (.dirname path curr-db-filepath)
-         base-dir-name    (.basename path base-dir)
+   (let [{:keys [images-dir name]}          @(rf/subscribe [:db-picker/selected-db])
+         _                (prn head tail images-dir name item extension)
          file             (.getAsFile item)
-         img-filename     (.resolve path img-dir (str "img-" base-dir-name "-" (athens.util/gen-block-uid) "." extension))
+         img-filename     (.resolve path images-dir (str "img-" name "-" (athens.util/gen-block-uid) "." extension))
          reader           (js/FileReader.)
          new-str          (str head "![](" "file://" img-filename ")" tail)
          cb               (fn [e]
@@ -34,8 +30,8 @@
                                              (.. e -target -result) x
                                              (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
                                              (js/Buffer. x "base64"))]
-                              (when-not (.existsSync fs img-dir)
-                                (.mkdirSync fs img-dir))
+                              (when-not (.existsSync fs images-dir)
+                                (.mkdirSync fs images-dir))
                               (.writeFileSync fs img-filename img-data)))]
      (set! (.. reader -onload) cb)
      (.readAsDataURL reader file)
