@@ -41,7 +41,6 @@
 
 (defn toggle
   [block-uid open]
-  (println "TOGGLE")
   (rf/dispatch [:block/open {:block-uid block-uid
                              :open?     open}]))
 
