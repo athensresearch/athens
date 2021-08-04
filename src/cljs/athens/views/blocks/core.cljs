@@ -236,13 +236,13 @@
                                                                                     :source-uids  source-uids
                                                                                     :target-uid  target-uid}]
                                diff-parents-source?   [:drop-multi/diff-source drag-target
-                                                                                 source-uids
-                                                                                  target
+                                                       source-uids
+                                                       target
                                                        target-parent]
                                same-parent-source?    [:drop-multi/same-source {:drag-target drag-target
                                                                                 :source-uids source-uids
                                                                                 :target-uid  target-uid}])]
-    (println ".event" event) ;; TODO Remove this after all events are ported
+    (println ".event" event) ; TODO Remove this after all events are ported
 
 
     (rf/dispatch [:selected/clear-items])

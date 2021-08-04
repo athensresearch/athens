@@ -746,6 +746,8 @@
                           [:remote/send-event!       selected-delete-event]]]]})))
 
 
+;; TODO: we don't have followup for remote paste event, because current implementation relies on analyzing tx
+;; this ain't available in current remote events protocol.
 (rf/reg-event-fx
   :remote/followup-paste
   (fn [{_db :db} [_ event-id]]
@@ -762,7 +764,7 @@
            :as      paste-event} (common-events/build-paste-event last-seen-tx
                                                                   uid
                                                                   text)
-          followup-fx                  [[:dispatch [:remote/followup-paste event-id]]]]
+          followup-fx            [[:dispatch [:remote/followup-paste event-id]]]]
       (js/console.debug ":remote/[paste" (pr-str paste-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event!       paste-event]]]]})))

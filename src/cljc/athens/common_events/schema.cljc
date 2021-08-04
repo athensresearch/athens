@@ -62,6 +62,7 @@
    :datascript/tx-log
    :datascript/db-dump])
 
+
 (def event-common
   [:map
    [:event/id uuid?]
@@ -312,6 +313,7 @@
       :source-uid  string?
       :target-uid  string?]]]])
 
+
 (def datascript-left-sidebar-drop-above
   [:map
    [:event/args
@@ -348,6 +350,7 @@
         [:block/uid string?]]]]
      [:title string?]]]])
 
+
 (def datascript-selected-delete
   [:map
    [:event/args
@@ -361,6 +364,7 @@
     [:map
      [:uid  string?
       :text string?]]]])
+
 
 (def event
   [:multi {:dispatch :event/type}
@@ -382,6 +386,7 @@
    (dispatch :datascript/indent datascript-indent)
    (dispatch :datascript/unindent datascript-unindent)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
+   (dispatch :datascript/paste datascript-paste)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
@@ -523,6 +528,7 @@
    (dispatch :datascript/indent datascript-indent true)
    (dispatch :datascript/unindent datascript-unindent true)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
+   (dispatch :datascript/paste datascript-paste true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)

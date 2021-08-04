@@ -1289,7 +1289,6 @@
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
 
-
 (reg-event-fx
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
@@ -1443,7 +1442,6 @@
         {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
 
 
-
 (defn drop-multi-diff-source-parents
   "Only reindex after last target. plus-after"
   [kind source-uids target target-parent]
@@ -1490,7 +1488,6 @@
   :drop-multi/diff-source
   (fn [_ [_ kind source-uids target target-parent]]
     {:dispatch [:transact (drop-multi-diff-source-parents kind source-uids target target-parent)]}))
-
 
 
 (defn text-to-blocks
@@ -1565,7 +1562,7 @@
 ;; - Otherwise append after current block.
 
 (reg-event-fx
-  :paste
+  :paste-old
   (fn [_ [_ uid text]]
     (println ":paste event triggered")
     (println ":paste text data" text)
@@ -1575,7 +1572,7 @@
           {:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
-            block-start?  (zero? start)
+          block-start?  (zero? start)
           parent?       (and children open)
           start-idx     (cond
                           empty-block? order
@@ -1609,19 +1606,35 @@
                                         embed-id (str "-embed-" embed-id)) n]))]})))
 
 
-#_(reg-event-fx
-    :paste
-    (fn [_ [_ {:keys [uid text] :as args}]]
-      (js/console.debug ":paste args" args)
-      (let [local? (not (client/open?))]
-        (if local?
-          (let [paste-event (common-events/build-paste-event -1
-                                                             uid
-                                                             text)
-                tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
-            (js/console.debug ":paste tx" tx)
-            {:fx [[:dispatch [:transact tx]]]})
-          {:fx [[:dispatch [:remote/paste args]]]}))))
+(reg-event-fx
+  :paste
+  (fn [_ [_ {:keys [uid text] :as args}]]
+    (js/console.debug ":paste args" args)
+    (let [local?          (not (client/open?))
+          [uid embed-id]  (db/uid-and-embed-id uid)
+          {:keys [start
+                  value]} (textarea-keydown/destruct-target js/document.activeElement)
+          block-start?    (zero? start)]
+      (if local?
+        (let [paste-event (common-events/build-paste-event -1
+                                                           uid
+                                                           text)
+              tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
+          (js/console.debug ":paste tx" tx)
+          {:fx [[:dispatch [:transact tx]]
+                (when block-start?
+                  (let [block                  (-> tx first :block/children)
+                        {:block/keys [uid
+                                      string]} block
+                        n                      (count string)]
+                    [:editing/uid
+                     (cond-> uid
+                       embed-id (str "-embed-" embed-id))
+                     n]))]})
+        {:fx [[:dispatch [:remote/paste {:uid   uid
+                                         :text  text
+                                         :start start
+                                         :value value}]]]}))))
 
 
 (reg-event-fx

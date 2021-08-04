@@ -1,7 +1,6 @@
 (ns athens.common-events.resolver
   (:require
     [athens.common-db :as common-db]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
@@ -700,15 +699,15 @@
         new-source-blocks                 (if target-above-source?
                                             (map-indexed (fn [idx x]
                                                            (let [new-order (cond-> (+ idx target-block-order)
-                                                                                   drag-target-below?
-                                                                                   inc)]
+                                                                             drag-target-below?
+                                                                             inc)]
                                                              {:db/id       (:db/id x)
                                                               :block/order new-order}))
                                                          source-blocks)
                                             (map-indexed (fn [idx x]
                                                            (let [new-order (cond-> (- target-block-order idx)
-                                                                                   drag-target-above?
-                                                                                   dec)]
+                                                                             drag-target-above?
+                                                                             dec)]
                                                              {:db/id       (:db/id x)
                                                               :block/order new-order}))
                                                          (reverse source-blocks)))
@@ -756,8 +755,9 @@
                                                                      bound
                                                                      n)
                                                (concat new-source-blocks))
-        retracts                          (map (fn [x] [:db/retract     first-source-parent-eid
-                                                        :block/children [:block/uid x]])
+        retracts                          (map (fn [x]
+                                                 [:db/retract     first-source-parent-eid
+                                                  :block/children [:block/uid x]])
                                                source-uids)
         new-source-parent                 {:db/id          first-source-parent-eid
                                            :block/children reindex-source-parent}
@@ -1043,38 +1043,41 @@
   ;; - Otherwise append after current block.
   (println "resolver :datascript/paste args" (pr-str args))
   (let [{:keys [uid
-                text]}                         args
-        [uid embed-id]                         (common-db/uid-and-embed-id uid)
-        block                                  (common-db/get-block db [:block/uid uid])
-        {:block/keys  [order children open]}   block
-        {:keys [start value]}                  (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
-        empty-block?                           (and (string/blank? value)
-                                                    (empty? children))
-        block-start?                           (zero? start)
-        parent?                                (and children open)
-        start-idx                              (cond
-                                                 empty-block? order
-                                                 block-start? order
-                                                 parent? 0
-                                                 :else (inc order))
-        root-order                             (atom start-idx)
-        parent                                 (cond
-                                                 parent? block
-                                                 :else (common-db/get-parent db [:block/uid uid]))
-        paste-tx-data                          (text-to-blocks text (:block/uid parent) root-order)
+                text
+                start
+                value]}      args
+        [uid _embed-id]      (common-db/uid-and-embed-id uid)
+        block                (common-db/get-block db [:block/uid uid])
+        {:block/keys [order
+                      children
+                      open]} block
+        empty-block?         (and (string/blank? value)
+                                  (empty? children))
+        block-start?         (zero? start)
+        parent?              (and children open)
+        start-idx            (cond
+                               empty-block? order
+                               block-start? order
+                               parent?      0
+                               :else        (inc order))
+        root-order           (atom start-idx)
+        parent               (cond
+                               parent? block
+                               :else   (common-db/get-parent db [:block/uid uid]))
+        paste-tx-data        (text-to-blocks text (:block/uid parent) root-order)
         ;; the delta between root-order and start-idx is how many root blocks were added
-        n                                      (- @root-order start-idx)
-        start-reindex                          (cond
-                                                 block-start? (dec order)
-                                                 parent? -1
-                                                 :else order)
-        amount                                 (cond
-                                                 empty-block? (dec n)
-                                                 :else n)
-        reindex                                (plus-after (:db/id parent) start-reindex amount)
-        tx-data                                (concat reindex
-                                                       paste-tx-data
-                                                       (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
+        n                    (- @root-order start-idx)
+        start-reindex        (cond
+                               block-start? (dec order)
+                               parent?      -1
+                               :else        order)
+        amount               (cond
+                               empty-block? (dec n)
+                               :else        n)
+        reindex              (common-db/plus-after db (:db/id parent) start-reindex amount)
+        tx-data              (concat reindex
+                                     paste-tx-data
+                                     (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
     (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
     tx-data))
 
