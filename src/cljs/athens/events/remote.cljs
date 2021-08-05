@@ -758,12 +758,14 @@
 
 (rf/reg-event-fx
   :remote/paste
-  (fn [{db :db} [_ uid text]]
+  (fn [{db :db} [_ uid text start value]]
     (let [last-seen-tx           (:remote/last-seen-tx db)
           {event-id :event/id
            :as      paste-event} (common-events/build-paste-event last-seen-tx
                                                                   uid
-                                                                  text)
+                                                                  text
+                                                                  start
+                                                                  value)
           followup-fx            [[:dispatch [:remote/followup-paste event-id]]]]
       (js/console.debug ":remote/[paste" (pr-str paste-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]

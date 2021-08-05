@@ -1122,3 +1122,27 @@
           (t/is (= 2 (-> parent-block :block/children count)))
           (t/is (= 0 (:block/order block-1)))
           (t/is (= 1 (:block/order block-4))))))))
+
+
+(t/deftest paste-event-test
+  (let [block-1-uid "test-block-1-uid"
+        block-2-uid "test-block-2-uid"
+        setup-tx    [{:node/title     "test page"
+                      :block/uid      "page-uid"
+                      :block/children [{:block/uid      block-1-uid
+                                        :block/string   ""
+                                        :block/order    0
+                                        :block/children [{:block/uid      block-2-uid
+                                                          :block/string   ""
+                                                          :block/order    0
+                                                          :block/children []}]}]}]]
+    (d/transact @fixture/connection setup-tx)
+    (let [paste-event (common-events/build-paste-event -1
+                                                       block-2-uid
+                                                       "- test 1\n  - test 2"
+                                                       0
+                                                       "")
+          paste-tx    (resolver/resolve-event-to-tx @@fixture/connection paste-event)]
+      (d/transact @fixture/connection paste-tx)
+      (let [block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])]
+        (t/is (= 1 (-> block-1 :block/children count)))))))

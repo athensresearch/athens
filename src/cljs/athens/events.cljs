@@ -1572,12 +1572,15 @@
     (js/console.debug ":paste args" args)
     (let [local?          (not (client/open?))
           [uid embed-id]  (db/uid-and-embed-id uid)
-          {:keys [start]} (textarea-keydown/destruct-target js/document.activeElement)
+          {:keys [start
+                  value]} (textarea-keydown/destruct-target js/document.activeElement)
           block-start?    (zero? start)]
       (if local?
         (let [paste-event (common-events/build-paste-event -1
                                                            uid
-                                                           text)
+                                                           text
+                                                           start
+                                                           value)
               tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
           (js/console.debug ":paste tx" tx)
           {:fx [[:dispatch [:transact tx]]

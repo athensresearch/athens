@@ -524,14 +524,18 @@
 (defn build-paste-event
   "Builds `:datascript/paste` event with:
   - uid  : The uid of block to which text is to be pasted
-  - text : The text to be pasted"
-  [last-tx uid text]
+  - text : The text to be pasted
+  - start: cursor position in block
+  - value: current `:block/string` value"
+  [last-tx uid text start value]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/paste
-     :event/args    {:uid  uid
-                     :text text}}))
+     :event/args    {:uid   uid
+                     :text  text
+                     :start start
+                     :value value}}))
 
 
 ;; - presence events
