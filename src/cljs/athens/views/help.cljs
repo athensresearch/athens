@@ -219,14 +219,12 @@
 
 (def modal-body-styles
   {:width         "max-content"
-   :margin        "auto"
+   :margin        "2rem auto"
    :background    (color :background-plus-1)
    :border        (str "1px solid " (color :border-color))
    :max-width     "calc(100% - 1rem)"
    :border-radius "1rem"
    :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
-   :margin-top    "3.5rem"
-   :max-height    "calc(100vh - 7rem)"
    :display       "flex"})
 
 (def help-styles
@@ -324,6 +322,9 @@
   (let [open? @(subscribe [:help/open?])]
     (if open?
       [:> Modal {:open    true
+                 :style   {:overflow-y "auto"}
+                 :disableEnforceFocus true
+                 :disableAutoFocus true
                  :onClose #(dispatch [:help/toggle])}
        [modal-body
         [:div (use-style help-styles)
