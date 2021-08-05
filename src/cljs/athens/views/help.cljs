@@ -109,10 +109,10 @@
   [{:name  "App"
     :items [{:description "Toggle Athena"
              :shortcut    "mod+k"}
-            {:description "Toggle Navigation"
-             :shortcut    "mod+s"}
-            {:description "Toggle Reference Sidebar"
-             :shortcut    "mod+shift+s"}
+            {:description "Open Left Sidebar"
+             :shortcut    "mod+\\"}
+            {:description "Open Right Sidebar"
+             :shortcut    "mod+shift+\\"}
             {:description "Increase Text Size"
              :shortcut    "mod+plus"}
             {:description "Decrease Text Size"
@@ -144,7 +144,7 @@
             {:description "Select next block"
              :shortcut    "shift+down"}
             {:description "Select all blocks"
-             :shortcut    "shift+a"}]}
+             :shortcut    "mod+a"}]}
    {:name  "Formatting"
     :items [{:description "Bold"
              :example     [:strong "Athens"]
@@ -152,12 +152,13 @@
             {:description "Italics"
              :example     [:i "Athens"]
              :shortcut    "mod+i"}
-            {:description "Underline"
-             :example     [:span (use-style {:text-decoration "underline"}) "Athens"]
-             :shortcut    "mod+u"}
+            ;; Underline is currently not working. Uncomment when it does.
+            ;;{:description "Underline"
+            ;; :example     [:span (use-style {:text-decoration "underline"}) "Athens"]
+            ;; :shortcut    "mod+u"}
             {:description "Strikethrough"
              :example     [:span (use-style {:text-decoration "line-through"}) "Athens"]
-             :shortcut    "mod+shift+x"}
+             :shortcut    "mod+y"}
             {:description "Highlight"
              :example     [:span (use-style {:background    (color :highlight-color)
                                              :color         (color :background-color)
@@ -286,6 +287,7 @@
            :padding               "0.25rem 0.5rem"
            ::stylefy/manual       [["&:nth-child(odd)"
                                     {:background (color :background-plus-2 :opacity-low)}]]})
+
 
    [:span (use-style
             {:display         "flex"
