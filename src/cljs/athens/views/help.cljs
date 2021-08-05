@@ -9,7 +9,10 @@
     [athens.util :as util]
     [athens.style :refer [color]]
     [stylefy.core :as stylefy :refer [use-style]]
-    [re-frame.core :refer [dispatch subscribe]]))
+    [re-frame.core :refer [dispatch subscribe]])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 ;; Helpers to create the help content
 ;; ==========================
@@ -221,9 +224,8 @@
 (def modal-body-styles
   {:width         "max-content"
    :margin        "2rem auto"
-   :background    (color :background-plus-1)
-   :border        (str "1px solid " (color :border-color))
    :max-width     "calc(100% - 1rem)"
+   :border        (str "1px solid " (color :border-color))
    :border-radius "1rem"
    :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
    :display       "flex"})
@@ -319,44 +321,55 @@
         {:target "_blank" :rel "noopener noreferrer"})
    children])
 
-(defn help-popup
-  []
-  (let [open? @(subscribe [:help/open?])]
-    (if open?
-      [:> Modal {:open    true
-                 :style   {:overflow-y "auto"}
-                 :disableEnforceFocus true
-                 :disableAutoFocus true
-                 :onClose #(dispatch [:help/toggle])}
-       [modal-body
-        [:div (use-style help-styles)
-         [:header (use-style help-header-styles)
-          [:h1 (use-style help-title)
-           "Help"]
-          [:nav
-           (use-style
-             {:display "flex"
-              :gap     "1rem"
-              :padding "1rem"})]]
-         ;; Links at the top of the help. Uncomment when the correct links are obtained.
-         ;;[help-link
-         ;; [:> LiveHelp]
-         ;; "Get Help on Discord"]
-         ;;[help-link
-         ;; [:> Error]
-         ;; "Get Help on Discord"]
-         ;;[help-link
-         ;; [:> AddToPhotos]
-         ;; "Get Help on Discord"]]]
-         [:div (use-style {:overflow-y "auto"})
-          (for [section content]
-            ^{:key section}
-            [help-section (:name section)
-             (for [group (:groups section)]
-               ^{:key group}
-               [help-section-group (:name group)
-                (for [item (:items group)]
-                  ^{:key item}
-                  [help-item item])])])]]]])))
+;; Help popup UI
+;; Why the escape handler?
+;; Because when disabled the modal autofocus (which moves the modal to the top when
+;; opened and causes other issues like moving into the top the modal when clicking outside
+;; of it from the top), the escape handler from the modal itself doesn't work.
+;; Because of that, our own escape handler is added.
+(defn help-popup []
+  (r/with-let
+    [open? (subscribe [:help/open?])
+     close #(dispatch [:help/toggle])
+     escape-handler (fn [event]
+                      (when
+                        (and @open? (= (.. event -keyCode) KeyCodes.ESC))
+                        (close)))
+     _ (js/addEventListener "keydown" escape-handler)]
+    [:> Modal {:open             @open?
+               :style            {:overflow-y "auto"}
+               :disableAutoFocus true
+               :onClose          close}
+     [modal-body
+      [:div (use-style help-styles)
+       [:header (use-style help-header-styles)
+        [:h1 (use-style help-title)
+         "Help"]
+        [:nav
+         (use-style
+           {:display "flex"
+            :gap     "1rem"
+            :padding "1rem"})]]
+       ;; Links at the top of the help. Uncomment when the correct links are obtained.
+       ;;[help-link
+       ;; [:> LiveHelp]
+       ;; "Get Help on Discord"]
+       ;;[help-link
+       ;; [:> Error]
+       ;; "Get Help on Discord"]
+       ;;[help-link
+       ;; [:> AddToPhotos]
+       ;; "Get Help on Discord"]]]
+       [:div (use-style {:overflow-y "auto"})
+        (for [section content]
+          ^{:key section}
+          [help-section (:name section)
+           (for [group (:groups section)]
+             ^{:key group}
+             [help-section-group (:name group)
+              (for [item (:items group)]
+                ^{:key item}
+                [help-item item])])])]]]]
+    (finally js/removeEventListener "keydown" escape-handler)))
 
 
