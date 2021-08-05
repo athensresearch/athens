@@ -106,7 +106,13 @@
 (rf/reg-sub
   :selected/items
   (fn [db _]
-    (:selected/items db)))
+    (get-in db [:selection :items])))
+
+
+(rf/reg-sub
+  :selected/order
+  (fn [db _]
+    (get-in db [:selection :order])))
 
 
 (rf/reg-sub

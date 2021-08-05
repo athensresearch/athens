@@ -309,31 +309,39 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items (fnil conj #{}) uid)))
+    (update-in db [:selection :items] (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (update db :selected/items disj uid)))
+    (update-in db [:selection :items] disj uid)))
 
 
 (reg-event-db
   :selected/remove-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply disj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply conj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply conj %1 %2) uids)))
+
+
+(reg-event-db
+  :selected/items-order
+  (fn [db [_ items-order]]
+    (assoc-in db [:selection :order] items-order)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items #{})))
+    (-> db
+        (assoc-in [:selection :items] #{})
+        (assoc-in [:selection :order] []))))
 
 
 (defn select-up
@@ -377,7 +385,7 @@
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-up selected-items))))
+    (assoc-in db [:selection :items] (select-up selected-items))))
 
 
 (defn select-down
@@ -408,12 +416,12 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-down selected-items))))
+    (assoc-in db [:selection :items] (select-down selected-items))))
 
 
 (reg-event-fx
   :selected/delete
-  (fn [_ [_ selected-uids]]
+  (fn [{db :db} [_ selected-uids]]
     (js/console.debug ":selected/delete args" selected-uids)
     (let [local?         (not (client/open?))
           sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
@@ -424,7 +432,10 @@
               tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
           (js/console.debug  ":selected/delete tx" tx)
           {:fx [[:dispatch-n [[:transact    tx]
-                              [:editing/uid nil]]]]})
+                              [:editing/uid nil]]]]
+           :db (-> db
+                   (assoc-in [:selection :items] #{})
+                   (assoc-in [:selection :order] []))})
         {:fx [[:dispatch [:remote/selected-delete {:uids selected-uids}]]]}))))
 
 
@@ -1555,65 +1566,13 @@
     tx-data))
 
 
-;; Paste based on conditions of block where paste originated from.
-;; - If from an empty block, delete block in place and make that location the root
-;; - If at text start of non-empty block, prepend block and focus first new root
-;; - If anywhere else beyond text start of an OPEN parent block, prepend children
-;; - Otherwise append after current block.
-
-(reg-event-fx
-  :paste-old
-  (fn [_ [_ uid text]]
-    (println ":paste event triggered")
-    (println ":paste text data" text)
-    (let [[uid embed-id]  (db/uid-and-embed-id uid)
-          block         (db/get-block [:block/uid uid])
-          {:block/keys  [order children open]} block
-          {:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
-          empty-block?  (and (string/blank? value)
-                             (empty? children))
-          block-start?  (zero? start)
-          parent?       (and children open)
-          start-idx     (cond
-                          empty-block? order
-                          block-start? order
-                          parent? 0
-                          :else (inc order))
-          root-order    (atom start-idx)
-          parent        (cond
-                          parent? block
-                          :else (db/get-parent [:block/uid uid]))
-          paste-tx-data (text-to-blocks text (:block/uid parent) root-order)
-          ;; the delta between root-order and start-idx is how many root blocks were added
-          n             (- @root-order start-idx)
-          start-reindex (cond
-                          block-start? (dec order)
-                          parent? -1
-                          :else order)
-          amount        (cond
-                          empty-block? (dec n)
-                          :else n)
-          reindex       (plus-after (:db/id parent) start-reindex amount)
-          tx-data       (concat reindex
-                                paste-tx-data
-                                (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
-      {:dispatch-n [[:transact tx-data]
-                    (when block-start?
-                      (let [block (-> paste-tx-data first :block/children)
-                            {:block/keys [uid string]} block
-                            n     (count string)]
-                        [:editing/uid (cond-> uid
-                                        embed-id (str "-embed-" embed-id)) n]))]})))
-
-
 (reg-event-fx
   :paste
-  (fn [_ [_ {:keys [uid text] :as args}]]
+  (fn [_ [_ uid text :as args]]
     (js/console.debug ":paste args" args)
     (let [local?          (not (client/open?))
           [uid embed-id]  (db/uid-and-embed-id uid)
-          {:keys [start
-                  value]} (textarea-keydown/destruct-target js/document.activeElement)
+          {:keys [start]} (textarea-keydown/destruct-target js/document.activeElement)
           block-start?    (zero? start)]
       (if local?
         (let [paste-event (common-events/build-paste-event -1
@@ -1631,10 +1590,12 @@
                      (cond-> uid
                        embed-id (str "-embed-" embed-id))
                      n]))]})
-        {:fx [[:dispatch [:remote/paste {:uid   uid
-                                         :text  text
-                                         :start start
-                                         :value value}]]]}))))
+        {:fx [[:dispatch
+               [:alert/js "Sorry, Paste event isn't ported to remote setup, yet."]
+               #_[:remote/paste {:uid   uid
+                                 :text  text
+                                 :start start
+                                 :value value}]]]}))))
 
 
 (reg-event-fx
