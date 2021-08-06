@@ -785,7 +785,7 @@
         (let [undo-event (common-events/build-undo-redo-event -1 false)
               tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
-        false))))
+        {:fx [[:dispatch [:alert/js "Undo not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
@@ -798,7 +798,7 @@
         (let [redo-event (common-events/build-undo-redo-event -1 true)
               tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
-        false))))
+        {:fx [[:dispatch [:alert/js "Redo not supported in Lan-Party, yet."]]]}))))
 
 
 (defn prev-block-uid-without-presence-recursively
