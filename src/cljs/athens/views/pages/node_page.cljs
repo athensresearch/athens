@@ -168,9 +168,10 @@
   (let [new-uid               (gen-block-uid)
         [parent-uid embed-id] (db/uid-and-embed-id parent-uid)
         parent-block          (db/get-block [:block/uid parent-uid])]
-    (dispatch [:enter/add-child {:block    parent-block
-                                 :new-uid  new-uid
-                                 :embed-id embed-id}])
+    (dispatch [:enter/add-child {:block     parent-block
+                                 :new-uid   new-uid
+                                 :embed-id  embed-id
+                                 :add-time? true  }])
     (dispatch [:editing/uid new-uid])))
 
 

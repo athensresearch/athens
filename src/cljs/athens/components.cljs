@@ -21,7 +21,8 @@
     (dispatch [:block/save {:uid        uid
                             :old-string current-block-content
                             :new-string new-block-content
-                            :callback   #()}])))
+                            :callback   #()
+                            :add-time?  true}])))
 
 
 (defn span-click-stop

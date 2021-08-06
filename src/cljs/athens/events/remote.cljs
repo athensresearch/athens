@@ -342,12 +342,13 @@
 
 (rf/reg-event-fx
   :remote/block-save
-  (fn [{db :db} [_ {:keys [uid new-string callback]}]]
+  (fn [{db :db} [_ {:keys [uid new-string callback add-time?]}]]
     (let [last-seen-tx     (:remote/last-seen-tx db)
           {event-id :event/id
            :as      event} (common-events/build-block-save-event last-seen-tx
                                                                  uid
-                                                                 new-string)
+                                                                 new-string
+                                                                 add-time?)
           followup-fx      [[:dispatch [:remote/followup-block-save {:event-id event-id
                                                                      :callback callback}]]]]
       (js/console.debug ":remote/block-stave" (pr-str event))
@@ -397,12 +398,13 @@
 
 (rf/reg-event-fx
   :remote/add-child
-  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id add-time?]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-add-child-event last-seen-tx
                                                                           parent-uid
-                                                                          new-uid)
+                                                                          new-uid
+                                                                          add-time?)
           followup-fx                [[:dispatch [:remote/followup-add-child {:event-id event-id
                                                                               :embed-id embed-id}]]]]
       (js/console.debug ":remote/add-child" (pr-str add-child-event))

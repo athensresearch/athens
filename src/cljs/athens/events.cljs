@@ -945,7 +945,7 @@
 
 (reg-event-fx
   :block/save
-  (fn [_ [_ {:keys [uid old-string new-string callback] :as args}]]
+  (fn [_ [_ {:keys [uid old-string new-string callback add-time?] :as args}]]
     (js/console.debug ":block/save args" (pr-str args))
     (let [local?      (not (client/open?))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
@@ -961,13 +961,15 @@
         (if local?
           (let [block-save-event (common-events/build-block-save-event -1
                                                                        uid
-                                                                       new-string)
+                                                                       new-string
+                                                                       add-time?)
                 block-save-tx    (resolver/resolve-event-to-tx @db/dsdb block-save-event)]
             {:fx [[:dispatch [:transact block-save-tx]]
                   [:invoke-callback callback]]})
           {:fx [[:dispatch [:remote/block-save {:uid        uid
                                                 :new-string new-string
-                                                :callback   callback}]]]})))))
+                                                :callback   callback
+                                                :add-time?  add-time?}]]]})))))
 
 
 (reg-event-fx
@@ -993,21 +995,23 @@
 
 (reg-event-fx
   :enter/add-child
-  (fn [_ [_ {:keys [block new-uid embed-id]}]]
+  (fn [_ [_ {:keys [block new-uid embed-id add-time?]}]]
     (js/console.debug ":enter/add-child" (pr-str block) new-uid)
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
                                                                    (:block/uid block)
-                                                                   new-uid)
+                                                                   new-uid
+                                                                   add-time?)
               tx              (resolver/resolve-event-to-tx @db/dsdb add-child-event)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
         {:fx [[:dispatch [:remote/add-child {:parent-uid (:block/uid block)
                                              :new-uid    new-uid
-                                             :embed-id   embed-id}]]]}))))
+                                             :embed-id   embed-id
+                                             :add-time?  add-time?}]]]}))))
 
 
 (reg-event-fx
@@ -1648,14 +1652,14 @@
 
 (reg-event-fx
   :block/open
-  (fn [_ [_ {:keys [block-uid open?] :as args}]]
+  (fn [_ [_ {:keys [block-uid open-block?] :as args}]]
     (js/console.debug ":block/open args" args)
     (let [local? (not (client/open?))]
       (js/console.debug ":block/open local?" local?)
       (if local?
         (let [block-open-event   (common-events/build-block-open-event -1
                                                                        block-uid
-                                                                       open?)
+                                                                       open-block?)
               tx                (resolver/resolve-event-to-tx @db/dsdb block-open-event)]
           (js/console.debug ":block/open tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
