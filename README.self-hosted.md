@@ -20,7 +20,28 @@ athens.core.lan_off();
 
 ## Server
 
-### Running Athens Self-Hosted Server
+### Building `uberjar`
+
+To create uberjar:
+``` shell
+lein uberjar
+```
+
+This will create `target/athens-lan-party-standalone.jar`.
+
+### Running `uberjar`
+
+Once you've built `uberjar` you can run it as simply as:
+
+``` shell
+java -jar target/athens-lan-party-standalone.jar
+```
+
+In the output you can notice `Starting WebServer with config:  {:port 3010}`,  
+this **3010** is the port number that Athens Lan-Party runs on,  
+notice it might be different number if you've changed configuration.
+
+### Running Athens Self-Hosted Server (using `lein`)
 
 ``` shell
 lein run

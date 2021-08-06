@@ -36,6 +36,6 @@ RUN git clone --depth 1 https://github.com/athensresearch/athens.git .
 #RUN cd athens
 RUN yarn
 COPY project.clj /usr/src/app/project.clj
-RUN lein do compile
+RUN lein do compile-js
 CMD ["lein", "dev"]
 EXPOSE 3000 8777 9630
