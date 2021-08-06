@@ -112,9 +112,9 @@
   [{:name  "App"
     :items [{:description "Toggle Athena"
              :shortcut    "mod+k"}
-            {:description "Open Left Sidebar"
+            {:description "Toggle Left Sidebar"
              :shortcut    "mod+\\"}
-            {:description "Open Right Sidebar"
+            {:description "Toggle Right Sidebar"
              :shortcut    "mod+shift+\\"}
             {:description "Increase Text Size"
              :shortcut    "mod+plus"}
@@ -171,8 +171,6 @@
    {:name  "Graph"
     :items [{:description "Open Node in Sidebar"
              :shortcut    "shift+click"}
-            {:description "Zoom to Node"
-             :shortcut    "shift+click+hold"}
             {:description "Move Node"
              :shortcut    "click+drag"}
             {:description "Zoom in/out"
