@@ -661,6 +661,33 @@
 
 
 (rf/reg-event-fx
+  :remote/drop-diff-source-same-parents
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-source-same-parents args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-source-same-parents-event  (common-events/build-drop-multi-diff-source-same-parents-event last-seen-tx
+                                                                                                        drag-target
+                                                                                                        source-uids
+                                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-diff-source-same-parents event" drop-diff-source-same-parents-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-source-same-parents-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/drop-diff-source-diff-parents
+  (fn [{db :db} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+    (js/console.debug ":remote/drop-diff-source-diff-parents args" (pr-str args))
+    (let [last-seen-tx     (:remote/last-seen-tx db)
+          drop-diff-source-diff-parents-event  (common-events/build-drop-multi-diff-source-diff-parents-event last-seen-tx
+                                                                                                        drag-target
+                                                                                                        source-uids
+                                                                                                        target-uid)]
+      (js/console.debug ":remote/drop-diff-source-diff-parents event" drop-diff-source-diff-parents-event)
+      {:fx [[:dispatch [:remote/send-event! drop-diff-source-diff-parents-event]]]})))
+
+
+
+(rf/reg-event-fx
   :remote/drop-link-diff-parent
   (fn [{db :db} [_ {:keys [drag-target source-uid target-uid] :as args}]]
     (js/console.debug ":remote/drop-link-diff-parent args" (pr-str args))
@@ -727,10 +754,13 @@
 
 (rf/reg-event-fx
   :remote/followup-selected-delete
-  (fn [{_db :db} [_ event-id]]
+  (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
     {:fx [:dispatch-n [[:editing/uid nil]
-                       [:remote/unregister-followup event-id]]]}))
+                       [:remote/unregister-followup event-id]]]
+     :db (-> db
+             (assoc-in [:selection :items] #{})
+             (assoc-in [:selection :order] []))}))
 
 
 (rf/reg-event-fx
