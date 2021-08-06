@@ -240,7 +240,6 @@
                                same-parent-source?          [:drop-multi/same-source {:drag-target drag-target
                                                                                       :source-uids source-uids
                                                                                       :target-uid  target-uid}])]
-
     (rf/dispatch [:selected/clear-items])
     (rf/dispatch event)))
 

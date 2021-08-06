@@ -666,9 +666,9 @@
     (js/console.debug ":remote/drop-diff-source-same-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
           drop-diff-source-same-parents-event  (common-events/build-drop-multi-diff-source-same-parents-event last-seen-tx
-                                                                                                        drag-target
-                                                                                                        source-uids
-                                                                                                        target-uid)]
+                                                                                                              drag-target
+                                                                                                              source-uids
+                                                                                                              target-uid)]
       (js/console.debug ":remote/drop-diff-source-same-parents event" drop-diff-source-same-parents-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-source-same-parents-event]]]})))
 
@@ -679,12 +679,11 @@
     (js/console.debug ":remote/drop-diff-source-diff-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
           drop-diff-source-diff-parents-event  (common-events/build-drop-multi-diff-source-diff-parents-event last-seen-tx
-                                                                                                        drag-target
-                                                                                                        source-uids
-                                                                                                        target-uid)]
+                                                                                                              drag-target
+                                                                                                              source-uids
+                                                                                                              target-uid)]
       (js/console.debug ":remote/drop-diff-source-diff-parents event" drop-diff-source-diff-parents-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-source-diff-parents-event]]]})))
-
 
 
 (rf/reg-event-fx
@@ -774,3 +773,29 @@
       (js/console.debug ":remote/selected-delete" (pr-str selected-delete-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event!       selected-delete-event]]]]})))
+
+
+;; TODO: we don't have followup for remote paste event, because current implementation relies on analyzing tx
+;; this ain't available in current remote events protocol.
+(rf/reg-event-fx
+  :remote/followup-paste
+  (fn [{_db :db} [_ event-id]]
+    (js/console.debug ":remote/followup-paste" event-id)
+    {:fx [:dispatch-n [[:editing/uid nil]
+                       [:remote/unregister-followup event-id]]]}))
+
+
+(rf/reg-event-fx
+  :remote/paste
+  (fn [{db :db} [_ uid text start value]]
+    (let [last-seen-tx           (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as      paste-event} (common-events/build-paste-event last-seen-tx
+                                                                  uid
+                                                                  text
+                                                                  start
+                                                                  value)
+          followup-fx            [[:dispatch [:remote/followup-paste event-id]]]]
+      (js/console.debug ":remote/[paste" (pr-str paste-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event!       paste-event]]]]})))
