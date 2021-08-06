@@ -1465,8 +1465,8 @@
                                                                                                                        source-uids
                                                                                                                        target-uid)
               tx                                        (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-source-same-parents-event)]
-         (js/console.log ":drop-multi-diff-source-same-parents tx" tx)
-         {:fx [[:dispatch [:transact tx]]]})
+          (js/console.log ":drop-multi-diff-source-same-parents tx" tx)
+          {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-same-parents args]]]}))))
 
 
@@ -1485,7 +1485,6 @@
           (js/console.log ":drop-multi-diff-source-diff-parents tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-diff-parents args]]]}))))
-
 
 
 (reg-event-fx

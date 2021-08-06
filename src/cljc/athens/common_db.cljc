@@ -393,6 +393,7 @@
        target-block-uid
        not-contains? (set selected-uids)))
 
+
 (defn- extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
@@ -454,7 +455,6 @@
   (string->lookup-refs "one [[two]] ((three)) #four #[[five [[six]]]]")
   (parser/parse-to-ast "one [[two]] ((three)) #four #[[five [[six]]]]")
   (update-refs-tx [:block/uid "one"] #{[:node/title "foo"]} #{[:block/uid "bar"] [:node/title "baz"]}))
-
 
 
 (defn block-refs-as-lookup-refs

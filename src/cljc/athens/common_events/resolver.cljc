@@ -573,7 +573,6 @@
     tx-data))
 
 
-
 (defn add-new-blocks
   "Given a vector of blocks add more blocks to it"
   [current-blocks add-these-blocks add-to-index]
@@ -684,8 +683,9 @@
         {last-source-parent-eid :db/id
          last-source-parent-uid :block/uid}    (last source-parents)
         n                                      (count
-                                                 (filter (fn [x] (= (:block/uid x)
-                                                                    last-source-parent-uid))
+                                                 (filter (fn [x]
+                                                           (= (:block/uid x)
+                                                              last-source-parent-uid))
                                                          source-parents))
         reindex-last-source-parent             (common-db/minus-after db
                                                                       last-source-parent-eid
@@ -743,8 +743,7 @@
         ;; find the blocks which have same parent as the target-block's parent
         uid-of-blocks-to-remove-but-not-retract (filter
                                                   (fn [block-uid]
-                                                    (let [
-                                                          block-parent-eid (:db/id (common-db/get-parent db [:block/uid block-uid]))]
+                                                    (let [block-parent-eid (:db/id (common-db/get-parent db [:block/uid block-uid]))]
                                                       (if (= block-parent-eid
                                                              target-parent-eid)
                                                         block-uid)))

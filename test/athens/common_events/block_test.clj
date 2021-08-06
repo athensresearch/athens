@@ -787,7 +787,6 @@
                    (:block/children target-parent-block))))))))
 
 
-
 (t/deftest drop-multi-diff-source-same-parents-test
   "Basic Case:
      Start with :
@@ -854,7 +853,6 @@
                     (select-keys source-1-block [:block/uid :block/order])
                     (select-keys source-2-block [:block/uid :block/order])]
                    (:block/children target-parent-block))))))))
-
 
 
 (t/deftest drop-link-diff-parent-test

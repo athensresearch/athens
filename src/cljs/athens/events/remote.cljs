@@ -666,9 +666,9 @@
     (js/console.debug ":remote/drop-diff-source-same-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
           drop-diff-source-same-parents-event  (common-events/build-drop-multi-diff-source-same-parents-event last-seen-tx
-                                                                                                        drag-target
-                                                                                                        source-uids
-                                                                                                        target-uid)]
+                                                                                                              drag-target
+                                                                                                              source-uids
+                                                                                                              target-uid)]
       (js/console.debug ":remote/drop-diff-source-same-parents event" drop-diff-source-same-parents-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-source-same-parents-event]]]})))
 
@@ -679,12 +679,11 @@
     (js/console.debug ":remote/drop-diff-source-diff-parents args" (pr-str args))
     (let [last-seen-tx     (:remote/last-seen-tx db)
           drop-diff-source-diff-parents-event  (common-events/build-drop-multi-diff-source-diff-parents-event last-seen-tx
-                                                                                                        drag-target
-                                                                                                        source-uids
-                                                                                                        target-uid)]
+                                                                                                              drag-target
+                                                                                                              source-uids
+                                                                                                              target-uid)]
       (js/console.debug ":remote/drop-diff-source-diff-parents event" drop-diff-source-diff-parents-event)
       {:fx [[:dispatch [:remote/send-event! drop-diff-source-diff-parents-event]]]})))
-
 
 
 (rf/reg-event-fx
