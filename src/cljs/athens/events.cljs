@@ -945,7 +945,9 @@
 
 (reg-event-fx
   :block/save
-  (fn [_ [_ {:keys [uid old-string new-string callback add-time?] :as args}]]
+  (fn [_ [_ {:keys [uid old-string new-string callback add-time?]
+             :or {add-time? false}
+             :as args}]]
     (js/console.debug ":block/save args" (pr-str args))
     (let [local?      (not (client/open?))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
@@ -995,8 +997,10 @@
 
 (reg-event-fx
   :enter/add-child
-  (fn [_ [_ {:keys [block new-uid embed-id add-time?]}]]
-    (js/console.debug ":enter/add-child" (pr-str block) new-uid)
+  (fn [_ [_ {:keys [block new-uid embed-id add-time?]
+             :or {add-time? false}
+             :as args}]]
+    (js/console.debug ":enter/add-child args:" (pr-str args))
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/add-child local?" local?)
       (if local?

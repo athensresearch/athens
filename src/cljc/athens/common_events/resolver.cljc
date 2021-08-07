@@ -158,7 +158,6 @@
   (let [{:keys [parent-uid
                 new-uid
                 add-time?]} args
-        ;; Why do we set :db/id here, should this not be handled db?
         new-child         {:db/id        -1
                            :block/uid    new-uid
                            :block/string ""
