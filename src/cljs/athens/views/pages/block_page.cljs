@@ -62,22 +62,18 @@
 
 ;; Helpers
 
-(defn transact-string
-  "A helper function that takes a `string` and a `block` and datascript `transact` vector
-  ready for `dispatch`. Used in `block-page-el` function to log when there is a diff and `on-blur`."
-  [string block]
-  [:transact [{:db/id        [:block/uid (:block/uid block)]
-               :block/string string
-               :edit/time    (now-ts)}]])
-
 
 (defn persist-textarea-string
-  "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`. "
-  [state block]
-  (let [diff? (not= (:string/local state)
-                    (:string/previous state))]
-    (when diff?
-      (dispatch (transact-string (:string/local state) block)))))
+  "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`.
+   Used in `block-page-el` function to log when there is a diff and `on-blur`"
+  [state block-uid]
+  (let [old-string  (:string/previous state)
+        new-string  (:string/local state)]
+    (dispatch [:block/save {:uid        block-uid
+                            :old-string old-string
+                            :new-string new-string
+                            :callback   #()
+                            :add-time?  true}])))
 
 
 ;; Components
@@ -103,7 +99,6 @@
                        :string/previous nil})]
     (fn [block parents editing-uid refs]
       (let [{:block/keys [string children uid]} block]
-
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
@@ -132,7 +127,7 @@
             :value       (:string/local @state)
             :class       (when (= editing-uid uid) "is-editing")
             :auto-focus  true
-            :on-blur     (fn [_] (persist-textarea-string @state block))
+            :on-blur     (fn [_] (persist-textarea-string @state uid))
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
             :on-change   (fn [e] (block-page-change e uid state))}]
           (if (clojure.string/blank? (:string/local @state))

@@ -342,12 +342,13 @@
 
 (rf/reg-event-fx
   :remote/block-save
-  (fn [{db :db} [_ {:keys [uid new-string callback]}]]
+  (fn [{db :db} [_ {:keys [uid new-string callback add-time?]}]]
     (let [last-seen-tx     (:remote/last-seen-tx db)
           {event-id :event/id
            :as      event} (common-events/build-block-save-event last-seen-tx
                                                                  uid
-                                                                 new-string)
+                                                                 new-string
+                                                                 add-time?)
           followup-fx      [[:dispatch [:remote/followup-block-save {:event-id event-id
                                                                      :callback callback}]]]]
       (js/console.debug ":remote/block-stave" (pr-str event))
@@ -397,12 +398,13 @@
 
 (rf/reg-event-fx
   :remote/add-child
-  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
+  (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id add-time?]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      add-child-event} (common-events/build-add-child-event last-seen-tx
                                                                           parent-uid
-                                                                          new-uid)
+                                                                          new-uid
+                                                                          add-time?)
           followup-fx                [[:dispatch [:remote/followup-add-child {:event-id event-id
                                                                               :embed-id embed-id}]]]]
       (js/console.debug ":remote/add-child" (pr-str add-child-event))
@@ -773,6 +775,17 @@
       (js/console.debug ":remote/selected-delete" (pr-str selected-delete-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event!       selected-delete-event]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/block-open
+  (fn [{db :db} [_ block-uid open?]]
+    (let [last-seen-tx      (:remote/last-seen-tx db)
+          block-open-event  (common-events/build-block-open-event last-seen-tx
+                                                                  block-uid
+                                                                  open?)]
+      (js/console.debug ":remote/block-open" (pr-str block-open-event))
+      {:fx [[:dispatch-n [[:remote/send-event!       block-open-event]]]]})))
 
 
 ;; TODO: we don't have followup for remote paste event, because current implementation relies on analyzing tx

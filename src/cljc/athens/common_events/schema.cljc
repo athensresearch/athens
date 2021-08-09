@@ -56,6 +56,7 @@
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
+   :datascript/block-open
    :datascript/paste])
 
 
@@ -142,7 +143,8 @@
    [:event/args
     [:map
      [:uid string?]
-     [:new-string string?]]]])
+     [:new-string string?]
+     [:add-time?  boolean?]]]])
 
 
 (def datascript-new-block
@@ -159,7 +161,8 @@
    [:event/args
     [:map
      [:parent-uid string?]
-     [:new-uid string?]]]])
+     [:new-uid   string?]
+     [:add-time? boolean?]]]])
 
 
 (def datascript-split-block
@@ -230,24 +233,24 @@
   [:map
    [:event/args
     [:map
-     [:source-uid string?
-      :target-uid string?]]]])
+     [:source-uid string?]
+     [:target-uid string?]]]])
 
 
 (def datascript-drop-multi-child
   [:map
    [:event/args
     [:map
-     [:source-uids [:vector string?]
-      :target-uid  string?]]]])
+     [:source-uids [:vector string?]]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-link-child
   [:map
    [:event/args
     [:map
-     [:source-uid string?
-      :target-uid string?]]]])
+     [:source-uid string?]
+     [:target-uid string?]]]])
 
 
 (def datascript-drop-diff-parent
@@ -256,9 +259,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uid  string?
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uid  string?]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-multi-diff-source-same-parents
@@ -267,9 +270,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uids [:vector string?]
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uids [:vector string?]]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-multi-diff-source-diff-parents
@@ -278,9 +281,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uids [:vector string?]
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uids [:vector string?]]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-link-diff-parent
@@ -289,9 +292,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uid  string?
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uid  string?]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-same
@@ -300,9 +303,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uid  string?
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uid  string?]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-multi-same-source
@@ -311,9 +314,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uids [:vector string?]
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uids [:vector string?]]
+     [:target-uid  string?]]]])
 
 
 (def datascript-drop-multi-same-all
@@ -322,9 +325,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uids [:vector string?]
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uids [:vector string?]]
+     [:target-uid  string?]]]])
 
 
 (def datascript-link-same
@@ -333,9 +336,9 @@
     [:map
      [:drag-target [:enum
                     :above
-                    :below]
-      :source-uid  string?
-      :target-uid  string?]]]])
+                    :below]]
+     [:source-uid  string?]
+     [:target-uid  string?]]]])
 
 
 (def datascript-left-sidebar-drop-above
@@ -380,6 +383,14 @@
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
+
+
+(def datascript-block-open
+  [:map
+   [:event/args
+    [:map
+     [:block-uid string?]
+     [:open?     boolean?]]]])
 
 
 (def datascript-paste

@@ -14,13 +14,15 @@
 
 (defn todo-on-click
   [uid from-str to-str]
-  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
-    (dispatch [:transact [{:block/uid    uid
-                           :block/string (clojure.string/replace
-                                           current-block-content
-                                           from-str
-                                           to-str)
-                           :edit/time    (now-ts)}]])))
+  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))
+        new-block-content (clojure.string/replace current-block-content
+                                                  from-str
+                                                  to-str)]
+    (dispatch [:block/save {:uid        uid
+                            :old-string current-block-content
+                            :new-string new-block-content
+                            :callback   #()
+                            :add-time?  true}])))
 
 
 (defn span-click-stop

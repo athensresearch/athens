@@ -331,7 +331,8 @@
                                   new-open-state (cond
                                                    up? false
                                                    down? true)
-                                  event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
+                                  event          [:block/open {:block-uid uid
+                                                               :open?     new-open-state}]]
                               (.. e preventDefault)
                               (dispatch event)))
 

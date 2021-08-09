@@ -158,15 +158,17 @@
 ;;           it would be safer to generate it during resolution
 (defn build-block-save-event
   "Builds `:datascript/block-save` event with:
-  - `uid`: `:block/uid` of block to save
-  - `new-string`: new value for `:block/string`"
-  [last-tx uid new-string]
+  - `uid`       : `:block/uid` of block to save
+  - `new-string`: new value for `:block/string`
+  - `add-time?` : Should `:edit/time` for this block be transacted"
+  [last-tx uid new-string add-time?]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/block-save
      :event/args    {:uid        uid
-                     :new-string new-string}}))
+                     :new-string new-string
+                     :add-time?  add-time?}}))
 
 
 (defn build-new-block-event
@@ -187,14 +189,16 @@
 (defn build-add-child-event
   "Builds `:datascript/add-child` event with:
   - `parent-uid`: `:block/uid` of parent block
-  - `new-uid`: new child's block uid"
-  [last-tx parent-uid new-uid]
+  - `new-uid`  : new child's block uid
+  - `add-time?`: Should `:edit/time` for this block be transacted"
+  [last-tx parent-uid new-uid add-time?]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/add-child
      :event/args    {:parent-uid parent-uid
-                     :new-uid    new-uid}}))
+                     :new-uid    new-uid
+                     :add-time?  add-time?}}))
 
 
 (defn build-open-block-add-child-event
@@ -551,6 +555,18 @@
      :event/args    {:uids uids}}))
 
 
+(defn build-block-open-event
+  "Builds `:datascript/block-open` event with:
+  - block-uid : The uid of block to be opened
+  - open?     : Bool to set the block state to open or close"
+  [last-tx block-uid open?]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/block-open
+     :event/args    {:block-uid block-uid
+                     :open?     open?}}))
+
 (defn build-paste-event
   "Builds `:datascript/paste` event with:
   - uid  : The uid of block to which text is to be pasted
@@ -566,6 +582,7 @@
                      :text  text
                      :start start
                      :value value}}))
+
 
 
 ;; - presence events
