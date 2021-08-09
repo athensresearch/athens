@@ -56,7 +56,8 @@
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
-   :datascript/block-open])
+   :datascript/block-open
+   :datascript/paste])
 
 
 (def event-type-graph-server
@@ -392,6 +393,14 @@
      [:open?     boolean?]]]])
 
 
+(def datascript-paste
+  [:map
+   [:event/args
+    [:map
+     [:uid  string?
+      :text string?]]]])
+
+
 (def event
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello-args)
@@ -412,6 +421,7 @@
    (dispatch :datascript/indent datascript-indent)
    (dispatch :datascript/unindent datascript-unindent)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
+   (dispatch :datascript/paste datascript-paste)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
@@ -553,6 +563,7 @@
    (dispatch :datascript/indent datascript-indent true)
    (dispatch :datascript/unindent datascript-unindent true)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
+   (dispatch :datascript/paste datascript-paste true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
