@@ -20,7 +20,7 @@
 (re-frame/reg-sub
   :theme/dark
   (fn [db _]
-    (:theme/dark db)))
+    (-> db :athens/persist :theme/dark)))
 
 
 (re-frame/reg-sub
@@ -142,4 +142,10 @@
     (if (util/electron?)
       (:db/remote-graph-conf db)
       {})))
+
+
+(re-frame/reg-sub
+ :settings
+ (fn [db _]
+   (-> db :athens/persist :settings)))
 

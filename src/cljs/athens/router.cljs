@@ -34,9 +34,9 @@
 ;; events
 (reg-event-fx
   :navigate
-  (fn [_ [_ & route]]
-    {:navigate!          route
-     :local-storage/set! ["current-route/uid" (-> route second :id)]}))
+  (fn [{:keys [db]} [_ & route]]
+    {:navigate! route
+     :db        (assoc-in db [:athens/persist :current-route/uid] (-> route second :id))}))
 
 
 (reg-event-fx
@@ -63,12 +63,11 @@
 
 
 (reg-event-fx
-  :local-storage/navigate
-  [(rf/inject-cofx :local-storage "current-route/uid")]
-  (fn [{:keys [local-storage]} _]
-    (if (= "null" local-storage)
-      {:dispatch [:navigate :home]}
-      {:dispatch [:navigate :page {:id local-storage}]})))
+  :restore-navigation
+  (fn [{:keys [db]} _]
+    (if-let [uid (-> db :athens/persist :current-route/uid)]
+      {:dispatch [:navigate :page {:id uid}]}
+      {:dispatch [:navigate :home]})))
 
 
 ;; effects

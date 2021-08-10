@@ -3,6 +3,7 @@
     ["@sentry/integrations" :as integrations]
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
+    [athens.interceptors]
     [athens.coeffects]
     [athens.components]
     [athens.config :as config]
@@ -78,20 +79,6 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
-(defn init-windowsize
-  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
-  []
-  (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron.core/remote)
-          [lastx lasty]    (util/get-window-size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch [:window/set-size [x y]])))))))
-
-
 (defn init-datalog-console
   []
   (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
@@ -113,7 +100,6 @@
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
-  (init-windowsize)
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)

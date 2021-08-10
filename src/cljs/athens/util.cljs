@@ -7,7 +7,8 @@
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
-    [tick.locale-en-us])
+    [tick.locale-en-us]
+    [cognitect.transit :as tr])
   (:require-macros
     [com.rpl.specter :refer [recursive-path]]))
 
@@ -345,12 +346,19 @@
 ;; :else "Web"))
 
 
-;; Window
+;; Local Storage
 
-(defn get-window-size
-  "Reads window size from local-storage and returns the values as a vector"
-  []
-  (let [ws (js/localStorage.getItem "ws/window-size")]
-    (if (nil? ws)
-      '[800 600]
-      (map #(js/parseInt %) (string/split ws ",")))))
+(defn local-storage-set!
+  "Set v to local storage under k, replacing the value that was there before.
+  k is coerced to string, v is written as json-verbose transit."
+  [k v]
+  (.setItem js/localStorage (str k) (tr/write (tr/writer :json-verbose) v)))
+
+
+(defn local-storage-get
+  "Get value from local storage under k.
+  k is coerced to string, v is read as json-verbose transit."
+  [k]
+  (tr/read (tr/reader :json-verbose) (.getItem js/localStorage (str k))))
+
+

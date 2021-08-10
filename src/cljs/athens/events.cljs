@@ -17,10 +17,11 @@
 
 (reg-event-fx
   :boot/web
-  (fn [_ _]
-    {:db         db/rfdb
+  [(inject-cofx :local-storage :athens/persist)]
+  (fn [{:keys [local-storage]} _]
+    {:db         (db/init-app-db local-storage)
      :dispatch-n [[:loading/unset]
-                  [:local-storage/set-theme]]}))
+                  [:theme/set]]}))
 
 
 (reg-event-db
@@ -468,8 +469,8 @@
 
 (reg-event-fx
   :window/set-size
-  (fn [_ [_ [x y]]]
-    {:local-storage/set! ["ws/window-size" (str x "," y)]}))
+  (fn [{:keys [db]} [_ [x y]]]
+    {:db (assoc-in db [:athens/persist :window/size] [x y])}))
 
 
 ;; Loading
@@ -543,12 +544,7 @@
 (reg-event-fx
   :get-db/init
   (fn [{rfdb :db} _]
-    {:db (cond-> db/rfdb
-           true (assoc :loading? true)
-
-           (= (js/localStorage.getItem "theme/dark") "true")
-           (assoc :theme/dark true))
-
+    {:db         (assoc db/rfdb :loading? true)
      :async-flow {:first-dispatch [:http/get-db]
                   :rules          [{:when :seen?
                                     :events :reset-conn
@@ -572,35 +568,21 @@
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db db/schema) datoms)]
-      {:fx [[:dispatch [:reset-conn new-db]
-             :dispatch [:local-storage/set-db new-db]]]})))
+      {:dispatch [:reset-conn new-db]})))
 
 
 (reg-event-fx
-  :local-storage/set-db
-  (fn [_ [_ db]]
-    {:local-storage/set-db! db}))
-
-
-(reg-event-fx
-  :local-storage/set-theme
-  [(inject-cofx :local-storage "theme/dark")]
-  (fn [{:keys [local-storage db]} _]
-    (let [is-dark (= "true" local-storage)
-          theme   (if is-dark style/THEME-DARK style/THEME-LIGHT)]
-      {:db          (assoc db :theme/dark is-dark)
-       :stylefy/tag [":root" (style/permute-color-opacities theme)]})))
+  :theme/set
+  (fn [{:keys [db]} _]
+    (let [theme (if (-> db :athens/persist :theme/dark) style/THEME-DARK style/THEME-LIGHT)]
+      {:stylefy/tag [":root" (style/permute-color-opacities theme)]})))
 
 
 (reg-event-fx
   :theme/toggle
   (fn [{:keys [db]} _]
-    (let [dark?    (:theme/dark db)
-          new-dark (not dark?)
-          theme    (if dark? style/THEME-LIGHT style/THEME-DARK)]
-      {:db                 (assoc db :theme/dark new-dark)
-       :local-storage/set! ["theme/dark" new-dark]
-       :stylefy/tag        [":root" (style/permute-color-opacities theme)]})))
+    {:db       (update-in db [:athens/persist :theme/dark] not)
+     :dispatch [:theme/set]}))
 
 
 ;; Datascript

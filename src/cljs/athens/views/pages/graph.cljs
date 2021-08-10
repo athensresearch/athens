@@ -5,15 +5,7 @@
       global graphs vs local graphs -- local graphs have an explicit root node
       and customizations are based on that where as global doesn't have an explicit root
 
-      Relies on material ui comps for user inputs.
-
-      Conf strategy:
-      A default is set when ns is evaled in user's runtime which saves it
-      to localStorage. During init load this default or local storage conf
-      is loaded into re-frame db(reactive purposes)
-      Every edit saves this new conf to db as well as localStorage and all
-      future graphs that are opened will be based on that.
-      "}
+      Relies on material ui comps for user inputs."}
   athens.views.pages.graph
   (:require
     ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
@@ -70,39 +62,25 @@
 (rf/reg-sub
   :graph/conf
   (fn [db _]
-    (:graph-conf db)))
+    (-> db :athens/persist :graph-conf)))
+
+
+(rf/reg-event-db
+ :graph/set-conf
+ (fn [db [_ k v]]
+   (update-in db [:athens/persist :graph-conf] #(assoc % k v))))
+
+
+(rf/reg-sub
+ :graph/ref
+ (fn [db [_ key]]
+   (get-in db [:graph-ref key])))
 
 
 (rf/reg-event-db
   :graph/set-graph-ref
   (fn [db [_ key val]]
     (assoc-in db [:graph-ref key] val)))
-
-
-(rf/reg-sub
-  :graph/ref
-  (fn [db [_ key]]
-    (get-in db [:graph-ref key])))
-
-
-(rf/reg-event-db
-  :graph/set-conf
-  (fn [db [_ key val]]
-    (let [n-gc (-> db :graph-conf (assoc key val))]
-      (js/localStorage.setItem "graph-conf" n-gc)
-      (assoc db :graph-conf n-gc))))
-
-
-(rf/reg-event-db
-  :graph/load-graph-conf
-  (fn [db _]
-    (let [conf (or (some->> "graph-conf" js/localStorage.getItem read-string)
-                   db/default-graph-conf)]
-      (js/localStorage.setItem "graph-conf" conf)
-      (assoc db :graph-conf conf))))
-
-
-(dispatch [:graph/load-graph-conf])
 
 
 ;; -------------------------------------------------------------------
@@ -236,7 +214,7 @@
                        [comp
                         (merge
                           props
-                          {:value    (or (key graph-conf) (key db/default-graph-conf))
+                          {:value    (key graph-conf)
                            :color    "primary"
                            :onChange (fn [_ n-val]
                                        (and onChange (onChange n-val))

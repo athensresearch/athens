@@ -16,14 +16,6 @@
 
 (when (util/electron?)
 
-  (def electron (js/require "electron"))
-  (def remote (.. electron -remote))
-
-
-  (def fs (js/require "fs"))
-  (def path (js/require "path"))
-
-
   ;; Subs
 
   (rf/reg-sub

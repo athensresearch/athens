@@ -30,10 +30,8 @@
      Adding a db with the same db-path will show an alert."
     (if (get-in db [:athens/persist :db-picker/all-dbs db-path])
       {:dispatch [:alert/js (str "This Database is already listed as " (:name added-db) ".")]}
-      (let [new-app-db (assoc-in db [:athens/persist :db-picker/all-dbs db-path] added-db)]
-        {:db       new-app-db
-         :persist  new-app-db
-         :dispatch [:db-picker/select-db added-db]}))))
+      {:db       (assoc-in db [:athens/persist :db-picker/all-dbs db-path] added-db)
+       :dispatch [:db-picker/select-db added-db]})))
 
 
 (rf/reg-event-fx
@@ -53,10 +51,8 @@
         {:dispatch [:alert/js "Database is no longer listed, please add it again."]}
 
         (and db-exists? synced?)
-        (let [new-app-db (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)]
-          {:db       new-app-db
-           :persist  new-app-db
-           :dispatch [:boot/desktop]})
+        {:db       (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)
+         :dispatch [:boot/desktop]}
 
         (and db-exists? (not synced?))
         {:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved."]}
@@ -78,8 +74,6 @@
   :db-picker/remove-db
   (fn [{:keys [db]} [_ {:keys [db-path]}]]
     "Delete a db from the db-picker."
-    (let [new-app-db (update-in db [:athens/persist :db-picker/all-dbs] dissoc db-path)]
-      {:db      new-app-db
-       :persist new-app-db})))
+    {:db      (update-in db [:athens/persist :db-picker/all-dbs] dissoc db-path)}))
 
 

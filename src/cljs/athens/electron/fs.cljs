@@ -40,29 +40,24 @@
   (debounce sync-db-from-fs 1000))
 
 
-(def watcher
-  "Singleton watcher, can only have one at a given time.
-   Not part of the ReFrame DB because the actual watcher exists, and must be cleaned up, regardless of the DB."
-  (atom nil))
-
 ;; Watches directory that db is located in. If db file is updated, sync-db-from-fs.
 ;; Watching db file directly doesn't always work, so watch directory and regex match.
 ;; Debounce because files can be changed multiple times per save.
+;; Adding a new watcher removes the previous one.
 (rf/reg-event-fx
   :fs/watch
-  (fn [_ [_ filepath]]
-    (swap! watcher
-           (fn [x]
-             (when x (.close x))
-             (let [dirpath (.dirname path filepath)]
-               (.. fs (watch dirpath (fn [_event filename]
-                                       ;; when filename matches last part of filepath
-                                       ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                                       (when (re-find #"conflict" (or filename ""))
-                                         (throw "Conflict file created by Dropbox"))
-                                       (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                         (debounce-sync-db-from-fs filepath filename))))))))
-    {}))
+  (fn [{:keys [db]} [_ filepath]]
+    (let [old-watcher (:fs/watcher db)
+          dirpath     (.dirname path filepath)
+          new-watcher (.. fs (watch dirpath (fn [_event filename]
+                                              ;; when filename matches last part of filepath
+                                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                                              (when (re-find #"conflict" (or filename ""))
+                                                (throw "Conflict file created by Dropbox"))
+                                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                                (debounce-sync-db-from-fs filepath filename)))))]
+      (when old-watcher (.close old-watcher))
+      {:db (assoc db :fs/watcher new-watcher)})))
 
 
 (rf/reg-event-fx
@@ -140,21 +135,23 @@
     (.pipe r w)))
 
 
-(def debounce-write-db
-  (let [debounce-save-time (js/localStorage.getItem "debounce-save-time")]
-    (if (nil? debounce-save-time)
-      (let [debounce-save-time 15]
-        (js/localStorage.setItem "debounce-save-time" debounce-save-time)
-        (debounce write-db (* 1000 debounce-save-time)))
-
-      (let [debounce-save-time (js/Number debounce-save-time)]
-        (debounce write-db (* 1000 debounce-save-time))))))
-
-
 (defn write-bkp
   []
   (write-db false))
 
+(rf/reg-sub
+ :fs/write-db
+ (fn [db _]
+   (-> db :fs/debounce-write-db)))
+
+(rf/reg-event-fx
+ :fs/update-write-db
+ (fn [{:keys [db]} _]
+   (let [backup-time (-> db :athens/persist :settings :backup-time)
+         f           (debounce write-db (* 1000 backup-time))]
+     (print "update-write-db" backup-time)
+     (print (-> db :athens/persist :settings))
+     {:db (assoc db :fs/debounce-write-db f)})))
 
 ;; The write happens asynchronously due to the debounce and write-db both being asynchronous.
 ;; write-db also takes the value of dsdb and filepath at the time it actually runs, not when
@@ -162,4 +159,4 @@
 (rf/reg-fx
   :fs/write!
   (fn []
-    (debounce-write-db true)))
+    (@(rf/subscribe [:fs/write-db]) true)))

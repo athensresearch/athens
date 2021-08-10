@@ -7,19 +7,26 @@
             [athens.electron.utils :as utils]))
 
 
-(def fs (js/require "fs"))
-
-
-(defn- init-app-db
-  [app-db persist]
-  (merge app-db {:athens/persist persist}))
+(rf/reg-event-fx
+ :electron/window
+ (fn [{:keys [db]} _]
+   "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
+   (let [curWindow     (.getCurrentWindow utils/remote)
+         [lastx lasty] (-> db :athens/persist :window/size)]
+     (.setSize curWindow lastx lasty)
+     (.center curWindow)
+     (.on ^js curWindow "close" (fn [e]
+                                  (let [sender (.-sender e)
+                                        [x y] (.getSize ^js sender)]
+                                    (rf/dispatch-sync [:window/set-size [x y]])))))
+   {}))
 
 
 (rf/reg-event-fx
   :boot/desktop
   [(rf/inject-cofx :local-storage :athens/persist)]
-  (fn [{:keys [local-storage] :as _cofx} _]
-    (let [init-app-db         (init-app-db db/rfdb local-storage)
+  (fn [{:keys [local-storage]} _]
+    (let [init-app-db         (db/init-app-db local-storage)
           all-dbs             (get-in init-app-db [:athens/persist :db-picker/all-dbs])
           selected-db         (get-in init-app-db [:athens/persist :db-picker/selected-db])
           default-db          (utils/local-db (utils/default-db-path))
@@ -67,8 +74,10 @@
                                      ;; if nth time, remember dark/light theme and last page
                                      {:when       :seen?
                                       :events     :reset-conn
-                                      :dispatch-n [[:local-storage/set-theme]
-                                                   #_[:local-storage/navigate]]}
+                                      :dispatch-n [[:electron/window]
+                                                   [:theme/set]
+                                                   [:fs/update-write-db]
+                                                   [:restore-navigation]]}
 
                                      ;; whether first or nth time, update athens pages
                                      #_{:when       :seen-any-of?

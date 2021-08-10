@@ -259,12 +259,6 @@
 
 
 (reg-fx
-  :local-storage/set-db!
-  (fn [db]
-    (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
-
-
-(reg-fx
   :http
   (fn [{:keys [url method opts on-success on-failure]}]
     (go
