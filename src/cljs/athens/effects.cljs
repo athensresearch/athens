@@ -3,20 +3,16 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.config               :as config]
-    [athens.datsync-utils        :as dat-s]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
     [athens.util                 :as util]
     [athens.walk                 :as walk]
-    [athens.ws-client            :as ws]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
     [cljs.pprint                 :refer [pprint]]
     [clojure.string              :as str]
     [com.stuartsierra.component  :as component]
-    [dat.sync.client]
     [datascript.core             :as d]
-    [datascript.transit          :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
@@ -228,44 +224,26 @@
 
 (defn walk-transact
   [tx-data]
-  (let [socket-status     (rf/subscribe [:socket-status])
-        remote-graph-conf (rf/subscribe [:db/remote-graph-conf])]
-    (if (= @socket-status :closed)
-      (rf/dispatch [:show-snack-msg
-                    {:msg "Graph is now read only"}])
-      (do (dev-pprint "TX RAW INPUTS")                             ; event tx-data
-          (dev-pprint tx-data)
-          (try
-            (let [with-tx (d/with @db/dsdb tx-data)]
-              (dev-pprint "TX WITH")                               ; tx-data normalized by datascript to flat datoms
-              (dev-pprint (:tx-data with-tx))
-              (let [more-tx-data  (parse-for-links with-tx)
-                    final-tx-data (vec (concat tx-data more-tx-data))]
-                (dev-pprint "TX MORE")                             ; parsed tx-data, e.g. asserting/retracting pages and references
-                (dev-pprint more-tx-data)
-                (dev-pprint "TX FINAL INPUTS")                     ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-                (dev-pprint final-tx-data)
-                (let [{:keys [db-before tx-data]} (transact! db/dsdb final-tx-data)]
+  (dev-pprint "TX RAW INPUTS")                          ; event tx-data
+  (dev-pprint tx-data)
+  (try
+    (let [with-tx (d/with @db/dsdb tx-data)]
+      (dev-pprint "TX WITH")                            ; tx-data normalized by datascript to flat datoms
+      (dev-pprint (:tx-data with-tx))
+      (let [more-tx-data (parse-for-links with-tx)
+            final-tx-data (vec (concat tx-data more-tx-data))]
+        (dev-pprint "TX MORE")                          ; parsed tx-data, e.g. asserting/retracting pages and references
+        (dev-pprint more-tx-data)
+        (dev-pprint "TX FINAL INPUTS")                  ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+        (dev-pprint final-tx-data)
+        (let [{:keys [_db-before tx-data]} (transact! db/dsdb final-tx-data)]
+          (ph-link-created! tx-data)
+          (dev-pprint "TX OUTPUTS")
+          (dev-pprint tx-data))))
 
-                  ;; check remote data against previous db
-                  (when (and (:default? @remote-graph-conf)
-                             (= @socket-status :running))
-                    ((:send-fn ws/channel-socket)
-                     [:dat.sync.client/tx
-                      [ws/cur-random
-                       (dat-s/remote-tx
-                         db-before
-                         (mapv (fn [[e a v _t sig?]]
-                                 [(if sig? :db/add :db/retract) e a v])
-                               tx-data))]]))
-
-                  (ph-link-created! tx-data)
-                  (dev-pprint "TX OUTPUTS")
-                  (dev-pprint tx-data))))
-
-            (catch js/Error e
-              (js/alert (str e))
-              (js/console.log "EXCEPTION" e)))))))
+    (catch js/Error e
+      (js/alert (str e))
+      (js/console.log "EXCEPTION" e))))
 
 
 (rf/reg-fx
@@ -288,12 +266,6 @@
   :local-storage/set!
   (fn [[key value]]
     (js/localStorage.setItem key value)))
-
-
-(rf/reg-fx
-  :local-storage/set-db!
-  (fn [db]
-    (js/localStorage.setItem "datascript/DB" (dt/write-transit-str db))))
 
 
 (rf/reg-fx

@@ -20,7 +20,7 @@
 (rf/reg-sub
   :theme/dark
   (fn [db _]
-    (:theme/dark db)))
+    (-> db :athens/persist :theme/dark)))
 
 
 (rf/reg-sub
@@ -151,6 +151,12 @@
 
 
 (rf/reg-sub
+ :settings
+ (fn [db _]
+   (-> db :athens/persist :settings)))
+
+
+(rf/reg-sub
   :remote/awaited-events
   (fn [db _]
     (:remote/awaited-events db #{})))
@@ -197,3 +203,4 @@
   :<- [:remote/followup]
   (fn [followups [_ event-id]]
     (get followups event-id)))
+

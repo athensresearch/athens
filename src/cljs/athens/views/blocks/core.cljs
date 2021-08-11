@@ -1,7 +1,7 @@
 (ns athens.views.blocks.core
   (:require
     [athens.db                               :as db]
-    [athens.electron                         :as electron]
+    [athens.electron.images                  :as images]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
@@ -267,7 +267,7 @@
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
-                                     (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
+                                     (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (drop-bullet source-uid target-uid drag-target effect-allowed)

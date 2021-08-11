@@ -29,12 +29,86 @@
    :daily-notes?     true})
 
 
+(def greek-pantheon
+  #{"Zeus"
+    "Hera"
+    "Poseidon"
+    "Demeter"
+    "Athena"
+    "Apollo"
+    "Artemis"
+    "Ares"
+    "Aphrodite"
+    "Hephaestus"
+    "Hermes"
+    "Dionysus"
+    ;; Technically not part of the Olympians, but a cool guy nonetheless.
+    "Hades"
+    ;; Son of either Zeus and Persephone or Hades and persephone.
+    ;; Nothing to do with a recent video game at all.
+    "Zagreus"})
+
+
+(def default-settings
+  {:email       nil
+   :username    (rand-nth (vec greek-pantheon))
+   :monitoring  true
+   :backup-time 15})
+
+
+(def default-athens-persist
+  {:persist/version 1
+   :theme/dark      false
+   :window/size     [800 600]
+   :graph-conf      default-graph-conf
+   :settings        default-settings})
+
+
+;; -- update -------------------------------------------------------------
+
+(defn update-legacy-to-latest
+  "Add settings in the legacy format to the latest persist format."
+  [latest]
+  ;; This value was not saved in local storage proper, saving it there
+  ;; to enable use of update-when-found.
+  (js/localStorage.setItem "monitoring" (not (try (.. js/window -posthog has_opted_out_capturing)
+                                                  (catch :default _ true))))
+  (let [update-when-found (fn [x keyseq k xf]
+                            (if-some [v (js/localStorage.getItem k)]
+                              (assoc-in x keyseq (xf v))
+                              x))
+        str->boolean (fn [x] (= x "true"))]
+    (-> latest
+        (update-when-found [:settings :email] "auth/email" identity)
+        (update-when-found [:settings :username] "user/name" identity)
+        (update-when-found [:settings :backup-time] "debounce-save-time" js/Number)
+        (update-when-found [:settings :monitoring] "monitoring" str->boolean)
+        (update-when-found [:theme/dark] "theme/dark" str->boolean)
+        (update-when-found [:window/size] "ws/window-size" #(map js/parseInt (string/split % ",")))
+        (update-when-found [:graph-conf] "graph-conf" edn/read-string))))
+
+
+(defn update-persisted
+  "Updates persisted to the latest format."
+  [{:keys [:persist/version] :as persisted}]
+  ;; Anything saved under the :athens/persist key will be automatically
+  ;; persisted and loaded between sessions.
+  {:athens/persist
+   (if-not version
+     (update-legacy-to-latest default-athens-persist)
+     ;; Ignore the clj-kondo warning for v<, it'll go away once we have updates.
+     #_:clj-kondo/ignore
+     (let [v< #(< version %)]
+       (cond-> persisted
+               ;; Update persisted by applying each update fn incrementally.
+               ;; (v< 2) update-v1-to-v2
+               ;; (v< 3) update-v2-to-v3
+               )))})
+
+
 ;; -- re-frame -----------------------------------------------------------
 
-(defonce rfdb {:user                {:name (or (js/localStorage.getItem "user/name")
-                                               "Socrates")}
-               :db/filepath         nil
-               :db/synced           true
+(defonce rfdb {:db/synced           true
                :db/mtime            nil
                :current-route       nil
                :loading?            true
@@ -54,10 +128,14 @@
                :daily-notes/items   []
                :selection           {:items #{}
                                      :order []}
-               :theme/dark          false
                :zoom-level          1
-               :graph-conf          default-graph-conf
+               :fs/watcher          nil
                :presence            {}})
+
+
+(defn init-app-db
+  [persisted]
+  (merge rfdb (update-persisted persisted)))
 
 
 ;; -- JSON Parsing ----------------------------------------------------

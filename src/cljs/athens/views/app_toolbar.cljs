@@ -2,30 +2,26 @@
   (:require
     ["@material-ui/core/SvgIcon" :default SvgIcon]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/CheckCircle" :default CheckCircle]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
-    ["@material-ui/icons/Replay" :default Replay]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
     ["@material-ui/icons/Storage" :default Storage]
-    ["@material-ui/icons/Sync" :default Sync]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+    [athens.electron.db-menu.core :refer [db-menu]]
+    [athens.electron.db-modal :as db-modal]
     [athens.router :as router]
     [athens.self-hosted.presence.views :as presence]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
     [athens.views.buttons :refer [button]]
-    [athens.views.filesystem :as filesystem]
-    [athens.ws-client :as ws]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -155,15 +151,6 @@
    :block-size "auto"})
 
 
-(def sync-icon-style
-  {:background (color :background-minus-2)
-   :border-radius "100%"
-   :padding 0
-   :margin 0
-   :height "12px !important"
-   :width "12px !important"})
-
-
 (stylefy/keyframes "fade-in"
                    [:from
                     {:opacity 0}]
@@ -187,8 +174,6 @@
         os                (util/get-os)
         electron?         (util/electron?)
         theme-dark        (subscribe [:theme/dark])
-        remote-graph-conf (subscribe [:db/remote-graph-conf])
-        socket-status     (subscribe [:socket-status])
         win-focused?      (if electron?
                             (subscribe [:win-focused?])
                             (r/atom false))
@@ -202,7 +187,7 @@
     (fn []
       [:<>
        (when @merge-open?
-         [filesystem/merge-modal merge-open?])
+         [db-modal/merge-modal merge-open?])
        [:header (merge (use-style app-header-style
                                   {:class (app-classes {:os os
                                                         :electron? electron?
@@ -212,6 +197,7 @@
                                                         :win-maximized? @win-maximized?})})
                        (unzoom))
         [:div (use-style app-header-control-section-style)
+         [db-menu]
          [button {:active @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
@@ -244,15 +230,6 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [presence/toolbar-presence-el]
-            (when (= @socket-status :closed)
-              [button
-               {:onClick #(ws/start-socket!
-                            (assoc @remote-graph-conf
-                                   :reload-on-init? true))}
-               [:<>
-                [:> Replay]
-                [:span "Re-connect with remote"]]])
             [button {:on-click #(swap! merge-open? not)
                      :title "Merge Roam Database"}
              [:> MergeType]]
@@ -261,27 +238,8 @@
                      :active   (= @route-name :settings)}
              [:> Settings]]
 
-            [button {:on-click #(dispatch [:modal/toggle])
-                     :title "Choose Database"}
-             [:div {:style {:display "flex"}}
-              [:> Storage {:style {:align-self "center"}}]
-              [:div {:style {:margin-left "-10px"
-                             :align-self "flex-end"}}
-               (cond
-                 (= @socket-status :closed)
-                 [:> Error (merge (use-style sync-icon-style)
-                                  {:style {:color (color :error-color)}
-                                   :title "Disconnected"})]
-                 (or (and (:default? @remote-graph-conf)
-                          (= @socket-status :running))
-                     @(subscribe [:db/synced]))
-                 [:> CheckCircle (merge (use-style sync-icon-style)
-                                        {:style {:color (color :confirmation-color)}
-                                         :title "Synced"})]
-                 :else [:> Sync (merge (use-style sync-icon-style)
-                                       {:style {:color (color :highlight-color)}
-                                        :title "Synchronizing..."})])]]]
-
+            [:div {:style {:display "flex"}}
+             [:> Storage {:style {:align-self "center"}}]]
             [separator]]
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])

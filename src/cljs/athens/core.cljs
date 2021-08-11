@@ -8,8 +8,9 @@
     [athens.config :as config]
     [athens.db :refer [dsdb]]
     [athens.effects]
-    [athens.electron]
+    [athens.electron.core]
     [athens.events]
+    [athens.interceptors]
     [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.self-hosted.client :as client]
@@ -79,20 +80,6 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
-(defn init-windowsize
-  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
-  []
-  (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron/remote)
-          [lastx lasty]    (util/get-window-size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch [:window/set-size [x y]])))))))
-
-
 (defn init-datalog-console
   []
   (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
@@ -114,7 +101,6 @@
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
-  (init-windowsize)
   (style/init)
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
