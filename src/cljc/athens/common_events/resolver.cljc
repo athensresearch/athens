@@ -1318,7 +1318,6 @@
 
 (defmethod resolve-event-to-tx :datascript/backspace
   [db {:event/keys [args]}]
-  (println "resolver-db" db)
   (let [{:keys [uid value]} args
         root-embed?     #?(:cljs (= (some-> (str "#editable-uid-" uid)
                                             js/document.querySelector
@@ -1348,11 +1347,11 @@
         new-parent     {:db/id (:db/id parent) :block/children reindex}]
     (cond
       (not parent) nil ; TODO: what's the purpose?
-      root-embed? nil ; TODO: what's the purpose?
+      root-embed? nil ; NOTE: when the last block in an embedded block is empty
       (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
-                                                                                                 tx-data)
+                                                                                                 tx-data) ;; NOTE: when backspacing on the remaining empty block
       (and (not-empty children) (not-empty (:block/children prev-sib))) nil ; TODO: what's the purpose?
-      (and (not-empty children) (= parent prev-block)) nil ; TODO: what's the purpose?
+      (and (not-empty children) (= parent prev-block)) nil ; NOTE: when backspacing at the very top block but it has children
       :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
                   new-prev-block {:db/id          [:block/uid prev-block-uid]
                                   :block/string   (str (:block/string prev-block) value)
