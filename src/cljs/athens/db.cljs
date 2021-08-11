@@ -64,12 +64,16 @@
    :graph-conf      default-graph-conf
    :settings        default-settings})
 
+
+;; -- update -------------------------------------------------------------
+
 (defn update-legacy-to-latest
   "Add settings in the legacy format to the latest persist format."
   [latest]
   ;; This value was not saved in local storage proper, saving it there
   ;; to enable use of update-when-found.
-  (js/localStorage.setItem "monitoring" (not (.. js/window -posthog has_opted_out_capturing)))
+  (js/localStorage.setItem "monitoring" (not (try (.. js/window -posthog has_opted_out_capturing)
+                                                  (catch :default _ true))))
   (let [update-when-found (fn [x keyseq k xf]
                             (if-some [v (js/localStorage.getItem k)]
                               (assoc-in x keyseq (xf v))
