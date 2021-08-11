@@ -17,9 +17,9 @@
 
 (rf/reg-event-fx
   :fs/open-dialog
-  (fn [{:keys [db]} {:keys [db-path]}]
-    (js/alert (str (if db-path
-                     (str "No DB found at " db-path ".")
+  (fn [{:keys [db]} {:keys [base-dir]}]
+    (js/alert (str (if base-dir
+                     (str "No DB found at " base-dir ".")
                      "No DB found.")
                    "\nPlease open or create a new db."))
     {:dispatch-n [[:modal/toggle]]}))
@@ -29,24 +29,29 @@
   (js/alert (str "Directory " base-dir " already contains the " name " graph, sorry.")))
 
 
+(def open-dir-opts
+  (clj->js {:defaultPath (utils/default-dbs-dir)
+            :properties  ["openDirectory"]}))
+
+
 (defn move-dialog!
   "If new-dir/athens already exists, no-op and alert user.
   Else copy db to new db location. When there is an images folder, copy /images folder and all images.
     file:// image urls in block/string don't get updated, so if original images are deleted, links will be broken."
   []
-  (let [res     (.showOpenDialogSync dialog (clj->js {:properties ["openDirectory"]}))
+  (let [res     (.showOpenDialogSync dialog open-dir-opts)
         new-dir (first res)]
     (when new-dir
       (let [{name            :name
              curr-images-dir :images-dir
              curr-db-path    :db-path
              curr-base-dir   :base-dir
-             :as             curr-db}    @(rf/subscribe [:db-picker/selected-db])
-            new-db-path                  (.resolve path new-dir name utils/DB-INDEX)
+             :as             curr-db} @(rf/subscribe [:db-picker/selected-db])
             ;; Merge the new local db info into the current db to preserve any other information there.
-            new-db                       (merge curr-db (utils/local-db new-db-path))
             {new-base-dir   :base-dir
-             new-images-dir :images-dir} new-db]
+             new-images-dir :images-dir
+             new-db-path    :db-path
+             :as            new-db}   (merge curr-db (utils/local-db (.resolve path new-dir name)))]
         (if (utils/local-db-dir-exists? new-db)
           (graph-already-exists-alert new-db)
           (do (.mkdirSync fs new-base-dir)
@@ -68,22 +73,20 @@
 (defn open-dialog!
   "Allow user to open db elsewhere from filesystem."
   []
-  (let [res       (.showOpenDialogSync dialog (clj->js {:properties ["openFile"]
-                                                        :filters    [{:name "Transit" :extensions ["transit"]}]}))
+  (let [res       (.showOpenDialogSync dialog open-dir-opts)
         open-file (first res)]
     (when (and open-file (.existsSync fs open-file))
-      (rf/dispatch [:db-picker/add-and-select-db (utils/local-db open-file)]))))
+      (rf/dispatch [:db-picker/add-and-select-db (utils/local-db (.dirname path open-file))]))))
 
 
 (defn create-dialog!
   "Create a new database."
   [db-name]
-  (let [res         (.showOpenDialogSync dialog (clj->js {:defaultPath (utils/default-dbs-dir)
-                                                          :properties  ["openDirectory"]}))
+  (let [res         (.showOpenDialogSync dialog open-dir-opts)
         db-location (first res)]
     (when (and db-location (not-empty db-name))
-      (let [db-path  (.resolve path db-location db-name utils/DB-INDEX)
-            local-db (utils/local-db db-path)]
+      (let [base-dir (.resolve path db-location db-name)
+            local-db (utils/local-db base-dir)]
         (if (utils/local-db-dir-exists? local-db)
           (graph-already-exists-alert local-db)
           (rf/dispatch [:fs/create-and-watch local-db]))))))

@@ -102,7 +102,7 @@
   (r/with-let [ele (r/atom nil)]
               (let [all-dbs          @(subscribe [:db-picker/all-dbs])
                     active-db        @(subscribe [:db-picker/selected-db])
-                    inactive-dbs     (dissoc all-dbs (:db-path active-db))
+                    inactive-dbs     (dissoc all-dbs (:base-dir active-db))
                     sync-status      (if @(subscribe [:db/synced])
                                        :running
                                        :synchronising)]
@@ -134,7 +134,7 @@
                     [:div (use-style current-db-area-style)
                      [db-list-item {:db active-db
                                     :is-current true
-                                    :key (:db-path active-db)}]
+                                    :key (:base-dir active-db)}]
                      [current-db-tools {:db active-db} all-dbs]]
                     ;; Show all inactive DBs and a separator
                     (doall

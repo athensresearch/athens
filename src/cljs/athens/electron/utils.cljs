@@ -31,20 +31,14 @@
   (.resolve path (default-dbs-dir) "athens"))
 
 
-(defn default-db-path
-  []
-  (.resolve path (default-base-dir) DB-INDEX))
-
-
 (defn local-db
   "Returns a map representing a local db.
-   Local dbs are uniquely identified by the db-path."
-  [db-path]
-  (let [base-dir (.dirname path db-path)]
-    {:name       (.basename path base-dir)
-     :base-dir   base-dir
-     :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
-     :db-path    db-path}))
+   Local dbs are uniquely identified by the base-dir."
+  [base-dir]
+  {:name       (.basename path base-dir)
+   :base-dir   base-dir
+   :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
+   :db-path    (.resolve path base-dir DB-INDEX)})
 
 
 (defn local-db-exists? [{:keys [db-path] :as db}]
