@@ -29,6 +29,7 @@
    :orphans?         true
    :daily-notes?     true})
 
+
 (def greek-pantheon
   #{"Zeus"
     "Hera"
@@ -54,6 +55,7 @@
    :username    (rand-nth (vec greek-pantheon))
    :monitoring  true
    :backup-time 15})
+
 
 (def default-athens-persist
   {:persist/version 1
@@ -120,7 +122,8 @@
                :mouse-down          false
                :daily-notes/items   []
                :selected/items      #{}
-               :zoom-level          1})
+               :zoom-level          1
+               :fs/watcher          nil})
 
 (defn init-app-db
   [persisted]
