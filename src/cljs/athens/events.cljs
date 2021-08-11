@@ -890,11 +890,6 @@
        (count (:block/string prev-block))])))
 
 
-(comment
-  (cond-> 1
-    true (str "2"))
-  *e)
-
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
 ;; which might not be same as blur is not yet called
