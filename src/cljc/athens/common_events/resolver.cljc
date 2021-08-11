@@ -1314,3 +1314,49 @@
                                      (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
     (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
     tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/backspace
+  [db {:event/keys [args]}]
+  (println "resolver-db" db)
+  (let [{:keys [uid value]} args
+        root-embed?     #?(:cljs (= (some-> (str "#editable-uid-" uid)
+                                            js/document.querySelector
+                                            (.. (closest ".block-embed"))
+                                            (. -firstChild)
+                                            (.getAttribute "data-uid"))
+                                    uid)
+                           :clj nil) ; TODO: failing in clj
+        [uid]           (common-db/uid-and-embed-id uid)
+        block           (common-db/get-block db [:block/uid uid])
+        {:block/keys    [children order] :or {children []}} block
+        parent          (common-db/get-parent db [:block/uid uid])
+        reindex         (common-db/dec-after db (:db/id parent) (:block/order block))
+        prev-block-uid  (common-db/prev-block-uid db uid)
+        prev-block      (common-db/get-block db [:block/uid prev-block-uid])
+        prev-sib-order  (dec (:block/order block))
+        prev-sib        (d/q '[:find ?sib .
+                               :in $ % ?target-uid ?prev-sib-order
+                               :where
+                               (siblings ?target-uid ?sib)
+                               [?sib :block/order ?prev-sib-order]
+                               [?sib :block/uid ?uid]
+                               [?sib :block/children ?ch]]
+                             db common-db/rules uid prev-sib-order)
+        prev-sib       (when-not (nil? prev-sib) (common-db/get-block db prev-sib)) ; TODO: check if there's a way for common-db/get-block to accept nil
+        retract-block  [:db/retractEntity (:db/id block)]
+        new-parent     {:db/id (:db/id parent) :block/children reindex}]
+    (cond
+      (not parent) nil ; TODO: what's the purpose?
+      root-embed? nil ; TODO: what's the purpose?
+      (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
+                                                                                                 tx-data)
+      (and (not-empty children) (not-empty (:block/children prev-sib))) nil ; TODO: what's the purpose?
+      (and (not-empty children) (= parent prev-block)) nil ; TODO: what's the purpose?
+      :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+                  new-prev-block {:db/id          [:block/uid prev-block-uid]
+                                  :block/string   (str (:block/string prev-block) value)
+                                  :block/children children}
+                  tx-data        (conj retracts retract-block new-prev-block new-parent)]
+              tx-data))))
+

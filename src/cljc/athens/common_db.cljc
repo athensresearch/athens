@@ -285,6 +285,52 @@
       [uid nil]))
 
 
+(defn nth-sibling
+  "Find sibling that has order+n of current block.
+  Negative n means previous sibling.
+  Positive n means next sibling."
+  [db uid n]
+  (let [block      (get-block db [:block/uid uid])
+        {:block/keys [order]} block
+        find-order (+ n order)]
+    (d/q '[:find (pull ?sibs [*]) .
+           :in $ % ?curr-uid ?find-order
+           :where
+           (siblings ?curr-uid ?sibs)
+           [?sibs :block/order ?find-order]]
+         db rules uid find-order)))
+
+
+(defn deepest-child-block
+  [db id]
+  (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)
+                      sort-block-children)]
+    (loop [block document]
+      (let [{:block/keys [children]} block
+            n (count children)]
+        (if (zero? n)
+          block
+          (recur (get children (dec n))))))))
+
+
+(defn prev-block-uid
+  "If order 0, go to parent.
+   If order n but block is closed, go to prev sibling.
+   If order n and block is OPEN, go to prev sibling's deepest child."
+  [db uid]
+  (let [[uid embed-id]  (uid-and-embed-id uid)
+        block           (get-block db [:block/uid uid])
+        parent          (get-parent db [:block/uid uid])
+        prev-sibling    (nth-sibling db uid -1)
+        {:block/keys    [open uid]} prev-sibling
+        prev-block      (cond
+                          (zero? (:block/order block)) parent
+                          (false? open) prev-sibling
+                          (true? open) (deepest-child-block db [:block/uid uid]))]
+    (cond-> (:block/uid prev-block)
+      embed-id (str "-embed-" embed-id))))
+
+
 (defn same-parent?
   "Given a coll of uids, determine if uids are all direct children of the same parent."
   [db uids]

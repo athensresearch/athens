@@ -344,7 +344,8 @@
         :datascript/page-add-shortcut
         :datascript/page-remove-shortcut
         :datascript/left-sidebar-drop-above
-        :datascript/left-sidebar-drop-below} (forwarded-event-handler packet))
+        :datascript/left-sidebar-drop-below
+        :datascript/backspace} (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))

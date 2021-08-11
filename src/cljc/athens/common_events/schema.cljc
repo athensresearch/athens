@@ -57,7 +57,8 @@
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
    :datascript/block-open
-   :datascript/paste])
+   :datascript/paste
+   :datascript/backspace])
 
 
 (def event-type-graph-server
@@ -401,6 +402,14 @@
       :text string?]]]])
 
 
+(def datascript-backspace
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:value string?]]]])
+
+
 (def event
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello-args)
@@ -427,7 +436,8 @@
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
-   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)])
+   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
+   (dispatch :datascript/backspace datascript-backspace)])
 
 
 (def valid-event?
@@ -570,6 +580,7 @@
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
+   (dispatch :datascript/backspace datascript-backspace true)
 
    ;; server specific graph events
    (dispatch :datascript/tx-log tx-log true)
