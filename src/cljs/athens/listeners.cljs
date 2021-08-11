@@ -177,9 +177,10 @@
   "If blocks are selected, copy blocks as markdown list.
   Use -event_ because goog events quirk "
   [^js e]
-  (let [uids @(subscribe [:selected/items])]
+  (let [uids  @(subscribe [:selected/items])
+        order @(subscribe [:selected/order])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) order)
                            (map #(blocks-to-clipboard-data 0 %))
                            (apply str))]
         (.. e preventDefault)
@@ -191,12 +192,8 @@
   [^js e]
   (let [uids @(subscribe [:selected/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                           (map #(blocks-to-clipboard-data 0 %))
-                           (apply str))]
-        (.. e preventDefault)
-        (.. e -event_ -clipboardData (setData "text/plain" copy-data))
-        (dispatch [:selected/delete uids])))))
+      (copy e)
+      (dispatch [:selected/delete uids]))))
 
 
 (defn prevent-save

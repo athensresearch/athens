@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-beta.89",
+  "version": "1.0.0-beta.94",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -85,7 +85,8 @@
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
     "shadow-cljs": "^2.11.23",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "standard-version": "^9.3.1"
   },
   "standard-version": {
     "types": [

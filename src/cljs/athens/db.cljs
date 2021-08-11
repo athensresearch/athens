@@ -126,7 +126,8 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selected/items      #{}
+               :selection           {:items #{}
+                                     :order []}
                :zoom-level          1
                :fs/watcher          nil})
 

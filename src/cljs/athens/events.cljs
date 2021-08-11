@@ -293,31 +293,39 @@
 (reg-event-db
   :selected/add-item
   (fn [db [_ uid]]
-    (update db :selected/items (fnil conj #{}) uid)))
+    (update-in db [:selection :items] (fnil conj #{}) uid)))
 
 
 (reg-event-db
   :selected/remove-item
   (fn [db [_ uid]]
-    (update db :selected/items disj uid)))
+    (update-in db [:selection :items] disj uid)))
 
 
 (reg-event-db
   :selected/remove-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply disj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply disj %1 %2) uids)))
 
 
 (reg-event-db
   :selected/add-items
   (fn [db [_ uids]]
-    (update db :selected/items #(apply conj %1 %2) uids)))
+    (update-in db [:selection :items] #(apply conj %1 %2) uids)))
+
+
+(reg-event-db
+  :selected/items-order
+  (fn [db [_ items-order]]
+    (assoc-in db [:selection :order] items-order)))
 
 
 (reg-event-db
   :selected/clear-items
   (fn [db _]
-    (assoc db :selected/items #{})))
+    (-> db
+        (assoc-in [:selection :items] #{})
+        (assoc-in [:selection :order] []))))
 
 
 (defn select-up
@@ -361,7 +369,7 @@
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-up selected-items))))
+    (assoc-in db [:selection :items] (select-up selected-items))))
 
 
 (defn select-down
@@ -392,7 +400,7 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-down selected-items))))
+    (assoc-in db [:selection :items] (select-down selected-items))))
 
 
 (defn delete-selected
@@ -431,7 +439,9 @@
           tx-data           (concat retract-vecs reindex-last-selected-parent)]
       {:fx [[:dispatch [:transact tx-data]]
             [:dispatch [:editing/uid nil]]]
-       :db (assoc db :selected/items [])})))
+       :db (-> db
+               (assoc-in [:selection :items] #{})
+               (assoc-in [:selection :order] []))})))
 
 
 ;; Alerts

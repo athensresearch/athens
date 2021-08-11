@@ -173,9 +173,15 @@
         os                (util/get-os)
         electron?         (util/electron?)
         theme-dark        (subscribe [:theme/dark])
-        win-focused?      (subscribe [:win-focused?])
-        win-maximized?    (subscribe [:win-maximized?])
-        win-fullscreen?   (subscribe [:win-fullscreen?])
+        win-focused?      (if electron?
+                            (subscribe [:win-focused?])
+                            (r/atom false))
+        win-maximized?    (if electron?
+                            (subscribe [:win-maximized?])
+                            (r/atom false))
+        win-fullscreen?   (if electron?
+                            (subscribe [:win-fullscreen?])
+                            (r/atom false))
         merge-open?       (reagent.core/atom false)]
     (fn []
       [:<>
