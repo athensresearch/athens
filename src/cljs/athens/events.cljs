@@ -889,16 +889,45 @@
 
 
 (defn followup-backspace
-  [uid]
-  (let [[uid embed-id]  (db/uid-and-embed-id uid)
+  [uid value]
+  (let [root-embed?     (some-> (str "#editable-uid-" uid)
+                                js/document.querySelector
+                                (.. (closest ".block-embed"))
+                                (. -firstChild)
+                                (.getAttribute "data-uid"))
+        [uid embed-id]  (db/uid-and-embed-id uid)
+        block           (db/get-block [:block/uid uid])
+        {:block/keys    [children order] :or {children []}} block
+        parent          (db/get-parent [:block/uid uid])
         prev-block-uid  (db/prev-block-uid uid)
         prev-block      (db/get-block [:block/uid prev-block-uid])
-        prev-block-uid  (db/prev-block-uid uid)]
-    [:editing/uid
-     (cond-> prev-block-uid
-       embed-id (str "-embed-" embed-id))
-     (count (:block/string prev-block))]))
+        prev-sib-order  (dec (:block/order block))
+        prev-sib        (d/q '[:find ?sib .
+                               :in $ % ?target-uid ?prev-sib-order
+                               :where
+                               (siblings ?target-uid ?sib)
+                               [?sib :block/order ?prev-sib-order]
+                               [?sib :block/uid ?uid]
+                               [?sib :block/children ?ch]]
+                             @db/dsdb db/rules uid prev-sib-order)
+        prev-sib       (when-not (nil? prev-sib) (db/get-block prev-sib))]
 
+    (when-not (or (not parent)
+                  root-embed?
+                  (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
+                  (and (not-empty children) (not-empty (:block/children prev-sib)))
+                  (and (not-empty children) (= parent prev-block)))
+
+      [:editing/uid
+       (cond-> prev-block-uid
+         embed-id (str "-embed-" embed-id))
+       (count (:block/string prev-block))])))
+
+
+(comment
+  (cond-> 1
+    true (str "2"))
+  *e)
 
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
@@ -912,7 +941,7 @@
       (if local?
         (let [backspace-event (common-events/build-backspace-event -1 uid value)
               backspace-tx    (resolver/resolve-event-to-tx @db/dsdb backspace-event)
-              followup-fx     (followup-backspace uid)]
+              followup-fx     (followup-backspace uid value)]
           {:fx [[:dispatch [:transact backspace-tx]]
                 [:dispatch followup-fx]]})
         {:fx [[:dispatch [:remote/backspace uid value]]]}))))
