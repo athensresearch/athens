@@ -5,7 +5,6 @@
     [re-frame.core :as rf]))
 
 
-(def electron (js/require "electron"))
 (def path (js/require "path"))
 (def fs (js/require "fs"))
 
