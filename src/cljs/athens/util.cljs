@@ -347,12 +347,16 @@
 
 
 ;; Local Storage
+;; Inspired by intermine/bluegenes:
+;; https://github.com/intermine/bluegenes/blob/4589ef8b09b26dcf23d434d4d7d9d56fd01a259f/src/cljs/bluegenes/effects.cljs#L14-L30
 
 (defn local-storage-set!
   "Set v to local storage under k, replacing the value that was there before.
   k is coerced to string, v is written as json-verbose transit."
   [k v]
-  (.setItem js/localStorage (str k) (tr/write (tr/writer :json-verbose) v)))
+  (if (some? v)
+    (.setItem js/localStorage (str k) (tr/write (tr/writer :json-verbose) v))
+    (.removeItem js/localStorage (str k))))
 
 
 (defn local-storage-get
