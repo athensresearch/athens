@@ -55,6 +55,7 @@
 
 (def dropdown-style
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
+                              :color (color :body-text-color)
                               :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
                               :display "inline-flex"
@@ -332,7 +333,7 @@
                  [m-popover
                   (merge (use-style dropdown-style)
                          {:style {:font-size "14px"}
-                          :open            @ele
+                          :open            (boolean @ele)
                           :anchorEl        @ele
                           :onClose         #(reset! ele nil)
                           :anchorOrigin    #js{:vertical   "bottom"

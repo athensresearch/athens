@@ -3,6 +3,7 @@
     ["/textarea" :as getCaretCoordinates]
     [athens.config :as config]
     [clojure.string :as string]
+    [cognitect.transit :as tr]
     [com.rpl.specter :as s]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
@@ -345,12 +346,23 @@
 ;; :else "Web"))
 
 
-;; Window
+;; Local Storage
+;; Inspired by intermine/bluegenes:
+;; https://github.com/intermine/bluegenes/blob/4589ef8b09b26dcf23d434d4d7d9d56fd01a259f/src/cljs/bluegenes/effects.cljs#L14-L30
 
-(defn get-window-size
-  "Reads window size from local-storage and returns the values as a vector"
-  []
-  (let [ws (js/localStorage.getItem "ws/window-size")]
-    (if (nil? ws)
-      '[800 600]
-      (map #(js/parseInt %) (string/split ws ",")))))
+(defn local-storage-set!
+  "Set v to local storage under k, replacing the value that was there before.
+  k is coerced to string, v is written as json-verbose transit."
+  [k v]
+  (if (some? v)
+    (.setItem js/localStorage (str k) (tr/write (tr/writer :json-verbose) v))
+    (.removeItem js/localStorage (str k))))
+
+
+(defn local-storage-get
+  "Get value from local storage under k.
+  k is coerced to string, v is read as json-verbose transit."
+  [k]
+  (tr/read (tr/reader :json-verbose) (.getItem js/localStorage (str k))))
+
+

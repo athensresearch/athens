@@ -73,6 +73,9 @@
                                   :webPreferences {:contextIsolation false
                                                    :nodeIntegration true
                                                    :worldSafeExecuteJavaScript true
+                                                   ;; Using the remote module is slow can can lead to suble race conditions.
+                                                   ;; https://nornagon.medium.com/electrons-remote-module-considered-harmful-70d69500f31
+                                                   ;; If we're seeing weird race conditions on node modules, check this article.
                                                    :enableRemoteModule true
                                                    ;; Remove OverlayScrollbars and instances of `overflow-y: overlay`
                                                    ;; after `scollbar-gutter` is implemented in browsers.

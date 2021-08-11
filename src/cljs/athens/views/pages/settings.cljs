@@ -2,15 +2,13 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
-    [athens.electron :as electron]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [goog.functions :as goog-functions]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r]
     [stylefy.core :as stylefy])
   (:require-macros
@@ -57,43 +55,8 @@
 
 ;; Helpers
 
-
-(defn init-email
-  []
-  (let [email (js/localStorage.getItem "auth/email")]
-    (if (= email "null")
-      ""
-      email)))
-
-
-(defn init-monitoring
-  "Returns true if opted-out
-  Monitoring = true if opted-in"
-  []
-  (not (.. js/window -posthog has_opted_out_capturing)))
-
-
-(defn init-backup-time
-  []
-  (js/Number (js/localStorage.getItem "debounce-save-time")))
-
-
-(defn init-state
-  []
-  {:email         (init-email)
-   :monitoring    (init-monitoring)
-   :backup-time (init-backup-time)})
-
-
-(defn handle-reset-email
-  [s value]
-  (reset! value "")
-  (swap! s assoc :email "")
-  (js/localStorage.setItem "auth/email" nil))
-
-
 (defn handle-submit-email
-  [s value]
+  [value update-fn]
   (let [api       "https://dhx9n94ty5.execute-api.us-east-1.amazonaws.com/Prod/hello"
         email-qs  "?email="
         query-url (str api email-qs @value)]
@@ -102,15 +65,12 @@
 
             ;; Open Collective Lambda finds email associated with Athens
             (and (:success resp) (true? (:email_exists (:body resp))))
-            (do
-              (js/localStorage.setItem "auth/email" @value)
-              (swap! s assoc :email @value))
+            (update-fn @value)
 
             ;; Open Collective Lambda doesn't find email
             (and (:success resp) (false? (:email_exists (:body resp))))
             (do
-              (js/localStorage.setItem "auth/email" nil)
-              (swap! s assoc :email "")
+              (update-fn nil)
               (js/alert "No OpenCollective account was found with this email address."))
 
             ;; Something else, e.g. networking error
@@ -118,35 +78,33 @@
             (js/alert (str "Unexpected error" resp)))))))
 
 
+(defn handle-reset-email
+  [value update-fn]
+  (reset! value "")
+  (update-fn nil))
+
+
 (defn monitoring-off
-  [s]
+  [update-fn]
   (.. js/posthog (capture "opt-out"))
   (.. js/window -posthog opt_out_capturing)
   (js/localStorage.setItem "sentry" "off")
-  (swap! s update :monitoring not))
+  (update-fn))
 
 
 (defn monitoring-on
-  [s]
+  [update-fn]
   (.. js/window -posthog opt_in_capturing)
   (.. js/posthog (capture "opt-in"))
   (js/localStorage.setItem "sentry" "on")
-  (swap! s update :monitoring not))
+  (update-fn))
 
 
 (defn handle-monitoring-click
-  [s]
-  (if (:monitoring @s)
-    (monitoring-off s)
-    (monitoring-on s)))
-
-
-(defn handle-blur-backup-input
-  [e s]
-  (let [value (.. e -target -value)]
-    (swap! s assoc :backup-time value)
-    (set! electron/debounce-write-db (goog-functions/debounce electron/write-db (* 1000 value)))
-    (js/localStorage.setItem "debounce-save-time" value)))
+  [monitoring update-fn]
+  (if monitoring
+    (monitoring-off (partial update-fn false))
+    (monitoring-on (partial update-fn true))))
 
 
 ;; Components
@@ -164,16 +122,16 @@
 (defn email-comp
   "Two email values. One in `init-state`, one is `value`. Only updates init-state email if valid API response. Therefore,
   user is not valid if init-state email is empty string."
-  [s]
-  (let [value (r/atom (:email @s))]
-    (fn [s]
+  [email update-fn]
+  (let [value (r/atom (:email email))]
+    (fn []
       [setting-wrapper
        [:<>
         [:header
          [:h3 "Email"]
-         [:span.glance (if (clojure.string/blank? (:email @s))
+         [:span.glance (if (clojure.string/blank? email)
                          "Not set"
-                         (:email @s))]]
+                         email)]]
         [:main
          [:div
           [textinput/textinput {:type        " email "
@@ -181,24 +139,24 @@
                                 :on-change   #(reset! value (.. % -target -value))
                                 :value       @value}]
           [button {:primary  true
-                   :disabled (not (clojure.string/blank? (:email @s)))
-                   :on-click #(handle-submit-email s value)}
+                   :disabled (not (clojure.string/blank? email))
+                   :on-click #(handle-submit-email value update-fn)}
            "Submit"]
-          [button {:on-click #(handle-reset-email s value)}
+          [button {:on-click #(handle-reset-email value update-fn)}
            "Reset"]]
          [:aside
-          [:p (if (clojure.string/blank? (:email @s))
+          [:p (if (clojure.string/blank? email)
                 "You are using the free version of Athens. You are hosting your own data. Please be careful!"
                 "Thank you for supporting Athens! Backups are coming soon.")]]]]])))
 
 
 (defn monitoring-comp
-  [s]
+  [monitoring update-fn]
   [setting-wrapper
    [:<>
     [:header
      [:h3 "Usage and Diagnostics"]
-     [:span.glance (if (true? (:monitoring @s))
+     [:span.glance (if (true? monitoring)
                      [:<>
                       [:> Check]
                       [:span "Sending usage data"]]
@@ -207,37 +165,37 @@
                       [:span "Not sending usage data"]])]]
     [:main
      [:label {:style {:cursor "pointer"}}
-      [toggle-switch/toggle-switch {:checked   (:monitoring @s)
-                                    :on-change #(handle-monitoring-click s)}]
+      [toggle-switch/toggle-switch {:checked   monitoring
+                                    :on-change #(handle-monitoring-click monitoring update-fn)}]
       "Send usage data and diagnostics to Athens"]
      [:aside
       [:p "Athens has never and will never look at the contents of your database."]
       [:p "Athens will never ever sell your data."]]]]])
 
 
-(defn backup-comps
-  [s]
+(defn backup-comp
+  [backup-time update-fn]
   [setting-wrapper
    [:<>
     [:header
      [:h3 "Backups"]
-     [:span.glance (str (:backup-time @s) " seconds after last edit")]]
+     [:span.glance (str backup-time " seconds after last edit")]]
     [:main
      [:label
       [textinput/textinput {:type         "number"
-                            :defaultValue (:backup-time @s)
+                            :defaultValue backup-time
                             :min          0
                             :step         15
                             :max          100
-                            :on-blur      #(handle-blur-backup-input % s)}]
+                            :on-blur      #(update-fn (.. % -target -value))}]
       " seconds"]
      [:aside
       [:p "Changes are saved immediately."]
-      [:p (str "Athens will save a new backup " (:backup-time @s) " seconds after your last edit.")]]]]])
+      [:p (str "Athens will save a new backup " backup-time " seconds after your last edit.")]]]]])
 
 
-(defn backups-comp
-  [_s]
+(defn remote-backups-comp
+  []
   [setting-wrapper
    {:disabled true}
    [:<>
@@ -257,40 +215,38 @@
   [:div (stylefy/use-style settings-page-styles) child])
 
 
-(defn handle-user-name-change
-  [e]
-  (dispatch [:user/set :name (js-event->val e)])
-  (js/localStorage.setItem "user/name" (js-event->val e)))
-
-
 (defn remote-username-comp
-  []
-  (let [remote-graph-conf @(subscribe [:db/remote-graph-conf])
-        remote?           (:default? remote-graph-conf)]
-    [setting-wrapper
-     (when (not remote?) {:disabled true})
-     [:<>
-      [:header
-       [:h3 "Username"]
-       [:span.glance (:name @(subscribe [:user/current]))]]
-      [:main
-       [textinput/textinput {:type         "text"
-                             :placeholder  "Username"
-                             :disabled     (not remote?)
-                             :on-blur      handle-user-name-change
-                             :defaultValue (:name @(subscribe [:user/current]))}]
-       [:aside
-        [:p "For now, a username is only needed if you are connected to a server."]]]]]))
+  [username update-fn]
+  [setting-wrapper
+   [:<>
+    [:header
+     [:h3 "Username"]
+     [:span.glance username]]
+    [:main
+     [textinput/textinput {:type         "text"
+                           :placeholder  "Username"
+                           :on-blur      #(update-fn (js-event->val %))
+                           :defaultValue username}]
+     [:aside
+      [:p "For now, a username is only needed if you are connected to a server."]]]]])
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
 
 
 (defn page
   []
-  (let [s (r/atom (init-state))]
+  (let [{:keys [email username monitoring backup-time]} @(subscribe [:settings])]
     [settings-container
      [:<>
       [:h1 "Settings"]
-      [email-comp s]
-      [monitoring-comp s]
-      [backup-comps s]
-      [backups-comp s]
-      [remote-username-comp]]]))
+      [email-comp email #(dispatch [:settings/update :email %])]
+      [monitoring-comp monitoring #(dispatch [:settings/update :monitoring %])]
+      [backup-comp backup-time (fn [x]
+                                 (dispatch [:settings/update :backup-time x])
+                                 (dispatch [:fs/update-write-db]))]
+      [remote-backups-comp]
+      [remote-username-comp username #(dispatch [:settings/update :username %])]]]))

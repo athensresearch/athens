@@ -207,8 +207,7 @@
   (js/window.addEventListener
     EventType.BEFOREUNLOAD
     (fn [e]
-      (let [synced? (or @(subscribe [:db/synced])
-                        (:default? @(subscribe [:db/remote-graph-conf])))]
+      (let [synced? @(subscribe [:db/synced])]
         (when-not synced?
           (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
           (.. e preventDefault)
