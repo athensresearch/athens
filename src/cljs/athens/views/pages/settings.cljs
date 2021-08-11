@@ -2,14 +2,12 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
-    [athens.electron.fs :as fs]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [goog.functions :as goog-functions]
     [re-frame.core :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r]
     [stylefy.core :as stylefy])
@@ -234,9 +232,9 @@
 
 
 (reg-event-fx
- :settings/update
- (fn [{:keys [db]} [_ k v]]
-   {:db (assoc-in db [:athens/persist :settings k] v)}))
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
 
 
 (defn page

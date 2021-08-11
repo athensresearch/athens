@@ -14,7 +14,6 @@
     [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
-    [cljs.reader :refer [read-string]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.edn :as edn]
@@ -206,28 +205,28 @@
         password (r/atom "")]
     [:<>
      (->>
-          [:div {:style {:width  "100%" :margin-top "10px"}}
-           [:h5 "Remote Address"]
-           [:div {:style {:margin          "5px 0"
-                          :display         "flex"
-                          :justify-content "space-between"}}
-            [textinput/textinput {:style       {:flex-grow 1
-                                                :padding   "5px"}
-                                  :type        "text"
-                                  :value       @address
-                                  :placeholder "Remote server address"
-                                  :on-change   #(prn "TODO" %)}]]
-           [:h5 "Password"]
-           [:div {:style {:margin          "5px 0"
-                          :display         "flex"
-                          :justify-content "space-between"}}
-            [textinput/textinput {:style       {:flex-grow 1
-                                                :padding   "5px"}
-                                  :type        "text"
-                                  :value       @password
-                                  :placeholder "Password"
-                                  :on-change   #(prn "TODO" %)}]]]
-          doall)
+       [:div {:style {:width  "100%" :margin-top "10px"}}
+        [:h5 "Remote Address"]
+        [:div {:style {:margin          "5px 0"
+                       :display         "flex"
+                       :justify-content "space-between"}}
+         [textinput/textinput {:style       {:flex-grow 1
+                                             :padding   "5px"}
+                               :type        "text"
+                               :value       @address
+                               :placeholder "Remote server address"
+                               :on-change   #(prn "TODO" %)}]]
+        [:h5 "Password"]
+        [:div {:style {:margin          "5px 0"
+                       :display         "flex"
+                       :justify-content "space-between"}}
+         [textinput/textinput {:style       {:flex-grow 1
+                                             :padding   "5px"}
+                               :type        "text"
+                               :value       @password
+                               :placeholder "Password"
+                               :on-change   #(prn "TODO" %)}]]]
+       doall)
      [button {:primary  true
               :style    {:margin-top "0.5rem"}
               :on-click #(prn "TODO pass address and password to athens.core.lan_on()")}

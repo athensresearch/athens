@@ -1,7 +1,7 @@
 (ns athens.coeffects
   (:require
-    [re-frame.core :as rf]
-    [athens.util :as util]))
+    [athens.util :as util]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-cofx

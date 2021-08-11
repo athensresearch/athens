@@ -1,7 +1,7 @@
 (ns athens.interceptors
   (:require
-   [re-frame.core :as rf]
-   [athens.util :as util]))
+    [athens.util :as util]
+    [re-frame.core :as rf]))
 
 
 (def persist-db
@@ -10,11 +10,11 @@
   - performance, by using identical instead of map comparison
   - clarity, to make it obvious on access that it will be persisted"
   (rf/->interceptor
-   :id    :persist
-   :after (fn [{:keys [coeffects effects] :as context}]
-            (let [k      :athens/persist
-                  before (-> coeffects :db k)
-                  after  (-> effects :db k)]
+    :id    :persist
+    :after (fn [{:keys [coeffects effects] :as context}]
+             (let [k      :athens/persist
+                   before (-> coeffects :db k)
+                   after  (-> effects :db k)]
                (when (and after (not (identical? before after)))
                  (util/local-storage-set! k after)))
              context)))

@@ -1,17 +1,13 @@
 (ns athens.electron.images
   (:require
     [athens.db :as db]
+    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
 (def electron (js/require "electron"))
 (def path (js/require "path"))
 (def fs (js/require "fs"))
-(def stream (js/require "stream"))
-
-(def remote (.. electron -remote))
-(def dialog (.. remote -dialog))
-(def IMAGES-DIR-NAME "images")
 
 
 ;; Image Paste
@@ -22,7 +18,7 @@
    (let [{:keys [images-dir name]}          @(rf/subscribe [:db-picker/selected-db])
          _                (prn head tail images-dir name item extension)
          file             (.getAsFile item)
-         img-filename     (.resolve path images-dir (str "img-" name "-" (athens.util/gen-block-uid) "." extension))
+         img-filename     (.resolve path images-dir (str "img-" name "-" (util/gen-block-uid) "." extension))
          reader           (js/FileReader.)
          new-str          (str head "![](" "file://" img-filename ")" tail)
          cb               (fn [e]

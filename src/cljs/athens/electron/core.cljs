@@ -1,13 +1,11 @@
 (ns athens.electron.core
   (:require
-    [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.electron.boot]
     [athens.electron.db-picker]
     [athens.electron.fs]
     [athens.electron.window]
     [athens.util :as util]
-    [cljs.reader :refer [read-string]]
     [day8.re-frame.async-flow-fx]
     [re-frame.core :as rf]))
 
@@ -19,15 +17,15 @@
   ;; Subs
 
   (rf/reg-sub
-   :db/mtime
-   (fn [db _]
-     (:db/mtime db)))
+    :db/mtime
+    (fn [db _]
+      (:db/mtime db)))
 
 
   (rf/reg-event-fx
-   :db/retract-athens-pages
-   (fn []
-     {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
-                                   (db/retract-page-recursively "Changelog"))]})))
+    :db/retract-athens-pages
+    (fn []
+      {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
+                                    (db/retract-page-recursively "Changelog"))]})))
 
 

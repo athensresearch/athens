@@ -2,7 +2,6 @@
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
-    [athens.db :as db]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.electron.dialogs :as dialogs]
@@ -18,29 +17,6 @@
 ;; --- material ui ---
 
 (def m-popover (r/adapt-react-class (.-default Popover)))
-
-
-(def dummy-all-dbs
-  {"/home/jeff/Documents/alex/index.transit" {:last-open     '#inst"2021-06-30T18:35:38.277-00:00"
-                                              :last-modified '#inst"2021-06-30T18:35:38.277-00:00"
-                                              :path          "/home/jeff/Documents/alex/index.transit"
-                                              :name          "alex"
-                                              :remote?       false
-                                              :synced?       true}
-   "http://192.168.0.0"                      {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
-                                              :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
-                                              :path          "http://192.168.0.0"
-                                              :name          "192.168.0.0"
-                                              :password      "x"
-                                              :remote?       true
-                                              :synced        false}
-   "athensresarch.org/company-x"             {:last-open     '#inst"2021-09-13T18:35:38.277-00:00"
-                                              :last-modified '#inst"2021-09-13T18:35:38.277-00:00"
-                                              :path          "athensresarch.org/company-x"
-                                              :name          "athensresarch.org/company-x"
-                                              :password      "x"
-                                              :remote?       true
-                                              :synced        false}})
 
 
 ;; Style

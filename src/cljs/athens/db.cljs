@@ -6,8 +6,7 @@
     [clojure.string :as string]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]
-    [clojure.edn :as edn]))
+    [re-frame.core :refer [dispatch]]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -97,12 +96,14 @@
   {:athens/persist
    (if-not version
      (update-legacy-to-latest default-athens-persist)
+     ;; Ignore the clj-kondo warning for v<, it'll go away once we have updates.
+     #_:clj-kondo/ignore
      (let [v< #(< version %)]
        (cond-> persisted
-         ;; Update persisted by applying each update fn incrementally.
-         ;; (v< 2) update-v1-to-v2
-         ;; (v< 3) update-v2-to-v3
-         )))})
+               ;; Update persisted by applying each update fn incrementally.
+               ;; (v< 2) update-v1-to-v2
+               ;; (v< 3) update-v2-to-v3
+               )))})
 
 
 ;; -- re-frame -----------------------------------------------------------
@@ -128,6 +129,7 @@
                :selected/items      #{}
                :zoom-level          1
                :fs/watcher          nil})
+
 
 (defn init-app-db
   [persisted]

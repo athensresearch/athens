@@ -3,12 +3,12 @@
     ["/textarea" :as getCaretCoordinates]
     [athens.config :as config]
     [clojure.string :as string]
+    [cognitect.transit :as tr]
     [com.rpl.specter :as s]
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]]
     [tick.alpha.api :as t]
-    [tick.locale-en-us]
-    [cognitect.transit :as tr])
+    [tick.locale-en-us])
   (:require-macros
     [com.rpl.specter :refer [recursive-path]]))
 

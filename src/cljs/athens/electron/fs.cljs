@@ -5,8 +5,8 @@
     [athens.electron.utils :as utils]
     [datascript.core :as d]
     [datascript.transit :as dt]
-    [re-frame.core :as rf]
-    [goog.functions :refer [debounce]]))
+    [goog.functions :refer [debounce]]
+    [re-frame.core :as rf]))
 
 
 (def fs (js/require "fs"))
@@ -15,6 +15,7 @@
 
 
 (declare write-bkp)
+
 
 (defn sync-db-from-fs
   "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
@@ -80,9 +81,9 @@
 
 
 (rf/reg-event-fx
- :fs/add-read-and-watch
- (fn [_ [_ local-db]]
-   {:dispatch [:db-picker/add-and-select-db local-db]}))
+  :fs/add-read-and-watch
+  (fn [_ [_ local-db]]
+    {:dispatch [:db-picker/add-and-select-db local-db]}))
 
 
 (rf/reg-event-db
@@ -91,7 +92,6 @@
     (let [{:db/keys [filepath]} db
           mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
       (assoc db :db/mtime mtime))))
-
 
 
 ;; Effects
@@ -139,19 +139,22 @@
   []
   (write-db false))
 
+
 (rf/reg-sub
- :fs/write-db
- (fn [db _]
-   (-> db :fs/debounce-write-db)))
+  :fs/write-db
+  (fn [db _]
+    (-> db :fs/debounce-write-db)))
+
 
 (rf/reg-event-fx
- :fs/update-write-db
- (fn [{:keys [db]} _]
-   (let [backup-time (-> db :athens/persist :settings :backup-time)
-         f           (debounce write-db (* 1000 backup-time))]
-     (print "update-write-db" backup-time)
-     (print (-> db :athens/persist :settings))
-     {:db (assoc db :fs/debounce-write-db f)})))
+  :fs/update-write-db
+  (fn [{:keys [db]} _]
+    (let [backup-time (-> db :athens/persist :settings :backup-time)
+          f           (debounce write-db (* 1000 backup-time))]
+      (print "update-write-db" backup-time)
+      (print (-> db :athens/persist :settings))
+      {:db (assoc db :fs/debounce-write-db f)})))
+
 
 ;; The write happens asynchronously due to the debounce and write-db both being asynchronous.
 ;; write-db also takes the value of dsdb and filepath at the time it actually runs, not when

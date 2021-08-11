@@ -145,7 +145,7 @@
 
 
 (re-frame/reg-sub
- :settings
- (fn [db _]
-   (-> db :athens/persist :settings)))
+  :settings
+  (fn [db _]
+    (-> db :athens/persist :settings)))
 

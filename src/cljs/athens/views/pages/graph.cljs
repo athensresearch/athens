@@ -20,10 +20,9 @@
     [athens.router :as router]
     [athens.style :as styles]
     [athens.util :as util]
-    [cljs.reader :refer [read-string]]
     [clojure.set :as set]
     [datascript.core :as d]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [subscribe]]
     [reagent.core :as r]
     [reagent.dom :as dom]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -66,15 +65,15 @@
 
 
 (rf/reg-event-db
- :graph/set-conf
- (fn [db [_ k v]]
-   (update-in db [:athens/persist :graph-conf] #(assoc % k v))))
+  :graph/set-conf
+  (fn [db [_ k v]]
+    (update-in db [:athens/persist :graph-conf] #(assoc % k v))))
 
 
 (rf/reg-sub
- :graph/ref
- (fn [db [_ key]]
-   (get-in db [:graph-ref key])))
+  :graph/ref
+  (fn [db [_ key]]
+    (get-in db [:graph-ref key])))
 
 
 (rf/reg-event-db

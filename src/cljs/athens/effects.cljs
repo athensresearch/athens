@@ -9,11 +9,10 @@
     [cljs.pprint :refer [pprint]]
     [clojure.string :as str]
     [datascript.core :as d]
-    [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection :refer [setCursorPosition]]
     [posh.reagent :as p :refer [transact!]]
-    [re-frame.core :refer [dispatch reg-fx subscribe]]
+    [re-frame.core :refer [dispatch reg-fx]]
     [stylefy.core :as stylefy]))
 
 
@@ -218,26 +217,26 @@
 
 (defn walk-transact
   [tx-data]
-  (do (dev-pprint "TX RAW INPUTS")                          ; event tx-data
-      (dev-pprint tx-data)
-      (try
-        (let [with-tx (d/with @db/dsdb tx-data)]
-          (dev-pprint "TX WITH")                            ; tx-data normalized by datascript to flat datoms
-          (dev-pprint (:tx-data with-tx))
-          (let [more-tx-data (parse-for-links with-tx)
-                final-tx-data (vec (concat tx-data more-tx-data))]
-            (dev-pprint "TX MORE")                          ; parsed tx-data, e.g. asserting/retracting pages and references
-            (dev-pprint more-tx-data)
-            (dev-pprint "TX FINAL INPUTS")                  ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
-            (dev-pprint final-tx-data)
-            (let [{:keys [_db-before tx-data]} (transact! db/dsdb final-tx-data)]
-              (ph-link-created! tx-data)
-              (dev-pprint "TX OUTPUTS")
-              (dev-pprint tx-data))))
+  (dev-pprint "TX RAW INPUTS")                          ; event tx-data
+  (dev-pprint tx-data)
+  (try
+    (let [with-tx (d/with @db/dsdb tx-data)]
+      (dev-pprint "TX WITH")                            ; tx-data normalized by datascript to flat datoms
+      (dev-pprint (:tx-data with-tx))
+      (let [more-tx-data (parse-for-links with-tx)
+            final-tx-data (vec (concat tx-data more-tx-data))]
+        (dev-pprint "TX MORE")                          ; parsed tx-data, e.g. asserting/retracting pages and references
+        (dev-pprint more-tx-data)
+        (dev-pprint "TX FINAL INPUTS")                  ; parsing block/string (and node/title) to derive asserted or retracted titles and block refs
+        (dev-pprint final-tx-data)
+        (let [{:keys [_db-before tx-data]} (transact! db/dsdb final-tx-data)]
+          (ph-link-created! tx-data)
+          (dev-pprint "TX OUTPUTS")
+          (dev-pprint tx-data))))
 
-        (catch js/Error e
-          (js/alert (str e))
-          (js/console.log "EXCEPTION" e)))))
+    (catch js/Error e
+      (js/alert (str e))
+      (js/console.log "EXCEPTION" e))))
 
 
 (reg-fx

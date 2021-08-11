@@ -10,7 +10,6 @@
 (def electron (js/require "electron"))
 (def remote (.. electron -remote))
 (def app (.. remote -app))
-(def dialog (.. remote -dialog))
 (def path (js/require "path"))
 (def fs (js/require "fs"))
 
@@ -41,11 +40,13 @@
    :db-path    (.resolve path base-dir DB-INDEX)})
 
 
-(defn local-db-exists? [{:keys [db-path] :as db}]
+(defn local-db-exists?
+  [{:keys [db-path] :as db}]
   (when db (.existsSync fs db-path)))
 
 
-(defn local-db-dir-exists? [{:keys [base-dir] :as db}]
+(defn local-db-dir-exists?
+  [{:keys [base-dir] :as db}]
   (when db (.existsSync fs base-dir)))
 
 

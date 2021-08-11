@@ -1,25 +1,25 @@
 (ns athens.electron.boot
-  (:require [athens.db :as db]
-            [re-frame.core :as rf]
-            [datascript.core :as d]
-            [datascript.transit :as dt]
-            [athens.patterns :as patterns]
-            [athens.electron.utils :as utils]))
+  (:require
+    [athens.db :as db]
+    [athens.electron.utils :as utils]
+    [athens.patterns :as patterns]
+    [datascript.core :as d]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-event-fx
- :electron/window
- (fn [{:keys [db]} _]
-   "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
-   (let [curWindow     (.getCurrentWindow utils/remote)
-         [lastx lasty] (-> db :athens/persist :window/size)]
-     (.setSize curWindow lastx lasty)
-     (.center curWindow)
-     (.on ^js curWindow "close" (fn [e]
-                                  (let [sender (.-sender e)
-                                        [x y] (.getSize ^js sender)]
-                                    (rf/dispatch-sync [:window/set-size [x y]])))))
-   {}))
+  :electron/window
+  (fn [{:keys [db]} _]
+    ;; When the app is initialized, check if we should use the last window size and if so, set the current window size to that value
+    (let [curWindow     (.getCurrentWindow utils/remote)
+          [lastx lasty] (-> db :athens/persist :window/size)]
+      (.setSize curWindow lastx lasty)
+      (.center curWindow)
+      (.on ^js curWindow "close" (fn [e]
+                                   (let [sender (.-sender e)
+                                         [x y] (.getSize ^js sender)]
+                                     (rf/dispatch-sync [:window/set-size [x y]])))))
+    {}))
 
 
 (rf/reg-event-fx
@@ -39,8 +39,8 @@
                                      (seq all-dbs))
                                 [:fs/read-and-watch (-> all-dbs first second)]
 
-                               ;; Selected db not found in local storage, but default db found.
-                               ;; Add default db and load it.
+                                ;; Selected db not found in local storage, but default db found.
+                                ;; Add default db and load it.
                                 (and (not selected-db-exists?)
                                      default-db-exists?)
                                 [:fs/add-read-and-watch default-db]
@@ -96,8 +96,8 @@
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
                                       :dispatch-fn (fn [_]
                                                      (let [schemas    (d/q '[:find ?e ?v
-                                                                          :where [?e :schema/version ?v]]
-                                                                        @db/dsdb)
+                                                                             :where [?e :schema/version ?v]]
+                                                                           @db/dsdb)
                                                            schema-cnt (count schemas)]
                                                        (cond
                                                          (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
@@ -112,10 +112,10 @@
                                                                                                              linked-ref-pattern)
                                                                                 blocks-orig             (map (fn [{:block/keys [uid string]}]
                                                                                                                {:db/id [:block/uid uid] :block/string string})
-                                                                                                 blocks-with-plain-links)
+                                                                                                             blocks-with-plain-links)
                                                                                 blocks-temp             (map (fn [{:block/keys [uid]}]
                                                                                                                {:db/id [:block/uid uid] :block/string ""})
-                                                                                                 blocks-with-plain-links)]
+                                                                                                             blocks-with-plain-links)]
                                                                             ;; give all blocks empty string - clears refs
                                                                             ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
                                                                             ;; update schema version, so this doesn't need to happen again

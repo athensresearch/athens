@@ -7,7 +7,6 @@
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [datascript.core :as d]
-    [datascript.transit :as dt]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))

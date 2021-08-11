@@ -1,10 +1,6 @@
 (ns athens.electron.dialogs
   (:require
-    [athens.athens-datoms :as athens-datoms]
-    [athens.db :as db]
     [athens.electron.utils :as utils]
-    [datascript.core :as d]
-    [datascript.transit :as dt]
     [re-frame.core :as rf]))
 
 
@@ -17,7 +13,7 @@
 
 (rf/reg-event-fx
   :fs/open-dialog
-  (fn [{:keys [db]} {:keys [base-dir]}]
+  (fn [_ {:keys [base-dir]}]
     (js/alert (str (if base-dir
                      (str "No DB found at " base-dir ".")
                      "No DB found.")
@@ -25,7 +21,8 @@
     {:dispatch-n [[:modal/toggle]]}))
 
 
-(defn graph-already-exists-alert [{:keys [base-dir name]}]
+(defn graph-already-exists-alert
+  [{:keys [base-dir name]}]
   (js/alert (str "Directory " base-dir " already contains the " name " graph, sorry.")))
 
 
@@ -90,6 +87,7 @@
         (if (utils/local-db-dir-exists? local-db)
           (graph-already-exists-alert local-db)
           (rf/dispatch [:fs/create-and-watch local-db]))))))
+
 
 (defn delete-dialog!
   "Delete an existing database and select the first db of the remaining ones."
