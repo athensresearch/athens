@@ -567,6 +567,7 @@
      :event/args    {:block-uid block-uid
                      :open?     open?}}))
 
+
 (defn build-paste-event
   "Builds `:datascript/paste` event with:
   - uid  : The uid of block to which text is to be pasted
@@ -583,6 +584,15 @@
                      :start start
                      :value value}}))
 
+
+(defn build-backspace-event
+  [last-tx uid value]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/backspace
+     :event/args    {:uid uid
+                     :value value}}))
 
 
 ;; - presence events

@@ -801,7 +801,7 @@
       {:dispatch [:editing/uid (or next-block-uid uid)]})))
 
 
-(defn backspace
+#_(defn backspace
   "If root and 0th child, 1) if value, no-op, 2) if blank value, delete only block.
   No-op if parent is missing.
   No-op if parent is prev-block and block has children.
@@ -854,13 +854,34 @@
                                                    (count (:block/string prev-block))]}]}))))
 
 
+(defn followup-backspace
+  [uid]
+  (let [[uid embed-id]  (db/uid-and-embed-id uid)
+        prev-block-uid  (db/prev-block-uid uid)
+        prev-block      (db/get-block [:block/uid prev-block-uid])
+        prev-block-uid  (db/prev-block-uid uid)]
+    [:editing/uid
+     (cond-> prev-block-uid
+       embed-id (str "-embed-" embed-id))
+     (count (:block/string prev-block))]))
+
+
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
 ;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
-    (backspace uid value)))
+    (js/console.debug ":backspace" (prn-str uid value))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":backspace local?" local?)
+      (if local?
+        (let [backspace-event (common-events/build-backspace-event -1 uid value)
+              backspace-tx    (resolver/resolve-event-to-tx @db/dsdb backspace-event)
+              followup-fx     (followup-backspace uid)]
+          {:fx [[:dispatch [:transact backspace-tx]]
+                [:dispatch followup-fx]]})
+        {:fx [[:dispatch [:remote/backspace uid value]]]}))))
 
 
 (defn split-block
