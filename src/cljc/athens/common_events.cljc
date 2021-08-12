@@ -599,7 +599,7 @@
 (defn build-delete-merge-block-event
   "Builds `:datascript/delete-merge-block` event with:
   - uid  : The uid of block to delete
-  - value: "
+  - value: The text content of the block"
   [last-tx uid value]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
