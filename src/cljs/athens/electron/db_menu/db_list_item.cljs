@@ -46,10 +46,10 @@
    [:div.label
     [:span.name (:name db)]
     [:span.path
-     {:title (:base-dir db)}
+     {:title (:location db)}
      (when (:is-remote db)
        [:> Link])
-     (:base-dir db)]]])
+     (:location db)]]])
 
 
 (defn db-list-item

@@ -35,6 +35,7 @@
    Local dbs are uniquely identified by the base-dir."
   [base-dir]
   {:name       (.basename path base-dir)
+   :location   base-dir
    :base-dir   base-dir
    :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
    :db-path    (.resolve path base-dir DB-INDEX)})
@@ -42,12 +43,12 @@
 
 (defn local-db-exists?
   [{:keys [db-path] :as db}]
-  (when db (.existsSync fs db-path)))
+  (when db db-path (.existsSync fs db-path)))
 
 
 (defn local-db-dir-exists?
   [{:keys [base-dir] :as db}]
-  (when db (.existsSync fs base-dir)))
+  (when db base-dir (.existsSync fs base-dir)))
 
 
 (defn create-dir-if-needed!
@@ -55,3 +56,18 @@
   (when (not (.existsSync fs dir))
     (.mkdirSync fs dir)))
 
+
+(defn self-hosted-db
+  "Returns a map representing a self-hosted db.
+   Self-hosted dbs are uniquely identified by the url."
+  [name url]
+  {:name     name
+   :location url
+   :url      url
+   :ws-url   (str "ws://" url "/ws")})
+
+(defn db-exists? [db]
+  (cond
+    (:base-dir db) (local-db-exists? db)
+    (:url db)      true
+    :else          true))
