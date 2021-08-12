@@ -66,8 +66,17 @@
    :url      url
    :ws-url   (str "ws://" url "/ws")})
 
+
+(defn local-db? [db]
+  (boolean (:base-dir db)))
+
+
+(defn remote-db? [db]
+  (boolean (:url db)))
+
+
 (defn db-exists? [db]
   (cond
-    (:base-dir db) (local-db-exists? db)
-    (:url db)      true
-    :else          true))
+    (local-db? db)  (local-db-exists? db)
+    (remote-db? db) true
+    :else           true))

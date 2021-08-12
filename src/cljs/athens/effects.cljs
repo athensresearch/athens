@@ -263,12 +263,6 @@
 
 
 (rf/reg-fx
-  :local-storage/set!
-  (fn [[key value]]
-    (js/localStorage.setItem key value)))
-
-
-(rf/reg-fx
   :http
   (fn [{:keys [url method opts on-success on-failure]}]
     (go
@@ -378,13 +372,13 @@
 
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [url] :as connection-config}]
-    (js/console.debug ":remote/client-connect!" (pr-str connection-config))
+  (fn [{:keys [ws-url] :as remote-db}]
+    (js/console.debug ":remote/client-connect!" (pr-str remote-db))
     (when @self-hosted-client
       (js/console.log ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
     (js/console.log ":remote/client-connect! connecting")
-    (reset! self-hosted-client (-> url
+    (reset! self-hosted-client (-> ws-url
                                    client/new-ws-client
                                    component/start))))
 

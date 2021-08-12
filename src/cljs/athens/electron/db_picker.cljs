@@ -39,16 +39,19 @@
 (rf/reg-event-fx
   :db-picker/select-db
   (fn [{:keys [db]} [_ {:keys [location] :as selected-db} ignore-sync-check?]]
-    (let [synced?       (or ignore-sync-check? (:db/synced db))
-          db-in-picker? (get-in db [:athens/persist :db-picker/all-dbs location])
-          db-exists?    (utils/db-exists? selected-db)]
+    (let [synced?          (or ignore-sync-check? (:db/synced db))
+          curr-selected-db (get-in db [:athens/persist :db-picker/selected-db])
+          db-in-picker?    (get-in db [:athens/persist :db-picker/all-dbs location])
+          db-exists?       (utils/db-exists? selected-db)]
       (cond
         (not db-in-picker?)
         {:dispatch [:alert/js "Database is no longer listed, please add it again."]}
 
         (and db-exists? synced?)
-        {:db       (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)
-         :dispatch [:boot/desktop]}
+        {:db         (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)
+         :dispatch-n [(when (utils/remote-db? curr-selected-db)
+                        [:remote/disconnect!])
+                      [:boot/desktop]]}
 
         (and db-exists? (not synced?))
         {:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved."]}

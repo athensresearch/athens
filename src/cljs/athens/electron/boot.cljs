@@ -33,6 +33,10 @@
           selected-db-exists? (utils/db-exists? selected-db)
           default-db-exists?  (utils/db-exists? default-db)
           first-event         (cond
+                                ;; DB is remote, attempt to connect to it.
+                                (utils/remote-db? selected-db)
+                                [:remote/connect! selected-db]
+
                                 ;; No selected db but there are dbs listed.
                                 ;; Load the first one.
                                 (and (not selected-db-exists?)
@@ -61,7 +65,7 @@
                                 :else [:fs/open-dialog selected-db])]
 
 
-      ;; output => [:reset-conn] OR [:fs/create-and-watch] OR :local-storage/create-db-picker-list
+      ;; output => [:reset-conn] OR [:fs/create-and-watch]
 
       {:db         init-app-db
        :async-flow {:first-dispatch first-event
@@ -95,41 +99,42 @@
                                       :events      [:fs/create-and-watch :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
                                       :dispatch-fn (fn [_]
-                                                     (let [schemas    (d/q '[:find ?e ?v
-                                                                             :where [?e :schema/version ?v]]
-                                                                           @db/dsdb)
-                                                           schema-cnt (count schemas)]
-                                                       (cond
-                                                         (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
-                                                                                blocks-with-plain-links (d/q '[:find ?u ?s
-                                                                                                               :keys block/uid block/string
-                                                                                                               :in $ ?pattern
-                                                                                                               :where
-                                                                                                               [?e :block/uid ?u]
-                                                                                                               [?e :block/string ?s]
-                                                                                                               [(re-find ?pattern ?s)]]
-                                                                                                             @db/dsdb
-                                                                                                             linked-ref-pattern)
-                                                                                blocks-orig             (map (fn [{:block/keys [uid string]}]
-                                                                                                               {:db/id [:block/uid uid] :block/string string})
-                                                                                                             blocks-with-plain-links)
-                                                                                blocks-temp             (map (fn [{:block/keys [uid]}]
-                                                                                                               {:db/id [:block/uid uid] :block/string ""})
-                                                                                                             blocks-with-plain-links)]
-                                                                            ;; give all blocks empty string - clears refs
-                                                                            ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
-                                                                            ;; update schema version, so this doesn't need to happen again
-                                                                            (rf/dispatch [:transact blocks-temp])
-                                                                            (rf/dispatch [:transact blocks-orig])
-                                                                            (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
-                                                         (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
-                                                                            (case schema-version
-                                                                              1 (prn (str "Schema version " schema-version))
-                                                                              (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
-                                                         (< 1 schema-cnt)
-                                                         (js/alert (js/Error (str "Multiple schema versions: " schemas))))
+                                                     (when-not (utils/remote-db? selected-db)
+                                                       (let [schemas    (d/q '[:find ?e ?v
+                                                                               :where [?e :schema/version ?v]]
+                                                                             @db/dsdb)
+                                                             schema-cnt (count schemas)]
+                                                         (cond
+                                                           (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
+                                                                                  blocks-with-plain-links (d/q '[:find ?u ?s
+                                                                                                                 :keys block/uid block/string
+                                                                                                                 :in $ ?pattern
+                                                                                                                 :where
+                                                                                                                 [?e :block/uid ?u]
+                                                                                                                 [?e :block/string ?s]
+                                                                                                                 [(re-find ?pattern ?s)]]
+                                                                                                               @db/dsdb
+                                                                                                               linked-ref-pattern)
+                                                                                  blocks-orig             (map (fn [{:block/keys [uid string]}]
+                                                                                                                 {:db/id [:block/uid uid] :block/string string})
+                                                                                                               blocks-with-plain-links)
+                                                                                  blocks-temp             (map (fn [{:block/keys [uid]}]
+                                                                                                                 {:db/id [:block/uid uid] :block/string ""})
+                                                                                                               blocks-with-plain-links)]
+                                                                              ;; give all blocks empty string - clears refs
+                                                                              ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
+                                                                              ;; update schema version, so this doesn't need to happen again
+                                                                              (rf/dispatch [:transact blocks-temp])
+                                                                              (rf/dispatch [:transact blocks-orig])
+                                                                              (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
+                                                           (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
+                                                                              (case schema-version
+                                                                                1 (prn (str "Schema version " schema-version))
+                                                                                (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
+                                                           (< 1 schema-cnt)
+                                                           (js/alert (js/Error (str "Multiple schema versions: " schemas))))
 
-                                                       (rf/dispatch [:loading/unset])))
+                                                         (rf/dispatch [:loading/unset]))))
                                       :halt? true}]}})))
 
 

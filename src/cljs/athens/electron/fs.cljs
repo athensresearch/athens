@@ -162,4 +162,5 @@
 (rf/reg-fx
   :fs/write!
   (fn []
-    (@(rf/subscribe [:fs/write-db]) true)))
+    (when-some [write-db-fn @(rf/subscribe [:fs/write-db])]
+      (write-db-fn true))))

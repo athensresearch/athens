@@ -15,10 +15,6 @@
 (extend-type ty/UUID IUUID)
 
 
-;; TODO: make configurable
-(def ws-url "ws://localhost:3010/ws")
-
-
 (defonce ^:private ws-connection (atom nil))
 
 
@@ -46,7 +42,9 @@
 
 (defn- await-response!
   [{:event/keys [id] :as data}]
-  (js/console.log "WSClient awaiting response:" id)
+  (js/console.log "WSClient awaiting response:" (str id) (str data))
+  ;; message-handler will set the app as synced once a response has arrived.
+  (rf/dispatch [:db/not-synced])
   (swap! awaiting-response assoc id data))
 
 
@@ -370,6 +368,17 @@
                         {:handlers
                          {:datom datom-reader}})))]
     (js/console.log "message-handler" (pr-str packet))
+
+    ;; await-response! sets the app as waiting for sync.
+    ;; Since there is no optimistic event handling, the app is synced as soon as the
+    ;; last message was acknowledged by the server.
+    ;; TODO: this isn't where we should dispatch db/sync, because you can be getting
+    ;; messages broadcast from other clients. Instead we should only dispatch db/sync
+    ;; upon receiving awaited responses. But presence events don't go through
+    ;; don't go through awaited-response-handler even though they go through await-response!,
+    ;; so this is the best place to dispatch db/sync for now.
+    (rf/dispatch [:db/sync])
+
     (if (schema/valid-event-response? packet)
       (awaited-response-handler packet)
       (server-event-handler packet))))
@@ -426,6 +435,8 @@
 
 ;; REPL Testing
 (comment
+
+  (def ws-url "ws://localhost:3010/ws")
 
   ;; define a client
   (def client (new-ws-client ws-url))

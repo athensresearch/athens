@@ -14,31 +14,24 @@
 
 (rf/reg-event-fx
   :remote/connect!
-  (fn [{:keys [db]} [_ connection-config]]
-    (js/console.log ":remote/connect!" (pr-str connection-config))
-    {:db                     (-> db
-                                 (dissoc :db/filepath)
-                                 (assoc :db/remote connection-config))
-     :remote/client-connect! connection-config
-     :local-storage/set!     ["db/remote" connection-config]
+  (fn [_ [_ remote-db]]
+    (js/console.log ":remote/connect!" (pr-str remote-db))
+    {:remote/client-connect! remote-db
      :fx                     [[:dispatch [:loading/set]]]}))
 
 
 (rf/reg-event-fx
   :remote/connected
-  (fn [{:keys [db]} _]
+  (fn [_ _]
     (js/console.log ":remote/connected")
-    {:db (dissoc db :db/remote)
-     :fx [[:dispatch-n [[:loading/unset]
+    {:fx [[:dispatch-n [[:loading/unset]
                         [:db/sync]]]]}))
 
 
 (rf/reg-event-fx
   :remote/disconnect!
   (fn [{:keys [db]} _]
-    {:db                        (dissoc db :db/remote)
-     :remote/client-disconnect! nil
-     :local-storage/set!        ["db/remote" nil]}))
+    {:remote/client-disconnect! nil}))
 
 
 ;; Remote protocol management (awaiting txs & events, accepting/rejecting events)
