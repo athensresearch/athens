@@ -386,53 +386,45 @@
                           [:remote/send-event! new-block-event]]]]})))
 
 
-;; TODO: should pass the datahike-db not app-db
 (rf/reg-event-fx
-  :remote/backspace-followup
-  (fn [_ [_ db {:event/keys [args]} event-id]]
-    (println "backspace-followup")
-    (let [{:keys [uid value]} args
-          root-embed?     nil ; TODO: failing in clj
-          [uid embed-id]  (common-db/uid-and-embed-id uid)
-          block           (common-db/get-block db [:block/uid uid])
-          {:block/keys    [children order] :or {children []}} block
-          parent          (common-db/get-parent db [:block/uid uid])
-          prev-block-uid  (common-db/prev-block-uid db uid)
-          prev-block      (common-db/get-block db [:block/uid prev-block-uid])
-          prev-sib-order  (dec (:block/order block))
-          prev-sib        (d/q '[:find ?sib .
-                                 :in $ % ?target-uid ?prev-sib-order
-                                 :where
-                                 (siblings ?target-uid ?sib)
-                                 [?sib :block/order ?prev-sib-order]
-                                 [?sib :block/uid ?uid]
-                                 [?sib :block/children ?ch]]
-                               db common-db/rules uid prev-sib-order)
-          prev-sib       (when-not (nil? prev-sib) (common-db/get-block db prev-sib))] ; TODO: check if there's a way for common-db/get-block to accept nil
-
-      (when-not (or (not parent)
-                    root-embed?
-                    (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
-                    (and (not-empty children) (not-empty (:block/children prev-sib)))
-                    (and (not-empty children) (= parent prev-block)))
-
-        {:fx [[:dispatch [:editing/uid
-                          (cond-> prev-block-uid
-                            embed-id (str "-embed-" embed-id))
-                          (count (:block/string prev-block))]]
-              [:dispatch [:remote/unregister-followup event-id]]]}))))
-
-
-(rf/reg-event-fx
-  :remote/backspace
-  (fn [{db :db} [_ uid value]]
+  :remote/delete-only-child
+  (fn [{db :db} [_ uid]]
     (let [last-seen-tx          (:remote/last-seen-tx db)
           {event-id :event/id
-           :as backspace-event} (common-events/build-backspace-event last-seen-tx uid value)
-          followup-fx           [[:dispatch [:remote/backspace-followup db backspace-event event-id]]]]
-      (js/console.debug ":remote/backspace:" (pr-str backspace-event))
+           :as delete-only-child-event} (common-events/build-delete-only-child-event last-seen-tx uid)
+          followup-fx                [[:dispatch [:editing/uid nil]]]]
+      (js/console.debug ":remote/backspace:" (pr-str delete-only-child-event))
       {:fx [[:dispatch [:remote/register-followup event-id followup-fx]]
-            [:dispatch [:remote/send-event! backspace-event]]]})))
+            [:dispatch [:remote/send-event! delete-only-child-event]]]})))
+
+
+(rf/reg-event-fx
+  :remote/followup-delete-merge-block
+  (fn [{db :db} [_ {:keys [event-id prev-block-uid embed-id prev-block]}]]
+    (js/console.debug ":remote/followup-delete-merge-block" event-id)
+    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
+          {:keys [new-uid]} (:event/args event)]
+      (js/console.log ":remote/followup-delete-merge-block, new-uid" new-uid)
+      {:fx [[:dispatch [:editing/uid
+                        (cond-> prev-block-uid
+                          embed-id (str "-embed-" embed-id))
+                        (count (:block/string prev-block))]]
+            [:dispatch [:remote/unregister-followup event-id]]]})))
+
+
+(rf/reg-event-fx
+  :remote/delete-merge-block
+  (fn [{db :db} [_ {:keys [uid value prev-block-uid embed-id prev-block]}]]
+    (let [last-seen-tx          (:remote/last-seen-tx db)
+          {event-id :event/id
+           :as delete-merge-block-event} (common-events/build-delete-merge-block-event last-seen-tx uid value)
+          followup-fx                    [[:dispatch [:remote/followup-delete-merge-block {:event-id event-id
+                                                                                           :prev-block-uid prev-block-uid
+                                                                                           :prev-block prev-block
+                                                                                           :embed-id embed-id}]]]]
+      (js/console.debug ":remote/backspace:" (pr-str delete-merge-block-event))
+      {:fx [[:dispatch [:remote/register-followup event-id followup-fx]]
+            [:dispatch [:remote/send-event! delete-merge-block-event]]]})))
 
 
 (rf/reg-event-fx

@@ -1316,46 +1316,33 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/backspace
+(defmethod resolve-event-to-tx :datascript/delete-only-child
+  [db {:event/keys [args]}]
+  (let [{:keys [uid]} args
+        block       (common-db/get-block db [:block/uid uid])
+        parent      (common-db/get-parent db [:block/uid uid])
+        reindex     (common-db/dec-after db (:db/id parent) (:block/order block))
+        new-parent  {:db/id (:db/id parent) :block/children reindex}
+        retract     [:db/retractEntity (:db/id block)]
+        tx-data     [retract new-parent]]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/delete-merge-block
   [db {:event/keys [args]}]
   (let [{:keys [uid value]} args
-        root-embed?     #?(:cljs (= (some-> (str "#editable-uid-" uid)
-                                            js/document.querySelector
-                                            (.. (closest ".block-embed"))
-                                            (. -firstChild)
-                                            (.getAttribute "data-uid"))
-                                    uid)
-                           :clj nil) ; TODO: failing in clj
-        [uid]           (common-db/uid-and-embed-id uid)
         block           (common-db/get-block db [:block/uid uid])
-        {:block/keys    [children order] :or {children []}} block
+        {:block/keys [children] :or {children []}} block
         parent          (common-db/get-parent db [:block/uid uid])
-        reindex         (common-db/dec-after db (:db/id parent) (:block/order block))
         prev-block-uid  (common-db/prev-block-uid db uid)
         prev-block      (common-db/get-block db [:block/uid prev-block-uid])
-        prev-sib-order  (dec (:block/order block))
-        prev-sib        (d/q '[:find ?sib .
-                               :in $ % ?target-uid ?prev-sib-order
-                               :where
-                               (siblings ?target-uid ?sib)
-                               [?sib :block/order ?prev-sib-order]
-                               [?sib :block/uid ?uid]
-                               [?sib :block/children ?ch]]
-                             db common-db/rules uid prev-sib-order)
-        prev-sib       (when-not (nil? prev-sib) (common-db/get-block db prev-sib)) ; TODO: check if there's a way for common-db/get-block to accept nil
-        retract-block  [:db/retractEntity (:db/id block)]
-        new-parent     {:db/id (:db/id parent) :block/children reindex}]
-    (cond
-      (not parent) nil
-      root-embed? nil ; NOTE: when the last block in an embedded block is empty
-      (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
-                                                                                                 tx-data) ;; NOTE: when backspacing on the remaining empty block
-      (and (not-empty children) (not-empty (:block/children prev-sib))) nil ;; NOTE: prev sib has child/children
-      (and (not-empty children) (= parent prev-block)) nil ; NOTE: when backspacing at the very top block but it has child/children
-      :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
-                  new-prev-block {:db/id          [:block/uid prev-block-uid]
-                                  :block/string   (str (:block/string prev-block) value)
-                                  :block/children children}
-                  tx-data        (conj retracts retract-block new-prev-block new-parent)]
-              tx-data))))
+        new-prev-block  {:db/id          [:block/uid prev-block-uid]
+                         :block/string   (str (:block/string prev-block) value)
+                         :block/children children}
+        retracts        (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+        retract-block   [:db/retractEntity (:db/id block)]
+        reindex         (common-db/dec-after db (:db/id parent) (:block/order block))
+        new-parent      {:db/id (:db/id parent) :block/children reindex}
+        tx-data         (conj retracts retract-block new-prev-block new-parent)]
+    tx-data))
 

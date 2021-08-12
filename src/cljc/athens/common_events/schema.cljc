@@ -58,7 +58,8 @@
    :datascript/selected-delete
    :datascript/block-open
    :datascript/paste
-   :datascript/backspace])
+   :datascript/delete-only-child
+   :datascript/delete-merge-block])
 
 
 (def event-type-graph-server
@@ -402,7 +403,14 @@
       :text string?]]]])
 
 
-(def datascript-backspace
+(def datascript-delete-only-child
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]]]])
+
+
+(def datascript-delete-merge-block
   [:map
    [:event/args
     [:map
@@ -437,7 +445,8 @@
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
-   (dispatch :datascript/backspace datascript-backspace)])
+   (dispatch :datascript/delete-only-child datascript-delete-only-child)
+   (dispatch :datascript/delete-merge-block datascript-delete-merge-block)])
 
 
 (def valid-event?
@@ -580,7 +589,8 @@
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
-   (dispatch :datascript/backspace datascript-backspace true)
+   (dispatch :datascript/delete-only-child datascript-delete-only-child true)
+   (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
 
    ;; server specific graph events
    (dispatch :datascript/tx-log tx-log true)
