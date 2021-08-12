@@ -818,7 +818,7 @@
         db              @db/dsdb
         [uid embed-id]  (common-db/uid-and-embed-id uid)
         block           (common-db/get-block db [:block/uid uid])
-        {:block/keys    [children order] :or {children []}} block
+        {:block/keys [children order] :or {children []}} block
         parent          (common-db/get-parent db [:block/uid uid])
         prev-block-uid  (common-db/prev-block-uid db uid)
         prev-block      (common-db/get-block db [:block/uid prev-block-uid])
@@ -858,7 +858,9 @@
 (reg-event-fx
   :backspace/delete-only-child
   (fn [_ [_ uid]]
+    (js/console.debug ":backspace/delete-only-child:" (pr-str uid))
     (let [local? (not (client/open?))]
+      (js/console.debug ":backspace/delete-only-child: local?" local?)
       (if local?
         (let [build-delete-only-child-event (common-events/build-delete-only-child-event -1 uid)
               tx (resolver/resolve-event-to-tx @db/dsdb build-delete-only-child-event)]
@@ -870,7 +872,9 @@
 (reg-event-fx
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
+    (js/console.debug ":backspace/delete-merge-block args:" (pr-str args))
     (let [local? (not (client/open?))]
+      (js/console.debug ":backspace/delete-merge-block: local?" local?)
       (if local?
         (let [build-delete-merge-block-event (common-events/build-delete-merge-block-event -1 uid value)
               tx (resolver/resolve-event-to-tx @db/dsdb build-delete-merge-block-event)]
@@ -879,7 +883,11 @@
                             (cond-> prev-block-uid
                               embed-id (str "-embed-" embed-id))
                             (count (:block/string prev-block))]]]})
-        {:fx [[:dispatch [:remote/delete-merge-block args]]]}))))
+        {:fx [[:dispatch [:remote/delete-merge-block {:uid uid
+                                                      :value value
+                                                      :prev-block-uid prev-block-uid
+                                                      :embed-id embed-id
+                                                      :prev-block prev-block}]]]}))))
 
 
 (defn split-block
