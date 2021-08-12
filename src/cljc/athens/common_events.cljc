@@ -585,12 +585,26 @@
                      :value value}}))
 
 
-(defn build-backspace-event
+(defn build-delete-only-child-event
+  "Builds `:datascript/delete-only-child` event with:
+  - uid  : The uid of block to delete"
+  [last-tx uid]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/delete-only-child
+     :event/args    {:uid uid}}))
+
+
+(defn build-delete-merge-block-event
+  "Builds `:datascript/delete-merge-block` event with:
+  - uid  : The uid of block to delete
+  - value: "
   [last-tx uid value]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
-     :event/type    :datascript/backspace
+     :event/type    :datascript/delete-merge-block
      :event/args    {:uid uid
                      :value value}}))
 

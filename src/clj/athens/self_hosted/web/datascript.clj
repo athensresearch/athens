@@ -33,7 +33,8 @@
     :datascript/left-sidebar-drop-below
     :datascript/unlinked-references-link
     :datascript/unlinked-references-link-all
-    :datascript/backspace
+    :datascript/delete-only-child
+    :datascript/delete-merge-block
     ;; TODO: all the events
     })
 

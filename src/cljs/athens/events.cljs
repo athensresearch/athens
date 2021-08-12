@@ -801,7 +801,7 @@
       {:dispatch [:editing/uid (or next-block-uid uid)]})))
 
 
-#_(defn backspace
+(defn backspace
   "If root and 0th child, 1) if value, no-op, 2) if blank value, delete only block.
   No-op if parent is missing.
   No-op if parent is prev-block and block has children.
@@ -815,79 +815,35 @@
                                    (. -firstChild)
                                    (.getAttribute "data-uid"))
                            uid)
-        [uid embed-id]  (db/uid-and-embed-id uid)
-        block           (db/get-block [:block/uid uid])
+        db              @db/dsdb
+        [uid embed-id]  (common-db/uid-and-embed-id uid)
+        block           (common-db/get-block db [:block/uid uid])
         {:block/keys    [children order] :or {children []}} block
-        parent          (db/get-parent [:block/uid uid])
-        reindex         (dec-after (:db/id parent) (:block/order block))
-        prev-block-uid  (db/prev-block-uid uid)
-        prev-block      (db/get-block [:block/uid prev-block-uid])
+        parent          (common-db/get-parent db [:block/uid uid])
+        prev-block-uid  (common-db/prev-block-uid db uid)
+        prev-block      (common-db/get-block db [:block/uid prev-block-uid])
         prev-sib-order  (dec (:block/order block))
-        prev-sib        (d/q '[:find ?sib .
-                               :in $ % ?target-uid ?prev-sib-order
-                               :where
-                               (siblings ?target-uid ?sib)
-                               [?sib :block/order ?prev-sib-order]
-                               [?sib :block/uid ?uid]
-                               [?sib :block/children ?ch]]
-                             @db/dsdb db/rules uid prev-sib-order)
-        prev-sib        (db/get-block prev-sib)
-        retract-block  [:db/retractEntity (:db/id block)]
-        new-parent     {:db/id (:db/id parent) :block/children reindex}]
-    (cond
-      (not parent) nil
-      root-embed? nil
-      (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value)) (let [tx-data [retract-block new-parent]]
-                                                                                                 {:dispatch-n [[:transact tx-data]
-                                                                                                               [:editing/uid nil]]})
-      (and (not-empty children) (not-empty (:block/children prev-sib))) nil
-      (and (not-empty children) (= parent prev-block)) nil
-      :else (let [retracts       (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
-                  new-prev-block {:db/id          [:block/uid prev-block-uid]
-                                  :block/string   (str (:block/string prev-block) value)
-                                  :block/children children}
-                  tx-data        (conj retracts retract-block new-prev-block new-parent)]
-              {:dispatch-later [{:ms 0 :dispatch [:transact tx-data]}
-                                {:ms 10 :dispatch [:editing/uid
-                                                   (cond-> prev-block-uid
-                                                     embed-id (str "-embed-" embed-id))
-                                                   (count (:block/string prev-block))]}]}))))
+        prev-sib        (some->> (common-db/prev-sib db uid prev-sib-order)
+                                 (common-db/get-block db))
+        event           (cond
+                          (or (not parent)
+                              root-embed?
+                              (and (not-empty children) (not-empty (:block/children prev-sib)))
+                              (and (not-empty children) (= parent prev-block)))
+                          nil
 
+                          (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
+                          [:backspace/delete-only-child uid]
 
-(defn followup-backspace
-  [uid value]
-  (let [root-embed?     (some-> (str "#editable-uid-" uid)
-                                js/document.querySelector
-                                (.. (closest ".block-embed"))
-                                (. -firstChild)
-                                (.getAttribute "data-uid"))
-        [uid embed-id]  (db/uid-and-embed-id uid)
-        block           (db/get-block [:block/uid uid])
-        {:block/keys    [children order] :or {children []}} block
-        parent          (db/get-parent [:block/uid uid])
-        prev-block-uid  (db/prev-block-uid uid)
-        prev-block      (db/get-block [:block/uid prev-block-uid])
-        prev-sib-order  (dec (:block/order block))
-        prev-sib        (d/q '[:find ?sib .
-                               :in $ % ?target-uid ?prev-sib-order
-                               :where
-                               (siblings ?target-uid ?sib)
-                               [?sib :block/order ?prev-sib-order]
-                               [?sib :block/uid ?uid]
-                               [?sib :block/children ?ch]]
-                             @db/dsdb db/rules uid prev-sib-order)
-        prev-sib       (when-not (nil? prev-sib) (db/get-block prev-sib))]
-
-    (when-not (or (not parent)
-                  root-embed?
-                  (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
-                  (and (not-empty children) (not-empty (:block/children prev-sib)))
-                  (and (not-empty children) (= parent prev-block)))
-
-      [:editing/uid
-       (cond-> prev-block-uid
-         embed-id (str "-embed-" embed-id))
-       (count (:block/string prev-block))])))
+                          :else
+                          [:backspace/delete-merge-block {:uid uid
+                                                          :value value
+                                                          :prev-block-uid prev-block-uid
+                                                          :embed-id embed-id
+                                                          :prev-block prev-block}])]
+    (js/console.debug "[Backspace] ->" (pr-str event))
+    (when event
+      {:fx [[:dispatch event]]})))
 
 
 ;; todo(abhinav) -- stateless backspace
@@ -896,16 +852,34 @@
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
-    (js/console.debug ":backspace" (prn-str uid value))
+    (backspace uid value)))
+
+
+(reg-event-fx
+  :backspace/delete-only-child
+  (fn [_ [_ uid]]
     (let [local? (not (client/open?))]
-      (js/console.debug ":backspace local?" local?)
       (if local?
-        (let [backspace-event (common-events/build-backspace-event -1 uid value)
-              backspace-tx    (resolver/resolve-event-to-tx @db/dsdb backspace-event)
-              followup-fx     (followup-backspace uid value)]
-          {:fx [[:dispatch [:transact backspace-tx]]
-                [:dispatch followup-fx]]})
-        {:fx [[:dispatch [:remote/backspace uid value]]]}))))
+        (let [build-delete-only-child-event (common-events/build-delete-only-child-event -1 uid)
+              tx (resolver/resolve-event-to-tx @db/dsdb build-delete-only-child-event)]
+          {:fx [[:dispatch [:transact tx]]
+                [:dispatch [:editing/uid nil]]]})
+        {:fx [[:dispatch [:remote/delete-only-child uid]]]}))))
+
+
+(reg-event-fx
+  :backspace/delete-merge-block
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
+    (let [local? (not (client/open?))]
+      (if local?
+        (let [build-delete-merge-block-event (common-events/build-delete-merge-block-event -1 uid value)
+              tx (resolver/resolve-event-to-tx @db/dsdb build-delete-merge-block-event)]
+          {:fx [[:dispatch [:transact tx]]
+                [:dispatch [:editing/uid
+                            (cond-> prev-block-uid
+                              embed-id (str "-embed-" embed-id))
+                            (count (:block/string prev-block))]]]})
+        {:fx [[:dispatch [:remote/delete-merge-block args]]]}))))
 
 
 (defn split-block

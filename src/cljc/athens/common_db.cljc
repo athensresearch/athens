@@ -146,6 +146,18 @@
        (get-block db)))
 
 
+(defn prev-sib
+  [db uid prev-sib-order]
+  (d/q '[:find ?sib .
+         :in $ % ?target-uid ?prev-sib-order
+         :where
+         (siblings ?target-uid ?sib)
+         [?sib :block/order ?prev-sib-order]
+         [?sib :block/uid ?uid]
+         [?sib :block/children ?ch]]
+       db rules uid prev-sib-order))
+
+
 (defn get-older-sib
   [db uid]
   (let [sib-uid   (d/q '[:find ?uid .
