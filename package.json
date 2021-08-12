@@ -84,7 +84,7 @@
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
-    "shadow-cljs": "^2.11.23",
+    "shadow-cljs": "^2.15.3",
     "source-map-support": "^0.5.19",
     "standard-version": "^9.3.1"
   },
