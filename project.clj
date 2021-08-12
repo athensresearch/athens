@@ -10,11 +10,8 @@
             :comments     "same as Clojure"}
 
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.clojure/clojurescript "1.10.866"
-                  :exclusions [com.google.javascript/closure-compiler-unshaded
-                               org.clojure/google-closure-library
-                               org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.11.23"]
+                 [org.clojure/clojurescript "1.10.879"]
+                 [thheller/shadow-cljs "2.15.3"]
                  [reagent "1.0.0"]
                  [re-frame "1.2.0"]
                  [datascript "1.1.0"]
