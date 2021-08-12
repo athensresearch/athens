@@ -6,9 +6,9 @@
 
 
 (rf/reg-sub
-  :user
+  :username
   (fn [db _]
-    (:user db)))
+    (-> db :athens/persist :settings :username)))
 
 
 (rf/reg-sub
