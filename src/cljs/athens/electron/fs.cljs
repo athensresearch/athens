@@ -141,11 +141,16 @@
   []
   (write-db false))
 
+(defn default-debounce-write-db []
+  (debounce write-db (* 1000 15)))
 
 (rf/reg-sub
   :fs/write-db
   (fn [db _]
-    (-> db :fs/debounce-write-db)))
+    (or (-> db :fs/debounce-write-db)
+        ;; TODO: This default shouldn't be needed, but write! seems to be called
+        ;; before boot is finished sometimes and I'm not sure why.
+        (default-debounce-write-db))))
 
 
 (rf/reg-event-fx
@@ -162,5 +167,4 @@
 (rf/reg-fx
   :fs/write!
   (fn []
-    (when-some [write-db-fn @(rf/subscribe [:fs/write-db])]
-      (write-db-fn true))))
+    (@(rf/subscribe [:fs/write-db]) true)))

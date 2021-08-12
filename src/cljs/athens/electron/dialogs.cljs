@@ -70,10 +70,10 @@
 (defn open-dialog!
   "Allow user to open db elsewhere from filesystem."
   []
-  (let [res       (.showOpenDialogSync dialog open-dir-opts)
-        open-file (first res)]
-    (when (and open-file (.existsSync fs open-file))
-      (rf/dispatch [:db-picker/add-and-select-db (utils/local-db (.dirname path open-file))]))))
+  (let [res         (.showOpenDialogSync dialog open-dir-opts)
+        db-location (first res)]
+    (when (and db-location (.existsSync fs db-location))
+      (rf/dispatch [:db-picker/add-and-select-db (utils/local-db db-location)]))))
 
 
 (defn create-dialog!
@@ -93,6 +93,7 @@
   "Delete an existing database and select the first db of the remaining ones."
   [{:keys [name base-dir] :as db}]
   (when (.confirm js/window (str "Do you really want to delete " name "?"))
-    (.rmSync fs base-dir #js {:recursive true :force true})
+    (when (utils/local-db? db)
+      (.rmSync fs base-dir #js {:recursive true :force true}))
     (rf/dispatch [:db-picker/remove-db db])
     (rf/dispatch [:db-picker/select-most-recent-db])))
