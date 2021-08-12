@@ -242,7 +242,7 @@
                             (when-not @loading
                               (dispatch [:modal/toggle])))
         el (.. js/document (querySelector "#app"))
-        selected-db       (subscribe [:db-picker/selected-db])
+        selected-db       @(subscribe [:db-picker/selected-db])
         state             (r/atom {:input     ""
                                    :tab-value 0})]
     (fn []
