@@ -30,8 +30,8 @@
           all-dbs             (get-in init-app-db [:athens/persist :db-picker/all-dbs])
           selected-db         (get-in init-app-db [:athens/persist :db-picker/selected-db])
           default-db          (utils/local-db (utils/default-base-dir))
-          selected-db-exists? (utils/local-db-exists? selected-db)
-          default-db-exists?  (utils/local-db-exists? default-db)
+          selected-db-exists? (utils/db-exists? selected-db)
+          default-db-exists?  (utils/db-exists? default-db)
           first-event         (cond
                                 ;; No selected db but there are dbs listed.
                                 ;; Load the first one.

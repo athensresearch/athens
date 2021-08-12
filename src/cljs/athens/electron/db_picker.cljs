@@ -23,10 +23,10 @@
 ;; Adding a db with the same base-dir will show an alert.
 (rf/reg-event-fx
   :db-picker/add-and-select-db
-  (fn [{:keys [db]} [_ {:keys [base-dir] :as added-db}]]
-    (if (get-in db [:athens/persist :db-picker/all-dbs base-dir])
+  (fn [{:keys [db]} [_ {:keys [location] :as added-db}]]
+    (if (get-in db [:athens/persist :db-picker/all-dbs location])
       {:dispatch [:alert/js (str "This Database is already listed as " (:name added-db) ".")]}
-      {:db       (assoc-in db [:athens/persist :db-picker/all-dbs base-dir] added-db)
+      {:db       (assoc-in db [:athens/persist :db-picker/all-dbs location] added-db)
        :dispatch [:db-picker/select-db added-db]})))
 
 
@@ -38,10 +38,10 @@
 ;; is happening and instead shows an alert.
 (rf/reg-event-fx
   :db-picker/select-db
-  (fn [{:keys [db]} [_ {:keys [base-dir] :as selected-db} ignore-sync-check?]]
+  (fn [{:keys [db]} [_ {:keys [location] :as selected-db} ignore-sync-check?]]
     (let [synced?       (or ignore-sync-check? (:db/synced db))
-          db-in-picker? (get-in db [:athens/persist :db-picker/all-dbs base-dir])
-          db-exists?    (and base-dir (utils/local-db-exists? selected-db))]
+          db-in-picker? (get-in db [:athens/persist :db-picker/all-dbs location])
+          db-exists?    (utils/db-exists? selected-db)]
       (cond
         (not db-in-picker?)
         {:dispatch [:alert/js "Database is no longer listed, please add it again."]}
@@ -71,6 +71,6 @@
 ;; Delete a db from the db-picker.
 (rf/reg-event-fx
   :db-picker/remove-db
-  (fn [{:keys [db]} [_ {:keys [base-dir]}]]
-    {:db      (update-in db [:athens/persist :db-picker/all-dbs] dissoc base-dir)}))
+  (fn [{:keys [db]} [_ {:keys [location]}]]
+    {:db      (update-in db [:athens/persist :db-picker/all-dbs] dissoc location)}))
 

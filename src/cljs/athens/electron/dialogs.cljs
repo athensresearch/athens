@@ -13,9 +13,9 @@
 
 (rf/reg-event-fx
   :fs/open-dialog
-  (fn [_ {:keys [base-dir]}]
-    (js/alert (str (if base-dir
-                     (str "No DB found at " base-dir ".")
+  (fn [_ {:keys [location]}]
+    (js/alert (str (if location
+                     (str "No DB found at " location ".")
                      "No DB found.")
                    "\nPlease open or create a new db."))
     {:dispatch-n [[:modal/toggle]]}))
