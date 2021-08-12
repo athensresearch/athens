@@ -153,8 +153,6 @@
   (fn [{:keys [db]} _]
     (let [backup-time (-> db :athens/persist :settings :backup-time)
           f           (debounce write-db (* 1000 backup-time))]
-      (print "update-write-db" backup-time)
-      (print (-> db :athens/persist :settings))
       {:db (assoc db :fs/debounce-write-db f)})))
 
 

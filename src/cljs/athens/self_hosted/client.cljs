@@ -131,8 +131,7 @@
   (let [connection (.-target event)
         last-tx    @(rf/subscribe [:remote/last-seen-tx])]
     (reset! ws-connection connection)
-    (send! connection (common-events/build-presence-hello-event last-tx
-                                                                (:name @(rf/subscribe [:user]))))
+    (send! connection (common-events/build-presence-hello-event last-tx @(rf/subscribe [:username])))
     (when (seq @send-queue)
       (js/console.log "WSClient sending queued packets #" (count @send-queue))
       (doseq [data @send-queue]
