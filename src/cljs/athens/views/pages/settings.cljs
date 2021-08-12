@@ -2,6 +2,7 @@
   (:require
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
+    [athens.db :refer [default-athens-persist]]
     [athens.util :refer [js-event->val]]
     [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
@@ -231,11 +232,31 @@
       [:p "For now, a username is only needed if you are connected to a server."]]]]])
 
 
+(defn reset-settings-comp
+  [reset-fn]
+  [setting-wrapper
+   [:<>
+    [:header
+     [:h3 "Reset settings"]]
+    [:main
+     [button {:on-click reset-fn}
+      "Reset all settings to defaults"]
+     [:aside
+      [:p "All settings saved between sessions will be restored to defaults."]
+      [:p "Databases on disk will not be deleted, but you will need to add them to Athens again."]
+      [:p "Athens will restart after reset and open the default database path."]]]]])
+
+
 (reg-event-fx
   :settings/update
   (fn [{:keys [db]} [_ k v]]
     {:db (assoc-in db [:athens/persist :settings k] v)}))
 
+(reg-event-fx
+ :settings/reset
+ (fn [{:keys [db]} _]
+   {:db (assoc db :athens/persist default-athens-persist)
+    :dispatch [:boot]}))
 
 (defn page
   []
@@ -249,4 +270,5 @@
                                  (dispatch [:settings/update :backup-time x])
                                  (dispatch [:fs/update-write-db]))]
       [remote-backups-comp]
-      [remote-username-comp username #(dispatch [:settings/update :username %])]]]))
+      [remote-username-comp username #(dispatch [:settings/update :username %])]
+      [reset-settings-comp #(dispatch [:settings/reset])]]]))

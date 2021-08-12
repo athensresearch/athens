@@ -48,7 +48,9 @@
         {:dispatch [:alert/js "Database is no longer listed, please add it again."]}
 
         (and db-exists? synced?)
-        {:db         (assoc-in db [:athens/persist :db-picker/selected-db] selected-db)
+        {:db         (-> db
+                         (assoc-in [:athens/persist :db-picker/selected-db] selected-db)
+                         (assoc-in [:athens/persist :current-route/uid] nil))
          :dispatch-n [(when (utils/remote-db? curr-selected-db)
                         [:remote/disconnect!])
                       [:boot/desktop]]}
@@ -67,7 +69,7 @@
     ;; TODO: this is just getting the first one, not the most recent
     (let [most-recent-db (second (first (get-in db [:athens/persist :db-picker/all-dbs])))]
       {:dispatch (if most-recent-db
-                   [:db-picker/select-db most-recent-db]
+                   [:db-picker/select-db most-recent-db true]
                    [:fs/open-dialog])})))
 
 

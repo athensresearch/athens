@@ -79,4 +79,4 @@
   (cond
     (local-db? db)  (local-db-exists? db)
     (remote-db? db) true
-    :else           true))
+    :else           false))
