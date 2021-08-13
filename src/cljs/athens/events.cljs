@@ -286,9 +286,9 @@
     (when uid
       (let [remote? (client/open?)]
         (cond->
-            {:db                    (assoc db :editing/uid uid)
-             :editing/focus         [uid index]}
-            remote? (assoc :presence/send-editing uid))))))
+          {:db                    (assoc db :editing/uid uid)
+           :editing/focus         [uid index]}
+          remote? (assoc :presence/send-editing uid))))))
 
 
 (reg-event-fx
@@ -862,8 +862,8 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":backspace/delete-only-child: local?" local?)
       (if local?
-        (let [build-delete-only-child-event (common-events/build-delete-only-child-event -1 uid)
-              tx (resolver/resolve-event-to-tx @db/dsdb build-delete-only-child-event)]
+        (let [delete-only-child-event (common-events/build-delete-only-child-event -1 uid)
+              tx (resolver/resolve-event-to-tx @db/dsdb delete-only-child-event)]
           {:fx [[:dispatch [:transact tx]]
                 [:dispatch [:editing/uid nil]]]})
         {:fx [[:dispatch [:remote/delete-only-child uid]]]}))))
@@ -876,8 +876,8 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":backspace/delete-merge-block: local?" local?)
       (if local?
-        (let [build-delete-merge-block-event (common-events/build-delete-merge-block-event -1 uid value)
-              tx (resolver/resolve-event-to-tx @db/dsdb build-delete-merge-block-event)]
+        (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 uid value)
+              tx (resolver/resolve-event-to-tx @db/dsdb delete-merge-block-event)]
           {:fx [[:dispatch [:transact tx]]
                 [:dispatch [:editing/uid
                             (cond-> prev-block-uid
