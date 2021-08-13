@@ -2,21 +2,7 @@
 
 ## Client
 
-Standard procedure for running dev client.
-
-Open DevConsole.
-
-**Join LanParty**
-
-``` javascript
-athens.core.lan_on();
-```
-
-**Leave LanParty**
-
-``` javascript
-athens.core.lan_off();
-```
+Use DB Picker -> join with `localhost:3010` as URL, no password.
 
 ## Server
 

@@ -96,6 +96,14 @@
                                nil)))))))
 
 
+(rf/reg-event-fx
+ :boot
+ (fn [_ _]
+   {:dispatch (if (util/electron?)
+                [:boot/desktop]
+                [:boot/web])}))
+
+
 (defn init
   []
   (set-global-alert!)
@@ -105,20 +113,6 @@
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (init-datalog-console)
-  (if (util/electron?)
-    (rf/dispatch-sync [:boot/desktop])
-    (rf/dispatch-sync [:boot/web]))
+  (rf/dispatch-sync [:boot])
   (dev-setup)
   (mount-root))
-
-
-(defn ^:export lan-on
-  ([] ; TODO take default from configuration
-   (lan-on client/ws-url))
-  ([url]
-   (rf/dispatch [:remote/connect! {:url url}])))
-
-
-(defn ^:export lan-off
-  []
-  (rf/dispatch [:remote/disconnect!]))

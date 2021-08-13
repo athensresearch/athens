@@ -7,6 +7,7 @@
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Storage" :default Storage]
     [athens.electron.dialogs :as dialogs]
+    [athens.electron.utils :as utils]
     [athens.events :as events]
     [athens.style :refer [color]]
     [athens.subs]
@@ -31,7 +32,7 @@
    :align-items     "center"
    :justify-content "flex-start"
    :width           "500px"
-   :height          "15em"
+   :height          "17em"
    ::stylefy/manual [[:p {:max-width  "24rem"
                           :text-align "center"}]
                      [:button.toggle-button {:font-size     "18px"
@@ -163,7 +164,7 @@
     (if @loading
       "No DB Found At"
       "Current Location")]
-   [:code {:style {:margin "1rem 0 2rem 0"}} (:base-dir db)]
+   [:code {:style {:margin "1rem 0 2rem 0"}} (:location db)]
    [:div (use-style {:display         "flex"
                      :justify-content "space-between"
                      :align-items     "center"
@@ -201,36 +202,51 @@
 
 (defn join-remote-comp
   []
-  (let [address (r/atom "")
+  (let [name     (r/atom "RTC")
+        address  (r/atom "localhost:3010")
         password (r/atom "")]
-    [:<>
-     (->>
-       [:div {:style {:width  "100%" :margin-top "10px"}}
-        [:h5 "Remote Address"]
-        [:div {:style {:margin          "5px 0"
-                       :display         "flex"
-                       :justify-content "space-between"}}
-         [textinput/textinput {:style       {:flex-grow 1
-                                             :padding   "5px"}
-                               :type        "text"
-                               :value       @address
-                               :placeholder "Remote server address"
-                               :on-change   #(prn "TODO" %)}]]
-        [:h5 "Password"]
-        [:div {:style {:margin          "5px 0"
-                       :display         "flex"
-                       :justify-content "space-between"}}
-         [textinput/textinput {:style       {:flex-grow 1
-                                             :padding   "5px"}
-                               :type        "text"
-                               :value       @password
-                               :placeholder "Password"
-                               :on-change   #(prn "TODO" %)}]]]
-       doall)
-     [button {:primary  true
-              :style    {:margin-top "0.5rem"}
-              :on-click #(prn "TODO pass address and password to athens.core.lan_on()")}
-      "Join"]]))
+    (fn []
+      [:<>
+       (->>
+        [:div {:style {:width  "100%" :margin-top "10px"}}
+         [:h5 "Database Name"]
+         [:div {:style {:margin          "5px 0"
+                        :display         "flex"
+                        :justify-content "space-between"}}
+          [textinput/textinput {:style       {:flex-grow 1
+                                              :padding   "5px"}
+                                :type        "text"
+                                :value       @name
+                                :placeholder "DB name"
+                                :on-change   #(reset! name (js-event->val %))}]]
+         [:h5 "Remote Address"]
+         [:div {:style {:margin          "5px 0"
+                        :display         "flex"
+                        :justify-content "space-between"}}
+          [textinput/textinput {:style       {:flex-grow 1
+                                              :padding   "5px"}
+                                :type        "text"
+                                :value       @address
+                                :placeholder "Remote server address"
+                                :on-change   #(reset! address (js-event->val %))}]]
+         [:h5 "Password"]
+         [:div {:style {:margin          "5px 0"
+                        :display         "flex"
+                        :justify-content "space-between"}}
+          [textinput/textinput {:style       {:flex-grow 1
+                                              :padding   "5px"}
+                                :type        "text"
+                                :value       @password
+                                :placeholder "Password (not supported yet)"
+                                :disabled    true ;; TODO: not supported yet
+                                :on-change   #(reset! password (js-event->val %))}]]]
+        doall)
+       [button {:primary  true
+                :style    {:margin-top "0.5rem"}
+                :disabled (or (clojure.string/blank? @name)
+                              (clojure.string/blank? @address))
+                :on-click #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address)])}
+        "Join"]])))
 
 
 (defn window
@@ -242,7 +258,7 @@
                             (when-not @loading
                               (dispatch [:modal/toggle])))
         el (.. js/document (querySelector "#app"))
-        selected-db       (subscribe [:db-picker/selected-db])
+        selected-db       @(subscribe [:db-picker/selected-db])
         state             (r/atom {:input     ""
                                    :tab-value 0})]
     (fn []
