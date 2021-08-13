@@ -185,11 +185,6 @@
 (def title-format (t/formatter "LLLL dd, yyyy"))
 
 
-(defn now-ts
-  []
-  (-> (js/Date.) .getTime))
-
-
 (defn get-day
   "Returns today's date or a date OFFSET days before today"
   ([] (get-day 0))

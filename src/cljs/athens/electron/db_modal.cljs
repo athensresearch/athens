@@ -208,39 +208,39 @@
     (fn []
       [:<>
        (->>
-        [:div {:style {:width  "100%" :margin-top "10px"}}
-         [:h5 "Database Name"]
-         [:div {:style {:margin          "5px 0"
-                        :display         "flex"
-                        :justify-content "space-between"}}
-          [textinput/textinput {:style       {:flex-grow 1
-                                              :padding   "5px"}
-                                :type        "text"
-                                :value       @name
-                                :placeholder "DB name"
-                                :on-change   #(reset! name (js-event->val %))}]]
-         [:h5 "Remote Address"]
-         [:div {:style {:margin          "5px 0"
-                        :display         "flex"
-                        :justify-content "space-between"}}
-          [textinput/textinput {:style       {:flex-grow 1
-                                              :padding   "5px"}
-                                :type        "text"
-                                :value       @address
-                                :placeholder "Remote server address"
-                                :on-change   #(reset! address (js-event->val %))}]]
-         [:h5 "Password"]
-         [:div {:style {:margin          "5px 0"
-                        :display         "flex"
-                        :justify-content "space-between"}}
-          [textinput/textinput {:style       {:flex-grow 1
-                                              :padding   "5px"}
-                                :type        "text"
-                                :value       @password
-                                :placeholder "Password (not supported yet)"
-                                :disabled    true ;; TODO: not supported yet
-                                :on-change   #(reset! password (js-event->val %))}]]]
-        doall)
+         [:div {:style {:width  "100%" :margin-top "10px"}}
+          [:h5 "Database Name"]
+          [:div {:style {:margin          "5px 0"
+                         :display         "flex"
+                         :justify-content "space-between"}}
+           [textinput/textinput {:style       {:flex-grow 1
+                                               :padding   "5px"}
+                                 :type        "text"
+                                 :value       @name
+                                 :placeholder "DB name"
+                                 :on-change   #(reset! name (js-event->val %))}]]
+          [:h5 "Remote Address"]
+          [:div {:style {:margin          "5px 0"
+                         :display         "flex"
+                         :justify-content "space-between"}}
+           [textinput/textinput {:style       {:flex-grow 1
+                                               :padding   "5px"}
+                                 :type        "text"
+                                 :value       @address
+                                 :placeholder "Remote server address"
+                                 :on-change   #(reset! address (js-event->val %))}]]
+          [:h5 "Password"]
+          [:div {:style {:margin          "5px 0"
+                         :display         "flex"
+                         :justify-content "space-between"}}
+           [textinput/textinput {:style       {:flex-grow 1
+                                               :padding   "5px"}
+                                 :type        "text"
+                                 :value       @password
+                                 :placeholder "Password (not supported yet)"
+                                 :disabled    true ; TODO: not supported yet
+                                 :on-change   #(reset! password (js-event->val %))}]]]
+         doall)
        [button {:primary  true
                 :style    {:margin-top "0.5rem"}
                 :disabled (or (clojure.string/blank? @name)

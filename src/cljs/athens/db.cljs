@@ -273,53 +273,6 @@
             @dsdb rules eid order)))
 
 
-(defn dec-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (dec-after ?p ?at ?ch ?new-o)]
-            @dsdb rules eid order)))
-
-
-(defn plus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
-            @dsdb rules eid order x)))
-
-
-(defn minus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)]
-            @dsdb rules eid order x)))
-
-
-(defn not-contains?
-  [coll v]
-  (not (contains? coll v)))
-
-
-(defn last-child?
-  [uid]
-  (->> (d/q '[:find ?sib-uid ?sib-o
-              :in $ % ?uid
-              :where
-              (siblings ?uid ?sib)
-              [?sib :block/uid ?sib-uid]
-              [?sib :block/order ?sib-o]]
-            @dsdb rules uid)
-       (sort-by second)
-       last
-       first
-       (= uid)))
-
-
 (defn uid-and-embed-id
   [uid]
   (or (some->> uid
@@ -420,22 +373,6 @@
       get-block))
 
 
-(defn get-older-sib
-  [uid]
-  (let [sib-uid   (d/q '[:find ?uid .
-                         :in $ % ?target-uid
-                         :where
-                         (siblings ?target-uid ?sib)
-                         [?target-e :block/uid ?target-uid]
-                         [?target-e :block/order ?target-o]
-                         [(dec ?target-o) ?prev-sib-order]
-                         [?sib :block/order ?prev-sib-order]
-                         [?sib :block/uid ?uid]]
-                       @dsdb rules uid)
-        older-sib (get-block [:block/uid sib-uid])]
-    older-sib))
-
-
 (defn same-parent?
   "Given a coll of uids, determine if uids are all direct children of the same parent."
   [uids]
@@ -481,13 +418,6 @@
     (->> (get-children-recursively uid)
          (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]))
          next)))
-
-
-(defn retract-uid-recursively
-  "Retract all blocks of a page, including the page."
-  [uid]
-  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-        (get-children-recursively uid)))
 
 
 (defn re-case-insensitive
@@ -722,38 +652,6 @@
   "For node-page references UI."
   [title]
   (-> title patterns/unlinked get-data))
-
-
-(defn linked-refs-count
-  [title]
-  (d/q '[:find (count ?u) .
-         :in $ ?t
-         :where
-         [?e :node/title ?t]
-         [?r :block/refs ?e]
-         [?r :block/uid ?u]]
-       @dsdb
-       title))
-
-
-(defn replace-linked-refs
-  "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
-  [title]
-  (let [pattern (patterns/linked title)]
-    (->> pattern
-         get-ref-ids
-         (d/pull-many @dsdb [:db/id :block/string])
-         (mapv (fn [x]
-                 (let [new-str (string/replace (:block/string x) pattern title)]
-                   (assoc x :block/string new-str)))))))
-
-
-(defn pull-nil
-  [db selector id]
-  (try
-    (d/pull db selector id)
-    (catch js/Error _e
-      nil)))
 
 
 ;; -- save ------------------------------------------------------------

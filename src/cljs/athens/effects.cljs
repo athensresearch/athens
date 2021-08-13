@@ -2,22 +2,16 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
-    [athens.config               :as config]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
-    [athens.util                 :as util]
-    [athens.walk                 :as walk]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
-    [cljs.pprint                 :refer [pprint]]
-    [clojure.string              :as str]
     [com.stuartsierra.component  :as component]
     [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
     [malli.error                 :as me]
-    [posh.reagent                :as p :refer [transact!]]
     [re-frame.core               :as rf]
     [stylefy.core                :as stylefy]))
 

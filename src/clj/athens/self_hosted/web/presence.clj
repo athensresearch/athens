@@ -6,11 +6,6 @@
     [datahike.api               :as d]))
 
 
-(defn- now
-  []
-  (quot (System/currentTimeMillis) 1000))
-
-
 (let [max-id (atom 0)]
   (defn next-id
     []
@@ -71,7 +66,7 @@
 
 (defn goodbye-handler
   [channel _event]
-  (let [username (clients/get-client-username channel)]
+  (let [_username (clients/get-client-username channel)]
     (prn _event)))
 
 

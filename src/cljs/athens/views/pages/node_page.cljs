@@ -14,7 +14,7 @@
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.bullet :as bullet]
     [athens.views.blocks.core :as blocks]
@@ -172,7 +172,7 @@
     (dispatch [:enter/add-child {:block     parent-block
                                  :new-uid   new-uid
                                  :embed-id  embed-id
-                                 :add-time? true  }])
+                                 :add-time? true}])
     (dispatch [:editing/uid new-uid])))
 
 

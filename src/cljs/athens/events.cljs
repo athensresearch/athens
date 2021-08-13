@@ -3,7 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
-    [athens.db                            :as db :refer [dec-after inc-after minus-after plus-after retract-uid-recursively]]
+    [athens.db                            :as db]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
@@ -890,29 +890,6 @@
                                                       :prev-block prev-block}]]]}))))
 
 
-(defn split-block
-  [uid val index new-uid]
-  (let [parent     (db/get-parent [:block/uid uid])
-        block      (db/get-block [:block/uid uid])
-        {:block/keys [order children open] :or {children []}} block
-        head       (subs val 0 index)
-        tail       (subs val index)
-        retracts   (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)])
-                         children)
-        next-block  {:db/id          -1
-                     :block/order    (inc order)
-                     :block/uid      new-uid
-                     :block/open     open
-                     :block/children children
-                     :block/string   tail}
-        reindex    (->> (inc-after (:db/id parent) order)
-                        (concat [next-block]))
-        new-block  {:db/id (:db/id block) :block/string head}
-        new-parent {:db/id (:db/id parent) :block/children reindex}
-        tx-data    (conj retracts new-block new-parent)]
-    {:dispatch [:transact tx-data]}))
-
-
 (reg-event-fx
   :split-block-to-children
   (fn [_ [_ {:keys [uid value index new-uid embed-id] :as args}]]
@@ -1178,10 +1155,10 @@
 (reg-event-fx
   :indent
   (fn [_ [_ {:keys [uid d-key-down] :as args}]]
-    "- `block-zero`: The first block in a page
-     - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
-                     the local string  is reset to original value, since it has not been unfocused yet (which is currently the
-                     transaction that updates the string). "
+    ;; - `block-zero`: The first block in a page
+    ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
+    ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
+    ;;                 transaction that updates the string).
     (js/console.debug ":indent" args)
     (let [local?                    (not (client/open?))
           block                     (common-db/get-block @db/dsdb [:block/uid uid])

@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts recursively-modify-block-for-embed]]
+    [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]

@@ -257,12 +257,6 @@
             x)))
 
 
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (< (min s t) x (max s t)))
-
-
 (defn reindex-blocks-between-bounds
   [db inc-or-dec parent-eid lower-bound upper-bound n]
   (println "reindex block")
@@ -540,11 +534,8 @@
 
 (defn linkmaker-error-handler
   [e input-tx]
-  #?(:cljs (do
-             (js/alert (str "Software failure, sorry. Please let us know about it.\n"
-                            (str e)))
-             (js/console.error "Linkmaker failure." e))
-     :clj (do (log/error "Linkmaker failure." e)))
+  #?(:cljs (js/console.error "Linkmaker failure." e)
+     :clj  (log/error "Linkmaker failure." e))
   ;; Return the original, un-modified, input tx so that transactions can still move forward.
   ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
   ;; TODO(reporting): report the error type, without any identifiable information.

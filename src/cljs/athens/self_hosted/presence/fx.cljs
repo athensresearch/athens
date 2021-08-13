@@ -1,7 +1,6 @@
 (ns athens.self-hosted.presence.fx
   (:require
     [athens.common-events :as common-events]
-    [athens.db :as db]
     [athens.self-hosted.client :as client]
     [re-frame.core :as rf]))
 

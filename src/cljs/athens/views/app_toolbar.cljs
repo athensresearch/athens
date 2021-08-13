@@ -17,7 +17,6 @@
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
     [athens.router :as router]
-    [athens.self-hosted.presence.views :as presence]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
