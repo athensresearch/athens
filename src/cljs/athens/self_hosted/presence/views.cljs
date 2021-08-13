@@ -2,14 +2,11 @@
   (:require
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Link" :default Link]
-    [athens.db :as db]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
-    [athens.self-hosted.presence.utils :as utils]
     [athens.style :as style]
     [athens.views.buttons :refer [button]]
-    [clojure.string :as str]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -207,7 +204,7 @@
 
                  ;; Dropdown
                  [m-popover
-                  {:open            (boolean (and @ele))
+                  {:open            (boolean @ele)
                    :anchorEl        @ele
                    :onClose         #(reset! ele nil)
                    :anchorOrigin    #js{:vertical   "bottom"

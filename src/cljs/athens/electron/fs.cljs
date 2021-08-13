@@ -127,8 +127,8 @@
       (.on r "error" error-cb)
       (.on w "error" error-cb)
       (.on w "finish" (fn []
-                      ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
-                      ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
+                        ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
+                        ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
                         (when copy?
                           (.. fs (copyFileSync bkp-filepath filepath))
                           (let [mtime (.-mtime (.statSync fs filepath))]
@@ -141,8 +141,11 @@
   []
   (write-db false))
 
-(defn default-debounce-write-db []
+
+(defn default-debounce-write-db
+  []
   (debounce write-db (* 1000 15)))
+
 
 (rf/reg-sub
   :fs/write-db

@@ -30,7 +30,6 @@
                  [tick/tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]
-                 [datsync/datsync "0.0.1-alpha2-SNAPSHOT"]
                  ;; backend
                  ;;   logging hell
                  [org.clojure/tools.logging "1.1.0"]

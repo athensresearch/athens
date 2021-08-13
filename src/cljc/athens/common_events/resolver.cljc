@@ -1,6 +1,7 @@
 (ns athens.common-events.resolver
   (:require
     [athens.common-db :as common-db]
+    [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
@@ -752,13 +753,13 @@
         uid-of-blocks-to-remove-but-not-retract (filter
                                                   (fn [block-uid]
                                                     (let [block-parent-eid (:db/id (common-db/get-parent db [:block/uid block-uid]))]
-                                                      (if (= block-parent-eid
-                                                             target-parent-eid)
+                                                      (when (= block-parent-eid
+                                                               target-parent-eid)
                                                         block-uid)))
                                                   source-uids)
         first-block-to-remove-order             (:block/order (common-db/get-block db [:block/uid (first uid-of-blocks-to-remove-but-not-retract)]))
-        uid-of-blocks-to-retract                (clojure.set/difference (set source-uids)
-                                                                        (set uid-of-blocks-to-remove-but-not-retract))
+        uid-of-blocks-to-retract                (set/difference (set source-uids)
+                                                                (set uid-of-blocks-to-remove-but-not-retract))
         retracted-blocks                        (retract db uid-of-blocks-to-retract)
         remove-blocks-under-target-parent       (->> (common-db/get-children-not-in-selected-uids db
                                                                                                   target-uid

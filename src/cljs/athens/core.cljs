@@ -13,7 +13,6 @@
     [athens.interceptors]
     [athens.listeners :as listeners]
     [athens.router :as router]
-    [athens.self-hosted.client :as client]
     [athens.style :as style]
     [athens.subs]
     [athens.util :as util]
@@ -97,11 +96,11 @@
 
 
 (rf/reg-event-fx
- :boot
- (fn [_ _]
-   {:dispatch (if (util/electron?)
-                [:boot/desktop]
-                [:boot/web])}))
+  :boot
+  (fn [_ _]
+    {:dispatch (if (util/electron?)
+                 [:boot/desktop]
+                 [:boot/web])}))
 
 
 (defn init

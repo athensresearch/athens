@@ -1,12 +1,10 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
-    [athens.common-db              :as common-db]
     [athens.common-events          :as common-events]
     [athens.common-events.resolver :as resolver]
     [athens.common-events.schema   :as schema]
     [athens.db                     :as db]
-    [datascript.core               :as d]
     [malli.core                    :as m]
     [malli.error                   :as me]
     [re-frame.core                 :as rf]))
@@ -32,7 +30,7 @@
 
 (rf/reg-event-fx
   :remote/disconnect!
-  (fn [{:keys [db]} _]
+  (fn [_ _]
     {:remote/client-disconnect! nil}))
 
 

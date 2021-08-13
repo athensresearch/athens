@@ -5,7 +5,6 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts]]
     [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     #_[athens.views.buttons :refer [button]]

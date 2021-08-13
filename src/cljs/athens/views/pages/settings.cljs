@@ -252,11 +252,13 @@
   (fn [{:keys [db]} [_ k v]]
     {:db (assoc-in db [:athens/persist :settings k] v)}))
 
+
 (reg-event-fx
- :settings/reset
- (fn [{:keys [db]} _]
-   {:db (assoc db :athens/persist default-athens-persist)
-    :dispatch [:boot]}))
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
 
 (defn page
   []

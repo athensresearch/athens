@@ -15,7 +15,7 @@
   :presence/users-with-page-data
   :<- [:presence/users]
   (fn [users _]
-    (into {} (mapv (fn [[username {:keys [_username color block/uid] :as user}]]
+    (into {} (mapv (fn [[username {:keys [_username  block/uid] :as user}]]
                      (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
                        [username (assoc user :page/uid page-uid :page/title page-title :block/uid uid)]))
                    users))))
