@@ -39,6 +39,8 @@
                  ;;   configuration mgmt
                  [yogthos/config "1.1.7"]
                  ;;   Datahike
+                 ;;   TODO: monitor https://github.com/replikativ/datahike/issues/364 and
+                 ;;   and uncomment tests that refer to this issue when it is fixed.
                  [io.replikativ/datahike "0.3.7-SNAPSHOT"]
                  ;;   web server
                  [http-kit/http-kit "2.5.3"]
