@@ -36,7 +36,7 @@
 (reg-event-fx
   :navigate
   (fn [{:keys [db]} [_ & route]]
-    (let [db-id  (db-picker/selected-db db)
+    (let [db-id  (-> db db-picker/selected-db :id)
           new-db (if db-id
                    (assoc-in db [:athens/persist :db-picker/all-dbs db-id :current-route/uid] (-> route second :id))
                    db)]
