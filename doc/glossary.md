@@ -5,6 +5,6 @@
   * dsdb - refers to datascript's database. datascript docs typically call datascript db `[conn](https://github.com/tonsky/datascript#usage-examples)`.
   * `:fs/` namespace - refers to all the operations for saving datascript to the filesystem. This is currently how local-only Athens is persisted. Athens reads and writes to filesystem via Electron, which exposes node.js libraries.
   * local-storage
-    * `db-picker/all-dbs`     - all dbs known to athens
-    * `db-picker/selected-db` - the currently active db
+    * `db-picker/all-dbs`        - all dbs known to athens
+    * `db-picker/selected-db-id` - the id of the currently active db
 

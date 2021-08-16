@@ -34,8 +34,9 @@
   "Returns a map representing a local db.
    Local dbs are uniquely identified by the base-dir."
   [base-dir]
-  {:name       (.basename path base-dir)
-   :location   base-dir
+  {:type       :local
+   :name       (.basename path base-dir)
+   :id         base-dir
    :base-dir   base-dir
    :images-dir (.resolve path base-dir IMAGES-DIR-NAME)
    :db-path    (.resolve path base-dir DB-INDEX)})
@@ -61,25 +62,26 @@
   "Returns a map representing a self-hosted db.
    Self-hosted dbs are uniquely identified by the url."
   [name url]
-  {:name     name
-   :location url
-   :url      url
-   :ws-url   (str "ws://" url "/ws")})
+  {:type   :self-hosted
+   :name   name
+   :id     url
+   :url    url
+   :ws-url (str "ws://" url "/ws")})
 
 
 (defn local-db?
   [db]
-  (boolean (:base-dir db)))
+  (-> db :type (= :local)))
 
 
 (defn remote-db?
   [db]
-  (boolean (:url db)))
+  (-> db :type (= :self-hosted)))
 
 
 (defn db-exists?
   [db]
-  (cond
-    (local-db? db)  (local-db-exists? db)
-    (remote-db? db) true
-    :else           false))
+  (condp = (:type db)
+    :local       (local-db-exists? db)
+    :self-hosted remote-db? true
+    :else        false))

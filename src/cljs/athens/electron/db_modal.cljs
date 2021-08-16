@@ -164,7 +164,7 @@
     (if @loading
       "No DB Found At"
       "Current Location")]
-   [:code {:style {:margin "1rem 0 2rem 0"}} (:location db)]
+   [:code {:style {:margin "1rem 0 2rem 0"}} (:id db)]
    [:div (use-style {:display         "flex"
                      :justify-content "space-between"
                      :align-items     "center"

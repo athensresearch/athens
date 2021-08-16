@@ -1,6 +1,7 @@
 (ns athens.electron.boot
   (:require
     [athens.db :as db]
+    [athens.electron.db-picker :as db-picker]
     [athens.electron.utils :as utils]
     [athens.patterns :as patterns]
     [datascript.core :as d]
@@ -27,8 +28,8 @@
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     (let [init-app-db         (db/init-app-db local-storage)
-          all-dbs             (get-in init-app-db [:athens/persist :db-picker/all-dbs])
-          selected-db         (get-in init-app-db [:athens/persist :db-picker/selected-db])
+          all-dbs             (db-picker/all-dbs init-app-db)
+          selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/local-db (utils/default-base-dir))
           selected-db-exists? (utils/db-exists? selected-db)
           default-db-exists?  (utils/db-exists? default-db)

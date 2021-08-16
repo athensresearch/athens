@@ -2,6 +2,7 @@
   (:require
     [athens.db :as db]
     [athens.util :as util]
+    [athens.electron.db-picker :as db-picker]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
@@ -35,8 +36,12 @@
 (reg-event-fx
   :navigate
   (fn [{:keys [db]} [_ & route]]
-    {:navigate! route
-     :db        (assoc-in db [:athens/persist :current-route/uid] (-> route second :id))}))
+    (let [db-id  (db-picker/selected-db db)
+          new-db (if db-id
+                   (assoc-in db [:athens/persist :db-picker/all-dbs db-id :current-route/uid] (-> route second :id))
+                   db)]
+      {:navigate! route
+       :db        new-db})))
 
 
 (reg-event-fx
@@ -65,7 +70,7 @@
 (reg-event-fx
   :restore-navigation
   (fn [{:keys [db]} _]
-    (if-let [uid (-> db :athens/persist :current-route/uid)]
+    (if-let [uid (-> db db-picker/selected-db :current-route/uid)]
       {:dispatch [:navigate :page {:id uid}]}
       {:dispatch [:navigate :home]})))
 
