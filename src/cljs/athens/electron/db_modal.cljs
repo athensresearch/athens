@@ -53,7 +53,7 @@
    :margin "0.25rem 0"
    :align-self "stretch"
    :overflow "hidden"
-   :transition "box-shadow 0.2s ease, filter 0.2s ease;"
+   :transition "box-shadow 0.2s ease, filter 0.2s ease"
    :background (color :background-color)
    :padding "1px"
    ::stylefy/manual [[:&:hover {}]
