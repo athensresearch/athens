@@ -185,7 +185,7 @@
         add-child-tx      (resolve-event-to-tx db
                                                {:event/type :datascript/add-child
                                                 :event/args args})
-        tx-data           (apply conj [open-block-tx] add-child-tx)]
+        tx-data           (into [open-block-tx] add-child-tx)]
     (println ":datascript/open-block-add-child" parent-uid new-uid)
     tx-data))
 

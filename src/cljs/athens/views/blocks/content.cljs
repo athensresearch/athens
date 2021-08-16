@@ -228,7 +228,7 @@
                                 (let [ancestors-children (->> ancestors-uids
                                                               (mapcat #(get uids->children-uids %))
                                                               (into #{}))]
-                                  (recur (apply conj descendants ancestors-children)
+                                  (recur (set/union descendants ancestors-children)
                                          ancestors-children))
                                 descendants))
         to-remove-uids      (set/intersection selected-uids descendants-uids)

@@ -209,9 +209,7 @@
                       :- (count retractions)
                       :additions-tx (pr-str additions-tx)
                       :retractions-tx (pr-str retractions-tx))
-    (apply conj
-           [additions-tx]
-           retractions-tx)))
+    (into [additions-tx] retractions-tx)))
 
 
 (defn- reconstruct-tx-from-log
