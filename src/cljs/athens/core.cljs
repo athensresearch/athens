@@ -95,7 +95,8 @@
                                nil)))))))
 
 
-(defn boot-evts []
+(defn boot-evts
+  []
   (if (util/electron?)
     [:boot/desktop]
     [:boot/web]))
