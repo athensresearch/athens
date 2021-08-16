@@ -41,7 +41,7 @@
                                 ;; Load the first one.
                                 (and (not selected-db-exists?)
                                      (seq all-dbs))
-                                [:fs/read-and-watch (-> all-dbs first second)]
+                                [:fs/add-read-and-watch (-> all-dbs first second)]
 
                                 ;; Selected db not found in local storage, but default db found.
                                 ;; Add default db and load it.

@@ -24,10 +24,8 @@
 (rf/reg-event-fx
   :db-picker/add-and-select-db
   (fn [{:keys [db]} [_ {:keys [location] :as added-db}]]
-    (if (get-in db [:athens/persist :db-picker/all-dbs location])
-      {:dispatch [:alert/js (str "This Database is already listed as " (:name added-db) ".")]}
-      {:db       (assoc-in db [:athens/persist :db-picker/all-dbs location] added-db)
-       :dispatch [:db-picker/select-db added-db]})))
+    {:db       (assoc-in db [:athens/persist :db-picker/all-dbs location] added-db)
+     :dispatch [:db-picker/select-db added-db]}))
 
 
 ;; Select a db from the all db list and reboot the app into it.
