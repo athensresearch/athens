@@ -1,13 +1,14 @@
 (ns athens.listeners
   (:require
     [athens.db :as db]
+    [athens.electron.utils :as electron-utils]
     [athens.router :as router]
     [athens.util :as util]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType
@@ -207,12 +208,19 @@
   (js/window.addEventListener
     EventType.BEFOREUNLOAD
     (fn [e]
-      (let [synced? @(subscribe [:db/synced])]
-        (when-not synced?
-          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
-          (.. e preventDefault)
-          (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
-          "Returning a string also prevents exit on other browsers.")))))
+      (let [synced? @(subscribe [:db/synced])
+            remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
+        ;; disconnect the
+        (cond
+          (not synced?)
+          (do
+            (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
+            (.. e preventDefault)
+            (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
+            "Returning a string also prevents exit on other browsers.")
+
+          remote?
+          (dispatch-sync [:remote/disconnect!]))))))
 
 
 (defn init
