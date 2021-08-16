@@ -273,15 +273,15 @@ jobs:
            API_KEY_ID: ${{ secrets.api_key_id }}
            API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
 
-        - name: Build server JAR
-          run: lein uberjar
+       - name: Build server JAR
+         run: lein uberjar
 
-        - name: Publish server JAR
-          uses: ncipollo/release-action@v1
-          with:
-            artifacts: "target/athens-lan-party-standalone.jar"
-            token: ${{ secrets.github_token }}
-            allowUpdates: true
-            prerelease: true
-            draft: true
+       - name: Publish server JAR
+         uses: ncipollo/release-action@v1
+         with:
+           artifacts: "target/athens-lan-party-standalone.jar"
+           token: ${{ secrets.github_token }}
+           allowUpdates: true
+           prerelease: true
+           draft: true
 
