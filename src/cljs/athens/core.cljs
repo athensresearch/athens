@@ -118,5 +118,8 @@
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))
+  (when (util/electron?)
+    (rf/dispatch [:electron/window]))
+  (rf/dispatch [:theme/set])
   (dev-setup)
   (mount-root))

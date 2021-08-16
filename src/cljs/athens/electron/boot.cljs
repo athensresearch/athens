@@ -79,9 +79,7 @@
                                      ;; if nth time, remember dark/light theme and last page
                                      {:when       :seen?
                                       :events     :reset-conn
-                                      :dispatch-n [[:electron/window]
-                                                   [:theme/set]
-                                                   [:fs/update-write-db]
+                                      :dispatch-n [[:fs/update-write-db]
                                                    [:restore-navigation]]}
 
                                      ;; whether first or nth time, update athens pages
