@@ -22,9 +22,10 @@
   "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
   [filepath _filename]
   (let [prev-mtime @(rf/subscribe [:db/mtime])
-        curr-mtime (.-mtime (.statSync fs filepath))
+        curr-mtime (try (.-mtime (.statSync fs filepath))
+                        (catch :default _))
         newer?     (< prev-mtime curr-mtime)]
-    (when (and prev-mtime newer?)
+    (when (and prev-mtime curr-mtime newer?)
       (let [block-text js/document.activeElement.value
             _          (.. js/navigator -clipboard (writeText block-text))
             _          (write-bkp)
