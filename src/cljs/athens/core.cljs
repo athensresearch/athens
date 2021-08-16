@@ -95,12 +95,16 @@
                                nil)))))))
 
 
+(defn boot-evts []
+  (if (util/electron?)
+    [:boot/desktop]
+    [:boot/web]))
+
+
 (rf/reg-event-fx
   :boot
   (fn [_ _]
-    {:dispatch (if (util/electron?)
-                 [:boot/desktop]
-                 [:boot/web])}))
+    {:dispatch (boot-evts)}))
 
 
 (defn init
@@ -112,6 +116,6 @@
   (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (init-datalog-console)
-  (rf/dispatch-sync [:boot])
+  (rf/dispatch-sync (boot-evts))
   (dev-setup)
   (mount-root))
