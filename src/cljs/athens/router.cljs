@@ -1,8 +1,8 @@
 (ns athens.router
   (:require
     [athens.db :as db]
-    [athens.util :as util]
     [athens.electron.db-picker :as db-picker]
+    [athens.util :as util]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
