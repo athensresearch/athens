@@ -587,7 +587,7 @@
                                                           after      (string-as-lookup-refs db-after string)]
                                                       (update-refs-tx lookup-ref before after)))))
                                     tx-data)
-           with-linkmaker-txs (apply conj input-tx linkmaker-txs)]
+           with-linkmaker-txs (into [] (concat input-tx linkmaker-txs))]
        #_(println "linkmaker:"
                 "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
                 "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
