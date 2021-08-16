@@ -71,7 +71,7 @@
     ;; TODO: this is just getting the first one, not the most recent
     (let [most-recent-db (second (first (get-in db [:athens/persist :db-picker/all-dbs])))]
       {:dispatch (if most-recent-db
-                   [:db-picker/select-db-id most-recent-db true]
+                   [:db-picker/select-db most-recent-db true]
                    [:fs/open-dialog])})))
 
 
