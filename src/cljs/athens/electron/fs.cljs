@@ -24,7 +24,7 @@
   (let [prev-mtime @(rf/subscribe [:db/mtime])
         curr-mtime (.-mtime (.statSync fs filepath))
         newer?     (< prev-mtime curr-mtime)]
-    (when newer?
+    (when (and prev-mtime newer?)
       (let [block-text js/document.activeElement.value
             _          (.. js/navigator -clipboard (writeText block-text))
             _          (write-bkp)
