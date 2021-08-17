@@ -813,7 +813,7 @@
 
 (rf/reg-event-fx
   :remote/block-open
-  (fn [{db :db} [_ block-uid open?]]
+  (fn [{db :db} [_ {:keys [block-uid open?]}]]
     (let [last-seen-tx      (:remote/last-seen-tx db)
           block-open-event  (common-events/build-block-open-event last-seen-tx
                                                                   block-uid

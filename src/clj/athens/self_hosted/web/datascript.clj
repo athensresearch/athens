@@ -36,6 +36,7 @@
     :datascript/delete-only-child
     :datascript/delete-merge-block
     :datascript/bump-up
+    :datascript/block-open
     ;; TODO: all the events
     })
 
