@@ -183,7 +183,7 @@
         open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
         ;; delegate add-child-tx creation
         add-child-tx      (resolve-event-to-tx db
-                                               {:event/type :datascript/add-child
+                                               {:event/type :datascript/open-block-add-child
                                                 :event/args args})
         tx-data           (into [open-block-tx] add-child-tx)]
     (println ":datascript/open-block-add-child" parent-uid new-uid)
