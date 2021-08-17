@@ -791,8 +791,8 @@
   :remote/followup-selected-delete
   (fn [{db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
-    {:fx [:dispatch-n [[:editing/uid nil]
-                       [:remote/unregister-followup event-id]]]
+    {:fx [[:dispatch-n [[:editing/uid nil]
+                        [:remote/unregister-followup event-id]]]]
      :db (-> db
              (assoc-in [:selection :items] #{})
              (assoc-in [:selection :order] []))}))
