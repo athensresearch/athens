@@ -367,7 +367,7 @@
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
            :as      new-block-event} (common-events/build-new-block-event last-seen-tx
-                                                                          (:remote/db-id parent)
+                                                                          (:block/uid parent)
                                                                           (:block/order block)
                                                                           new-uid)
           followup-fx                [[:dispatch [:remote/followup-new-block {:event-id event-id

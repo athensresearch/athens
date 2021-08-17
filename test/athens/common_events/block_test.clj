@@ -112,7 +112,7 @@
             child-1-eid     (common-db/e-by-av @@fixture/connection
                                                :block/uid child-1-uid)
             new-block-event (common-events/build-new-block-event -1
-                                                                 page-1-eid
+                                                                 page-1-uid
                                                                  0
                                                                  child-2-uid)
             new-block-txs   (resolver/resolve-event-to-tx @@fixture/connection

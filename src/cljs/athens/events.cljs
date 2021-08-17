@@ -952,7 +952,7 @@
       (js/console.debug ":enter/new-block local?" local?)
       (if local?
         (let [new-block-event (common-events/build-new-block-event -1
-                                                                   (:db/id parent)
+                                                                   (:block/uid parent)
                                                                    (:block/order block)
                                                                    new-uid)
               tx              (resolver/resolve-event-to-tx @db/dsdb new-block-event)]
