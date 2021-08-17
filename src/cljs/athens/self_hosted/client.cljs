@@ -336,6 +336,8 @@
         :datascript/unindent
         :datascript/paste-verbatim
         :datascript/indent
+        :datascript/indent-multi
+        :datascript/unindent-multi
         :datascript/page-add-shortcut
         :datascript/page-remove-shortcut
         :datascript/left-sidebar-drop-above
