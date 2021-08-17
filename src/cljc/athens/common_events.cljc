@@ -159,15 +159,15 @@
 
 (defn build-new-block-event
   "Builds `:datascript/new-block` event with:
-  - `parent-eid`: `:db/id` of parent node
+  - `parent-uid`: `:block/uid` of parent node
   - `block-order`: order of current block
   - `new-uid`: `:block/uid` for new block"
-  [last-tx parent-eid block-order new-uid]
+  [last-tx parent-uid block-order new-uid]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/new-block
-     :event/args    {:parent-eid  parent-eid
+     :event/args    {:parent-uid  parent-uid
                      :block-order block-order
                      :new-uid     new-uid}}))
 

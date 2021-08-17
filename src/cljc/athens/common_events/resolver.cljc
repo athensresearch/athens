@@ -138,7 +138,7 @@
 
 (defmethod resolve-event-to-tx :datascript/new-block
   [db {:event/keys [args]}]
-  (let [{:keys [parent-eid
+  (let [{:keys [parent-uid
                 block-order
                 new-uid]} args
         new-block         {:db/id        -1
@@ -147,10 +147,10 @@
                            :block/order  (inc block-order)
                            :block/open   true}
         reindex           (concat [new-block]
-                                  (common-db/inc-after db parent-eid block-order))
-        tx-data           [{:db/id          parent-eid
+                                  (common-db/inc-after db [:block/uid parent-uid] block-order))
+        tx-data           [{:block/uid      parent-uid
                             :block/children reindex}]]
-    (println ":datascript/new-block" parent-eid new-uid)
+    (println ":datascript/new-block" parent-uid new-uid)
     tx-data))
 
 
