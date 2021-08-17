@@ -35,6 +35,7 @@
     :datascript/unlinked-references-link-all
     :datascript/delete-only-child
     :datascript/delete-merge-block
+    :datascript/bump-up
     ;; TODO: all the events
     })
 

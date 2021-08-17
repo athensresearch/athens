@@ -632,7 +632,7 @@
                                                              :embed-id embed-id}]]]]
       (js/console.debug ":remote/bump-up event" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remeote/send-event! event]]]]})))
+                          [:remote/send-event! event]]]]})))
 
 
 (rf/reg-event-fx
