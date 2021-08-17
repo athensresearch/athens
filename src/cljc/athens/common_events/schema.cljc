@@ -167,6 +167,13 @@
      [:new-uid   string?]
      [:add-time? boolean?]]]])
 
+(def datascript-open-block-add-child
+  [:map
+   [:event/args
+    [:map
+     [:parent-uid string?]
+     [:new-uid   string?]]]])
+
 
 (def datascript-split-block
   [:map
@@ -440,7 +447,7 @@
    (dispatch :datascript/new-block datascript-new-block)
    (dispatch :datascript/add-child datascript-add-child)
    ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-add-child)
+   (dispatch :datascript/open-block-add-child datascript-open-block-add-child)
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block)
@@ -588,7 +595,7 @@
    (dispatch :datascript/new-block datascript-new-block true)
    (dispatch :datascript/add-child datascript-add-child true)
    ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-add-child true)
+   (dispatch :datascript/open-block-add-child datascript-open-block-add-child true)
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block true)
