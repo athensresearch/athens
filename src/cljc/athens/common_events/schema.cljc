@@ -59,7 +59,8 @@
    :datascript/block-open
    :datascript/paste
    :datascript/delete-only-child
-   :datascript/delete-merge-block])
+   :datascript/delete-merge-block
+   :datascript/bump-up])
 
 
 (def event-type-graph-server
@@ -417,6 +418,12 @@
      [:uid string?]
      [:value string?]]]])
 
+(def datascript-bump-up
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:new-uid string?]]]])
 
 (def event
   [:multi {:dispatch :event/type}
@@ -446,7 +453,8 @@
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
-   (dispatch :datascript/delete-merge-block datascript-delete-merge-block)])
+   (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
+   (dispatch :datascript/bump-up datascript-bump-up)])
 
 
 (def valid-event?
@@ -591,6 +599,7 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
+   (dispatch :datascript/bump-up datascript-bump-up true)
 
    ;; server specific graph events
    (dispatch :datascript/tx-log tx-log true)
