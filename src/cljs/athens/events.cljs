@@ -430,7 +430,7 @@
            :db (-> db
                    (assoc-in [:selection :items] #{})
                    (assoc-in [:selection :order] []))})
-        {:fx [[:dispatch [:remote/selected-delete {:uids selected-uids}]]]}))))
+        {:fx [[:dispatch [:remote/selected-delete selected-uids]]]}))))
 
 
 ;; Alerts

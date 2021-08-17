@@ -396,7 +396,7 @@
   [:map
    [:event/args
     [:map
-     [:uids [:vector string?]]]]])
+     [:uids [:set string?]]]]])
 
 
 (def datascript-block-open
@@ -481,7 +481,8 @@
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
    (dispatch :datascript/bump-up datascript-bump-up)
-   (dispatch :datascript/block-open datascript-block-open)])
+   (dispatch :datascript/block-open datascript-block-open)
+   (dispatch :datascript/selected-delete datascript-selected-delete)])
 
 
 (def valid-event?
@@ -641,6 +642,7 @@
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
    (dispatch :datascript/bump-up datascript-bump-up true)
    (dispatch :datascript/block-open datascript-block-open true)
+   (dispatch :datascript/selected-delete datascript-selected-delete true)
 
    ;; server specific graph events
    (dispatch :datascript/tx-log tx-log true)
