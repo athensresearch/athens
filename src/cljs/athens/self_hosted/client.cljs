@@ -344,7 +344,8 @@
         :datascript/delete-merge-block
         :datascript/unlinked-references-link
         :datascript/unlinked-references-link-all
-        :datascript/bump-up} (forwarded-event-handler packet))
+        :datascript/bump-up
+        :datascript/block-open} (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))

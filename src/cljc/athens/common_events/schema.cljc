@@ -456,7 +456,8 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
-   (dispatch :datascript/bump-up datascript-bump-up)])
+   (dispatch :datascript/bump-up datascript-bump-up)
+   (dispatch :datascript/block-open datascript-block-open)])
 
 
 (def valid-event?
@@ -602,6 +603,7 @@
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
    (dispatch :datascript/bump-up datascript-bump-up true)
+   (dispatch :datascript/block-open datascript-block-open true)
 
    ;; server specific graph events
    (dispatch :datascript/tx-log tx-log true)
