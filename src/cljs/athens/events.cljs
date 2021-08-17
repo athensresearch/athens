@@ -1043,9 +1043,9 @@
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/open-block-add-chilid {:parent-uid (:block/uid block)
-                                                         :new-uid    new-uid
-                                                         :embed-id   embed-id}]]]}))))
+        {:fx [[:dispatch [:remote/open-block-add-child {:parent-uid (:block/uid block)
+                                                        :new-uid    new-uid
+                                                        :embed-id   embed-id}]]]}))))
 
 
 (defn enter
