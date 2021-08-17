@@ -9,18 +9,15 @@
       ExceptionInfo)))
 
 
-;; TODO: all the events
-
 (def supported-event-types
-  #{:datascript/paste-verbatim
-    :datascript/create-page
+  #{:datascript/create-page
     :datascript/rename-page
     :datascript/merge-page
     :datascript/delete-page
     :datascript/block-save
     :datascript/new-block
-    :datascript/open-block-add-child
     :datascript/add-child
+    :datascript/open-block-add-child
     :datascript/split-block
     :datascript/split-block-to-children
     :datascript/unindent
@@ -29,16 +26,28 @@
     :datascript/unindent-multi
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
+    :datascript/drop-child
+    :datascript/drop-multi-child
+    :datascript/drop-link-child
+    :datascript/drop-diff-parent
+    :datascript/drop-multi-diff-source-same-parents
+    :datascript/drop-multi-diff-source-diff-parents
+    :datascript/drop-link-diff-parent
+    :datascript/drop-same
+    :datascript/drop-multi-same-source
+    :datascript/drop-multi-same-all
+    :datascript/drop-link-same-parent
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
     :datascript/unlinked-references-link
     :datascript/unlinked-references-link-all
+    :datascript/selected-delete
+    :datascript/block-open
+    :datascript/paste
+    :datascript/paste-verbatim
     :datascript/delete-only-child
     :datascript/delete-merge-block
-    :datascript/bump-up
-    :datascript/block-open
-    ;; TODO: all the events
-    })
+    :datascript/bump-up})
 
 
 (defn transact!

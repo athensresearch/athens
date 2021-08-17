@@ -334,20 +334,33 @@
         :datascript/split-block
         :datascript/split-block-to-children
         :datascript/unindent
-        :datascript/paste-verbatim
         :datascript/indent
         :datascript/indent-multi
         :datascript/unindent-multi
         :datascript/page-add-shortcut
         :datascript/page-remove-shortcut
+        :datascript/drop-child
+        :datascript/drop-multi-child
+        :datascript/drop-link-child
+        :datascript/drop-diff-parent
+        :datascript/drop-multi-diff-source-same-parents
+        :datascript/drop-multi-diff-source-diff-parents
+        :datascript/drop-link-diff-parent
+        :datascript/drop-same
+        :datascript/drop-multi-same-source
+        :datascript/drop-multi-same-all
+        :datascript/drop-link-same-parent
         :datascript/left-sidebar-drop-above
         :datascript/left-sidebar-drop-below
-        :datascript/delete-only-child
-        :datascript/delete-merge-block
         :datascript/unlinked-references-link
         :datascript/unlinked-references-link-all
-        :datascript/bump-up
-        :datascript/block-open} (forwarded-event-handler packet))
+        :datascript/selected-delete
+        :datascript/block-open
+        :datascript/paste
+        :datascript/paste-verbatim
+        :datascript/delete-only-child
+        :datascript/delete-merge-block
+        :datascript/bump-up} (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
