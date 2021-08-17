@@ -384,23 +384,20 @@
           {event-id :event/id
            :as delete-only-child-event} (common-events/build-delete-only-child-event last-seen-tx uid)
           followup-fx                [[:dispatch [:editing/uid nil]]]]
-      (js/console.debug ":remote/backspace:" (pr-str delete-only-child-event))
+      (js/console.debug ":remote/delete-only-child" (pr-str delete-only-child-event))
       {:fx [[:dispatch [:remote/register-followup event-id followup-fx]]
             [:dispatch [:remote/send-event! delete-only-child-event]]]})))
 
 
 (rf/reg-event-fx
   :remote/followup-delete-merge-block
-  (fn [{db :db} [_ {:keys [event-id prev-block-uid embed-id prev-block]}]]
+  (fn [_ [_ {:keys [event-id prev-block-uid embed-id prev-block]}]]
     (js/console.debug ":remote/followup-delete-merge-block" event-id)
-    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
-          {:keys [new-uid]} (:event/args event)]
-      (js/console.log ":remote/followup-delete-merge-block, new-uid" new-uid)
-      {:fx [[:dispatch [:editing/uid
-                        (cond-> prev-block-uid
-                          embed-id (str "-embed-" embed-id))
-                        (count (:block/string prev-block))]]
-            [:dispatch [:remote/unregister-followup event-id]]]})))
+    {:fx [[:dispatch [:editing/uid
+                      (cond-> prev-block-uid
+                        embed-id (str "-embed-" embed-id))
+                      (count (:block/string prev-block))]]
+          [:dispatch [:remote/unregister-followup event-id]]]}))
 
 
 (rf/reg-event-fx
@@ -413,7 +410,7 @@
                                                                                            :prev-block-uid prev-block-uid
                                                                                            :prev-block prev-block
                                                                                            :embed-id embed-id}]]]]
-      (js/console.debug ":remote/backspace:" (pr-str delete-merge-block-event))
+      (js/console.debug ":remote/delete-merge-block:" (pr-str delete-merge-block-event))
       {:fx [[:dispatch [:remote/register-followup event-id followup-fx]]
             [:dispatch [:remote/send-event! delete-merge-block-event]]]})))
 
