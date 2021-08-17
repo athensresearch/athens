@@ -565,7 +565,7 @@
     (let [last-seen-tx        (:remote/last-seen-tx db)
           indent-multi-event  (common-events/build-indent-multi-event last-seen-tx uids)]
       (js/console.debug ":remote/indent-multi event" (pr-str indent-multi-event))
-      {:fx [[:dispatch [[:remote/send-event! indent-multi-event]]]]})))
+      {:fx [[:dispatch [:remote/send-event! indent-multi-event]]]})))
 
 
 (rf/reg-event-fx
@@ -604,7 +604,7 @@
     (let [last-seen-tx           (:remote/last-seen-tx db)
           unindent-multi-event   (common-events/build-unindent-multi-event last-seen-tx uids)]
       (js/console.debug ":remote/unindent-multi event" (pr-str unindent-multi-event))
-      {:fx [[:dispatch [[:remote/send-event! unindent-multi-event]]]]})))
+      {:fx [[:dispatch [:remote/send-event! unindent-multi-event]]]})))
 
 
 (rf/reg-event-fx

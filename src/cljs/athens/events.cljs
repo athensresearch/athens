@@ -1246,9 +1246,9 @@
     (js/console.debug ":unindent/multi" uids)
     (let [local?                      (not (client/open?))
           [f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
-          sanitized-selected-uids     (map (comp
-                                             first
-                                             common-db/uid-and-embed-id) uids)
+          sanitized-selected-uids     (mapv (comp
+                                              first
+                                              common-db/uid-and-embed-id) uids)
           {parent-title :node/title
            parent-uid   :block/uid}   (common-db/get-parent @db/dsdb [:block/uid f-uid])
           same-parent?                (common-db/same-parent? @db/dsdb sanitized-selected-uids)
