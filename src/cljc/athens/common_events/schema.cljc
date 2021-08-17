@@ -418,12 +418,14 @@
      [:uid string?]
      [:value string?]]]])
 
+
 (def datascript-bump-up
   [:map
    [:event/args
     [:map
      [:uid string?]
      [:new-uid string?]]]])
+
 
 (def event
   [:multi {:dispatch :event/type}
