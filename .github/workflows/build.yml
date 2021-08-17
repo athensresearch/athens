@@ -275,9 +275,11 @@ jobs:
            API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
 
        - name: Build server JAR
+         if: matrix.os == 'ubuntu-latest'
          run: lein uberjar
 
        - name: Publish server JAR
+         if: matrix.os == 'ubuntu-latest'
          uses: ncipollo/release-action@v1
          with:
            artifacts: "target/athens-lan-party-standalone.jar"
