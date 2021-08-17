@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.1](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.0...v1.0.0-alpha.rtc.1) (2021-08-17)
+
+
+### Bug Fixes
+
+* synced hopefully all the events ([bdf3bf4](https://github.com/athensresearch/athens/commit/bdf3bf4e256c775b32ac8a58d48a54e6b84f2e60)), closes [#1506](https://github.com/athensresearch/athens/issues/1506)
+
+
+### Refactors
+
+* simplify vector concat -> into ([444bfb9](https://github.com/athensresearch/athens/commit/444bfb9d406d131db6b7e528527077f1c548bb95)), closes [#1498](https://github.com/athensresearch/athens/issues/1498)
+
+
+* only release jar on ubuntu build ([03b869c](https://github.com/athensresearch/athens/commit/03b869cc44cbef6e32cd33c7eea879426c1f906a))
+
 ## [1.0.0-beta.94](https://github.com/athensresearch/athens/compare/v1.0.0-beta.93...v1.0.0-beta.94) (2021-08-04)
 
 ## [1.0.0-beta.93](https://github.com/athensresearch/athens/compare/v1.0.0-beta.92...v1.0.0-beta.93) (2021-08-04)
