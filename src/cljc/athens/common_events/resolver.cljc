@@ -4,7 +4,8 @@
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d]))
+       :cljs [datascript.core :as d])
+    [athens.common-events :as common-events])
   #?(:clj
      (:import
        (java.util
@@ -183,8 +184,9 @@
         open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
         ;; delegate add-child-tx creation
         add-child-tx      (resolve-event-to-tx db
-                                               {:event/type :datascript/open-block-add-child
-                                                :event/args args})
+                                               (common-events/build-add-child-event -1
+                                                                                    parent-uid
+                                                                                    new-uid))
         tx-data           (into [open-block-tx] add-child-tx)]
     (println ":datascript/open-block-add-child" parent-uid new-uid)
     tx-data))
