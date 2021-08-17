@@ -341,7 +341,9 @@
         :datascript/left-sidebar-drop-above
         :datascript/left-sidebar-drop-below
         :datascript/delete-only-child
-        :datascript/delete-merge-block} (forwarded-event-handler packet))
+        :datascript/delete-merge-block
+        :datascript/unlinked-references-link
+        :datascript/unlinked-references-link-all} (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
