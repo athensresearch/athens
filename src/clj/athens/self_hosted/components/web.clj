@@ -38,21 +38,22 @@
       (clients/send! channel (common-events/build-event-rejected id
                                                                  :introduce-yourself
                                                                  {:protocol-error :client-not-introduced})))
-    (let [result (cond
-                   (contains? presence/supported-event-types type)
-                   (presence/presence-handler (:conn datahike) channel data)
+    (if-let [result (cond
+                      (contains? presence/supported-event-types type)
+                      (presence/presence-handler (:conn datahike) channel data)
 
-                   (contains? datascript/supported-event-types type)
-                   (datascript/datascript-handler (:conn datahike) channel data)
+                      (contains? datascript/supported-event-types type)
+                      (datascript/datascript-handler (:conn datahike) channel data)
 
-                   :else
-                   (do
-                     (log/error "receive-handler, unsupported event:" (pr-str type))
-                     (common-events/build-event-rejected id
-                                                         (str "Unsupported event: " type)
-                                                         {:unsupported-type type})))]
+                      :else
+                      (do
+                        (log/error "receive-handler, unsupported event:" (pr-str type))
+                        (common-events/build-event-rejected id
+                                                            (str "Unsupported event: " type)
+                                                            {:unsupported-type type})))]
       (merge {:event/id id}
-             result))))
+             result)
+      (log/error "No result for `valid-event-handler`, input data:" (pr-str data)))))
 
 
 (def ^:private forwardable-events
