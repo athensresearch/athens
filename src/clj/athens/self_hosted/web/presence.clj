@@ -48,20 +48,14 @@
 
 
 (defn editing-handler
-  [channel {:event/keys [args]}]
-  (let [username (clients/get-client-username channel)
-        {:keys [block/uid]} args]
-    (when uid
-      (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event 42 username uid)]
+  [datahike channel {:event/keys [id args]}]
+  (let [username            (clients/get-client-username channel)
+        {:keys [block-uid]} args
+        max-tx              (:max-tx @datahike)]
+    (when block-uid
+      (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
         (clients/broadcast! broadcast-presence-editing-event)
-        #_(dosync
-            (let [all-presence* (conj @all-presence presence)
-                  total (count all-presence*)]
-              ;; NOTE: better way of cleanup, time based maybe? hold presence for 1 minute?
-              (if (> total 100)
-                (ref-set all-presence (vec (drop (- total 100) all-presence*)))
-                (ref-set all-presence all-presence*)))))
-      #_(clients/broadcast! (last @all-presence)))))
+        (common-events/build-event-accepted id max-tx)))))
 
 
 (defn goodbye-handler
@@ -74,5 +68,5 @@
   [datahike channel {:event/keys [type] :as event}]
   (condp = type
     :presence/hello   (hello-handler datahike channel event)
-    :presence/editing (editing-handler channel event)
+    :presence/editing (editing-handler datahike channel event)
     #_#_:presence/goodbye (goodbye-handler channel event)))
