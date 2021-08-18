@@ -28,15 +28,15 @@
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
 
-    (let [datoms (d/datoms @datahike :eavt) #_(map (fn [{:keys [e a v tx added]}]
-                        [e a v tx added])
-                      (d/datoms @datahike :eavt))]
+    (let [datoms (d/datoms @datahike :eavt)]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump-event max-tx datoms))
       (clients/send! channel
                      (common-events/build-presence-all-online-event max-tx
-                                                                    (clients/get-clients-usernames))))
+                                                                    (clients/get-clients-usernames)))
+      (clients/broadcast! (common-events/build-presence-online-event max-tx
+                                                                     username)))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
