@@ -51,7 +51,9 @@
             valid-server-event?)
       (http/send! channel (->transit data))
       ;; TODO internal failure mode, collect in reporting
-      (log/error "->" (get @clients channel) ", invalid schema:"
+      (log/error "->" (get @clients channel)
+                 ", event:" (pr-str data)
+                 ", invalid schema:"
                  "event-response take:" (str (schema/explain-event-response data))
                  ", server-event take:" (str (schema/explain-server-event data))))))
 
