@@ -642,7 +642,8 @@
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/editing
-     :event/args    {:username username :block/uid uid}}))
+     :event/args    {:username  username
+                     :block-uid uid}}))
 
 
 (defn build-presence-broadcast-editing-event
@@ -652,4 +653,5 @@
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/broadcast-editing
-     :event/args    {:username username :block/uid block-uid}}))
+     :event/args    {:username  username
+                     :block-uid block-uid}}))

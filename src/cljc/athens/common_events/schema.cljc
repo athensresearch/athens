@@ -111,9 +111,7 @@
    [:event/args
     [:map
      [:username string?]
-     ;; how to make block/uid string? or nil?
-     ;; why would it be `nil?`
-     #_[:block/uid  string?]]]])
+     [:block-uid string?]]]])
 
 
 (def datascript-create-page
@@ -596,7 +594,7 @@
    [:event/args
     [:map
      [:username string?]
-     [:block/uid string?]]]])
+     [:block-uid string?]]]])
 
 
 (def server-event

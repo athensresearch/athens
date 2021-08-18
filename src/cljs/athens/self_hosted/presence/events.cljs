@@ -30,6 +30,6 @@
 
 (rf/reg-event-db
   :presence/update-editing
-  (fn [db [_ {:keys [username block/uid]}]]
-    (update-in db [:presence :users username] assoc :block/uid uid)))
+  (fn [db [_ {:keys [username block-uid]}]]
+    (update-in db [:presence :users username] assoc :block/uid block-uid)))
 
