@@ -284,12 +284,11 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (when uid
-      (let [remote? (client/open?)]
-        (cond->
-          {:db                    (assoc db :editing/uid uid)
-           :editing/focus         [uid index]}
-          remote? (assoc :presence/send-editing uid))))))
+    (let [remote? (client/open?)]
+      (cond->
+        {:db                    (assoc db :editing/uid uid)
+         :editing/focus         [uid index]}
+        (and uid remote?) (assoc :presence/send-editing uid)))))
 
 
 (reg-event-fx
