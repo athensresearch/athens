@@ -1,5 +1,6 @@
 (ns athens.views.pages.daily-notes
   (:require
+    [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day uid-to-date]]
@@ -8,7 +9,6 @@
     [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -71,15 +71,11 @@
 
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
   [ids]
-  (->> ids
-       (map (fn [x] [:block/uid x]))
-       (map (fn [x]
-              (try
-                @(pull db/dsdb '[*] x)
-                (catch js/Error _e
-                  nil))))
-       (filter (fn [x]
-                 (not (nil? x))))))
+  (keep
+    (fn [uid]
+      (try (common-db/get-block @db/dsdb [:block/uid uid])
+           (catch js/Error _e nil)))
+    ids))
 
 
 ;; Components

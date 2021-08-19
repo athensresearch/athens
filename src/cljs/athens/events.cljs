@@ -8,7 +8,7 @@
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid]]
+    [athens.util                          :refer [gen-block-uid] :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
@@ -502,7 +502,9 @@
 (reg-event-db
   :daily-notes/add
   (fn [db [_ uid]]
-    (assoc db :daily-notes/items [uid])))
+    (if (empty? (get db :daily-notes/items))
+      (assoc db :daily-notes/items [uid])
+      (update db :daily-notes/items (comp rseq sort distinct conj) uid))))
 
 
 (reg-event-fx
@@ -521,15 +523,12 @@
 
 (reg-event-fx
   :daily-note/next
-  (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db    (update db :daily-notes/items conj uid)
-          block-uid (gen-block-uid)]
-      (if (db/e-by-av :block/uid uid)
-        {:db new-db}
-        {:db       new-db
-         :dispatch [:page/create {:title     title
-                                  :page-uid  uid
-                                  :block-uid block-uid}]}))))
+  (fn [_ [_ {:keys [uid title]}]]
+    {:fx [(when-not (db/e-by-av :block/uid uid)
+            [:dispatch [:page/create {:title     title
+                                      :page-uid  uid
+                                      :block-uid (gen-block-uid)}]])
+          [:dispatch [:daily-notes/add uid]]]}))
 
 
 (reg-event-fx
@@ -624,8 +623,11 @@
                                                                        title)
               tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              (if shift?
+                              (cond
+                                shift?
                                 [:right-sidebar/open-item page-uid]
+
+                                (not (util/is-daily-note page-uid))
                                 [:navigate :page {:id page-uid}])
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
