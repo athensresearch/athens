@@ -58,7 +58,7 @@
 
   :min-lein-version "2.5.3"
 
-  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/stories"]
 
   :main athens.self-hosted.core
   :aot [athens.self-hosted.core]

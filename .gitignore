@@ -31,3 +31,6 @@
 
 # electron build
 dist
+
+# design system ts output
+/src/stories/*.js

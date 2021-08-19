@@ -40,6 +40,9 @@ jobs:
        - name: Fetch JS deps
          run: yarn
 
+       - name: Compile components
+         run: yarn components
+
        # TODO: re-enable once web build is fixed
        # - name: Run Karma tests
        #   run: script/test/karma
@@ -164,6 +167,9 @@ jobs:
        - name: Fetch yarn
          run: yarn install --frozen-lockfile
 
+       - name: Compile components
+         run: yarn components
+
        - name: Compile app
          run: COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}" lein run -m shadow.cljs.devtools.cli --npm release app --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" }}"
          env:
@@ -237,6 +243,9 @@ jobs:
          run: |
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
+
+       - name: Compile components
+         run: yarn components
 
        - name: Compile JS Assets (*nix)
          if: matrix.os != 'windows-latest'
