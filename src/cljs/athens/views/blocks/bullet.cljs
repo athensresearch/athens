@@ -28,7 +28,7 @@
    ::stylefy/manual [[:&:after {:content "''"
                                 :background "currentColor"
                                 :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"
-                                :border-radius "100px"
+                                :border-radius "50%"
                                 :box-shadow "0 0 0 0.125rem transparent"
                                 :display "inline-flex"
                                 :margin "50% 0 0 50%"
