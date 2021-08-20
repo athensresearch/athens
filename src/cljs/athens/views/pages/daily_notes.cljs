@@ -3,12 +3,10 @@
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
-    [athens.util :refer [get-day uid-to-date]]
+    [athens.util :refer [get-day]]
     [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [goog.dom :refer [getElement]]
-    [goog.functions :refer [debounce]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
@@ -39,30 +37,6 @@
 (def daily-notes-notional-page-style
   (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
                                  :opacity "0.5"}))
-
-
-;; Helpers
-
-
-
-(defn scroll-daily-notes
-  [_]
-  (let [daily-notes @(subscribe [:daily-notes/items])
-        el          (getElement "daily-notes")
-        offset-top  (.. el -offsetTop)
-        rect        (.. el getBoundingClientRect)
-        from-bottom (.. rect -bottom)
-        from-top    (.. rect -top)
-        doc-height  (.. js/document -documentElement -scrollHeight)
-        top-delta   (- offset-top from-top)
-        bottom-delta (- from-bottom doc-height)]
-    ;; Don't allow user to scroll up for now.
-    (cond
-      (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-      (< bottom-delta 1) (dispatch [:daily-note/next (get-day (uid-to-date (last daily-notes)) 1)]))))
-
-
-(def db-scroll-daily-notes (debounce scroll-daily-notes 100))
 
 
 (defn safe-pull-many

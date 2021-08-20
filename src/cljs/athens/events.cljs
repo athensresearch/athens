@@ -14,6 +14,7 @@
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [goog.dom                             :refer [getElement]]
     [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -494,17 +495,15 @@
 ;; Daily Notes
 
 (reg-event-db
-  :daily-notes/reset
+  :daily-note/reset
   (fn [db _]
     (assoc db :daily-notes/items [])))
 
 
 (reg-event-db
-  :daily-notes/add
+  :daily-note/add
   (fn [db [_ uid]]
-    (if (empty? (get db :daily-notes/items))
-      (assoc db :daily-notes/items [uid])
-      (update db :daily-notes/items (comp rseq sort distinct conj) uid))))
+    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
@@ -528,7 +527,7 @@
             [:dispatch [:page/create {:title     title
                                       :page-uid  uid
                                       :block-uid (gen-block-uid)}]])
-          [:dispatch [:daily-notes/add uid]]]}))
+          [:dispatch [:daily-note/add uid]]]}))
 
 
 (reg-event-fx
@@ -538,6 +537,24 @@
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
+
+(reg-event-fx
+  :daily-note/scroll
+  (fn [_ [_]]
+    (let [daily-notes @(subscribe [:daily-notes/items])
+          el          (getElement "daily-notes")
+          offset-top  (.. el -offsetTop)
+          rect        (.. el getBoundingClientRect)
+          from-bottom (.. rect -bottom)
+          from-top    (.. rect -top)
+          doc-height  (.. js/document -documentElement -scrollHeight)
+          top-delta   (- offset-top from-top)
+          bottom-delta (- from-bottom doc-height)]
+      ;; Don't allow user to scroll up for now.
+      (cond
+        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
