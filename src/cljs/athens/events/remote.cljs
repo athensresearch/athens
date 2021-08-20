@@ -199,7 +199,10 @@
                             [:right-sidebar/open-item page-uid]
 
                             (not (util/is-daily-note page-uid))
-                            [:navigate :page {:id page-uid}])
+                            [:navigate :page {:id page-uid}]
+
+                            (util/is-daily-note page-uid)
+                            [:daily-note/add page-uid])
 
                           [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
