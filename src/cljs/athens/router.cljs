@@ -116,8 +116,8 @@
   []
   (let [route-uid @(subscribe [:current-route/uid])]
     (if (util/is-daily-note route-uid)
-      (dispatch [:daily-note/add route-uid])
-      (dispatch [:daily-note/reset]))
+      (dispatch [:daily-note/reset [route-uid]])
+      (dispatch [:daily-note/reset []]))
     (navigate :home)))
 
 

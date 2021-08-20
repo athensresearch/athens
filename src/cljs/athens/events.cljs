@@ -496,8 +496,8 @@
 
 (reg-event-db
   :daily-note/reset
-  (fn [db _]
-    (assoc db :daily-notes/items [])))
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items uid)))
 
 
 (reg-event-db
