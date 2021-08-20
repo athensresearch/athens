@@ -1,4 +1,4 @@
-# x. Local Storage
+# 8. Local Storage
 
 Date: 2021-07-01
 
