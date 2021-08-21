@@ -5,7 +5,7 @@
     [athens.common-events.resolver :as resolver]
     [athens.common-events.schema   :as schema]
     [athens.db                     :as db]
-    [athens.util                    :as util]
+    [athens.util                   :as util]
     [malli.core                    :as m]
     [malli.error                   :as me]
     [re-frame.core                 :as rf]))
