@@ -523,11 +523,11 @@
 (reg-event-fx
   :daily-note/next
   (fn [_ [_ {:keys [uid title]}]]
-    {:fx [(when-not (db/e-by-av :block/uid uid)
+    {:fx [(if (db/e-by-av :block/uid uid)
+            [:dispatch [:daily-note/add uid]]
             [:dispatch [:page/create {:title     title
                                       :page-uid  uid
-                                      :block-uid (gen-block-uid)}]])
-          [:dispatch [:daily-note/add uid]]]}))
+                                      :block-uid (gen-block-uid)}]])]}))
 
 
 (reg-event-fx
@@ -645,7 +645,11 @@
                                 [:right-sidebar/open-item page-uid]
 
                                 (not (util/is-daily-note page-uid))
-                                [:navigate :page {:id page-uid}])
+                                [:navigate :page {:id page-uid}]
+
+                                (util/is-daily-note page-uid)
+                                [:daily-note/add page-uid])
+
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
                [:remote/page-create page-uid block-uid title shift?]]]}))))
