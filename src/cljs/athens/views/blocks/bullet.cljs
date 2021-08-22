@@ -45,8 +45,9 @@
                      [:&:hover:before
                       :&:focus-visible:before {:opacity 1}]
                      [:&.closed-with-children [:circle {:stroke (style/color :body-text-color)
-                                                        :r "8"
-                                                        :stroke-width "4"
+                                                        :fill (style/color :body-text-color :opacity-low)
+                                                        :r "22"
+                                                        :stroke-width "12"
                                                         :opacity (:opacity-med style/OPACITIES)}]]
                      [:&:hover [:svg {:transform "scale(1.3)"}]]
                      [:&.dragging {:z-index 1
