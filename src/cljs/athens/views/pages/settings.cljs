@@ -1,10 +1,10 @@
 (ns athens.views.pages.settings
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
     [athens.db :refer [default-athens-persist]]
     [athens.util :refer [js-event->val]]
-    [athens.views.buttons :refer [button]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
@@ -139,11 +139,11 @@
                                 :placeholder " Open Collective Email "
                                 :on-change   #(reset! value (.. % -target -value))
                                 :value       @value}]
-          [button {:primary  true
+          [:> Button {:isPrimary  true
                    :disabled (not (clojure.string/blank? email))
                    :on-click #(handle-submit-email value update-fn)}
            "Submit"]
-          [button {:on-click #(handle-reset-email value update-fn)}
+          [:> Button {:on-click #(handle-reset-email value update-fn)}
            "Reset"]]
          [:aside
           [:p (if (clojure.string/blank? email)
@@ -208,7 +208,7 @@
            :rel    "noreferrer"}
        " paid users and sponsors"]]]
     [:main
-     [button {:disabled true} "Backup my DB to the cloud"]]]])
+     [:> Button {:disabled true} "Backup my DB to the cloud"]]]])
 
 
 (defn settings-container
@@ -239,7 +239,7 @@
     [:header
      [:h3 "Reset settings"]]
     [:main
-     [button {:on-click reset-fn}
+     [:> Button {:on-click reset-fn}
       "Reset all settings to defaults"]
      [:aside
       [:p "All settings saved between sessions will be restored to defaults."]

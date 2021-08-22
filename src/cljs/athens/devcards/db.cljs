@@ -1,7 +1,7 @@
 (ns athens.devcards.db
   (:require
     [athens.db :as db]
-    [athens.views.buttons :refer [button]]
+    ["/components/Button/Button" :refer [Button]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [go <!]]
     [cljsjs.react]
@@ -32,14 +32,14 @@
                   (swap! pressed? not)
                   (load-real-db!))]
     (fn []
-      [button {:disabled @pressed?
+      [:> Button {:disabled @pressed?
                :on-click handler} "Load Real Data"])))
 
 
 (defn reset-db-button
   []
   (fn []
-    [button {:on-click #(d/reset-conn! db/dsdb (d/empty-db db/schema))} "Reset DB"]))
+    [:> Button {:on-click #(d/reset-conn! db/dsdb (d/empty-db db/schema))} "Reset DB"]))
 
 
 ;; Devcards

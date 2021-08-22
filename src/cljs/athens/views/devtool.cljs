@@ -1,5 +1,6 @@
 (ns athens.views.devtool
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/Build" :default Build]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/Clear" :default Clear]
@@ -8,7 +9,6 @@
     [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
-    [athens.views.buttons :refer [button]]
     [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
     [cljsjs.react]
@@ -195,7 +195,7 @@
                          ""
                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
-         [button {:on-click #(swap! limit + 10)
+         [:> Button {:on-click #(swap! limit + 10)
                   :style {:width "100%"
                           :justify-content "center"
                           :margin "0.25rem 0"}}
@@ -332,7 +332,7 @@
              (for [i (-> navs count range)]
                (let [nav (get navs i)]
                  ^{:key i}
-                 [button {:style {:padding "0.125rem 0.25rem"}
+                 [:> Button {:style {:padding "0.125rem 0.25rem"}
                           :on-click #(swap! state (fn [s]
                                                     (-> s
                                                         (update :navs subvec 0 i)
@@ -344,12 +344,12 @@
             (for [v applicable-vs]
               (let [click-fn #(swap! state assoc :viewer v)]
                 ^{:key v}
-                [button {:on-click click-fn
-                         :active (= v viewer-name)}
+                [:> Button {:on-click click-fn
+                         :isPressed (= v viewer-name)}
                  (name v)]))]]]
          (when (d/db? navved-data)
-           [button {:on-click #(restore-db! navved-data)
-                    :primary true}
+           [:> Button {:on-click #(restore-db! navved-data)
+                    :isPrimary true}
             "Restore this db"])
          [viewer datafied-data add-nav!]]))))
 
@@ -464,8 +464,8 @@
 
 (defn devtool-prompt-el
   []
-  [button {:on-click #(dispatch [:devtool/toggle])
-           :primary true
+  [:> Button {:on-click #(dispatch [:devtool/toggle])
+           :isPrimary true
            :style {:font-size "11px"}}
    [:<>
     [:> Build]
@@ -474,7 +474,7 @@
 
 (defn devtool-close-el
   []
-  [button {:on-click #(dispatch [:devtool/toggle])}
+  [:> Button {:on-click #(dispatch [:devtool/toggle])}
    [:> Clear]])
 
 
@@ -486,11 +486,11 @@
       [:div (use-style container-style)
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
-         [button {:on-click #(switch-panel :query)
-                  :active (= active-panel :query)}
+         [:> Button {:on-click #(switch-panel :query)
+                  :isPressed (= active-panel :query)}
           [:<> [:> ShortText] [:span "Query"]]]
-         [button {:on-click #(switch-panel :txes)
-                  :active (= active-panel :txes)}]
+         [:> Button {:on-click #(switch-panel :txes)
+                  :isPressed (= active-panel :txes)}]
          [:<> [:> History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)

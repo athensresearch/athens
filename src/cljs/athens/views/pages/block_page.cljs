@@ -7,7 +7,6 @@
     [athens.style :refer [color]]
     [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    #_[athens.views.buttons :refer [button]]
     [athens.views.pages.node-page :as node-page]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -146,7 +145,7 @@
               [(r/adapt-react-class Link)]
               [:span "Linked References"]]
              ;; Hide button until feature is implemented
-             ;; [button {:disabled true} [(r/adapt-react-class FilterList)]]]
+             ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
              [:div (use-style node-page/references-list-style)
               (doall
                 (for [[group-title group] refs]

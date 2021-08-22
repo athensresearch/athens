@@ -1,5 +1,6 @@
 (ns athens.views.app-toolbar
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/core/SvgIcon" :default SvgIcon]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
@@ -20,7 +21,6 @@
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
-    [athens.views.buttons :refer [button]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -197,7 +197,7 @@
                        (unzoom))
         [:div (use-style app-header-control-section-style)
          [db-menu]
-         [button {:active @left-open?
+         [:> Button {:isPressed @left-open?
                   :title "Toggle Navigation Sidebar"
                   :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
@@ -205,49 +205,49 @@
          ;; TODO: refactor to effects
          (when electron?
            [:<>
-            [button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
-            [button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
+            [:> Button {:on-click #(.back js/window.history)} [:> ChevronLeft]]
+            [:> Button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
             [separator]])
-         [button {:on-click router/nav-daily-notes
+         [:> Button {:on-click router/nav-daily-notes
                   :title "Open Today's Daily Note"
-                  :active   (= @route-name :home)} [:> Today]]
-         [button {:on-click #(router/navigate :pages)
+                  :isPressed   (= @route-name :home)} [:> Today]]
+         [:> Button {:on-click #(router/navigate :pages)
                   :title "Open All Pages"
-                  :active   (= @route-name :pages)} [:> FileCopy]]
-         [button {:on-click #(router/navigate :graph)
+                  :isPressed   (= @route-name :pages)} [:> FileCopy]]
+         [:> Button {:on-click #(router/navigate :graph)
                   :title "Open Graph"
-                  :active   (= @route-name :graph)} [:> BubbleChart]]
+                  :isPressed   (= @route-name :graph)} [:> BubbleChart]]
          ;; below is used for testing error tracking
-         #_[button {:on-click #(throw (js/Error "error"))
+         #_[:> Button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
-         [button {:on-click #(dispatch [:athena/toggle])
-                  :class "athena"
-                  :style    {:background "inherit"}
-                  :active   @(subscribe [:athena/open])}
-          [:<> [:> Search] [:span (use-style athena-button-label-style) "Find or Create a Page"]]]]
+         [:> Button {:on-click #(dispatch [:athena/toggle])
+                     :class "athena"
+                     :style    {:background "inherit"}
+                     :isPressed   @(subscribe [:athena/open])}
+          [:> Search] [:span (use-style athena-button-label-style) "Find or Create a Page"]]]
 
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
-            [button {:on-click #(swap! merge-open? not)
+            [:> Button {:on-click #(swap! merge-open? not)
                      :title "Merge Roam Database"}
              [:> MergeType]]
-            [button {:on-click #(router/navigate :settings)
+            [:> Button {:on-click #(router/navigate :settings)
                      :title "Open Settings"
-                     :active   (= @route-name :settings)}
+                     :isPressed   (= @route-name :settings)}
              [:> Settings]]
 
             [:div {:style {:display "flex"}}
              [:> Storage {:style {:align-self "center"}}]]
             [separator]]
-           [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
-         [button {:on-click #(dispatch [:theme/toggle])
+           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :isPrimary true} "Load Test DB"])
+         [:> Button {:on-click #(dispatch [:theme/toggle])
                   :title "Toggle Color Scheme"}
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
          [separator]
-         [button {:active   @right-open?
+         [:> Button {:isPressed   @right-open?
                   :title "Toggle Sidebar"
                   :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]

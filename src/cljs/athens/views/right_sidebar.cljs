@@ -8,7 +8,7 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
-    [athens.views.buttons :refer [button]]
+    ["/components/Button/Button" :refer [Button]]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
@@ -239,7 +239,7 @@
                                   [:div (use-style sidebar-content-style {:class [(if open? "is-open" "is-closed") "right-sidebar-content"]})
                                    ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
                                    ;;  [:h1 "Pages and Blocks"]]
-                                   ;;  [button [:> FilterList]]
+                                   ;;  [:> Button [:> FilterList]]
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
@@ -247,7 +247,7 @@
                                          ^{:key uid}
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-                                           [button {:style    sidebar-item-toggle-style
+                                           [:> Button {:style    sidebar-item-toggle-style
                                                     :on-click #(dispatch [:right-sidebar/toggle-item uid])
                                                     :class    (when open "is-open")}
                                             [:> ChevronRight]]
@@ -257,9 +257,9 @@
                                               title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
                                               :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
                                            [:div {:class "controls"}
-                                            ;;  [button [:> DragIndicator]]
+                                            ;;  [:> Button [:> DragIndicator]]
                                             ;;  [:hr]
-                                            [button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+                                            [:> Button {:on-click #(dispatch [:right-sidebar/close-item uid])}
                                              [:> Close]]]]
                                           (when open
                                             [:div (use-style sidebar-item-container-style)

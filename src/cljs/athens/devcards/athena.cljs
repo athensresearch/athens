@@ -1,17 +1,17 @@
 (ns athens.devcards.athena
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.db :as db]
     [athens.devcards.db :refer [load-real-db-button]]
     [athens.subs]
     [athens.views.athena :refer [athena-prompt-el athena-component]]
-    [athens.views.buttons :refer [button]]
     [datascript.core :as d]
     [devcards.core :refer-macros [defcard-rg]]))
 
 
 (defcard-rg Create-Page
   "Press button and then search \"test\" "
-  [button {:on-click (fn []
+  [:> Button {:on-click (fn []
                        (let [n       (inc (:max-eid @db/dsdb))
                              n-child (inc n)]
                          (d/transact! db/dsdb [{:node/title     (str "Test Page " n)

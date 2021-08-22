@@ -6,7 +6,7 @@
     ["@material-ui/icons/FilterList" :default FilterList]
     ["@material-ui/icons/Sort" :default Sort]
     [athens.style :refer [color OPACITIES]]
-    [athens.views.buttons :refer [button]]
+    ["/components/Button/Button" :refer [Button]]
     [athens.views.textinput :refer [textinput]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -179,7 +179,7 @@
 
          ;; Controls
          [:div (use-style controls-style)
-          [button {:style sort-control-style
+          [:> Button {:style sort-control-style
                    :on-click (fn [_]
                                (swap! s assoc :sort (if (= sort_ :lex)
                                                       :count
@@ -187,7 +187,7 @@
            [:> Sort]]
           [:span (use-style sort-indicator-style) [:<> [:> ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
           [:span (str num-filters " Active")]
-          [button {:style reset-control-style
+          [:> Button {:style reset-control-style
                    :on-click (fn [_]
                                (swap! s assoc :items
                                       (reduce-kv

@@ -1,8 +1,8 @@
 (ns athens.devcards.all-pages
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.db :as db]
     [athens.devcards.db :refer [load-real-db-button]]
-    [athens.views.buttons :refer [button]]
     [athens.views.pages.all-pages :as all-pages]
     [datascript.core :as d]
     [devcards.core :refer [defcard defcard-rg]]
@@ -19,7 +19,7 @@
 
 (defcard-rg Create-Page
   "Page title increments by more than one each time because we create multiple entities (the child blocks)."
-  [button {:on-click (fn []
+  [:> Button {:on-click (fn []
                        (let [n (:max-eid @db/dsdb)]
                          (d/transact! db/dsdb [{:node/title     (str "Test Title " n)
                                                 :block/uid      (str "uid" n)

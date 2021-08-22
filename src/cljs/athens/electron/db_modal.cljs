@@ -1,5 +1,6 @@
 (ns athens.electron.db-modal
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/AddBox" :default AddBox]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Folder" :default Folder]
@@ -12,7 +13,6 @@
     [athens.style :refer [color]]
     [athens.subs]
     [athens.util :refer [js-event->val]]
-    [athens.views.buttons :refer [button]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
     [cljsjs.react]
@@ -113,7 +113,7 @@
         {:title    [:div.modal__title
                     [:> MergeType]
                     [:h4 "Merge Roam DB"]
-                    [button {:on-click close-modal}
+                    [:> Button {:on-click close-modal}
                      [:> Close]]]
 
          :content  [:div (use-style (merge modal-contents-style))
@@ -146,8 +146,8 @@
                           (for [x shared-pages]
                             ^{:key x}
                             [:li (str "[[" x "]]")])]
-                         [button {:style    {:align-self "center"}
-                                  :primary  true
+                         [:> Button {:style    {:align-self "center"}
+                                  :isPrimary  true
                                   :on-click (fn []
                                               (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
                                               (close-modal))}
@@ -169,11 +169,11 @@
                      :justify-content "space-between"
                      :align-items     "center"
                      :width           "80%"})
-    [button {:primary  true
+    [:> Button {:isPrimary  true
              :on-click #(dialogs/open-dialog!)}
      "Open"]
-    [button {:disabled @loading
-             :primary  true
+    [:> Button {:disabled @loading
+             :isPrimary  true
              :on-click #(dialogs/move-dialog!)}
      "Move"]]])
 
@@ -194,7 +194,7 @@
                   :justify-content "space-between"
                   :width           "100%"}}
     [:h5 "New Location"]
-    [button {:primary  true
+    [:> Button {:isPrimary  true
              :disabled (clojure.string/blank? (:input @state))
              :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
@@ -241,7 +241,7 @@
                                  :disabled    true ; TODO: not supported yet
                                  :on-change   #(reset! password (js-event->val %))}]]]
          doall)
-       [button {:primary  true
+       [:> Button {:isPrimary  true
                 :style    {:margin-top "0.5rem"}
                 :disabled (or (clojure.string/blank? @name)
                               (clojure.string/blank? @address))
@@ -269,7 +269,7 @@
                                     [:> Storage]
                                     [:h4 "Database"]
                                     (when-not @loading
-                                      [button {:on-click close-modal} [:> Close]])]
+                                      [:> Button {:on-click close-modal} [:> Close]])]
                          :content  [:div (use-style modal-contents-style)
                                     [:div (use-style picker-style)
                                      [:button {:class (when (= 0 (:tab-value @state)) "active")
