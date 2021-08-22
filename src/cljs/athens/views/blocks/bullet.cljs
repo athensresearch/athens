@@ -27,7 +27,10 @@
    :align-items "center"
    :justify-content "center"
    :color (style/color :body-text-color :opacity-low)
-   ::stylefy/manual [[:circle {:fill "currentColor"
+   ::stylefy/manual [[:svg {:transform "scale(1.001)" ;; Prevents the bullet being squished
+                            :overflow "visible" ;; Prevents the stroke from being cropped
+                            }]
+                     [:circle {:fill "currentColor"
                                :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"}]
                      [:&:before {:content "''"
                                  :inset "0.25rem -0.125rem"
