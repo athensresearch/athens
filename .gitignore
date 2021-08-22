@@ -33,4 +33,4 @@
 dist
 
 # design system ts output
-/src/stories/*.js
+/src/js/components/**/*.js
