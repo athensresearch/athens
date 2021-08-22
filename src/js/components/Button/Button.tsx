@@ -2,61 +2,88 @@ import React from 'react';
 import styled from 'styled-components';
 
 const StyledButton = styled.button`
-  font-family: 'IBM Plex Sans';
-  font-weight: 500;
   cursor: pointer;
+  padding: 0.375rem 0.625rem;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  border: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  --font-size: 1em;
-  --min-height: 1.5em;
-  min-height: var(--min-height);
-  border: var(--border);
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: var(--border-radius);
-  border-top-right-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
-  
-  &:hover:not([disabled]) {
-    filter: contrast(110%);
+  color: var(--body-text-color);
+  background-color: transparent;
+  transition-property: filter, background, color, opacity;
+  transition-duration: 0.075s;
+  transition-timing-function: ease;
+
+  &:hover {
+    background: var(--body-text-color---opacity-lower);
   }
 
-  &.border-none {
-    border: 0;
-  }
- 
-  &.shape-rect {
-    --border-radius: 0;
-  }
-  &.shape-round {
-    --border-radius: 0.2rem;
-    --border-radius: calc(var(--min-height) / 2);
-  }
-  &.shape-capsule {
-    --border-radius: 1000em;
+  &:active,
+  &:hover:active,
+  &[aria-pressed="true"] {
+    color: var(--body-text-color);
+    background: var(--body-text-color---opacity-lower);
   }
 
-  &.primary {
-    color: #fff;
-    background: var(--link-color);
+  &:active,
+  &:hover:active,
+  &:active[aria-pressed="true"] {
+    background: var(--body-text-color---opacity-low);
   }
-  &.secondary {
+
+  &:disabled,
+  &:disabled:active {
+    color: var(--body-text-color---opacity-low);
+    background: var(--body-text-color---opacity-lower);
+    cursor: default;
+  }
+
+  span {
+    flex: 1 0 auto;
+    text-align: left;
+  }
+
+  kbd {
+    margin-inline-start: 1rem;
+    font-size: 85%;
+  }
+
+  > svg {
+    margin: -0.0835em -0.325rem;
+
+    &:not(:first-child) {
+      margin-left: 0.251em;
+    }
+    &:not(:last-child) {
+      margin-right: 0.251em;
+    }
+  }
+
+  &.is-primary {
     color: var(--link-color);
-  }
+    background: var(--link-color---opacity-lower);
 
-  &.size-small {
-    font-size: var(--font-size, 12px);
-    padding: var(--padding, 10px 16px);
-  }
+    &:hover {
+      background: var(--link-color---opacity-low);
+    }
 
-  &.size-medium {
-    font-size: var(--font-size, 14px);
-    padding: var(--padding, 11px 20px);
-  }
+    &:active,
+    &:hover:active,
+    &[aria-pressed="true"] {
+      color: white;
+      background: var(--link-color);
+    }
 
-  &.size-large {
-    font-size: var(--font-size, 16px);
-    padding: var(--padding, 12px 24px);
+    &:disabled,
+    &:disabled:active {
+      color: var(--body-text-color---opacity-low);
+      background: var(--body-text-color---opacity-lower);
+      cursor: default;
+    }
   }
 `;
 
@@ -64,20 +91,11 @@ export interface ButtonProps {
   /**
    * Is this the principal call to action on the page?
    */
-  primary: boolean | undefined;
+  isPrimary?: boolean;
   /**
-   * How large should the button be?
+   * Is this the principal call to action on the page?
    */
-  size: 'small' | 'medium' | 'large' | undefined;
-  /**
-   * Button shape
-   */
-  shape: 'capsule' | 'round' | 'rect' | undefined;
-  /**
-   * Button border
-   */
-  border: 'none' | undefined;
-  icon: JSX.Element | undefined;
+  isPressed?: boolean;
 }
 
 /**
@@ -85,26 +103,20 @@ export interface ButtonProps {
  */
 export const Button: React.FC<ButtonProps> = ({
   children,
-  primary = false, 
-  shape = 'rect',
-  size = 'small',
-  border = 'none',
-  icon = null,
+  isPrimary,
+  isPressed,
   ...props
 }) => {
   return (
     <StyledButton
       type="button"
+      aria-pressed={isPressed ? isPressed : undefined}
       className={[
         'button',
-        primary ? 'primary' : 'secondary',
-        size && `size-${size}`,
-        shape && `shape-${shape}`,
-        border && `border-${border}`,
+        isPrimary && 'is-primary'
       ].join(' ')}
       {...props}
     >
-      {icon && icon}
       {children}
     </StyledButton>
   );

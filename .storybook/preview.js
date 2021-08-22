@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -126,13 +127,20 @@ const cssVars = `
     --warning-color---opacity-lower: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.1);
     --warning-color---opacity-med: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.5);
     --warning-color: #DE3C21;
+}
+
+.docs-story {
+  background: var(--background-color);
 }`
+
+const StoryWrapper = styled.div`
+`;
 
 export const decorators = [
   (Story) => (
-    <>
+    <StoryWrapper>
       <style>{cssVars}</style>
       <Story />
-    </>
+    </StoryWrapper>
   ),
 ];
