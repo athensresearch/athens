@@ -24,7 +24,7 @@
 (defcard-rg Reset-to-all-pages
   (fn []
     [:> Button {:on-click #(do (swap! state* assoc :eval-str (:eval-str initial-state))
-                            (eval-box!))}
+                               (eval-box!))}
      "Reset"]))
 
 

@@ -5,7 +5,7 @@
     [cljsjs.react]
     [cljsjs.react.dom]
     [garden.selectors :as selectors]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [stylefy.core :as stylefy]))
 
 
 ;; Styles

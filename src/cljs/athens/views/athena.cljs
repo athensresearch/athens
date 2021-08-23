@@ -1,5 +1,6 @@
 (ns athens.views.athena
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/ArrowForward" :default ArrowForward]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
@@ -9,7 +10,6 @@
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid scroll-into-view]]
-    ["/components/Button/Button" :refer [Button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     [clojure.string :as str]
@@ -245,10 +245,10 @@
 (defn athena-prompt-el
   []
   [:> Button {:on-click #(dispatch [:athena/toggle])
-           :isPrimary true
-           :style {:font-size "11px"}}
-    [:> Search]
-    "Find or Create a Page"])
+              :isPrimary true
+              :style {:font-size "11px"}}
+   [:> Search]
+   "Find or Create a Page"])
 
 
 (defn results-el

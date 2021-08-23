@@ -67,8 +67,8 @@
        [:> Button {:onClick #(dialogs/move-dialog!)} "Move"]
        ;; [:> Button {:onClick "Rename"]
        [:> Button {:onClick #(if (= 1 (count all-dbs))
-                            (js/alert "Can't remove last db from the list")
-                            (dialogs/delete-dialog! db))}
+                               (js/alert "Can't remove last db from the list")
+                               (dialogs/delete-dialog! db))}
         "Delete"]])]))
 
 
@@ -120,5 +120,5 @@
                     [:hr (use-style menu-separator-style)]
                     ;; Add DB control
                     [:> Button {:on-click #(dispatch [:modal/toggle])}
-                      [:> AddCircleOutline]
-                      [:span "Add Database"]]]]]])))
+                     [:> AddCircleOutline]
+                     [:span "Add Database"]]]]]])))

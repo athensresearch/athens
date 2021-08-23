@@ -40,9 +40,9 @@
                                        (doall
                                          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
                                            [:> Button {:key      text
-                                                            :id       (str "dropdown-item-" i)
-                                                            :isPressed (= i index)
-                                                            :on-click (fn [_] (slash-item-click state block item))}
+                                                       :id       (str "dropdown-item-" i)
+                                                       :isPressed (= i index)
+                                                       :on-click (fn [_] (slash-item-click state block item))}
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 

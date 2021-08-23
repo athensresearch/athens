@@ -140,8 +140,8 @@
                                 :on-change   #(reset! value (.. % -target -value))
                                 :value       @value}]
           [:> Button {:isPrimary  true
-                   :disabled (not (clojure.string/blank? email))
-                   :on-click #(handle-submit-email value update-fn)}
+                      :disabled (not (clojure.string/blank? email))
+                      :on-click #(handle-submit-email value update-fn)}
            "Submit"]
           [:> Button {:on-click #(handle-reset-email value update-fn)}
            "Reset"]]

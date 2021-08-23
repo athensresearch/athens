@@ -1,10 +1,10 @@
 (ns athens.views.alerts
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/Announcement" :default Announcement]
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/Close" :default Close]
     [athens.style :refer [color]]
-    ["/components/Button/Button" :refer [Button]]
     [cljsjs.react]
     [cljsjs.react.dom]
     ;; [garden.selectors :as selectors]

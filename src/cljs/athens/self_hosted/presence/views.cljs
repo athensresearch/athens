@@ -1,15 +1,15 @@
 (ns athens.self-hosted.presence.views
   (:require
-   ["/components/Button/Button" :refer [Button]]
-   ["@material-ui/core/Popover" :as Popover]
-   ["@material-ui/icons/Link" :default Link]
-   [athens.self-hosted.presence.events]
-   [athens.self-hosted.presence.fx]
-   [athens.self-hosted.presence.subs]
-   [athens.style :as style]
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+    ["/components/Button/Button" :refer [Button]]
+    ["@material-ui/core/Popover" :as Popover]
+    ["@material-ui/icons/Link" :default Link]
+    [athens.self-hosted.presence.events]
+    [athens.self-hosted.presence.fx]
+    [athens.self-hosted.presence.subs]
+    [athens.style :as style]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (def m-popover (r/adapt-react-class (.-default Popover)))

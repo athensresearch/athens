@@ -1,14 +1,14 @@
 (ns athens.views.blocks.context-menu
   (:require
-   ["/components/Button/Button" :refer [Button]]
-   [athens.db :as db]
-   [athens.listeners :as listeners]
-   [athens.views.dropdown :refer [menu-style dropdown-style]]
-   [clojure.string :as string]
-   [goog.events :as events]
-   [re-frame.core :as rf]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy]))
+    ["/components/Button/Button" :refer [Button]]
+    [athens.db :as db]
+    [athens.listeners :as listeners]
+    [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [clojure.string :as string]
+    [goog.events :as events]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy]))
 
 
 (defn copy-refs-mouse-down

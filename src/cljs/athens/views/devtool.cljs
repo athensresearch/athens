@@ -196,9 +196,9 @@
                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
          [:> Button {:on-click #(swap! limit + 10)
-                  :style {:width "100%"
-                          :justify-content "center"
-                          :margin "0.25rem 0"}}
+                     :style {:width "100%"
+                             :justify-content "center"
+                             :margin "0.25rem 0"}}
           "Load More"])])))
 
 
@@ -333,10 +333,10 @@
                (let [nav (get navs i)]
                  ^{:key i}
                  [:> Button {:style {:padding "0.125rem 0.25rem"}
-                          :on-click #(swap! state (fn [s]
-                                                    (-> s
-                                                        (update :navs subvec 0 i)
-                                                        (dissoc :viewer))))}
+                             :on-click #(swap! state (fn [s]
+                                                       (-> s
+                                                           (update :navs subvec 0 i)
+                                                           (dissoc :viewer))))}
                   [:<> [:> ChevronLeft] [:span (first nav)]]])))
            [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
            [:div (use-style current-location-controls-style)
@@ -345,11 +345,11 @@
               (let [click-fn #(swap! state assoc :viewer v)]
                 ^{:key v}
                 [:> Button {:on-click click-fn
-                         :isPressed (= v viewer-name)}
+                            :isPressed (= v viewer-name)}
                  (name v)]))]]]
          (when (d/db? navved-data)
            [:> Button {:on-click #(restore-db! navved-data)
-                    :isPrimary true}
+                       :isPrimary true}
             "Restore this db"])
          [viewer datafied-data add-nav!]]))))
 
@@ -465,8 +465,8 @@
 (defn devtool-prompt-el
   []
   [:> Button {:on-click #(dispatch [:devtool/toggle])
-           :isPrimary true
-           :style {:font-size "11px"}}
+              :isPrimary true
+              :style {:font-size "11px"}}
    [:<>
     [:> Build]
     [:span "Toggle devtool"]]])
@@ -487,10 +487,10 @@
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
          [:> Button {:on-click #(switch-panel :query)
-                  :isPressed (= active-panel :query)}
+                     :isPressed (= active-panel :query)}
           [:<> [:> ShortText] [:span "Query"]]]
          [:> Button {:on-click #(switch-panel :txes)
-                  :isPressed (= active-panel :txes)}]
+                     :isPressed (= active-panel :txes)}]
          [:<> [:> History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)

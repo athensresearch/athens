@@ -1,12 +1,12 @@
 (ns athens.views.filters
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/ArrowDownward" :default ArrowDownward]
     ["@material-ui/icons/Block" :default Block]
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/FilterList" :default FilterList]
     ["@material-ui/icons/Sort" :default Sort]
     [athens.style :refer [color OPACITIES]]
-    ["/components/Button/Button" :refer [Button]]
     [athens.views.textinput :refer [textinput]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -180,21 +180,21 @@
          ;; Controls
          [:div (use-style controls-style)
           [:> Button {:style sort-control-style
-                   :on-click (fn [_]
-                               (swap! s assoc :sort (if (= sort_ :lex)
-                                                      :count
-                                                      :lex)))}
+                      :on-click (fn [_]
+                                  (swap! s assoc :sort (if (= sort_ :lex)
+                                                         :count
+                                                         :lex)))}
            [:> Sort]]
           [:span (use-style sort-indicator-style) [:<> [:> ArrowDownward] (if (= sort_ :lex) "Title" "Number")]]
           [:span (str num-filters " Active")]
           [:> Button {:style reset-control-style
-                   :on-click (fn [_]
-                               (swap! s assoc :items
-                                      (reduce-kv
-                                        (fn [m k v]
-                                          (assoc m k (dissoc v :state)))
-                                        {}
-                                        (:items @s))))}
+                      :on-click (fn [_]
+                                  (swap! s assoc :items
+                                         (reduce-kv
+                                           (fn [m k v]
+                                             (assoc m k (dissoc v :state)))
+                                           {}
+                                           (:items @s))))}
            "Reset"]]
 
 
