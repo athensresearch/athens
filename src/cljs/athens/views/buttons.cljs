@@ -78,13 +78,13 @@
 (stylefy/class "button" buttons-style)
 
 
-(defn button
+#_ (defn button
   "Keep button interface as close to vanilla hiccup as possible.
   Dissoc :style :active and :class because we don't want to merge them in directly.
   Can pass in a :key prop to make react happy, as a :key or ^{:key}. Just works"
-  ([children] [button {} children])
+  ([children] [:> Button {} children])
   ([{:keys [style active primary class] :as props} children]
-   (let [props- (dissoc props :style :active :primary :class)]
+   (let [props- (dissoc props :style :active :isPrimary :class)]
      [:button (use-style (merge buttons-style style)
                          (merge props- {:class (vec (flatten [(when active "is-active") (when primary "is-primary") class]))}))
       children])))

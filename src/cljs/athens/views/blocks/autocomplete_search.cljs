@@ -1,13 +1,13 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    [athens.style :as style]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.buttons :as buttons]
-    [athens.views.dropdown :as dropdown]
-    [clojure.string :as string]
-    [goog.events :as events]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+   ["/components/Button/Button" :refer [Button]]
+   [athens.style :as style]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [athens.views.dropdown :as dropdown]
+   [clojure.string :as string]
+   [goog.events :as events]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy]))
 
 
 (defn inline-item-click
@@ -48,12 +48,12 @@
                                        (if (or (string/blank? query)
                                                (empty? results))
                                          ;; Just using button for styling
-                                         [buttons/button (stylefy/use-style {:opacity (style/OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
+                                         [:> Button (stylefy/use-style {:opacity (style/OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
                                          (doall
                                            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                             [buttons/button {:key      (str "inline-search-item" uid)
+                                             [:> Button {:key      (str "inline-search-item" uid)
                                                               :id       (str "dropdown-item-" i)
-                                                              :active   (= index i)
+                                                              :isPressed   (= index i)
                                                               ;; if page link, expand to title. otherwise expand to uid for a block ref
                                                               :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
                                                               :style    {:text-align "left"}}

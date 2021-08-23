@@ -1,13 +1,13 @@
 (ns athens.devcards.right-sidebar
   (:require
-    [athens.views.buttons :refer [button]]
+    ["/components/Button/Button" :refer [Button]]
     [athens.views.right-sidebar :as right-sidebar]
     [devcards.core :refer [defcard-rg]]
     [re-frame.core :refer [dispatch]]))
 
 
 (defcard-rg Toggle
-  [button {:primary true :on-click-fn #(dispatch [:right-sidebar/toggle])} "Toggle"])
+  [:> Button {:isPrimary true :on-click-fn #(dispatch [:right-sidebar/toggle])} "Toggle"])
 
 
 (defcard-rg Right-Sidebar

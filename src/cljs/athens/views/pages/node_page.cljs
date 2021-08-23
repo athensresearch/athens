@@ -9,6 +9,7 @@
     ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    ["/components/Button/Button" :refer [Button]]
     [athens.common-db :as common-db]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
@@ -20,7 +21,6 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -326,7 +326,7 @@
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
                 [:<>
-                 [button {:class    [(when @ele "is-active")]
+                 [:> Button {:class    [(when @ele "is-active")]
                           :on-click #(reset! ele (.-currentTarget %))
                           :style    page-menu-toggle-style}
                   [:> MoreHoriz]]
@@ -346,25 +346,22 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                       [:<>
+                      [:> Button {:on-click #(dispatch [:page/remove-shortcut uid])}
                         [:> BookmarkBorder]
-                        [:span "Remove Shortcut"]]]
-                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                       [:<>
+                        [:span "Remove Shortcut"]]
+                      [:> Button {:on-click #(dispatch [:page/add-shortcut uid])}
                         [:> Bookmark]
-                        [:span "Add Shortcut"]]])
-                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:<>
+                        [:span "Add Shortcut"]])
+                    [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
                       [:> BubbleChart]
-                      [:span "Show Local Graph"]]]]
+                      [:span "Show Local Graph"]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(do
+                   [:> Button {:on-click #(do
                                          (if daily-note?
                                            (dispatch [:daily-note/delete uid title])
                                            (dispatch [:page/delete uid title]))
                                          (navigate :pages))}
-                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
+                    [:> Delete] [:span "Delete Page"]]]]])))
 
 
 (defn ref-comp
@@ -402,7 +399,7 @@
               (not daily-notes?))
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn [] (swap! state update linked? not))}
+        [:> Button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
@@ -435,7 +432,7 @@
     (when (not daily-notes?)
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn []
+        [:> Button {:on-click (fn []
                              (if (get @state unlinked?)
                                (swap! state assoc unlinked? false)
                                (let [un-refs (get-unlinked-references (escape-str title))]
@@ -450,7 +447,7 @@
                        :width "100%"}}
          [:span unlinked?]
          (when (and unlinked? (not-empty @unlinked-refs))
-           [button {:style    {:font-size "14px"}
+           [:> Button {:style    {:font-size "14px"}
                     :on-click (fn []
                                 (let [unlinked-str-ids (->> @unlinked-refs
                                                             (mapcat second)
@@ -479,7 +476,7 @@
                             {:style {:max-width "90%"}})
                      [ref-comp block]]
                     (when unlinked?
-                      [button {:style    {:margin-top "1.5em"}
+                      [:> Button {:style    {:margin-top "1.5em"}
                                :on-click (fn []
                                            (let [hm                (into (hash-map) @unlinked-refs)
                                                  new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
