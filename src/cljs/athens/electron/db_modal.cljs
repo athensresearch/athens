@@ -147,7 +147,7 @@
                             ^{:key x}
                             [:li (str "[[" x "]]")])]
                          [:> Button {:style    {:align-self "center"}
-                                     :isPrimary  true
+                                     :is-primary  true
                                      :on-click (fn []
                                                  (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
                                                  (close-modal))}
@@ -169,11 +169,11 @@
                      :justify-content "space-between"
                      :align-items     "center"
                      :width           "80%"})
-    [:> Button {:isPrimary  true
+    [:> Button {:is-primary  true
                 :on-click #(dialogs/open-dialog!)}
      "Open"]
     [:> Button {:disabled @loading
-                :isPrimary  true
+                :is-primary  true
                 :on-click #(dialogs/move-dialog!)}
      "Move"]]])
 
@@ -194,7 +194,7 @@
                   :justify-content "space-between"
                   :width           "100%"}}
     [:h5 "New Location"]
-    [:> Button {:isPrimary  true
+    [:> Button {:is-primary  true
                 :disabled (clojure.string/blank? (:input @state))
                 :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
@@ -241,7 +241,7 @@
                                  :disabled    true ; TODO: not supported yet
                                  :on-change   #(reset! password (js-event->val %))}]]]
          doall)
-       [:> Button {:isPrimary  true
+       [:> Button {:is-primary  true
                    :style    {:margin-top "0.5rem"}
                    :disabled (or (clojure.string/blank? @name)
                                  (clojure.string/blank? @address))

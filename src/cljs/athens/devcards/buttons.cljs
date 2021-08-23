@@ -29,19 +29,19 @@
 
 (defcard-rg Primary-Button
   [:div (use-style {:display "grid" :grid-auto-flow "column" :justify-content "flex-start" :grid-gap "0.5rem"})
-   [:> Button {:isPrimary true} "Button"]
-   [:> Button {:isPrimary true} [:> Face]]
-   [:> Button {:isPrimary true} [:<>
-                                 [:> Face]
-                                 [:span "Button"]]]
-   [:> Button {:isPrimary true} [:<>
-                                 [:span "Button"]
-                                 [:> ChevronRight]]]
-   [:> Button {:isPrimary true :disabled true} "Button"]
-   [:> Button {:isPrimary true :disabled true} [:> Face]]
-   [:> Button {:isPrimary true :disabled true} [:<>
-                                                [:> Face]
-                                                [:span "Button"]]]
-   [:> Button {:isPrimary true :disabled true} [:<>
-                                                [:span "Button"]
-                                                [:> ChevronRight]]]])
+   [:> Button {:is-primary true} "Button"]
+   [:> Button {:is-primary true} [:> Face]]
+   [:> Button {:is-primary true} [:<>
+                                  [:> Face]
+                                  [:span "Button"]]]
+   [:> Button {:is-primary true} [:<>
+                                  [:span "Button"]
+                                  [:> ChevronRight]]]
+   [:> Button {:is-primary true :disabled true} "Button"]
+   [:> Button {:is-primary true :disabled true} [:> Face]]
+   [:> Button {:is-primary true :disabled true} [:<>
+                                                 [:> Face]
+                                                 [:span "Button"]]]
+   [:> Button {:is-primary true :disabled true} [:<>
+                                                 [:span "Button"]
+                                                 [:> ChevronRight]]]])

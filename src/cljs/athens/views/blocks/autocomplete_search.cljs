@@ -53,7 +53,7 @@
                                            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                              [:> Button {:key      (str "inline-search-item" uid)
                                                          :id       (str "dropdown-item-" i)
-                                                         :isPressed   (= index i)
+                                                         :is-pressed   (= index i)
                                                          ;; if page link, expand to title. otherwise expand to uid for a block ref
                                                          :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
                                                          :style    {:text-align "left"}}

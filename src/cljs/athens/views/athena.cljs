@@ -245,7 +245,7 @@
 (defn athena-prompt-el
   []
   [:> Button {:on-click #(dispatch [:athena/toggle])
-              :isPrimary true
+              :is-primary true
               :style {:font-size "11px"}}
    [:> Search]
    "Find or Create a Page"])

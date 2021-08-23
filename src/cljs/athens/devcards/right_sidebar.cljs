@@ -7,7 +7,7 @@
 
 
 (defcard-rg Toggle
-  [:> Button {:isPrimary true :on-click-fn #(dispatch [:right-sidebar/toggle])} "Toggle"])
+  [:> Button {:is-primary true :on-click-fn #(dispatch [:right-sidebar/toggle])} "Toggle"])
 
 
 (defcard-rg Right-Sidebar

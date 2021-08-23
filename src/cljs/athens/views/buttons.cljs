@@ -84,7 +84,7 @@
   Can pass in a :key prop to make react happy, as a :key or ^{:key}. Just works"
   ([children] [:> Button {} children])
   ([{:keys [style active primary class] :as props} children]
-   (let [props- (dissoc props :style :active :isPrimary :class)]
+   (let [props- (dissoc props :style :active :is-primary :class)]
      [:button (use-style (merge buttons-style style)
                          (merge props- {:class (vec (flatten [(when active "is-active") (when primary "is-primary") class]))}))
       children])))

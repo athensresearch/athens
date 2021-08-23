@@ -139,7 +139,7 @@
                                 :placeholder " Open Collective Email "
                                 :on-change   #(reset! value (.. % -target -value))
                                 :value       @value}]
-          [:> Button {:isPrimary  true
+          [:> Button {:is-primary  true
                       :disabled (not (clojure.string/blank? email))
                       :on-click #(handle-submit-email value update-fn)}
            "Submit"]

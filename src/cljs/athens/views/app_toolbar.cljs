@@ -197,7 +197,7 @@
                        (unzoom))
         [:div (use-style app-header-control-section-style)
          [db-menu]
-         [:> Button {:isPressed @left-open?
+         [:> Button {:is-pressed @left-open?
                      :title "Toggle Navigation Sidebar"
                      :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
@@ -210,20 +210,20 @@
             [separator]])
          [:> Button {:on-click router/nav-daily-notes
                      :title "Open Today's Daily Note"
-                     :isPressed   (= @route-name :home)} [:> Today]]
+                     :is-pressed   (= @route-name :home)} [:> Today]]
          [:> Button {:on-click #(router/navigate :pages)
                      :title "Open All Pages"
-                     :isPressed   (= @route-name :pages)} [:> FileCopy]]
+                     :is-pressed   (= @route-name :pages)} [:> FileCopy]]
          [:> Button {:on-click #(router/navigate :graph)
                      :title "Open Graph"
-                     :isPressed   (= @route-name :graph)} [:> BubbleChart]]
+                     :is-pressed   (= @route-name :graph)} [:> BubbleChart]]
          ;; below is used for testing error tracking
          #_[:> Button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
          [:> Button {:on-click #(dispatch [:athena/toggle])
                      :class "athena"
                      :style    {:background "inherit"}
-                     :isPressed   @(subscribe [:athena/open])}
+                     :is-pressed   @(subscribe [:athena/open])}
           [:> Search] [:span (use-style athena-button-label-style) "Find or Create a Page"]]]
 
         [:div (use-style app-header-secondary-controls-style)
@@ -234,20 +234,20 @@
              [:> MergeType]]
             [:> Button {:on-click #(router/navigate :settings)
                         :title "Open Settings"
-                        :isPressed   (= @route-name :settings)}
+                        :is-pressed   (= @route-name :settings)}
              [:> Settings]]
 
             [:div {:style {:display "flex"}}
              [:> Storage {:style {:align-self "center"}}]]
             [separator]]
-           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :isPrimary true} "Load Test DB"])
+           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :is-primary true} "Load Test DB"])
          [:> Button {:on-click #(dispatch [:theme/toggle])
                      :title "Toggle Color Scheme"}
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
          [separator]
-         [:> Button {:isPressed   @right-open?
+         [:> Button {:is-pressed   @right-open?
                      :title "Toggle Sidebar"
                      :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]

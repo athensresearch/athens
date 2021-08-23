@@ -111,7 +111,7 @@
                             :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:isPrimary true
+   [:> Button {:is-primary true
                :on-click (fn [e]
                            (.. e stopPropagation)
                            (rf/dispatch [:right-sidebar/open-item uid]))}

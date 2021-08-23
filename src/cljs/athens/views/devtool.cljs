@@ -345,11 +345,11 @@
               (let [click-fn #(swap! state assoc :viewer v)]
                 ^{:key v}
                 [:> Button {:on-click click-fn
-                            :isPressed (= v viewer-name)}
+                            :is-pressed (= v viewer-name)}
                  (name v)]))]]]
          (when (d/db? navved-data)
            [:> Button {:on-click #(restore-db! navved-data)
-                       :isPrimary true}
+                       :is-primary true}
             "Restore this db"])
          [viewer datafied-data add-nav!]]))))
 
@@ -465,7 +465,7 @@
 (defn devtool-prompt-el
   []
   [:> Button {:on-click #(dispatch [:devtool/toggle])
-              :isPrimary true
+              :is-primary true
               :style {:font-size "11px"}}
    [:<>
     [:> Build]
@@ -487,10 +487,10 @@
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
          [:> Button {:on-click #(switch-panel :query)
-                     :isPressed (= active-panel :query)}
+                     :is-pressed (= active-panel :query)}
           [:<> [:> ShortText] [:span "Query"]]]
          [:> Button {:on-click #(switch-panel :txes)
-                     :isPressed (= active-panel :txes)}]
+                     :is-pressed (= active-panel :txes)}]
          [:<> [:> History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)
