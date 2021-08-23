@@ -145,12 +145,11 @@
                           (map (fn [[orig-str match-str]]
                                  (let [eid (db/e-by-av :block/uid match-str)]
                                    (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" (db/v-by-ea eid :block/string) "))")]
                                      [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]
-      (let [orig-str    (first (first replacements))
-            replace-str (second (first replacements))]
+      (let [[orig-str replace-str] (first replacements)]
         (if (empty? replacements)
           s
           (recur (rest replacements)
@@ -162,19 +161,18 @@
   ([depth node]
    (blocks-to-clipboard-data depth node false))
   ([depth node unformat?]
-   (let [{:block/keys [string children header]} node
-         left-offset   (apply str (repeat depth "    "))
-         walk-children (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?) children))
-         string (let [header-to-str (case header
-                                      1 "# "
-                                      2 "## "
-                                      3 "### "
-                                      "")]
-                  (str header-to-str string))
-         string (if unformat?
-                  (-> string unformat-double-brackets athens.listeners/block-refs-to-plain-text)
-                  string)
-         dash (if unformat? "" "- ")]
+   (let [{:block/keys [string
+                       children
+                       _header]} node
+         left-offset             (apply str (repeat depth "    "))
+         walk-children           (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?)
+                                                 children))
+         string                  (if unformat?
+                                   (-> string
+                                       unformat-double-brackets
+                                       block-refs-to-plain-text)
+                                   (block-refs-to-plain-text string))
+         dash                    (if unformat? "" "- ")]
      (str left-offset dash string "\n" walk-children))))
 
 
