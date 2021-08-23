@@ -53,5 +53,5 @@
   (let [route-name (rf/subscribe [:current-route/name])]
     [:div (stylefy/use-style main-content-style
                              {:on-scroll (when (= @route-name :home)
-                                           #(daily-notes/db-scroll-daily-notes %))})
+                                           #(rf/dispatch [:daily-note/scroll]))})
      [match-page @route-name]]))
