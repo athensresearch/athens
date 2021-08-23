@@ -300,44 +300,6 @@
       {:db (assoc db :editing/uid uid)})))
 
 
-(reg-event-db
-  :selected/add-item
-  (fn [db [_ uid]]
-    (update-in db [:selection :items] (fnil conj #{}) uid)))
-
-
-(reg-event-db
-  :selected/remove-item
-  (fn [db [_ uid]]
-    (update-in db [:selection :items] disj uid)))
-
-
-(reg-event-db
-  :selected/remove-items
-  (fn [db [_ uids]]
-    (update-in db [:selection :items] #(apply disj %1 %2) uids)))
-
-
-(reg-event-db
-  :selected/add-items
-  (fn [db [_ uids]]
-    (update-in db [:selection :items] #(apply conj %1 %2) uids)))
-
-
-(reg-event-db
-  :selected/items-order
-  (fn [db [_ items-order]]
-    (assoc-in db [:selection :order] items-order)))
-
-
-(reg-event-db
-  :selected/clear-items
-  (fn [db _]
-    (-> db
-        (assoc-in [:selection :items] #{})
-        (assoc-in [:selection :order] []))))
-
-
 (defn select-up
   [selected-items]
   (let [first-item       (first selected-items)
@@ -383,26 +345,23 @@
 
 
 (defn select-down
-  [selected-items]
+  [selected-items next-block-uid]
   (let [editing-uid @(subscribe [:editing/uid])
         editing-idx (first (keep-indexed (fn [idx x]
                                            (when (= x editing-uid)
                                              idx))
                                          selected-items))
-        [_ f-embed]          (->> selected-items first db/uid-and-embed-id)
-        last-item            (last selected-items)
-        next-block-uid       (db/next-block-uid last-item true)]
+        [_ f-embed] (->> selected-items first db/uid-and-embed-id)]
     (cond
       (pos? editing-idx) (subvec selected-items 1)
-
       ;; shift down started from inside the embed should not go outside embed block
       f-embed            (let [sel-uid (str (-> next-block-uid db/uid-and-embed-id first) "-embed-" f-embed)]
                            (if (js/document.querySelector (str "#editable-uid-" sel-uid))
                              (conj selected-items sel-uid)
                              selected-items))
 
-      next-block-uid     (conj selected-items next-block-uid)
-      :else              selected-items)))
+      next-block-uid (conj selected-items next-block-uid)
+      :else          selected-items)))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
@@ -410,27 +369,13 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc-in db [:selection :items] (select-down selected-items))))
+    (let [last-item         (last selected-items)
+          next-block-uid    (db/next-block-uid last-item true)
+          ordered-selection (-> (into [] selected-items)
+                                (into [next-block-uid]))]
+      (js/console.debug ":selected/down, new-selection:" (pr-str ordered-selection))
+      (assoc-in db [:selection :items] ordered-selection))))
 
-
-(reg-event-fx
-  :selected/delete
-  (fn [{db :db} [_ selected-uids]]
-    (js/console.debug ":selected/delete args" selected-uids)
-    (let [local?         (not (client/open?))
-          sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
-      (js/console.log "selected/delete local?" local?)
-      (if local?
-        (let [selected-delete-event (common-events/build-selected-delete-event -1
-                                                                               sanitized-uids)
-              tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
-          (js/console.debug  ":selected/delete tx" tx)
-          {:fx [[:dispatch-n [[:transact    tx]
-                              [:editing/uid nil]]]]
-           :db (-> db
-                   (assoc-in [:selection :items] #{})
-                   (assoc-in [:selection :order] []))})
-        {:fx [[:dispatch [:remote/selected-delete selected-uids]]]}))))
 
 
 ;; Alerts

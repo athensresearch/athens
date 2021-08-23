@@ -7,7 +7,9 @@
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
     [athens.db :as db]
+    [athens.events.selection :as select-events]
     [athens.router :as router]
+    [athens.subs.selection :as select-subs]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -296,40 +298,50 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
-        selection?      (not (blank? selection))
-        start?          (block-start? e)
-        end?            (block-end? e)
-        {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
-        {:keys [top height]} caret-position
-        rows            (js/Math.round (/ textarea-height height))
-        row             (js/Math.ceil (/ top height))
-        top-row?        (= row 1)
-        bottom-row?     (= row rows)
-        up?             (= key-code KeyCodes.UP)
-        down?           (= key-code KeyCodes.DOWN)
-        left?           (= key-code KeyCodes.LEFT)
-        right?          (= key-code KeyCodes.RIGHT)
-        header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
+  (let [{:keys [key-code
+                shift
+                ctrl
+                target
+                selection]}              (destruct-key-down e)
+        selection?                       (not (blank? selection))
+        start?                           (block-start? e)
+        end?                             (block-end? e)
+        {:search/keys   [results
+                         type
+                         index]
+         caret-position :caret-position} @state
+        textarea-height                  (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
+        {:keys [top height]}             caret-position
+        rows                             (js/Math.round (/ textarea-height height))
+        row                              (js/Math.ceil (/ top height))
+        top-row?                         (= row 1)
+        bottom-row?                      (= row rows)
+        up?                              (= key-code KeyCodes.UP)
+        down?                            (= key-code KeyCodes.DOWN)
+        left?                            (= key-code KeyCodes.LEFT)
+        right?                           (= key-code KeyCodes.RIGHT)
+        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)
+        items-order                      @(subscribe [::select-subs/items])]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
-              left? nil
-              right? nil
+              left?                        nil
+              right?                       nil
               (or (and up? top-row?)
                   (and down? bottom-row?)) (do
                                              (.. target blur)
-                                             (dispatch [:selected/add-item uid])))
+                                             (dispatch [::select-events/add-item uid (cond
+                                                                                       up? :first
+                                                                                       down? :last)])))
 
       ;; Control: fold or unfold blocks
       ctrl (cond
-             left? nil
-             right? nil
+             left?          nil
+             right?         nil
              (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
                                   new-open-state (cond
-                                                   up? false
+                                                   up?   false
                                                    down? true)
                                   event          [:block/open {:block-uid uid
                                                                :open?     new-open-state}]]
@@ -339,15 +351,15 @@
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
-             (or up? down?) (let [cur-index    index
-                                  min-index    0
-                                  max-index    (max-idx results)
-                                  next-index   (cycle-list min-index max-index cur-index up? down?)
-                                  container-el (getElement "dropdown-menu")
-                                  target-el    (getElement (str "dropdown-item-" next-index))]
-                              (.. e preventDefault)
-                              (swap! state assoc :search/index next-index)
-                              (scroll-if-needed target-el container-el)))
+             (or up? down?)    (let [cur-index    index
+                                     min-index    0
+                                     max-index    (max-idx results)
+                                     next-index   (cycle-list min-index max-index cur-index up? down?)
+                                     container-el (getElement "dropdown-menu")
+                                     target-el    (getElement (str "dropdown-item-" next-index))]
+                                 (.. e preventDefault)
+                                 (swap! state assoc :search/index next-index)
+                                 (scroll-if-needed target-el container-el)))
 
       selection? nil
 
@@ -355,8 +367,8 @@
       ;; FIX: always navigates up or down for header because get-caret-position for some reason returns the wrong value for top
       (or (and up? top-row?)
           (and left? start?)
-          (and up? header)) (do (.. e preventDefault)
-                                (dispatch [:up uid]))
+          (and up? header))   (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
       (or (and down? bottom-row?)
           (and right? end?)
           (and down? header)) (do (.. e preventDefault)
@@ -371,7 +383,7 @@
   [e _uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])
+        selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
         [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)]
@@ -483,7 +495,7 @@
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
-                                                          (dispatch [:selected/add-items children]))
+                                                          (dispatch [::select-events/set-items children]))
 
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
@@ -717,7 +729,7 @@
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched
       ;; after some ops(like delete) can cause errors
-      (when (empty? @(subscribe [:selected/items]))
+      (when (empty? @(subscribe [::select-subs/items]))
         (cond
           (arrow-key-direction e)         (handle-arrow-key e uid state)
           (pair-char? e)                  (handle-pair-char e uid state)
