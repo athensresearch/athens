@@ -1,11 +1,11 @@
 (ns athens.common-events.resolver
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d])
-    [athens.common-events :as common-events])
+       :cljs [datascript.core :as d]))
   #?(:clj
      (:import
        (java.util
