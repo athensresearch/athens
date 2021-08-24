@@ -17,6 +17,7 @@
    :z-index 2
    :cursor "pointer"
    :margin-right "0.25em"
+   :padding 0
    :appearance "none"
    :border 0
    :background "transparent"
@@ -29,7 +30,8 @@
    :color (style/color :body-text-color :opacity-low)
    ::stylefy/manual [[:svg {:transform "scale(1.001)" ; Prevents the bullet being squished
                             :overflow "visible" ; Prevents the stroke from being cropped
-                            }]
+                            :width "0.25em"
+                            :height "0.25em"}]
                      [:circle {:fill "currentColor"
                                :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"}]
                      [:&:before {:content "''"
