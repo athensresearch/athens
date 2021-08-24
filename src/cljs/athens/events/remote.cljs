@@ -6,6 +6,7 @@
     [athens.common-events.schema   :as schema]
     [athens.db                     :as db]
     [athens.events.selection       :as select-events]
+    [athens.util                   :as util]
     [malli.core                    :as m]
     [malli.error                   :as me]
     [re-frame.core                 :as rf]))
@@ -194,9 +195,16 @@
           {:keys [page-uid
                   block-uid]} (:event/args event)]
       (js/console.log ":remote/followup-page-create, page-uid" page-uid)
-      {:fx [[:dispatch-n [(if shift?
+      {:fx [[:dispatch-n [(cond
+                            shift?
                             [:right-sidebar/open-item page-uid]
-                            [:navigate :page {:id page-uid}])
+
+                            (not (util/is-daily-note page-uid))
+                            [:navigate :page {:id page-uid}]
+
+                            (util/is-daily-note page-uid)
+                            [:daily-note/add page-uid])
+
                           [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
 
@@ -787,7 +795,7 @@
 
 (rf/reg-event-fx
   :remote/followup-selected-delete
-  (fn [{db :db} [_ event-id]]
+  (fn [{_db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
     {:fx [[:dispatch-n [[:editing/uid nil]
                         [:remote/unregister-followup event-id]

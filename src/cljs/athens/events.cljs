@@ -8,12 +8,13 @@
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid]]
+    [athens.util                          :refer [gen-block-uid] :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [goog.dom                             :refer [getElement]]
     [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -283,12 +284,11 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (when uid
-      (let [remote? (client/open?)]
-        (cond->
-          {:db                    (assoc db :editing/uid uid)
-           :editing/focus         [uid index]}
-          remote? (assoc :presence/send-editing uid))))))
+    (let [remote? (client/open?)]
+      (cond->
+        {:db                    (assoc db :editing/uid uid)
+         :editing/focus         [uid index]}
+        (and uid remote?) (assoc :presence/send-editing uid)))))
 
 
 (reg-event-fx
@@ -439,15 +439,15 @@
 ;; Daily Notes
 
 (reg-event-db
-  :daily-notes/reset
-  (fn [db _]
-    (assoc db :daily-notes/items [])))
+  :daily-note/reset
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items uid)))
 
 
 (reg-event-db
-  :daily-notes/add
+  :daily-note/add
   (fn [db [_ uid]]
-    (assoc db :daily-notes/items [uid])))
+    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
@@ -466,15 +466,12 @@
 
 (reg-event-fx
   :daily-note/next
-  (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db    (update db :daily-notes/items conj uid)
-          block-uid (gen-block-uid)]
-      (if (db/e-by-av :block/uid uid)
-        {:db new-db}
-        {:db       new-db
-         :dispatch [:page/create {:title     title
-                                  :page-uid  uid
-                                  :block-uid block-uid}]}))))
+  (fn [_ [_ {:keys [uid title]}]]
+    {:fx [(if (db/e-by-av :block/uid uid)
+            [:dispatch [:daily-note/add uid]]
+            [:dispatch [:page/create {:title     title
+                                      :page-uid  uid
+                                      :block-uid (gen-block-uid)}]])]}))
 
 
 (reg-event-fx
@@ -484,6 +481,24 @@
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
+
+(reg-event-fx
+  :daily-note/scroll
+  (fn [_ [_]]
+    (let [daily-notes @(subscribe [:daily-notes/items])
+          el          (getElement "daily-notes")
+          offset-top  (.. el -offsetTop)
+          rect        (.. el getBoundingClientRect)
+          from-bottom (.. rect -bottom)
+          from-top    (.. rect -top)
+          doc-height  (.. js/document -documentElement -scrollHeight)
+          top-delta   (- offset-top from-top)
+          bottom-delta (- from-bottom doc-height)]
+      ;; Don't allow user to scroll up for now.
+      (cond
+        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -569,9 +584,16 @@
                                                                        title)
               tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              (if shift?
+                              (cond
+                                shift?
                                 [:right-sidebar/open-item page-uid]
-                                [:navigate :page {:id page-uid}])
+
+                                (not (util/is-daily-note page-uid))
+                                [:navigate :page {:id page-uid}]
+
+                                (util/is-daily-note page-uid)
+                                [:daily-note/add page-uid])
+
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
                [:remote/page-create page-uid block-uid title shift?]]]}))))
