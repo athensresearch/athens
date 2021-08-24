@@ -63,80 +63,149 @@ We'll have smaller amount of tests in order to provide correctness guarantees
 
 ### Catalog of operations
 
-- Page Ops
-    - **`:page/create`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `title` - Page title page to be created
-            - `page-uid` - `:block/uid` of page to be created
-            - `block-uid` - `:block/uid` of 1st block to be created in page to be created
-    - **`:page/rename`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `page-uid` - `:block/uid` of page to be renamed
-            - `new-name` - Page should have this name after operation
-            - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
-    - **`:page/merge`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `page-uid` - `:block/uid` of page to be merged into `new-page`
-            - `new-page` - page name of a page we'll merge contents of `page-uid` page into
-            - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
-    - **`:page/delete`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `page-uid` - `:block/uid` of the page to be deleted
-- Block Ops
-    - ⚛️**`:block/new`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `parent-uid` - `:block/uid` of parent block (or page)
-            - `block-uid` - `:block/uid` of new block to be created
-            - `block-order` - `:block/order` of new block to be created
-                - Currently it's only `int
-                - We could extend it to allow `int` and 2 keywords `:first` & `:last` (to say that we want this new block to be 1st among the children of `parent-uid` or last)
-    - ⚛️**`:block/save`**
-        - ((⚛️ Atomic Graph Ops))
-        - *Input*
-            - `block-uid` - `:block/uid` of block to be saved
-            - `new-string` - new value of `:block/string` to be saved
-            - `add-time?` - ^^To Remove^^ , we should always update `:edit/time` 
-    - {{[[TODO]]}} ⚛️**`:block/open`**
-        - ((⚛️ Atomic Graph Ops))
+- Types of Graph Operations
+    - ⚛️ Atomic Graph Ops
+        - Not divisible Graph Ops
+        - Operations like create new block, create page, save block
+    - ⎄ Composite Graph Ops
+        - Collection of events to be executed on the graph
+            - {{[[TODO]]}} #[[Open Question]] How to represent multiple events
+        - Like `:block/save` when new link is discovered, should produce also `:page/create` event
+- List of Atomic Graph Operations:
+    - Page Ops
+        - **`:page/create`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `title` - Page title page to be created
+                - `page-uid` - `:block/uid` of page to be created
+                - `block-uid` - `:block/uid` of 1st block to be created in page to be created
+        - **`:page/rename`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `page-uid` - `:block/uid` of page to be renamed
+                - `new-name` - Page should have this name after operation
+                - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
+        - **`:page/merge`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `page-uid` - `:block/uid` of page to be merged into `new-page`
+                - `new-page` - page name of a page we'll merge contents of `page-uid` page into
+                - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
+        - **`:page/delete`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `page-uid` - `:block/uid` of the page to be deleted
+    - Block Ops
+        - ⚛️**`:block/new`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `parent-uid` - `:block/uid` of parent block (or page)
+                - `block-uid` - `:block/uid` of new block to be created
+                - `block-order` - `:block/order` of new block to be created
+                    - Currently it's only `int`
+                    - We could extend it to allow `int` and 2 keywords `:first` & `:last` (to say that we want this new block to be 1st among the children of `parent-uid` or last)
+        - ⚛️**`:block/save`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be saved
+                - `new-string` - new value of `:block/string` to be saved
+                - `add-time?` - ^^To Remove^^ , we should always update `:edit/time` 
+        - ⚛️**`:block/open`**
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be opened/closed
+                - `open?` - should we open or close the block
+        - ⎄**`:block/add-child`**
+            - ((⎄ Composite Graph Ops))
+            - *Composition of*
+                - It's a special case of ((⚛️**`:block/new`**)) where block is put as 1st child
+            - Currently in code as `:enter/add-child`
+        - ⎄**`:block/open-block-add-child`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `parent-uid` - `:block/uid` of parent to be open
+                - `block-uid` - `:block/uid` of child block to be added
+            - *Composition of*
+                - ((⚛️**`:block/new`**))
+                - ((⚛️**`:block/open`**))
+        - ⚛️**`:block/move`** ⭐️
+            - ⭐️New Operation
+            - ((⚛️ Atomic Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to move
+                - `parent-uid` - `:block/uid` of new parent block
+                - `index` - (optional) `:block/order` new position on `:block/children`
+                    - if not provided, position is preserved
+        - ⎄**`:block/split`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be split
+                - `value` - `:block/string` of block to be split
+                - `index` - split index
+                - `new-block-uid` - `:block/uid` of split to block
+            - *Composition of*
+                - ((⚛️**`:block/new`**))
+                - ((⚛️**`:block/move`** ⭐️))
+                - ((⚛️**`:block/save`**))
+            - *Notes*
+                - In code as `:enter/split-block`
+        - ⎄**`:block/split-to-children`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be split
+                - `value` - `:block/string` of block to be split
+                - `index` - index of split
+                - `child-uid` - `:block/uid` of new block to split to that is a first child
+            - *Composition of*
+                - ((⚛️**`:block/new`**))
+                - ((⚛️**`:block/save`**))
+            - *Notes*
+                - In code as `:split-block-to-children`
+        - ⎄**`:block/indent`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be indented
+                - `text` - (optional) new `:block/string` value to be saved
+            - *Composition of*
+                - ((⚛️**`:block/save`**))
+                - ((⚛️**`:block/move`** ⭐️))
+            - *Notes*
+                - In code as `:indent`
+        - ⎄**`:block/indent-multi`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uids`: list of `:block/uid` of blocks to be indented
+
+            - *Composition of*
+                - ((⎄**`:block/indent`**))
+            - *Notes*
+                - In code as `:indent/multi`
+        - ⎄**`:block/unindent`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be unindented
+                - `text` - (optional)  new `:block/string` value
+            - *Composition of*
+                - ((⚛️**`:block/save`**))
+                - ((⚛️**`:block/move`** ⭐️))
+            - *Notes*
+                - In code as `:unindent`
+        - ⎄**`:block/unindent-multi`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uids`: list of `:block/uid` of block to be unindented
+            - *Composition of*
+                - ((⎄**`:block/unindent`**))
+            - *Notes*
+                - In code as `:unindent/multi`
+        - {{[[TODO]]}} **`:block/bump-up`**
+        - {{[[TODO]]}} **`:paste-verbatim`**
+    - {{[[TODO]]}} Drop Ops
+        - drop/child
+        - drop/child-multi
+        - drop/child-link
+        - drop/different-parent
         - 
-    - **`:block/add-child`**
-        - ((⎄ Composite Graph Ops))
-        - It's a special case of ((⚛️**`:block/new`**)) where block is put as 1st child
-    - ⎄**`:block/open-block-add-child`**
-        - ((⎄ Composite Graph Ops))
-        - *Input*
-            - `parent-uid` - `:block/uid` of parent to be open
-            - `block-uid` - `:block/uid` of child block to be added
-        - Composition of:
-            - ((⚛️**`:block/new`**))
-            - (({{[[TODO]]}} ⚛️**`:block/open`**))
-    - {{[[TODO]]}} **`:block/split`**
-        - Maybe ((⎄ Composite Graph Ops))
-        - *Input*
-    - {{[[TODO]]}} **`:block/split-to-children`**
-        - Maybe ((⎄ Composite Graph Ops))
-        - *Input*
-    - {{[[TODO]]}} **`:block/indent`**
-        - ((⚛️ Atomic Graph Ops))
-    - {{[[TODO]]}} **`:block/indent-multi`**
-        - ((⎄ Composite Graph Ops))
-    - {{[[TODO]]}} **`:block/unindent`**
-        - ((⚛️ Atomic Graph Ops))
-    - {{[[TODO]]}} **`:block/unindent-multi`**
-        - ((⎄ Composite Graph Ops))
-    - {{[[TODO]]}} **`:block/bump-up`**
-    - {{[[TODO]]}} **`:paste-verbatim`**
-- Drop Ops
-    - drop/child
-    - drop/child-multi
-    - drop/child-link
-    - drop/different-parent
-    - 
-- Shortcut Ops
-    - {{[[TODO]]}} **`:shortcut/add`**
-    - {{[[TODO]]}} **`:shortcut/remove`**
+    - {{[[TODO]]}} Shortcut Ops
+        - {{[[TODO]]}} **`:shortcut/add`**
+        - {{[[TODO]]}} **`:shortcut/remove`**
