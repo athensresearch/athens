@@ -15,7 +15,8 @@
     [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
-    [athens.electron.images :as images]
+    [athens.electron.images               :as images]
+    [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.undo                          :as undo]
@@ -583,7 +584,7 @@
   :transact
   (fn [_ [_ tx-data]]
     (let [synced?   @(subscribe [:db/synced])
-          electron? (athens.util/electron?)]
+          electron? electron.utils/electron?]
       (if (and synced? electron?)
         {:fx [[:transact! tx-data]
               [:dispatch [:db/not-synced]]

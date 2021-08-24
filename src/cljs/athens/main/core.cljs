@@ -4,6 +4,7 @@
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]
     ["electron-window-state" :as electron-window-state]
+    [athens.electron.utils :as electron.utils]
     [athens.menu :refer [menu-template]]
     [athens.util :refer [ipcMainChannels]]))
 
@@ -30,7 +31,7 @@
 
 (def log (js/require "electron-log"))
 
-(set! (.. autoUpdater -logger) log)
+(set! (.. autoUpdater -logger) electron.utils/log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
 (set! (.. autoUpdater -autoInstallOnAppQuit) false)

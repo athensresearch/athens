@@ -1,18 +1,36 @@
 (ns athens.electron.utils)
 
 
-;; Documents/athens
-;; ├── images
-;; └── index.transit
+(def electron?
+  (let [user-agent (.. js/navigator -userAgent toLowerCase)]
+    (boolean (re-find #"electron" user-agent))))
 
 
+;; Electron node libs
 
-(def electron (js/require "electron"))
+(def platform-error "Platform does not support Electron requires.")
+(def ^js error-proxy (js/Proxy. #js {} #js {:get (fn [] (throw platform-error))}))
+
+
+(defn require-or-error
+  [x]
+  (if electron? (js/require x) error-proxy))
+
+
+(def electron (require-or-error "electron"))
+(def ipcRenderer (.. electron -ipcRenderer))
 (def remote (.. electron -remote))
 (def app (.. remote -app))
-(def path (js/require "path"))
-(def fs (js/require "fs"))
+(def version (.. remote -app getVersion))
+(def dialog (.. remote -dialog))
+(def path (require-or-error "path"))
+(def fs (require-or-error "fs"))
+(def os (require-or-error "os"))
+(def stream (require-or-error "stream"))
+(def log (require-or-error "electron-log"))
 
+
+;; DB utils
 
 (def DB-INDEX "index.transit")
 (def IMAGES-DIR-NAME "images")

@@ -10,6 +10,7 @@
     [athens.db :refer [dsdb]]
     [athens.effects]
     [athens.electron.core]
+    [athens.electron.utils :as electron.utils]
     [athens.events]
     [athens.interceptors]
     [athens.listeners :as listeners]
@@ -73,12 +74,11 @@
 
 (defn init-ipcRenderer
   []
-  (when (util/electron?)
-    (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-          update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+  (when electron.utils/electron?
+    (let [update-available? (.sendSync electron.utils/ipcRenderer "check-update" "renderer")]
       (when update-available?
         (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-          (.sendSync ipcRenderer "confirm-update"))))))
+          (.sendSync electron.utils/ipcRenderer "confirm-update"))))))
 
 
 (defn init-styles
@@ -89,7 +89,7 @@
 
 (defn boot-evts
   []
-  (if (util/electron?)
+  (if electron.utils/electron?
     [:boot/desktop]
     [:boot/web]))
 
