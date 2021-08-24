@@ -377,7 +377,6 @@
       (assoc-in db [:selection :items] ordered-selection))))
 
 
-
 ;; Alerts
 
 (reg-event-db
