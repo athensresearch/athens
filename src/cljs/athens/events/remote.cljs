@@ -5,6 +5,7 @@
     [athens.common-events.resolver :as resolver]
     [athens.common-events.schema   :as schema]
     [athens.db                     :as db]
+    [athens.events.selection       :as select-events]
     [athens.util                   :as util]
     [malli.core                    :as m]
     [malli.error                   :as me]
@@ -794,13 +795,11 @@
 
 (rf/reg-event-fx
   :remote/followup-selected-delete
-  (fn [{db :db} [_ event-id]]
+  (fn [{_db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
     {:fx [[:dispatch-n [[:editing/uid nil]
-                        [:remote/unregister-followup event-id]]]]
-     :db (-> db
-             (assoc-in [:selection :items] #{})
-             (assoc-in [:selection :order] []))}))
+                        [:remote/unregister-followup event-id]
+                        [::select-events/clear]]]]}))
 
 
 (rf/reg-event-fx

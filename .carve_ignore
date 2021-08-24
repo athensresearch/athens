@@ -31,3 +31,4 @@ athens.common-events.schema/datascript-block-open
 athens.self-hosted.clients/get-clients
 athens.self-hosted.presence.views/toolbar-presence-el
 athens.self-hosted.client/retract-args
+athens.events/select-down

@@ -2,8 +2,10 @@
   (:require
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
+    [athens.events.selection                 :as select-events]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
+    [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
@@ -132,7 +134,7 @@
         middle-y          (vertical-center closest-container)
         dragging-ancestor (.. e -target (closest ".dragging"))
         dragging?         dragging-ancestor
-        is-selected?      @(rf/subscribe [:selected/is-selected uid])
+        is-selected?      @(rf/subscribe [::select-subs/selected? uid])
         target            (cond
                             dragging? nil
                             is-selected? nil
@@ -240,7 +242,7 @@
                                same-parent-source?          [:drop-multi/same-source {:drag-target drag-target
                                                                                       :source-uids source-uids
                                                                                       :target-uid  target-uid}])]
-    (rf/dispatch [:selected/clear-items])
+    (rf/dispatch [::select-events/clear])
     (rf/dispatch event)))
 
 
@@ -263,7 +265,7 @@
                                      (not= source-uid target-uid)
                                      (or (= effect-allowed "link")
                                          (= effect-allowed "move")))
-        selected-items           @(rf/subscribe [:selected/items])]
+        selected-items           @(rf/subscribe [::select-subs/items])]
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
@@ -329,7 +331,7 @@
                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
-             is-selected           @(rf/subscribe [:selected/is-selected uid])
+             is-selected           @(rf/subscribe [::select-subs/selected? uid])
              present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (not (nil? present-user))]
 
