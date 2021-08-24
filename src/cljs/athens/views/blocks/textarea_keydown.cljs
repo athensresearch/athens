@@ -320,8 +320,7 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)
-        items-order                      @(subscribe [::select-subs/items])]
+        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
