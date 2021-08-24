@@ -63,5 +63,5 @@
 
 (rf/reg-event-db
   ::clear
-  (fn [{rf-db :db} _]
+  (fn [rf-db _]
     (assoc-in rf-db [:selection :items] [])))
