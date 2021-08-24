@@ -131,6 +131,7 @@ const cssVars = `
 
 .docs-story {
   background: var(--background-color);
+  color: var(--body-text-color);)
 }`
 
 const StoryWrapper = styled.div`
