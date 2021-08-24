@@ -2,7 +2,8 @@
   (:require
     [athens.config                        :as config]
     [athens.db                            :as db]
-    [athens.electron.images                 :as images]
+    [athens.electron.images               :as images]
+    [athens.electron.utils                :as electron.utils]
     [athens.parse-renderer                :refer [parse-and-render]]
     [athens.style                         :as style]
     [athens.util                          :as util]
@@ -289,7 +290,7 @@
       (mapv (fn [item]
               (let [datatype (.. item -type)]
                 (cond
-                  (re-find img-regex datatype) (when (util/electron?)
+                  (re-find img-regex datatype) (when electron.utils/electron?
                                                  (let [new-str (images/save-image head tail item "png")]
                                                    (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))

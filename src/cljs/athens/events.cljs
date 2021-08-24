@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
     [athens.db                            :as db]
+    [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
@@ -597,7 +598,7 @@
   :transact
   (fn [_ [_ tx-data]]
     (let [synced?   @(subscribe [:db/synced])
-          electron? (athens.util/electron?)]
+          electron? electron.utils/electron?]
       (if (and synced? electron?)
         {:fx [[:transact! tx-data]
               [:dispatch [:db/not-synced]]

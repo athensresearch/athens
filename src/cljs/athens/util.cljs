@@ -2,6 +2,7 @@
   (:require
     ["/textarea" :as getCaretCoordinates]
     [athens.config :as config]
+    [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
     [cognitect.transit :as tr]
     [com.rpl.specter :as s]
@@ -322,19 +323,13 @@
         (open-10x)))))
 
 
-(defn electron?
-  []
-  (let [user-agent (.. js/navigator -userAgent toLowerCase)]
-    (boolean (re-find #"electron" user-agent))))
-
-
 ;; (goog-define COMMIT_URL "")
 
 
 (defn athens-version
   []
   (cond
-    (electron?) (.. (js/require "electron") -remote -app getVersion)))
+    electron.utils/electron? electron.utils/version))
 
 
 ;; (not (string/blank? COMMIT_URL)) COMMIT_URL

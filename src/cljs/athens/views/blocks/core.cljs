@@ -2,6 +2,7 @@
   (:require
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
+    [athens.electron.utils                   :as electron.utils]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
@@ -266,7 +267,7 @@
         selected-items           @(rf/subscribe [:selected/items])]
 
     (cond
-      (re-find img-regex datatype) (when (util/electron?)
+      (re-find img-regex datatype) (when electron.utils/electron?
                                      (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)

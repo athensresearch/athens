@@ -16,6 +16,7 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
+    [athens.electron.utils :as electron.utils]
     [athens.router :as router]
     [athens.style :refer [color unzoom]]
     [athens.subs]
@@ -171,7 +172,7 @@
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
         os                (util/get-os)
-        electron?         (util/electron?)
+        electron?         electron.utils/electron?
         theme-dark        (subscribe [:theme/dark])
         win-focused?      (if electron?
                             (subscribe [:win-focused?])

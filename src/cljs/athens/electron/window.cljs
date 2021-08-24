@@ -1,13 +1,9 @@
 (ns athens.electron.window
   (:require
+    [athens.electron.utils :as electron.utils]
     [athens.style :refer [zoom-level-min zoom-level-max]]
     [athens.util :as util]
     [re-frame.core :as rf]))
-
-
-(def electron (js/require "electron"))
-(def remote (.. electron -remote))
-(def ipcRenderer (.. electron -ipcRenderer))
 
 
 (rf/reg-event-db
@@ -99,21 +95,21 @@
   :invoke-win!
   (fn [{:keys [channel arg]} _]
     (if arg
-      (.. ipcRenderer (invoke channel arg))
-      (.. ipcRenderer (invoke channel)))))
+      (.. electron.utils/ipcRenderer (invoke channel arg))
+      (.. electron.utils/ipcRenderer (invoke channel)))))
 
 
 (rf/reg-fx
   :close-win!
   (fn []
-    (let [window (.. electron -BrowserWindow getFocusedWindow)]
+    (let [window (.. electron.utils/electron -BrowserWindow getFocusedWindow)]
       (.close window))))
 
 
 (rf/reg-fx
   :bind-win-listeners!
   (fn []
-    (let [active-win (.getCurrentWindow remote)]
+    (let [active-win (.getCurrentWindow electron.utils/remote)]
       (doto ^js/BrowserWindow active-win
         (.on "maximize" #(rf/dispatch-sync [:toggle-win-maximized true]))
         (.on "unmaximize" #(rf/dispatch-sync [:toggle-win-maximized false]))

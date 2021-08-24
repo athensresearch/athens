@@ -1,12 +1,9 @@
 (ns athens.electron.images
   (:require
     [athens.db :as db]
+    [athens.electron.utils :as electron.utils]
     [athens.util :as util]
     [re-frame.core :as rf]))
-
-
-(def path (js/require "path"))
-(def fs (js/require "fs"))
 
 
 ;; Image Paste
@@ -17,7 +14,7 @@
    (let [{:keys [images-dir name]}          @(rf/subscribe [:db-picker/selected-db])
          _                (prn head tail images-dir name item extension)
          file             (.getAsFile item)
-         img-filename     (.resolve path images-dir (str "img-" name "-" (util/gen-block-uid) "." extension))
+         img-filename     (.resolve electron.utils/path images-dir (str "img-" name "-" (util/gen-block-uid) "." extension))
          reader           (js/FileReader.)
          new-str          (str head "![](" "file://" img-filename ")" tail)
          cb               (fn [e]
@@ -25,9 +22,9 @@
                                              (.. e -target -result) x
                                              (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
                                              (js/Buffer. x "base64"))]
-                              (when-not (.existsSync fs images-dir)
-                                (.mkdirSync fs images-dir))
-                              (.writeFileSync fs img-filename img-data)))]
+                              (when-not (.existsSync electron.utils/fs images-dir)
+                                (.mkdirSync electron.utils/fs images-dir))
+                              (.writeFileSync electron.utils/fs img-filename img-data)))]
      (set! (.. reader -onload) cb)
      (.readAsDataURL reader file)
      new-str)))

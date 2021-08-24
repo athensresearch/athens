@@ -3,9 +3,10 @@
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
+    [athens.electron.utils :as electron.utils]
     [athens.style :refer [zoom]]
     [athens.subs]
-    [athens.util :refer [get-os electron?]]
+    [athens.util :refer [get-os]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
@@ -65,7 +66,7 @@
   []
   (let [loading    (rf/subscribe [:loading?])
         os         (get-os)
-        electron?  (electron?)
+        electron?  electron.utils/electron?
         modal      (rf/subscribe [:modal])]
     (fn []
       [:div (merge {:style {:display "contents"}}

@@ -3,13 +3,12 @@
   (:require
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]
+    [athens.electron.utils :as electron.utils]
     [athens.menu :refer [menu-template]]
     [athens.util :refer [ipcMainChannels]]))
 
 
-(def log (js/require "electron-log"))
-
-(set! (.. autoUpdater -logger) log)
+(set! (.. autoUpdater -logger) electron.utils/log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -channel) "beta")
 (set! (.. autoUpdater -autoDownload) false)

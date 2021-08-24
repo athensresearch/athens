@@ -1,7 +1,7 @@
 (ns athens.listeners
   (:require
     [athens.db :as db]
-    [athens.electron.utils :as electron-utils]
+    [athens.electron.utils :as electron.utils]
     [athens.router :as router]
     [athens.util :as util]
     [cljsjs.react]
@@ -209,7 +209,7 @@
     EventType.BEFOREUNLOAD
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
-            remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
+            remote? (electron.utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         ;; disconnect the
         (cond
           (not synced?)
