@@ -69,6 +69,13 @@
   (start
     [component]
     (let [dh-conf          (get-in config [:config :datahike])
+          custom-db-path   (get-in config [:config :datahike-store-path])
+          dh-conf          (if (and custom-db-path
+                                    (= :file (get-in dh-conf [:store :backend])))
+                             (do
+                               (log/info "Environment controls Datahike's DB Path" custom-db-path)
+                               (assoc-in dh-conf [:store :path] custom-db-path))
+                             dh-conf)
           conf-with-schema (assoc dh-conf :initial-tx schema)
           new-db?          (atom false)]
       (if (d/database-exists? dh-conf)
