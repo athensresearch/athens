@@ -30,8 +30,8 @@
    :color (style/color :body-text-color :opacity-low)
    ::stylefy/manual [[:svg {:transform "scale(1.001)" ; Prevents the bullet being squished
                             :overflow "visible" ; Prevents the stroke from being cropped
-                            :width "0.25em"
-                            :height "0.25em"}]
+                            :width "0.5em"
+                            :height "0.5em"}]
                      [:circle {:fill "currentColor"
                                :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"}]
                      [:&:before {:content "''"
@@ -48,8 +48,8 @@
                       :&:focus-visible:before {:opacity 1}]
                      [:&.closed-with-children [:circle {:stroke (style/color :body-text-color)
                                                         :fill (style/color :body-text-color :opacity-low)
-                                                        :r "22"
-                                                        :stroke-width "12"
+                                                        :r "16"
+                                                        :stroke-width "10"
                                                         :opacity (:opacity-med style/OPACITIES)}]]
                      [:&:hover [:svg {:transform "scale(1.3)"}]]
                      [:&.dragging {:z-index 1
