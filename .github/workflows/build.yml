@@ -126,7 +126,8 @@ jobs:
 
    deploy-gh-pages:
      needs: [test, lint, style, carve]
-     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+     # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
      runs-on: ubuntu-latest
      steps:
        - name: Git checkout
@@ -240,15 +241,17 @@ jobs:
 
        - name: Compile JS Assets (*nix)
          if: matrix.os != 'windows-latest'
-         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\"}}"
+         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
+           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
 
        - name: Compile JS Assets (Windows)
          if: matrix.os == 'windows-latest'
-         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \`"$env:SENTRY_DSN\`"}}"
+         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \`"$env:SENTRY_DSN\`" athens.main.core/AUTO_UPDATE $env:AUTO_UPDATE}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
+           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
 
        - name: Build and Publish Electron App
          uses: samuelmeuli/action-electron-builder@v1
@@ -268,6 +271,13 @@ jobs:
            # If the commit is tagged with a version (e.g. "v1.0.0"),
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+           # Skip auto-update files on branches other than main.
+           # Ideally we could use electron-builder release channels, but they don't work for github publishing.
+           # Auto-update is also disabled in code inside athens.main.core.
+           # NB: GH actions doesn't have ternary operator, but can workaround using AND/OR logic.
+           # see https://github.com/actions/runner/issues/409#issuecomment-752775072
+           args: ${{ github.ref != 'refs/heads/main' && '-c.publish.publishAutoUpdate=false' || '' }}
 
          env:
            # macOS notarization API key
