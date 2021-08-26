@@ -18,10 +18,8 @@ RUN lein uberjar
 
 # Environment Variables
 
-# Expose ports
-EXPOSE 3010   # TODO This should be set via environment variable
-
 # serve jar file
 CMD ["java", "-jar", "target/athens-lan-party-standalone.jar"]
 
-# Output logs to local disk volume
+# Logging: By default docker uses the json-file driver to store container
+# logs and can be found in : /var/lib/docker/containers/[container-id]/[container-id]-json.log:w
