@@ -1,6 +1,3 @@
-import React from 'react';
-import styled from 'styled-components';
-
 import { Block } from './Block';
 
 export default {
@@ -13,14 +10,11 @@ const Template = (args) => <Block {...args} />;
 
 export const Primary = Template.bind({});
 Primary.args = {
-  children: 'Content text',
-  hasChildren: true,
-  refsCount: 1,
   isOpen: true,
 };
 
-export const Pressed = Template.bind({});
-Pressed.args = {
-  "aria-pressed": true,
-  children: 'Block',
+export const Typical = Template.bind({});
+Typical.args = {
+  content: 'Block',
+  isOpen: true,
 };
