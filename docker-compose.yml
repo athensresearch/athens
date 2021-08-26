@@ -5,7 +5,8 @@ services:
     restart: always
     expose:
       - 3010 # Change this according to config.edn
-    # env:   # set environment variables
+    environment:   # set environment variables
+      datahike_store_path: /srv/athens/db
 
 
   nginx:
