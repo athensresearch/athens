@@ -1,0 +1,19 @@
+version: "3"
+services:
+  athens-server:
+    build: .
+    restart: always
+    expose:
+      - 3010 # Change this according to config.edn
+    # env:   # set environment variables
+
+
+  nginx:
+    image: nginx
+    depends_on:
+      - athens-server
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/athens.conf
+    ports:
+      - 80:80
