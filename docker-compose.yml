@@ -5,6 +5,8 @@ services:
     restart: always
     expose:
       - 3010 # Change this according to config.edn
+    volumes:
+      - datahike-db:/srv/athens/db
     environment:   # set environment variables
       datahike_store_path: /srv/athens/db
 
@@ -15,6 +17,9 @@ services:
       - athens-server
     restart: always
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/athens.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - 80:80
+
+volumes:
+  datahike-db:
