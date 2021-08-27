@@ -5,6 +5,7 @@ const parseAndRender = (content: string): ReactNode => <span>{content}</span>
 
 const ContentWrap = styled.div`
   display: grid;
+  grid-area: content;
   grid-template-areas: 'main';
   align-items: stretch;
   justify-content: stretch;

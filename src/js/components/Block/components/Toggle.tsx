@@ -16,7 +16,6 @@ export const ToggleButton = styled.button`
   cursor: pointer;
   padding: 0;
   -webkit-appearance: none;
-  color: var(--body-text-color---opacity-med);
 
   &:hover {
     color: var(--link-color);
@@ -39,9 +38,13 @@ export const ToggleButton = styled.button`
     opacity: 1;
   }
 
+  svg {
+    transform: rotate(90deg);
+  }
+
   &.closed {
     svg {
-      transform: rotate(90deg)
+      transform: rotate(0deg);
     };
   }
 
@@ -50,12 +53,13 @@ export const ToggleButton = styled.button`
   }
 `;
 
-export const Toggle = ({ isOpen, linkedRef, toggleIsBlockOpen, uid, ...props }) => (
+export const Toggle = ({ isOpen, handlePressToggle, linkedRef, uid, ...props }) => (
   <ToggleButton
     className={isOpen ? 'open' : 'closed'}
     tabIndex={0}
     onClick={(e) => {
       e.stopPropagation();
+      handlePressToggle();
       console.log('toggled block open/closed')
     }}
     {...props}
