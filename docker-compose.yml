@@ -2,6 +2,7 @@ version: "3"
 services:
   athens-server:
     build: .
+    image: athens-server:1.0.0-alpha.rtc.2
     restart: always
     expose:
       - 3010 # Change this according to config.edn
