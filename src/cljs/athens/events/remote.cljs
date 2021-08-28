@@ -19,7 +19,8 @@
   (fn [_ [_ remote-db]]
     (js/console.log ":remote/connect!" (pr-str remote-db))
     {:remote/client-connect! remote-db
-     :fx                     [[:dispatch [:loading/set]]]}))
+     :fx                     [[:dispatch [:loading/set]]
+                              [:dispatch [:conn-status/connecting]]]}))
 
 
 (rf/reg-event-fx
@@ -27,6 +28,7 @@
   (fn [_ _]
     (js/console.log ":remote/connected")
     {:fx [[:dispatch-n [[:loading/unset]
+                        [:conn-status/connected]
                         [:db/sync]]]]}))
 
 

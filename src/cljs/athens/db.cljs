@@ -129,7 +129,8 @@
                :selection           {:items []}
                :zoom-level          1
                :fs/watcher          nil
-               :presence            {}})
+               :presence            {}
+               :connection-status   :disconnected})
 
 
 (defn init-app-db
