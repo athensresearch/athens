@@ -2,12 +2,13 @@ import styled from 'styled-components';
 
 export const Container = styled.div`
   display: flex;
-  line-height: 2em;
+  line-height: var(--line-height, 1.75em);
   position: relative;
   border-radius: 0.125rem;
   justify-content: flex-start;
   flex-direction: column;
   flex: 1 1 100%;
+  color: inherit;
 
   &.show-tree-indicator:before {
     content: '';
@@ -27,7 +28,6 @@ export const Container = styled.div`
 
   &:after {
     content: '';
-    z-index: -1;
     position: absolute;
     top: 0.75px;
     right: 0;
@@ -37,11 +37,11 @@ export const Container = styled.div`
     pointer-events: none;
     border-radius: 0.25rem;
     transition: opacity 0.075s ease;
-    background: var(--link-color---opacity-lower);
+    background: var(--link-color---opacity-low);
+  }
 
-    &.is-selected {
-      opacity: 1;
-    }
+  &.is-selected:after {
+    opacity: 1;
   }
 
   .user-avatar {

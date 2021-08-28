@@ -10,7 +10,11 @@ export const AnchorButton = styled.button`
   border: 0;
   background: transparent;
   transition: all 0.05s ease;
+  color: inherit;
   margin-right: 0.25em;
+  display: flex;
+  place-items: center;
+  place-content: center;
   padding: 0;
   height: 2em;
   width: 1em;
@@ -53,7 +57,7 @@ export const AnchorButton = styled.button`
   &.closed-with-children circle {
       stroke: var(--body-text-color);
       fill: var(--body-text-color---opacity-low);
-      r: 1.5;
+      r: 2;
       stroke-width: 1;
       opacity: var(--opacity-med);
   }
@@ -69,8 +73,8 @@ export const AnchorButton = styled.button`
   }
 `;
 
-const Circle = () => (<svg viewBox="0 0 1 1">
-  <circle cx="0.5" cy="0." r="1" />
+const Circle = () => (<svg viewBox="0 0 2 2">
+  <circle cx="1" cy="1" r="2" />
 </svg>)
 
 const Dash = () => (<svg viewBox="0 0 1 1">
@@ -90,20 +94,24 @@ export interface AnchorProps {
    * When the anchor button is pressed
    */
   handlePressAnchor: () => void;
+  /**
+   * When the anchor button is right-clicked
+   */
+  handleAnchorContextMenu?: () => void;
 }
 
 export const Anchor = ({
   isClosedWithChildren,
   handlePressAnchor,
+  handleAnchorContextMenu,
   anchorElement = 'circle',
   ...props
 }: AnchorProps) => (
   <AnchorButton
     className={['anchor', isClosedWithChildren && 'closed-with-children'].join(' ')}
-    tabIndex={0}
     draggable={true}
     onClick={handlePressAnchor}
-    onContextMenu={() => console.log('right clicked')}
+    onContextMenu={handleAnchorContextMenu}
     onMouseOver={() => console.log('mouse over')}
     onMouseOut={() => console.log('mouse out')}
     onDragStart={() => console.log('drag start')}

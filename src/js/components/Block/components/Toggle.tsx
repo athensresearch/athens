@@ -14,6 +14,7 @@ export const ToggleButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: inherit;
   padding: 0;
   -webkit-appearance: none;
 
@@ -28,7 +29,6 @@ export const ToggleButton = styled.button`
     position: absolute;
     transition: opacity 0.1s ease;
     border-radius: 0.25rem;
-    // :box-shadow (:4 style/DEPTH-SHADOWS)
     opacity: 0;
     background: var(--background-plus-2);
   }
@@ -40,6 +40,7 @@ export const ToggleButton = styled.button`
 
   svg {
     transform: rotate(90deg);
+    vector-effect: non-scaling-stroke;
   }
 
   &.closed {
@@ -70,7 +71,12 @@ export const Toggle = ({ isOpen, handlePressToggle, linkedRef, uid, ...props }) 
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M10 6L16 11.5L10 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M10 6L16 11.5L10 17"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
     </svg>
   </ToggleButton>
 );
