@@ -438,28 +438,9 @@
 ;; Connection status
 
 (reg-event-db
-  :conn-status/connecting
-  (fn [db _]
-    (assoc db :connection-status :connecting)))
-
-
-(reg-event-db
-  :conn-status/connected
-  (fn [db _]
-    (assoc db :connection-status :connected)))
-
-
-(reg-event-db
-  :conn-status/reconnecting
-  (fn [db _]
-    (assoc db :connection-status :reconnecting)))
-
-
-(reg-event-db
-  :conn-status/disconnected
-  (fn [db _]
-    (assoc db :connection-status :disconnected)))
-
+ :conn-status
+ (fn [db [_ status]]
+   (assoc db :connection-status status)))
 
 ;; Daily Notes
 
