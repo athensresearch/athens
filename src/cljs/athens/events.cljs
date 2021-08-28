@@ -438,9 +438,10 @@
 ;; Connection status
 
 (reg-event-db
- :conn-status
- (fn [db [_ status]]
-   (assoc db :connection-status status)))
+  :conn-status
+  (fn [db [_ status]]
+    (assoc db :connection-status status)))
+
 
 ;; Daily Notes
 
