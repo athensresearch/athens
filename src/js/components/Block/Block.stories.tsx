@@ -149,6 +149,12 @@ export const MultipleSelected = () => {
       isSelected={true}
       isOpen={true}
       rawContent={data.randomBlockContent[0]}
+    />
+    <Block
+      uid="123"
+      isSelected={true}
+      isOpen={true}
+      rawContent={data.randomBlockContent[0]}
     >
       <Block
         uid="123"

@@ -37,11 +37,17 @@ export const Container = styled.div`
     pointer-events: none;
     border-radius: 0.25rem;
     transition: opacity 0.075s ease;
-    background: var(--link-color---opacity-low);
+    background: var(--link-color---opacity-lower);
   }
 
   &.is-selected:after {
     opacity: 1;
+  }
+
+  .is-selected &.is-selected {
+    &:after {
+      opacity: 0;
+    }
   }
 
   .user-avatar {
