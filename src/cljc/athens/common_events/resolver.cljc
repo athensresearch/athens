@@ -134,10 +134,10 @@
                                     :in $ ?uid]
                                   db uid))
         retract-blocks     (common-db/retract-uid-recursively-tx db uid)
-        delete-linked-refs (->> title
+        delete-linked-refs (->> (common-db/get-page-uid-by-title db title)
+                                (vector :block/uid)
+                                (common-db/get-block db)
                                 vector
-                                (map #(common-db/get-page-uid-by-title db %))
-                                (map #(common-db/get-block db [:block/uid %]))
                                 (replace-linked-refs-tx db))
         tx-data            (concat retract-blocks
                                    delete-linked-refs)]
@@ -1375,7 +1375,9 @@
         retracts            (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
         retract-block       [:db/retractEntity (:db/id block)]
         reindex             (common-db/dec-after db (:db/id parent) (:block/order block))
-        block-refs-replace  (replace-linked-refs-tx db [uid])
+        block-refs-replace  (->> (common-db/get-block db [:block/uid uid])
+                                 vector
+                                 (replace-linked-refs-tx db))
         new-parent          {:db/id (:db/id parent) :block/children reindex}
         tx-data             (into (conj retracts retract-block new-prev-block new-parent)
                                   block-refs-replace)]
