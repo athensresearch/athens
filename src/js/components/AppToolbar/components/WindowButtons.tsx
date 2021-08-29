@@ -82,9 +82,13 @@ const Wrapper = styled.div`
         content: '';
         position: absolute;
         border-radius: 1000em;
-        z-index: -1;
+        z-index: 0;
         background: var(--background-plus-1);
         inset: 6px;
+      }
+
+      svg {
+        z-index: 1;
       }
 
       &.close {
