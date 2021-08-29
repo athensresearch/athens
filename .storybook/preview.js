@@ -262,7 +262,13 @@ const themeLight = `
   --warning-color: #D20000;
 `;
 
-const Wrapper = styled.div`
+/**
+ * Provides contextual classnames, colors, and typographic
+ * defaults which all components expect.
+ * 
+ * Not used in the application, but useful for testing.
+ */
+const App = styled.div`
   background-color: var(--background-color);
   font-family: IBM Plex Sans, Sans-Serif;
   color: var(--body-text-color);
@@ -271,8 +277,8 @@ const Wrapper = styled.div`
   position: relative;
   overflow: hidden;
 
-  &.is-canvas {
-    min-height: 100vh;
+  &.is-storybook-canvas {
+    /* min-height: 100vh; */
   }
 
   &.is-theme-light {
@@ -290,13 +296,13 @@ export const decorators = [
   (Story, context) => {
     console.log(context);
     return (
-      <Wrapper className={[
+      <App className={[
         context.globals.theme === 'light' ? 'is-theme-light' : 'is-theme-dark',
         context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
-        context.viewMode === 'docs' ? 'is-docs' : 'is-canvas'
+        context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
       ].join(' ')}>
-      <Story />
-      </Wrapper>
+        <Story />
+      </App>
     )
   },
 ];

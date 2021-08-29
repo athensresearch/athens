@@ -3,18 +3,30 @@ import styled from 'styled-components';
 import { classnames } from '../util/classnames';
 import { getOs } from '../util/getOs';
 
+import { LeftSidebar } from './LeftSidebar';
 import { AppToolbar } from './AppToolbar';
+import { AppLayout } from './AppLayout';
 import { Block } from './Block';
 
-const Window = styled.div`
+const Desktop = styled.div`
+  background: purple;
+  display: flex;
+`;
+
+const WindowWrapper = styled.div`
   --margin: 2rem;
   margin: var(--margin);
-  overflow: hidden;
   border-radius: 5px;
   height: calc(100vh - (var(--margin) * 2));
   width: calc(100vw - (var(--margin) * 2));
-  position: relative;
   box-shadow: 0 10px 12px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  position: relative;
+  background: var(--background-color);
+
+  > * {
+    z-index: 1;
+  }
 
   &.os-windows {
     border-radius: 4px;
@@ -22,6 +34,33 @@ const Window = styled.div`
 
   &.os-mac {
     border-radius: 12px;
+
+    &.is-electron {
+      &:before {
+        content: '';
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        border-radius: 100px;
+        left: 20px;
+        top: 19px;
+        background: #888;
+        z-index: 1;
+        box-shadow: 20px 0 0 0 #888, 40px 0 0 0 #888;
+      }
+
+      &.is-theme-dark {
+        &:after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          z-index: 100;
+          box-shadow: inset 0 0 1px #fff, 0 0 1px #000;
+        }
+      }
+    }
   }
 
   &.is-win-maximized,
@@ -31,23 +70,27 @@ const Window = styled.div`
     width: 100vw;
     margin: 0;
   }
+
+  &.is-storybook-docs {
+    height: 700px;
+  }
 `;
 
 
 export default {
-  title: 'App/Window',
+  title: 'App/Electron',
   component: Window,
   argTypes: {},
 };
 
-const Template = (args) => {
+const Template = (args, context) => {
   const [os, setOs] = React.useState(args.os);
   const [route, setRoute] = React.useState(args.route);
   const [isElectron, setIsElectron] = React.useState(args.isElectron);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
-  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen);
+  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen || true);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen);
   const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen);
   const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
@@ -55,51 +98,65 @@ const Template = (args) => {
   const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
 
   return (
-    <Window {...args}
-      className={classnames(
-        os,
-        isElectron ? 'is-electron' : 'is-web',
-        isWinMaximized && 'is-win-maximized',
-        isWinFocused && 'is-win-focused',
-        isWinFullscreen && 'is-win-fullscreen',
-        isThemeDark ? 'is-theme-dark' : 'is-theme-light',
-      )}
-    >
-      <AppToolbar
-        os={os}
-        isElectron={isElectron}
-        route={route}
-        isWinFullscreen={isWinFullscreen}
-        isWinFocused={isWinFocused}
-        isWinMaximized={isWinMaximized}
-        isLeftSidebarOpen={isLeftSidebarOpen}
-        isRightSidebarOpen={isRightSidebarOpen}
-        isCommandBarOpen={isCommandBarOpen}
-        isMergeDialogOpen={isMergeDialogOpen}
-        isDatabaseDialogOpen={isDatabaseDialogOpen}
-        isThemeDark={isThemeDark}
-        handlePressHistoryBack={() => null}
-        handlePressHistoryForward={() => null}
-        handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
-        handlePressDailyNotes={() => setRoute('/daily-notes')}
-        handlePressAllPages={() => setRoute('/all-pages')}
-        handlePressGraph={() => setRoute('/graph')}
-        handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
-        handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
-        handlePressSettings={() => setRoute('/settings')}
-        handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
-        handlePressLeftSidebar={() => setIsLeftOpen(!isLeftSidebarOpen)}
-        handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-        handlePressFullscreen={() => setIsWinFullscreen(true)}
-        handlePressMaximizeRestore={() => setIsWinMaximized(!isWinMaximized)}
-      />
-    </Window>)
+    <Desktop>
+      <WindowWrapper {...args}
+        className={classnames(
+          "os-" + os,
+          isElectron ? 'is-electron' : 'is-web',
+          isWinMaximized && 'is-win-maximized',
+          isWinFocused && 'is-win-focused',
+          isWinFullscreen && 'is-win-fullscreen',
+          isThemeDark ? 'is-theme-dark' : 'is-theme-light',
+          context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-in-canvas',
+        )}
+      >
+        <AppLayout>
+          <AppToolbar
+            os={os}
+            isElectron={isElectron}
+            route={route}
+            isWinFullscreen={isWinFullscreen}
+            isWinFocused={isWinFocused}
+            isWinMaximized={isWinMaximized}
+            isLeftSidebarOpen={isLeftSidebarOpen}
+            isRightSidebarOpen={isRightSidebarOpen}
+            isCommandBarOpen={isCommandBarOpen}
+            isMergeDialogOpen={isMergeDialogOpen}
+            isDatabaseDialogOpen={isDatabaseDialogOpen}
+            isThemeDark={isThemeDark}
+            handlePressHistoryBack={() => null}
+            handlePressHistoryForward={() => null}
+            handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
+            handlePressDailyNotes={() => setRoute('/daily-notes')}
+            handlePressAllPages={() => setRoute('/all-pages')}
+            handlePressGraph={() => setRoute('/graph')}
+            handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
+            handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
+            handlePressSettings={() => setRoute('/settings')}
+            handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
+            handlePressLeftSidebar={() => setIsLeftOpen(!isLeftSidebarOpen)}
+            handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+            handlePressFullscreen={() => setIsWinFullscreen(true)}
+            handlePressMaximizeRestore={() => setIsWinMaximized(!isWinMaximized)}
+          />
+          <LeftSidebar
+            isLeftSidebarOpen={isLeftSidebarOpen}
+            handlePressShortcut={() => null}
+            shortcuts={[{ uid: '1', title: 'James and the giant', order: 0 }]}
+            version="1.0.0"
+          />
+          {/* <Pages /> */}
+          {/* <RightSidebar /> */}
+          {/* <Devtool /> */}
+        </AppLayout>
+      </WindowWrapper>
+    </Desktop>)
 };
 
 export const Primary = Template.bind({});
 Primary.args = {
   os: () => getOs(window),
-  isElectron: true
+  isElectron: true,
 };
 Primary.parameters = {
   layout: 'fullscreen',

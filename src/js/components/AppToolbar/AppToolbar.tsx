@@ -52,11 +52,13 @@ const AppToolbarWrapper = styled.header`
     padding-left: 88px;
     padding-right: 22px;
     height: 52px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     backdrop-filter: blur(20px);
-    /* position: absolute;
+    position: sticky;
     top: 0;
     left: 0;
-    right: 0; */
+    right: 0;
 
     &.is-fullscreen {
       padding-left: 22px;
