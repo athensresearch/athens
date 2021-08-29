@@ -113,13 +113,12 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
-  handlePressMinimize(): void;
-  handlePressClose(): void;
-  handlePressMaximizeRestore(): void;
-  handlePressMaximizeRestore(): void;
-  handlePressMaximizeRestore(): void;
-  handlePressFullscreen(): void;
-  handlePressMenu(): void;
+  handlePressMinimize?(): void;
+  handlePressClose?(): void;
+  handlePressMaximizeRestore?(): void;
+  handlePressMaximizeRestore?(): void;
+  handlePressMaximizeRestore?(): void;
+  handlePressFullscreen?(): void;
   handlePressCommandBar(): void;
   handlePressDailyNotes(): void;
   handlePressAllPages(): void;

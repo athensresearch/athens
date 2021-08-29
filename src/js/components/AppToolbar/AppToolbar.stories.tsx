@@ -3,7 +3,7 @@ import React from 'react';
 import { AppToolbar } from './AppToolbar';
 
 export default {
-  title: 'Example/AppToolbar',
+  title: 'Components/AppToolbar',
   component: AppToolbar,
   argTypes: {},
 };

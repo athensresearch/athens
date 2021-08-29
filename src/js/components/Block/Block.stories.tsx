@@ -24,7 +24,7 @@ const BlockContainer = styled.div`
 `;
 
 export default {
-  title: 'Example/Block',
+  title: 'Components/Block',
   component: Block,
   argTypes: {},
 };

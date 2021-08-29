@@ -1,10 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-
 import { Button } from './Button';
 
 export default {
-  title: 'Example/Button',
+  title: 'Components/Button',
   component: Button,
   argTypes: {},
 };
