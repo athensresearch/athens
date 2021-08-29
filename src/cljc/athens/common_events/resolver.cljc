@@ -114,7 +114,7 @@
                                     :in $ ?uid]
                                   db uid))
         retract-blocks     (common-db/retract-uid-recursively-tx db uid)
-        delete-linked-refs (common-db/replace-linked-refs-tx db title)
+        delete-linked-refs (common-db/replace-page-refs-tx db title)
         tx-data            (concat retract-blocks
                                    delete-linked-refs)]
     (println ":datascript/delete-page" uid title)
@@ -1119,10 +1119,7 @@
                                                                  order
                                                                  n)
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
-        block-refs-replace                (sequence (comp (map #(common-db/get-block db [:block/uid %]))
-                                                          (map #(select-keys % [:block/string :block/uid]))
-                                                          (mapcat #(common-db/replace-linked-refs-tx db (:block/uid %) (:block/string %))))
-                                                    uids)
+        block-refs-replace                (common-db/replace-block-refs-tx db uids)
         tx-data                           (concat retracted-vec
                                                   reindex
                                                   block-refs-replace)]
@@ -1341,7 +1338,7 @@
   (let [{:keys [uid value]} args
         block               (common-db/get-block db [:block/uid uid])
         {:block/keys
-         [children string]
+         [children]
          :or {children []}} block
         parent              (common-db/get-parent db [:block/uid uid])
         prev-block-uid      (common-db/prev-block-uid db uid)
@@ -1352,7 +1349,7 @@
         retracts            (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
         retract-block       [:db/retractEntity (:db/id block)]
         reindex             (common-db/dec-after db (:db/id parent) (:block/order block))
-        block-refs-replace  (common-db/replace-linked-refs-tx db uid string)
+        block-refs-replace  (common-db/replace-block-refs-tx db [uid])
         new-parent          {:db/id (:db/id parent) :block/children reindex}
         tx-data             (into (conj retracts retract-block new-prev-block new-parent)
                                   block-refs-replace)]

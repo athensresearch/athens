@@ -106,20 +106,6 @@
        db pattern))
 
 
-(defn replace-linked-refs-tx
-  "For a given title, unlinks [[brackets]], #[[brackets]], #brackets, and ((brackets))."
-  ([db title]
-   (replace-linked-refs-tx db title title))
-  ([db uid replacement]
-   (let [pattern (patterns/linked uid)]
-     (->> pattern
-          (get-ref-ids db)
-          (d/pull-many db [:db/id :block/string])
-          (mapv (fn [block]
-                  (let [new-str (string/replace (:block/string block) pattern replacement)]
-                    (assoc block :block/string new-str))))))))
-
-
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
@@ -136,6 +122,39 @@
                {:block/children [:block/uid
                                  :block/order]}]
           eid))
+
+
+(defn replace-page-refs-tx
+  "For a given title, unlinks [[brackets]], #[[brackets]], #brackets."
+  [db title]
+  (let [pattern (patterns/linked title)]
+    (->> pattern
+         (get-ref-ids db)
+         (d/pull-many db [:db/id :block/string])
+         (mapv (fn [block]
+                 (let [new-str (string/replace (:block/string block) pattern title)]
+                   (assoc block :block/string new-str)))))))
+
+
+(defn replace-block-refs-tx
+  "For a given block, unlinks ((brackets))."
+  [db uids]
+  (let [block-refs-ids (sequence (comp (map #(patterns/linked %))
+                                       (mapcat #(get-ref-ids db %))
+                                       (distinct))
+                                 uids)
+        block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)
+        blocks         (sequence (comp (map #(get-block db [:block/uid %]))
+                                       (map #(assoc % :block/pattern (patterns/linked (:block/uid %))))
+                                       (map #(select-keys % [:block/string :block/pattern])))
+                                 uids)]
+    (mapv (fn [block-ref]
+            (let [updated-content (reduce (fn [content {:keys [block/pattern block/string]}]
+                                            (string/replace content pattern string))
+                                          (:block/string block-ref)
+                                          blocks)]
+              (assoc block-ref :block/string updated-content)))
+          block-refs)))
 
 
 (defn get-parent
