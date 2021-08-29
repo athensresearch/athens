@@ -135,7 +135,7 @@
                                   db uid))
         retract-blocks     (common-db/retract-uid-recursively-tx db uid)
         delete-linked-refs (->> title
-                                (into [])
+                                vector
                                 (map #(common-db/get-page-uid-by-title db %))
                                 (map #(common-db/get-block db [:block/uid %]))
                                 (replace-linked-refs-tx db))
