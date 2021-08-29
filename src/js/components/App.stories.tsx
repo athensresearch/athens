@@ -6,12 +6,13 @@ import { getOs } from '../util/getOs';
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
+import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
 import { WelcomePage } from './Page/Page.stories';
 import { Block } from './Block';
 
 const Desktop = styled.div`
-  background: purple;
+  background: rebeccapurple;
   display: flex;
 `;
 
@@ -47,7 +48,7 @@ const WindowWrapper = styled.div`
         left: 20px;
         top: 19px;
         background: #888;
-        z-index: 2;
+        z-index: 999999;
         box-shadow: 20px 0 0 0 #888, 40px 0 0 0 #888;
       }
 
@@ -94,7 +95,7 @@ const Template = (args, context) => {
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
   const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen || true);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen || false);
-  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen);
+  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen || false);
   const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(args.isDatabaseDialogOpen);
   const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
@@ -150,6 +151,11 @@ const Template = (args, context) => {
           <WelcomePage />
           <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}
+          {isCommandBarOpen && (<CommandBar
+            autoFocus={true}
+            handleCloseCommandBar={() => setIsCommandBarOpen(false)}
+          />)
+          }
         </AppLayout>
       </WindowWrapper>
     </Desktop>)

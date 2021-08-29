@@ -27,7 +27,6 @@ export const globalTypes = {
   },
 };
 
-
 const themeLight = `
   --background-color---opacity-high: hsla(0, 0%, 96.47058823529412%, 0.75);
   --background-color---opacity-higher: hsla(0, 0%, 96.47058823529412%, 0.85);
@@ -157,6 +156,13 @@ const themeLight = `
   --zindex-modal: 1050;
   --zindex-popover: 1060;
   --zindex-tooltip: 1070;
+
+  --shadow-color: rgb(0 0 0 / 0.2);
+
+  --depth-shadow-4: 0 2px 4px var(--shadow-color);
+  --depth-shadow-8: 0 4px 8px var(--shadow-color);
+  --depth-shadow-14: 0 4px 16px var(--shadow-color);
+  --depth-shadow-64: 0 24px 60px var(--shadow-color);
 `;
 
 const themeDark = `
@@ -280,6 +286,27 @@ const themeDark = `
   --opacity-med: 0.5;
   --opacity-low: 0.25;
   --opacity-lower: 0.1;
+
+  --opacity-higher: 0.85;
+  --opacity-high: 0.7;
+  --opacity-med: 0.5;
+  --opacity-low: 0.25;
+  --opacity-lower: 0.1;
+
+  --zindex-dropdown: 1000;
+  --zindex-sticky: 1020;
+  --zindex-fixed: 1030;
+  --zindex-modal-backdrop: 1040;
+  --zindex-modal: 1050;
+  --zindex-popover: 1060;
+  --zindex-tooltip: 1070;
+
+  --shadow-color: rgb(0 0 0 / 0.2);
+
+  --depth-shadow-4: 0 2px 4px var(--shadow-color);
+  --depth-shadow-8: 0 4px 8px var(--shadow-color);
+  --depth-shadow-14: 0 4px 16px var(--shadow-color);
+  --depth-shadow-64: 0 24px 60px var(--shadow-color);
  }
 `;
 
