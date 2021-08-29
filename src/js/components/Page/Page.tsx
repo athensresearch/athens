@@ -118,6 +118,9 @@ interface PageProps {
   uid: string,
 }
 
+/**
+ * Display whole page content
+ */
 export const Page = ({
   isDailyNote,
   hasShortcut,

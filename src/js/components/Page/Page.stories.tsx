@@ -26,11 +26,11 @@ export default {
 
 const Template = (args) => <Page {...args} />;
 
-export const Typical = Template.bind({});
-Typical.args = {
+export const NodePage = Template.bind({});
+NodePage.args = {
   isDailyNote: false,
   hasShortcut: false,
-  title: 'Typical page',
+  title: 'Node Page',
   uid: '123'
 };
 
