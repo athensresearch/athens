@@ -2,6 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
+    [athens.patterns :as patterns]
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
@@ -33,6 +34,25 @@
   (if (< s t)
     (and (< s x) (< x t))
     (and (< t x) (< x s))))
+
+
+(defn replace-linked-refs-tx
+  "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
+  [db blocks]
+  (let [deleted-blocks (map #(assoc % :block/pattern (patterns/linked (or (:node/title %) (:block/uid %))))
+                            blocks)
+        block-refs-ids (sequence (comp (map #(:block/pattern %))
+                                       (mapcat #(common-db/get-ref-ids db %))
+                                       (distinct))
+                                 deleted-blocks)
+        block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)]
+    (mapv (fn [block-ref]
+            (let [updated-content (reduce (fn [content {:keys [block/pattern block/string node/title]}]
+                                            (string/replace content pattern (or title string)))
+                                          (:block/string block-ref)
+                                          deleted-blocks)]
+              (assoc block-ref :block/string updated-content)))
+          block-refs)))
 
 
 ;; TODO start using this resolution in handlers
@@ -114,7 +134,11 @@
                                     :in $ ?uid]
                                   db uid))
         retract-blocks     (common-db/retract-uid-recursively-tx db uid)
-        delete-linked-refs (common-db/replace-page-refs-tx db title)
+        delete-linked-refs (->> title
+                                (into [])
+                                (map #(common-db/get-page-uid-by-title db %))
+                                (map #(common-db/get-block db [:block/uid %]))
+                                (replace-linked-refs-tx db))
         tx-data            (concat retract-blocks
                                    delete-linked-refs)]
     (println ":datascript/delete-page" uid title)
@@ -1119,7 +1143,9 @@
                                                                  order
                                                                  n)
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
-        block-refs-replace                (common-db/replace-block-refs-tx db uids)
+        block-refs-replace                (->> uids
+                                               (map #(common-db/get-block db [:block/uid %]))
+                                               (replace-linked-refs-tx db))
         tx-data                           (concat retracted-vec
                                                   reindex
                                                   block-refs-replace)]
@@ -1349,7 +1375,7 @@
         retracts            (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
         retract-block       [:db/retractEntity (:db/id block)]
         reindex             (common-db/dec-after db (:db/id parent) (:block/order block))
-        block-refs-replace  (common-db/replace-block-refs-tx db [uid])
+        block-refs-replace  (replace-linked-refs-tx db [uid])
         new-parent          {:db/id (:db/id parent) :block/children reindex}
         tx-data             (into (conj retracts retract-block new-prev-block new-parent)
                                   block-refs-replace)]
