@@ -268,7 +268,6 @@ const Wrapper = styled.div`
   color: var(--body-text-color);
   font-size: 16px;
   line-height: 1.5;
-  margin: 0.5px;
   position: relative;
   overflow: hidden;
 
