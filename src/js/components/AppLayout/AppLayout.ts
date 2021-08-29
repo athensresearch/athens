@@ -10,7 +10,7 @@ export const AppLayout = styled.div`
   'devtool devtool devtool';
   grid-template-columns: auto 1fr auto;
   grid-template-rows: auto 1fr auto;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
+  height: 100vh;
+  /* overflow: hidden; */
+  /* position: relative; */
 `;

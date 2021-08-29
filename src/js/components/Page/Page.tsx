@@ -7,6 +7,34 @@ import { Button } from '../Button';
 import { Overlay } from '../Overlay';
 import { Menu } from '../Menu';
 
+const MainContent = styled.div`
+  flex: 1 1 100%;
+  grid-area: main-content;
+  align-items: flex-start;
+  justify-content: stretch;
+  padding-top: 2.5rem;
+  display: flex;
+  overflow-y: auto;
+
+  @supports (overflow-y: overlay) {
+    overflow-y: overlay;
+  }
+
+  &::-webkit-scrollbar {
+    background: var(--background-minus-1);
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: var(--background-minus-1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--background-minus-2);
+  }
+`;
+
 const PageWrap = styled.article`
   margin: 2rem auto;
   padding: 1rem 2rem 10rem 2rem;
@@ -110,34 +138,37 @@ export const Page = ({
     setIsPageMenuOpen(false);
   };
 
-  return (<PageWrap>
-    <PageHeader>
-      <PageMenuToggle
-        isPressed={isPageMenuOpen}
-        onClick={handlePressMenuToggle}
-      >
-        <MoreHoriz />
-      </PageMenuToggle>
-      <Popper
-        open={isPageMenuOpen}
-        anchorEl={pageMenuAnchor}
-        container={() => document.querySelector('#app')}
-        placement="bottom-start"
-      >
-        <ClickAwayListener onClickAway={handleClosePageMenu}>
-          <Overlay>
-            <Menu>
-              <Button>test button</Button>
-              <Button>test button</Button>
-              <Menu.Separator />
-              <Button>test button</Button>
-            </Menu>
-          </Overlay>
-        </ClickAwayListener>
-      </Popper>
+  return (
+    <MainContent>
+      <PageWrap>
+        <PageHeader>
+          <PageMenuToggle
+            isPressed={isPageMenuOpen}
+            onClick={handlePressMenuToggle}
+          >
+            <MoreHoriz />
+          </PageMenuToggle>
+          <Popper
+            open={isPageMenuOpen}
+            anchorEl={pageMenuAnchor}
+            container={() => document.querySelector('#app')}
+            placement="bottom-start"
+          >
+            <ClickAwayListener onClickAway={handleClosePageMenu}>
+              <Overlay>
+                <Menu>
+                  <Button>test button</Button>
+                  <Button>test button</Button>
+                  <Menu.Separator />
+                  <Button>test button</Button>
+                </Menu>
+              </Overlay>
+            </ClickAwayListener>
+          </Popper>
 
-      <Title>{title}</Title>
-    </PageHeader>
-    {children ? children : <div>placeholder</div>}
-  </PageWrap>);
+          <Title>{title}</Title>
+        </PageHeader>
+        {children ? children : <div>placeholder</div>}
+      </PageWrap>
+    </MainContent>);
 };
