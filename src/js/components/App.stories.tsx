@@ -7,6 +7,7 @@ import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
 import { AppLayout } from './AppLayout';
+import { WelcomePage } from './Page/Page.stories';
 import { Block } from './Block';
 
 const Desktop = styled.div`
@@ -146,7 +147,7 @@ const Template = (args, context) => {
             shortcuts={[{ uid: '1', title: 'James and the giant', order: 0 }]}
             version="1.0.0"
           />
-          {/* <Pages /> */}
+          <WelcomePage />
           <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}
         </AppLayout>

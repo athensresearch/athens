@@ -55,7 +55,7 @@ const AppToolbarWrapper = styled.header`
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     backdrop-filter: blur(20px);
-    position: sticky;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;

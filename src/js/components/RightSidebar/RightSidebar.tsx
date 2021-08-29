@@ -111,9 +111,9 @@ export interface RightSidebarProps extends React.HTMLAttributes<HTMLDivElement> 
    * Width of Right Sidebar in viewport width units
    */
   items?: RightSidebarItem[];
-  handleGrabDragHandle(): void;
-  handlePressItemClose(): void;
-  handlePressItemToggle(): void;
+  handleGrabDragHandle?(): void;
+  handlePressItemClose?(): void;
+  handlePressItemToggle?(): void;
 }
 
 export const RightSidebar = ({

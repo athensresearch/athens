@@ -31,7 +31,7 @@ export default {
 
 // Stories
 
-const Template = (args) => <BlockContainer><Block {...args} /></BlockContainer>;
+const Template = (args) => <Block {...args} />;
 
 export const Typical = Template.bind({});
 Typical.args = {
@@ -53,7 +53,8 @@ export const Series = () => {
   const [block2Open, setBlock2Open] = React.useState(true);
   const [block3Open, setBlock3Open] = React.useState(true);
 
-  return (<BlockContainer>
+  return (
+    <>
     <Block
       uid="123"
       isOpen={block1Open}
@@ -69,8 +70,9 @@ export const Series = () => {
       isOpen={block3Open}
       handlePressToggle={() => toggle(block3Open, setBlock3Open)}
       rawContent={data.randomBlockContent[2]}
-    />
-  </BlockContainer>)
+      />
+    </>
+  )
 };
 
 export const EditableSeries = () => {
@@ -89,7 +91,8 @@ export const EditableSeries = () => {
     }
   }
 
-  return (<BlockContainer>
+  return (
+    <>
     <Block
       uid="1"
       isOpen={true}
@@ -113,12 +116,13 @@ export const EditableSeries = () => {
       handlePressContainer={() => setEditingUid("3")}
       handleContentChange={(e) => updateBlockContent("3", e.target.value)}
       rawContent={block3Content}
-    />
-  </BlockContainer>)
+      />
+    </>
+  )
 };
 
 export const References = () => {
-  return (<BlockContainer>
+  return (
     <Block
       uid="123"
       isSelected={true}
@@ -127,11 +131,11 @@ export const References = () => {
       rawContent={data.randomBlockContent[0]}
     >
     </Block>
-  </BlockContainer>)
+  )
 };
 
 export const Selected = () => {
-  return (<BlockContainer>
+  return (
     <Block
       uid="123"
       isSelected={true}
@@ -139,11 +143,12 @@ export const Selected = () => {
       rawContent={data.randomBlockContent[0]}
     >
     </Block>
-  </BlockContainer>)
+  )
 };
 
 export const MultipleSelected = () => {
-  return (<BlockContainer>
+  return (
+    <>
     <Block
       uid="123"
       isSelected={true}
@@ -170,8 +175,9 @@ export const MultipleSelected = () => {
         >
         </Block>
       </Block>
-    </Block>
-  </BlockContainer>)
+      </Block>
+    </>
+  )
 };
 
 export const Tree = () => {
@@ -179,7 +185,7 @@ export const Tree = () => {
   const [block2Open, setBlock2Open] = React.useState(true);
   const [block3Open, setBlock3Open] = React.useState(true);
 
-  return (<BlockContainer>
+  return (
     <Block
       uid="123"
       isOpen={block1Open}
@@ -198,7 +204,7 @@ export const Tree = () => {
         />
       </Block>
     </Block>
-  </BlockContainer>)
+  )
 };
 
 export const Welcome = () => {
@@ -206,7 +212,7 @@ export const Welcome = () => {
   const [block2Open, setBlock2Open] = React.useState(true);
   const [block3Open, setBlock3Open] = React.useState(true);
 
-  return (<BlockContainer>
+  return (
     <Block
       uid="123"
       isOpen={block1Open}
@@ -224,7 +230,26 @@ export const Welcome = () => {
           handlePressToggle={() => toggle(block3Open, setBlock3Open)}
           rawContent={data.randomBlockContent[2]}
         />
+        <Block
+          uid="123"
+          isOpen={block1Open}
+          handlePressToggle={() => toggle(block1Open, setBlock1Open)}
+          rawContent="asd"
+          renderedContent={data.contentWithLink()}
+        >
+          <Block uid="123"
+            isOpen={block2Open}
+            handlePressToggle={() => toggle(block2Open, setBlock2Open)}
+            rawContent={data.randomBlockContent[1]}
+          >
+            <Block uid="123"
+              isOpen={block3Open}
+              handlePressToggle={() => toggle(block3Open, setBlock3Open)}
+              rawContent={data.randomBlockContent[2]}
+            />
+          </Block>
+        </Block>
       </Block>
     </Block>
-  </BlockContainer>)
+  )
 };
