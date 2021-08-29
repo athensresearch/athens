@@ -4,6 +4,7 @@ import { classnames } from '../util/classnames';
 import { getOs } from '../util/getOs';
 
 import { LeftSidebar } from './LeftSidebar';
+import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
 import { AppLayout } from './AppLayout';
 import { Block } from './Block';
@@ -45,7 +46,7 @@ const WindowWrapper = styled.div`
         left: 20px;
         top: 19px;
         background: #888;
-        z-index: 1;
+        z-index: 2;
         box-shadow: 20px 0 0 0 #888, 40px 0 0 0 #888;
       }
 
@@ -56,7 +57,7 @@ const WindowWrapper = styled.div`
           inset: 0;
           border-radius: inherit;
           pointer-events: none;
-          z-index: 100;
+          z-index: 2;
           box-shadow: inset 0 0 1px #fff, 0 0 1px #000;
         }
       }
@@ -91,7 +92,7 @@ const Template = (args, context) => {
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
   const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen || true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen || false);
   const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen);
   const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(args.isDatabaseDialogOpen);
@@ -146,7 +147,7 @@ const Template = (args, context) => {
             version="1.0.0"
           />
           {/* <Pages /> */}
-          {/* <RightSidebar /> */}
+          <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}
         </AppLayout>
       </WindowWrapper>

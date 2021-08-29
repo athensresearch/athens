@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -142,6 +142,12 @@ const themeDark = `
   --warning-color---opacity-lower: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.1);
   --warning-color---opacity-med: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.5);
   --warning-color: #DE3C21;
+
+  --opacity-higher: 0.85;
+  --opacity-high: 0.7;
+  --opacity-med: 0.5;
+  --opacity-low: 0.25;
+  --opacity-lower: 0.1;
  }
 `;
 
@@ -260,15 +266,15 @@ const themeLight = `
   --warning-color---opacity-lower: hsla(0, 100%, 41.17647058823529%, 0.1);
   --warning-color---opacity-med: hsla(0, 100%, 41.17647058823529%, 0.5);
   --warning-color: #D20000;
+
+  --opacity-higher: 0.85;
+  --opacity-high: 0.7;
+  --opacity-med: 0.5;
+  --opacity-low: 0.25;
+  --opacity-lower: 0.1;
 `;
 
-/**
- * Provides contextual classnames, colors, and typographic
- * defaults which all components expect.
- * 
- * Not used in the application, but useful for testing.
- */
-const App = styled.div`
+const BaseStyles = css`
   background-color: var(--background-color);
   font-family: IBM Plex Sans, Sans-Serif;
   color: var(--body-text-color);
@@ -277,9 +283,7 @@ const App = styled.div`
   position: relative;
   overflow: hidden;
 
-  &.is-storybook-canvas {
-    /* min-height: 100vh; */
-  }
+  &.is-storybook-canvas { }
 
   &.is-theme-light {
     ${themeLight}
@@ -290,6 +294,16 @@ const App = styled.div`
   }
 
   * {box-sizing: border-box};
+`;
+
+/**
+ * Provides contextual classnames, colors, and typographic
+ * defaults which all components expect.
+ * 
+ * Not used in the application, but useful for testing.
+ */
+const App = styled.div`
+  ${BaseStyles}
 `;
 
 export const decorators = [

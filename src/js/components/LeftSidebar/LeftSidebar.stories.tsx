@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import { LeftSidebar } from './LeftSidebar';
+import { AppLayout } from '../AppLayout';
 
 export default {
   title: 'Components/LeftSidebar',
@@ -8,13 +9,9 @@ export default {
   argTypes: {},
 };
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-`;
-
-const Template = (args) => <Wrapper><LeftSidebar {...args} /></Wrapper>;
+const Template = (args) => <AppLayout style={{ minHeight: "60vh" }}>
+  <LeftSidebar {...args} />
+</AppLayout>;
 
 export const Primary = Template.bind({});
 Primary.args = {
