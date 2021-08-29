@@ -1119,8 +1119,16 @@
                                                                  order
                                                                  n)
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
+        block-refs-replace                (sequence
+                                            (comp
+                                              (map #(common-db/get-block db [:block/uid %]))
+                                              (map #(select-keys % [:block/string :block/uid]))
+                                              (map #(common-db/replace-linked-refs-tx db (:block/uid %) (:block/string %)))
+                                              cat)
+                                            uids)
         tx-data                           (concat retracted-vec
-                                                  reindex)]
+                                                  reindex
+                                                  block-refs-replace)]
     (println "resolver :datascript/selected-delete tx-data is " (pr-str tx-data))
     tx-data))
 
@@ -1334,19 +1342,21 @@
 (defmethod resolve-event-to-tx :datascript/delete-merge-block
   [db {:event/keys [args]}]
   (let [{:keys [uid value]} args
-        block           (common-db/get-block db [:block/uid uid])
-        {:block/keys [children string] :or {children []}} block
-        parent          (common-db/get-parent db [:block/uid uid])
-        prev-block-uid  (common-db/prev-block-uid db uid)
-        prev-block      (common-db/get-block db [:block/uid prev-block-uid])
-        new-prev-block  {:db/id          [:block/uid prev-block-uid]
-                         :block/string   (str (:block/string prev-block) value)
-                         :block/children children}
-        retracts        (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
-        retract-block   [:db/retractEntity (:db/id block)]
-        reindex         (common-db/dec-after db (:db/id parent) (:block/order block))
-        block-refs      (common-db/replace-linked-refs-tx db uid string)
-        new-parent      {:db/id (:db/id parent) :block/children reindex}
-        tx-data         (-> (conj retracts retract-block new-prev-block new-parent)
-                            (into block-refs))]
+        block               (common-db/get-block db [:block/uid uid])
+        {:block/keys
+         [children string]
+         :or {children []}} block
+        parent              (common-db/get-parent db [:block/uid uid])
+        prev-block-uid      (common-db/prev-block-uid db uid)
+        prev-block          (common-db/get-block db [:block/uid prev-block-uid])
+        new-prev-block      {:db/id          [:block/uid prev-block-uid]
+                             :block/string   (str (:block/string prev-block) value)
+                             :block/children children}
+        retracts            (mapv (fn [x] [:db/retract (:db/id block) :block/children (:db/id x)]) children)
+        retract-block       [:db/retractEntity (:db/id block)]
+        reindex             (common-db/dec-after db (:db/id parent) (:block/order block))
+        block-refs-replace  (common-db/replace-linked-refs-tx db uid string)
+        new-parent          {:db/id (:db/id parent) :block/children reindex}
+        tx-data             (into (conj retracts retract-block new-prev-block new-parent)
+                                  block-refs-replace)]
     tx-data))
