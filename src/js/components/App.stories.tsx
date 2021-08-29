@@ -8,7 +8,6 @@ import { Block } from './Block';
 
 const Window = styled.div`
   --margin: 2rem;
-  background: #0dd;
   margin: var(--margin);
   overflow: hidden;
   border-radius: 5px;
