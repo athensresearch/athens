@@ -17,6 +17,7 @@ const StyledButton = styled.button`
   transition-property: filter, background, color, opacity;
   transition-duration: 0.075s;
   transition-timing-function: ease;
+  gap: 0.5rem;
 
   &:hover {
     background: var(--body-text-color---opacity-lower);
@@ -87,13 +88,13 @@ const StyledButton = styled.button`
   }
 `;
 
-export interface ButtonProps {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
-   * Is this the principal call to action on the page?
+   * Whether this button should have a stronger style
    */
   isPrimary?: boolean;
   /**
-   * Is this the principal call to action on the page?
+   * Whether the button should appear pressed
    */
   isPressed?: boolean;
 }
@@ -101,20 +102,13 @@ export interface ButtonProps {
 /**
  * Primary UI component for user interaction
  */
-export const Button: React.FC<ButtonProps> = ({
-  children,
-  isPrimary,
-  isPressed,
-  ...props
-}) => {
+
+export const Button = ({ isPrimary, isPressed, children, ...props }: ButtonProps) => {
   return (
     <StyledButton
       type="button"
-      aria-pressed={isPressed ? isPressed : undefined}
-      className={[
-        'button',
-        isPrimary && 'is-primary'
-      ].join(' ')}
+      className={isPrimary ? 'is-primary' : ''}
+      aria-pressed={isPressed}
       {...props}
     >
       {children}

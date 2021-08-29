@@ -11,7 +11,7 @@ export const parameters = {
 }
 
 const storyStyle = `
-.docs-story {
+ :root {
   --background-color---opacity-high: hsla(0, 0%, 10.196078431372548%, 0.75);
   --background-color---opacity-higher: hsla(0, 0%, 10.196078431372548%, 0.85);
   --background-color---opacity-low: hsla(0, 0%, 10.196078431372548%, 0.25);
@@ -126,11 +126,14 @@ const storyStyle = `
   --warning-color---opacity-lower: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.1);
   --warning-color---opacity-med: hsla(8.571428571428555, 74.11764705882354%, 50%, 0.5);
   --warning-color: #DE3C21;
+ }
 
+.docs-story
   background: var(--background-color);
   color: var(--body-text-color);
   font-family: IBM Plex Sans;
-}`
+}
+`;
 
 export const decorators = [
   (Story) => (
