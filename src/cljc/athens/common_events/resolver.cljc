@@ -1119,13 +1119,10 @@
                                                                  order
                                                                  n)
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
-        block-refs-replace                (sequence
-                                            (comp
-                                              (map #(common-db/get-block db [:block/uid %]))
-                                              (map #(select-keys % [:block/string :block/uid]))
-                                              (map #(common-db/replace-linked-refs-tx db (:block/uid %) (:block/string %)))
-                                              cat)
-                                            uids)
+        block-refs-replace                (sequence (comp (map #(common-db/get-block db [:block/uid %]))
+                                                          (map #(select-keys % [:block/string :block/uid]))
+                                                          (mapcat #(common-db/replace-linked-refs-tx db (:block/uid %) (:block/string %))))
+                                                    uids)
         tx-data                           (concat retracted-vec
                                                   reindex
                                                   block-refs-replace)]
