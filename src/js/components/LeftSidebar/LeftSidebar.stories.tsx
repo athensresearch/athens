@@ -1,6 +1,4 @@
-import React from 'react';
 import styled from 'styled-components';
-import { classnames } from '../util/classnames';
 
 import { LeftSidebar } from './LeftSidebar';
 
@@ -10,7 +8,13 @@ export default {
   argTypes: {},
 };
 
-const Template = (args) => <LeftSidebar {...args} />;
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+`;
+
+const Template = (args) => <Wrapper><LeftSidebar {...args} /></Wrapper>;
 
 export const Primary = Template.bind({});
 Primary.args = {

@@ -18,7 +18,7 @@ export const globalTypes = {
     description: 'Global theme for components',
     defaultValue: 'light',
     toolbar: {
-      icon: 'circlehollow',
+      // icon: 'circlehollow',
       // Array of plain string values or MenuItem shape (see below)
       items: ['light', 'dark'],
       // Property that specifies if the name of the item will be displayed
@@ -293,6 +293,7 @@ export const decorators = [
     return (
       <Wrapper className={[
         context.globals.theme === 'light' ? 'is-theme-light' : 'is-theme-dark',
+        context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
         context.viewMode === 'docs' ? 'is-docs' : 'is-canvas'
       ].join(' ')}>
       <Story />

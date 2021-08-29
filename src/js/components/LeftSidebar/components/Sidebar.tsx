@@ -25,9 +25,8 @@ export const Sidebar = styled.section`
     flex: 0 0 auto;
     margin: auto 2rem 0;
     align-self: stretch;
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    display: flex;
     grid-gap: 0.25rem;
   }
 
