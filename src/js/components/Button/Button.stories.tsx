@@ -4,6 +4,9 @@ export default {
   title: 'Components/Button',
   component: Button,
   argTypes: {},
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 const Template = (args) => <Button {...args} />;
@@ -13,17 +16,20 @@ Primary.args = {
   children: 'Button',
 };
 
+
 export const isPrimary = Template.bind({});
 isPrimary.args = {
   isPrimary: true,
   children: 'Button',
 };
 
+
 export const Pressed = Template.bind({});
 Pressed.args = {
   "aria-pressed": true,
   children: 'Button',
 };
+
 
 export const Icon = Template.bind({});
 Icon.args = {
@@ -33,3 +39,4 @@ Icon.args = {
     <path d="M21 3.6V20.4C21 20.7314 20.7314 21 20.4 21H3.6C3.26863 21 3 20.7314 3 20.4V3.6C3 3.26863 3.26863 3 3.6 3H20.4C20.7314 3 21 3.26863 21 3.6Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>,
 };
+

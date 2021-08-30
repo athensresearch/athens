@@ -101,6 +101,9 @@ export interface AnchorProps {
   handleAnchorContextMenu?: () => void;
 }
 
+/**
+ * A handle and indicator of a block's position in the document
+*/
 export const Anchor = ({
   isClosedWithChildren,
   handlePressAnchor,

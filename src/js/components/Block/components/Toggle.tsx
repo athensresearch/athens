@@ -55,6 +55,9 @@ export const ToggleButton = styled.button`
   }
 `;
 
+/**
+ * Button to toggle the visibility of a block's child blocks.
+ */
 export const Toggle = ({ isOpen, handlePressToggle, linkedRef, uid, ...props }) => (
   <ToggleButton
     className={isOpen ? 'open' : 'closed'}

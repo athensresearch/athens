@@ -34,6 +34,14 @@ NodePage.args = {
   uid: '123'
 };
 
+export const BlockPage = Template.bind({});
+BlockPage.args = {
+  isDailyNote: false,
+  hasShortcut: false,
+  title: 'Block Page',
+  uid: '123'
+};
+
 export const WelcomePage = () => {
   return (
     <Page
