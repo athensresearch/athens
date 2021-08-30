@@ -1,6 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 
-const dropdownAppear = keyframes`
+const overlayAppear = keyframes`
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -10,6 +10,9 @@ const dropdownAppear = keyframes`
   }
 `;
 
+/**
+ * A simple container with basic padding, background, shadow, etc.
+ */
 export const Overlay = styled.div`
   display: inline-flex;
   color: var(--body-text-color);
@@ -24,6 +27,6 @@ export const Overlay = styled.div`
   background: var(--background-plus-1);
   
   &.animate-in {
-    animation: ${dropdownAppear} 0.125s;
+    animation: ${overlayAppear} 0.125s;
   }
 `;

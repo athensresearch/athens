@@ -77,6 +77,8 @@ const WindowWrapper = styled.div`
   &.is-storybook-docs {
     height: 700px;
   }
+  &.is-storybook-canvas {
+  }
 `;
 
 
@@ -84,6 +86,9 @@ export default {
   title: 'App/Electron',
   component: Window,
   argTypes: {},
+  parameters: {
+    layout: 'fullscreen'
+  }
 };
 
 const Template = (args, context) => {
@@ -181,38 +186,26 @@ const Template = (args, context) => {
     </Desktop>)
 };
 
-export const Primary = Template.bind({});
-Primary.args = {
+export const Auto = Template.bind({});
+Auto.args = {
   os: () => getOs(window),
   isElectron: true,
 };
-Primary.parameters = {
-  layout: 'fullscreen',
-}
 
 export const MacOs = Template.bind({});
 MacOs.args = {
   os: 'mac',
   isElectron: true
 };
-MacOs.parameters = {
-  layout: 'fullscreen',
-}
 
 export const Windows = Template.bind({});
 Windows.args = {
   os: 'windows',
   isElectron: true
 };
-Windows.parameters = {
-  layout: 'fullscreen',
-}
 
 export const Linux = Template.bind({});
 Linux.args = {
   os: 'linux',
   isElectron: true
 };
-Linux.parameters = {
-  layout: 'fullscreen',
-}

@@ -9,8 +9,8 @@ export default {
 
 const Template = (args) => <AppLayout style={{ minHeight: "60vh" }}><RightSidebar {...args} /></AppLayout>;
 
-export const Primary = Template.bind({});
-Primary.args = {
+export const Basic = Template.bind({});
+Basic.args = {
   isRightSidebarOpen: true,
   items: [{
     title: 'Item 1',

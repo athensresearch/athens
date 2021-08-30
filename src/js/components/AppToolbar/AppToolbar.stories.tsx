@@ -1,6 +1,13 @@
 import React from 'react';
+import styled from 'styled-components';
 
 import { AppToolbar } from './AppToolbar';
+
+const Wrapper = styled.div`
+  position: relative;
+  height: 52px;
+  background: #fff;
+`;
 
 export default {
   title: 'Sections/AppToolbar',
@@ -20,7 +27,7 @@ const Template = (args) => {
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
   const [isThemeDark, setIsThemeDark] = React.useState(false);
 
-  return <AppToolbar
+  return <Wrapper><AppToolbar
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}
@@ -42,11 +49,11 @@ const Template = (args) => {
     handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
     handlePressShortcuts={() => setIsLeftOpen(!isLeftSidebarOpen)}
     handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-    {...args} />
+    {...args} /></Wrapper>
 };
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Auto = Template.bind({});
+Auto.args = {};
 
 export const MacOs = Template.bind({});
 MacOs.args = {

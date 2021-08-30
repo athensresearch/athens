@@ -8,8 +8,8 @@ export default {
 
 const Template = (args) => <CommandBar {...args} isModal={false} />;
 
-export const Primary = Template.bind({});
-Primary.args = {
+export const Empty = Template.bind({});
+Empty.args = {
   isOpen: true,
 };
 

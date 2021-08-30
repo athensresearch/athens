@@ -13,8 +13,8 @@ const Template = (args) => <AppLayout style={{ minHeight: "60vh" }}>
   <LeftSidebar {...args} />
 </AppLayout>;
 
-export const Primary = Template.bind({});
-Primary.args = {
+export const Basic = Template.bind({});
+Basic.args = {
   isLeftSidebarOpen: true,
   shortcuts: [{
     uid: "4b89dde0-3ccf-481a-875b-d11adfda3f7e",

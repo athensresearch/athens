@@ -1,10 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
-import { MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
+import { Today, MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
 import { Popper, Modal } from "@material-ui/core";
 import { Button } from '../Button';
 import { Overlay } from '../Overlay';
 import { Menu } from '../Menu';
+import { Block } from '../Block';
+
+import { EmptyMessage } from './components/EmptyMessage';
 
 const MainContent = styled.div`
   flex: 1 1 100%;
@@ -36,7 +39,7 @@ const MainContent = styled.div`
 
 const PageWrap = styled.article`
   margin: 2rem auto;
-  padding: 1rem 2rem 10rem 2rem;
+  padding: 1rem 0 10rem 0;
   flex-basis: 100%;
   align-self: stretch;
   max-width: 55rem;
@@ -47,14 +50,14 @@ const PageHeader = styled.header`
 `;
 
 const Title = styled.h1`
+  font-size: 2.5rem;
   position: relative;
   overflow: visible;
   flex-grow: 1;
-  margin: 0.1em 0 0.1em 1rem;
-  letter-spacing: --0.03em;
+  margin: 0.1em 0;
   white-space: pre-line;
   word-break: break-word;
-  line-height: 1.4em;
+  line-height: 1.1em;
 
   textarea {
     padding: 0;
@@ -100,13 +103,14 @@ const Title = styled.h1`
 `;
 
 const PageMenuToggle = styled(Button)`
-  position: absolute;
-  left: -1.5rem;
+  float: left;
   border-radius: 1000px;
-  padding: 0.375rem 0.5rem;
+  margin-left: -2.5rem;
+  margin-top: 0.5rem;
+  width: 2rem;
+  height: 2rem;
   color: var(--body-text-color---opacity-high);
-  transform: translateY(-50%);
-  top: 50%;
+  vertical-align: bottom;
 `;
 
 interface PageProps {
@@ -124,6 +128,10 @@ interface PageProps {
    */
   title: React.ReactNode,
   /**
+   * Whether the page can be edited
+   */
+  isEditable?: boolean,
+  /**
    * The unique identifier of the page
    */
   uid: string,
@@ -136,6 +144,7 @@ interface PageProps {
 export const Page = ({
   isDailyNote,
   hasShortcut,
+  isEditable = true,
   children,
   title,
   uid,
@@ -155,42 +164,43 @@ export const Page = ({
 
   return (
     <MainContent>
-      <PageWrap>
+      <PageWrap className={isDailyNote ? 'is-daily-note' : ''}>
         <PageHeader>
-          <PageMenuToggle
-            isPressed={isPageMenuOpen}
-            onClick={handlePressMenuToggle}
-          >
-            <MoreHoriz />
-          </PageMenuToggle>
-          <Modal
-            onClose={handleClosePageMenu}
-            BackdropProps={{ invisible: true }}
-            container={() => document.querySelector('#app')}
-            open={isPageMenuOpen}
-          >
-            <Popper
-              open={isPageMenuOpen}
-              anchorEl={pageMenuAnchor}
-              disablePortal={true}
-              placement="bottom-start"
-            >
-              <Overlay>
-                <Menu>
-                  {hasShortcut
-                    ? <Button><Bookmark /> Remove Shortcut</Button>
-                    : <Button><Bookmark /> Add Shortcut</Button>}
-                  <Button><BubbleChart /> Show Local Graph</Button>
-                  <Menu.Separator />
-                  <Button><Delete /> Delete Page</Button>
-                </Menu>
-              </Overlay>
-            </Popper>
-          </Modal>
 
-          <Title>{title}</Title>
+          <Title>
+            <PageMenuToggle
+              isPressed={isPageMenuOpen}
+              onClick={handlePressMenuToggle}
+            >
+              <MoreHoriz />
+            </PageMenuToggle>
+            <Modal
+              onClose={handleClosePageMenu}
+              BackdropProps={{ invisible: true }}
+              container={() => document.querySelector('#app')}
+              open={isPageMenuOpen}
+            >
+              <Popper
+                open={isPageMenuOpen}
+                anchorEl={pageMenuAnchor}
+                disablePortal={true}
+                placement="bottom-start"
+              >
+                <Overlay className="animate-in">
+                  <Menu>
+                    {hasShortcut
+                      ? <Button><Bookmark /> Remove Shortcut</Button>
+                      : <Button><Bookmark /> Add Shortcut</Button>}
+                    <Button><BubbleChart /> Show Local Graph</Button>
+                    <Menu.Separator />
+                    <Button><Delete /> Delete Page</Button>
+                  </Menu>
+                </Overlay>
+              </Popper>
+            </Modal>
+            {title} {isDailyNote && <Today />}</Title>
         </PageHeader>
-        {children ? children : <div>placeholder</div>}
+        {children ? children : isEditable ? <Block /> : <EmptyMessage />}
       </PageWrap>
     </MainContent>);
 };
