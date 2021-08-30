@@ -42,6 +42,7 @@ export const AnchorButton = styled.button`
     border-radius: 0.25rem;
     opacity: 0;
     background: var(--background-plus-2);
+    box-shadow: var(--depth-shadow-8);
   }
 
   &:hover {
