@@ -145,7 +145,27 @@ const Template = (args, context) => {
           <LeftSidebar
             isLeftSidebarOpen={isLeftSidebarOpen}
             handlePressShortcut={() => null}
-            shortcuts={[{ uid: '1', title: 'James and the giant', order: 0 }]}
+            shortcuts={[{
+              uid: "4b89dde0-3ccf-481a-875b-d11adfda3f7e",
+              title: "Passer domesticus",
+              order: 1
+            }, {
+              uid: "bd4a892f-c7e5-45d8-bab8-68a8ed9d224f",
+              title: "Spermophilus richardsonii",
+              order: 2
+            }, {
+              uid: "b60fc12e-bf48-415c-a059-a7a4d5ef686e",
+              title: "Leprocaulinus vipera",
+              order: 3
+            }, {
+              uid: "c58d62e5-0e1b-4f30-a156-af8467317c1c",
+              title: "Rangifer tarandus",
+              order: 4
+            }, {
+              uid: "dd099e5d-1f6d-4be7-8bf0-9fc0310ba489",
+              title: "Nycticorax nycticorax",
+              order: 5
+            }]}
             version="1.0.0"
           />
           <WelcomePage />

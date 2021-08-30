@@ -48,13 +48,28 @@ const LinkLeader = styled.span`
 `;
 
 export interface Result {
+  /**
+   * The title of the result.
+   */
   title: React.ReactNode;
+  /**
+   * Truncated sample of the result's main text
+   */
   preview?: React.ReactNode;
+  /**
+   * Whether the result is selected in the list of results
+   */
   isSelected: boolean,
-  handleChooseResult: (result: Result) => void;
+  /**
+   * The type of action to take when choosing the result
+  */
   action: 'create' | 'open'
+  handleChooseResult: (result: Result) => void;
 }
 
+/**
+ * The result of a search.
+*/
 export const Result = ({
   title,
   preview,

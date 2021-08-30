@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { Close } from '@material-ui/icons';
-import { ClickAwayListener, Portal, Modal } from '@material-ui/core';
-
+import { Modal } from '@material-ui/core';
 import { Result } from './components/Result';
 
 const Container = styled.div`
@@ -124,10 +123,26 @@ const Hint = styled.span`
 `;
 
 export interface CommandBarProps {
+  /**
+   * Items returned based on the search query
+   */
   results?: Result[];
+  /**
+   * Prefill the search input with a query
+  */
   defaultQuery?: string;
+  /**
+   * Whether the search input field should be autofocused
+  */
   autoFocus?: true;
+  /**
+   * Whether to render the command bar portaled modal.
+   * If false, the command bar will be rendered in place.
+   */
   isModal?: boolean;
+  /**
+  * Element to attach Portal to
+  **/
   container?: Element;
   handleChooseResult?(result: Result): void;
   handleQueryChange?(query: string): void;
@@ -136,7 +151,7 @@ export interface CommandBarProps {
 }
 
 /**
- * Find and create pages. Command bar.
+ * Finds and creates pages. Command bar.
  */
 export const CommandBar = ({
   results,
