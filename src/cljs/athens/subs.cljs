@@ -174,3 +174,8 @@
   (fn [followups [_ event-id]]
     (get followups event-id)))
 
+
+(rf/reg-sub
+  :connection-status
+  (fn [db _]
+    (:connection-status db)))

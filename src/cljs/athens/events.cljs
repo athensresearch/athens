@@ -435,6 +435,14 @@
     (assoc db :tooltip/uid uid)))
 
 
+;; Connection status
+
+(reg-event-db
+  :conn-status
+  (fn [db [_ status]]
+    (assoc db :connection-status status)))
+
+
 ;; Daily Notes
 
 (reg-event-db
@@ -1522,3 +1530,4 @@
           (js/console.debug ":block/open tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/block-open args]]]}))))
+
