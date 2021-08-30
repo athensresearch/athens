@@ -1,6 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
-import { classnames } from '../../util/classnames';
+import { classnames } from '../../utils/classnames';
 import { EmptyMessage } from "./components/EmptyMessage";
 import { RightSidebarItem, Item } from "./components/RightSidebarItem";
 

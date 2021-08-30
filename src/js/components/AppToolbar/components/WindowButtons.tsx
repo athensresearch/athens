@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { classnames } from '../../../util/classnames';
+import { classnames } from '../../../utils/classnames';
 import { SvgIcon } from '@material-ui/core';
 
 const Wrapper = styled.div`

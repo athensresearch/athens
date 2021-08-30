@@ -4,11 +4,9 @@ import { Block } from '../Block';
 import styled from 'styled-components';
 import { DateTime, toISODate } from 'luxon';
 import { Welcome } from '../Block/Block.stories';
-
+import { preferredDateFormat } from '../../config';
 
 // Helpers
-
-const dateFormat = { month: 'long', day: 'numeric' };
 
 const data = {
   randomBlockContent: [
@@ -50,8 +48,8 @@ export const DailyNote = Template.bind({});
 DailyNote.args = {
   isDailyNote: true,
   hasShortcut: false,
-  title: DateTime.now().toISODate(),
-  uid: '123'
+  title: DateTime.now().toLocaleString(preferredDateFormat),
+  uid: DateTime.now().toISODate();
 };
 
 export const WelcomePage = () => {

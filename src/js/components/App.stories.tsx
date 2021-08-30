@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { classnames } from '../util/classnames';
-import { getOs } from '../util/getOs';
+import { classnames } from '../utils/classnames';
+import { getOs } from '../utils/getOs';
 
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
