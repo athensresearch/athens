@@ -211,9 +211,9 @@ export const CommandBar = ({
     <Modal
       open={true}
       disablePortal={true}
-      container={container ? container : () => document.querySelector('#app-layout')}
+      container={container ? container : () => document.querySelector('#app')}
       onClose={handleCloseCommandBar}
-      hideBackdrop={true}
+      BackdropProps={{ invisible: true }}
     >
       {content}
     </Modal>
