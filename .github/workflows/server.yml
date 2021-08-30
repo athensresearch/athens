@@ -1,0 +1,30 @@
+# 2 options to do this, going with option 2:
+# - build jar on github and then send this to server
+#   - jar can be big so total time would be: jar + rsync time
+# - ssh into server and there build the jar
+#   - some initial setup needed on server side
+name: Deploy on server
+on:
+  push:
+    branches:
+      - feature/rtc-v1
+jobs:
+    deploy-server:
+     runs-on: ubuntu-20.04
+     steps:
+       - name: Deploy via ssh
+         uses: appleboy/ssh-action@v0.1.3
+         with:
+           host: ${{ secrets.HOST_1 }}
+           username: ${{ secrets.USERNAME_1 }}
+           key: ${{ secrets.SECRET_KEY_1 }}
+           script: |
+             cd athens
+             git checkout feature/rtc-v1 # For now, change later
+             git status
+             docker-compose stop
+             lein uberjar
+             cp target/athens-lan-party-standalone.jar ./
+             docker-compose start
+
+
