@@ -7,6 +7,10 @@ export const Menu = styled.div`
   align-items: stretch;
   grid-auto-flow: row;
   overflow: auto;
+
+  button svg {
+    font-size: 16px;
+  }
 `;
 
 Menu.Separator = styled.hr`

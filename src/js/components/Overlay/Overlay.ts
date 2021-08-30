@@ -19,7 +19,7 @@ export const Overlay = styled.div`
   z-index: var(--zindex-dropdown);
   min-height: 2em;
   animation-fill-mode: both;
-  /* box-shadow: [(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]; */
+  box-shadow: var(--depth-shadow-16), 0 0 0 1px rgb(0 0 0 / 0.05);
   flex-direction: column;
   background: var(--background-plus-1);
   

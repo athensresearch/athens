@@ -1,8 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { MoreHoriz } from '@material-ui/icons';
-import { Popper } from "@material-ui/core";
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import { MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
+import { Popper, Modal } from "@material-ui/core";
 import { Button } from '../Button';
 import { Overlay } from '../Overlay';
 import { Menu } from '../Menu';
@@ -112,11 +111,24 @@ const PageMenuToggle = styled(Button)`
 
 interface PageProps {
   children?: React.ReactNode,
+  /**
+   * Whether the page is a Daily Note
+   */
   isDailyNote: boolean,
+  /**
+   * Whether the page has a corresponding shortcut
+   */
   hasShortcut: boolean,
+  /**
+   * The title of the page
+   */
   title: React.ReactNode,
+  /**
+   * The unique identifier of the page
+   */
   uid: string,
 }
+
 
 /**
  * Display whole page content
@@ -151,23 +163,30 @@ export const Page = ({
           >
             <MoreHoriz />
           </PageMenuToggle>
-          <Popper
-            open={isPageMenuOpen}
-            anchorEl={pageMenuAnchor}
+          <Modal
+            onClose={handleClosePageMenu}
+            BackdropProps={{ invisible: true }}
             container={() => document.querySelector('#app')}
-            placement="bottom-start"
+            open={isPageMenuOpen}
           >
-            <ClickAwayListener onClickAway={handleClosePageMenu}>
+            <Popper
+              open={isPageMenuOpen}
+              anchorEl={pageMenuAnchor}
+              disablePortal={true}
+              placement="bottom-start"
+            >
               <Overlay>
                 <Menu>
-                  <Button>test button</Button>
-                  <Button>test button</Button>
+                  {hasShortcut
+                    ? <Button><Bookmark /> Remove Shortcut</Button>
+                    : <Button><Bookmark /> Add Shortcut</Button>}
+                  <Button><BubbleChart /> Show Local Graph</Button>
                   <Menu.Separator />
-                  <Button>test button</Button>
+                  <Button><Delete /> Delete Page</Button>
                 </Menu>
               </Overlay>
-            </ClickAwayListener>
-          </Popper>
+            </Popper>
+          </Modal>
 
           <Title>{title}</Title>
         </PageHeader>
