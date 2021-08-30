@@ -106,18 +106,6 @@
        db pattern))
 
 
-(defn replace-linked-refs-tx
-  "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
-  [db title]
-  (let [pattern (patterns/linked title)]
-    (->> pattern
-         (get-ref-ids db)
-         (d/pull-many db [:db/id :block/string])
-         (mapv (fn [x]
-                 (let [new-str (string/replace (:block/string x) pattern title)]
-                   (assoc x :block/string new-str)))))))
-
-
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]

@@ -1326,7 +1326,54 @@
               block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])]
           (t/is (= 2 (-> parent-block :block/children count)))
           (t/is (= 0 (:block/order block-1)))
-          (t/is (= 1 (:block/order block-4))))))))
+          (t/is (= 1 (:block/order block-4)))))))
+
+  (t/testing "Replace block refs"
+    (let [block-1-uid    "block-1-uid"
+          block-1-text   "a"
+          block-2-uid    "block-2-uid"
+          block-2-text   "b"
+          block-3-uid    "block-3-ui"
+          block-3-text   (str "((" block-1-uid "))")
+          block-4-uid    "block-4-uid"
+          block-4-text   (str "((" block-2-uid "))")
+          block-5-uid    "block-5-uid"
+          block-5-text   (str "((" block-1-uid "))" " test " "((" block-2-uid "))")
+          setup-txs         [{:node/title     "test page"
+                              :block/uid      "page-uid"
+                              :block/children [{:block/uid      block-1-uid
+                                                :block/string   block-1-text
+                                                :block/order    0
+                                                :block/children {:block/uid      block-2-uid
+                                                                 :block/string   block-2-text
+                                                                 :block/order    0
+                                                                 :block/children []}}
+                                               {:block/uid      block-3-uid
+                                                :block/string   block-3-text
+                                                :block/order    1
+                                                :block/children []}
+                                               {:block/uid      block-4-uid
+                                                :block/string   block-4-text
+                                                :block/order    2
+                                                :block/children []}
+                                               {:block/uid      block-5-uid
+                                                :block/string   block-5-text
+                                                :block/order    3
+                                                :block/children []}]}]]
+
+
+      (d/transact @fixture/connection setup-txs)
+      (let [uids                   [block-1-uid block-2-uid]
+            selected-delete-event  (common-events/build-selected-delete-event -1
+                                                                              uids)
+            selected-delete-txs    (resolver/resolve-event-to-tx @@fixture/connection selected-delete-event)]
+        (d/transact @fixture/connection selected-delete-txs)
+        (let [block-3                (common-db/get-block @@fixture/connection [:block/uid block-3-uid])
+              block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])
+              block-5                (common-db/get-block @@fixture/connection [:block/uid block-5-uid])]
+          (t/is (= "a" (:block/string block-3)))
+          (t/is (= "b" (:block/string block-4)))
+          (t/is (= "a test b" (:block/string block-5))))))))
 
 
 (t/deftest paste-event-test
@@ -1378,36 +1425,69 @@
 
 
 (t/deftest delete-merge-block
-  (let [block-uid "block-uid-2"
-        page-uid  "page-uid"
-        value "next"
-        setup-tx [{:db/id          -1
-                   :node/title     "test page"
-                   :block/order    0
-                   :block/uid      page-uid
-                   :block/open     true
-                   :block/children [{:db/id -2
-                                     :block/uid "block-uid-1"
-                                     :block/string "previous"
-                                     :block/open     true
-                                     :block/order 0}
-                                    {:db/id -3
-                                     :block/uid block-uid
-                                     :block/string value
-                                     :block/order 1}]}]]
+  (t/testing "Deleting and merging blocks"
+    (let [block-uid "block-uid-2"
+          page-uid  "page-uid"
+          value "next"
+          setup-tx [{:db/id          -1
+                     :node/title     "test page"
+                     :block/order    0
+                     :block/uid      page-uid
+                     :block/open     true
+                     :block/children [{:db/id -2
+                                       :block/uid "block-uid-1"
+                                       :block/string "previous"
+                                       :block/open     true
+                                       :block/order 0}
+                                      {:db/id -3
+                                       :block/uid block-uid
+                                       :block/string value
+                                       :block/order 1}]}]]
 
-    (d/transact @fixture/connection setup-tx)
-    (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
-      (t/is (= page-uid uid)
-            "check if setup-tx is added"))
+      (d/transact @fixture/connection setup-tx)
+      (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
+        (t/is (= page-uid uid)
+              "check if setup-tx is added"))
 
-    (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 block-uid value)
-          delete-merge-block-tx    (resolver/resolve-event-to-tx @@fixture/connection delete-merge-block-event)]
-      (d/transact @fixture/connection delete-merge-block-tx)
-      (let [{children :block/children} (d/pull @@fixture/connection '[{:block/children [:block/string]}] [:block/uid page-uid])]
-        (t/is (= 1 (count children))
-              "check if the second child is deleted")
-        (t/is (= "previousnext" (-> children
-                                    first
-                                    :block/string))
-              "check if the content of the two blocks are merged")))))
+      (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 block-uid value)
+            delete-merge-block-tx    (resolver/resolve-event-to-tx @@fixture/connection delete-merge-block-event)]
+        (d/transact @fixture/connection delete-merge-block-tx)
+        (let [{children :block/children} (d/pull @@fixture/connection '[{:block/children [:block/string]}] [:block/uid page-uid])]
+          (t/is (= 1 (count children))
+                "check if the second child is deleted")
+          (t/is (= "previousnext" (-> children
+                                      first
+                                      :block/string))
+                "check if the content of the two blocks are merged")))))
+
+  (t/testing "Replacing block refs"
+    (let [page-uid    "page-uid"
+          block-uid-1 "block-uid-1"
+          block-str-1 "a"
+          block-uid-2 "block-uid-2"
+          block-str-2 (str "((" block-uid-1 "))")
+          setup-tx [{:db/id          -1
+                     :node/title     "test page"
+                     :block/order    0
+                     :block/uid      page-uid
+                     :block/children [{:db/id -2
+                                       :block/uid block-uid-1
+                                       :block/string block-str-1
+                                       :block/order 0}
+                                      {:db/id -3
+                                       :block/uid block-uid-2
+                                       :block/string block-str-2
+                                       :block/order 1}]}]]
+
+      (d/transact @fixture/connection setup-tx)
+      (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
+        (t/is (= page-uid uid)
+              "check if setup-tx is added"))
+
+      (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 block-uid-1 block-str-1)
+            delete-merge-block-tx    (resolver/resolve-event-to-tx @@fixture/connection delete-merge-block-event)]
+        (d/transact @fixture/connection delete-merge-block-tx)
+
+        (let [{string :block/string} (common-db/get-block @@fixture/connection [:block/uid block-uid-2])]
+          (t/is (= "a" string)
+                "check if the block refs is replaced with text content"))))))
