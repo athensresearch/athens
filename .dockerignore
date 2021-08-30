@@ -2,7 +2,6 @@
 /.dockerignore
 /.gitignore
 /.shadow-cljs/
-/target/
 /node_modules/
 /.git/
 /resources/public/js/compiled

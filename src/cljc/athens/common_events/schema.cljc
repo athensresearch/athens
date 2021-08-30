@@ -402,7 +402,7 @@
   [:map
    [:event/args
     [:map
-     [:uids [:set string?]]]]])
+     [:uids [:vector string?]]]]])
 
 
 (def datascript-block-open

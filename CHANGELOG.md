@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.2](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.1...v1.0.0-alpha.rtc.2) (2021-08-26)
+
+
+### Bug Fixes
+
+* A bit more logging while we're debugging. ([a8903b5](https://github.com/athensresearch/athens/commit/a8903b5c2503134fdf6bd80b8e3f6aea12b1baa1))
+* Block doesn't render when clicking outside ([12c039a](https://github.com/athensresearch/athens/commit/12c039a9a5623d322ef52f9c7a65d134bc794b29)), closes [#1491](https://github.com/athensresearch/athens/issues/1491)
+* **bullets:** make bullets same size across zoom levels ([4b5d877](https://github.com/athensresearch/athens/commit/4b5d8770e26153c598e9f706530c0ec0c635be25))
+* Can't delete multiple blocks at once ([c8825e6](https://github.com/athensresearch/athens/commit/c8825e6442311c95509d5bce66681cb257c72f68)), closes [#1516](https://github.com/athensresearch/athens/issues/1516)
+* Daily pages creation from Daily Pages. ([287fa74](https://github.com/athensresearch/athens/commit/287fa74cd5420c04815de7004746f2e652df1411))
+* Log error when handler doesn't return handle status event. ([f668448](https://github.com/athensresearch/athens/commit/f6684487c9d123971030cac5ca26f78606c4b74e))
+* make bullet look closer to previous collapsed bullets ([ee892fc](https://github.com/athensresearch/athens/commit/ee892fcc5f2b14f61dc5d7a8027da09838fd0232))
+* nav-daily-notes and daily-note/reset ([765d6fc](https://github.com/athensresearch/athens/commit/765d6fc1ed56feae1cdc5077c2b2410ae7fd71c1))
+* Presence broadcast new username when new player introduces. ([6e46576](https://github.com/athensresearch/athens/commit/6e4657657ec5e80993366e85de5e5aecc34ad66e))
+* Presence confirm `:presence/editing` & plain keywords for args. ([65ffae2](https://github.com/athensresearch/athens/commit/65ffae25e6523150295a3ef03b2904ac6382ed51))
+* problems in the daily page scroll ([8bf3e6b](https://github.com/athensresearch/athens/commit/8bf3e6b60d1497d9c8fb0b6034c968b9fd1cbc48))
+* remove unused storage icon ([dcc5e16](https://github.com/athensresearch/athens/commit/dcc5e16fca44ce2478f0652a40e659e0b8842e09))
+* Selection behaviour fixed. [#1571](https://github.com/athensresearch/athens/issues/1571) ([a7fd284](https://github.com/athensresearch/athens/commit/a7fd284e019c5d7381a1f98ee57163c989f4c1ee))
+* Selection clear was resetting `re-frame` db. ([377e417](https://github.com/athensresearch/athens/commit/377e417a778d7a5c0673dc904b6d243ea69e9560))
+* some bullets are not round ([56d608f](https://github.com/athensresearch/athens/commit/56d608f2a74f9dab2798c601dc4495335a930e2e))
+* Some bullets are not round ([f583bc5](https://github.com/athensresearch/athens/commit/f583bc565c1784b02d2460315ab841f07f08a0f8))
+* Some bullets are not round ([1370fec](https://github.com/athensresearch/athens/commit/1370fec2996f841c2ef15c1cc321e5c428c5e0fe)), closes [#1495](https://github.com/athensresearch/athens/issues/1495)
+* update daily page after creation ([e9b140e](https://github.com/athensresearch/athens/commit/e9b140eb3b7b16d2ebea0581f93e0cff2e62564f))
+
+
+* alignment ([384cad6](https://github.com/athensresearch/athens/commit/384cad62fa53c205878156fd83ed92a996f689a9))
+* comment and deploy gh pages to main ([cdac939](https://github.com/athensresearch/athens/commit/cdac9396078f65fb7ed8fe3568659510218aec7d))
+* fix ([87c016c](https://github.com/athensresearch/athens/commit/87c016c526119d8fb9bcfb976ef91e5f393b5132))
+* only auto-update releases from the main branch ([d98719d](https://github.com/athensresearch/athens/commit/d98719dffab2b5c4e128aeffa2dae62caba11e86))
+* only deploy to gh-pages on master ([a29bb6f](https://github.com/athensresearch/athens/commit/a29bb6f776c3be7dd0ddd8c13b47e886ba0a95bd))
+
 ## [1.0.0-alpha.rtc.1](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.0...v1.0.0-alpha.rtc.1) (2021-08-17)
 
 

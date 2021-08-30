@@ -183,7 +183,7 @@
                                    :event/type    :datascript/add-child
                                    :event/args    {:parent-uid parent-uid
                                                    :new-uid    new-uid
-                                                   :add-time?  false?}}))
+                                                   :add-time?  false}}))
   ([last-tx parent-uid new-uid add-time?] (let [event-id (gen-event-id)]
                                             {:event/id      event-id
                                              :event/last-tx last-tx
