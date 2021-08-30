@@ -118,7 +118,7 @@ interface PageProps {
   /**
    * Whether the page has a corresponding shortcut
    */
-  hasShortcut: boolean,
+  hasShortcut?: boolean,
   /**
    * The title of the page
    */

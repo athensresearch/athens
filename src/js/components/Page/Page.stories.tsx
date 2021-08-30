@@ -2,9 +2,13 @@ import React from 'react';
 import { Page } from '../Page';
 import { Block } from '../Block';
 import styled from 'styled-components';
+import { DateTime, toISODate } from 'luxon';
 import { Welcome } from '../Block/Block.stories';
 
+
 // Helpers
+
+const dateFormat = { month: 'long', day: 'numeric' };
 
 const data = {
   randomBlockContent: [
@@ -39,6 +43,14 @@ BlockPage.args = {
   isDailyNote: false,
   hasShortcut: false,
   title: 'Block Page',
+  uid: '123'
+};
+
+export const DailyNote = Template.bind({});
+DailyNote.args = {
+  isDailyNote: true,
+  hasShortcut: false,
+  title: DateTime.now().toISODate(),
   uid: '123'
 };
 
