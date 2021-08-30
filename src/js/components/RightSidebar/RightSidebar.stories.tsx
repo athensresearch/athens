@@ -2,7 +2,7 @@ import { RightSidebar } from './RightSidebar';
 import { AppLayout } from '../AppLayout';
 
 export default {
-  title: 'Components/RightSidebar',
+  title: 'Sections/RightSidebar',
   component: RightSidebar,
   argTypes: {},
 };

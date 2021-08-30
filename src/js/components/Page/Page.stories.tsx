@@ -2,7 +2,7 @@ import React from 'react';
 import { Page } from '../Page';
 import { Block } from '../Block';
 import styled from 'styled-components';
-import { DateTime, toISODate } from 'luxon';
+import { DateTime } from 'luxon';
 import { Welcome } from '../Block/Block.stories';
 import { preferredDateFormat } from '../../config';
 
@@ -31,7 +31,6 @@ const Template = (args) => <Page {...args} />;
 export const NodePage = Template.bind({});
 NodePage.args = {
   isDailyNote: false,
-  hasShortcut: false,
   title: 'Node Page',
   uid: '123'
 };
@@ -39,8 +38,14 @@ NodePage.args = {
 export const BlockPage = Template.bind({});
 BlockPage.args = {
   isDailyNote: false,
-  hasShortcut: false,
   title: 'Block Page',
+  uid: '123'
+};
+
+export const BlockPageWithLongTitle = Template.bind({});
+BlockPageWithLongTitle.args = {
+  isDailyNote: false,
+  title: 'Lorem ipsum dolor sit amet donec consectetur',
   uid: '123'
 };
 
@@ -49,7 +54,7 @@ DailyNote.args = {
   isDailyNote: true,
   hasShortcut: false,
   title: DateTime.now().toLocaleString(preferredDateFormat),
-  uid: DateTime.now().toISODate();
+  uid: DateTime.now().toISODate()
 };
 
 export const WelcomePage = () => {

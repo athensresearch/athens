@@ -17,12 +17,6 @@ const data = {
   contentWithLink: () => <>regular text <a href="https://www.google.com">link</a> regular text</>,
 };
 
-const BlockContainer = styled.div`
-  flex: 1 1 100%;
-  padding: 1rem;
-  max-width: 900px;
-`;
-
 export default {
   title: 'Components/Block',
   component: Block,

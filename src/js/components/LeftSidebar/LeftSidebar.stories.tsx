@@ -4,7 +4,7 @@ import { LeftSidebar } from './LeftSidebar';
 import { AppLayout } from '../AppLayout';
 
 export default {
-  title: 'Components/LeftSidebar',
+  title: 'Sections/LeftSidebar',
   component: LeftSidebar,
   argTypes: {},
 };
