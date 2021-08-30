@@ -161,7 +161,7 @@ const themeLight = `
 
   --depth-shadow-4: 0 2px 4px var(--shadow-color);
   --depth-shadow-8: 0 4px 8px var(--shadow-color);
-  --depth-shadow-14: 0 4px 16px var(--shadow-color);
+  --depth-shadow-16: 0 4px 16px var(--shadow-color);
   --depth-shadow-64: 0 24px 60px var(--shadow-color);
 `;
 
@@ -305,7 +305,7 @@ const themeDark = `
 
   --depth-shadow-4: 0 2px 4px var(--shadow-color);
   --depth-shadow-8: 0 4px 8px var(--shadow-color);
-  --depth-shadow-14: 0 4px 16px var(--shadow-color);
+  --depth-shadow-16: 0 4px 16px var(--shadow-color);
   --depth-shadow-64: 0 24px 60px var(--shadow-color);
  }
 `;
