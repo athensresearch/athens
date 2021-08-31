@@ -1,4 +1,4 @@
-# 9. Atomic/Composite Grapth Operations
+# 10. Atomic/Composite Grapth Operations
 
 Date: 2021-08-18
 
@@ -7,15 +7,6 @@ Date: 2021-08-18
 Draft
 
 Supercedes [7. Lan-Party Datascript Events](0007-lan-party-datascript-events.md)
-
-- **Consequences**
-    - We'll have additional work of Porting Semantic Events to use Atomic Graph Ops and compositions.
-    - We have working `:paste` & `:block/save` events, they are broken not ported now.
-    - We'll have smaller amount of tests in order to provide correctness guarantees
-    - 
-    - What becomes easier or more difficult to do and any risks introduced by the change that will need to be mitigated.
-- **Additional Resources**
-    - ((List of Atomic Graph Operations:))
 
 ## Context
 
@@ -38,17 +29,42 @@ We have two kinds of events to modify graph:
     - Operations like create new block, create page, save block
 - ⎄ Composite Graph Ops
     - Collection of events to be executed on the graph
-        - [ ] #[[Open Question]] How to represent multiple events
     - Like `:block/save` when new link is discovered, should produce also `:page/create` event
 
-Atomic events should follow same Common Events model as it's happening now
+Atomic events should follow same Common Events model as it's happening now.
 
-Composite events are really 2 cases and should be tackled as separate
+List of ((⚛️ Atomic Graph Ops))
+- *Page Ops*
+    - ((⚛️**`:page/create`**))
+    - ((⚛️**`:page/rename`**))
+    - ((⚛️**`:page/merge`**))
+    - ((⚛️**`:page/delete`**))
+- *Block Ops*
+    - ((⚛️**`:block/new`**))
+    - ((⚛️**`:block/save`**))
+    - ((⚛️**`:block/open`**))
+    - ((⚛️**`:block/move`** ⭐️))
+- *Shortcut Ops*
+    - (({{[[TODO]]}} ⚛️**`:shortcut/add`**))
+    - (({{[[TODO]]}} ⚛️**`:shortcut/remove`**))
+    - (({{[[TODO]]}} ⚛️**`:shortcut/move`**))
 
-Use ((1. Change Event Protocol to accept list of events)) & ((2 .Extend common event type by adding consequence events))
-- We need both:
-  - ((Event type Composite Event, that contains list of Atomic Graph Ops))
-  - ((Consequence Event is 2 things))
+
+((⎄ Composite Graph Ops)) are a way to group ((⚛️ Atomic Graph Ops)).
+
+We'll only need one type of Composite Graph Ops, that is Consequence Event.
+
+Consequence Event is 2 things:
+- Trigger Event (like `:paste`)
+- Consequence Events List
+    - Containing however many events to include into transaction resolution.
+    - These events can be more of Consequence Events, or ((⚛️ Atomic Graph Ops)).
+
+
+This will allow for easier Temporality,
+We'll be able to represent Main Action that moved Knowledge Graph forward.
+
+It will maintain information about `:paste` events that injected sub-tree with ((⚛️ Atomic Graph Ops)).
 
 ## Consequences
 
@@ -69,29 +85,29 @@ We'll have smaller amount of tests in order to provide correctness guarantees
         - Operations like create new block, create page, save block
     - ⎄ Composite Graph Ops
         - Collection of events to be executed on the graph
-            - {{[[TODO]]}} #[[Open Question]] How to represent multiple events
         - Like `:block/save` when new link is discovered, should produce also `:page/create` event
+
 - List of Atomic Graph Operations:
     - Page Ops
-        - **`:page/create`**
+        - ⚛️**`:page/create`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `title` - Page title page to be created
                 - `page-uid` - `:block/uid` of page to be created
                 - `block-uid` - `:block/uid` of 1st block to be created in page to be created
-        - **`:page/rename`**
+        - ⚛️**`:page/rename`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `page-uid` - `:block/uid` of page to be renamed
                 - `new-name` - Page should have this name after operation
                 - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
-        - **`:page/merge`**
+        - ⚛️**`:page/merge`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `page-uid` - `:block/uid` of page to be merged into `new-page`
                 - `new-page` - page name of a page we'll merge contents of `page-uid` page into
                 - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
-        - **`:page/delete`**
+        - ⚛️**`:page/delete`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `page-uid` - `:block/uid` of the page to be deleted
@@ -198,14 +214,53 @@ We'll have smaller amount of tests in order to provide correctness guarantees
                 - ((⎄**`:block/unindent`**))
             - *Notes*
                 - In code as `:unindent/multi`
-        - {{[[TODO]]}} **`:block/bump-up`**
-        - {{[[TODO]]}} **`:paste-verbatim`**
+        - ⎄**`:block/bump-up`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to be bumped up
+                - `new-block-uid` - `:block/uid` of new block to be created above `block-uid` block
+            - *Composition of*
+                - ((⚛️**`:block/new`**))
+        - ⎄**`:paste-verbatim`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `block-uid` - `:block/uid` of block to paste `text` to
+                - `text` - text to be added to `:block/string`
+                - `index` - position to add `text` at
+                - `value` - (^^To Remove^^)`:block/string` value
+            - *Composition of*
+                - ((⚛️**`:block/save`**))
     - {{[[TODO]]}} Drop Ops
-        - drop/child
-        - drop/child-multi
-        - drop/child-link
-        - drop/different-parent
-        - 
+        - ⎄ **`:drop/child`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `source-uid` - `:block/uid` of blocked to drop to new `new-parent-uid`
+                - `new-parent-uid` - `:block/uid` of new parent to drop to
+            - *Composition of*
+                - ((⚛️**`:block/move`** ⭐️))
+        - ⎄**`:drop/child-multi`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `source-uids` - list of `:block/uid` of blocks to be moved
+                - `new-parent-uid` - `:block/uid` of new parent to move to
+            - *Composition of*
+                - ((⎄ **`:drop/child`**))
+        - ⎄ **`:drop/child-link`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `source-uid` - `:block/uid` of block to link to
+                - `parent-uid` - `:block/uid` of parent block receiving link drop
+                - `new-block-uid` - `:block/uid` of block to create with link to `source-uid`
+            - *Composition of*
+                - ((⚛️**`:block/new`**))
+                - ((⚛️**`:block/save`**))
+        - ⎄ **`:drop/different-parent`**
+            - ((⎄ Composite Graph Ops))
+            - *Input*
+                - `source-uid` - `:block/uid` of block to link to
+                - `parent-uid` - `:block/uid` of parent block receiving link drop
+                - 
     - {{[[TODO]]}} Shortcut Ops
-        - {{[[TODO]]}} **`:shortcut/add`**
-        - {{[[TODO]]}} **`:shortcut/remove`**
+        - {{[[TODO]]}} ⚛️**`:shortcut/add`**
+        - {{[[TODO]]}} ⚛️**`:shortcut/remove`**
+        - {{[[TODO]]}} ⚛️**`:shortcut/move`**
