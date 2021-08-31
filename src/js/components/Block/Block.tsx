@@ -141,25 +141,6 @@ export const Block: React.FC<BlockProps> = ({
       isSelected && isDragging ? 'dragging' : '',
       isEditing ? 'is-editing' : ''].join(' ')}
   >
-    {presentUser && (
-      <Popper
-        open={!!presentUser}
-        anchorEl={avatarAnchorEl}
-        placement="top-start"
-        popperOptions={{
-          modifiers: {
-            preventOverflow: { enabled: false },
-            offset: []
-          }
-        }}
-      >
-        <Avatar
-          name={presentUser.name}
-          color={presentUser.color}
-          size="1.5rem"
-        />
-      </Popper>
-    )}
     {/* Drop area indicator before */}
     <div
       className="block-body"
