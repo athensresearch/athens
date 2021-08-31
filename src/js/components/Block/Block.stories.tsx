@@ -1,7 +1,11 @@
 import React from 'react';
 import { Block } from './Block';
 
-// Helpers
+import styled from 'styled-components';
+
+const Wrapper = styled.div`
+  padding: 4rem;
+`;
 
 const data = {
   blockContent: [
@@ -28,7 +32,7 @@ export default {
 
 // Stories
 
-const Template = (args) => <Block {...args} />;
+const Template = (args) => <Wrapper><Block {...args} /></Wrapper>;
 
 export const Basic = Template.bind({});
 Basic.args = {
@@ -72,7 +76,7 @@ export const Series = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <>
+    <Wrapper>
       <Block
         uid="1"
         isOpen={blockState["b1"].isOpen}
@@ -96,72 +100,76 @@ export const Series = () => {
         renderedContent={blockState["b3"].renderedContent}
         presentUser={blockState["b3"].presentUser}
       />
-    </>
+    </Wrapper>
   )
 };
 
 export const References = () => {
   return (
-    <Block
-      uid="1"
-      isSelected={false}
-      isOpen={true}
-      refsCount={12}
-      rawContent={data.blockContent[0].raw}
-      renderedContent={data.blockContent[0].rendered()}
-    >
-    </Block>
+    <Wrapper>
+      <Block
+        uid="1"
+        isSelected={false}
+        isOpen={true}
+        refsCount={12}
+        rawContent={data.blockContent[0].raw}
+        renderedContent={data.blockContent[0].rendered()}
+      >
+      </Block>
+    </Wrapper>
   )
 };
 
 export const Selected = () => {
   return (
-    <Block
-      uid="1"
-      isSelected={true}
-      isOpen={true}
-      rawContent={data.blockContent[0].raw}
-      renderedContent={data.blockContent[0].rendered()}
-    >
-    </Block>
+    <Wrapper>
+      <Block
+        uid="1"
+        isSelected={true}
+        isOpen={true}
+        rawContent={data.blockContent[0].raw}
+        renderedContent={data.blockContent[0].rendered()}
+      >
+      </Block>
+    </Wrapper>
   )
 };
 
 export const MultipleSelected = () => {
   return (
-    <>
-    <Block
-      uid="123"
-      isSelected={true}
-      isOpen={true}
-        rawContent={data.blockContent[0].raw}
-        renderedContent={data.blockContent[0].rendered()}
-    />
-    <Block
-      uid="123"
-      isSelected={true}
-      isOpen={true}
-        rawContent={data.blockContent[1].raw}
-        renderedContent={data.blockContent[1].rendered()}
-    >
+    <Wrapper>
       <Block
         uid="123"
         isSelected={true}
         isOpen={true}
-          rawContent={data.blockContent[2].raw}
-          renderedContent={data.blockContent[2].rendered()}
+        rawContent={data.blockContent[0].raw}
+        renderedContent={data.blockContent[0].rendered()}
+      />
+      <Block
+        uid="123"
+        isSelected={true}
+        isOpen={true}
+        rawContent={data.blockContent[1].raw}
+        renderedContent={data.blockContent[1].rendered()}
       >
         <Block
           uid="123"
           isSelected={true}
           isOpen={true}
+          rawContent={data.blockContent[2].raw}
+          renderedContent={data.blockContent[2].rendered()}
+        >
+          <Block
+            uid="123"
+            isSelected={true}
+            isOpen={true}
             rawContent={data.blockContent[0].raw}
             renderedContent={data.blockContent[0].rendered()}
-        >
+          >
+          </Block>
         </Block>
       </Block>
-      </Block>
-    </>
+    </Wrapper>
   )
 };
 
@@ -190,30 +198,32 @@ export const Tree = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Block
-      uid="1"
-      isOpen={blockState["b1"].isOpen}
-      handlePressToggle={() => toggleBlockOpen("b1")}
-      rawContent={blockState["b1"].rawContent}
-      renderedContent={blockState["b1"].renderedContent}
-      presentUser={blockState["b1"].presentUser}
-    >
-      <Block uid="2"
-        isOpen={blockState["b2"].isOpen}
-        handlePressToggle={() => toggleBlockOpen("b2")}
-        rawContent={blockState["b2"].rawContent}
-        renderedContent={blockState["b2"].renderedContent}
-        presentUser={blockState["b2"].presentUser}
+    <Wrapper>
+      <Block
+        uid="1"
+        isOpen={blockState["b1"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b1")}
+        rawContent={blockState["b1"].rawContent}
+        renderedContent={blockState["b1"].renderedContent}
+        presentUser={blockState["b1"].presentUser}
       >
-        <Block uid="3"
-          isOpen={blockState["b3"].isOpen}
-          handlePressToggle={() => toggleBlockOpen("b3")}
-          rawContent={blockState["b3"].rawContent}
-          renderedContent={blockState["b3"].renderedContent}
-          presentUser={blockState["b3"].presentUser}
-        />
+        <Block uid="2"
+          isOpen={blockState["b2"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b2")}
+          rawContent={blockState["b2"].rawContent}
+          renderedContent={blockState["b2"].renderedContent}
+          presentUser={blockState["b2"].presentUser}
+        >
+          <Block uid="3"
+            isOpen={blockState["b3"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b3")}
+            rawContent={blockState["b3"].rawContent}
+            renderedContent={blockState["b3"].renderedContent}
+            presentUser={blockState["b3"].presentUser}
+          />
+        </Block>
       </Block>
-    </Block>
+    </Wrapper>
   )
 };
 
@@ -223,13 +233,97 @@ export const Welcome = () => {
       isOpen: true,
       rawContent: data.blockContent[1].raw,
       renderedContent: data.blockContent[1].rendered(),
-      presentUser: null,
     },
     b2: {
       isOpen: true,
       rawContent: data.blockContent[1].raw,
       renderedContent: data.blockContent[1].rendered(),
-      presentUser: { name: "Jeff", color: "blue" },
+    },
+    b3: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+    },
+    b4: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+    },
+    b5: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+    },
+    b6: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+    },
+  })
+
+  const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
+
+  return (
+    <Wrapper>
+      <Block
+        uid="1"
+        isOpen={blockState["b1"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b1")}
+        rawContent={blockState["b1"].rawContent}
+        renderedContent={blockState["b1"].renderedContent}
+      >
+        <Block uid="2"
+          isOpen={blockState["b2"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b2")}
+          rawContent={blockState["b2"].rawContent}
+          renderedContent={blockState["b2"].renderedContent}
+        >
+          <Block uid="3"
+            isOpen={blockState["b3"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b3")}
+            rawContent={blockState["b3"].rawContent}
+            renderedContent={blockState["b3"].renderedContent}
+          />
+          <Block
+            uid="4"
+            isOpen={blockState["b4"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b4")}
+            rawContent={blockState["b4"].rawContent}
+            renderedContent={blockState["b4"].renderedContent}
+          >
+            <Block uid="5"
+              isOpen={blockState["b5"].isOpen}
+              handlePressToggle={() => toggleBlockOpen("b5")}
+              rawContent={blockState["b5"].rawContent}
+              renderedContent={blockState["b5"].renderedContent}
+            >
+              <Block uid="6"
+                isOpen={blockState["b6"].isOpen}
+                handlePressToggle={() => toggleBlockOpen("b6")}
+                rawContent={blockState["b6"].rawContent}
+                renderedContent={blockState["b6"].renderedContent}
+              />
+            </Block>
+          </Block>
+        </Block>
+      </Block>
+    </Wrapper>
+  )
+};
+
+export const WithAvatars = ({ ...args }) => {
+  const [blockState, setBlockState] = React.useState({
+    b1: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: { name: "Jeff", color: args.color },
+    },
+    b2: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: { name: "Matei", color: args.color },
     },
     b3: {
       isOpen: true,
@@ -241,13 +335,13 @@ export const Welcome = () => {
       isOpen: true,
       rawContent: data.blockContent[1].raw,
       renderedContent: data.blockContent[1].rendered(),
-      presentUser: null,
+      presentUser: { name: "Alex", color: args.color },
     },
     b5: {
       isOpen: true,
       rawContent: data.blockContent[1].raw,
       renderedContent: data.blockContent[1].rendered(),
-      presentUser: null,
+      presentUser: { name: "Felipe", color: args.color },
     },
     b6: {
       isOpen: true,
@@ -260,53 +354,57 @@ export const Welcome = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Block
-      uid="1"
-      isOpen={blockState["b1"].isOpen}
-      handlePressToggle={() => toggleBlockOpen("b1")}
-      rawContent={blockState["b1"].rawContent}
-      renderedContent={blockState["b1"].renderedContent}
-      presentUser={blockState["b1"].presentUser}
-    >
-      <Block uid="2"
-        isOpen={blockState["b2"].isOpen}
-        handlePressToggle={() => toggleBlockOpen("b2")}
-        rawContent={blockState["b2"].rawContent}
-        renderedContent={blockState["b2"].renderedContent}
-        presentUser={blockState["b2"].presentUser}
+    <Wrapper>
+      <Block
+        uid="1"
+        isOpen={blockState["b1"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b1")}
+        rawContent={blockState["b1"].rawContent}
+        renderedContent={blockState["b1"].renderedContent}
+        presentUser={{ name: "Jeff", color: args.color || "#DDA74C" }}
       >
-        <Block uid="3"
-          isOpen={blockState["b3"].isOpen}
-          handlePressToggle={() => toggleBlockOpen("b3")}
-          rawContent={blockState["b3"].rawContent}
-          renderedContent={blockState["b3"].renderedContent}
-          presentUser={blockState["b3"].presentUser}
-        />
-        <Block
-          uid="4"
-          isOpen={blockState["b4"].isOpen}
-          handlePressToggle={() => toggleBlockOpen("b4")}
-          rawContent={blockState["b4"].rawContent}
-          renderedContent={blockState["b4"].renderedContent}
-          presentUser={blockState["b4"].presentUser}
+        <Block uid="2"
+          isOpen={blockState["b2"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b2")}
+          rawContent={blockState["b2"].rawContent}
+          renderedContent={blockState["b2"].renderedContent}
+          presentUser={{ name: "Matei", color: args.color || "#C45042" }}
         >
-          <Block uid="5"
-            isOpen={blockState["b5"].isOpen}
-            handlePressToggle={() => toggleBlockOpen("b5")}
-            rawContent={blockState["b5"].rawContent}
-            renderedContent={blockState["b5"].renderedContent}
-            presentUser={blockState["b5"].presentUser}
+          <Block uid="3"
+            isOpen={blockState["b3"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b3")}
+            rawContent={blockState["b3"].rawContent}
+            renderedContent={blockState["b3"].renderedContent}
+          />
+          <Block
+            uid="4"
+            isOpen={blockState["b4"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b4")}
+            rawContent={blockState["b4"].rawContent}
+            renderedContent={blockState["b4"].renderedContent}
+            presentUser={{ name: "Alex", color: args.color || "#611A58" }}
           >
-            <Block uid="6"
-              isOpen={blockState["b6"].isOpen}
-              handlePressToggle={() => toggleBlockOpen("b6")}
-              rawContent={blockState["b6"].rawContent}
-              renderedContent={blockState["b6"].renderedContent}
-              presentUser={blockState["b6"].presentUser}
-            />
+            <Block uid="5"
+              isOpen={blockState["b5"].isOpen}
+              handlePressToggle={() => toggleBlockOpen("b5")}
+              rawContent={blockState["b5"].rawContent}
+              renderedContent={blockState["b5"].renderedContent}
+              presentUser={{ name: "Felipe", color: args.color || "#21A469" }}
+            >
+              <Block uid="6"
+                isOpen={blockState["b6"].isOpen}
+                handlePressToggle={() => toggleBlockOpen("b6")}
+                rawContent={blockState["b6"].rawContent}
+                renderedContent={blockState["b6"].renderedContent}
+                presentUser={null}
+              />
+            </Block>
           </Block>
         </Block>
       </Block>
-    </Block>
+    </Wrapper>
   )
 };
+WithAvatars.args = {
+  color: "#611A58",
+}

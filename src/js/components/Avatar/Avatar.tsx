@@ -6,9 +6,10 @@ const AvatarWrap = styled.svg`
 
 const Name = styled.text`
   text-anchor: middle;
+  font-weight: bold;
 `;
 
-interface AvatarProps {
+interface AvatarProps extends React.SVGProps<SVGSVGElement> {
   color?: string;
   name: string;
   size?: string;
@@ -23,6 +24,8 @@ export const Avatar = ({
   size = "1.5em",
   ...props
 }: AvatarProps) => {
+
+  color = color || '#000'
 
   let initials;
   if (name) {
@@ -47,6 +50,7 @@ export const Avatar = ({
         x="12"
         y="18"
         fill={readableColor(color) || '#fff'}
+        textLength="24"
         vectorEffect="non-scaling-stroke"
         fontSize="18"
       >
