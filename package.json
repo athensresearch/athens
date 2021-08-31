@@ -16,7 +16,7 @@
     "components:watch": "yarn tsc --watch",
     "compile": "yarn components && shadow-cljs compile main renderer app",
     "prod": "yarn components && shadow-cljs release main renderer app",
-    "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs && rm -rf ./src/stories/**/*.js",
+    "clean": "rm -rf resources/public/**/*.js target .shadow-cljs ./src/stories/**/*.js",
     "dist": "electron-builder -p always",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
