@@ -84,7 +84,7 @@ export const Series = () => {
         rawContent={blockState["b1"].rawContent}
         renderedContent={blockState["b1"].renderedContent}
         presentUser={blockState["b1"].presentUser}
-    />
+      />
       <Block
         uid="2"
         isOpen={blockState["b2"].isOpen}
@@ -92,7 +92,7 @@ export const Series = () => {
         rawContent={blockState["b2"].rawContent}
         renderedContent={blockState["b2"].renderedContent}
         presentUser={blockState["b2"].presentUser}
-    />
+      />
       <Block uid="3"
         isOpen={blockState["b3"].isOpen}
         handlePressToggle={() => toggleBlockOpen("b3")}
