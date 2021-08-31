@@ -51,6 +51,9 @@
 (defn view
   []
   (let [route-name (rf/subscribe [:current-route/name])]
+    ;; TODO: create a UI to inform the player of the connection status
+    (when (= @(rf/subscribe [:connection-status]) :reconnecting)
+      (rf/dispatch [:alert/js "Oops! Connection Lost. Reconnecting..."]))
     [:div (stylefy/use-style main-content-style
                              {:on-scroll (when (= @route-name :home)
                                            #(rf/dispatch [:daily-note/scroll]))})
