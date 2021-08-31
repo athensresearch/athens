@@ -1,20 +1,23 @@
 import React from 'react';
 import { Block } from './Block';
-import styled from 'styled-components';
 
 // Helpers
 
-const toggle = (bool, setter) => {
-  bool ? setter(!bool) : setter(true);
-}
-
 const data = {
-  randomBlockContent: [
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    "Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at.",
-    "Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-  ],
-  contentWithLink: () => <>regular text <a href="https://www.google.com">link</a> regular text</>,
+  blockContent: [
+    {
+      raw: "**Lorem** ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      rendered: () => <><strong>Lorem</strong> ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</>
+    },
+    {
+      raw: "**Donec** id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at.",
+      rendered: () => <><strong>Donec</strong> id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at.</>
+    },
+    {
+      raw: "**Consectetur** adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      rendered: () => <><strong>Consectetur</strong> adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</>
+    },
+  ]
 };
 
 export default {
@@ -27,10 +30,11 @@ export default {
 
 const Template = (args) => <Block {...args} />;
 
-export const Typical = Template.bind({});
-Typical.args = {
+export const Basic = Template.bind({});
+Basic.args = {
   uid: "123",
-  rawContent: data.randomBlockContent[0],
+  rawContent: data.blockContent[0].raw,
+  renderedContent: data.blockContent[0].rendered(),
   isOpen: true,
   refsCount: 12
 };
@@ -39,77 +43,58 @@ export const Editing = Template.bind({});
 Editing.args = {
   isEditing: true,
   isOpen: true,
-  rawContent: data.randomBlockContent[0]
+  rawContent: data.blockContent[0].raw,
+  renderedContent: data.blockContent[0].rendered(),
 };
 
 export const Series = () => {
-  const [block1Open, setBlock1Open] = React.useState(true);
-  const [block2Open, setBlock2Open] = React.useState(true);
-  const [block3Open, setBlock3Open] = React.useState(true);
+  const [blockState, setBlockState] = React.useState({
+    b1: {
+      isOpen: true,
+      rawContent: data.blockContent[0].raw,
+      renderedContent: data.blockContent[0].rendered(),
+      presentUser: null,
+    },
+    b2: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b3: {
+      isOpen: true,
+      rawContent: data.blockContent[2].raw,
+      renderedContent: data.blockContent[2].rendered(),
+      presentUser: null,
+    },
+  });
+
+  const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { isOpen: !prevState[blockId].isOpen } }))
 
   return (
     <>
-    <Block
-      uid="123"
-      isOpen={block1Open}
-      handlePressToggle={() => toggle(block1Open, setBlock1Open)}
-      rawContent={data.randomBlockContent[0]}
+      <Block
+        uid="1"
+        isOpen={blockState["b1"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b1")}
+        rawContent={blockState["b1"].rawContent}
+        renderedContent={blockState["b1"].renderedContent}
+        presentUser={blockState["b1"].presentUser}
     />
-    <Block uid="123"
-      isOpen={block2Open}
-      handlePressToggle={() => toggle(block2Open, setBlock2Open)}
-      rawContent={data.randomBlockContent[1]}
+      <Block
+        uid="2"
+        isOpen={blockState["b2"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b2")}
+        rawContent={blockState["b2"].rawContent}
+        renderedContent={blockState["b2"].renderedContent}
+        presentUser={blockState["b2"].presentUser}
     />
-    <Block uid="123"
-      isOpen={block3Open}
-      handlePressToggle={() => toggle(block3Open, setBlock3Open)}
-      rawContent={data.randomBlockContent[2]}
-      />
-    </>
-  )
-};
-
-export const EditableSeries = () => {
-  const [block1Content, setBlock1Content] = React.useState(data.randomBlockContent[0]);
-  const [block2Content, setBlock2Content] = React.useState(data.randomBlockContent[1]);
-  const [block3Content, setBlock3Content] = React.useState(data.randomBlockContent[2]);
-  const [editingUid, setEditingUid] = React.useState(null);
-  const updateBlockContent = (uid, content) => {
-    console.log(uid, content)
-    if (uid === "1") {
-      setBlock1Content(content);
-    } else if (uid === "2") {
-      setBlock2Content(content);
-    } else if (uid === "3") {
-      setBlock3Content(content);
-    }
-  }
-
-  return (
-    <>
-    <Block
-      uid="1"
-      isOpen={true}
-      isEditing={editingUid === "1"}
-      handlePressContainer={() => setEditingUid("1")}
-      handleContentChange={(e) => updateBlockContent("1", e.target.value)}
-      rawContent={block1Content}
-    />
-    <Block
-      uid="2"
-      isOpen={true}
-      isEditing={editingUid === "2"}
-      handlePressContainer={() => setEditingUid("2")}
-      handleContentChange={(e) => updateBlockContent("2", e.target.value)}
-      rawContent={block2Content}
-    />
-    <Block
-      uid="3"
-      isOpen={true}
-      isEditing={editingUid === "3"}
-      handlePressContainer={() => setEditingUid("3")}
-      handleContentChange={(e) => updateBlockContent("3", e.target.value)}
-      rawContent={block3Content}
+      <Block uid="3"
+        isOpen={blockState["b3"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b3")}
+        rawContent={blockState["b3"].rawContent}
+        renderedContent={blockState["b3"].renderedContent}
+        presentUser={blockState["b3"].presentUser}
       />
     </>
   )
@@ -118,11 +103,12 @@ export const EditableSeries = () => {
 export const References = () => {
   return (
     <Block
-      uid="123"
-      isSelected={true}
+      uid="1"
+      isSelected={false}
       isOpen={true}
       refsCount={12}
-      rawContent={data.randomBlockContent[0]}
+      rawContent={data.blockContent[0].raw}
+      renderedContent={data.blockContent[0].rendered()}
     >
     </Block>
   )
@@ -131,10 +117,11 @@ export const References = () => {
 export const Selected = () => {
   return (
     <Block
-      uid="123"
+      uid="1"
       isSelected={true}
       isOpen={true}
-      rawContent={data.randomBlockContent[0]}
+      rawContent={data.blockContent[0].raw}
+      renderedContent={data.blockContent[0].rendered()}
     >
     </Block>
   )
@@ -147,25 +134,29 @@ export const MultipleSelected = () => {
       uid="123"
       isSelected={true}
       isOpen={true}
-      rawContent={data.randomBlockContent[0]}
+        rawContent={data.blockContent[0].raw}
+        renderedContent={data.blockContent[0].rendered()}
     />
     <Block
       uid="123"
       isSelected={true}
       isOpen={true}
-      rawContent={data.randomBlockContent[0]}
+        rawContent={data.blockContent[1].raw}
+        renderedContent={data.blockContent[1].rendered()}
     >
       <Block
         uid="123"
         isSelected={true}
         isOpen={true}
-        rawContent={data.randomBlockContent[1]}
+          rawContent={data.blockContent[2].raw}
+          renderedContent={data.blockContent[2].rendered()}
       >
         <Block
           uid="123"
           isSelected={true}
           isOpen={true}
-          rawContent={data.randomBlockContent[2]}
+            rawContent={data.blockContent[0].raw}
+            renderedContent={data.blockContent[0].rendered()}
         >
         </Block>
       </Block>
@@ -175,26 +166,51 @@ export const MultipleSelected = () => {
 };
 
 export const Tree = () => {
-  const [block1Open, setBlock1Open] = React.useState(true);
-  const [block2Open, setBlock2Open] = React.useState(true);
-  const [block3Open, setBlock3Open] = React.useState(true);
+  const [blockState, setBlockState] = React.useState({
+    b1: {
+      isOpen: true,
+      rawContent: data.blockContent[0].raw,
+      renderedContent: data.blockContent[0].rendered(),
+      presentUser: null,
+    },
+    b2: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b3: {
+      isOpen: true,
+      rawContent: data.blockContent[2].raw,
+      renderedContent: data.blockContent[2].rendered(),
+      presentUser: null,
+    },
+  });
+
+  const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { isOpen: !prevState[blockId].isOpen } }))
 
   return (
     <Block
-      uid="123"
-      isOpen={block1Open}
-      handlePressToggle={() => toggle(block1Open, setBlock1Open)}
-      rawContent={data.randomBlockContent[0]}
+      uid="1"
+      isOpen={blockState["b1"].isOpen}
+      handlePressToggle={() => toggleBlockOpen("b1")}
+      rawContent={blockState["b1"].rawContent}
+      renderedContent={blockState["b1"].renderedContent}
+      presentUser={blockState["b1"].presentUser}
     >
-      <Block uid="123"
-        isOpen={block2Open}
-        handlePressToggle={() => toggle(block2Open, setBlock2Open)}
-        rawContent={data.randomBlockContent[1]}
+      <Block uid="2"
+        isOpen={blockState["b2"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b2")}
+        rawContent={blockState["b2"].rawContent}
+        renderedContent={blockState["b2"].renderedContent}
+        presentUser={blockState["b2"].presentUser}
       >
-        <Block uid="123"
-          isOpen={block3Open}
-          handlePressToggle={() => toggle(block3Open, setBlock3Open)}
-          rawContent={data.randomBlockContent[2]}
+        <Block uid="3"
+          isOpen={blockState["b3"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b3")}
+          rawContent={blockState["b3"].rawContent}
+          renderedContent={blockState["b3"].renderedContent}
+          presentUser={blockState["b3"].presentUser}
         />
       </Block>
     </Block>
@@ -202,44 +218,91 @@ export const Tree = () => {
 };
 
 export const Welcome = () => {
-  const [block1Open, setBlock1Open] = React.useState(true);
-  const [block2Open, setBlock2Open] = React.useState(true);
-  const [block3Open, setBlock3Open] = React.useState(true);
+  const [blockState, setBlockState] = React.useState({
+    b1: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b2: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: { name: "Jeff", color: "blue" },
+    },
+    b3: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b4: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b5: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+    b6: {
+      isOpen: true,
+      rawContent: data.blockContent[1].raw,
+      renderedContent: data.blockContent[1].rendered(),
+      presentUser: null,
+    },
+  })
+
+  const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { isOpen: !prevState[blockId].isOpen } }))
 
   return (
     <Block
-      uid="123"
-      isOpen={block1Open}
-      handlePressToggle={() => toggle(block1Open, setBlock1Open)}
-      rawContent="asd"
-      renderedContent={data.contentWithLink()}
+      uid="1"
+      isOpen={blockState["b1"].isOpen}
+      handlePressToggle={() => toggleBlockOpen("b1")}
+      rawContent={blockState["b1"].rawContent}
+      renderedContent={blockState["b1"].renderedContent}
+      presentUser={blockState["b1"].presentUser}
     >
-      <Block uid="123"
-        isOpen={block2Open}
-        handlePressToggle={() => toggle(block2Open, setBlock2Open)}
-        rawContent={data.randomBlockContent[1]}
+      <Block uid="2"
+        isOpen={blockState["b2"].isOpen}
+        handlePressToggle={() => toggleBlockOpen("b2")}
+        rawContent={blockState["b2"].rawContent}
+        renderedContent={blockState["b2"].renderedContent}
+        presentUser={blockState["b2"].presentUser}
       >
-        <Block uid="123"
-          isOpen={block3Open}
-          handlePressToggle={() => toggle(block3Open, setBlock3Open)}
-          rawContent={data.randomBlockContent[2]}
+        <Block uid="3"
+          isOpen={blockState["b3"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b3")}
+          rawContent={blockState["b3"].rawContent}
+          renderedContent={blockState["b3"].renderedContent}
+          presentUser={blockState["b3"].presentUser}
         />
         <Block
-          uid="123"
-          isOpen={block1Open}
-          handlePressToggle={() => toggle(block1Open, setBlock1Open)}
-          rawContent="asd"
-          renderedContent={data.contentWithLink()}
+          uid="4"
+          isOpen={blockState["b4"].isOpen}
+          handlePressToggle={() => toggleBlockOpen("b4")}
+          rawContent={blockState["b4"].rawContent}
+          renderedContent={blockState["b4"].renderedContent}
+          presentUser={blockState["b4"].presentUser}
         >
-          <Block uid="123"
-            isOpen={block2Open}
-            handlePressToggle={() => toggle(block2Open, setBlock2Open)}
-            rawContent={data.randomBlockContent[1]}
+          <Block uid="5"
+            isOpen={blockState["b5"].isOpen}
+            handlePressToggle={() => toggleBlockOpen("b5")}
+            rawContent={blockState["b5"].rawContent}
+            renderedContent={blockState["b5"].renderedContent}
+            presentUser={blockState["b5"].presentUser}
           >
-            <Block uid="123"
-              isOpen={block3Open}
-              handlePressToggle={() => toggle(block3Open, setBlock3Open)}
-              rawContent={data.randomBlockContent[2]}
+            <Block uid="6"
+              isOpen={blockState["b6"].isOpen}
+              handlePressToggle={() => toggleBlockOpen("b6")}
+              rawContent={blockState["b6"].rawContent}
+              renderedContent={blockState["b6"].renderedContent}
+              presentUser={blockState["b6"].presentUser}
             />
           </Block>
         </Block>

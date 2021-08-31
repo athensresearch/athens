@@ -1,4 +1,8 @@
 import React, { ReactNode } from 'react';
+import { Popper } from '@material-ui/core';
+
+import { Avatar } from '../Avatar';
+
 import { Anchor } from './components/Anchor';
 import { Content } from './components/Content';
 import { Toggle } from './components/Toggle';
@@ -49,7 +53,7 @@ export interface BlockProps {
   /**
    * A user attached to this block
    */
-  presentUser?: { color: string };
+  presentUser?: { color: string, name: string };
   /**
    * The UID of this block
    */
@@ -121,11 +125,10 @@ export const Block: React.FC<BlockProps> = ({
   handleDrop = () => null,
 }) => {
   const [showEditableDom, setRenderEditableDom] = React.useState(false);
+  const [avatarAnchorEl, setAvatarAnchorEl] = React.useState(null);
 
   return (<Container
     style={presentUser ? { "--user-color": presentUser.color } : undefined}
-    onMouseEnter={() => { handleMouseEnterBlock; setRenderEditableDom(true) }}
-    onMouseLeave={() => { handleMouseLeaveBlock; setRenderEditableDom(false) }}
     onClick={handlePressContainer}
     onDragOver={handleDragOver}
     onDragLeave={handleDragLeave}
@@ -138,8 +141,32 @@ export const Block: React.FC<BlockProps> = ({
       isSelected && isDragging ? 'dragging' : '',
       isEditing ? 'is-editing' : ''].join(' ')}
   >
+    {presentUser && (
+      <Popper
+        open={!!presentUser}
+        anchorEl={avatarAnchorEl}
+        placement="top-start"
+        popperOptions={{
+          modifiers: {
+            preventOverflow: { enabled: false },
+            offset: []
+          }
+        }}
+      >
+        <Avatar
+          name={presentUser.name}
+          color={presentUser.color}
+          size="1.5rem"
+        />
+      </Popper>
+    )}
     {/* Drop area indicator before */}
-    <div className="block-body">
+    <div
+      className="block-body"
+      ref={setAvatarAnchorEl}
+      onMouseEnter={() => { handleMouseEnterBlock; setRenderEditableDom(true) }}
+      onMouseLeave={() => { handleMouseLeaveBlock; setRenderEditableDom(false) }}
+    >
       {children && <Toggle
         isOpen={isOpen}
         linkedRef={linkedRef}
