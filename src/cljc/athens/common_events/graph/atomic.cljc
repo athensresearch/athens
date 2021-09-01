@@ -4,8 +4,7 @@
   3 groups of Graph Ops:
   * block
   * page
-  * shortcut"
-  (:require))
+  * shortcut")
 
 
 ;; Block Ops
@@ -34,7 +33,7 @@
 
 
 (defn make-block-open
-  "Creates `:block/open` atomic op
+  "Creates `:block/open` atomic op.
    - `block-uid` - `:block/uid` of block to be opened/closed
    - `open?` - should we open or close the block"
   [block-uid open?]
@@ -68,51 +67,74 @@
 
 ;; :page/new
 (defn make-page-new
-  "Creates `:page/new` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:page/new` atomic op.
+   - `title` - Page title page to be created
+   - `page-uid` - `:block/uid` of page to be created
+   - `block-uid` - `:block/uid` of 1st block to be created in page to be created"
+  [title page-uid block-uid]
+  {:op/type :page/new
+   :op/args {:title     title
+             :page-uid  page-uid
+             :block-uid block-uid}})
 
 
 ;; :page/rename
 (defn make-page-rename
-  "Creates `:page/rename` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:page/rename` atomic op.
+   - `page-uid` - `:block/uid` of page to be renamed
+   - `new-name` - Page should have this name after operation"
+  [page-uid new-name]
+  {:op/type :page/rename
+   :op/args {:page-uid page-uid
+             :new-name new-name}})
 
 
 ;; :page/merge
 (defn make-page-merge
-  "Creates `:page/merge` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:page/merge` atomic op.
+   - `page-uid` - `:block/uid` of page to be merged into `new-page`
+   - `new-page` - page name of a page we'll merge contents of `page-uid` page into"
+  [page-uid new-page]
+  {:op/type :page/merge
+   :op/args {:page-uid page-uid
+             :new-page new-page}})
 
 
 ;; :page/remove
 (defn make-page-remove
-  "Creates `:page/remove` atomic op"
-  [] ;; TODO implement
-  )
-
+  "Creates `:page/remove` atomic op.
+   - `page-uid` - `:block/uid` of the page to be deleted"
+  [page-uid]
+  {:op/type :page/remove
+   :op/args {:page-uid page-uid}})
 
 
 ;; Shortcut
 
 ;; :shortcut/new
 (defn make-shortcut-new
-  "Creates `:shortcut/new` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:shortcut/new` atomic op.
+   - `page-uid` - `:block/uid` of page to be added to shortcuts"
+  [page-uid]
+  {:op/type :shortcut/new
+   :op/args {:page-uid page-uid}})
 
 
 ;; :shortcut/remove
 (defn make-shortcut-remove
-  "Creates `:shortcut/remove` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:shortcut/remove` atomic op.
+   - `page-uid` - `:block/uid` of page to be removed from shortcuts"
+  [page-uid]
+  {:op/type :shortcut/remove
+   :op/args {:page-uid page-uid}})
 
 
 ;; :shortcut/move
 (defn make-shortcut-move
-  "Creates `:shortcut/move` atomic op"
-  [] ;; TODO implement
-  )
+  "Creates `:shortcut/move` atomic op.
+   - `page-uid` - `:block/uid` of page to be moved to new position in shortcuts
+   - `index` - new position for `page-uid` shortcut"
+  [page-uid index]
+  {:op/type :shortcut/move
+   :op/args {:page-uid page-uid
+             :index    index}})
