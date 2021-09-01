@@ -18,7 +18,7 @@ This will create `target/athens-lan-party-standalone.jar`.
 ### Custom Datahike DB path
 
 You can customize where Datahike stores it's DB via
-environment variable `datahike_store_path`.
+environment variable `config_edn`.
 
 The default in `config.edn` is right now `/tmp/example`,
 so if you don't overwrite with above mentioned ENV var,
