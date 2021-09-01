@@ -35,17 +35,18 @@ Atomic events should follow same Common Events model as it's happening now.
 
 List of ((⚛️ Atomic Graph Ops))
 - *Page Ops*
-    - ((⚛️**`:page/create`**))
+    - ((⚛️**`:page/new`**))
     - ((⚛️**`:page/rename`**))
     - ((⚛️**`:page/merge`**))
-    - ((⚛️**`:page/delete`**))
+    - ((⚛️**`:page/remove`**))
 - *Block Ops*
     - ((⚛️**`:block/new`**))
     - ((⚛️**`:block/save`**))
     - ((⚛️**`:block/open`**))
     - ((⚛️**`:block/move`** ⭐️))
+    - ⚛️**`:block/remove`**
 - *Shortcut Ops*
-    - (({{[[TODO]]}} ⚛️**`:shortcut/add`**))
+    - (({{[[TODO]]}} ⚛️**`:shortcut/new`**))
     - (({{[[TODO]]}} ⚛️**`:shortcut/remove`**))
     - (({{[[TODO]]}} ⚛️**`:shortcut/move`**))
 
@@ -89,7 +90,7 @@ We'll have smaller amount of tests in order to provide correctness guarantees
 
 - List of Atomic Graph Operations:
     - Page Ops
-        - ⚛️**`:page/create`**
+        - ⚛️**`:page/new`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `title` - Page title page to be created
@@ -107,7 +108,7 @@ We'll have smaller amount of tests in order to provide correctness guarantees
                 - `page-uid` - `:block/uid` of page to be merged into `new-page`
                 - `new-page` - page name of a page we'll merge contents of `page-uid` page into
                 - `old-name` - ^^To Remove^^ This is accidental, and shouldn't be provided
-        - ⚛️**`:page/delete`**
+        - ⚛️**`:page/remove`**
             - ((⚛️ Atomic Graph Ops))
             - *Input*
                 - `page-uid` - `:block/uid` of the page to be deleted
@@ -261,6 +262,6 @@ We'll have smaller amount of tests in order to provide correctness guarantees
                 - `parent-uid` - `:block/uid` of parent block receiving link drop
                 - 
     - {{[[TODO]]}} Shortcut Ops
-        - {{[[TODO]]}} ⚛️**`:shortcut/add`**
+        - {{[[TODO]]}} ⚛️**`:shortcut/new`**
         - {{[[TODO]]}} ⚛️**`:shortcut/remove`**
         - {{[[TODO]]}} ⚛️**`:shortcut/move`**
