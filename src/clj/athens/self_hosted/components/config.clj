@@ -13,8 +13,11 @@
 
   (start
     [component]
-    (log/info "Starting configuration component")
-    (assoc component :config (cfg/reload-env)))
+    (let [config        (cfg/reload-env)
+          merged-config (cfg/merge-maps config (:config-edn config))]
+      (log/info "Starting configuration component")
+      (log/info merged-config)
+      (assoc component :config merged-config)))
 
 
   (stop
