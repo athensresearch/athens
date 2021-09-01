@@ -76,7 +76,7 @@ export const Series = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Wrapper>
+    <>
       <Block
         uid="1"
         isOpen={blockState["b1"].isOpen}
@@ -100,25 +100,25 @@ export const Series = () => {
         renderedContent={blockState["b3"].renderedContent}
         presentUser={blockState["b3"].presentUser}
       />
-    </Wrapper>
+    </>
   )
 };
+Series.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const References = () => {
   return (
-    <Wrapper>
-      <Block
-        uid="1"
-        isSelected={false}
-        isOpen={true}
-        refsCount={12}
-        rawContent={data.blockContent[0].raw}
-        renderedContent={data.blockContent[0].rendered()}
-      >
-      </Block>
-    </Wrapper>
+    <Block
+      uid="1"
+      isSelected={false}
+      isOpen={true}
+      refsCount={12}
+      rawContent={data.blockContent[0].raw}
+      renderedContent={data.blockContent[0].rendered()}
+    >
+    </Block>
   )
 };
+References.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Selected = () => {
   return (
@@ -134,10 +134,11 @@ export const Selected = () => {
     </Wrapper>
   )
 };
+Selected.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const MultipleSelected = () => {
   return (
-    <Wrapper>
+    <>
       <Block
         uid="123"
         isSelected={true}
@@ -169,9 +170,10 @@ export const MultipleSelected = () => {
           </Block>
         </Block>
       </Block>
-    </Wrapper>
+    </>
   )
 };
+MultipleSelected.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Tree = () => {
   const [blockState, setBlockState] = React.useState({
@@ -198,7 +200,7 @@ export const Tree = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Wrapper>
+    <>
       <Block
         uid="1"
         isOpen={blockState["b1"].isOpen}
@@ -223,9 +225,10 @@ export const Tree = () => {
           />
         </Block>
       </Block>
-    </Wrapper>
+    </>
   )
 };
+Tree.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Welcome = () => {
   const [blockState, setBlockState] = React.useState({
@@ -264,7 +267,7 @@ export const Welcome = () => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Wrapper>
+    <>
       <Block
         uid="1"
         isOpen={blockState["b1"].isOpen}
@@ -307,9 +310,10 @@ export const Welcome = () => {
           </Block>
         </Block>
       </Block>
-    </Wrapper>
+    </>
   )
 };
+Welcome.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const WithAvatars = ({ ...args }) => {
   const [blockState, setBlockState] = React.useState({
@@ -354,7 +358,7 @@ export const WithAvatars = ({ ...args }) => {
   const toggleBlockOpen = (blockId) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
   return (
-    <Wrapper>
+    <>
       <Block
         uid="1"
         isOpen={blockState["b1"].isOpen}
@@ -402,9 +406,10 @@ export const WithAvatars = ({ ...args }) => {
           </Block>
         </Block>
       </Block>
-    </Wrapper>
+    </>
   )
 };
 WithAvatars.args = {
   color: "#611A58",
 }
+WithAvatars.decorators = [(Story) => <Wrapper><Story /></Wrapper>];

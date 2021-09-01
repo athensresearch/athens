@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar } from './Avatar';
 import styled from 'styled-components';
+import { WithAvatars } from '../Block/Block.stories';
 
 // Helpers
 
@@ -48,3 +49,8 @@ export const Colors = () => (
     <Avatar name="Jeff" color="#009FB8" size="3em" />
   </StoryWrapper>
 )
+
+export const OnBlocks = WithAvatars;
+OnBlocks.parameters = {
+  layout: 'fullscreen'
+}
