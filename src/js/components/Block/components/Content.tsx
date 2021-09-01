@@ -42,14 +42,20 @@ const ContentWrap = styled.div`
 
   &.is-editing,
   &.show-editable-dom {
-    .rendered-content {
-      opacity: 0;
-    }
-
     textarea {
       z-index: 3;
       line-height: inherit;
+      opacity: 0;
+    }
+  }
+
+  &.is-editing {
+    textarea {
       opacity: 1;
+    }
+
+    .rendered-content {
+      opacity: 0;
     }
   }
 
