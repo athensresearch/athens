@@ -77,8 +77,6 @@ const WindowWrapper = styled.div`
   &.is-storybook-docs {
     height: 700px;
   }
-  &.is-storybook-canvas {
-  }
 `;
 
 
@@ -114,8 +112,6 @@ const Template = (args, context) => {
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',
-          isThemeDark ? 'is-theme-dark' : 'is-theme-light',
-          context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-in-canvas',
         )}
       >
         <AppLayout>
