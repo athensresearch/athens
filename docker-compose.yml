@@ -9,7 +9,8 @@ services:
     volumes:
       - datahike-db:/srv/athens/db
     environment:   # set environment variables
-      datahike_store_path: /srv/athens/db
+      # config_edn is deep merged with the whole config file
+      config_edn: "{:datahike {:store {:path \"/srv/athens/db\"}}}"
 
 
   nginx:
