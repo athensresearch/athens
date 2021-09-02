@@ -188,7 +188,7 @@ export const AppToolbar = ({
       <Button isPressed={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></Button>
       <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
       <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
-      <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> Find or create a page</Button>
+      <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
