@@ -37,20 +37,20 @@ export const Button = styled.button.attrs(props => ({
   transition-timing-function: ease;
   gap: 0.5rem;
 
-  &:hover {
+  &:enabled:hover {
     background: var(--body-text-color---opacity-lower);
   }
 
-  &:active,
-  &:hover:active,
-  &[aria-pressed="true"] {
+  &:enabled:active,
+  &:enabled:hover:active,
+  &:enabled[aria-pressed="true"] {
     color: var(--body-text-color);
     background: var(--body-text-color---opacity-lower);
   }
 
-  &:active,
-  &:hover:active,
-  &:active[aria-pressed="true"] {
+  &:enabled:active,
+  &:enabled:hover:active,
+  &:enabled:active[aria-pressed="true"] {
     background: var(--body-text-color---opacity-low);
   }
 
@@ -105,16 +105,3 @@ export const Button = styled.button.attrs(props => ({
     }
   }
 `;
-
-// export const Button = ({ isPrimary, isPressed, children, ...props }: ButtonProps) => {
-//   return (
-//     <StyledButton
-//       type="button"
-//       className={isPrimary ? 'is-primary' : ''}
-//       aria-pressed={isPressed}
-//       {...props}
-//     >
-//       {children}
-//     </StyledButton>
-//   );
-// };
