@@ -1,7 +1,10 @@
 # A base, just JVM
-FROM openjdk:16
+FROM openjdk-16-lein
 
 RUN mkdir -p /srv/athens/db
+
+# Build Uberjar
+lein uberjar
 
 # Copy from local working directory
 COPY target/athens-lan-party-standalone.jar /srv/athens/
