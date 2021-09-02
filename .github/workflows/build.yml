@@ -321,14 +321,15 @@ jobs:
            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
        - name: Build and Push
-         uses: docker/build-push-action@v2  # https://github.com/docker/build-push-action
+         uses: docker/build-push-action@v1  # https://github.com/docker/build-push-action
 
          # By default, this action uses the Git context so you don't need to use the
          # actions/checkout action The git reference will be based on the event that
          # triggered your workflow and will result in the following context:
          # https://github.com/<owner>/<repo>.git#<ref>.
          with:
-           context: .
+           repository: sid597/athens
+           path: .
            push: true      # Will automatically push the build result to registry.
            tags: ${{ steps.meta.outputs.tags }}
            labels: ${{ steps.meta.outputs.labels }}
