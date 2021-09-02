@@ -9,7 +9,7 @@
 
 ;; Block Ops
 
-(defn make-block-new
+(defn make-block-new-op
   "Creates `:block/new` atomic op.
    - `parent-uid` - `:block/uid` of parent block (or page)
    - `block-uid` - `:block/uid` of new block to be created
@@ -23,7 +23,7 @@
                 :block-order block-order}})
 
 
-(defn make-block-save
+(defn make-block-save-op
   "Creates `:block/save` atomic op.
    - `block-uid` - `:block/uid` of block to be saved
    - `new-string` - new value of `:block/string` to be saved"
@@ -34,7 +34,7 @@
                 :new-string new-string}})
 
 
-(defn make-block-open
+(defn make-block-open-op
   "Creates `:block/open` atomic op.
    - `block-uid` - `:block/uid` of block to be opened/closed
    - `open?` - should we open or close the block"
@@ -45,7 +45,7 @@
                 :open?     open?}})
 
 
-(defn make-block-remove
+(defn make-block-remove-op
   "Creates `:block/remove` atomic op.
    - `block-uid` - `:block/uid` of block to be removed"
   [block-uid]
@@ -54,7 +54,7 @@
    :op/args    {:block-uid block-uid}})
 
 
-(defn make-block-move
+(defn make-block-move-op
   "Creates `:block/move` atomic op.
    - `block-uid` - `:block/uid` of block to move
    - `parent-uid` - `:block/uid` of new parent block
@@ -70,8 +70,7 @@
 
 ;; Page Ops
 
-;; :page/new
-(defn make-page-new
+(defn make-page-new-op
   "Creates `:page/new` atomic op.
    - `title` - Page title page to be created
    - `page-uid` - `:block/uid` of page to be created
@@ -84,8 +83,7 @@
                 :block-uid block-uid}})
 
 
-;; :page/rename
-(defn make-page-rename
+(defn make-page-rename-op
   "Creates `:page/rename` atomic op.
    - `page-uid` - `:block/uid` of page to be renamed
    - `new-name` - Page should have this name after operation"
@@ -96,8 +94,7 @@
                 :new-name new-name}})
 
 
-;; :page/merge
-(defn make-page-merge
+(defn make-page-merge-op
   "Creates `:page/merge` atomic op.
    - `page-uid` - `:block/uid` of page to be merged into `new-page`
    - `new-page` - page name of a page we'll merge contents of `page-uid` page into"
@@ -108,8 +105,7 @@
                 :new-page new-page}})
 
 
-;; :page/remove
-(defn make-page-remove
+(defn make-page-remove-op
   "Creates `:page/remove` atomic op.
    - `page-uid` - `:block/uid` of the page to be deleted"
   [page-uid]
@@ -120,8 +116,7 @@
 
 ;; Shortcut
 
-;; :shortcut/new
-(defn make-shortcut-new
+(defn make-shortcut-new-op
   "Creates `:shortcut/new` atomic op.
    - `page-uid` - `:block/uid` of page to be added to shortcuts"
   [page-uid]
@@ -130,8 +125,7 @@
    :op/args    {:page-uid page-uid}})
 
 
-;; :shortcut/remove
-(defn make-shortcut-remove
+(defn make-shortcut-remove-op
   "Creates `:shortcut/remove` atomic op.
    - `page-uid` - `:block/uid` of page to be removed from shortcuts"
   [page-uid]
@@ -140,8 +134,7 @@
    :op/args    {:page-uid page-uid}})
 
 
-;; :shortcut/move
-(defn make-shortcut-move
+(defn make-shortcut-move-op
   "Creates `:shortcut/move` atomic op.
    - `page-uid` - `:block/uid` of page to be moved to new position in shortcuts
    - `index` - new position for `page-uid` shortcut"

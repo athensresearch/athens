@@ -1,10 +1,11 @@
 (ns athens.common-events.schema
   (:require
     #?(:clj
-       [datahike.datom :as datom])
-    [malli.core        :as m]
-    [malli.error       :as me]
-    [malli.util        :as mu]))
+       [datahike.datom                 :as datom])
+    [athens.common-events.graph.schema :as graph-schema]
+    [malli.core                        :as m]
+    [malli.error                       :as me]
+    [malli.util                        :as mu]))
 
 
 (def event-type-presence
@@ -69,13 +70,19 @@
    :datascript/db-dump])
 
 
+(def event-type-atomic
+  [:enum
+   :op/atomic])
+
+
 (def event-common
   [:map
    [:event/id uuid?]
    [:event/last-tx int?]
    [:event/type [:or
                  event-type-presence
-                 event-type-graph]]])
+                 event-type-graph
+                 event-type-atomic]]])
 
 
 (def event-common-server
@@ -85,7 +92,8 @@
    [:event/type [:or
                  event-type-graph
                  event-type-graph-server
-                 event-type-presence-server]]])
+                 event-type-presence-server
+                 event-type-atomic]]])
 
 
 (defn dispatch
@@ -444,6 +452,11 @@
      [:new-uid string?]]]])
 
 
+(def graph-ops-atomic
+  [:map
+   [:event/op graph-schema/atomic-op]])
+
+
 (def event
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello-args)
@@ -488,7 +501,8 @@
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
    (dispatch :datascript/bump-up datascript-bump-up)
    (dispatch :datascript/block-open datascript-block-open)
-   (dispatch :datascript/selected-delete datascript-selected-delete)])
+   (dispatch :datascript/selected-delete datascript-selected-delete)
+   (dispatch :op/atomic graph-ops-atomic)])
 
 
 (def valid-event?

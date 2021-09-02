@@ -661,3 +661,13 @@
      :event/type    :presence/broadcast-editing
      :event/args    {:username  username
                      :block-uid block-uid}}))
+
+
+(defn build-atomic-event
+  "Builds atomic graph operation"
+  [last-tx atomic-op]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :op/atomic
+     :event/op      atomic-op}))
