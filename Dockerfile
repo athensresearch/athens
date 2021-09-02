@@ -2,7 +2,7 @@
 FROM clojure:openjdk-16-lein
 
 #RUN mkdir -p /srv/athens/db
-
+RUN ls
 # Build Uberjar
 RUN lein uberjar
 
