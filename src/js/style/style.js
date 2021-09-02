@@ -16,6 +16,9 @@ const permuteColorOpacities = (theme) =>
     );
   });
 
+const opacityStyles = () => Object.keys(opacities).map(opacity => `--${opacity}: ${opacities[opacity]};`).join("")
+
+
 const opacities = {
   "opacity-lower": 0.1,
   "opacity-low": 0.25,
@@ -73,6 +76,7 @@ const themeDark = {
 const lightThemeColors = permuteColorOpacities(themeLight);
 const darkThemeColors = permuteColorOpacities(themeDark);
 
+
 export const GlobalStyles = createGlobalStyle`
   :root {
     --zindex-dropdown: 1000;
@@ -87,6 +91,8 @@ export const GlobalStyles = createGlobalStyle`
     --depth-shadow-8: 0 4px 8px rgba(0, 0, 0, 0.2);
     --depth-shadow-16: 0 4px 16px rgba(0, 0, 0, 0.2);
     --depth-shadow-64: 0 24px 60px rgba(0, 0, 0, 0.2);
+
+    ${opacityStyles}
 
     .is-theme-light {
       ${lightThemeColors}

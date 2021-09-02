@@ -9,7 +9,7 @@ const Container = styled.div`
   display: flex;
   background: var(--background-plus-1);
   overflow: hidden;
-  box-shadow: var(--depth-shadow-64), 0 0 0 1px var(--shadow-color);
+  box-shadow: var(--depth-shadow-64), 0 0 0 1px var(--shadow-color---opacity-lower);
   max-width: calc(100vw - 1rem);
   border-radius: 0.25rem;
   flex-direction: column;
