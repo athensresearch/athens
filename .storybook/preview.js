@@ -1,4 +1,5 @@
 import React from 'react';
+import { themes } from '@storybook/theming';
 
 import { GlobalStyles } from '../src/js/style/style';
 import { badges, Storybook } from '../src/js/storybook';
@@ -14,16 +15,29 @@ export const parameters = {
   },
   badgesConfig: {
     ...badges
+  },
+  darkMode: {
+    // Override the default dark theme
+    dark: {
+      ...themes.dark,
+      appBg: '#151515',
+      appContentBg: '#fff',
+    },
+    // Override the default light theme
+    light: {
+      ...themes.normal,
+      appBg: '#EFEDEB',
+      appContentBg: "#F6F6F6"
+    }
   }
 }
 
 export const globalTypes = {
   theme: {
-    name: 'Theme',
+    name: 'Story Theme',
     description: 'Global theme for components',
     defaultValue: 'light',
     toolbar: {
-      // icon: 'circlehollow',
       // Array of plain string values or MenuItem shape (see below)
       items: ['light', 'dark'],
       // Property that specifies if the name of the item will be displayed
