@@ -331,7 +331,7 @@ jobs:
            push: true      # Will automatically push the build result to registry.
            tags: ${{ steps.meta.outputs.tags }}
            labels: ${{ steps.meta.outputs.labels }}
-           file: .github/workflow/Dockerfile        # Path to the Dockerfile. (default {context}/Dockerfile)
+           # file: .github/workflow/Dockerfile        # Path to the Dockerfile. (default {context}/Dockerfile)
            # cache-to:     # Export build cache to an external cache destination.
            # cache-from:   # Use an external cache source for a build. Supported types are registry, local and gha.
                            # can use cache from previously exported with --cache-to.
