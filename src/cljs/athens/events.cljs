@@ -341,26 +341,6 @@
     (assoc-in db [:selection :items] (select-up selected-items))))
 
 
-(defn select-down
-  [selected-items next-block-uid]
-  (let [editing-uid @(subscribe [:editing/uid])
-        editing-idx (first (keep-indexed (fn [idx x]
-                                           (when (= x editing-uid)
-                                             idx))
-                                         selected-items))
-        [_ f-embed] (->> selected-items first db/uid-and-embed-id)]
-    (cond
-      (pos? editing-idx) (subvec selected-items 1)
-      ;; shift down started from inside the embed should not go outside embed block
-      f-embed            (let [sel-uid (str (-> next-block-uid db/uid-and-embed-id first) "-embed-" f-embed)]
-                           (if (js/document.querySelector (str "#editable-uid-" sel-uid))
-                             (conj selected-items sel-uid)
-                             selected-items))
-
-      next-block-uid (conj selected-items next-block-uid)
-      :else          selected-items)))
-
-
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
 ;; this would let us know if the operation is additive or subtractive
 (reg-event-db
@@ -413,6 +393,7 @@
        :db (-> db
                (assoc-in [:selection :items] #{})
                (assoc-in [:selection :order] []))})))
+
 
 ;; Alerts
 
@@ -1786,7 +1767,7 @@
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
     (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second unlinked-refs)
+                               (mapcat second)
                                (map (fn [{:block/keys [string uid]}]
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]

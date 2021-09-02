@@ -320,8 +320,7 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)
-        items-order                      @(subscribe [::select-subs/items])]
+        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -384,8 +383,7 @@
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
-        current-root-uid               @(subscribe [:current-route/uid])
-        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)]
+        [editing-uid _]         (db/uid-and-embed-id editing-uid)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent editing-uid d-key-down])
