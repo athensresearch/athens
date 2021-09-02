@@ -328,7 +328,6 @@ jobs:
          # triggered your workflow and will result in the following context:
          # https://github.com/<owner>/<repo>.git#<ref>.
          with:
-           context: .
            push: true      # Will automatically push the build result to registry.
            tags: ${{ steps.meta.outputs.tags }}
            labels: ${{ steps.meta.outputs.labels }}
