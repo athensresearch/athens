@@ -1,5 +1,4 @@
 import React from 'react';
-import styled from 'styled-components';
 
 import { Block } from './Block';
 import { BADGE, Storybook } from '../../storybook';
@@ -104,7 +103,6 @@ export const Series = () => {
     </>
   )
 };
-Series.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const References = () => {
   return (
