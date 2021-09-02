@@ -530,6 +530,16 @@
   input-tx)
 
 
+(defn update-refs
+  "Returns updated refs for eid.
+   Returns nil if eid is no longer in db."
+  [db [eid string]]
+  (when-let [lookup-ref (eid->lookup-ref db eid)]
+    (let [before     (block-refs-as-lookup-refs db lookup-ref)
+          after      (string-as-lookup-refs db string)]
+      (update-refs-tx lookup-ref before after))))
+
+
 (defn linkmaker
   "Maintains the linked nature of Knowledge Graph.
 
@@ -548,11 +558,7 @@
    (try
      (let [linkmaker-txs (into []
                                (comp (keep parseable-string-datom)
-                                     (mapcat (fn [[eid string]]
-                                               (let [lookup-ref (eid->lookup-ref db eid)
-                                                     before     (block-refs-as-lookup-refs db lookup-ref)
-                                                     after      (string-as-lookup-refs db string)]
-                                                 (update-refs-tx lookup-ref before after)))))
+                                     (mapcat (partial update-refs db)))
                                (d/datoms db :eavt))]
        #_(println "linkmaker:"
                "\nall:" (with-out-str (clojure.pprint/pprint (d/datoms db :eavt)))
@@ -568,22 +574,18 @@
                    tx-data]}  (d/with db input-tx)
            linkmaker-txs      (into []
                                     (comp (keep parseable-string-datom)
-                                          (mapcat (fn [[eid string]]
-                                                    (let [lookup-ref (eid->lookup-ref db-after eid)
-                                                          ;; Use db-after for the before-refs to ensure retracted
-                                                          ;; entities are already removed, otherwise we get
-                                                          ;; entity-missing errors from trying to retract refs
-                                                          ;; with lookup-refs to missing entities.
-                                                          before     (block-refs-as-lookup-refs db-after lookup-ref)
-                                                          after      (string-as-lookup-refs db-after string)]
-                                                      (update-refs-tx lookup-ref before after)))))
+                                          ;; Use db-after for the before-refs to ensure retracted
+                                          ;; entities are already removed, otherwise we get
+                                          ;; entity-missing errors from trying to retract refs
+                                          ;; with lookup-refs to missing entities.
+                                          (mapcat (partial update-refs db-after)))
                                     tx-data)
            with-linkmaker-txs (into (vec input-tx) linkmaker-txs)]
        #_(println "linkmaker:"
-                "\ninput-tx:" (with-out-str (clojure.pprint/pprint input-tx))
-                "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
-                "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs))
-                "\nwith-linkmaker-txs:" (with-out-str (clojure.pprint/pprint with-linkmaker-txs)))
+                 "\ninput-tx:" (with-out-str (clojure.pprint/pprint input-tx))
+                 "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
+                 "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs))
+                 "\nwith-linkmaker-txs:" (with-out-str (clojure.pprint/pprint with-linkmaker-txs)))
        with-linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
