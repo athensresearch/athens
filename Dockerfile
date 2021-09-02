@@ -2,9 +2,9 @@
 FROM clojure:openjdk-16-lein
 
 #RUN mkdir -p /srv/athens/db
-RUN ls
+RUN ls target
 # Build Uberjar
-RUN lein uberjar
+#RUN lein uberjar
 
 # Copy from local working directory
 #COPY target/athens-lan-party-standalone.jar /srv/athens/
