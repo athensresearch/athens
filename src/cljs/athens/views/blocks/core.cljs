@@ -1,9 +1,10 @@
 (ns athens.views.blocks.core
   (:require
-    [athens.db :as db]
-    [athens.electron :as electron]
-    [athens.style :as style]
-    [athens.util :as util :refer [mouse-offset vertical-center specter-recursive-path]]
+    [athens.db                               :as db]
+    [athens.electron                         :as electron]
+    [athens.style                            :as style]
+    [athens.subs.selection                   :as select-subs]
+    [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash :as autocomplete-slash]
     [athens.views.blocks.bullet :as bullet]
@@ -128,7 +129,7 @@
         middle-y          (vertical-center closest-container)
         dragging-ancestor (.. e -target (closest ".dragging"))
         dragging?         dragging-ancestor
-        is-selected?      @(rf/subscribe [:selected/is-selected uid])
+        is-selected?      @(rf/subscribe [::select-subs/selected? uid])
         target            (cond
                             dragging? nil
                             is-selected? nil
@@ -145,21 +146,18 @@
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         [target-uid _]          (db/uid-and-embed-id target-uid)
-        {:keys [drag-target]} @state
-        source-uid     (.. e -dataTransfer (getData "text/plain"))
-        effect-allowed (.. e -dataTransfer -effectAllowed)
-
-        items          (array-seq (.. e -dataTransfer -items))
-        item           (first items)
-        datatype       (.. item -type)
-
-        img-regex      #"(?i)^image/(p?jpeg|gif|png)$"
-
-        valid-text-drop     (and (not (nil? drag-target))
-                                 (not= source-uid target-uid)
-                                 (or (= effect-allowed "link")
-                                     (= effect-allowed "move")))
-        selected-items @(rf/subscribe [:selected/items])]
+        {:keys [drag-target]}   @state
+        source-uid              (.. e -dataTransfer (getData "text/plain"))
+        effect-allowed          (.. e -dataTransfer -effectAllowed)
+        items                   (array-seq (.. e -dataTransfer -items))
+        item                    (first items)
+        datatype                (.. item -type)
+        img-regex               #"(?i)^image/(p?jpeg|gif|png)$"
+        valid-text-drop         (and (not (nil? drag-target))
+                                     (not= source-uid target-uid)
+                                     (or (= effect-allowed "link")
+                                         (= effect-allowed "move")))
+        selected-items           @(rf/subscribe [::select-subs/items])]
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
@@ -225,7 +223,7 @@
                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
-             is-selected           @(rf/subscribe [:selected/is-selected uid])]
+             is-selected           @(rf/subscribe [::select-subs/selected? uid])]
 
          ;; (prn uid is-selected)
 
