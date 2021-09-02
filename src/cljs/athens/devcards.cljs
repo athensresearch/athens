@@ -27,8 +27,6 @@
     [athens.effects]
     [athens.events]
     [athens.listeners :as listeners]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [devcards.core]
     [posh.reagent :refer [transact!]]
     [re-frame.core :refer [dispatch-sync]]

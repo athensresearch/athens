@@ -5,8 +5,6 @@
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day]]
     [athens.views.pages.node-page :as node-page]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 

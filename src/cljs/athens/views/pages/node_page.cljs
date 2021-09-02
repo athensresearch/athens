@@ -22,8 +22,6 @@
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]

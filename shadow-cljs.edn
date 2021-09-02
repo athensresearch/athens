@@ -38,12 +38,6 @@
                  :main athens.main.core/main
                  :compiler-options {:output-feature-set :es-next}}
 
-          :devcards         {:asset-path "js/devcards"
-                             :modules {:main {:init-fn athens.devcards/main}}
-                             :compiler-options {:devcards true}
-                             :output-dir "resources/public/js/devcards"
-                             :target :browser}
-
           :karma-test {:target :karma
                        :ns-regexp "-test$"
                        :output-to "target/karma-test.js"}}}

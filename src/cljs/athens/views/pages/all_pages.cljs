@@ -6,8 +6,6 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
     [athens.util :refer [date-string]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :refer [lower-case]]
     [datascript.core :as d]
     [garden.selectors :as selectors]

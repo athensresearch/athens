@@ -2,8 +2,6 @@
   (:require
     [athens.db]
     [athens.style :refer [color OPACITIES]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 

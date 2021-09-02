@@ -1,7 +1,6 @@
 (ns athens.views.devtool
   (:require
     ["/components/Button/Button" :refer [Button]]
-    ["@material-ui/icons/Build" :default Build]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
@@ -11,8 +10,6 @@
     [athens.style :refer [color]]
     [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.core.protocols :as core-p]
     [clojure.datafy :refer [nav datafy]]
     [datascript.core :as d]
@@ -354,15 +351,6 @@
          [viewer datafied-data add-nav!]]))))
 
 
-(defn handler
-  []
-  (let [n (inc (:max-eid @dsdb))
-        n-child (inc n)]
-    (d/transact! dsdb [{:node/title     (str "Test Page " n)
-                        :block/uid      (str "uid-" n)
-                        :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
-
-
 (defn eval-with-sci
   [{:keys [eval-str] :as state}]
   (let [bindings {'athens/db dsdb
@@ -460,16 +448,6 @@
 (defn txes-component
   [{:keys [tx-reports]}]
   [data-browser tx-reports])
-
-
-(defn devtool-prompt-el
-  []
-  [:> Button {:on-click #(dispatch [:devtool/toggle])
-              :is-primary true
-              :style {:font-size "11px"}}
-   [:<>
-    [:> Build]
-    [:span "Toggle devtool"]]])
 
 
 (defn devtool-close-el

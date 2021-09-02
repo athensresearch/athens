@@ -11,8 +11,6 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]

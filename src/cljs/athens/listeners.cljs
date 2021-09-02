@@ -6,8 +6,6 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])

@@ -5,8 +5,6 @@
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/Close" :default Close]
     [athens.style :refer [color]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     ;; [garden.selectors :as selectors]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))

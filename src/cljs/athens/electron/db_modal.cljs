@@ -15,8 +15,6 @@
     [athens.util :refer [js-event->val]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [komponentit.modal :as modal]
