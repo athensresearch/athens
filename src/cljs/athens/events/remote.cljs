@@ -5,6 +5,8 @@
     [athens.common-events.resolver :as resolver]
     [athens.common-events.schema   :as schema]
     [athens.db                     :as db]
+    [athens.events.selection       :as select-events]
+    [athens.util                   :as util]
     [malli.core                    :as m]
     [malli.error                   :as me]
     [re-frame.core                 :as rf]))
@@ -17,7 +19,8 @@
   (fn [_ [_ remote-db]]
     (js/console.log ":remote/connect!" (pr-str remote-db))
     {:remote/client-connect! remote-db
-     :fx                     [[:dispatch [:loading/set]]]}))
+     :fx                     [[:dispatch [:loading/set]]
+                              [:dispatch [:conn-status :connecting]]]}))
 
 
 (rf/reg-event-fx
@@ -25,6 +28,7 @@
   (fn [_ _]
     (js/console.log ":remote/connected")
     {:fx [[:dispatch-n [[:loading/unset]
+                        [:conn-status :connected]
                         [:db/sync]]]]}))
 
 
@@ -193,9 +197,16 @@
           {:keys [page-uid
                   block-uid]} (:event/args event)]
       (js/console.log ":remote/followup-page-create, page-uid" page-uid)
-      {:fx [[:dispatch-n [(if shift?
+      {:fx [[:dispatch-n [(cond
+                            shift?
                             [:right-sidebar/open-item page-uid]
-                            [:navigate :page {:id page-uid}])
+
+                            (not (util/is-daily-note page-uid))
+                            [:navigate :page {:id page-uid}]
+
+                            (util/is-daily-note page-uid)
+                            [:daily-note/add page-uid])
+
                           [:editing/uid block-uid]
                           [:remote/unregister-followup event-id]]]]})))
 
@@ -460,14 +471,14 @@
   (fn [{db :db} [_ {:keys [parent-uid new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
           {event-id :event/id
-           :as      add-child-event} (common-events/build-open-block-add-child-event last-seen-tx
-                                                                                     parent-uid
-                                                                                     new-uid)
+           :as      open-block-add-child-event} (common-events/build-open-block-add-child-event last-seen-tx
+                                                                                                parent-uid
+                                                                                                new-uid)
           followup-fx                [[:dispatch [:remote/followup-open-block-add-child {:event-id event-id
                                                                                          :embed-id embed-id}]]]]
-      (js/console.debug ":remote/add-child" (pr-str add-child-event))
+      (js/console.debug ":remote/open-block-add-child" (pr-str open-block-add-child-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remote/send-event! add-child-event]]]]})))
+                          [:remote/send-event! open-block-add-child-event]]]]})))
 
 
 (rf/reg-event-fx
@@ -786,13 +797,11 @@
 
 (rf/reg-event-fx
   :remote/followup-selected-delete
-  (fn [{db :db} [_ event-id]]
+  (fn [{_db :db} [_ event-id]]
     (js/console.debug ":remote/followup-selected-delete" event-id)
     {:fx [[:dispatch-n [[:editing/uid nil]
-                        [:remote/unregister-followup event-id]]]]
-     :db (-> db
-             (assoc-in [:selection :items] #{})
-             (assoc-in [:selection :order] []))}))
+                        [:remote/unregister-followup event-id]
+                        [::select-events/clear]]]]}))
 
 
 (rf/reg-event-fx

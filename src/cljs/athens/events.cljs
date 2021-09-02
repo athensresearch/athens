@@ -8,12 +8,13 @@
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid]]
+    [athens.util                          :refer [gen-block-uid] :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [goog.dom                             :refer [getElement]]
     [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -283,12 +284,11 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (when uid
-      (let [remote? (client/open?)]
-        (cond->
-          {:db                    (assoc db :editing/uid uid)
-           :editing/focus         [uid index]}
-          remote? (assoc :presence/send-editing uid))))))
+    (let [remote? (client/open?)]
+      (cond->
+        {:db                    (assoc db :editing/uid uid)
+         :editing/focus         [uid index]}
+        (and uid remote?) (assoc :presence/send-editing uid)))))
 
 
 (reg-event-fx
@@ -298,44 +298,6 @@
                   (string/split "editable-uid-")
                   second)]
       {:db (assoc db :editing/uid uid)})))
-
-
-(reg-event-db
-  :selected/add-item
-  (fn [db [_ uid]]
-    (update-in db [:selection :items] (fnil conj #{}) uid)))
-
-
-(reg-event-db
-  :selected/remove-item
-  (fn [db [_ uid]]
-    (update-in db [:selection :items] disj uid)))
-
-
-(reg-event-db
-  :selected/remove-items
-  (fn [db [_ uids]]
-    (update-in db [:selection :items] #(apply disj %1 %2) uids)))
-
-
-(reg-event-db
-  :selected/add-items
-  (fn [db [_ uids]]
-    (update-in db [:selection :items] #(apply conj %1 %2) uids)))
-
-
-(reg-event-db
-  :selected/items-order
-  (fn [db [_ items-order]]
-    (assoc-in db [:selection :order] items-order)))
-
-
-(reg-event-db
-  :selected/clear-items
-  (fn [db _]
-    (-> db
-        (assoc-in [:selection :items] #{})
-        (assoc-in [:selection :order] []))))
 
 
 (defn select-up
@@ -383,26 +345,23 @@
 
 
 (defn select-down
-  [selected-items]
+  [selected-items next-block-uid]
   (let [editing-uid @(subscribe [:editing/uid])
         editing-idx (first (keep-indexed (fn [idx x]
                                            (when (= x editing-uid)
                                              idx))
                                          selected-items))
-        [_ f-embed]          (->> selected-items first db/uid-and-embed-id)
-        last-item            (last selected-items)
-        next-block-uid       (db/next-block-uid last-item true)]
+        [_ f-embed] (->> selected-items first db/uid-and-embed-id)]
     (cond
       (pos? editing-idx) (subvec selected-items 1)
-
       ;; shift down started from inside the embed should not go outside embed block
       f-embed            (let [sel-uid (str (-> next-block-uid db/uid-and-embed-id first) "-embed-" f-embed)]
                            (if (js/document.querySelector (str "#editable-uid-" sel-uid))
                              (conj selected-items sel-uid)
                              selected-items))
 
-      next-block-uid     (conj selected-items next-block-uid)
-      :else              selected-items)))
+      next-block-uid (conj selected-items next-block-uid)
+      :else          selected-items)))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
@@ -410,27 +369,12 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc-in db [:selection :items] (select-down selected-items))))
-
-
-(reg-event-fx
-  :selected/delete
-  (fn [{db :db} [_ selected-uids]]
-    (js/console.debug ":selected/delete args" selected-uids)
-    (let [local?         (not (client/open?))
-          sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
-      (js/console.log "selected/delete local?" local?)
-      (if local?
-        (let [selected-delete-event (common-events/build-selected-delete-event -1
-                                                                               sanitized-uids)
-              tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
-          (js/console.debug  ":selected/delete tx" tx)
-          {:fx [[:dispatch-n [[:transact    tx]
-                              [:editing/uid nil]]]]
-           :db (-> db
-                   (assoc-in [:selection :items] #{})
-                   (assoc-in [:selection :order] []))})
-        {:fx [[:dispatch [:remote/selected-delete selected-uids]]]}))))
+    (let [last-item         (last selected-items)
+          next-block-uid    (db/next-block-uid last-item true)
+          ordered-selection (-> (into [] selected-items)
+                                (into [next-block-uid]))]
+      (js/console.debug ":selected/down, new-selection:" (pr-str ordered-selection))
+      (assoc-in db [:selection :items] ordered-selection))))
 
 
 ;; Alerts
@@ -491,18 +435,26 @@
     (assoc db :tooltip/uid uid)))
 
 
+;; Connection status
+
+(reg-event-db
+  :conn-status
+  (fn [db [_ status]]
+    (assoc db :connection-status status)))
+
+
 ;; Daily Notes
 
 (reg-event-db
-  :daily-notes/reset
-  (fn [db _]
-    (assoc db :daily-notes/items [])))
+  :daily-note/reset
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items uid)))
 
 
 (reg-event-db
-  :daily-notes/add
+  :daily-note/add
   (fn [db [_ uid]]
-    (assoc db :daily-notes/items [uid])))
+    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
@@ -521,15 +473,12 @@
 
 (reg-event-fx
   :daily-note/next
-  (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db    (update db :daily-notes/items conj uid)
-          block-uid (gen-block-uid)]
-      (if (db/e-by-av :block/uid uid)
-        {:db new-db}
-        {:db       new-db
-         :dispatch [:page/create {:title     title
-                                  :page-uid  uid
-                                  :block-uid block-uid}]}))))
+  (fn [_ [_ {:keys [uid title]}]]
+    {:fx [(if (db/e-by-av :block/uid uid)
+            [:dispatch [:daily-note/add uid]]
+            [:dispatch [:page/create {:title     title
+                                      :page-uid  uid
+                                      :block-uid (gen-block-uid)}]])]}))
 
 
 (reg-event-fx
@@ -539,6 +488,24 @@
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
+
+(reg-event-fx
+  :daily-note/scroll
+  (fn [_ [_]]
+    (let [daily-notes @(subscribe [:daily-notes/items])
+          el          (getElement "daily-notes")
+          offset-top  (.. el -offsetTop)
+          rect        (.. el getBoundingClientRect)
+          from-bottom (.. rect -bottom)
+          from-top    (.. rect -top)
+          doc-height  (.. js/document -documentElement -scrollHeight)
+          top-delta   (- offset-top from-top)
+          bottom-delta (- from-bottom doc-height)]
+      ;; Don't allow user to scroll up for now.
+      (cond
+        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -624,9 +591,16 @@
                                                                        title)
               tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
           {:fx [[:dispatch-n [[:transact tx]
-                              (if shift?
+                              (cond
+                                shift?
                                 [:right-sidebar/open-item page-uid]
-                                [:navigate :page {:id page-uid}])
+
+                                (not (util/is-daily-note page-uid))
+                                [:navigate :page {:id page-uid}]
+
+                                (util/is-daily-note page-uid)
+                                [:daily-note/add page-uid])
+
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
                [:remote/page-create page-uid block-uid title shift?]]]}))))
@@ -1556,3 +1530,4 @@
           (js/console.debug ":block/open tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/block-open args]]]}))))
+

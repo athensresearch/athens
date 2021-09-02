@@ -416,6 +416,7 @@
   (js/console.log "WSClient Disconnected:" event)
   (let [connection (.-target event)
         url        (.-url connection)]
+    (rf/dispatch [:conn-status :reconnecting])
     (remove-listeners! connection)
     (delayed-reconnect! url)))
 
@@ -443,6 +444,7 @@
       (.close connection)
       (js/console.debug "WSClient closed connection")
       (reset! ws-connection nil)
+      (rf/dispatch [:conn-status :disconnected])
       component)))
 
 

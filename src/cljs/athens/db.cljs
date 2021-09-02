@@ -126,11 +126,11 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selection           {:items #{}
-                                     :order []}
+               :selection           {:items []}
                :zoom-level          1
                :fs/watcher          nil
-               :presence            {}})
+               :presence            {}
+               :connection-status   :disconnected})
 
 
 (defn init-app-db

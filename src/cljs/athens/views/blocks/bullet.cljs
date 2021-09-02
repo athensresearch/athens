@@ -10,7 +10,6 @@
 
 ;; Styles
 
-
 (def bullet-style
   {:flex-shrink "0"
    :grid-area "bullet"
@@ -18,23 +17,23 @@
    :z-index 2
    :cursor "pointer"
    :margin-right "0.25em"
+   :padding 0
    :appearance "none"
    :border 0
    :background "transparent"
    :transition "all 0.05s ease"
    :height "2em"
    :width "1em"
+   :display "flex"
+   :align-items "center"
+   :justify-content "center"
    :color (style/color :body-text-color :opacity-low)
-   ::stylefy/manual [[:&:after {:content "''"
-                                :background "currentColor"
-                                :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"
-                                :border-radius "100px"
-                                :box-shadow "0 0 0 0.125rem transparent"
-                                :display "inline-flex"
-                                :margin "50% 0 0 50%"
-                                :transform "translate(-50%, -50%)"
-                                :height "0.3125em"
-                                :width "0.3125em"}]
+   ::stylefy/manual [[:svg {:transform "scale(1.001)" ; Prevents the bullet being squished
+                            :overflow "visible" ; Prevents the stroke from being cropped
+                            :width "0.25em"
+                            :height "0.25em"}]
+                     [:circle {:fill "currentColor"
+                               :transition "color 0.05s ease, opacity 0.05s ease, box-shadow 0.05s ease, transform 0.05s ease"}]
                      [:&:before {:content "''"
                                  :inset "0.25rem -0.125rem"
                                  :z-index -1
@@ -47,9 +46,12 @@
                      [:&:hover {:color (style/color :link-color)}]
                      [:&:hover:before
                       :&:focus-visible:before {:opacity 1}]
-                     [:&.closed-with-children [:&:after {:box-shadow (str "0 0 0 0.125rem " (style/color :body-text-color))
-                                                         :opacity (:opacity-med style/OPACITIES)}]]
-                     [:&:hover:after {:transform "translate(-50%, -50%) scale(1.3)"}]
+                     [:&.closed-with-children [:circle {:stroke (style/color :body-text-color)
+                                                        :fill (style/color :body-text-color :opacity-low)
+                                                        :r "22"
+                                                        :stroke-width "12"
+                                                        :opacity (:opacity-med style/OPACITIES)}]]
+                     [:&:hover [:svg {:transform "scale(1.3)"}]]
                      [:&.dragging {:z-index 1
                                    :cursor "grabbing"
                                    :color (style/color :body-text-color)}]]})
@@ -108,4 +110,8 @@
                 :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ; useful during development to check block meta-data
                 :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
                 :on-drag-start   (fn [e] (bullet-drag-start e uid state))
-                :on-drag-end     (fn [e] (bullet-drag-end e uid state))}])))
+                :on-drag-end     (fn [e] (bullet-drag-end e uid state))}
+       [:svg {:viewBox "0 0 24 24"}
+        [:circle {:cx "12"
+                  :cy "12"
+                  :r "12"}]]])))

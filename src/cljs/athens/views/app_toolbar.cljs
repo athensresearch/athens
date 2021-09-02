@@ -10,7 +10,6 @@
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Search" :default Search]
     ["@material-ui/icons/Settings" :default Settings]
-    ["@material-ui/icons/Storage" :default Storage]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ToggleOff" :default ToggleOff]
     ["@material-ui/icons/ToggleOn" :default ToggleOn]
@@ -236,9 +235,6 @@
                         :title "Open Settings"
                         :is-pressed   (= @route-name :settings)}
              [:> Settings]]
-
-            [:div {:style {:display "flex"}}
-             [:> Storage {:style {:align-self "center"}}]]
             [separator]]
            [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :is-primary true} "Load Test DB"])
          [:> Button {:on-click #(dispatch [:theme/toggle])

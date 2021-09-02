@@ -2,7 +2,9 @@
   (:require
     [athens.db :as db]
     [athens.electron.utils :as electron-utils]
+    [athens.events.selection :as select-events]
     [athens.router :as router]
+    [athens.subs.selection :as select-subs]
     [athens.util :as util]
     [cljsjs.react]
     [cljsjs.react.dom]
@@ -24,7 +26,7 @@
   - tab: indent/unindent blocks
   Can't use textarea-key-down from keybindings.cljs because textarea is no longer focused."
   [e]
-  (let [selected-items @(subscribe [:selected/items])]
+  (let [selected-items @(subscribe [::select-subs/items])]
     (when (not-empty selected-items)
       (let [shift    (.. e -shiftKey)
             key-code (.. e -keyCode)
@@ -37,10 +39,10 @@
         (cond
           enter? (do
                    (dispatch [:editing/uid (first selected-items)])
-                   (dispatch [:selected/clear-items]))
+                   (dispatch [::select-events/clear]))
           (or bksp? delete?)  (do
-                                (dispatch [:selected/delete selected-items])
-                                (dispatch [:selected/clear-items]))
+                                (dispatch [::select-events/delete])
+                                (dispatch [::select-events/clear]))
           tab? (do
                  (.preventDefault e)
                  (if shift
@@ -50,7 +52,7 @@
           (and shift down?) (dispatch [:selected/down selected-items])
           (or up? down?) (do
                            (.preventDefault e)
-                           (dispatch [:selected/clear-items])
+                           (dispatch [::select-events/clear])
                            (if up?
                              (dispatch [:up (first selected-items) e])
                              (dispatch [:down (last selected-items) e]))))))))
@@ -60,7 +62,7 @@
   "Clears editing/uid when user clicks anywhere besides bullets, header, or on a block.
   Clears selected/items when user clicks somewhere besides a bullet point."
   [e]
-  (let [selected-items?      (not-empty @(subscribe [:selected/items]))
+  (let [selected-items?      (not-empty @(subscribe [::select-subs/items]))
         editing-uid          @(subscribe [:editing/uid])
         closest-block        (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
@@ -70,7 +72,7 @@
         closest              (or closest-block closest-block-header closest-page-header closest-dropdown)]
     (when (and selected-items?
                (nil? closest-bullet))
-      (dispatch [:selected/clear-items]))
+      (dispatch [::select-events/clear]))
     (when (and (nil? closest)
                editing-uid)
       (dispatch [:editing/uid nil]))))
@@ -96,7 +98,7 @@
                                        KeyCodes.G (dispatch [:devtool/toggle])
 
                                        KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
-                                                        selected-items @(subscribe [:selected/items])]
+                                                        selected-items @(subscribe [::select-subs/items])]
                                                     ;; editing/uid must be nil or selected-items must be non-empty
                                                     (when (or (nil? editing-uid)
                                                               (not-empty selected-items))
@@ -143,12 +145,11 @@
                           (map (fn [[orig-str match-str]]
                                  (let [eid (db/e-by-av :block/uid match-str)]
                                    (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" (db/v-by-ea eid :block/string) "))")]
                                      [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]
-      (let [orig-str    (first (first replacements))
-            replace-str (second (first replacements))]
+      (let [[orig-str replace-str] (first replacements)]
         (if (empty? replacements)
           s
           (recur (rest replacements)
@@ -160,19 +161,18 @@
   ([depth node]
    (blocks-to-clipboard-data depth node false))
   ([depth node unformat?]
-   (let [{:block/keys [string children header]} node
-         left-offset   (apply str (repeat depth "    "))
-         walk-children (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?) children))
-         string (let [header-to-str (case header
-                                      1 "# "
-                                      2 "## "
-                                      3 "### "
-                                      "")]
-                  (str header-to-str string))
-         string (if unformat?
-                  (-> string unformat-double-brackets athens.listeners/block-refs-to-plain-text)
-                  string)
-         dash (if unformat? "" "- ")]
+   (let [{:block/keys [string
+                       children
+                       _header]} node
+         left-offset             (apply str (repeat depth "    "))
+         walk-children           (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?)
+                                                 children))
+         string                  (if unformat?
+                                   (-> string
+                                       unformat-double-brackets
+                                       block-refs-to-plain-text)
+                                   (block-refs-to-plain-text string))
+         dash                    (if unformat? "" "- ")]
      (str left-offset dash string "\n" walk-children))))
 
 
@@ -180,23 +180,29 @@
   "If blocks are selected, copy blocks as markdown list.
   Use -event_ because goog events quirk "
   [^js e]
-  (let [uids  @(subscribe [:selected/items])
-        order @(subscribe [:selected/order])]
+  (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) order)
-                           (map #(blocks-to-clipboard-data 0 %))
-                           (apply str))]
-        (.. e preventDefault)
-        (.. e -event_ -clipboardData (setData "text/plain" copy-data))))))
+      (let [copy-data      (->> uids
+                                (map #(db/get-block-document [:block/uid %]))
+                                (map #(blocks-to-clipboard-data 0 %))
+                                (apply str))
+            clipboard-data (.. e -event_ -clipboardData)]
+        (doto clipboard-data
+          (.setData "text/plain" copy-data)
+          ;; TODO: internal Athens representation of copied data,
+          ;; so it can be Pasted even if source was deleted
+          ;; {:block/keys [uid string children order open]}
+          (.setData "application/athens" (pr-str {:uids uids})))
+        (.preventDefault e)))))
 
 
 (defn cut
   "Cut is essentially copy AND delete selected blocks"
   [^js e]
-  (let [uids @(subscribe [:selected/items])]
+  (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
       (copy e)
-      (dispatch [:selected/delete uids]))))
+      (dispatch [::select-events/delete]))))
 
 
 (defn prevent-save
