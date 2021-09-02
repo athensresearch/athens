@@ -1,7 +1,25 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const StyledButton = styled.button`
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * Whether this button should have a stronger style
+   */
+  isPrimary?: boolean;
+  /**
+   * Whether the button should appear pressed
+   */
+  isPressed?: boolean;
+}
+
+
+/**
+ * Primary UI component for user interaction
+ */
+export const Button = styled.button.attrs(props => ({
+  className: [props.className, props.isPrimary ? 'is-primary' : ''].join(' '),
+  ariaPressed: props.isPressed,
+})) <ButtonProps>`
   cursor: pointer;
   padding: 0.375rem 0.625rem;
   margin: 0;
@@ -88,30 +106,15 @@ const StyledButton = styled.button`
   }
 `;
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /**
-   * Whether this button should have a stronger style
-   */
-  isPrimary?: boolean;
-  /**
-   * Whether the button should appear pressed
-   */
-  isPressed?: boolean;
-}
-
-/**
- * Primary UI component for user interaction
- */
-
-export const Button = ({ isPrimary, isPressed, children, ...props }: ButtonProps) => {
-  return (
-    <StyledButton
-      type="button"
-      className={isPrimary ? 'is-primary' : ''}
-      aria-pressed={isPressed}
-      {...props}
-    >
-      {children}
-    </StyledButton>
-  );
-};
+// export const Button = ({ isPrimary, isPressed, children, ...props }: ButtonProps) => {
+//   return (
+//     <StyledButton
+//       type="button"
+//       className={isPrimary ? 'is-primary' : ''}
+//       aria-pressed={isPressed}
+//       {...props}
+//     >
+//       {children}
+//     </StyledButton>
+//   );
+// };
