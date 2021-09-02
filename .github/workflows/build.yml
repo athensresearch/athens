@@ -331,8 +331,8 @@ jobs:
            repository: sid597/athens
            path: .
            push: true      # Will automatically push the build result to registry.
-           tags: ${{ steps.meta.outputs.tags }}
-           labels: ${{ steps.meta.outputs.labels }}
+           #tags: ${{ steps.meta.outputs.tags }}
+           #labels: ${{ steps.meta.outputs.labels }}
            # file: .github/workflow/Dockerfile        # Path to the Dockerfile. (default {context}/Dockerfile)
            # cache-to:     # Export build cache to an external cache destination.
            # cache-from:   # Use an external cache source for a build. Supported types are registry, local and gha.
