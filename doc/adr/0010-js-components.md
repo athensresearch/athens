@@ -1,4 +1,4 @@
-# X. JS Components
+# 10. JS Components
 
 Date: 2021-08-23
 
@@ -16,10 +16,12 @@ The separation also has several second order benefits related to organization an
 
 Costs for this change are centered around the degree of separation between application and components, where cljs is the primary language on the former and js on the latter, and maintaining extra tooling.
 
+Part of [Ongoing Hypothesis](https://docs.google.com/document/d/18ExzXHB5aezyINmIVWDBpZpXgV67kAhuAO8MvX6dbPw/edit).
+
 
 ## Decision
 
-TBD
+Decided to use JS components with Storybook, compiled from TSX, after seeing how much Stuart was able to get done with them.
 
 
 ## Consequences
