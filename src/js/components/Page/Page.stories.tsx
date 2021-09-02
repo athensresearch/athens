@@ -2,6 +2,7 @@ import React from 'react';
 import { Page } from '../Page';
 import { Block } from '../Block';
 import styled from 'styled-components';
+import { BADGE, Storybook } from '../../storybook';
 import { DateTime } from 'luxon';
 import { Welcome } from '../Block/Block.stories';
 import { preferredDateFormat } from '../../config';
@@ -22,6 +23,9 @@ export default {
   title: 'Components/Page',
   component: Page,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  },
 };
 
 // Stories

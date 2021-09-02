@@ -1,4 +1,5 @@
 import { Button } from './Button';
+import { BADGE, Storybook } from '../../storybook';
 
 export default {
   title: 'Components/Button',
@@ -6,7 +7,9 @@ export default {
   argTypes: {},
   parameters: {
     layout: 'centered',
+    badges: [BADGE.BETA]
   },
+  decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };
 
 const Template = (args) => <Button {...args} />;

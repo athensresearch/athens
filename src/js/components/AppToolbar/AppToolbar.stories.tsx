@@ -1,18 +1,26 @@
 import React from 'react';
 import styled from 'styled-components';
+import { BADGE, Storybook } from '../../storybook';
 
 import { AppToolbar } from './AppToolbar';
 
-const Wrapper = styled.div`
-  position: relative;
-  height: 52px;
-  background: #fff;
+const ToolbarStoryWrapper = styled(Storybook.Wrapper)`
+  background: rebeccapurple;
+
+  > * {
+    /* Make the macOS toolbar behave inside the story */
+    position: static !important;
+  }
 `;
 
 export default {
   title: 'Sections/AppToolbar',
   component: AppToolbar,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  },
+  decorators: [(Story) => <ToolbarStoryWrapper>{Story()}</ToolbarStoryWrapper>]
 };
 
 const Template = (args) => {
@@ -27,7 +35,7 @@ const Template = (args) => {
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
   const [isThemeDark, setIsThemeDark] = React.useState(false);
 
-  return <Wrapper><AppToolbar
+  return <AppToolbar
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}
@@ -49,7 +57,7 @@ const Template = (args) => {
     handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
     handlePressShortcuts={() => setIsLeftOpen(!isLeftSidebarOpen)}
     handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-    {...args} /></Wrapper>
+    {...args} />
 };
 
 export const Auto = Template.bind({});
@@ -58,7 +66,7 @@ Auto.args = {};
 export const MacOs = Template.bind({});
 MacOs.args = {
   os: 'mac',
-  isElectron: true
+  isElectron: true,
 };
 
 export const Windows = Template.bind({});

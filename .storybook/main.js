@@ -5,7 +5,8 @@ module.exports = {
   ],
   "addons": [
     "@storybook/addon-links",
-    "@storybook/addon-essentials"
+    "@storybook/addon-essentials",
+    '@geometricpanda/storybook-addon-badges'
   ],
   webpackFinal: async (config, { configType }) => {
     // Always prefer .tsx files when resolving modules.

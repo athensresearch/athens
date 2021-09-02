@@ -1,9 +1,13 @@
 import { CommandBar } from './CommandBar';
+import { BADGE, Storybook } from '../../storybook';
 
 export default {
   title: 'Components/CommandBar',
   component: CommandBar,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  },
 };
 
 const Template = (args) => <CommandBar {...args} isModal={false} />;

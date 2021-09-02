@@ -1,11 +1,15 @@
 import React from 'react';
+import { BADGE, Storybook } from '../../storybook';
 import { Breadcrumbs } from './Breadcrumbs';
 
 export default {
   title: 'Components/Breadcrumbs',
   component: Breadcrumbs,
   argTypes: {},
-  decorators: [(Story) => <div style={{ padding: '4rem' }}>{Story()}</div>],
+  decorators: [(Story) => <Storybook.Wrapper>{Story()}</Storybook.Wrapper>],
+  parameters: {
+    badges: [BADGE.DEV]
+  }
 };
 
 export const Basic = () => {

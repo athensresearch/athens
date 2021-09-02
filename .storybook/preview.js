@@ -1,7 +1,7 @@
 import React from 'react';
-import styled from 'styled-components';
 
 import { GlobalStyles } from '../src/js/style/style';
+import { badges, Storybook } from '../src/js/storybook';
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -12,6 +12,9 @@ export const parameters = {
       date: /Date$/,
     },
   },
+  badgesConfig: {
+    ...badges
+  }
 }
 
 export const globalTypes = {
@@ -29,19 +32,6 @@ export const globalTypes = {
   },
 };
 
-/**
- * Provides contextual classnames, colors, and typographic
- * defaults which all components expect.
- * 
- * Not used in the application, but useful for testing.
- */
-const App = styled.div`
-  background-color: var(--background-color);
-  color: var(--body-text-color);
-  position: relative;
-  overflow: hidden;
-`;
-
 
 export const decorators = [
   (Story, context) => {
@@ -49,7 +39,7 @@ export const decorators = [
     return (
       <>
         <GlobalStyles />
-        <App
+        <Storybook.App
           id="app"
           className={[
             context.globals.theme === 'light' ? 'is-theme-light' : 'is-theme-dark',
@@ -57,7 +47,7 @@ export const decorators = [
             context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
           ].join(' ')}>
           <Story />
-        </App>
+        </Storybook.App>
       </>
     )
   },

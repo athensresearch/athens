@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { BADGE, Storybook } from '../../storybook';
 
 import { LeftSidebar } from './LeftSidebar';
 import { AppLayout } from '../AppLayout';
@@ -7,6 +8,9 @@ export default {
   title: 'Sections/LeftSidebar',
   component: LeftSidebar,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  }
 };
 
 const Template = (args) => <AppLayout style={{ minHeight: "60vh" }}>

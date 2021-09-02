@@ -1,14 +1,20 @@
 import styled from 'styled-components';
 import { Create } from '@material-ui/icons';
+import { BADGE, Storybook } from '../../storybook';
 
 import { Overlay } from './Overlay';
 import { Menu } from '../Menu';
 import { Button } from '../Button';
 
-const Wrapper = styled.div`
-  padding: 4rem;
-  margin: auto;
-`;
+export default {
+  title: 'Components/Overlay',
+  component: Overlay,
+  argTypes: {},
+  parameters: {
+    layout: 'centered',
+    badges: [BADGE.DEV]
+  }
+};
 
 const MessageContent = styled.div`
   display: flex;
@@ -32,16 +38,7 @@ const MessageContent = styled.div`
   }
 `;
 
-export default {
-  title: 'Components/Overlay',
-  component: Overlay,
-  argTypes: {},
-  parameters: {
-    layout: 'centered'
-  }
-};
-
-const Template = (args) => <Wrapper><Overlay {...args} /></Wrapper>;
+const Template = (args) => <Storybook.Wrapper><Overlay {...args} /></Storybook.Wrapper>;
 
 export const Basic = Template.bind({});
 Basic.args = {

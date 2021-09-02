@@ -1,24 +1,20 @@
-import styled from 'styled-components';
+import { BADGE, Storybook } from '../../storybook';
 
 import { Menu } from './Menu';
 import { Button } from '../Button';
 import { Overlay } from '../Overlay';
-
-const Wrapper = styled.div`
-  padding: 4rem;
-  margin: auto;
-`;
 
 export default {
   title: 'Components/Menu',
   component: Menu,
   argTypes: {},
   parameters: {
-    layout: 'centered'
+    layout: 'centered',
+    badges: [BADGE.DEV]
   }
 };
 
-const Template = (args) => <Wrapper><Menu {...args} /></Wrapper>;
+const Template = (args) => <Storybook.Wrapper><Menu {...args} /></Storybook.Wrapper>;
 
 export const Basic = Template.bind({});
 Basic.args = {

@@ -1,11 +1,18 @@
 import React from 'react';
-import { Block } from './Block';
-
 import styled from 'styled-components';
 
-const Wrapper = styled.div`
-  padding: 4rem;
-`;
+import { Block } from './Block';
+import { BADGE, Storybook } from '../../storybook';
+
+export default {
+  title: 'Components/Block',
+  component: Block,
+  argTypes: {},
+  decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>],
+  parameters: {
+    badges: [BADGE.DEV]
+  }
+};
 
 const data = {
   blockContent: [
@@ -24,15 +31,9 @@ const data = {
   ]
 };
 
-export default {
-  title: 'Components/Block',
-  component: Block,
-  argTypes: {},
-};
-
 // Stories
 
-const Template = (args) => <Wrapper><Block {...args} /></Wrapper>;
+const Template = (args) => <Block {...args} />;
 
 export const Basic = Template.bind({});
 Basic.args = {
@@ -118,11 +119,9 @@ export const References = () => {
     </Block>
   )
 };
-References.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Selected = () => {
   return (
-    <Wrapper>
       <Block
         uid="1"
         isSelected={true}
@@ -130,11 +129,9 @@ export const Selected = () => {
         rawContent={data.blockContent[0].raw}
         renderedContent={data.blockContent[0].rendered()}
       >
-      </Block>
-    </Wrapper>
+    </Block>
   )
 };
-Selected.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const MultipleSelected = () => {
   return (
@@ -173,7 +170,6 @@ export const MultipleSelected = () => {
     </>
   )
 };
-MultipleSelected.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Tree = () => {
   const [blockState, setBlockState] = React.useState({
@@ -228,7 +224,6 @@ export const Tree = () => {
     </>
   )
 };
-Tree.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const Welcome = () => {
   const [blockState, setBlockState] = React.useState({
@@ -313,7 +308,6 @@ export const Welcome = () => {
     </>
   )
 };
-Welcome.decorators = [(Story) => <Wrapper><Story /></Wrapper>];
 
 export const WithAvatars = ({ ...args }) => {
   const [blockState, setBlockState] = React.useState({
@@ -412,4 +406,3 @@ export const WithAvatars = ({ ...args }) => {
 WithAvatars.args = {
   color: "#611A58",
 }
-WithAvatars.decorators = [(Story) => <Wrapper><Story /></Wrapper>];

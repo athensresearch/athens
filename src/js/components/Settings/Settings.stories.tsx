@@ -1,4 +1,6 @@
 import React from 'react';
+import { BADGE, Storybook } from '../../storybook';
+
 import { Settings } from './Settings';
 import { Button } from '../Button';
 
@@ -6,6 +8,9 @@ export default {
   title: 'Routes/Settings',
   component: Settings,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  },
 };
 
 export const Basic = () => {

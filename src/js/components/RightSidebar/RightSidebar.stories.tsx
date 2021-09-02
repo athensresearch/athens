@@ -1,10 +1,14 @@
 import { RightSidebar } from './RightSidebar';
+import { BADGE } from '../../storybook';
 import { AppLayout } from '../AppLayout';
 
 export default {
   title: 'Sections/RightSidebar',
   component: RightSidebar,
   argTypes: {},
+  parameters: {
+    badges: [BADGE.DEV]
+  }
 };
 
 const Template = (args) => <AppLayout style={{ minHeight: "60vh" }}><RightSidebar {...args} /></AppLayout>;
