@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { Modal } from '@material-ui/core';
 import { Close, Block, CheckBox } from '@material-ui/icons';
 
+import { Input } from '../Input';
 import { Overlay } from '../Overlay';
 import { Button } from '../Button';
 
@@ -78,6 +79,11 @@ const SettingWrap = styled.div`
   }
 `;
 
+const EmailControls = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
 const Setting = ({ label, glance, body, help }) =>
   <SettingWrap>
     <header>
@@ -118,8 +124,8 @@ export const Settings = ({
         <Setting
           label="Email"
           glance={openCollectiveEmail ? (<><CheckBox /> {openCollectiveEmail}</>) : (<><Block /> Not set</>)}
-          body={<>
-            <input
+          body={<EmailControls>
+            <Input
               type="email"
               placeholder="OpenCollective Email"
               onChange={handleChangeEmail}
@@ -132,7 +138,7 @@ export const Settings = ({
             <Button
               onClick={handleResetEmail}
             >Reset</Button>
-          </>}
+          </EmailControls>}
           help={<p>{openCollectiveEmail !== '' ? "You are using the free version of Athens. You are hosting your own data. Please be careful!" : "Thank you for supporting Athens! Backups are coming soon."}</p>}
         />
 
