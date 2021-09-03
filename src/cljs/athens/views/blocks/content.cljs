@@ -3,10 +3,13 @@
     [athens.config                        :as config]
     [athens.db                            :as db]
     [athens.electron                      :as electron]
+    [athens.events.selection              :as select-events]
     [athens.parse-renderer                :refer [parse-and-render]]
     [athens.style                         :as style]
+    [athens.subs.selection                :as select-subs]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.edn                          :as edn]
     [clojure.set                          :as set]
     [garden.selectors                     :as selectors]
     [goog.events                          :as goog-events]
@@ -213,7 +216,7 @@
                                  (filter (fn [[_idx uid]]
                                            (= target-uid uid)))
                                  ffirst)
-        selected-uids       @(rf/subscribe [:selected/items])
+        selected-uids       (set @(rf/subscribe [::select-subs/items]))
         candidate-uids      (->> indexed-uids
                                  (filter (fn [[idx _uid]]
                                            (<= (min start-index end-index)
@@ -249,9 +252,7 @@
                                                       :target-uid      target-uid
                                                       :selection-order selection-order})))
     (when (and start-index end-index)
-      (rf/dispatch [:selected/remove-items to-remove-uids])
-      (rf/dispatch [:selected/add-items selection-new-uids])
-      (rf/dispatch [:selected/items-order selection-order]))))
+      (rf/dispatch [::select-events/set-items selection-order]))))
 
 
 ;; Event Handlers
@@ -275,7 +276,9 @@
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
   (let [data        (.. e -clipboardData)
-        text-data   (.. data (getData "text"))
+        text-data   (.getData data "text/plain")
+        _app-clip   (some-> (.getData data "application/athens")
+                            edn/read-string)
         line-breaks (re-find #"\r?\n" text-data)
         no-shift    (-> @state :last-keydown :shift not)
         items       (array-seq (.. e -clipboardData -items))
@@ -324,7 +327,7 @@
              target-uid
              (not= source-uid target-uid))
       (find-selected-items e source-uid target-uid)
-      (rf/dispatch [:selected/clear-items]))))
+      (rf/dispatch [::select-events/clear]))))
 
 
 (defn global-mouseup
@@ -354,7 +357,7 @@
   (let [source-uid @(rf/subscribe [:editing/uid])
         mouse-down @(rf/subscribe [:mouse-down])]
     (when mouse-down
-      (rf/dispatch [:selected/clear-items])
+      (rf/dispatch [::select-events/clear])
       (find-selected-items e source-uid target-uid))))
 
 
@@ -368,7 +371,7 @@
   [block state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
-        selected-items (rf/subscribe [:selected/items])]
+        selected-items (rf/subscribe [::select-subs/items])]
     (fn [_block _state]
       (let [font-size (case header
                         1 "2.1em"
