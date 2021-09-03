@@ -108,6 +108,12 @@ export interface BlockProps {
   handleDrop?: () => void;
 }
 
+const Test = ({ children }) => {
+  console.log('test appeared');
+
+  return children;
+}
+
 export const Block = ({
   children,
   rawContent,
@@ -138,11 +144,11 @@ export const Block = ({
 
   return (<>
     <Container
-    style={presentUser ? { "--user-color": presentUser.color } : undefined}
-    onClick={handlePressContainer}
-    onDragOver={handleDragOver}
-    onDragLeave={handleDragLeave}
-    onDrop={handleDrop}
+      style={(showPresentUserAvatar && presentUser) ? { "--user-color": presentUser.color } : undefined}
+      onClick={handlePressContainer}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={classnames(
         children && 'show-tree-indicator',
         isOpen ? 'is-open' : 'is-closed',
@@ -159,7 +165,7 @@ export const Block = ({
       onMouseEnter={() => { handleMouseEnterBlock; setRenderEditableDom(true) }}
       onMouseLeave={() => { handleMouseLeaveBlock; setRenderEditableDom(false) }}
     >
-      {children && <Toggle
+        {children && !isLocked && <Toggle
         isOpen={isOpen}
         linkedRef={linkedRef}
         uid={uid}
@@ -190,22 +196,25 @@ export const Block = ({
     {/* Drop area indicator after */}
 
     </Container>
+
     {(showPresentUserAvatar && presentUser) && (
+      <>
       <Popper
-        open={!!presentUser}
+          open={true}
         anchorEl={avatarAnchorEl}
         placement="top-start"
-        container={DOMRoot}
+          container={DOMRoot}
         popperOptions={{
-          modifiers: { offset: { enabled: true, offset: '-70, -56' } },
+          modifiers: { offset: { enabled: true, offset: '-10, -56' } },
         }}
       >
         <Avatar
           {...presentUser}
           size="1.5rem"
-          style={{ filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.1))" }}
+            style={{ filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.1))", zIndex: 99999 }}
         />
-      </Popper>
+        </Popper>
+      </>
     )}
   </>)
 };

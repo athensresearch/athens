@@ -19,11 +19,7 @@ export const Container = styled.div`
     bottom: 0;
     transform: translateX(50%);
     transition: background-color 0.2s ease-in-out;
-    background: var(--border-color);
-  }
-
-  &.is-presence.show-tree-indicator:before {
-    background: var(--user-color);
+    background: var(--user-color, var(--border-color));
   }
 
   &:after {
