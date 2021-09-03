@@ -155,7 +155,8 @@ export const Block = ({
         linkedRef && 'is-linked-ref',
         isLocked && 'is-locked',
         isSelected && 'is-selected',
-        isSelected && isDragging && 'dragging',
+        presentUser && showPresentUserAvatar && 'is-presence',
+        isSelected && isDragging && 'is-dragging',
         isEditing && 'is-editing')}
   >
     {/* Drop area indicator before */}

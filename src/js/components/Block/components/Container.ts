@@ -22,6 +22,11 @@ export const Container = styled.div`
     background: var(--user-color, var(--border-color));
   }
 
+  &.is-presence.show-tree-indicator:before {
+    opacity: var(--opacity-low);
+    transform: translateX(50%) scaleX(2);
+  }
+
   &:after {
     content: '';
     position: absolute;
