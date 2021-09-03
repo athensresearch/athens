@@ -1,0 +1,553 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+# Inspired by https://aws.amazon.com/blogs/compute/amazon-ecs-and-docker-volume-drivers-amazon-ebs/
+# Modified to only have 1 EC2 instance and use the Self-Hosted Athens docker image.
+
+
+# Input parameters
+Parameters:
+  InstanceType:
+    Description: The EC2 instance type
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+    ConstraintDescription: must be a valid EC2 instance type.
+  AthensImage:
+    Description: Athens docker image to use.
+    Type: String
+    Default: 'filipesilva/athens-server:rtc.alpha.2'    
+  SnapshotID:
+    Description: Optional Snapshot ID to use for AthensDataVolume.
+    Type: String
+    Default: ''
+  CIDRVPC:
+    Description: Enter the CIDR Range for your VPC
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 192.168.0.0/16
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  CIDRSubnet1:
+    Description: Enter the CIDR Range for your VPC
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 192.168.1.0/24
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  ECSAMI:
+    Description: AMI ID
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
+Conditions:
+  UseSnapshot: !Not 
+    - !Equals 
+      - !Ref SnapshotID
+      - ''
+
+
+Resources:
+
+# Athens Service
+# Define an Athens server running on docker, using AthensDataVolume exclusively.
+# There can be 1 or 0 of this server running.
+  AthensTaskDef:
+    DependsOn:
+      - Subnet1
+      - AthensDataVolume
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      ContainerDefinitions:
+        - LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CWLogsGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: ecs
+          PortMappings:
+            - ContainerPort: 3010
+              Protocol: tcp
+          Environment:
+            - Name: datahike_store_path
+              Value: /var/lib/athens
+          MountPoints:
+            - ContainerPath: /var/lib/athens
+              SourceVolume: AthensDataVolume
+          Image: !Ref AthensImage
+          Essential: true
+          Name: athens-cnt
+      PlacementConstraints:
+        - Type: memberOf
+          Expression: !Sub 
+            - 'attribute:ecs.availability-zone==${AvailabilityZone}'
+            - AvailabilityZone: !GetAtt 
+                - Subnet1
+                - AvailabilityZone
+      Memory: '512'
+      Cpu: '512'
+      Family: athens
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - EC2
+      Volumes:
+        - Name: AthensDataVolume
+          DockerVolumeConfiguration:
+            Scope: shared
+            Autoprovision: false
+            Driver: rexray/ebs
+  AthensService:
+    DependsOn:
+      - Subnet1
+      - NLBListener
+      - AthensTaskDef
+    Type: 'AWS::ECS::Service'
+    Properties:
+      Cluster: !Ref ECSCluster
+      ServiceName: athens-svc
+      TaskDefinition: !Ref AthensTaskDef
+      LoadBalancers:
+        - TargetGroupArn: !Ref AthensTargetGroup
+          ContainerName: athens-cnt
+          ContainerPort: 3010
+      DesiredCount: 1
+      LaunchType: EC2
+      HealthCheckGracePeriodSeconds: 60
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref Subnet1
+          SecurityGroups:
+            - !Ref InstanceSecurityGroup
+          AssignPublicIp: DISABLED
+
+
+# Data Resilience
+# AthensDataVolume is a EBS volume snapshotted every 12h, and on deletion.
+  AthensDataVolume:
+    DependsOn:
+      - Subnet1
+    Type: 'AWS::EC2::Volume'
+    Properties:
+      AvailabilityZone: !GetAtt 
+        - Subnet1
+        - AvailabilityZone
+      Size: '10'
+      VolumeType: gp3
+      SnapshotId: !If 
+        - UseSnapshot
+        - !Ref SnapshotID
+        - !Ref 'AWS::NoValue'
+      Tags:
+        - Key: Athens
+          Value: DataVolume
+        - Key: Name
+          Value: AthensDataVolume
+    DeletionPolicy: Snapshot
+  AthensDataLifecyclePolicy:
+    Type: 'AWS::DLM::LifecyclePolicy'
+    Properties:
+      Description: Athens backups
+      State: ENABLED
+      ExecutionRoleArn: !GetAtt 
+        - DlmServiceRole
+        - Arn
+      PolicyDetails:
+        ResourceTypes:
+          - VOLUME
+        TargetTags:
+          - Key: Athens
+            Value: DataVolume
+        Schedules:
+          - Name: Daily Snapshots
+            TagsToAdd:
+              - Key: type
+                Value: DailySnapshot
+            CreateRule:
+              Interval: 12
+              IntervalUnit: HOURS
+              Times:
+                - '13:00'
+            RetainRule:
+              Count: 90
+            CopyTags: true
+  DlmServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - dlm.amazonaws.com
+      ManagedPolicyArns:
+        - >-
+          arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRole
+      Path: /
+
+
+# ECS Container Cluster
+# A single machine cluster to run the container on.
+# No more machines are needed because Athens is a singleton service.
+  AthensTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Port: 3010
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPC
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: athens-cluster
+  ECSAutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      AvailabilityZones:
+        - !Select 
+          - '0'
+          - !GetAZs 
+            Ref: 'AWS::Region'
+      VPCZoneIdentifier:
+        - !Ref Subnet1
+      LaunchConfigurationName: !Ref ContainerInstances
+      MinSize: '1'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+      Tags:
+        - Key: Name
+          Value: ECS host
+          PropagateAtLaunch: 'true'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        MaxBatchSize: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+  ContainerInstances:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    DependsOn:
+      - AthensDataVolume
+    Properties:
+      ImageId: !Ref ECSAMI
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64 
+        'Fn::Sub': >
+          #!/bin/bash
+
+          yum install -y aws-cfn-bootstrap
+
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack
+          ${AWS::StackName} --resource ContainerInstances
+
+          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack
+          ${AWS::StackName} --resource ECSAutoScalingGroup
+
+
+          exec 2>>/var/log/ecs/ecs-agent-install.log
+
+          set -x
+
+          until curl -s http://localhost:51678/v1/metadata
+
+          do
+             sleep 1
+          done
+
+          docker plugin install rexray/ebs REXRAY_PREEMPT=true
+          EBS_REGION=us-west-2 --grant-all-permissions
+
+          stop ecs 
+
+          start ecs
+    Metadata:
+      'AWS::CloudFormation::Init':
+        config:
+          packages:
+            yum:
+              aws-cli: []
+              jq: []
+              ecs-init: []
+          commands:
+            01_add_instance_to_cluster:
+              command: !Sub 'echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config'
+            02_start_ecs_agent:
+              command: start ecs
+          files:
+            /etc/cfn/cfn-hup.conf:
+              mode: 256
+              owner: root
+              group: root
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub >
+                [cfn-auto-reloader-hook]
+
+                triggers=post.update
+
+                path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
+
+                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack
+                ${AWS::StackName} --resource ContainerInstances
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+      'AWS::CloudFormation::Designer':
+        id: 6ccfbc23-2c3a-4a53-85f8-c7dd5348890a
+  EC2Role:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+      Policies:
+        - PolicyName: ECSforEC2InstanceRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecs:CreateCluster'
+                  - 'ecs:DeregisterContainerInstance'
+                  - 'ecs:DiscoverPollEndpoint'
+                  - 'ecs:Poll'
+                  - 'ecs:RegisterContainerInstance'
+                  - 'ecs:StartTelemetrySession'
+                  - 'ecs:Submit*'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: RexrayPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:AttachVolume'
+                  - 'ec2:CreateVolume'
+                  - 'ec2:CreateSnapshot'
+                  - 'ec2:CreateTags'
+                  - 'ec2:DeleteVolume'
+                  - 'ec2:DeleteSnapshot'
+                  - 'ec2:DescribeAvailabilityZones'
+                  - 'ec2:DescribeInstances'
+                  - 'ec2:DescribeVolumes'
+                  - 'ec2:DescribeVolumeAttribute'
+                  - 'ec2:DescribeVolumeStatus'
+                  - 'ec2:DescribeSnapshots'
+                  - 'ec2:CopySnapshot'
+                  - 'ec2:DescribeSnapshotAttribute'
+                  - 'ec2:DetachVolume'
+                  - 'ec2:ModifySnapshotAttribute'
+                  - 'ec2:ModifyVolumeAttribute'
+                  - 'ec2:DescribeTags'
+                Resource: '*'
+  ECSServiceAutoScalingRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Action:
+            - 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service:
+              - application-autoscaling.amazonaws.com
+      Path: /
+      Policies:
+        - PolicyName: ecs-service-autoscaling
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - 'application-autoscaling:*'
+                - 'cloudwatch:DescribeAlarms'
+                - 'cloudwatch:PutMetricAlarm'
+                - 'ecs:DescribeServices'
+                - 'ecs:UpdateService'
+              Resource: '*'
+  EC2InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2Role
+  CWLogsGroup:
+    Type: 'AWS::Logs::LogGroup'
+
+
+# Network Configuration
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref CIDRVPC
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: Athens VPC
+  Subnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      MapPublicIpOnLaunch: true
+      CidrBlock: !Ref CIDRSubnet1
+      AvailabilityZone: !Select 
+        - '0'
+        - !GetAZs 
+          Ref: 'AWS::Region'
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackName'
+        - Key: Network
+          Value: Public
+  GatewayToInternet:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicRouteTable:
+    DependsOn:
+      - VPC
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackName'
+        - Key: Network
+          Value: Public
+  PublicRoute:
+    DependsOn:
+      - PublicRouteTable
+      - InternetGateway
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnetRouteTableAssociation:
+    DependsOn:
+      - Subnet1
+      - PublicRouteTable
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref PublicRouteTable
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable port 3010
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3010'
+          ToPort: '3010'
+          CidrIp: 0.0.0.0/0
+  NetworkLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref Subnet1
+      Type: network
+  NLBListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AthensTargetGroup
+      LoadBalancerArn: !Ref NetworkLoadBalancer
+      Port: 3010
+      Protocol: TCP
+
+
+# Output data
+Outputs:
+  AWSRegion:
+    Description: The name of the region where the stack was launched
+    Value: !Ref 'AWS::Region'
+  AvailabilityZone:
+    Description: The AZ where the instances are deployed
+    Value: !GetAtt 
+      - Subnet1
+      - AvailabilityZone
+  NLBFullyQualifiedName:
+    Description: The fully qualified name of the NLB
+    Value: !GetAtt 
+      - NetworkLoadBalancer
+      - DNSName
+  NLBName:
+    Description: The name of the NLB
+    Value: !GetAtt 
+      - NetworkLoadBalancer
+      - LoadBalancerName
+  ECSClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref ECSCluster
+  CWLogGroupName:
+    Description: The name of the CWLogs group
+    Value: !Ref CWLogsGroup
+  SubnetId:
+    Description: The ID of the subnet that the instances are associated with
+    Value: !Ref Subnet1
+  SecurityGroupId:
+    Description: The ID of security group that the instances are members of
+    Value: !Ref InstanceSecurityGroup
+  AthensTargetGroupArn:
+    Description: The Arn of the Athens target group
+    Value: !Ref AthensTargetGroup
+  AthensTaskDefArn:
+    Description: The Arn of the Athens task definition
+    Value: !Ref AthensTaskDef
+  AthensServiceArn:
+    Description: The Arn of the Athens service
+    Value: !Ref AthensService
+  AthensDataLifecyclePolicyArn:
+    Description: The Arn of the Athens Data LifecyclePolicy
+    Value: !Ref AthensDataLifecyclePolicy
+  AthensDataVolumeArn:
+    Description: The Arn of the Athens Data Volume
+    Value: !Ref AthensDataVolume        
