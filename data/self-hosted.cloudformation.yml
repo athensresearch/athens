@@ -150,6 +150,8 @@ Resources:
           Value: DataVolume
         - Key: Name
           Value: AthensDataVolume
+        - Key: AthensStack
+          Value: !Ref AWS::StackName
     DeletionPolicy: Snapshot
   AthensDataLifecyclePolicy:
     Type: 'AWS::DLM::LifecyclePolicy'

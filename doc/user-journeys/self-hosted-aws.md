@@ -5,10 +5,10 @@ The Athens Self-Hosted server can be deployed on AWS using a [CloudFormation](ht
 ## TODOs
 
 - make multiple instances actually work
-- add stack name or something to snapshot delete, policy
 - consider refactoring to https://github.com/nathanpeck/ecs-cloudformation#publically-networked-service-with-public-load-balancer
 - should using a nginx container as well to filter traffic to athens by http and so that we don't have to set the port on Athens.
 - https cert support & instructions
+- replace filipesilva/athens-server:rtc.alpha.2 image with official one
 
 ## Pre-requisites
 
@@ -79,7 +79,7 @@ To list all the snapshots you have, what stack they belong to, and when they wer
 ```sh
 aws ec2 describe-snapshots \
     --filters Name=tag:Athens,Values=DataVolume \
-    --query "Snapshots[*].{ID:SnapshotId,Time:StartTime,Stack:Tags[?Key=='Stack']|[0].Value} | sort_by([], &Time)" \
+    --query "Snapshots[*].{ID:SnapshotId,Time:StartTime,Stack:Tags[?Key=='AthensStack']|[0].Value} | sort_by([], &Time)" \
     --output table
 ```
 
