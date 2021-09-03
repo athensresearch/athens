@@ -4,7 +4,6 @@ The Athens Self-Hosted server can be deployed on AWS using a [CloudFormation](ht
 
 ## TODOs
 
-- make multiple instances actually work
 - consider refactoring to https://github.com/nathanpeck/ecs-cloudformation#publically-networked-service-with-public-load-balancer
 - should using a nginx container as well to filter traffic to athens by http and so that we don't have to set the port on Athens.
 - https cert support & instructions

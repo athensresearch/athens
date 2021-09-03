@@ -77,10 +77,10 @@ Resources:
               Value: /var/lib/athens
           MountPoints:
             - ContainerPath: /var/lib/athens
-              SourceVolume: AthensDataVolume
+              SourceVolume: !Sub '${AWS::StackName}AthensDataVolume'
           Image: !Ref AthensImage
           Essential: true
-          Name: athens-cnt
+          Name: !Sub '${AWS::StackName}-athens-cnt'
       PlacementConstraints:
         - Type: memberOf
           Expression: !Sub 
@@ -90,12 +90,12 @@ Resources:
                 - AvailabilityZone
       Memory: '512'
       Cpu: '512'
-      Family: athens
+      Family: !Sub '${AWS::StackName}-athens-task'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - EC2
       Volumes:
-        - Name: AthensDataVolume
+        - Name: !Sub '${AWS::StackName}AthensDataVolume'
           DockerVolumeConfiguration:
             Scope: shared
             Autoprovision: false
@@ -108,11 +108,11 @@ Resources:
     Type: 'AWS::ECS::Service'
     Properties:
       Cluster: !Ref ECSCluster
-      ServiceName: athens-svc
+      ServiceName: !Sub '${AWS::StackName}-athens-svc'
       TaskDefinition: !Ref AthensTaskDef
       LoadBalancers:
         - TargetGroupArn: !Ref AthensTargetGroup
-          ContainerName: athens-cnt
+          ContainerName: !Sub '${AWS::StackName}-athens-cnt'
           ContainerPort: 3010
       DesiredCount: 1
       LaunchType: EC2
@@ -149,7 +149,7 @@ Resources:
         - Key: Athens
           Value: DataVolume
         - Key: Name
-          Value: AthensDataVolume
+          Value: !Sub '${AWS::StackName}AthensDataVolume'
         - Key: AthensStack
           Value: !Ref AWS::StackName
     DeletionPolicy: Snapshot
@@ -210,7 +210,7 @@ Resources:
   ECSCluster:
     Type: 'AWS::ECS::Cluster'
     Properties:
-      ClusterName: athens-cluster
+      ClusterName: !Sub '${AWS::StackName}-athens-cluster'
   ECSAutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
