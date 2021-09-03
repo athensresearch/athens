@@ -1,5 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+
+import { DOMRoot } from '../../config';
+
 import { Close } from '@material-ui/icons';
 import { Modal } from '@material-ui/core';
 import { Result } from './components/Result';
@@ -211,7 +214,7 @@ export const CommandBar = ({
     <Modal
       open={true}
       disablePortal={true}
-      container={container ? container : () => document.querySelector('#app')}
+      container={container ? container : DOMRoot}
       onClose={handleCloseCommandBar}
       BackdropProps={{ invisible: true }}
     >

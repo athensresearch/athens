@@ -1,7 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
+
 import { Today, MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
 import { Popper, Modal } from "@material-ui/core";
+
+import { DOMRoot } from '../../config';
+
 import { Button } from '../Button';
 import { Overlay } from '../Overlay';
 import { Menu } from '../Menu';
@@ -177,7 +181,7 @@ export const Page = ({
             <Modal
               onClose={handleClosePageMenu}
               BackdropProps={{ invisible: true }}
-              container={() => document.querySelector('#app')}
+              container={DOMRoot}
               open={isPageMenuOpen}
             >
               <Popper

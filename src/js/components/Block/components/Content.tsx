@@ -63,7 +63,7 @@ const ContentWrap = styled.div`
     line-height: inherit;
   }
 
-  &.is-locked {
+  .is-locked > .block-body > & {
     opacity: 0.5
   };
 

@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { Modal } from '@material-ui/core';
 import { Close, Block, CheckBox } from '@material-ui/icons';
 
+import { DOMRoot } from '../../config';
+
 import { Input } from '../Input';
 import { Overlay } from '../Overlay';
 import { Button } from '../Button';
@@ -111,8 +113,7 @@ export const Settings = ({
   return (
     <Modal
       onClose={handleCloseSettings}
-      // BackdropProps={{ invisible: true }}
-      container={() => document.querySelector('#app')}
+      container={DOMRoot}
       open={true}
     >
       <SettingsWrap className="animate-in">

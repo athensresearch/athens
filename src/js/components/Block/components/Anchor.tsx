@@ -26,6 +26,7 @@ export const AnchorButton = styled.button`
     overflow: visible; // Prevents the bullet being cropped
     width: 0.25em;
     height: 0.25em;
+    color: var(--body-text-color---opacity-low);
   }
 
   circle {
