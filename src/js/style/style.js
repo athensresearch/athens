@@ -76,7 +76,6 @@ const themeDark = {
 const lightThemeColors = permuteColorOpacities(themeLight);
 const darkThemeColors = permuteColorOpacities(themeDark);
 
-
 export const GlobalStyles = createGlobalStyle`
   :root {
     --zindex-dropdown: 1000;
@@ -93,10 +92,7 @@ export const GlobalStyles = createGlobalStyle`
     --depth-shadow-64: 0 24px 60px rgba(0, 0, 0, 0.2);
 
     ${opacityStyles}
-
-    .is-theme-light {
-      ${lightThemeColors}
-    }
+    ${lightThemeColors}
 
     .is-theme-dark {
       ${darkThemeColors}
@@ -104,6 +100,7 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   html {
+    height: 100vh;
     background: var(--color-background);
     font-family: "IBM Plex Sans", sans-serif;
     color: var(--body-text-color);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { themes } from '@storybook/theming';
 
+import { classnames } from '../src/js/utils/classnames';
 import { GlobalStyles } from '../src/js/style/style';
 import { badges, Storybook } from '../src/js/storybook';
 
@@ -55,11 +56,11 @@ export const decorators = [
         <GlobalStyles />
         <Storybook.App
           id="app"
-          className={[
+          className={classnames(
             context.globals.theme === 'light' ? 'is-theme-light' : 'is-theme-dark',
             context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
             context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
-          ].join(' ')}>
+          )}>
           <Story />
         </Storybook.App>
       </>

@@ -43,7 +43,7 @@ const App = styled.div`
  background-color: var(--background-color);
  color: var(--body-text-color);
  position: relative;
- overflow: hidden;
+ z-index: 0;
 
  .docs-story & {
     margin: -30px -20px;

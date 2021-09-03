@@ -1,13 +1,16 @@
 import React, { ReactNode } from 'react';
 import { Popper } from '@material-ui/core';
 
-import { Avatar } from '../Avatar';
+import { DOMRoot } from '../../config';
+import { classnames } from '../../utils/classnames';
 
+import { Avatar } from '../Avatar';
 import { Anchor } from './components/Anchor';
 import { Content } from './components/Content';
 import { Toggle } from './components/Toggle';
 import { Refs } from './components/Refs';
 import { Container } from './components/Container';
+import { AvatarProps } from '../Avatar/Avatar';
 
 export interface BlockProps {
   /**
@@ -51,9 +54,13 @@ export interface BlockProps {
    */
   refsCount?: number;
   /**
+   * Whether to display the avatar of a present user
+   */
+  showPresentUserAvatar?: boolean;
+  /**
    * A user attached to this block
    */
-  presentUser?: { color: string, name: string };
+  presentUser?: AvatarProps;
   /**
    * The UID of this block
    */
@@ -101,15 +108,17 @@ export interface BlockProps {
   handleDrop?: () => void;
 }
 
-export const Block: React.FC<BlockProps> = ({
+export const Block = ({
   children,
   rawContent,
   renderedContent,
   presentUser,
+  showPresentUserAvatar = true,
   isOpen,
   isSelected,
   isEditable,
   isEditing,
+  isLocked,
   isDragging,
   linkedRef,
   refsCount,
@@ -123,28 +132,30 @@ export const Block: React.FC<BlockProps> = ({
   handleDragOver = () => null,
   handleDragLeave = () => null,
   handleDrop = () => null,
-}) => {
+}: BlockProps) => {
   const [showEditableDom, setRenderEditableDom] = React.useState(false);
   const [avatarAnchorEl, setAvatarAnchorEl] = React.useState(null);
 
-  return (<Container
+  return (<>
+    <Container
     style={presentUser ? { "--user-color": presentUser.color } : undefined}
     onClick={handlePressContainer}
     onDragOver={handleDragOver}
     onDragLeave={handleDragLeave}
     onDrop={handleDrop}
-    className={[
-      children ? 'show-tree-indicator' : '',
-      isOpen ? 'is-open' : 'is-closed',
-      linkedRef ? 'is-linked-ref' : '',
-      isSelected ? 'is-selected' : '',
-      isSelected && isDragging ? 'dragging' : '',
-      isEditing ? 'is-editing' : ''].join(' ')}
+      className={classnames(
+        children && 'show-tree-indicator',
+        isOpen ? 'is-open' : 'is-closed',
+        linkedRef && 'is-linked-ref',
+        isLocked && 'is-locked',
+        isSelected && 'is-selected',
+        isSelected && isDragging && 'dragging',
+        isEditing && 'is-editing')}
   >
     {/* Drop area indicator before */}
     <div
       className="block-body"
-      ref={setAvatarAnchorEl}
+        ref={showPresentUserAvatar && setAvatarAnchorEl}
       onMouseEnter={() => { handleMouseEnterBlock; setRenderEditableDom(true) }}
       onMouseLeave={() => { handleMouseLeaveBlock; setRenderEditableDom(false) }}
     >
@@ -178,22 +189,23 @@ export const Block: React.FC<BlockProps> = ({
     {/* Drop area indicator child */}
     {/* Drop area indicator after */}
 
-    {presentUser && (
+    </Container>
+    {(showPresentUserAvatar && presentUser) && (
       <Popper
         open={!!presentUser}
         anchorEl={avatarAnchorEl}
         placement="top-start"
+        container={DOMRoot}
         popperOptions={{
-          modifiers: { offset: { enabled: true, offset: '-60, -56' } },
+          modifiers: { offset: { enabled: true, offset: '-70, -56' } },
         }}
       >
         <Avatar
-          name={presentUser.name}
-          color={presentUser.color}
+          {...presentUser}
           size="1.5rem"
           style={{ filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.1))" }}
         />
       </Popper>
     )}
-  </Container>)
+  </>)
 };
