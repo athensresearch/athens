@@ -1,9 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
+import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
+
 import { Button } from '../Button';
-import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { WindowButtons } from './components/WindowButtons';
+import { PresenceDetailsOverlay } from './components/PresenceDetailsOverlay';
+import { PresenceDetailsIndicator } from './components/PresenceDetailsIndicator';
+
 
 const AppToolbarWrapper = styled.header`
   background: var(--color-background);
@@ -88,6 +92,18 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   */
   os: string;
   /**
+  * The address of the server in a multiplayer context
+  */
+  hostAddress?: string;
+  /**
+  * People present on the current page
+  */
+  currentPageMembers?: PersonPresence[];
+  /**
+  * People present on the domain but not on the current page
+  */
+  differentPageMembers?: PersonPresence[];
+  /**
   * Whether the renderer is in Electron or a browser
   */
   isElectron: boolean;
@@ -133,6 +149,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   handlePressHistoryForward(): void;
   handlePressLeftSidebar(): void;
   handlePressRightSidebar(): void;
+  handlePressHostAddress(): void;
 }
 
 export const AppToolbar = ({
@@ -148,6 +165,9 @@ export const AppToolbar = ({
   isCommandBarOpen,
   isMergeDialogOpen,
   isDatabaseDialogOpen,
+  hostAddress,
+  currentPageMembers,
+  differentPageMembers,
   handlePressCommandBar,
   handlePressDailyNotes,
   handlePressAllPages,
@@ -162,8 +182,12 @@ export const AppToolbar = ({
   handlePressRightSidebar,
   handlePressMinimize,
   handlePressMaximizeRestore,
-  handlePressClose
+  handlePressClose,
+  handlePressHostAddress,
 }: AppToolbarProps): React.ReactElement => {
+  const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(true);
+  const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
+
   return (<AppToolbarWrapper
     className={[
       os && "os-" + os,
@@ -176,7 +200,7 @@ export const AppToolbar = ({
         onClick={handlePressLeftSidebar}
         isPressed={isLeftSidebarOpen}
       >
-        <Menu />
+        <MenuIcon />
       </Button>
       {isElectron && (
         <>
@@ -191,6 +215,24 @@ export const AppToolbar = ({
       <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
+      <PresenceDetailsIndicator
+        isPresenceDetailsOpen={isPresenceDetailsOpen}
+        setIsPresenceDetailsOpen={setIsPresenceDetailsOpen}
+        setPresenceDetailsAnchor={setPresenceDetailsAnchor}
+        currentPageMembers={currentPageMembers}
+        differentPageMembers={differentPageMembers}
+      />
+      {isPresenceDetailsOpen && (
+        <PresenceDetailsOverlay
+          hostAddress={hostAddress}
+          currentPageMembers={currentPageMembers}
+          differentPageMembers={differentPageMembers}
+          handlePressHostAddress={handlePressHostAddress}
+          setIsPresenceDetailsOpen={setIsPresenceDetailsOpen}
+          isPresenceDetailsOpen={isPresenceDetailsOpen}
+          presenceDetailsAnchor={presenceDetailsAnchor}
+        />
+      )}
       <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
       <Button isPressed={isDatabaseDialogOpen} onClick={handlePressDatabase}><Storage /></Button>

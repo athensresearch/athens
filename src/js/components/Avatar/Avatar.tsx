@@ -8,8 +8,8 @@ import { DOMRoot } from '../../config';
 const AvatarWrap = styled.svg`
   overflow: visible;
   cursor: default;
-  height: var(--size);
-  width: var(--size);
+  height: var(--size, 1.5em);
+  width: var(--size, 1.5em);
 `;
 
 const Name = styled.text`
@@ -31,19 +31,23 @@ const FullName = styled.span`
   pointer-events: none;
 `;
 
-export interface AvatarProps extends React.SVGProps<SVGSVGElement> {
+export interface AvatarProps extends React.SVGProps<SVGSVGElement>, Person {
   /**
-* The primary color of the icon
-*/
-  color?: string;
+  * The primary color of the icon
+  */
+  color: string;
   /**
    * The full username of the person
    */
-  name: string;
+  username: string;
   /**
    * Height and width of the avatar
    */
   size?: string;
+  /**
+   * Whether to display the avatar in a muted visual style
+   */
+  isMuted?: boolean;
   /**
    * Whether to show the user's full name. Set to 'hover' to show it when interacting with the icon.
    */
@@ -58,27 +62,27 @@ export interface AvatarProps extends React.SVGProps<SVGSVGElement> {
  * Visual representation of a human user
 */
 export const Avatar = ({
-  color = "#000",
-  name,
+  username,
+  color,
   showTooltip = 'hover',
   tooltipPlacement = 'right',
-  size = "1.5em",
+  isMuted = false,
+  size,
   ...props
 }: AvatarProps) => {
   const [avatarEl, setAvatarEl] = React.useState();
   const [isShowingTooltip, setIsShowingTooltip] = React.useState(showTooltip === 'hover' ? false : showTooltip);
 
-  /**
-   * CSS Variables defining the color of the Avatar elements
-   */
-  const avatarColors = { "--background-color": color, "--text-color": readableColor(color) }
-
-
-  let initials;
-  if (name) {
-    initials = name.split(' ').map(word => word[0]).join('').slice(0);
+  const avatarColors = {
+    "--background-opacity": isMuted ? 0.2 : 1,
+    "--background-color": color,
+    "--text-color": isMuted ? color : readableColor(color)
   }
 
+  let initials;
+  if (username) {
+    initials = username.split(' ').map(word => word[0]).join('').slice(0).toUpperCase();
+  }
 
   return (
     <>
@@ -95,16 +99,20 @@ export const Avatar = ({
           cy="12"
           r="12"
           fill="var(--background-color)"
-          vectorEffect="non-scaling-stroke"
+          fillOpacity="var(--background-opacity)"
         />
         <Name
           x="12"
           y="18"
           fill="var(--text-color)"
           vectorEffect="non-scaling-stroke"
+          stroke={readableColor(readableColor(color))}
+          strokeWidth="2px"
+          strokeOpacity="0.25"
+          paintOrder="stroke fill"
           fontSize="18"
         >
-          {initials || name.charAt(0)}
+          {initials || username}
         </Name>
       </AvatarWrap>
       <Popper
@@ -120,7 +128,7 @@ export const Avatar = ({
             <FullName
               className={"tooltip-" + tooltipPlacement}
               style={avatarColors}
-            >{name}</FullName>
+            >{username}</FullName>
           </Fade>
         )}
       </Popper>
@@ -130,22 +138,24 @@ export const Avatar = ({
 
 
 /* 
-* Wraps a horizontal series of avatars 
+* Wraps a horizontal series of avatars
 */
 interface AvatarStackProps {
   maskSize?: string,
-  stackOverlap?: number
+  size?: string,
+  overlap?: number
 }
 Avatar.Stack = styled.div<AvatarStackProps>`
   --mask-size: ${props => props.maskSize || '3px'};
-  --stack-overlap: ${props => props.stackOverlap || '0.5'};
+  --size: ${props => props.size || undefined};
+  --stack-overlap: ${props => props.overlap || '0.5'};
+  display: inline-flex;
 
   ${AvatarWrap} {
-    margin-inline-end: calc(var(--size) * (var(--stack-overlap) * -1));
-
     &:not(:last-of-type) {
+      margin-inline-end: calc(var(--size, 1.5em) * (var(--stack-overlap) * -1));
       mask-image: radial-gradient(
-        calc(var(--size) + var(--mask-size)) calc((var(--size) * (2 / 3)) + var(--mask-size)) at calc(100% + (100% * (1 - var(--stack-overlap)))) 50%,
+        calc(var(--size, 1.5em) + var(--mask-size)) calc((var(--size, 1.5em) * (2 / 3)) + var(--mask-size)) at calc(100% + (100% * (1 - var(--stack-overlap)))) 50%,
         transparent 99%,
         #000 100%);
     }

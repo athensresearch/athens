@@ -29,7 +29,8 @@ export const Button = styled.button.attrs(props => ({
   font-weight: 500;
   border: none;
   display: inline-flex;
-  align-items: center;
+  place-items: center;
+  place-content: center;
   color: var(--body-text-color);
   background-color: transparent;
   transition-property: filter, background, color, opacity;

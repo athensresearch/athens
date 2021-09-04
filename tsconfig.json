@@ -9,5 +9,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src/js/components/",
+    "typeRoots": [
+      "src/js"
+    ]
   }
 }

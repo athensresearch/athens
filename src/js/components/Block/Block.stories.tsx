@@ -349,7 +349,7 @@ export const WithAvatars = ({ ...args }) => {
         rawContent={blockState["b1"].rawContent}
         renderedContent={blockState["b1"].renderedContent}
         isLocked={true}
-        presentUser={{ name: "Jeff", color: "#DDA74C" }}
+        presentUser={{ username: "Jeff", color: "#DDA74C" }}
       >
         <Block uid="2"
           isOpen={blockState["b2"].isOpen}
@@ -357,29 +357,32 @@ export const WithAvatars = ({ ...args }) => {
           rawContent={blockState["b2"].rawContent}
           renderedContent={blockState["b2"].renderedContent}
           isLocked={true}
-          presentUser={{ name: "Matei", color: "#C45042" }}
+          presentUser={{ username: "Matei", color: "#C45042" }}
+          refsCount={10}
         >
           <Block uid="3"
             isOpen={blockState["b3"].isOpen}
             handlePressToggle={() => toggleBlockOpen("b3", setBlockState)}
             rawContent={blockState["b3"].rawContent}
             renderedContent={blockState["b3"].renderedContent}
+            refsCount={10}
           />
           <Block
             uid="4"
             isOpen={blockState["b4"].isOpen}
             handlePressToggle={() => toggleBlockOpen("b4", setBlockState)}
-            rawContent={blockState["b4"].rawContent}
-            renderedContent={blockState["b4"].renderedContent}
+            rawContent={"Short block conent"}
+            renderedContent={"Short block conent"}
             isLocked={true}
-            presentUser={{ name: "Alex", color: "#611A58" }}
+            refsCount={10}
+            presentUser={{ username: "Alex", color: "#611A58" }}
           >
             <Block uid="5"
               isOpen={blockState["b5"].isOpen}
               handlePressToggle={() => toggleBlockOpen("b5", setBlockState)}
               rawContent={blockState["b5"].rawContent}
               renderedContent={blockState["b5"].renderedContent}
-              presentUser={{ name: "Felipe Silva", color: "#21A469" }}
+              presentUser={{ username: "Felipe Silva", color: "#21A469" }}
               isLocked={true}
             >
               <Block uid="6"

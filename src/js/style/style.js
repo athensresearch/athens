@@ -91,6 +91,13 @@ export const GlobalStyles = createGlobalStyle`
     --depth-shadow-16: 0 4px 16px rgba(0, 0, 0, 0.2);
     --depth-shadow-64: 0 24px 60px rgba(0, 0, 0, 0.2);
 
+    --font-size--text-xs: 0.75rem;
+    --font-size--text-sm: 0.875rem;
+    --font-size--text-base: 1em;
+    --font-size--text-lg: 1.125em;
+    --font-size--text-xl: 1.25em;
+    --font-size--text-2xl: 1.5em;
+
     ${opacityStyles}
     ${lightThemeColors}
 
@@ -102,7 +109,7 @@ export const GlobalStyles = createGlobalStyle`
   html {
     height: 100vh;
     background: var(--color-background);
-    font-family: "IBM Plex Sans", sans-serif;
+    font-family: "IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     color: var(--body-text-color);
     font-size: 16px;
     line-height: 1.5;
