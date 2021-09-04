@@ -1,7 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
 import { transparentize } from 'polished';
 
-const permuteColorOpacities = (theme) =>
+export const permuteColorOpacities = (theme) =>
   Object.keys(theme).map((color) => {
     return (
       `--${color}: ${theme[color]};` +
@@ -16,8 +16,7 @@ const permuteColorOpacities = (theme) =>
     );
   });
 
-const opacityStyles = () => Object.keys(opacities).map(opacity => `--${opacity}: ${opacities[opacity]};`).join("")
-
+export const opacityStyles = () => Object.keys(opacities).map(opacity => `--${opacity}: ${opacities[opacity]};`).join("")
 
 const opacities = {
   "opacity-lower": 0.1,
@@ -46,7 +45,7 @@ const themeLight = {
   "graph-node-normal": "#909090",
   "graph-node-hlt": "#0075E1",
   "graph-link-normal": "#cfcfcf",
-  "error-color": "#fd5243",
+  "error-color": "#fd5243", // Deprecate. Replace with "danger-color"
   "shadow-color": "#000"
 }
 
@@ -69,7 +68,7 @@ const themeDark = {
   "graph-node-normal": "#909090",
   "graph-node-hlt": "#FBBE63",
   "graph-link-normal": "#323232",
-  "error-color": "#fd5243",
+  "error-color": "#fd5243", // Deprecate. Replace with "danger-color"
   "shadow-color": "#000"
 }
 
@@ -86,6 +85,9 @@ export const GlobalStyles = createGlobalStyle`
     --zindex-popover: 1060;
     --zindex-tooltip: 1070;
 
+    --font-family-default: "IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+    --font-family-code: "IBM Plex Mono", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+
     --depth-shadow-4: 0 2px 4px rgba(0, 0, 0, 0.2);
     --depth-shadow-8: 0 4px 8px rgba(0, 0, 0, 0.2);
     --depth-shadow-16: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -93,10 +95,10 @@ export const GlobalStyles = createGlobalStyle`
 
     --font-size--text-xs: 0.75rem;
     --font-size--text-sm: 0.875rem;
-    --font-size--text-base: 1em;
+    --font-size--text-base: 1rem;
     --font-size--text-lg: 1.125em;
-    --font-size--text-xl: 1.25em;
-    --font-size--text-2xl: 1.5em;
+    --font-size--text-xl: 1.25rem;
+    --font-size--text-2xl: 1.5rem;
 
     ${opacityStyles}
     ${lightThemeColors}
@@ -109,7 +111,7 @@ export const GlobalStyles = createGlobalStyle`
   html {
     height: 100vh;
     background: var(--color-background);
-    font-family: "IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+    font-family: var(--font-family-default);
     color: var(--body-text-color);
     font-size: 16px;
     line-height: 1.5;
