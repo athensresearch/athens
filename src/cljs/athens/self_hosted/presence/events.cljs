@@ -1,6 +1,7 @@
 (ns athens.self-hosted.presence.events
   (:require
     [athens.self-hosted.presence.utils :as utils]
+    [clojure.set :as set]
     [re-frame.core :as rf]))
 
 
@@ -38,9 +39,8 @@
   :presence/update-username
   (fn [db [_ {:keys [current-username new-username]}]]
     (-> db
-        (update-in [:presence :users] assoc new-username (get-in db [:presence :users current-username]))
-        (update-in [:presence :users new-username] assoc :username new-username)
-        (update-in [:presence :users] dissoc current-username))))
+        (update-in [:presence :users] set/rename-keys {current-username new-username})
+        (update-in [:presence :users new-username] assoc :username new-username))))
 
 
 (rf/reg-event-fx
