@@ -61,6 +61,38 @@ export const Colors = () => (
     <Avatar name="Jeff Tang" color="#009FB8" size="3em" />
   </>
 )
+export const StackNarrow = () => (
+  <Avatar.Stack stackOverlap={0.25}>
+    <Avatar name="Jeff Tang" color="#DDA74C" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#C45042" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#611A58" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#21A469" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#0062BE" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#009FB8" tooltipPlacement="bottom" size="3em" />
+  </Avatar.Stack>
+)
+
+export const Stack = () => (
+  <Avatar.Stack>
+    <Avatar name="Jeff Tang" color="#DDA74C" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#C45042" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#611A58" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#21A469" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#0062BE" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#009FB8" tooltipPlacement="bottom" size="3em" />
+  </Avatar.Stack>
+)
+export const StackWide = () => (
+  <Avatar.Stack stackOverlap={0.75}>
+    <Avatar name="Jeff Tang" color="#DDA74C" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#C45042" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#611A58" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#21A469" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#0062BE" tooltipPlacement="bottom" size="3em" />
+    <Avatar name="Jeff Tang" color="#009FB8" tooltipPlacement="bottom" size="3em" />
+  </Avatar.Stack>
+)
+
 
 export const OnBlocks = WithAvatars;
 OnBlocks.parameters = {

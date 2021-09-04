@@ -8,12 +8,13 @@ import { DOMRoot } from '../../config';
 const AvatarWrap = styled.svg`
   overflow: visible;
   cursor: default;
+  height: var(--size);
+  width: var(--size);
 `;
 
 const Name = styled.text`
   text-anchor: middle;
   color: var(--text-color);
-
   transform: scale(0.8);
   transform-origin: center;
 `;
@@ -82,14 +83,12 @@ export const Avatar = ({
   return (
     <>
       <AvatarWrap
-        width={size}
-        height={size}
         viewBox="0 0 24 24"
         ref={setAvatarEl}
         onMouseOver={() => { if (showTooltip === 'hover') setIsShowingTooltip(true) }}
         onMouseLeave={() => { if (showTooltip === 'hover') setIsShowingTooltip(false) }}
         {...props}
-        style={{ ...avatarColors, ...props.style }}
+        style={{ ...avatarColors, "--size": size, ...props.style }}
       >
         <circle
           cx="12"
@@ -124,7 +123,31 @@ export const Avatar = ({
             >{name}</FullName>
           </Fade>
         )}
-      </Popper >
+      </Popper>
     </>
   );
 };
+
+
+/* 
+* Wraps a horizontal series of avatars 
+*/
+interface AvatarStackProps {
+  maskSize?: string,
+  stackOverlap?: number
+}
+Avatar.Stack = styled.div<AvatarStackProps>`
+  --mask-size: ${props => props.maskSize || '3px'};
+  --stack-overlap: ${props => props.stackOverlap || '0.5'};
+
+  ${AvatarWrap} {
+    margin-inline-end: calc(var(--size) * (var(--stack-overlap) * -1));
+
+    &:not(:last-of-type) {
+      mask-image: radial-gradient(
+        calc(var(--size) + var(--mask-size)) calc((var(--size) * (2 / 3)) + var(--mask-size)) at calc(100% + (100% * (1 - var(--stack-overlap)))) 50%,
+        transparent 99%,
+        #000 100%);
+    }
+  }
+`;
