@@ -149,8 +149,8 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   handlePressHistoryForward(): void;
   handlePressLeftSidebar(): void;
   handlePressRightSidebar(): void;
-  handlePressHostAddress(): void;
-  handlePressMember(member): void;
+  handlePressHostAddress?(): void;
+  handlePressMember?(member): void;
 }
 
 export const AppToolbar = ({

@@ -6,6 +6,7 @@ import { getOs } from '../utils/getOs';
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
+import * as mockAppToolbarData from './AppToolbar/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
 import { WelcomePage } from './Page/Page.stories';
@@ -129,6 +130,9 @@ const Template = (args, context) => {
             isThemeDark={isThemeDark}
             handlePressHistoryBack={() => null}
             handlePressHistoryForward={() => null}
+            hostAddress={mockAppToolbarData.hostAddress}
+            currentPageMembers={mockAppToolbarData.currentPageMembers}
+            differentPageMembers={mockAppToolbarData.differentPageMembers}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
             handlePressDailyNotes={() => setRoute('/daily-notes')}
             handlePressAllPages={() => setRoute('/all-pages')}

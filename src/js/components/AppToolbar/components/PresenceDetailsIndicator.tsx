@@ -26,7 +26,7 @@ export const PresenceDetailsIndicator = ({
       isPressed={isPresenceDetailsOpen}>
       <Avatar.Stack
         size="1em"
-        maskSize="2px"
+        maskSize="1.5px"
         overlap="0.2"
       >
         {showablePersons && showablePersons.slice(0, maxToDisplay).map((member, index) => {
@@ -35,6 +35,7 @@ export const PresenceDetailsIndicator = ({
               <Avatar
                 username={member.username}
                 color={member.color}
+                personId={member.personId}
                 // isMuted={currentPageMembers.indexOf(member) ? true : false}
                 showTooltip={false}
               />
