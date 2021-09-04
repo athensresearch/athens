@@ -11,12 +11,21 @@ import { AppLayout } from './AppLayout';
 import { WelcomePage } from './Page/Page.stories';
 import { Block } from './Block';
 
+export default {
+  title: 'App/Browser',
+  component: Window,
+  argTypes: {},
+  parameters: {
+    layout: 'fullscreen'
+  }
+};
+
 const Desktop = styled.div`
   background: rebeccapurple;
   display: flex;
 `;
 
-const WindowWrapper = styled.div`
+const BrowserWrapper = styled.div`
   --margin: 2rem;
   margin: var(--margin);
   border-radius: 5px;
@@ -31,68 +40,28 @@ const WindowWrapper = styled.div`
     z-index: 1;
   }
 
-  &.os-windows {
-    border-radius: 4px;
-  }
-
-  &.os-mac {
-    border-radius: 12px;
-
-    &.is-electron {
-      &:before {
-        content: '';
-        width: 12px;
-        height: 12px;
-        position: absolute;
-        border-radius: 100px;
-        left: 20px;
-        top: 19px;
-        background: #888;
-        z-index: 999999;
-        box-shadow: 20px 0 0 0 #888, 40px 0 0 0 #888;
-      }
-
-      &.is-theme-dark {
-        &:after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          z-index: 2;
-          box-shadow: inset 0 0 1px #fff, 0 0 1px #000;
-        }
-      }
-    }
-  }
-
-  &.is-win-maximized,
-  &.is-win-fullscreen {
-    border-radius: 0;
-    height: 100vh;
-    width: 100vw;
-    margin: 0;
-  }
-
   &.is-storybook-docs {
     height: 700px;
   }
+
+  ${AppToolbar} {
+    height: calc(100vh - 52px);
+    margin-top: 52px;
+  }
 `;
 
-
-export default {
-  title: 'App/Electron',
-  component: Window,
-  argTypes: {},
-  parameters: {
-    layout: 'fullscreen'
-  }
-};
+const BrowserToolbar = () => {
+  return (<>
+    <div style={{ display: 'flex', border: "2px solid red" }}>
+      <input readOnly={true} defaultValue="https://athensresearch.org/app/#bjs350" />
+    </div>
+  </>)
+}
 
 const Template = (args, context) => {
   const [os, setOs] = React.useState(args.os);
   const [route, setRoute] = React.useState(args.route);
-  const [isElectron, setIsElectron] = React.useState(args.isElectron);
+  const [isStandalone, setIsStandalone] = React.useState(args.isStandalone);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
@@ -105,19 +74,20 @@ const Template = (args, context) => {
 
   return (
     <Desktop>
-      <WindowWrapper {...args}
+      <BrowserWrapper {...args}
         className={classnames(
           "os-" + os,
-          isElectron ? 'is-electron' : 'is-web',
+          isStandalone ? 'is-electron' : 'is-web',
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',
         )}
       >
+        <BrowserToolbar />
         <AppLayout>
           <AppToolbar
             os={os}
-            isElectron={isElectron}
+            isElectron={false}
             route={route}
             isWinFullscreen={isWinFullscreen}
             isWinFocused={isWinFocused}
@@ -178,30 +148,11 @@ const Template = (args, context) => {
           />)
           }
         </AppLayout>
-      </WindowWrapper>
+      </BrowserWrapper>
     </Desktop>)
 };
 
-export const Auto = Template.bind({});
-Auto.args = {
-  os: () => getOs(window),
-  isElectron: true,
-};
-
-export const MacOs = Template.bind({});
-MacOs.args = {
-  os: 'mac',
-  isElectron: true
-};
-
-export const Windows = Template.bind({});
-Windows.args = {
-  os: 'windows',
-  isElectron: true
-};
-
-export const Linux = Template.bind({});
-Linux.args = {
-  os: 'linux',
-  isElectron: true
+export const Browser = Template.bind({});
+Browser.args = {
+  os: () => getOs(window)
 };
