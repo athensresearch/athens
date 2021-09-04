@@ -7,6 +7,7 @@ type UID = string;
  * A person interacting with Athens in a multiplayer context
  */
 type Person = {
+  personId: string;
   username: string;
   color: string;
 }

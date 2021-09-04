@@ -150,6 +150,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   handlePressLeftSidebar(): void;
   handlePressRightSidebar(): void;
   handlePressHostAddress(): void;
+  handlePressMember(member): void;
 }
 
 export const AppToolbar = ({
@@ -168,6 +169,7 @@ export const AppToolbar = ({
   hostAddress,
   currentPageMembers,
   differentPageMembers,
+  handlePressMember,
   handlePressCommandBar,
   handlePressDailyNotes,
   handlePressAllPages,
@@ -185,7 +187,7 @@ export const AppToolbar = ({
   handlePressClose,
   handlePressHostAddress,
 }: AppToolbarProps): React.ReactElement => {
-  const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(true);
+  const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
 
   return (<AppToolbarWrapper
@@ -228,6 +230,7 @@ export const AppToolbar = ({
           currentPageMembers={currentPageMembers}
           differentPageMembers={differentPageMembers}
           handlePressHostAddress={handlePressHostAddress}
+          handlePressMember={handlePressMember}
           setIsPresenceDetailsOpen={setIsPresenceDetailsOpen}
           isPresenceDetailsOpen={isPresenceDetailsOpen}
           presenceDetailsAnchor={presenceDetailsAnchor}

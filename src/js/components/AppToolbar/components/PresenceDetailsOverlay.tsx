@@ -26,6 +26,7 @@ interface PresenceDetailsProps {
   differentPageMembers: PersonPresence[],
   presenceDetailsAnchor: HTMLElement | null,
   isPresenceDetailsOpen: boolean,
+  handlePressMember(member): void,
   handlePressHostAddress(): void,
   setIsPresenceDetailsOpen(boolean): void
 }
@@ -36,6 +37,7 @@ export const PresenceDetailsOverlay = ({
   differentPageMembers,
   handlePressHostAddress,
   setIsPresenceDetailsOpen,
+  handlePressMember,
   isPresenceDetailsOpen,
   presenceDetailsAnchor
 }: PresenceDetailsProps) => {
@@ -58,9 +60,10 @@ export const PresenceDetailsOverlay = ({
                   <Heading>On this page</Heading>
                   <Menu>
                     {currentPageMembers.length > 0 && currentPageMembers.map(member =>
-                      <Button>
+                      <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
                         <Avatar
                           username={member.username}
+                          personId={member.personId}
                           color={member.color}
                           showTooltip={false}
                         />
@@ -73,9 +76,10 @@ export const PresenceDetailsOverlay = ({
               )}
               <Menu>
                 {differentPageMembers.length > 0 && differentPageMembers.map(member =>
-                  <Button>
+                  <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
                     <Avatar
                       username={member.username}
+                      personId={member.personId}
                       color={member.color}
                       showTooltip={false}
                       isMuted={true}

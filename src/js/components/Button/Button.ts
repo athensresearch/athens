@@ -20,7 +20,6 @@ export const Button = styled.button.attrs(props => ({
   className: [props.className, props.isPrimary ? 'is-primary' : ''].join(' '),
   ariaPressed: props.isPressed,
 })) <ButtonProps>`
-  cursor: pointer;
   padding: 0.375rem 0.625rem;
   margin: 0;
   font-family: inherit;
@@ -37,6 +36,10 @@ export const Button = styled.button.attrs(props => ({
   transition-duration: 0.075s;
   transition-timing-function: ease;
   gap: 0.5rem;
+
+  &:enabled {
+    cursor: pointer;
+  }
 
   &:enabled:hover {
     background: var(--body-text-color---opacity-lower);
@@ -87,13 +90,13 @@ export const Button = styled.button.attrs(props => ({
     color: var(--link-color);
     background: var(--link-color---opacity-lower);
 
-    &:hover {
+    &:enabled:hover {
       background: var(--link-color---opacity-low);
     }
 
-    &:active,
-    &:hover:active,
-    &[aria-pressed="true"] {
+    &:enabled:active,
+    &:enabled:hover:active,
+    &:enabled[aria-pressed="true"] {
       color: white;
       background: var(--link-color);
     }
