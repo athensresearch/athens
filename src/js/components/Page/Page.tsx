@@ -18,7 +18,7 @@ const MainContent = styled.div`
   grid-area: main-content;
   align-items: flex-start;
   justify-content: stretch;
-  padding-top: 2.5rem;
+  padding-top: var(--app-upper-spacing);
   display: flex;
   overflow-y: auto;
 
@@ -42,8 +42,8 @@ const MainContent = styled.div`
 `;
 
 const PageWrap = styled.article`
-  margin: 2rem auto;
-  padding: 1rem 0 10rem 0;
+  width: min(40ch, 100% - 2rem);
+  padding: 1rem 3rem 10rem;
   flex-basis: 100%;
   align-self: stretch;
   max-width: 55rem;
@@ -139,6 +139,10 @@ interface PageProps {
    * The unique identifier of the page
    */
   uid: string,
+  handlePressRemoveShortcut(): void,
+  handlePressAddShortcut(): void,
+  handlePressShowLocalGraph(): void,
+  handlePressDelete(): void,
 }
 
 
@@ -152,6 +156,10 @@ export const Page = ({
   children,
   title,
   uid,
+  handlePressRemoveShortcut,
+  handlePressAddShortcut,
+  handlePressShowLocalGraph,
+  handlePressDelete,
 }: PageProps) => {
   const [isPageMenuOpen, setIsPageMenuOpen] = React.useState(false);
   const [pageMenuAnchor, setPageMenuAnchor] = React.useState(null);
@@ -193,11 +201,11 @@ export const Page = ({
                 <Overlay className="animate-in">
                   <Menu>
                     {hasShortcut
-                      ? <Button><Bookmark /> Remove Shortcut</Button>
-                      : <Button><Bookmark /> Add Shortcut</Button>}
-                    <Button><BubbleChart /> Show Local Graph</Button>
+                      ? <Button onClick={handlePressRemoveShortcut}><Bookmark /> <span>Remove Shortcut</span></Button>
+                      : <Button onClick={handlePressAddShortcut}><Bookmark /> <span>Add Shortcut</span></Button>}
+                    <Button onClick={handlePressShowLocalGraph}><BubbleChart /> <span>Show Local Graph</span></Button>
                     <Menu.Separator />
-                    <Button><Delete /> Delete Page</Button>
+                    <Button onClick={handlePressDelete}><Delete /> <span>Delete Page</span></Button>
                   </Menu>
                 </Overlay>
               </Popper>

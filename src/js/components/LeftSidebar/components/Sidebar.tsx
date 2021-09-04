@@ -42,7 +42,7 @@ export const Sidebar = styled.section`
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 7.5rem 0 1rem;
+    padding: calc(var(--app-upper-spacing) + 2rem) 0 1rem;
     transition: opacity 0.5s ease;
 
     .is-left-sidebar-open & {
