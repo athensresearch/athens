@@ -20,6 +20,12 @@ const PresenceOverlay = styled(Overlay)`
   min-width: 12em;
 `;
 
+const HostIcon = styled(Wifi)`
+  padding: 0.25rem;
+  background: var(--background-minus-2);
+  border-radius: 100em;
+`;
+
 interface PresenceDetailsProps {
   hostAddress: string,
   currentPageMembers: PersonPresence[]
@@ -56,8 +62,8 @@ export const PresenceDetailsOverlay = ({
         transition>
         {({ TransitionProps }) => (
           <Fade {...TransitionProps} timeout={250}>
-            <PresenceOverlay>
-              {hostAddress && <><Button onClick={handlePressHostAddress}><Wifi /> <span>{hostAddress}</span></Button>
+            <PresenceOverlay className="animate-in">
+              {hostAddress && <><Button onClick={handlePressHostAddress}><HostIcon /> <span>{hostAddress}</span></Button>
                 <Menu.Separator /></>
               }
               {currentPageMembers.length > 0 && (

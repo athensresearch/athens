@@ -1,5 +1,11 @@
+import styled from 'styled-components';
+
 import { Button } from '../../Button';
 import { Avatar } from '../../Avatar';
+
+const MemberCount = styled.span`
+  margin-left: 0.25rem;
+`;
 
 interface PresenceDetailsIndicatorProps {
   setPresenceDetailsAnchor: React.Dispatch<any>,
@@ -36,7 +42,6 @@ export const PresenceDetailsIndicator = ({
                 username={member.username}
                 color={member.color}
                 personId={member.personId}
-                // isMuted={currentPageMembers.indexOf(member) ? true : false}
                 showTooltip={false}
               />
             );
@@ -44,7 +49,7 @@ export const PresenceDetailsIndicator = ({
           return null;
         })}
       </Avatar.Stack>
-      {showablePersons.length > maxToDisplay && <span>+{showablePersons.length - maxToDisplay}</span>}
+      {showablePersons.length > maxToDisplay && <MemberCount>+{showablePersons.length - maxToDisplay}</MemberCount>}
     </Button>
   </div>;
 }
