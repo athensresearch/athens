@@ -33,7 +33,6 @@
 
 (defonce rfdb {:user                {:name (or (js/localStorage.getItem "user/name")
                                                "Socrates")}
-
                :db/filepath         nil
                :db/synced           true
                :db/mtime            nil
@@ -41,6 +40,9 @@
                :loading?            true
                :modal               false
                :alert               nil
+               :win-maximized?      false
+               :win-fullscreen?     false
+               :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
                :devtool/open        false
@@ -50,8 +52,9 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selected/items      []
+               :selection           {:items []}
                :theme/dark          false
+               :zoom-level          1
                :graph-conf          default-graph-conf})
 
 
@@ -404,30 +407,25 @@
 
 (defn search-exact-node-title
   [query]
-  (d/q '[:find (pull ?node [:db/id :node/title :block/uid]) .
-         :in $ ?query
-         :where [?node :node/title ?query]]
-       @dsdb
-       query))
+  (d/entity @dsdb [:node/title query]))
 
 
 (defn search-in-node-title
   ([query] (search-in-node-title query 20 false))
   ([query n] (search-in-node-title query n false))
-  ([query n ignore-dup]
+  ([query n exclude-exact-match?]
    (if (string/blank? query)
      (vector)
-     (let [results (->> (d/q '[:find [(pull ?node [:db/id :node/title :block/uid]) ...]
-                               :in $ ?query-pattern ?query
-                               :where
-                               [?node :node/title ?title]
-                               [(re-find ?query-pattern ?title)]
-                               [(not= ?title ?query)]]                ;; ignore exact match to avoid duplicate
-                             @dsdb
-                             (re-case-insensitive query)
-                             (when ignore-dup query))
-                        (take n))]
-       results))))
+     (let [exact-match            (when exclude-exact-match? query)
+           case-insensitive-query (re-case-insensitive query)]
+       (sequence
+         (comp
+           (filter (every-pred
+                     #(re-find case-insensitive-query (:v %))
+                     #(not= exact-match (:v %))))
+           (take n)
+           (map #(d/entity @dsdb (:e %))))
+         (d/datoms @dsdb :aevt :node/title))))))
 
 
 (defn get-root-parent-node
@@ -445,18 +443,19 @@
   ([query n]
    (if (string/blank? query)
      (vector)
-     (->>
-       (d/q '[:find [(pull ?block [:db/id :block/uid :block/string :node/title {:block/_children ...}]) ...]
-              :in $ ?query-pattern
-              :where
-              [?block :block/string ?txt]
-              [(re-find ?query-pattern ?txt)]]
-            @dsdb
-            (re-case-insensitive query))
-       (take n)
-       (map get-root-parent-node)
-       (remove nil?)
-       (mapv #(dissoc % :block/_children))))))
+     (let [case-insensitive-query (re-case-insensitive query)]
+       (->>
+         (d/datoms @dsdb :aevt :block/string)
+         (sequence
+           (comp
+             (filter #(re-find case-insensitive-query (:v %)))
+             (take n)
+             (map #(:e %))))
+         (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
+         (sequence
+           (comp
+             (keep get-root-parent-node)
+             (map #(dissoc % :block/_children)))))))))
 
 
 (defn nth-sibling
@@ -537,10 +536,12 @@
          (str "-embed-" embed-id)))
      (next-block-uid uid))))
 
+
 ;; history
 
 (defonce history (atom '()))
 #_(def ^:const history-limit 10)
+
 
 ;; this gives us customization options
 ;; now if there is a pattern for a tx then the datoms can be
@@ -561,6 +562,7 @@
                                        true
                                        (:tx-data tx-report)]
                                       cur-his))))))
+
 
 ;; -- Linked & Unlinked References ----------
 

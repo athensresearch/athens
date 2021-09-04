@@ -16,7 +16,6 @@
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
     [goog.events :as events]
-    [goog.functions :refer [debounce]]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]])
@@ -25,7 +24,7 @@
       KeyCodes)))
 
 
-;;; Styles
+;; Styles
 
 
 (def container-style
@@ -64,7 +63,7 @@
    :cursor         "text"
    ::stylefy/mode {:focus {:outline "none"}
                    "::placeholder" {:color (color :body-text-color :opacity-low)}
-                   "::-webkit-search-cancel-button" {:display "none"}}}) ;; We replace the button elsewhere
+                   "::-webkit-search-cancel-button" {:display "none"}}}) ; We replace the button elsewhere
 
 
 
@@ -126,7 +125,7 @@
    ::stylefy/manual [[:b {:font-weight "500"
                           :opacity (:opacity-high OPACITIES)}]
                      [:&.selected :&:hover {:background (color :link-color)
-                                            :color "#fff"} ;; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color 
+                                            :color "#fff"} ; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color
                       [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
 
 
@@ -149,7 +148,7 @@
    :font-size "14px"})
 
 
-;;; Utilities
+;; Utilities
 
 
 (defn highlight-match
@@ -165,18 +164,18 @@
 
 (defn create-search-handler
   [state]
-  (debounce (fn [query]
-              (if (str/blank? query)
-                (reset! state {:index   0
-                               :query   nil
-                               :results []})
-                (reset! state {:index   0
-                               :query   query
-                               :results (->> (concat [(search-exact-node-title query)]
-                                                     (search-in-node-title query 20 true)
-                                                     (search-in-block-content query))
-                                             vec)})))
-            1000))
+  (fn [query]
+    (if (str/blank? query)
+      (reset! state {:index   0
+                     :query   nil
+                     :results []})
+      (reset! state {:index   0
+                     :query   query
+                     :results (vec
+                                (concat
+                                  [(search-exact-node-title query)]
+                                  (search-in-node-title query 20 true)
+                                  (search-in-block-content query)))}))))
 
 
 (defn key-down-handler
@@ -236,7 +235,7 @@
       :else nil)))
 
 
-;;; Components
+;; Components
 
 
 (defn athena-prompt-el
@@ -251,22 +250,22 @@
 
 (defn results-el
   [state]
-  (let [query? (str/blank? (:query @state))
+  (let [no-query? (str/blank? (:query @state))
         recent-items @(subscribe [:athena/get-recent])]
     [:<> [:div (use-style results-heading-style)
-          [:h5 (if query? "Recent" "Results")]
+          [:h5 (if no-query? "Recent" "Results")]
           [:span (use-style hint-style)
            "Press "
            [:kbd "shift + enter"]
            " to open in right sidebar."]]
-     (when query?
+     (when no-query?
        [:div (use-style results-list-style)
         (doall
           (for [[i x] (map-indexed list recent-items)]
             (when x
               (let [{:keys [query :node/title :block/uid :block/string]} x]
                 [:div (use-style result-style {:key      i
-                                               :on-click #(navigate-uid uid)})
+                                               :on-click #(navigate-uid uid %)})
                  [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                  (when string
                    [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
@@ -321,6 +320,8 @@
                                                                                              (let [uid (gen-block-uid)]
                                                                                                (dispatch [:athena/toggle])
                                                                                                (dispatch [:page/create query uid])
+                                                                                               ;; TODO(agentydragon): Open the new page in sidebar if Shift is pressed.
+                                                                                               ;; (navigate-uid uid e) does not work, because the page does not exist yet.
                                                                                                (navigate-uid uid)))
                                                                                  :class    (when (= i index) "selected")})
 
@@ -331,14 +332,14 @@
                                                    [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class Create)]]]
 
                                                   [:div (use-style result-style {:key      i
-                                                                                 :on-click (fn []
+                                                                                 :on-click (fn [e]
                                                                                              (let [selected-page {:node/title   title
                                                                                                                   :block/uid    uid
                                                                                                                   :block/string string
                                                                                                                   :query        query}]
                                                                                                (dispatch [:athena/toggle])
                                                                                                (dispatch [:athena/update-recent-items selected-page])
-                                                                                               (navigate-uid uid)))
+                                                                                               (navigate-uid uid e)))
                                                                                  :class    (when (= i index) "selected")})
                                                    [:div (use-style result-body-style)
 

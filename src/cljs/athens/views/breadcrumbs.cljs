@@ -7,7 +7,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def breadcrumbs-list-style
@@ -34,10 +34,15 @@
    :min-width "2.5em"
    :white-space "nowrap"
    :text-overflow "ellipsis"
-   :transition "all 0.3s ease"
+   :transition "color 0.3s ease"
    ::stylefy/manual [[:a {:text-decoration "none"
                           :cursor "pointer"
+                          :position "relative"
                           :color "inherit"}]
+                     [:* {:display "inline"
+                          :margin 0
+                          :padding 0
+                          :font-size "inherit"}]
                      [:&:last-child {:color (color :body-text-color)}]
                      [:&:hover {:flex-shrink "0"
                                 :color (color :link-color)}]
@@ -49,7 +54,7 @@
                      [:&:first-child:before {:content "none"}]]})
 
 
-;;; Components
+;; Components
 
 
 (defn breadcrumbs-list

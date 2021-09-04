@@ -24,7 +24,7 @@ block = (thematic-break /
          fenced-code-block /
          block-quote /
          paragraph-text)*
-thematic-break = #'[*_-]{3}'
+thematic-break = #'[_-]{3}'
 heading = #'[#]+' <space> #'.+' <newline>*
 indented-code-block = (<'    '> code-text)+
 fenced-code-block = <'```'> #'(?s)(.+(?=(```|\\n))|\\n)+' <'```'>
@@ -76,19 +76,13 @@ code-span = <#'(?<!\\w)`'>
             #'(?s)([^`]|(?<=\\s)`(?=\\s))+'
             <#'`(?!\\w)'>
 
-strong-emphasis = (<#'(?<!\\w)\\*\\*(?!\\s)'>
-                   recur
-                   <#'(?<!\\s)\\*\\*(?!\\w)'>)
-                | (<#'(?<!\\w)__(?!\\s)'>
-                   recur
-                   <#'(?<!\\s)__(?!\\w)'>)
+strong-emphasis = <#'(?<!\\w)\\*\\*(?!\\s)'>
+                  recur
+                  <#'(?<!\\s)\\*\\*(?!\\w)'>
 
-emphasis = (<#'(?<!\\w)\\*(?!\\s)'>
-            recur
-            <#'(?<!\\s)\\*(?!\\w)'>)
-         | (<#'(?<!\\w)_(?!\\s)'>
-            recur
-            <#'(?<!\\s)_(?!\\w)'>)
+emphasis = <#'(?<!\\w)\\*(?!\\s)'>
+           recur
+           <#'(?<!\\s)\\*(?!\\w)'>
 
 highlight = <#'(?<!\\w)\\^\\^(?!\\s)'>
             recur
@@ -144,10 +138,10 @@ latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'(?:[^\\*_`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\#\\$\\{])+'
+text-run = #'(?:[^\\*`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\#\\$\\{])+'
 
 (* any special char *)
-<special-char> = #'(?<!\\w)[\\*_`^~\\[!<\\(\\#\\$\\{]'
+<special-char> = #'(?<!\\w)[\\*`^~\\[!<\\(\\#\\$\\{]'
 
 <backtick> = #'(?<!`)`(?!`)'
 
@@ -277,9 +271,11 @@ newline = #'\\n'
     result))
 
 
-(defn- link-transform
-  [& link-parts]
-  (let [{:keys [link-text link-title]} (into {} (remove #(= :link-target (first %)) link-parts))
+(defn- link-parts->map
+  [link-parts]
+  (let [safe-parts (->> link-parts
+                        (remove #(= :link-target (first %)))
+                        (into {}))
         link-target-rest (->> link-parts
                               (filter #(= :link-target (first %)))
                               first
@@ -287,6 +283,12 @@ newline = #'\\n'
         link-target (if (= 1 (count link-target-rest))
                       (first link-target-rest)
                       (string/join link-target-rest))]
+    (assoc safe-parts :link-target link-target)))
+
+
+(defn- link-transform
+  [& link-parts]
+  (let [{:keys [link-text link-target link-title]} (link-parts->map link-parts)]
     [:link (cond-> {:text   link-text
                     :target link-target}
              link-title (assoc :title link-title))]))
@@ -294,7 +296,7 @@ newline = #'\\n'
 
 (defn- image-transform
   [& link-parts]
-  (let [{:keys [link-text link-target link-title]} (into {} link-parts)]
+  (let [{:keys [link-text link-target link-title]} (link-parts->map link-parts)]
     [:url-image (cond-> {:alt link-text
                          :src link-target}
                   link-title (assoc :title link-title))]))
@@ -372,7 +374,7 @@ newline = #'\\n'
   [text-run]
   (let [matches (re-seq uri-pattern text-run)]
     (if (seq matches)
-      (into [:span]
+      (into [:text-run]
             (loop [t   text-run
                    m   matches
                    acc []]

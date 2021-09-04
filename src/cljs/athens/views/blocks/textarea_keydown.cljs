@@ -1,4 +1,4 @@
-(ns athens.keybindings
+(ns athens.views.blocks.textarea-keydown
   (:require
     ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
     ["@material-ui/icons/Done" :default Done]
@@ -7,11 +7,13 @@
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
     [athens.db :as db]
+    [athens.events.selection :as select-events]
     [athens.router :as router]
+    [athens.subs.selection :as select-subs]
     [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
     [cljsjs.react]
     [cljsjs.react.dom]
-    [clojure.string :refer [replace-first blank?]]
+    [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
@@ -22,7 +24,7 @@
       KeyCodes)))
 
 
-;;; Event Helpers
+;; Event Helpers
 
 
 (defn modifier-keys
@@ -45,6 +47,12 @@
 
 
 (defn destruct-target
+  "Get the current value of a textarea (`:value`) and
+   the start (`:start`) and end (`:end`) index of the selection.
+   Furthermore, split the selection into three parts:
+   text before the selection (`:head`),
+   the selection itself (`:selection`),
+   and text after the selection (`:tail`)."
   [target]
   (let [value (.. target -value)
         [start end] (get-end-points target)
@@ -83,7 +91,7 @@
   (contains? ARROW-KEYS (.. e -keyCode)))
 
 
-;;; Dropdown: inline-search and slash commands
+;; Dropdown: inline-search and slash commands
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
@@ -96,10 +104,11 @@
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
-;;[ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
-;;[DateRange "Date Picker"]
-;;[Attachment "Upload Image or File"]
-;;[ExposurePlus1 "Word Count"]
+
+;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;; [DateRange "Date Picker"]
+;; [Attachment "Upload Image or File"]
+;; [ExposurePlus1 "Word Count"]
 
 
 (defn filter-slash-options
@@ -107,7 +116,7 @@
   (if (blank? query)
     slash-options
     (filterv (fn [[text]]
-               (re-find (re-pattern (str "(?i)" query)) text))
+               (includes? (lower-case text) (lower-case query)))
              slash-options)))
 
 
@@ -139,123 +148,109 @@
              :search/results results))))
 
 
+;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+;; textarea setval will lose ability to undo/redo
+
+;; execCommand is obsolete:
+;; be wary before updating electron - as chromium might drop support for execCommand
+;; electron 11 - uses chromium < 90(latest) which supports execCommand
+(defn replace-selection-with
+  "replace the current selection with `new-text`"
+  [new-text]
+  (.execCommand js/document "insertText" false new-text))
+
+
+(defn set-selection
+  "select text from `start` to `end` in the textarea `target`"
+  [target start end]
+  (setStart target start)
+  (setEnd target end))
+
+
 ;; 1- if no results, just hide slash commands so this doesnt get triggered
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
+  ;; this signature is called to process keyboard events.
   ([state e]
-   (let [{:search/keys [index results]} @state
-         {:keys [value head tail target]} (destruct-key-down e)
-         [n _ expansion _ pos] (nth results index)
-         expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #"(?s).*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)]
-     (swap! state assoc
-            :search/type nil
-            :string/local new-str)
-     (set! (.-value target) new-str)
-     (when pos
-       (let [new-idx (- (count (str new-head expand)) pos)]
-         (set-cursor-position target new-idx)
-         (when (= n "Block Embed")
-           (swap! state assoc :search/type :block
-                  :search/query "" :search/results []))))))
+   (let [target (.. e -target)
+         {:search/keys [index results]} @state
+         item (nth results index)]
+     (auto-complete-slash state target item)))
+  ;; here comes the autocompletion logic itself,
+  ;; independent of the input method the user used.
+  ;; `expansion` is the identifier of the page or block
+  ;; (i.e., UID of block or title of page) that shall be
+  ;; inserted.
   ([state target item]
-   (let [{:keys [value head tail]} (destruct-target target)
-         [_ _ expansion _ pos] item
+   (let [{:keys [start head]} (destruct-target target)
+         [caption _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
-         start-idx (dec (count (re-find #"(?s).*/" head)))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head expand tail)]
+         ;; the regex is evaluated greedily, yielding the last
+         ;; occurrence in head (head = text up to cursor)
+         start-idx (dec (count (re-find #"(?s).*/" head)))]
      (swap! state assoc
-            :search/type nil
-            :string/local new-str)
-     (set! (.-value target) new-str)
+            :search/type nil)
+     (set-selection target start-idx start)
+     (replace-selection-with expand)
      (when pos
-       (let [new-idx (- (count (str new-head expand)) pos)]
-         (set-cursor-position target new-idx))))))
+       (let [new-idx (+ start-idx (count expand) (- pos))]
+         (set-cursor-position target new-idx)
+         (when (= caption "Block Embed")
+           (swap! state assoc :search/type :block
+                  :search/query "" :search/results [])))))))
 
 
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
 (defn auto-complete-hashtag
   ([state e]
    (let [{:search/keys [index results]} @state
+         target (.. e -target)
          {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [value head tail]} (destruct-key-down e)
-         expansion (or title uid)
-         start-idx (count (re-find #"(?s).*#" head))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head "[[" expansion "]]" tail)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc
-              :search/type nil
-              :string/local new-str))))
+         expansion (or title uid)]
+     (auto-complete-hashtag state target expansion)))
+
   ([state target expansion]
-   (let [{:keys [value head tail]} (destruct-target target)
-         start-idx (count (re-find #"(?s).*#" head))
-         new-head  (subs value 0 start-idx)
-         new-str   (str new-head "[[" expansion "]]" tail)]
+   (let [{:keys [start head]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
        (swap! state assoc :search/type nil)
-       (swap! state assoc
-              :search/type nil
-              :string/local new-str)))))
+       (do
+         (set-selection target start-idx start)
+         (replace-selection-with (str "[[" expansion "]]"))
+         (swap! state assoc
+                :search/type nil))))))
 
 
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
 (defn auto-complete-inline
   ([state e]
-   (let [{:search/keys [query type index results]} @state
-         {:keys [node/title block/uid]} (nth results index nil)
-         {:keys [start head tail target]} (destruct-key-down e)
-         expansion    (or title uid)
-         block?       (= type :block)
-         page?        (= type :page)
-         query        (escape-str query)
-         ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
-                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
-                            page? #"(?s)(\]\])?(.*)")
-         new-head     (cond block? "$1(("
-                            page? "$1[[")
-         closing-str  (cond block? "))"
-                            page? "]]")
-         replacement  (str new-head expansion closing-str)
-         replace-str  (replace-first head head-pattern replacement)
-         matches      (re-matches tail-pattern tail)
-         [_ _ after-closing-str] matches
-         new-str      (str replace-str after-closing-str)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc :search/type nil :string/local new-str))
-     (setStart target (+ 2 start))))
+   (let [{:search/keys [index results]} @state
+         ;; (nth results (or index 0) nil) returns the index-th result
+         ;; If (= index nil) or index is out of bounds, returns nil
+         ;; For example, index can be nil if (= results [])
+         {:keys [node/title block/uid]} (nth results (or index 0) nil)
+         target (.. e -target)
+         expansion    (or title uid)]
+     (auto-complete-inline state target expansion)))
+
   ([state target expansion]
-   (let [{:search/keys [query type]} @state
-         {:keys [start head tail]} (destruct-target target)
-         block?       (= type :block)
-         page?        (= type :page)
-         query        (escape-str query)
-         ;; rewrite this more cleanly
-         head-pattern (cond block? (re-pattern (str "(?s)(.*)\\(\\(" query))
-                            page? (re-pattern (str "(?s)(.*)\\[\\[" query)))
-         tail-pattern (cond block? #"(?s)(\)\))?(.*)"
-                            page? #"(?s)(\]\])?(.*)")
-         new-head     (cond block? "$1(("
-                            page? "$1[[")
-         closing-str  (cond block? "))"
-                            page? "]]")
-         replacement  (str new-head expansion closing-str)
-         replace-str  (replace-first head head-pattern replacement)
-         matches      (re-matches tail-pattern tail)
-         [_ _ after-closing-str] matches
-         new-str      (str replace-str after-closing-str)]
-     (if (nil? expansion)
-       (swap! state assoc :search/type nil)
-       (swap! state assoc :search/type nil :string/local new-str))
-     (setStart target (+ 2 start)))))
+   (let [{:search/keys [query]} @state
+         {:keys [end]} (destruct-target target)
+         query        (escape-str query)]
+
+     ;; assumption: cursor or selection is immediately before the closing brackets
+
+     (when (not (nil? expansion))
+       (set-selection target (- end (count query)) end)
+       (replace-selection-with expansion))
+     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
+       (set-cursor-position target new-cursor-pos))
+     (swap! state assoc :search/type nil))))
 
 
-;;; Arrow Keys
+;; Arrow Keys
 
 
 (defn block-start?
@@ -303,40 +298,49 @@
 
 (defn handle-arrow-key
   [e uid state]
-  (let [{:keys [key-code shift ctrl target selection]} (destruct-key-down e)
-        selection?      (not (blank? selection))
-        start?          (block-start? e)
-        end?            (block-end? e)
-        {:search/keys [results type index] caret-position :caret-position} @state
-        textarea-height (.. target -offsetHeight) ;; this height is accurate, but caret-position height is not updating
-        {:keys [top height]} caret-position
-        rows            (js/Math.round (/ textarea-height height))
-        row             (js/Math.ceil (/ top height))
-        top-row?        (= row 1)
-        bottom-row?     (= row rows)
-        up?             (= key-code KeyCodes.UP)
-        down?           (= key-code KeyCodes.DOWN)
-        left?           (= key-code KeyCodes.LEFT)
-        right?          (= key-code KeyCodes.RIGHT)
-        header          (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
+  (let [{:keys [key-code
+                shift
+                ctrl
+                target
+                selection]}              (destruct-key-down e)
+        selection?                       (not (blank? selection))
+        start?                           (block-start? e)
+        end?                             (block-end? e)
+        {:search/keys   [results
+                         type
+                         index]
+         caret-position :caret-position} @state
+        textarea-height                  (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
+        {:keys [top height]}             caret-position
+        rows                             (js/Math.round (/ textarea-height height))
+        row                              (js/Math.ceil (/ top height))
+        top-row?                         (= row 1)
+        bottom-row?                      (= row rows)
+        up?                              (= key-code KeyCodes.UP)
+        down?                            (= key-code KeyCodes.DOWN)
+        left?                            (= key-code KeyCodes.LEFT)
+        right?                           (= key-code KeyCodes.RIGHT)
+        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
-              left? nil
-              right? nil
+              left?                        nil
+              right?                       nil
               (or (and up? top-row?)
                   (and down? bottom-row?)) (do
                                              (.. target blur)
-                                             (dispatch [:selected/add-item uid])))
+                                             (dispatch [::select-events/add-item uid (cond
+                                                                                       up? :first
+                                                                                       down? :last)])))
 
       ;; Control: fold or unfold blocks
       ctrl (cond
-             left? nil
-             right? nil
+             left?          nil
+             right?         nil
              (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
                                   new-open-state (cond
-                                                   up? false
+                                                   up?   false
                                                    down? true)
                                   event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
                               (.. e preventDefault)
@@ -345,15 +349,15 @@
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
              (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
-             (or up? down?) (let [cur-index    index
-                                  min-index    0
-                                  max-index    (max-idx results)
-                                  next-index   (cycle-list min-index max-index cur-index up? down?)
-                                  container-el (getElement "dropdown-menu")
-                                  target-el    (getElement (str "dropdown-item-" next-index))]
-                              (.. e preventDefault)
-                              (swap! state assoc :search/index next-index)
-                              (scroll-if-needed target-el container-el)))
+             (or up? down?)    (let [cur-index    index
+                                     min-index    0
+                                     max-index    (max-idx results)
+                                     next-index   (cycle-list min-index max-index cur-index up? down?)
+                                     container-el (getElement "dropdown-menu")
+                                     target-el    (getElement (str "dropdown-item-" next-index))]
+                                 (.. e preventDefault)
+                                 (swap! state assoc :search/index next-index)
+                                 (scroll-if-needed target-el container-el)))
 
       selection? nil
 
@@ -361,15 +365,15 @@
       ;; FIX: always navigates up or down for header because get-caret-position for some reason returns the wrong value for top
       (or (and up? top-row?)
           (and left? start?)
-          (and up? header)) (do (.. e preventDefault)
-                                (dispatch [:up uid]))
+          (and up? header))   (do (.. e preventDefault)
+                                  (dispatch [:up uid]))
       (or (and down? bottom-row?)
           (and right? end?)
           (and down? header)) (do (.. e preventDefault)
                                   (dispatch [:down uid])))))
 
 
-;;; Tab
+;; Tab
 
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
@@ -377,8 +381,9 @@
   [e _uid _state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
-        selected-items                 @(subscribe [:selected/items])
-        editing-uid                    @(subscribe [:editing/uid])]
+        selected-items                 @(subscribe [::select-subs/items])
+        editing-uid                    @(subscribe [:editing/uid])
+        [editing-uid _]         (db/uid-and-embed-id editing-uid)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent editing-uid d-key-down])
@@ -399,7 +404,7 @@
 
 (defn handle-enter
   [e uid state]
-  (let [{:keys [shift ctrl meta head tail value] :as d-key-down} (destruct-key-down e)
+  (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
     (cond
@@ -408,29 +413,41 @@
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
              :hashtag (auto-complete-hashtag state e))
-      ;; shift-enter: add line break to textarea
-      shift (swap! state assoc :string/local (str head "\n" tail))
-      ;; cmd-enter: cycle todo states. 13 is the length of the {{[[TODO]]}} string
-      (shortcut-key? meta ctrl) (let [first    (subs value 0 13)
-                                      new-tail (subs value 13)
-                                      new-str  (cond (= first "{{[[TODO]]}} ") (str "{{[[DONE]]}} " new-tail)
-                                                     (= first "{{[[DONE]]}} ") new-tail
-                                                     :else (str "{{[[TODO]]}} " value))]
-                                  (swap! state assoc :string/local new-str))
+      ;; shift-enter: add line break to textarea and move cursor to the next line.
+      shift (replace-selection-with "\n")
+      ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
+      ;; 13 is the length of the {{[[TODO]]}} and {{[[DONE]]}} string
+      ;; this trick depends on the fact that they are of the same length.
+      (shortcut-key? meta ctrl) (let [todo-prefix         "{{[[TODO]]}} "
+                                      done-prefix         "{{[[DONE]]}} "
+                                      no-prefix           ""
+                                      first               (subs value 0 13)
+                                      current-prefix      (cond (= first todo-prefix) todo-prefix
+                                                                (= first done-prefix) done-prefix
+                                                                :else no-prefix)
+                                      new-prefix          (cond (= current-prefix no-prefix) todo-prefix
+                                                                (= current-prefix todo-prefix) done-prefix
+                                                                (= current-prefix done-prefix) no-prefix)
+                                      new-cursor-position (+ start (- (count current-prefix)) (count new-prefix))]
+                                  (set-selection (.. e -target) 0 (count current-prefix))
+                                  (replace-selection-with new-prefix)
+                                  (set-cursor-position (.. e -target) new-cursor-position))
       ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
       :else (throttled-dispatch-sync [:enter uid d-key-down]))))
 
 
-;;; Pair Chars: auto-balance for backspace and writing chars
+;; Pair Chars: auto-balance for backspace and writing chars
 
 (def PAIR-CHARS
   {"(" ")"
    "[" "]"
    "{" "}"
    "\"" "\""})
-  ;;"`" "`"
-  ;;"*" "*"
-   ;;"_" "_"})
+
+
+;; "`" "`"
+;; "*" "*"
+;; "_" "_"})
 
 
 (defn surround
@@ -441,37 +458,32 @@
     (str around selection around)))
 
 
+(defn surround-and-set
+  ;; Default to n=2 because it's more common.
+  ([e state surround-text]
+   (surround-and-set e state surround-text 2))
+  ([e _ surround-text n]
+   (let [{:keys [selection start end target]} (destruct-key-down e)
+         selection?       (not= start end)]
+     (.preventDefault e)
+     (.stopPropagation e)
+     (let [selection (surround selection surround-text)]
+
+       (replace-selection-with selection)
+       (if selection?
+         (set-selection target (+ n start) (+ n end))
+         (set-cursor-position target (+ start n)))))))
+
+
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection start end target value]} (destruct-key-down e)
-        selection?       (not= start end)
-
-        surround-and-set (fn [surround-text]
-                           (.preventDefault e)
-                           (.stopPropagation e)
-                           (let [selection (surround selection surround-text)
-                                 new-str   (str head selection tail)]
-                             ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-                             ;; textarea setval will lose ability to undo/redo
-
-                             ;; other note: execCommand is probably the simpler way
-                             ;; at least until a new standard comes around
-
-                             ;; be wary before updating electron - as chromium might drop support for execCommand
-                             ;; electron 11 - uses chromium < 90(latest) which supports execCommand
-                             (swap! state assoc :string/local new-str)
-                             (.. js/document (execCommand "insertText" false selection))
-                             (if selection?
-                               (do (setStart target (+ 2 start))
-                                   (setEnd target (+ 2 end)))
-                               (set-cursor-position target (+ start 2)))))]
-
+  (let [{:keys [key-code head tail selection target value shift]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
                                                               closest            (or closest-node-page closest-block-page)
-                                                              block              (db/get-block [:block/uid (.. closest -dataset -uid)])
+                                                              block              (db/get-block [:block/uid (.getAttribute closest "data-uid")])
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
@@ -479,17 +491,19 @@
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
-                                  (dispatch [:undo])))
+                                  (if shift
+                                    (dispatch [:redo])
+                                    (dispatch [:undo]))))
 
-      (= key-code KeyCodes.B) (surround-and-set "**")
+      (= key-code KeyCodes.B) (surround-and-set e state "**")
 
-      (= key-code KeyCodes.I) (surround-and-set "*")
+      (= key-code KeyCodes.I) (surround-and-set e state "*" 1)
 
-      (= key-code KeyCodes.Y) (surround-and-set "~~")
+      (= key-code KeyCodes.Y) (surround-and-set e state "~~")
 
-      (= key-code KeyCodes.U) (surround-and-set "--")
+      (= key-code KeyCodes.U) (surround-and-set e state "--")
 
-      (= key-code KeyCodes.H) (surround-and-set "^^")
+      (= key-code KeyCodes.H) (surround-and-set e state "^^")
 
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
@@ -555,23 +569,19 @@
 
 (defn handle-pair-char
   [e _ state]
-  (let [{:keys [key head tail target start end selection value]} (destruct-key-down e)
+  (let [{:keys [key target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
     (.. e preventDefault)
 
     (cond
       ;; when close char, increment caret index without writing more
-      (or (= ")" key lookbehind-char)
-          (= "}" key lookbehind-char)
-          (= "\"" key lookbehind-char)
-          (= "]" key lookbehind-char)) (do (setStart target (inc start))
-                                           (swap! state assoc :search/type nil))
+      (some #(= % key lookbehind-char)
+            [")" "}" "\"" "]"]) (do (set-cursor-position target (inc start))
+                                    (swap! state assoc :search/type nil))
 
-      (= selection "") (let [new-str (str head key close-pair tail)
-                             new-idx (inc start)]
-                         (swap! state assoc :string/local new-str)
-                         (set! (.-value target) new-str)
+      (= selection "") (let [new-idx (inc start)]
+                         (replace-selection-with (str key close-pair))
                          (set-cursor-position target new-idx)
                          (when (>= (count (:string/local @state)) 4)
                            (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
@@ -580,14 +590,18 @@
                                  type             (cond double-brackets? :page
                                                         double-parens? :block)]
                              (when type
-                               (swap! state assoc :search/type type :search/query "" :search/results [])))))
+                               (swap! state assoc
+                                      :search/type type
+                                      :search/query ""
+                                      :search/results []
+                                      ;; It's cleaner to explicitly set this to nil to avoid
+                                      ;; seemingly nondeterministic behavior caused by a
+                                      ;; previous value of :search/index
+                                      :search/index nil)))))
 
-      (not= selection "") (let [surround-selection (surround selection key)
-                                new-str            (str head surround-selection tail)]
-                            (swap! state assoc :string/local new-str)
-                            (set! (.-value target) new-str)
-                            (set! (.-selectionStart target) (inc start))
-                            (set! (.-selectionEnd target) (inc end))
+      (not= selection "") (let [surround-selection (surround selection key)]
+                            (replace-selection-with surround-selection)
+                            (set-selection target (inc start) (inc end))
                             (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
                                                         (subs (:string/local @state) (+ end 1) (+ end 3)))
                                   double-brackets? (= "[[]]" four-char)
@@ -597,7 +611,11 @@
                                   query-fn         (cond double-brackets? db/search-in-node-title
                                                          double-parens? db/search-in-block-content)]
                               (when type
-                                (swap! state assoc :search/type type :search/query selection :search/results (query-fn selection))))))))
+                                (swap! state assoc
+                                       :search/type type
+                                       :search/query selection
+                                       :search/results (query-fn selection)
+                                       :search/index 0)))))))
 
 
 ;; Backspace
@@ -615,16 +633,11 @@
     (cond
       (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
       ;; pair char: hide inline search and auto-balance
-      possible-pair (let [head    (subs value 0 (dec start))
-                          tail    (subs value (inc start))
-                          new-str (str head tail)
-                          new-idx (dec start)]
+      possible-pair (do
                       (.. e preventDefault)
-                      (swap! state assoc
-                             :search/type nil
-                             :string/local new-str)
-                      (set! (.-value target) new-str)
-                      (set-cursor-position target new-idx))
+                      (swap! state assoc :search/type nil)
+                      (set-selection target (dec start) (inc start))
+                      (replace-selection-with ""))
 
       ;; slash: close dropdown
       (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
@@ -701,7 +714,7 @@
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched
       ;; after some ops(like delete) can cause errors
-      (when (empty? @(subscribe [:selected/items]))
+      (when (empty? @(subscribe [::select-subs/items]))
         (cond
           (arrow-key-direction e)         (handle-arrow-key e uid state)
           (pair-char? e)                  (handle-pair-char e uid state)

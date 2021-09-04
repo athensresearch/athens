@@ -14,10 +14,10 @@
     "#hola"
     {:node/titles ["hola"] :page/refs [[:node/title "hola"]]}
 
-             ;; order matters
-             ;; ["ma" "ni hao"] != ["ni hao" "ma"]
-             ;;"[[ni hao]] #ma"
-             ;;{:node/titles ["ma" "ni hao"]}
+    ;; order matters
+    ;; ["ma" "ni hao"] != ["ni hao" "ma"]
+    ;; "[[ni hao]] #ma"
+    ;; {:node/titles ["ma" "ni hao"]}
 
     "#[[aloha]]"
     {:node/titles ["aloha"] :page/refs [[:node/title "aloha"]]}

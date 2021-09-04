@@ -5,6 +5,7 @@
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
     ["@material-ui/icons/ShortText" :default ShortText]
+    [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
     [athens.views.buttons :refer [button]]
@@ -28,7 +29,7 @@
       KeyCodes)))
 
 
-;;; Styles
+;; Styles
 
 
 (def container-style
@@ -123,7 +124,7 @@
                           :font-family "IBM Plex Mono"}))
 
 
-;;; Components
+;; Components
 
 
 (def initial-state
@@ -201,7 +202,7 @@
           "Load More"])])))
 
 
-; TODO add truncation of long strings here
+;; TODO add truncation of long strings here
 (defn edn-viewer
   [data _]
   [:pre (use-style edn-viewer-style) [:code (with-out-str (cljs.pprint/pprint data))]])
@@ -394,7 +395,11 @@
     (eval-box!)))
 
 
-(d/listen! dsdb :devtool/open listener)
+;; Only run the listener in dev mode, not in prod. The listener slows things
+;; down a lot. For example it makes the enter key take ~300ms rather than ~100ms,
+;; according to the Chrome devtools flamegraph.
+(when config/debug?
+  (d/listen! dsdb :devtool/open listener))
 
 
 (defn handle-box-change!

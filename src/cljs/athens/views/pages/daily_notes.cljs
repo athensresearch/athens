@@ -13,7 +13,7 @@
     [stylefy.core :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def daily-notes-scroll-area-style
@@ -41,7 +41,7 @@
                                  :opacity "0.5"}))
 
 
-;;; Helpers
+;; Helpers
 
 
 
@@ -62,7 +62,7 @@
       (< bottom-delta 1) (dispatch [:daily-note/next (get-day (uid-to-date (last daily-notes)) 1)]))))
 
 
-(def db-scroll-daily-notes (debounce scroll-daily-notes 500))
+(def db-scroll-daily-notes (debounce scroll-daily-notes 100))
 
 
 (defn safe-pull-many
@@ -82,7 +82,7 @@
                  (not (nil? x))))))
 
 
-;;; Components
+;; Components
 
 
 (defn page

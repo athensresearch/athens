@@ -59,6 +59,18 @@ jobs:
        - name: Lint
          run: script/lint
 
+# # ignore for now
+#   deps-check:
+#     runs-on: ubuntu-18.04
+#     steps:
+#       - name: Git checkout
+#         uses: actions/checkout@v1
+#         with:
+#           fetch-depth: 1
+#           submodules: 'true'
+#       - name: Check Dependencies
+#         run: lein ancient
+
    style:
      runs-on: ubuntu-18.04
      steps:
@@ -67,6 +79,17 @@ jobs:
          with:
            fetch-depth: 1
            submodules: 'true'
+
+       - name: Cache deps
+         uses: actions/cache@v1
+         id: cache-deps-style
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-style-${{ hashFiles('project.clj') }}
+
+       - name: Fetch deps
+         if: steps.cache-deps-style.outputs.cache-hit != 'true'
+         run: lein with-profile cljstyle deps
 
        - name: Style
          run: script/style

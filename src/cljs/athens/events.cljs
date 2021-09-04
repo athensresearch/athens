@@ -1,10 +1,10 @@
 (ns athens.events
   (:require
     [athens.db :as db :refer [retract-uid-recursively inc-after dec-after plus-after minus-after]]
-    [athens.keybindings :as keybindings]
     [athens.patterns :as patterns]
     [athens.style :as style]
     [athens.util :refer [now-ts gen-block-uid]]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [datascript.core :as d]
     [datascript.transit :as dt]
@@ -153,7 +153,7 @@
                                     string (assoc :block/string (patterns/replace-roam-date string))
                                     title (assoc :node/title (patterns/replace-roam-date title))))
                                 date-concat)]
-    ;;tx-data))
+    ;; tx-data))
     (d/db-with db tx-data)))
 
 
@@ -231,6 +231,7 @@
   (fn [_ _]
     {}))
 
+
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
@@ -257,14 +258,18 @@
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          new-items (assoc (:right-sidebar/items db) uid new-item)
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items (into {}
+                          (assoc (:right-sidebar/items db) uid new-item))
           inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
                                {}
                                new-items)
           sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
-                                                [(get-in new-items [k1 :index]) k2]
-                                                [(get-in new-items [k2 :index]) k1]))) inc-items)]
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
        :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
                     [:right-sidebar/scroll-top]]})))
@@ -290,31 +295,6 @@
                   (string/split "editable-uid-")
                   second)]
       {:db (assoc db :editing/uid uid)})))
-
-
-(reg-event-db
-  :selected/add-item
-  (fn [db [_ uid]]
-    (update db :selected/items conj uid)))
-
-
-(reg-event-db
-  :selected/remove-item
-  (fn [db [_ uid]]
-    (let [items (:selected/items db)]
-      (assoc db :selected/items (filterv #(not= % uid) items)))))
-
-
-(reg-event-db
-  :selected/add-items
-  (fn [db [_ uids]]
-    (update db :selected/items concat uids)))
-
-
-(reg-event-db
-  :selected/clear-items
-  (fn [db _]
-    (assoc db :selected/items [])))
 
 
 (defn select-up
@@ -358,30 +338,7 @@
 (reg-event-db
   :selected/up
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-up selected-items))))
-
-
-(defn select-down
-  [selected-items]
-  (let [editing-uid @(subscribe [:editing/uid])
-        editing-idx (first (keep-indexed (fn [idx x]
-                                           (when (= x editing-uid)
-                                             idx))
-                                         selected-items))
-        [_ f-embed]          (->> selected-items first db/uid-and-embed-id)
-        last-item            (last selected-items)
-        next-block-uid       (db/next-block-uid last-item true)]
-    (cond
-      (pos? editing-idx) (subvec selected-items 1)
-
-      ;; shift down started from inside the embed should not go outside embed block
-      f-embed            (let [sel-uid (str (-> next-block-uid db/uid-and-embed-id first) "-embed-" f-embed)]
-                           (if (js/document.querySelector (str "#editable-uid-" sel-uid))
-                             (conj selected-items sel-uid)
-                             selected-items))
-
-      next-block-uid     (conj selected-items next-block-uid)
-      :else              selected-items)))
+    (assoc-in db [:selection :items] (select-up selected-items))))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
@@ -389,7 +346,12 @@
 (reg-event-db
   :selected/down
   (fn [db [_ selected-items]]
-    (assoc db :selected/items (select-down selected-items))))
+    (let [last-item         (last selected-items)
+          next-block-uid    (db/next-block-uid last-item true)
+          ordered-selection (-> (into [] selected-items)
+                                (into [next-block-uid]))]
+      (js/console.debug ":selected/down, new-selection:" (pr-str ordered-selection))
+      (assoc-in db [:selection :items] ordered-selection))))
 
 
 (defn delete-selected
@@ -428,7 +390,9 @@
           tx-data           (concat retract-vecs reindex-last-selected-parent)]
       {:fx [[:dispatch [:transact tx-data]]
             [:dispatch [:editing/uid nil]]]
-       :db (assoc db :selected/items [])})))
+       :db (-> db
+               (assoc-in [:selection :items] #{})
+               (assoc-in [:selection :order] []))})))
 
 
 ;; Alerts
@@ -467,6 +431,7 @@
   :window/set-size
   (fn [_ [_ [x y]]]
     {:local-storage/set! ["ws/window-size" (str x "," y)]}))
+
 
 ;; Loading
 
@@ -526,10 +491,11 @@
 (reg-event-fx
   :daily-note/delete
   (fn [{:keys [db]} [_ uid title]]
-    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ;; Filter current date from daily note vec
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
       {:fx [[:dispatch [:page/delete uid title]]]
        :db new-db})))
+
 
 ;; -- event-fx and Datascript Transactions -------------------------------
 
@@ -825,7 +791,7 @@
 
 ;; todo(abhinav) -- stateless backspace
 ;; will pick db value of backspace/delete instead of current state
-  ;; which might not be same as blur is not yet called
+;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
   (fn [_ [_ uid value]]
@@ -1661,7 +1627,7 @@
     (let [[uid embed-id]  (db/uid-and-embed-id uid)
           block         (db/get-block [:block/uid uid])
           {:block/keys  [order children open]} block
-          {:keys [start value]} (keybindings/destruct-target js/document.activeElement) ; TODO: coeffect
+          {:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement) ; TODO: coeffect
           empty-block?  (and (string/blank? value)
                              (empty? children))
           block-start?  (zero? start)
@@ -1699,27 +1665,27 @@
 
 
 (reg-event-fx
- :paste-verbatim
- (fn [_ [_ uid text]]
-   (let [{:keys [start value]} (keybindings/destruct-target js/document.activeElement)
-         block-empty?          (string/blank? value)
-         block-start?          (zero? start)
-         new-string            (cond
+  :paste-verbatim
+  (fn [_ [_ uid text]]
+    (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
+          block-empty?          (string/blank? value)
+          block-start?          (zero? start)
+          new-string            (cond
 
-                                 block-empty?
-                                 text
+                                  block-empty?
+                                  text
 
-                                 (and (not block-empty?)
-                                      block-start?)
-                                 (str text value)
+                                  (and (not block-empty?)
+                                       block-start?)
+                                  (str text value)
 
-                                 :else
-                                 (str (subs value 0 start)
-                                      text
-                                      (subs value start)))
-         tx-data [{:db/id        [:block/uid uid]
-                   :block/string new-string}]]
-     {:dispatch [:transact tx-data]})))
+                                  :else
+                                  (str (subs value 0 start)
+                                       text
+                                       (subs value start)))
+          tx-data [{:db/id        [:block/uid uid]
+                    :block/string new-string}]]
+      {:dispatch [:transact tx-data]})))
 
 
 (defn left-sidebar-drop-above
@@ -1801,7 +1767,7 @@
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
     (let [new-str-tx-data (->> unlinked-refs
-                               (mapcat second unlinked-refs)
+                               (mapcat second)
                                (map (fn [{:block/keys [string uid]}]
                                       (let [new-str (link-unlinked-reference string title)]
                                         {:db/id [:block/uid uid] :block/string new-str}))))]

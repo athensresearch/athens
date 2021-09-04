@@ -4,8 +4,8 @@
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Folder" :default Folder]
     ["@material-ui/icons/Group" :default Group]
-    ["@material-ui/icons/LibraryBooks" :default LibraryBooks]
     ["@material-ui/icons/MergeType" :default MergeType]
+    ["@material-ui/icons/Storage" :default Storage]
     [athens.electron :as electron]
     [athens.events :as events]
     [athens.style :refer [color]]
@@ -136,13 +136,14 @@
                     [button {:on-click close-modal}
                      [:> Close]]]
 
-         :content  [:div (use-style (merge modal-contents-style {:height "20em"}))
+         :content  [:div (use-style (merge modal-contents-style))
                     (if (nil? @transformed-roam-db)
                       [:<>
-                       [:input {:type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
+                       [:input {:style {:flex "0 0 auto"} :type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
                        [:div {:style {:position       "relative"
                                       :padding-bottom "56.25%"
-                                      :margin         "20px 0"
+                                      :margin         "1em 0 0"
+                                      :flex "1 1 100%"
                                       :width          "100%"}}
                         [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
                                   :frameBorder           "0"
@@ -268,7 +269,7 @@
         (r/as-element [:div (use-style modal-style)
                        [modal/modal
                         {:title    [:div.modal__title
-                                    [:> LibraryBooks]
+                                    [:> Storage]
                                     [:h4 "Database"]
                                     (when-not @loading
                                       [button {:on-click close-modal} [:> Close]])]

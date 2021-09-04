@@ -104,20 +104,6 @@
 
 
 (re-frame/reg-sub
-  :selected/items
-  (fn [db _]
-    (:selected/items db)))
-
-
-(re-frame/reg-sub
-  :selected/is-selected
-  (fn [_]
-    [(subscribe [:selected/items])])
-  (fn [[selected-items] [_ uid]]
-    (contains? (set selected-items) uid)))
-
-
-(re-frame/reg-sub
   :daily-notes/items
   (fn-traced [db _]
              (:daily-notes/items db)))

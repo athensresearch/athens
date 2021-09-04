@@ -110,10 +110,10 @@
 
 (deftest parser-raw-url-tests
   (are [x y] (= x (sut/staged-parser->ast y))
-    ; Basic URLs in plain text
+    ;; Basic URLs in plain text
     [:block
      [:paragraph
-      [:span
+      [:text-run
        "First URL: "
        [:link {:text   "https://example.com/1"
                :target "https://example.com/1"}]
@@ -122,10 +122,20 @@
                :target "https://example.com/2"}]]]]
     "First URL: https://example.com/1 second URL: https://example.com/2"
 
-    ; URL following a TODO component
+    ;; Regression test for https://github.com/athensresearch/athens/issues/1057
+    ;; (URL with underscore in plain text)
+    [:block
+     [:paragraph
+      [:text-run
+       "URL: "
+       [:link {:text   "https://my_url_with_underscore.com"
+               :target "https://my_url_with_underscore.com"}]]]]
+    "URL: https://my_url_with_underscore.com"
+
+    ;; URL following a TODO component
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
-             [:span
+             [:text-run
               " read: "
               [:link {:text   "https://www.example.com"
                       :target "https://www.example.com"}]]]]
@@ -136,18 +146,18 @@
     ;; or rather not qualify `#` in a middle of a world as hashtag
     [:block [:paragraph
              [:component "[[TODO]]" [:page-link "TODO"]]
-             [:span
+             [:text-run
               " "
               [:link {:text   "https://example.com"
                       :target "https://example.com"}]]]]
     "{{[[TODO]]}} https://example.com"))
 
 
-; Test cases for blocks that only contain a single raw URL that should be parsed
-; as a link. Those mostly test the URL parser.
+;; Test cases for blocks that only contain a single raw URL that should be parsed
+;; as a link. Those mostly test the URL parser.
 (deftest parser-lone-raw-url-tests
-  (are [url] (= [:block [:paragraph [:span [:link {:text   url
-                                                   :target url}]]]] (sut/staged-parser->ast url))
+  (are [url] (= [:block [:paragraph [:text-run [:link {:text   url
+                                                       :target url}]]]] (sut/staged-parser->ast url))
     "https://example.com"
     ;; URL with path set to /.
     "https://example.com/"
@@ -171,20 +181,21 @@
     ;; URL with username and password.
     "http://a:b@example.com"))
 
-; Tests for strings that should not be parsed as URLs.
+
+;; Tests for strings that should not be parsed as URLs.
 (deftest parser-lone-invalid-raw-url-tests
   (are [text] (= [:block [:paragraph text]] (sut/staged-parser->ast text))
-    ; URLs without host.
+    ;; URLs without host.
     "http:///a"
     ;; `#` is special character so is represented by separate string
     ;; "http://#"
     "http://?"
     ;; This passes, though it shouldn't
     ;; "http://12345"
-    ; TODO(agentydragon): Also should not pass:
-    ;   http://0.0.0.0
-    ;   http://999.999.999.999
-    ; See https://mathiasbynens.be/demo/url-regex for more.
+    ;; TODO(agentydragon): Also should not pass:
+    ;;   http://0.0.0.0
+    ;;   http://999.999.999.999
+    ;; See https://mathiasbynens.be/demo/url-regex for more.
     ))
 
 
@@ -258,7 +269,7 @@
 
     [:block
      [:paragraph
-      [:span
+      [:text-run
        [:link {:target "https://raw-link.com"
                :text   "https://raw-link.com"}]]]]
     "https://raw-link.com"))

@@ -1,4 +1,4 @@
-;;(ns athens.ws
+;; (ns athens.ws
 ;;  (:require
 ;;    [athens.athens-datoms :as athens-datoms]
 ;;    [athens.db :as db]
@@ -11,12 +11,12 @@
 ;;    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx reg-fx dispatch dispatch-sync subscribe reg-sub]]))
 ;;
 ;;
-;;;; Websockets
+;; Websockets
 ;;
-;;(defonce ws-chan (atom nil))
+;; (defonce ws-chan (atom nil))
 ;;
 ;;
-;;(defn receive-transit-msg!
+;; (defn receive-transit-msg!
 ;;  [update-fn]
 ;;  (fn [msg]
 ;;    (update-fn
@@ -25,7 +25,7 @@
 ;;           datascript.transit/read-transit-str))))
 ;;
 ;;
-;;(defn send-transit-msg!
+;; (defn send-transit-msg!
 ;;  [msg]
 ;;  (if @ws-chan
 ;;    (.send @ws-chan
@@ -33,7 +33,7 @@
 ;;    (throw (js/Error. "Websocket is not available!"))))
 ;;
 ;;
-;;(defn make-websocket!
+;; (defn make-websocket!
 ;;  [url receive-handler]
 ;;  (println "attempting to connect websocket")
 ;;  (if-let [chan (js/WebSocket. url)]
@@ -44,16 +44,16 @@
 ;;    (throw (js/Error. "Websocket connection failed!"))))
 ;;
 ;;
-;;;; Re-frame
+;; Re-frame
 ;;
-;;(rf/reg-event-fx
+;; (rf/reg-event-fx
 ;;  :ws/on-connect
 ;;  (fn [_ [_ data]]
 ;;    (let [db (:message data)]
 ;;      (dispatch [:reset-conn db]))))
 ;;
 ;;
-;;(defn update-messages!
+;; (defn update-messages!
 ;;  [data]
 ;;  (prn "UPDATE" data)
 ;;  (case (:type data)
@@ -61,7 +61,7 @@
 ;;    :connect (dispatch [:ws/on-connect data])))
 ;;
 ;;
-;;(rf/reg-event-fx
+;; (rf/reg-event-fx
 ;;  :ws/boot
 ;;  (fn [_ _]
 ;;    {:db         db/rfdb
@@ -72,7 +72,7 @@
 ;;                                    :halt?    true}]}}))
 ;;
 ;;
-;;(rf/reg-event-fx
+;; (rf/reg-event-fx
 ;;  :ws/make-ws
 ;;  (fn [_ _]
 ;;    (let [ws-prefix (if (= (.. js/window -location -protocol) "https:")
@@ -81,7 +81,7 @@
 ;;      (make-websocket! (str ws-prefix "5c377b6594da.ngrok.io" "/ws") update-messages!))))
 ;;
 ;;
-;;(rf/reg-event-fx
+;; (rf/reg-event-fx
 ;;  :ws/tx
 ;;  (fn [_ [_ tx-data]]
 ;;    (send-transit-msg! {:type :tx :message tx-data})))

@@ -3,7 +3,8 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.patterns :as patterns]
-    [athens.util :as util]
+    [athens.style :refer [zoom-level-min zoom-level-max]]
+    [athens.util :as util :refer [ipcMainChannels]]
     [cljs.reader :refer [read-string]]
     [datascript.core :as d]
     [datascript.transit :as dt :refer [write-transit-str]]
@@ -18,10 +19,10 @@
 
   (def electron (js/require "electron"))
   (def remote (.. electron -remote))
+  (def ipcRenderer (.. electron -ipcRenderer))
 
   (def dialog (.. remote -dialog))
   (def app (.. remote -app))
-
 
   (def fs (js/require "fs"))
   (def path (js/require "path"))
@@ -31,7 +32,11 @@
   (def DB-INDEX "index.transit")
   (def IMAGES-DIR-NAME "images")
 
-  ;;; Filesystem Dialogs
+  (def documents-athens-dir
+    (let [DOC-PATH (.getPath app "documents")]
+      (.resolve path DOC-PATH "athens")))
+
+  ;; Filesystem Dialogs
 
 
   (defn move-dialog!
@@ -162,8 +167,7 @@
       (js/setTimeout #(dispatch [:transact [tx-data]]) 50)))
 
 
-  ;;; Subs
-
+  ;; Subs
 
   (reg-sub
     :db/mtime
@@ -184,7 +188,7 @@
 
 
   ;; create sub in athens.subs so web-version of Athens works
-  ;;(reg-sub
+  ;; (reg-sub
   ;;  :db/remote-graph-conf
   ;;  (fn [db _]
   ;;    (:db/remote-graph-conf db)))
@@ -195,8 +199,23 @@
     (fn [db _]
       (:db/remote-graph db)))
 
+  (reg-sub
+    :win-maximized?
+    (fn [db _]
+      (:win-maximized? db)))
 
-  ;;; Events
+  (reg-sub
+    :win-fullscreen?
+    (fn [db _]
+      (:win-fullscreen? db)))
+
+  (reg-sub
+    :win-focused?
+    (fn [db _]
+      (:win-focused? db)))
+
+
+  ;; Events
 
 
   (reg-event-fx
@@ -211,12 +230,15 @@
     :local-storage/get-db-filepath
     [(inject-cofx :local-storage "db/filepath")
      (inject-cofx :local-storage-map {:ls-key "db/remote-graph-conf"
-                                      :key :remote-graph-conf})]
+                                      :key    :remote-graph-conf})]
     (fn [{:keys [local-storage remote-graph-conf]} _]
-      (if (some-> remote-graph-conf read-string
-                  :default?)
-        {:dispatch [:start-socket]}
-        {:dispatch [:db/update-filepath local-storage]})))
+      (let [default-db-path (.resolve path documents-athens-dir DB-INDEX)]
+        (cond
+          (some-> remote-graph-conf read-string :default?) {:dispatch [:start-socket]}
+          ;; No filepath in local storage, but an existing db suggests a dev chromium is running with a different local storage
+          ;; Short-circuit the first load and just use the existing DB
+          (and (nil? local-storage) (.existsSync fs default-db-path)) {:dispatch [:db/update-filepath default-db-path]}
+          :else {:dispatch [:db/update-filepath local-storage]}))))
 
 
   (reg-event-fx
@@ -224,11 +246,6 @@
     [(inject-cofx :local-storage "current-route/uid")]
     (fn [{:keys [local-storage]} _]
       {:dispatch [:navigate {:page {:id local-storage}}]}))
-
-
-  (def documents-athens-dir
-    (let [DOC-PATH (.getPath app "documents")]
-      (.resolve path DOC-PATH "athens")))
 
 
   (defn create-dir-if-needed!
@@ -364,6 +381,12 @@
                                         :dispatch-n [[:db/retract-athens-pages]
                                                      [:db/transact-athens-pages]]}
 
+                                     ;; bind windows toolbar electron buttons
+                                     {:when       :seen-any-of?
+                                      :events     [:fs/create-new-db :reset-conn]
+                                      :dispatch   [:bind-win-listeners]}
+
+
                                      {:when        :seen-any-of?
                                       :events      [:fs/create-new-db :reset-conn]
                                       ;; if schema is nil, update to 1 and reparse all block/string's for links
@@ -406,7 +429,67 @@
                                       :halt?       true}]}}))
 
 
-  ;;; Effects
+  (reg-event-fx
+    :toggle-max-min-win
+    (fn [_ [_ toggle-min?]]
+      {:invoke-win! {:channel (:toggle-max-or-min-win-channel ipcMainChannels)
+                     :arg (clj->js toggle-min?)}}))
+
+  (reg-event-fx
+    :bind-win-listeners
+    (fn [_ _]
+      {:bind-win-listeners! {}}))
+
+  (reg-event-fx
+    :exit-fullscreen-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:exit-fullscreen-win-channel ipcMainChannels)}}))
+
+  (reg-event-fx
+    :close-win
+    (fn [_ _]
+      {:invoke-win! {:channel (:close-win-channel ipcMainChannels)}}))
+
+  (reg-event-db
+    :toggle-win-maximized
+    (fn [db [_ maximized?]]
+      (assoc db :win-maximized? maximized?)))
+
+  (reg-event-db
+    :toggle-win-fullscreen
+    (fn [db [_ fullscreen?]]
+      (assoc db :win-fullscreen? fullscreen?)))
+
+  (reg-event-db
+    :toggle-win-focused
+    (fn [db [_ focused?]]
+      (assoc db :win-focused? focused?)))
+
+
+  ;; Zoom
+
+  (reg-event-db
+    :zoom/in
+    (fn [db _]
+      (update db :zoom-level #(min (inc %) zoom-level-max))))
+
+  (reg-event-db
+    :zoom/out
+    (fn [db _]
+      (update db :zoom-level #(max (dec %) zoom-level-min))))
+
+  (reg-event-db
+    :zoom/set
+    (fn [db [_ level]]
+      (assoc db :zoom-level level)))
+
+  (reg-event-db
+    :zoom/reset
+    (fn [db _]
+      (assoc db :zoom-level 0)))
+
+
+  ;; Effects
 
   (defn os-username
     []
@@ -465,4 +548,29 @@
   (reg-fx
     :fs/write!
     (fn []
-      (debounce-write-db true))))
+      (debounce-write-db true)))
+
+  (reg-fx
+    :invoke-win!
+    (fn [{:keys [channel arg]} _]
+      (if arg
+        (.. ipcRenderer (invoke channel arg))
+        (.. ipcRenderer (invoke channel)))))
+
+  (reg-fx
+    :close-win!
+    (fn []
+      (let [window (.. electron -BrowserWindow getFocusedWindow)]
+        (.close window))))
+
+  (reg-fx
+    :bind-win-listeners!
+    (fn []
+      (let [active-win (.getCurrentWindow remote)]
+        (doto ^js/BrowserWindow active-win
+          (.on "maximize" #(dispatch-sync [:toggle-win-maximized true]))
+          (.on "unmaximize" #(dispatch-sync [:toggle-win-maximized false]))
+          (.on "blur" #(dispatch-sync [:toggle-win-focused false]))
+          (.on "focus" #(dispatch-sync [:toggle-win-focused true]))
+          (.on "enter-full-screen" #(dispatch-sync [:toggle-win-fullscreen true]))
+          (.on "leave-full-screen" #(dispatch-sync [:toggle-win-fullscreen false])))))))

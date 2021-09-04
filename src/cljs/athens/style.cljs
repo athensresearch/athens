@@ -3,12 +3,15 @@
     [athens.config :as config]
     [athens.util :as util]
     [garden.color :refer [opacify hex->hsl]]
-    [stylefy.core :as stylefy]))
+    [re-frame.core :refer [reg-sub subscribe]]
+    [stylefy.core :as stylefy]
+    [stylefy.reagent :as stylefy-reagent]))
 
 
 (def THEME-DARK
   {:link-color          "#2399E7"
    :highlight-color     "#FBBE63"
+   :text-highlight-color "#FBBE63"
    :warning-color       "#DE3C21"
    :confirmation-color  "#189E36"
    :header-text-color   "#BABABA"
@@ -19,8 +22,6 @@
    :background-color    "#1A1A1A"
    :background-plus-1   "#222"
    :background-plus-2   "#333"
-
-   :shadow-color  "rgba(0,0,0,0.16)"
 
    :graph-control-bg    "#272727"
    :graph-control-color "white"
@@ -34,19 +35,17 @@
 (def THEME-LIGHT
   {:link-color          "#0075E1"
    :highlight-color     "#F9A132"
+   :text-highlight-color "#ffdb8a"
    :warning-color       "#D20000"
    :confirmation-color  "#009E23"
    :header-text-color   "#322F38"
    :body-text-color     "#433F38"
    :border-color        "hsla(32, 81%, 10%, 0.08)"
-   :background-plus-2   "#FFFFFF"
-   :background-plus-1   "#FFFFFF"
-   :background-color    "#FFFFFF"
+   :background-plus-2   "#fff"
+   :background-plus-1   "#fbfbfb"
+   :background-color    "#F6F6F6"
    :background-minus-1  "#FAF8F6"
    :background-minus-2  "#EFEDEB"
-
-   :shadow-color  "rgba(0,0,0,0.16)"
-
    :graph-control-bg    "#f9f9f9"
    :graph-control-color "black"
    :graph-node-normal   "#909090"
@@ -57,10 +56,10 @@
 
 
 (def DEPTH-SHADOWS
-  {:4  "0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0.3px 0.9px rgba(0, 0, 0, 0.1)"
-   :8  "0px 3.2px 7.2px rgba(0, 0, 0, 0.13), 0px 0.6px 1.8px rgba(0, 0, 0, 0.1)"
-   :16 "0px 6.4px 14.4px rgba(0, 0, 0, 0.13), 0px 1.2px 3.6px rgba(0, 0, 0, 0.1)"
-   :64 "0px 24px 60px rgba(0, 0, 0, 0.15), 0px 5px 12px rgba(0, 0, 0, 0.1)"})
+  {:4  "0 2px 4px rgba(0, 0, 0, 0.2)"
+   :8  "0 4px 8px rgba(0, 0, 0, 0.2)"
+   :16 "0 4px 16px rgba(0, 0, 0, 0.2)"
+   :64 "0 24px 60px rgba(0, 0, 0, 0.2)"})
 
 
 (def OPACITIES
@@ -106,7 +105,7 @@
   {:background-color (color :background-color)
    :font-family      "IBM Plex Sans, Sans-Serif"
    :color            (color :body-text-color)
-   :font-size        "16px"                                 ;; Sets the Rem unit to 16px
+   :font-size        "16px"                                 ; Sets the Rem unit to 16px
    :line-height      "1.5"
    ::stylefy/manual  [[:a {:color (color :link-color)}]
                       [:h1 :h2 :h3 :h4 :h5 :h6 {:margin      "0.2em 0"
@@ -129,6 +128,9 @@
                             :text-transform "uppercase"}]
                       [:.MuiSvgIcon-root {:font-size "1.5rem"}]
                       [:input {:font-family "inherit"}]
+                      [:mark {:background-color (color :text-highlight-color)
+                              :border-radius "0.25rem"
+                              :color "#000"}]
                       [:kbd {:text-transform "uppercase"
                              :font-family    "inherit"
                              :font-size      "0.85em"
@@ -173,16 +175,66 @@
        (apply hash-map)))
 
 
+(reg-sub
+  :zoom-level
+  (fn [db _]
+    (:zoom-level db)))
+
+
+;; Zoom levels mirror Google Chrome browser zoom levels.
+;; Levels determined by zooming Chrome in/out and recording the zoom percent.
+(def zoom-levels
+  {-5 50
+   -4 67
+   -3 75
+   -2 80
+   -1 90
+   0 100
+   1 110
+   2 125
+   3 133
+   4 140
+   5 150
+   6 175
+   7 200
+   8 250
+   9 300
+   10 400
+   11 500})
+
+
+(def zoom-level-max 11)
+(def zoom-level-min -5)
+
+
+(defn get-zoom-pct
+  [n]
+  (zoom-levels n))
+
+
+(defn zoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str (get-zoom-pct @zoom-level) "%")}}))
+
+
+(defn unzoom
+  []
+  (let [zoom-level (subscribe [:zoom-level])]
+    {:style {:font-size (str "calc(1 / " (get-zoom-pct @zoom-level) " * 100 * 100%)")}}))
+
+
 (defn init
   []
-  (stylefy/init)
+  (stylefy/init {:dom (stylefy-reagent/init)})
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
   (stylefy/class "CodeMirror" codemirror-styles)
   (let [permute-light (permute-color-opacities THEME-LIGHT)
         permute-dark  (permute-color-opacities THEME-DARK)]
     (stylefy/tag ":root" (merge permute-light
-                                {::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
+                                {:font-size "16px"
+                                 ::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
   (when config/debug?
     (util/hide-10x)))

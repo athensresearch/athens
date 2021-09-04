@@ -8,7 +8,7 @@
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
-;;; Styles
+;; Styles
 
 
 (def button-icons-style
@@ -39,12 +39,17 @@
    :align-items      "center"
    :color            (color :body-text-color)
    :background-color "transparent"
-   :transition       "all 0.075s ease"
+   :transition-property "filter, background, color, opacity"
+   :transition-duration "0.075s"
+   :transition-timing-function "ease"
    ::stylefy/manual [[:&:hover {:background (color :body-text-color :opacity-lower)}]
                      [:&:active
                       :&:hover:active
                       :&.is-active {:color (color :body-text-color)
-                                    :background (color :body-text-color :opacity-low)}]
+                                    :background (color :body-text-color :opacity-lower)}]
+                     [:&:active
+                      :&:hover:active
+                      :&:active.is-active {:background (color :body-text-color :opacity-low)}]
                      [:&:disabled :&:disabled:active {:color (color :body-text-color :opacity-low)
                                                       :background (color :body-text-color :opacity-lower)
                                                       :cursor "default"}]
@@ -68,7 +73,7 @@
                                                        :cursor "default"}]]]})
 
 
-;;; Components
+;; Components
 
 (stylefy/class "button" buttons-style)
 
