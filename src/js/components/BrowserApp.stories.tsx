@@ -62,7 +62,6 @@ const BrowserToolbar = () => {
 const Template = (args, context) => {
   const [os, setOs] = React.useState(args.os);
   const [route, setRoute] = React.useState(args.route);
-  const [isStandalone, setIsStandalone] = React.useState(args.isStandalone);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
@@ -77,8 +76,6 @@ const Template = (args, context) => {
     <Desktop>
       <BrowserWrapper {...args}
         className={classnames(
-          "os-" + os,
-          isStandalone ? 'is-electron' : 'is-web',
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',

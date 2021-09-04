@@ -92,7 +92,6 @@ const WindowWrapper = styled.div`
 const Template = (args, context) => {
   const [os, setOs] = React.useState(args.os);
   const [route, setRoute] = React.useState(args.route);
-  const [isElectron, setIsStandalone] = React.useState(args.isElectron);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
   const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
@@ -107,8 +106,6 @@ const Template = (args, context) => {
     <Desktop>
       <WindowWrapper {...args}
         className={classnames(
-          "os-" + os,
-          isElectron ? 'is-electron' : 'is-web',
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',
@@ -117,7 +114,7 @@ const Template = (args, context) => {
         <AppLayout>
           <AppToolbar
             os={os}
-            isElectron={isElectron}
+            isElectron={args.isElectron}
             route={route}
             isWinFullscreen={isWinFullscreen}
             isWinFocused={isWinFocused}
@@ -183,12 +180,6 @@ const Template = (args, context) => {
         </AppLayout>
       </WindowWrapper>
     </Desktop>)
-};
-
-export const Auto = Template.bind({});
-Auto.args = {
-  os: () => getOs(window),
-  isElectron: true,
 };
 
 export const MacOs = Template.bind({});
