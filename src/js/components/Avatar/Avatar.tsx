@@ -8,20 +8,21 @@ import { DOMRoot } from '../../config';
 const AvatarWrap = styled.svg`
   overflow: visible;
   cursor: default;
+  border-radius: 100%;
   height: var(--size, 1.5em);
   width: var(--size, 1.5em);
 `;
 
 const Name = styled.text`
   text-anchor: middle;
-  color: var(--text-color);
+  color: var(--avatar-text-color);
   transform: scale(0.8);
   transform-origin: center;
 `;
 
 const FullName = styled.span`
-  background: var(--background-color);
-  color: var(--text-color);
+  background: var(--tooltip-background-color);
+  color: var(--tooltip-text-color);
   display: inline-flex;
   width: max-content;
   line-height: 1;
@@ -74,9 +75,11 @@ export const Avatar = ({
   const [isShowingTooltip, setIsShowingTooltip] = React.useState(showTooltip === 'hover' ? false : showTooltip);
 
   const avatarColors = {
-    "--background-opacity": isMuted ? 0.2 : 1,
-    "--background-color": color,
-    "--text-color": isMuted ? color : readableColor(color)
+    "--avatar-background-opacity": isMuted ? 0.2 : 1,
+    "--avatar-background-color": color,
+    "--avatar-text-color": isMuted ? color : readableColor(color),
+    "--tooltip-text-color": readableColor(color),
+    "--tooltip-background-color": color,
   }
 
   let initials;
@@ -98,13 +101,13 @@ export const Avatar = ({
           cx="12"
           cy="12"
           r="12"
-          fill="var(--background-color)"
-          fillOpacity="var(--background-opacity)"
+          fill="var(--avatar-background-color)"
+          fillOpacity="var(--avatar-background-opacity)"
         />
         <Name
           x="12"
           y="18"
-          fill="var(--text-color)"
+          fill="var(--avatar-text-color"
           vectorEffect="non-scaling-stroke"
           stroke={readableColor(readableColor(color))}
           strokeWidth="2px"
@@ -138,13 +141,23 @@ export const Avatar = ({
 
 
 /* 
-* Wraps a horizontal series of avatars
+* Wraps a horizontal series of avatars and causes them to overlap each other.
 */
 interface AvatarStackProps {
+  /**
+   * The width of the mask added to overlapping Avatars.
+   */
   maskSize?: string,
+  /**
+   * The size of Avatars. Can be overridden by the same property on child Avatars.
+   */
   size?: string,
+  /**
+   * How much Avatars should overlap. 0.5 is 50% overlap.
+   */
   overlap?: number
 }
+
 Avatar.Stack = styled.div<AvatarStackProps>`
   --mask-size: ${props => props.maskSize || '3px'};
   --size: ${props => props.size || undefined};
@@ -152,10 +165,10 @@ Avatar.Stack = styled.div<AvatarStackProps>`
   display: inline-flex;
 
   ${AvatarWrap} {
-    &:not(:last-of-type) {
-      margin-inline-end: calc(var(--size, 1.5em) * (var(--stack-overlap) * -1));
+    &:not(:first-of-type) {
+      margin-inline-start: calc(var(--size, 1.5em) * (var(--stack-overlap) * -1));
       mask-image: radial-gradient(
-        calc(var(--size, 1.5em) + var(--mask-size)) calc((var(--size, 1.5em) * (2 / 3)) + var(--mask-size)) at calc(100% + (100% * (1 - var(--stack-overlap)))) 50%,
+        calc(var(--size, 1.5em) + var(--mask-size)) calc((var(--size, 1.5em) * (2 / 3)) + var(--mask-size)) at calc(-100% + (100% * (var(--stack-overlap)))) 50%,
         transparent 99%,
         #000 100%);
     }
