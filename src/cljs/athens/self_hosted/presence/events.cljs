@@ -34,13 +34,13 @@
     (update-in db [:presence :users username] assoc :block/uid block-uid)))
 
 
-(rf/reg-event-fx
-  :presence/update-username
-  (fn [{db :db} [_ {:keys [current-username new-username]}]]
-    {:db (-> db
-             (update-in [:presence :users] assoc new-username (get-in db [:presence :users current-username]))
-             (update-in [:presence :users new-username] assoc :username new-username)
-             (update-in [:presence :users] dissoc current-username))}))
+(rf/reg-event-db
+ :presence/update-username
+ (fn [db [_ {:keys [current-username new-username]}]]
+   (-> db
+       (update-in [:presence :users] assoc new-username (get-in db [:presence :users current-username]))
+       (update-in [:presence :users new-username] assoc :username new-username)
+       (update-in [:presence :users] dissoc current-username))))
 
 
 (rf/reg-event-fx
