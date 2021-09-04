@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import { DOMRoot } from '../../../config';
 import { Wifi } from '@material-ui/icons'
-import { Popper, ClickAwayListener } from '@material-ui/core'
+import { Popper, ClickAwayListener, Fade } from '@material-ui/core'
 
 import { Button } from '../../Button';
 import { Menu } from '../../Menu';
@@ -45,43 +45,48 @@ export const PresenceDetailsOverlay = ({
         open={isPresenceDetailsOpen}
         placement="bottom-end"
         container={DOMRoot}
-        anchorEl={presenceDetailsAnchor}>
-        <PresenceOverlay>
-          {hostAddress && <><Button onClick={handlePressHostAddress}><Wifi /> <span>{hostAddress}</span></Button>
-            <Menu.Separator /></>
-          }
-          {currentPageMembers.length > 0 && (
-            <>
-              <Heading>On this page</Heading>
+        anchorEl={presenceDetailsAnchor}
+        transition>
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={250}>
+            <PresenceOverlay>
+              {hostAddress && <><Button onClick={handlePressHostAddress}><Wifi /> <span>{hostAddress}</span></Button>
+                <Menu.Separator /></>
+              }
+              {currentPageMembers.length > 0 && (
+                <>
+                  <Heading>On this page</Heading>
+                  <Menu>
+                    {currentPageMembers.length > 0 && currentPageMembers.map(member =>
+                      <Button>
+                        <Avatar
+                          username={member.username}
+                          color={member.color}
+                          showTooltip={false}
+                        />
+                        <span>{member.username}</span>
+                      </Button>
+                    )}
+                  </Menu>
+                  <Menu.Separator />
+                </>
+              )}
               <Menu>
-                {currentPageMembers.length > 0 && currentPageMembers.map(member =>
+                {differentPageMembers.length > 0 && differentPageMembers.map(member =>
                   <Button>
                     <Avatar
                       username={member.username}
                       color={member.color}
                       showTooltip={false}
+                      isMuted={true}
                     />
                     <span>{member.username}</span>
                   </Button>
                 )}
               </Menu>
-              <Menu.Separator />
-            </>
-          )}
-          <Menu>
-            {differentPageMembers.length > 0 && differentPageMembers.map(member =>
-              <Button>
-                <Avatar
-                  username={member.username}
-                  color={member.color}
-                  showTooltip={false}
-                  isMuted={true}
-                />
-                <span>{member.username}</span>
-              </Button>
-            )}
-          </Menu>
-        </PresenceOverlay>
+            </PresenceOverlay>
+          </Fade>
+        )}
       </Popper>
     </ClickAwayListener>
   )
