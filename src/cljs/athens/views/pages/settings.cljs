@@ -226,7 +226,7 @@
     [:main
      [textinput/textinput {:type         "text"
                            :placeholder  "Username"
-                           :on-blur      #(update-fn (js-event->val %))
+                           :on-blur      #(update-fn username (js-event->val %))
                            :defaultValue username}]
      [:aside
       [:p "For now, a username is only needed if you are connected to a server."]]]]])
@@ -272,5 +272,7 @@
                                  (dispatch [:settings/update :backup-time x])
                                  (dispatch [:fs/update-write-db]))]
       [remote-backups-comp]
-      [remote-username-comp username #(dispatch [:settings/update :username %])]
+      [remote-username-comp username (fn [current-username new-username]
+                                       (dispatch [:presence/send-username current-username new-username])
+                                       (dispatch [:settings/update :username new-username]))]
       [reset-settings-comp #(dispatch [:settings/reset])]]]))

@@ -661,3 +661,25 @@
      :event/type    :presence/broadcast-editing
      :event/args    {:username  username
                      :block-uid block-uid}}))
+
+
+(defn build-presence-username-event
+  "Sent by client when username is updated"
+  [last-tx current-username new-username]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/username
+     :event/args    {:current-username current-username
+                     :new-username new-username}}))
+
+
+(defn build-presence-broadcast-username-event
+  "Sent by server when the updated username is broadcasted"
+  [last-tx current-username new-username]
+  (let [event-id (gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/broadcast-username
+     :event/args    {:current-username current-username
+                     :new-username new-username}}))

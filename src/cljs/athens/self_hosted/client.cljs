@@ -305,6 +305,12 @@
   (rf/dispatch [:presence/update-editing args]))
 
 
+(defn- presence-receive-username
+  [args]
+  (js/console.log "User username:" (pr-str args))
+  (rf/dispatch [:presence/update-username args]))
+
+
 (defn- forwarded-event-handler
   [args]
   (js/console.log "Forwarded event:" (pr-str args))
@@ -323,6 +329,7 @@
       #{:presence/all-online} (presence-all-online-handler args)
       #{:presence/offline} (presence-offline-handler args)
       #{:presence/broadcast-editing} (presence-receive-editing args)
+      #{:presence/broadcast-username} (presence-receive-username args)
       #{:datascript/create-page
         :datascript/rename-page
         :datascript/merge-page
