@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import { DOMRoot } from '../../../config';
 import { Wifi } from '@material-ui/icons'
-import { Popper, ClickAwayListener, Fade } from '@material-ui/core'
+import { Popper, Modal, Fade } from '@material-ui/core'
 
 import { Button } from '../../Button';
 import { Menu } from '../../Menu';
@@ -42,11 +42,16 @@ export const PresenceDetailsOverlay = ({
   presenceDetailsAnchor
 }: PresenceDetailsProps) => {
   return (
-    <ClickAwayListener onClickAway={() => setIsPresenceDetailsOpen(false)}>
+    <Modal
+      container={DOMRoot}
+      open={isPresenceDetailsOpen}
+      BackdropProps={{ invisible: true }}
+      onClose={() => setIsPresenceDetailsOpen(false)}
+    >
       <Popper
         open={isPresenceDetailsOpen}
         placement="bottom-end"
-        container={DOMRoot}
+        disablePortal={true}
         anchorEl={presenceDetailsAnchor}
         transition>
         {({ TransitionProps }) => (
@@ -92,6 +97,6 @@ export const PresenceDetailsOverlay = ({
           </Fade>
         )}
       </Popper>
-    </ClickAwayListener>
+    </Modal>
   )
 }
