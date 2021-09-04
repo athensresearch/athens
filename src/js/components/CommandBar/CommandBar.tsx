@@ -176,6 +176,9 @@ export const CommandBar = ({
           type="search"
           id="athena-input"
           autoFocus={autoFocus}
+          autocomplete="off"
+          suggestions="off"
+          spellcheck={false}
           required={true}
           placeholder="Find or Create Page"
           onChange={(e) => handleQueryChange(e.target.value)}
