@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Block } from './Block';
 import { BADGE, Storybook } from '../../storybook';
+import { blocks } from './mockData';
 
 export default {
   title: 'Components/Block',
@@ -13,23 +14,6 @@ export default {
   }
 };
 
-const data = {
-  blockContent: [
-    {
-      raw: "**Lorem** ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-      rendered: () => <><strong>Lorem</strong> ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</>
-    },
-    {
-      raw: "**Donec** id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam.",
-      rendered: () => <><strong>Donec</strong> id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam.</>
-    },
-    {
-      raw: "**Consectetur** adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-      rendered: () => <><strong>Consectetur</strong> adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</>
-    },
-  ]
-};
-
 const toggleBlockOpen = (blockId, setBlockState) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
 
 // Stories
@@ -39,8 +23,8 @@ const Template = (args) => <Block {...args} />;
 export const Basic = Template.bind({});
 Basic.args = {
   uid: "123",
-  rawContent: data.blockContent[0].raw,
-  renderedContent: data.blockContent[0].rendered(),
+  rawContent: blocks[0].raw,
+  renderedContent: blocks[0].rendered(),
   isOpen: true,
   refsCount: 12
 };
@@ -49,28 +33,28 @@ export const Editing = Template.bind({});
 Editing.args = {
   isEditing: true,
   isOpen: true,
-  rawContent: data.blockContent[0].raw,
-  renderedContent: data.blockContent[0].rendered(),
+  rawContent: blocks[0].raw,
+  renderedContent: blocks[0].rendered(),
 };
 
 export const Series = () => {
   const [blockState, setBlockState] = React.useState({
     b1: {
       isOpen: true,
-      rawContent: data.blockContent[0].raw,
-      renderedContent: data.blockContent[0].rendered(),
+      rawContent: blocks[0].raw,
+      renderedContent: blocks[0].rendered(),
       presentUser: null,
     },
     b2: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
       presentUser: null,
     },
     b3: {
       isOpen: true,
-      rawContent: data.blockContent[2].raw,
-      renderedContent: data.blockContent[2].rendered(),
+      rawContent: blocks[2].raw,
+      renderedContent: blocks[2].rendered(),
       presentUser: null,
     },
   });
@@ -111,8 +95,8 @@ export const References = () => {
       isSelected={false}
       isOpen={true}
       refsCount={12}
-      rawContent={data.blockContent[0].raw}
-      renderedContent={data.blockContent[0].rendered()}
+      rawContent={blocks[0].raw}
+      renderedContent={blocks[0].rendered()}
     >
     </Block>
   )
@@ -124,8 +108,8 @@ export const Selected = () => {
         uid="1"
         isSelected={true}
         isOpen={true}
-        rawContent={data.blockContent[0].raw}
-        renderedContent={data.blockContent[0].rendered()}
+      rawContent={blocks[0].raw}
+      renderedContent={blocks[0].rendered()}
       >
     </Block>
   )
@@ -138,29 +122,29 @@ export const MultipleSelected = () => {
         uid="123"
         isSelected={true}
         isOpen={true}
-        rawContent={data.blockContent[0].raw}
-        renderedContent={data.blockContent[0].rendered()}
+        rawContent={blocks[0].raw}
+        renderedContent={blocks[0].rendered()}
       />
       <Block
         uid="123"
         isSelected={true}
         isOpen={true}
-        rawContent={data.blockContent[1].raw}
-        renderedContent={data.blockContent[1].rendered()}
+        rawContent={blocks[1].raw}
+        renderedContent={blocks[1].rendered()}
       >
         <Block
           uid="123"
           isSelected={true}
           isOpen={true}
-          rawContent={data.blockContent[2].raw}
-          renderedContent={data.blockContent[2].rendered()}
+          rawContent={blocks[2].raw}
+          renderedContent={blocks[2].rendered()}
         >
           <Block
             uid="123"
             isSelected={true}
             isOpen={true}
-            rawContent={data.blockContent[0].raw}
-            renderedContent={data.blockContent[0].rendered()}
+            rawContent={blocks[0].raw}
+            renderedContent={blocks[0].rendered()}
           >
           </Block>
         </Block>
@@ -173,20 +157,20 @@ export const Tree = () => {
   const [blockState, setBlockState] = React.useState({
     b1: {
       isOpen: true,
-      rawContent: data.blockContent[0].raw,
-      renderedContent: data.blockContent[0].rendered(),
+      rawContent: blocks[0].raw,
+      renderedContent: blocks[0].rendered(),
       presentUser: null,
     },
     b2: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
       presentUser: null,
     },
     b3: {
       isOpen: true,
-      rawContent: data.blockContent[2].raw,
-      renderedContent: data.blockContent[2].rendered(),
+      rawContent: blocks[2].raw,
+      renderedContent: blocks[2].rendered(),
       presentUser: null,
     },
   });
@@ -225,33 +209,33 @@ export const Welcome = () => {
   const [blockState, setBlockState] = React.useState({
     b1: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b2: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b3: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b4: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b5: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b6: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
   })
 
@@ -307,34 +291,34 @@ export const WithAvatars = ({ ...args }) => {
   const [blockState, setBlockState] = React.useState({
     b1: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b2: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b3: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
       presentUser: null,
     },
     b4: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b5: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
     },
     b6: {
       isOpen: true,
-      rawContent: data.blockContent[1].raw,
-      renderedContent: data.blockContent[1].rendered(),
+      rawContent: blocks[1].raw,
+      renderedContent: blocks[1].rendered(),
       presentUser: null,
     },
   })
