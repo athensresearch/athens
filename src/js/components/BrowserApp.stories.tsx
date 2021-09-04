@@ -6,10 +6,10 @@ import { getOs } from '../utils/getOs';
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
+import * as mockAppToolbarData from './AppToolbar/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
 import { WelcomePage } from './Page/Page.stories';
-import { Block } from './Block';
 
 export default {
   title: 'App/Browser',
@@ -53,6 +53,7 @@ const BrowserWrapper = styled.div`
 const BrowserToolbar = () => {
   return (<>
     <div style={{ display: 'flex', border: "2px solid red" }}>
+      <span>Browser chrome</span>
       <input readOnly={true} defaultValue="https://athensresearch.org/app/#bjs350" />
     </div>
   </>)
@@ -83,8 +84,8 @@ const Template = (args, context) => {
           isWinFullscreen && 'is-win-fullscreen',
         )}
       >
-        <BrowserToolbar />
         <AppLayout>
+          <BrowserToolbar />
           <AppToolbar
             os={os}
             isElectron={false}
@@ -98,6 +99,9 @@ const Template = (args, context) => {
             isMergeDialogOpen={isMergeDialogOpen}
             isDatabaseDialogOpen={isDatabaseDialogOpen}
             isThemeDark={isThemeDark}
+            hostAddress={mockAppToolbarData.hostAddress}
+            currentPageMembers={mockAppToolbarData.currentPageMembers}
+            differentPageMembers={mockAppToolbarData.differentPageMembers}
             handlePressHistoryBack={() => null}
             handlePressHistoryForward={() => null}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}

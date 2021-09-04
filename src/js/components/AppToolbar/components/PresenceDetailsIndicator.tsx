@@ -35,6 +35,7 @@ export const PresenceDetailsIndicator = ({
               <Avatar
                 username={member.username}
                 color={member.color}
+                personId={member.personId}
                 // isMuted={currentPageMembers.indexOf(member) ? true : false}
                 showTooltip={false}
               />
