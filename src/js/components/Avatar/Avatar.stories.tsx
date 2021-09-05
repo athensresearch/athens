@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar } from './Avatar';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
-import { WithAvatars } from '../Block/Block.stories';
+import { WithPresence } from '../Block/Block.stories';
 
 const Wrapper = styled(Storybook.Wrapper)`
   display: flex;
@@ -105,4 +105,4 @@ export const StackWide = () => (
   </Avatar.Stack>
 )
 
-export const OnBlocks = WithAvatars;
+export const OnBlocks = WithPresence;

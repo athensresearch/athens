@@ -3,7 +3,7 @@ import React from 'react';
 import { Block } from './Block';
 import { BADGE, Storybook } from '../../storybook';
 import { Checklist } from '../Checkbox/Checkbox.stories';
-import { blocks, welcome } from './mockData';
+import { block, blockTree, blockTreeSeries, blockTreeWithAvatars } from './mockData';
 
 export default {
   title: 'Components/Block',
@@ -15,212 +15,79 @@ export default {
   }
 };
 
-const toggleBlockOpen = (blockId, setBlockState) => setBlockState(prevState => ({ ...prevState, [blockId]: { ...prevState[blockId], isOpen: !prevState[blockId].isOpen } }))
-
-// Stories
+const toggleBlockOpen2 = (blockUid, setBlockState) => {
+  setBlockState(prevState => {
+    console.log(prevState);
+    return ({
+      ...prevState,
+      blocks: {
+        ...prevState.blocks,
+        [blockUid]: {
+          ...prevState.blocks[blockUid],
+          isOpen: !prevState.blocks[blockUid].isOpen
+        }
+      }
+    })
+  })
+}
 
 const Template = (args) => <Block {...args} />;
 
-
 export const Basic = Template.bind({});
 Basic.args = {
-  ...blocks[0],
-  refsCount: 12
+  ...block,
 };
 
 export const Editing = Template.bind({});
 Editing.args = {
-  ...blocks[0],
+  ...block,
   isEditing: true,
 };
 
+const recurseBlocks = (tree: any[], content: Object, setBlockState) => {
+  return tree.map(block => {
+    return (
+      <Block
+        {...content[block.uid]}
+        handlePressToggle={() => toggleBlockOpen2(block.uid, setBlockState)}
+      >
+        {block.children && recurseBlocks(block.children, content, setBlockState)}
+      </Block>
+    )
+  })
+};
+
+export const BlockTree = () => {
+  const [blockState, setBlockState] = React.useState(blockTree);
+  return recurseBlocks(blockState.tree, blockState.blocks, setBlockState)
+}
+
 export const Series = () => {
-  const [blockState, setBlockState] = React.useState({
-    b0: {
-      ...blocks[0],
-      handlePressToggle: () => toggleBlockOpen('b0', setBlockState),
-      isOpen: true,
-    },
-    b1: {
-      ...blocks[1],
-      handlePressToggle: () => toggleBlockOpen('b1', setBlockState),
-      isOpen: true,
-    },
-    b2: {
-      ...blocks[2],
-      handlePressToggle: () => toggleBlockOpen('b2', setBlockState),
-      isOpen: true,
-    },
-  });
+  const [blockState, setBlockState] = React.useState(blockTreeSeries);
+  return recurseBlocks(blockState.tree, blockState.blocks, setBlockState)
+}
 
-  return (
-    <>
-      <Block {...blockState.b0} />
-      <Block {...blockState.b1} />
-      <Block {...blockState.b2} />
-    </>
-  )
+export const WithPresence = () => {
+  const [blockState, setBlockState] = React.useState(blockTreeWithAvatars);
+  return recurseBlocks(blockState.tree, blockState.blocks, setBlockState)
+}
+
+export const References = Template.bind({});
+References.args = {
+  ...block,
+  refsCount: 12
 };
 
-export const References = () => {
-  return (
-    <Block {...blocks[0]} refsCount={12} />
-  )
-};
-
-export const Selected = () => {
-  return (
-    <Block {...blocks[0]} isSelected={true} />
-  )
+export const Selected = Template.bind({});
+Selected.args = {
+  ...block,
+  isSelected: true,
 };
 
 export const MultipleSelected = () => {
-  return (
-    <>
-      <Block
-        {...blocks[0]}
-        isSelected={true}
-      />
-      <Block
-        {...blocks[1]}
-        isSelected={true}
-      >
-        <Block
-          {...blocks[2]}
-          isSelected={true}
-        >
-          <Block
-            {...blocks[3]}
-            isSelected={true}
-          >
-          </Block>
-        </Block>
-      </Block>
-    </>
-  )
-};
-
-export const Tree = () => {
-  const [blockState, setBlockState] = React.useState({
-    b0: {
-      ...blocks[0],
-      handlePressToggle: () => toggleBlockOpen('b0', setBlockState),
-      isOpen: true,
-    },
-    b1: {
-      ...blocks[1],
-      handlePressToggle: () => toggleBlockOpen('b1', setBlockState),
-      isOpen: true,
-    },
-    b2: {
-      ...blocks[2],
-      handlePressToggle: () => toggleBlockOpen('b2', setBlockState),
-      isOpen: true,
-    },
-  });
-
-  return (
-    <>
-      <Block {...blockState.b0}>
-        <Block {...blockState.b1}>
-          <Block {...blockState.b2} />
-        </Block>
-      </Block>
-    </>
-  )
-};
-
-export const Welcome = () => {
-  const [blockState, setBlockState] = React.useState({
-    b0: {
-      ...welcome[0],
-      handlePressToggle: () => toggleBlockOpen('b0', setBlockState),
-    },
-    b1: {
-      ...welcome[1],
-      handlePressToggle: () => toggleBlockOpen('b1', setBlockState),
-      isOpen: true,
-    },
-    b2: {
-      ...welcome[2],
-      handlePressToggle: () => toggleBlockOpen('b2', setBlockState),
-    },
-    b3: {
-      ...welcome[3],
-      handlePressToggle: () => toggleBlockOpen('b3', setBlockState),
-    },
-    b4: {
-      ...welcome[4],
-      handlePressToggle: () => toggleBlockOpen('b4', setBlockState),
-    },
-    b5: {
-      ...welcome[5],
-      handlePressToggle: () => toggleBlockOpen('b5', setBlockState),
-    },
-  });
-
-  return (
-    <>
-      <Block {...blockState.b0} />
-      <Block {...blockState.b1} />
-      <Block {...blockState.b2} />
-      <Block {...blockState.b3} />
-      <Block {...blockState.b4} />
-      <Block {...blockState.b4} />
-    </>
-  )
-};
-
-export const WithAvatars = ({ ...args }) => {
-  const [blockState, setBlockState] = React.useState({
-    b0: {
-      ...welcome[0],
-      handlePressToggle: () => toggleBlockOpen('b0', setBlockState),
-      presentUser: { personId: '0', username: "Jeff", color: "#DDA74C" }
-    },
-    b1: {
-      ...welcome[1],
-      handlePressToggle: () => toggleBlockOpen('b1', setBlockState),
-      presentUser: { personId: '1', username: "Sid", color: "#C45042" },
-      refsCount: 12
-    },
-    b2: {
-      ...welcome[2],
-      handlePressToggle: () => toggleBlockOpen('b2', setBlockState),
-      presentUser: { personId: '2', username: "Matei", color: "#C45042" },
-    },
-    b3: {
-      ...welcome[3],
-      handlePressToggle: () => toggleBlockOpen('b3', setBlockState),
-      presentUser: { personId: '3', username: "Alex", color: "#611A58" }
-    },
-    b4: {
-      ...welcome[4],
-      handlePressToggle: () => toggleBlockOpen('b4', setBlockState),
-      presentUser: { personId: '4', username: "Felipe Silva", color: "#21A469" }
-    },
-    b5: {
-      ...welcome[5],
-      handlePressToggle: () => toggleBlockOpen('b5', setBlockState),
-    },
-  });
-
-
-  return (
-    <>
-      <Block {...blockState.b0}>
-        <Block {...blockState.b1}>
-          <Block {...blockState.b2} refsCount={10} />
-          <Block {...blockState.b3} refsCount={10} >
-            <Block {...blockState.b4} isLocked={true} >
-              <Block {...blockState.b5} />
-            </Block>
-          </Block>
-        </Block>
-      </Block>
-    </>
-  )
-};
+  const [blockState, setBlockState] = React.useState(blockTreeSeries);
+  return recurseBlocks(blockState.tree, blockState.blocks, setBlockState)
+}
 
 export const ChecklistBlock = () => {
   return <Block

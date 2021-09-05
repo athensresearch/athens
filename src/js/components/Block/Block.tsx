@@ -32,7 +32,7 @@ export interface BlockProps {
   /**
    * Whether this block's children should be shown
    */
-  isOpen?: boolean;
+  isOpen: boolean;
   /**
    * Whether this block is locked
    */
