@@ -7,6 +7,7 @@ import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
 import * as mockAppToolbarData from './AppToolbar/mockData';
+import { mockDatabases } from './AppToolbar/components/DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
 import { NodePage } from './Page/Page.stories';
@@ -99,6 +100,9 @@ const Template = (args, context) => {
             hostAddress={mockAppToolbarData.hostAddress}
             currentPageMembers={mockAppToolbarData.currentPageMembers}
             differentPageMembers={mockAppToolbarData.differentPageMembers}
+            activeDatabase={mockDatabases[0]}
+            inactiveDatabases={mockDatabases.slice(1, 4)}
+            synced={true}
             handlePressHistoryBack={() => null}
             handlePressHistoryForward={() => null}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}

@@ -73,7 +73,7 @@ export const isMuted = () => (
   </>
 )
 
-export const StackNarrow = () => (
+export const Stack = () => (
   <Avatar.Stack>
     <Avatar personId="1" username="Jeff Tang" color="#DDA74C" tooltipPlacement="bottom" size="3em" />
     <Avatar personId="1" username="Jeff Tang" color="#C45042" tooltipPlacement="bottom" size="3em" />
@@ -84,8 +84,8 @@ export const StackNarrow = () => (
   </Avatar.Stack>
 )
 
-export const Stack = () => (
-  <Avatar.Stack>
+export const StackNarrow = () => (
+  <Avatar.Stack overlap={0.25}>
     <Avatar personId="1" username="Jeff Tang" color="#DDA74C" tooltipPlacement="bottom" size="3em" />
     <Avatar personId="1" username="Jeff Tang" color="#C45042" tooltipPlacement="bottom" size="3em" />
     <Avatar personId="1" username="Jeff Tang" color="#611A58" tooltipPlacement="bottom" size="3em" />

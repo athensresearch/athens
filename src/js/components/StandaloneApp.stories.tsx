@@ -1,16 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { classnames } from '../utils/classnames';
-import { getOs } from '../utils/getOs';
 
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
 import * as mockAppToolbarData from './AppToolbar/mockData';
+import { mockDatabases } from './AppToolbar/components/DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
 import { NodePage } from './Page/Page.stories';
-import { Block } from './Block';
 
 export default {
   title: 'App/Standalone',
@@ -130,6 +129,9 @@ const Template = (args, context) => {
             hostAddress={mockAppToolbarData.hostAddress}
             currentPageMembers={mockAppToolbarData.currentPageMembers}
             differentPageMembers={mockAppToolbarData.differentPageMembers}
+            activeDatabase={mockDatabases[0]}
+            inactiveDatabases={mockDatabases.slice(1, 4)}
+            synced={true}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
             handlePressDailyNotes={() => setRoute('/daily-notes')}
             handlePressAllPages={() => setRoute('/all-pages')}

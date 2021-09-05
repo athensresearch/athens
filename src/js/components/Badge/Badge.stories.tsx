@@ -21,16 +21,23 @@ const Wrapper = styled.div`
   font-size: 2em;
 `;
 
+const MockObject = styled.div`
+  border-radius: 0.25rem;
+  background: var(--body-text-color---opacity-low);
+  width: 2em;
+  height: 2em;
+`;
+
 const Template = (args) => <Badge {...args} />;
 
 export const Default = Template.bind({});
 Default.args = {
-  children: <div style={{ border: "1px solid red", width: "2em", height: "2em" }} />,
+  children: <MockObject />,
 };
 
 export const Content = Template.bind({});
 Content.args = {
-  children: <div style={{ border: "1px solid red", width: "2em", height: "2em" }} />,
+  children: <MockObject />,
   badgeContent: '7'
 };
 

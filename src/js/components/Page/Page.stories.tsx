@@ -17,12 +17,14 @@ export default {
 
 const Template = (args) => <Page {...args} />;
 
-export const NodePage = Template.bind({});
-NodePage.args = {
-  isDailyNote: false,
-  title: 'Node Page',
-  uid: '123'
-};
+export const NodePage = () => <Page
+  handlePressAddShortcut={() => null}
+  handlePressDelete={() => null}
+  handlePressRemoveShortcut={() => null}
+  handlePressShowLocalGraph={() => null}
+  title="Node Page"
+  isDailyNote={false}
+  uid="123" />;
 
 export const BlockPage = Template.bind({});
 BlockPage.args = {

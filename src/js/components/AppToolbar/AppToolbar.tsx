@@ -28,7 +28,7 @@ const AppToolbarWrapper = styled.header`
   grid-auto-flow: column;
   -webkit-app-region: drag;
 
-  &.is-fullscreen {
+  .is-fullscreen & {
     height: 44px;
   }
 
@@ -46,12 +46,12 @@ const AppToolbarWrapper = styled.header`
     -webkit-app-region: no-drag;
   }
 
-  &.os-windows {
+  .os-windows & {
     background: var(--background-minus-1);
     padding-left: 10px;
   }
 
-  &.os-mac {
+  .os-mac & {
     background: var(--background-color---opacity-high);
     color: var(--body-text-color---opacity-med);
     padding-left: 88px;
@@ -65,7 +65,7 @@ const AppToolbarWrapper = styled.header`
     left: 0;
     right: 0;
 
-    &.is-fullscreen {
+    .is-fullscreen & {
       padding-left: 22px;
     }
   }
@@ -208,13 +208,7 @@ export const AppToolbar = ({
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
 
-  return (<AppToolbarWrapper
-    className={[
-      os && "os-" + os,
-      isElectron ? "is-electron" : '',
-      isWinFullscreen ? "is-fullscreen" : '',
-      "app-toolbar"].join(" ")}
-  >
+  return (<AppToolbarWrapper>
     <AppToolbar.MainControls>
       <DatabaseMenu
         activeDatabase={activeDatabase}
@@ -303,6 +297,7 @@ AppToolbar.MainControls = styled.div`
   display: grid;
   grid-auto-flow: column;
   grid-gap: 0.25rem;
+  align-items: center;
 `;
 
 AppToolbar.SecondaryControls = styled(AppToolbar.MainControls)`
