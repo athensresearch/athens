@@ -8,10 +8,12 @@ const EmbedWrap = styled.div`
   width: 100%;
   height: max-content;
   background: var(--background-minus-2);
+  padding-block: 1px;
 
   &.video-16-9 {
     padding-bottom: calc((9 / 16) * 100%);
     height: 0;
+    background: #000;
     position: relative;
 
     iframe {
@@ -44,6 +46,7 @@ export const Embed = ({
 
   return <EmbedWrap
     className={classnames(
+      type && "type-" + type,
       isVideo && "video-16-9"
     )}>
 

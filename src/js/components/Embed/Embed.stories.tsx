@@ -23,7 +23,21 @@ export const InABlock = () => <>
     rawContent="![cat](https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60)"
     renderedContent={<Embed type="image" url="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" />}
   />
-  <Block {...block}
+  <Block {...block} />
+</>;
+
+export const InABlock2 = () => <>
+  <Block {...block} />
+  <Block
+    {...block}
+    rawContent="![cat](https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60)"
+    renderedContent={<Embed type="youtube" url="https://www.youtube.com/embed/dQw4w9WgXcQ" />}
   />
+  <Block
+    {...block}
+    rawContent="![cat](https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60)"
+    renderedContent={<Embed type="image" url="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" />}
+  />
+  <Block {...block} />
 </>;
 
