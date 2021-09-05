@@ -195,8 +195,8 @@ export const Block = ({
       <>
       <Popper
           open={true}
-        anchorEl={avatarAnchorEl}
-        placement="top-start"
+          anchorEl={avatarAnchorEl}
+          placement="top-start"
           container={DOMRoot}
           modifiers={{
             offset: { offset: "2, -32" },
@@ -204,7 +204,7 @@ export const Block = ({
             preventOverflow: {
               enabled: false,
             }
-        }}
+          }}
       >
         <Avatar
           {...presentUser}
