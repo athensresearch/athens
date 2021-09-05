@@ -65,6 +65,8 @@
     "@js-joda/timezone": "2.2.0",
     "@material-ui/core": "^4.10.1",
     "@material-ui/icons": "^4.9.1",
+    "@react-aria/checkbox": "^3.2.3",
+    "@react-stately/toggle": "^3.2.3",
     "@sentry/integrations": "^6.1.0",
     "@sentry/react": "^5.27.2",
     "@sentry/tracing": "^5.27.2",
