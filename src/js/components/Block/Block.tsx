@@ -198,8 +198,12 @@ export const Block = ({
         anchorEl={avatarAnchorEl}
         placement="top-start"
           container={DOMRoot}
-        popperOptions={{
-          modifiers: { offset: { enabled: true, offset: '-10, -56' } },
+          modifiers={{
+            offset: { offset: "2, -32" },
+            flip: { enabled: false },
+            preventOverflow: {
+              enabled: false,
+            }
         }}
       >
         <Avatar
