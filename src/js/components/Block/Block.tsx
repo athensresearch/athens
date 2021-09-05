@@ -32,7 +32,7 @@ export interface BlockProps {
   /**
    * Whether this block's children should be shown
    */
-  isOpen: boolean;
+  isOpen?: boolean;
   /**
    * Whether this block is locked
    */
@@ -114,7 +114,7 @@ export const Block = ({
   renderedContent,
   presentUser,
   showPresentUserAvatar = true,
-  isOpen,
+  isOpen = true,
   isSelected,
   isEditable,
   isEditing,
