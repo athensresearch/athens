@@ -1,5 +1,9 @@
-import { Checkbox } from './Checkbox';
+import React from 'react';
 import { BADGE, Storybook } from '../../storybook';
+
+import { Checkbox } from './Checkbox';
+
+import { Meter } from '../Meter';
 
 export default {
   title: 'components/Checkbox',
@@ -20,11 +24,25 @@ export const Disabled = () => <Checkbox isDisabled onChange={console.log}>Build 
 export const Circle = () => <Checkbox styleCircle onChange={console.log}>Build Athens</Checkbox>;
 export const StrikethroughWhenChecked = () => <Checkbox shouldStrikethroughWhenChecked onChange={console.log}>Build Athens</Checkbox>;
 
-export const Checklist = () => (
-  <ul style={{ listStyle: 'none' }}>
-    <li><Checkbox styleCircle shouldStrikethroughWhenChecked>Read How To Take Good Notes</Checkbox></li>
-    <li><Checkbox styleCircle shouldStrikethroughWhenChecked>Read What's Best Next</Checkbox></li>
-    <li><Checkbox styleCircle shouldStrikethroughWhenChecked>Build Athens</Checkbox></li>
-    <li><Checkbox styleCircle shouldStrikethroughWhenChecked>Take a nap</Checkbox></li>
-  </ul>
-);
+export const Checklist = () => {
+  const [checked1, setChecked1] = React.useState(false);
+  const [checked2, setChecked2] = React.useState(false);
+  const [checked3, setChecked3] = React.useState(false);
+  const [checked4, setChecked4] = React.useState(false);
+  const [numChecked, setNumChecked] = React.useState(0)
+
+  React.useEffect(() => {
+    setNumChecked([checked1, checked2, checked3, checked4].filter(Boolean).length);
+  }, [checked1, checked2, checked3, checked4])
+
+  return (<>
+    <Meter value={numChecked} maxValue={4} showValueLabel={false} label="Checklist" />
+    <ul style={{ listStyle: 'none', padding: 0 }}>
+      <li><Checkbox onChange={setChecked1} styleCircle shouldStrikethroughWhenChecked>Read How To Take Good Notes</Checkbox></li>
+      <li><Checkbox onChange={setChecked2} styleCircle shouldStrikethroughWhenChecked>Read What's Best Next</Checkbox></li>
+      <li><Checkbox onChange={setChecked3} styleCircle shouldStrikethroughWhenChecked>Build Athens</Checkbox></li>
+      <li><Checkbox onChange={setChecked4} styleCircle shouldStrikethroughWhenChecked>Take a nap</Checkbox></li>
+    </ul>
+  </>
+  )
+};
