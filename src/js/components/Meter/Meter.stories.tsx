@@ -12,4 +12,4 @@ export default {
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };
 
-export const Default = (args) => <Meter {...args} />;
+export const Default = (args) => (<Meter {...args} />);
