@@ -157,8 +157,8 @@ export const Block = ({
     <div
       className="block-body"
         ref={showPresentUserAvatar && setAvatarAnchorEl}
-      onMouseEnter={() => { handleMouseEnterBlock; setRenderEditableDom(true) }}
-      onMouseLeave={() => { handleMouseLeaveBlock; setRenderEditableDom(false) }}
+        onMouseEnter={() => { handleMouseEnterBlock; isEditable && setRenderEditableDom(true) }}
+        onMouseLeave={() => { handleMouseLeaveBlock; isEditable && setRenderEditableDom(false) }}
     >
         {children && !isLocked && <Toggle
         isOpen={isOpen}
