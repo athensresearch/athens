@@ -19,6 +19,9 @@ type PersonPresence = Person & {
   uid: UID;
 }
 
+/**
+ * A knowledge graph
+ */
 type Database = {
   id: string;
   name: string;
