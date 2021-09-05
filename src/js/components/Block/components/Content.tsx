@@ -136,49 +136,6 @@ const ContentWrap = styled.div`
     max-width: calc(100% - 0.25rem);
   }
 
-  input {
-    &[type="checkbox"] {
-      appearance: none;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      color: var(--link-color);
-      margin-inline-end: 0.25rem;
-      position: relative;
-      top: 0.13em;
-      width: 1rem;
-      height: 1rem;
-      transition: color 0.05s ease, transform 0.05s ease, box-shadow 0.05s ease;
-      transform: scale(1);
-      box-shadow: inset 0 0 0 1px;
-
-      &:after {
-        content: '';
-        position: absolute;
-        top: 45%;
-        left: 20%;
-        width: 30%;
-        height: 50%;
-        border-width: 0 2px 2px 0;
-        border-style: solid;
-        opacity: 0;
-        transform: rotate(45deg) translate(-40%, -50%);
-      }
-
-      &:checked {
-        background: var(--background-color);
-
-        &:after {
-          opacity: 1;
-          color: var(--background-color);
-        }
-      }
-
-      &:active {
-        transform: scale(0.9);
-      }
-    }
-  }
-
   h1, h2, h3, h4, h5, h6 {
     margin: 0;
     color: var(--body-text-color---opacity-higher);
