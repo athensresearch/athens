@@ -108,12 +108,6 @@ export interface BlockProps {
   handleDrop?: () => void;
 }
 
-const Test = ({ children }) => {
-  console.log('test appeared');
-
-  return children;
-}
-
 export const Block = ({
   children,
   rawContent,
@@ -129,15 +123,15 @@ export const Block = ({
   linkedRef,
   refsCount,
   uid,
-  handleContentChange = () => null,
-  handleMouseEnterBlock = () => null,
-  handleMouseLeaveBlock = () => null,
-  handlePressToggle = () => null,
-  handlePressAnchor = () => null,
-  handlePressContainer = () => null,
-  handleDragOver = () => null,
-  handleDragLeave = () => null,
-  handleDrop = () => null,
+  handleContentChange,
+  handleMouseEnterBlock,
+  handleMouseLeaveBlock,
+  handlePressToggle,
+  handlePressAnchor,
+  handlePressContainer,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
 }: BlockProps) => {
   const [showEditableDom, setRenderEditableDom] = React.useState(false);
   const [avatarAnchorEl, setAvatarAnchorEl] = React.useState(null);
@@ -184,8 +178,7 @@ export const Block = ({
         rawContent={rawContent}
         renderedContent={renderedContent}
         handleContentChange={handleContentChange}
-      />
-      {/* Presence el */}
+        />
       {(refsCount >= 1) && <Refs
         refsCount={refsCount}
       />}
