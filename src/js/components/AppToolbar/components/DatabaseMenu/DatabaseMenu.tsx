@@ -10,10 +10,10 @@ import { Overlay } from '../../../Overlay';
 import { Badge } from '../../../Badge';
 import { Menu } from '../../../Menu';
 
-import { DBIcon } from './components/DBIcon';
-import { DBMenuItem } from './components/DBMenuItem';
+import { DatabaseIcon } from './components/DatabaseIcon';
+import { DatabaseMenuItem } from './components/DatabaseMenuItem';
 
-const DBMenuOverlay = styled(Overlay)`
+const DatabaseMenuOverlay = styled(Overlay)`
   width: 16rem;
   max-height: 90vh;
   overflow-y: auto;
@@ -23,7 +23,7 @@ const DBMenuOverlay = styled(Overlay)`
   }
 `;
 
-const ActiveDb = styled.div`
+const ActiveDatabase = styled.div`
   display: flex;
   padding: 0.25rem 1rem 0.25rem 0.5rem;
   gap: 0.25rem;
@@ -83,39 +83,39 @@ const Path = styled.span`
   white-space: nowrap;
 `;
 
-interface DBMenuProps {
-  activeDb: Database
-  inactiveDbs: Database[]
+export interface DatabaseMenuProps {
+  activeDatabase: Database
+  inactiveDatabases: Database[]
   synced: boolean
-  handleChooseDb: (db: Database) => void
-  handlePressAddDb: () => void
-  handlePressRemoveDb: (db: Database) => void
-  handlePressImportDb: (db: Database) => void
-  handlePressMoveDb: (db: Database) => void
+  handleChooseDatabase: (database: Database) => void
+  handlePressAddDatabase: () => void
+  handlePressRemoveDatabase: (database: Database) => void
+  handlePressImportDatabase: (database: Database) => void
+  handlePressMoveDatabase: (database: Database) => void
 }
 
 /**
  * Menu for switching to and joining graphs.
  */
-export const DBMenu = ({
-  handlePressAddDb,
-  handleChooseDb,
-  handlePressImportDb,
-  handlePressRemoveDb,
-  handlePressMoveDb,
-  activeDb,
-  inactiveDbs,
+export const DatabaseMenu = ({
+  handlePressAddDatabase,
+  handleChooseDatabase,
+  handlePressImportDatabase,
+  handlePressRemoveDatabase,
+  handlePressMoveDatabase,
+  activeDatabase,
+  inactiveDatabases,
   synced
-}: DBMenuProps) => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(true);
+}: DatabaseMenuProps) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [menuAnchor, setMenuAnchor] = React.useState(null);
 
-  const handlePressDBMenu = (e) => {
+  const handlePressDatabaseMenu = (e) => {
     setMenuAnchor(e.currentTarget);
     setIsMenuOpen(true);
   };
 
-  const handleCloseDBMenu = () => {
+  const handleCloseDatabaseMenu = () => {
     setMenuAnchor(null);
     setIsMenuOpen(false);
   };
@@ -124,16 +124,16 @@ export const DBMenu = ({
     <>
       <Button
         isPressed={isMenuOpen}
-        onClick={handlePressDBMenu}
+        onClick={handlePressDatabaseMenu}
       >
         {synced ? (
-          <Badge style={{}}><DBIcon name={activeDb.name} /></Badge>
+          <Badge><DatabaseIcon name={activeDatabase.name} /></Badge>
         ) : (
-          <DBIcon name={activeDb.name} />
+          <DatabaseIcon name={activeDatabase.name} />
         )}
       </Button>
       <Modal
-        onClose={handleCloseDBMenu}
+        onClose={handleCloseDatabaseMenu}
         BackdropProps={{ invisible: true }}
         container={DOMRoot}
         open={isMenuOpen}
@@ -144,41 +144,41 @@ export const DBMenu = ({
           disablePortal={true}
           placement="bottom-start"
         >
-          <DBMenuOverlay className="animate-in">
+          <DatabaseMenuOverlay className="animate-in">
             <Menu>
-              <ActiveDb>
-                <DBIcon name={activeDb.name} />
+              <ActiveDatabase>
+                <DatabaseIcon name={activeDatabase.name} />
                 <main>
-                  <Name>{activeDb.name}</Name>
-                  <Path>{activeDb.id}</Path>
+                  <Name>{activeDatabase.name}</Name>
+                  <Path>{activeDatabase.id}</Path>
                   <div className="tools">
-                    {activeDb["is-remote"] ? (
+                    {activeDatabase["is-remote"] ? (
                       <>
-                        <Button onClick={(activeDb) => handlePressImportDb(activeDb)}>Import</Button>
-                        <Button onClick={(activeDb) => handlePressRemoveDb(activeDb)}>Remove</Button>
+                        <Button onClick={(activeDatabase) => handlePressImportDatabase(activeDatabase)}>Import</Button>
+                        <Button onClick={(activeDatabase) => handlePressRemoveDatabase(activeDatabase)}>Remove</Button>
                       </>
                     ) : (
                       <>
-                        <Button onClick={(activeDb) => handlePressMoveDb(activeDb)}>Import</Button>
-                        <Button onClick={(activeDb) => handlePressRemoveDb(activeDb)}>Remove</Button>
+                        <Button onClick={(activeDatabase) => handlePressMoveDatabase(activeDatabase)}>Import</Button>
+                        <Button onClick={(activeDatabase) => handlePressRemoveDatabase(activeDatabase)}>Remove</Button>
                       </>
                     )}
                   </div>
                 </main>
-              </ActiveDb>
-              {inactiveDbs.length > 0 && (
+              </ActiveDatabase>
+              {inactiveDatabases.length > 0 && (
                 <>
                   <Menu.Separator />
-                  {inactiveDbs.map(db => <DBMenuItem
-                    handleChooseDb={handleChooseDb}
-                    db={db}
-                    key={db.id} />)}
+                  {inactiveDatabases.map(database => <DatabaseMenuItem
+                    handleChooseDatabase={handleChooseDatabase}
+                    database={database}
+                    key={database.id} />)}
                 </>
               )}
               <Menu.Separator />
-              <Button onClick={handlePressAddDb}><AddCircle /><span>Add Database</span></Button>
+              <Button onClick={handlePressAddDatabase}><AddCircle /><span>Add Database</span></Button>
             </Menu>
-          </DBMenuOverlay>
+          </DatabaseMenuOverlay>
         </Popper>
       </Modal>
     </>

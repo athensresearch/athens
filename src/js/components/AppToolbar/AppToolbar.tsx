@@ -4,8 +4,7 @@ import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, Mer
 
 import { Button } from '../Button';
 
-import { DBMenu } from './components/DBMenu';
-import * as mockGraphData from './components/DBMenu/mockData';
+import { DatabaseMenu, DatabaseMenuProps } from './components/DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
 import { PresenceDetailsOverlay } from './components/PresenceDetailsOverlay';
 import { PresenceDetailsIndicator } from './components/PresenceDetailsIndicator';
@@ -72,7 +71,7 @@ const AppToolbarWrapper = styled.header`
   }
 `;
 
-export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps {
   /**
   * The application's current route
   */
@@ -157,11 +156,11 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   handlePressHostAddress?(): void;
   handlePressMember?(member): void;
   // DB Menu
-  handleChooseDb: (db: Database) => void
-  handlePressAddDb: () => void
-  handlePressRemoveDb: (db: Database) => void
-  handlePressImportDb: (db: Database) => void
-  handlePressMoveDb: (db: Database) => void
+  handleChooseDatabase: (db: Database) => void
+  handlePressAddDatabase: () => void
+  handlePressRemoveDatabase: (db: Database) => void
+  handlePressImportDatabase: (db: Database) => void
+  handlePressMoveDatabase: (db: Database) => void
 }
 
 export const AppToolbar = ({
@@ -180,11 +179,14 @@ export const AppToolbar = ({
   hostAddress,
   currentPageMembers,
   differentPageMembers,
-  handleChooseDb,
-  handlePressAddDb,
-  handlePressRemoveDb,
-  handlePressImportDb,
-  handlePressMoveDb,
+  activeDatabase,
+  inactiveDatabases,
+  synced,
+  handleChooseDatabase,
+  handlePressAddDatabase,
+  handlePressRemoveDatabase,
+  handlePressImportDatabase,
+  handlePressMoveDatabase,
   handlePressMember,
   handlePressCommandBar,
   handlePressDailyNotes,
@@ -214,15 +216,15 @@ export const AppToolbar = ({
       "app-toolbar"].join(" ")}
   >
     <AppToolbar.MainControls>
-      <DBMenu
-        activeDb={mockGraphData.activeDb}
-        inactiveDbs={mockGraphData.inactiveDbs}
-        synced={mockGraphData.synced}
-        handleChooseDb={handleChooseDb}
-        handlePressAddDb={handlePressAddDb}
-        handlePressRemoveDb={handlePressRemoveDb}
-        handlePressImportDb={handlePressImportDb}
-        handlePressMoveDb={handlePressMoveDb}
+      <DatabaseMenu
+        activeDatabase={activeDatabase}
+        inactiveDatabases={inactiveDatabases}
+        synced={synced}
+        handleChooseDatabase={handleChooseDatabase}
+        handlePressAddDatabase={handlePressAddDatabase}
+        handlePressRemoveDatabase={handlePressRemoveDatabase}
+        handlePressImportDatabase={handlePressImportDatabase}
+        handlePressMoveDatabase={handlePressMoveDatabase}
       />
       <Button
         onClick={handlePressLeftSidebar}

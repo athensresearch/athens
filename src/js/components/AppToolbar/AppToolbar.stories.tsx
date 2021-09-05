@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
 import * as mockData from './mockData';
+import { mockDatabases } from './components/DatabaseMenu/mockData';
 
 import { AppToolbar } from './AppToolbar';
 
@@ -28,7 +29,7 @@ const Template = (args) => {
   const [route, setRoute] = React.useState('');
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(false);
   const [isWinFocused, setIsWinFocused] = React.useState(true);
-  const [isWinMaximized, setIsWinMaximized] = React.useState(true);
+  const [isWinMaximized, setIsWinMaximized] = React.useState(false);
   const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false);
   const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(false);
@@ -50,6 +51,13 @@ const Template = (args) => {
     hostAddress={mockData.hostAddress}
     currentPageMembers={mockData.currentPageMembers}
     differentPageMembers={mockData.differentPageMembers}
+    handleChooseDatabase={() => null}
+    handlePressAddDatabase={() => null}
+    handlePressRemoveDatabase={() => null}
+    handlePressImportDatabase={() => null}
+    activeDatabase={mockDatabases[0]}
+    inactiveDatabases={mockDatabases.slice(1, 4)}
+    synced={true}
     handlePessLeftButton={() => setIsLeftOpen(!isLeftSidebarOpen)}
     handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
     handlePressDailyNotes={() => setRoute('/daily-notes')}

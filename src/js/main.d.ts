@@ -25,7 +25,7 @@ type PersonPresence = Person & {
 type Database = {
   id: string;
   name: string;
-  "is-remote": boolean;
+  isRemote: boolean;
 }
 
 type Synced = boolean;

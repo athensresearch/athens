@@ -4,7 +4,7 @@ import { Link } from '@material-ui/icons';
 
 import { Badge } from '../../../../Badge';
 import { Button } from '../../../../Button';
-import { DBIcon } from './DBIcon';
+import { DatabaseIcon } from './DatabaseIcon';
 
 const MenuItem = styled(Button)`
   display: flex;
@@ -52,20 +52,20 @@ const Path = styled.span`
   }
 `;
 
-interface DBMenuItemProps {
-  db: Database;
-  handleChooseDb: (db: Database) => void;
+interface DatabaseMenuItemProps {
+  database: Database;
+  handleChooseDatabase: (database: Database) => void;
 }
 
-export const DBMenuItem = ({
-  db,
-  handleChooseDb,
-}: DBMenuItemProps) => <MenuItem
-  onClick={(db) => handleChooseDb(db)}
+export const DatabaseMenuItem = ({
+  database,
+  handleChooseDatabase,
+}: DatabaseMenuItemProps) => <MenuItem
+  onClick={(database) => handleChooseDatabase(database)}
 >
-    <DBIcon name={db.name} />
+    <DatabaseIcon name={database.name} />
     <main>
-      <Name>{db.name}</Name>
-      <Path>{db["is-remote"] && <Link />} {db.id}</Path>
+      <Name>{database.name}</Name>
+      <Path>{database["is-remote"] && <Link />} {database.id}</Path>
     </main>
   </MenuItem>

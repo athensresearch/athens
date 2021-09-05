@@ -19,7 +19,7 @@ const IconWrap = styled.svg`
 /**
  * Icon representing a database
  */
-export const DBIcon = ({ name }) => {
+export const DatabaseIcon = ({ name }) => {
 
   return <IconWrap viewBox="0 0 24 24">
     <rect
