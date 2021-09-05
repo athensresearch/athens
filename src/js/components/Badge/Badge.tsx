@@ -4,9 +4,9 @@ import styled from 'styled-components';
 const BadgeEl = styled.b`
   position: absolute;
   border-radius: 100em;
-  background: var(--link-color);
+  background: var(--badge-background-color, var(--link-color));
   font-size: var(--font-size--text-xs);
-  color: #fff;
+  color: var(--badge-text-color, #fff);
   padding: 0.125em 0.35em;
   line-height: 1;
   
@@ -44,7 +44,7 @@ const BadgeWrap = styled.span`
 `;
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  badgeContent: ReactNode,
+  badgeContent?: ReactNode,
   /** Where the badge should appear relative to the content */
   placement?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right',
 }
@@ -55,5 +55,11 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 export const Badge = ({
   badgeContent,
   placement = "top-right",
-  children
-}: BadgeProps) => <BadgeWrap>{children}<BadgeEl className={"placement-" + placement}>{badgeContent}</BadgeEl></BadgeWrap>
+  children,
+  ...props
+}: BadgeProps) => <BadgeWrap style={props.style}>
+    {children}
+    <BadgeEl className={"placement-" + placement} {...props}>
+      {badgeContent}
+    </BadgeEl>
+  </BadgeWrap>

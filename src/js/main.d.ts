@@ -18,3 +18,11 @@ type Person = {
 type PersonPresence = Person & {
   uid: UID;
 }
+
+type Database = {
+  id: string;
+  name: string;
+  "is-remote": boolean;
+}
+
+type Synced = boolean;

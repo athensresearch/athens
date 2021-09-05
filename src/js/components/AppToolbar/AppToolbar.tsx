@@ -4,6 +4,8 @@ import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, Mer
 
 import { Button } from '../Button';
 
+import { DBMenu } from './components/DBMenu';
+import * as mockGraphData from './components/DBMenu/mockData';
 import { WindowButtons } from './components/WindowButtons';
 import { PresenceDetailsOverlay } from './components/PresenceDetailsOverlay';
 import { PresenceDetailsIndicator } from './components/PresenceDetailsIndicator';
@@ -131,12 +133,14 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
+  // Electron only
   handlePressMinimize?(): void;
   handlePressClose?(): void;
   handlePressMaximizeRestore?(): void;
   handlePressMaximizeRestore?(): void;
   handlePressMaximizeRestore?(): void;
   handlePressFullscreen?(): void;
+  // Main toolbar
   handlePressCommandBar(): void;
   handlePressDailyNotes(): void;
   handlePressAllPages(): void;
@@ -149,8 +153,15 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   handlePressHistoryForward(): void;
   handlePressLeftSidebar(): void;
   handlePressRightSidebar(): void;
+  // Presence Menu
   handlePressHostAddress?(): void;
   handlePressMember?(member): void;
+  // DB Menu
+  handleChooseDb: (db: Database) => void
+  handlePressAddDb: () => void
+  handlePressRemoveDb: (db: Database) => void
+  handlePressImportDb: (db: Database) => void
+  handlePressMoveDb: (db: Database) => void
 }
 
 export const AppToolbar = ({
@@ -169,6 +180,11 @@ export const AppToolbar = ({
   hostAddress,
   currentPageMembers,
   differentPageMembers,
+  handleChooseDb,
+  handlePressAddDb,
+  handlePressRemoveDb,
+  handlePressImportDb,
+  handlePressMoveDb,
   handlePressMember,
   handlePressCommandBar,
   handlePressDailyNotes,
@@ -198,6 +214,16 @@ export const AppToolbar = ({
       "app-toolbar"].join(" ")}
   >
     <AppToolbar.MainControls>
+      <DBMenu
+        activeDb={mockGraphData.activeDb}
+        inactiveDbs={mockGraphData.inactiveDbs}
+        synced={mockGraphData.synced}
+        handleChooseDb={handleChooseDb}
+        handlePressAddDb={handlePressAddDb}
+        handlePressRemoveDb={handlePressRemoveDb}
+        handlePressImportDb={handlePressImportDb}
+        handlePressMoveDb={handlePressMoveDb}
+      />
       <Button
         onClick={handlePressLeftSidebar}
         isPressed={isLeftSidebarOpen}
