@@ -1,6 +1,7 @@
 import { mockPeople } from '../Avatar/mockData';
 
 export const block = {
+  uid: '1',
   isOpen: true,
   rawContent: "**Donec** id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam.",
   renderedContent: <><strong>Donec</strong> id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Cras justo odio, dapibus ac facilisis in, egestas eget quam.</>,

@@ -9,7 +9,7 @@ import { AppToolbar } from './AppToolbar';
 import * as mockAppToolbarData from './AppToolbar/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout } from './AppLayout';
-import { WelcomePage } from './Page/Page.stories';
+import { NodePage } from './Page/Page.stories';
 
 export default {
   title: 'App/Browser',
@@ -140,7 +140,7 @@ const Template = (args, context) => {
             }]}
             version="1.0.0"
           />
-          <WelcomePage />
+          <NodePage />
           <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}
           {isCommandBarOpen && (<CommandBar

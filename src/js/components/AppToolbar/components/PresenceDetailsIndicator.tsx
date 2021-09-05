@@ -39,6 +39,7 @@ export const PresenceDetailsIndicator = ({
           if (index < maxToDisplay) {
             return (
               <Avatar
+                key={member.personId}
                 username={member.username}
                 color={member.color}
                 personId={member.personId}

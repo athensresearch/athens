@@ -1,7 +1,6 @@
 import { Page } from '../Page';
-import { BADGE } from '../../storybook';
+import { BADGE, Storybook } from '../../storybook';
 import { DateTime } from 'luxon';
-import { Welcome } from '../Block/Block.stories';
 import { preferredDateFormat } from '../../config';
 
 export default {
@@ -11,6 +10,7 @@ export default {
   parameters: {
     badges: [BADGE.DEV]
   },
+  decorators: [(Story) => <Storybook.Wrapper>{Story()}</Storybook.Wrapper>]
 };
 
 // Stories
@@ -45,20 +45,3 @@ DailyNote.args = {
   title: DateTime.now().toLocaleString(preferredDateFormat),
   uid: DateTime.now().toISODate()
 };
-
-export const WelcomePage = () => {
-  return (
-    <Page
-      isDailyNote={false}
-      hasShortcut={true}
-      title="Welcome"
-      uid="123"
-      handlePressAddShortcut={() => null}
-      handlePressRemoveShortcut={() => null}
-      handlePressDelete={() => null}
-      handlePressShowLocalGraph={() => null}
-    >
-      <Welcome />
-    </Page>
-  );
-}

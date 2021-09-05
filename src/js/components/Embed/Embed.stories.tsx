@@ -2,7 +2,7 @@ import { BADGE, Storybook } from '../../storybook';
 
 import { Embed } from './Embed';
 import { Block } from '../../components/Block';
-import { blocks } from '../../components/Block/mockData';
+import { block } from '../../components/Block/mockData';
 
 export default {
   title: 'Components/Embed',
@@ -17,13 +17,13 @@ export default {
 export const Youtube = () => <Embed type="youtube" url="https://www.youtube.com/embed/dQw4w9WgXcQ" />;
 export const Image = () => <Embed type="image" url="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" />;
 export const InABlock = () => <>
-  <Block {...blocks[0]} />
+  <Block {...block} />
   <Block
-    {...blocks[1]}
+    {...block}
     rawContent="![cat](https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60)"
     renderedContent={<Embed type="image" url="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" />}
   />
-  <Block {...blocks[2]}
+  <Block {...block}
   />
 </>;
 
