@@ -50,6 +50,13 @@ export const globalTypes = {
 
 export const decorators = [
   (Story, context) => {
+
+    React.useEffect(() => {
+      const theme = context.globals.theme === 'dark' ? 'is-theme-dark' : 'is-theme-light';
+      document.body.classList.add(theme);
+      return () => document.body.classList.remove(theme);
+    }, [context])
+
     console.log(context);
     return (
       <>
@@ -57,7 +64,6 @@ export const decorators = [
         <Storybook.App
           id="app"
           className={classnames(
-            context.globals.theme === 'light' ? 'is-theme-light' : 'is-theme-dark',
             context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
             context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
           )}>

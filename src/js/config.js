@@ -1,4 +1,4 @@
 
 export const preferredDateFormat = { month: 'long', day: 'numeric' };
 
-export const DOMRoot = () => document.querySelector("#app");
+export const DOMRoot = () => document.querySelector("body");
