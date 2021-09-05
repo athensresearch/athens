@@ -108,9 +108,13 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 
+  body {
+    min-height: 100vh;
+  }
+
   html {
     height: 100vh;
-    background: var(--color-background);
+    background: var(--background-color);
     font-family: var(--font-family-default);
     color: var(--body-text-color);
     font-size: 16px;
