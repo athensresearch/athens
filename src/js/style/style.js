@@ -110,15 +110,17 @@ export const GlobalStyles = createGlobalStyle`
 
   body {
     min-height: 100vh;
-  }
-
-  html {
-    height: 100vh;
     background: var(--background-color);
     font-family: var(--font-family-default);
     color: var(--body-text-color);
     font-size: 16px;
     line-height: 1.5;
+  }
+
+  html {
+    padding: 0;
+    margin: 0;
+    height: 100vh;
   }
 
   * {
