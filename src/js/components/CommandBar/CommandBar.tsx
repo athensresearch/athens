@@ -90,6 +90,7 @@ const ResultsHeading = styled.header`
   background: var(--background-plus-2);
   display: flex;
   position: sticky;
+  z-index: 100;
   margin: 0;
   flex-wrap: wrap;
   gap: 0.5rem;
