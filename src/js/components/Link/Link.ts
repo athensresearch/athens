@@ -1,8 +1,6 @@
 import styled from 'styled-components';
 
-export const Widgets = () => null``;
-
-Widgets.BidirectionalLink = styled.a`
+export const Link = styled.a`
   display: inline-flex;
   color: var(--link-color);
   margin-inline: calc(-0.25em + 0.1ch);
