@@ -29,7 +29,8 @@ Default.args = {
 
 export const isPrimary = Template.bind({});
 isPrimary.args = {
-  isPrimary: false,
+  isPrimary: true,
+  className: 'is-cool',
   children: 'Button',
 };
 

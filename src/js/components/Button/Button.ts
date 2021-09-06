@@ -25,19 +25,19 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 /**
  * Primary UI component for user interaction
  */
-export const Button = styled.button.attrs<ButtonProps>(props => ({
+export const Button = styled.button.attrs<ButtonProps>(props => {
+  const _shape = props.shape || 'rect';
+  let _variant = props.variant || 'plain';
+  if (props.isPrimary) _variant = 'tinted';
+  return ({
   "aria-pressed": props.isPressed ? 'true' : 'false',
   className: classnames(
     'button',
-    props.classNames && props.classNames,
-    props.isPrimary
-      ? 'variant-tinted'
-      : props.variant
-        ? 'variant-' + props.variant
-        : 'variant-plain',
-    props.shape ? 'shape-' + props.shape : 'shape-rect'
-  )
-})) <ButtonProps>`
+    props.className,
+    'shape-' + _shape,
+    'variant-' + _variant)
+  })
+}) <ButtonProps>`
   margin: 0;
   font-family: inherit;
   font-size: inherit;
@@ -98,7 +98,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => ({
 
   &.variant-filled {
     background: var(--link-color);
-    color: var(--white, #fff);
+    color: var(--link-color---contrast, #fff);
   }
 
   /* States */
