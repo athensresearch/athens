@@ -1,7 +1,10 @@
 import React from 'react';
 import { BADGE, Storybook } from '../../storybook';
+import { blockTree } from '../Block/mockData';
 
 import { Preview } from './Preview';
+import { Link } from '../Link';
+import { recurseBlocks } from '../../utils/recurseBlocks';
 
 export default {
   title: 'concepts/Preview',
@@ -12,7 +15,6 @@ export default {
     badges: [BADGE.CONCEPT]
   },
   decorators: [(Story) => <Storybook.Wrapper style={{ gap: "2rem" }}><Story /></Storybook.Wrapper>]
-
 };
 
 export const Basic = () => {
@@ -20,21 +22,29 @@ export const Basic = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   return (<>
-    <a
+    <Link
       ref={setAnchorEl}
       onMouseOver={() => setIsPreviewOpen(true)}
       onMouseOut={() => setIsPreviewOpen(false)}
       href="#"
     >
       link
-    </a>
+    </Link>
     <Preview
       anchorEl={anchorEl}
       isPreviewOpen={isPreviewOpen}
     >
       <Preview.Media src="https://source.unsplash.com/random/400x400" />
       <Preview.Title>Link</Preview.Title>
-      <Preview.Body>this is some preview content</Preview.Body>
+      <Preview.Body>{(
+        recurseBlocks({
+          tree: blockTree.tree,
+          content: blockTree.blocks,
+          // lengthLimit: 3,
+          // depthLimit: 3,
+          blockComponent: <Preview.MiniBlock />
+        })
+      )}</Preview.Body>
     </Preview>
   </>)
 }

@@ -31,6 +31,8 @@ Preview.Container = styled(Overlay)`
   padding: 0;
   font-size: var(--font-size--text-sm);
   overflow: hidden;
+  width: 20em;
+  line-height: 1.2;
 `;
 
 Preview.Title = styled.h1`
@@ -52,3 +54,23 @@ Preview.Media = styled.img`
   margin-right: 1rem;
   margin-bottom: 1rem;
 `;
+
+
+Preview.BlockWrap = styled.div`
+  overflow: hidden;
+`;
+Preview.BlockContent = styled.span`
+  display: flex;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  white-space: nowrap;
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+Preview.MiniBlock = ({ renderedContent, children }) => {
+  return (<Preview.BlockWrap><Preview.BlockContent>{renderedContent}</Preview.BlockContent>
+    <div style={{ marginLeft: "1rem" }}>{children}</div>
+  </Preview.BlockWrap>)
+}
