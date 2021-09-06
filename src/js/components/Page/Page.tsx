@@ -12,6 +12,7 @@ import { Menu } from '../Menu';
 import { Block } from '../Block';
 
 import { EmptyMessage } from './components/EmptyMessage';
+import { References, ReferencesProps } from './components/References';
 
 const MainContent = styled.div`
   flex: 1 1 100%;
@@ -127,7 +128,7 @@ export const PageBlocksContainer = styled.div`
   padding-right: 1rem;
 `;
 
-interface PageProps {
+interface PageProps extends ReferencesProps {
   children?: React.ReactNode,
   /**
    * Whether the page is a Daily Note
@@ -173,6 +174,10 @@ export const Page = ({
 }: PageProps) => {
   const [isPageMenuOpen, setIsPageMenuOpen] = React.useState(false);
   const [pageMenuAnchor, setPageMenuAnchor] = React.useState(null);
+  const [isLinkedReferencesOpen, setIsLinkedReferencesOpen] = React.useState(true);
+  const [isUnlinkedReferencesOpen, setIsUnlinkedReferencesOpen] = React.useState(true);
+  const handlePressLinkedToggle = () => setIsLinkedReferencesOpen(!isLinkedReferencesOpen);
+  const handlePressUnlinkedToggle = () => setIsUnlinkedReferencesOpen(!isUnlinkedReferencesOpen);
 
   const handlePressMenuToggle = (e) => {
     setPageMenuAnchor(e.currentTarget);
@@ -223,6 +228,12 @@ export const Page = ({
             {title} {isDailyNote && <Today />}</Title>
         </PageHeader>
         {children ? children : isEditable ? <PageBlocksContainer><Block /></PageBlocksContainer> : <EmptyMessage />}
+        <References
+          isLinkedReferencesOpen={isLinkedReferencesOpen}
+          isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
+          handlePressLinkedToggle={handlePressLinkedToggle}
+          handlePressUnlinkedToggle={handlePressUnlinkedToggle}
+        />
       </PageWrap>
     </MainContent>);
 };
