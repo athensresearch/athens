@@ -36,20 +36,67 @@ isPrimary.args = {
 
 export const Pressed = Template.bind({});
 Pressed.args = {
-  "aria-pressed": true,
+  isPressed: true,
   children: 'Button',
 };
 
-export const Variants = () => <Wrapper>
-  <Button variant="plain">Plain</Button>
-  <Button variant="gray">Gray</Button>
-  <Button variant="tinted">Tinted</Button>
-  <Button variant="filled">Filled</Button>
-  <Button shape="round" variant="plain">Plain</Button>
-  <Button shape="round" variant="gray">Gray</Button>
-  <Button shape="round" variant="tinted">Tinted</Button>
-  <Button shape="round" variant="filled">Filled</Button>
-</Wrapper>
+const ThemeWrapper = styled.div`
+  padding: 1rem;
+  border-radius: 1rem;
+  max-width: max-content;
+  margin: auto;
+  border: 1px solid var(--border-color);
+  margin: 0.5rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const Variants = () => <>
+  <ThemeWrapper className="is-theme-light">
+    <Wrapper>
+      <Button variant="plain">Plain</Button>
+      <Button variant="gray">Gray</Button>
+      <Button variant="tinted">Tinted</Button>
+      <Button variant="filled">Filled</Button>
+      <Button shape="round" variant="plain">Plain</Button>
+      <Button shape="round" variant="gray">Gray</Button>
+      <Button shape="round" variant="tinted">Tinted</Button>
+      <Button shape="round" variant="filled">Filled</Button>
+    </Wrapper>
+    <Wrapper>
+      <Button isPressed={true} variant="plain">Plain</Button>
+      <Button isPressed={true} variant="gray">Gray</Button>
+      <Button isPressed={true} variant="tinted">Tinted</Button>
+      <Button isPressed={true} variant="filled">Filled</Button>
+      <Button isPressed={true} shape="round" variant="plain">Plain</Button>
+      <Button isPressed={true} shape="round" variant="gray">Gray</Button>
+      <Button isPressed={true} shape="round" variant="tinted">Tinted</Button>
+      <Button isPressed={true} shape="round" variant="filled">Filled</Button>
+    </Wrapper>
+  </ThemeWrapper>
+  <ThemeWrapper className="is-theme-dark">
+    <Wrapper>
+      <Button variant="plain">Plain</Button>
+      <Button variant="gray">Gray</Button>
+      <Button variant="tinted">Tinted</Button>
+      <Button variant="filled">Filled</Button>
+      <Button shape="round" variant="plain">Plain</Button>
+      <Button shape="round" variant="gray">Gray</Button>
+      <Button shape="round" variant="tinted">Tinted</Button>
+      <Button shape="round" variant="filled">Filled</Button>
+    </Wrapper>
+    <Wrapper>
+      <Button isPressed={true} variant="plain">Plain</Button>
+      <Button isPressed={true} variant="gray">Gray</Button>
+      <Button isPressed={true} variant="tinted">Tinted</Button>
+      <Button isPressed={true} variant="filled">Filled</Button>
+      <Button isPressed={true} shape="round" variant="plain">Plain</Button>
+      <Button isPressed={true} shape="round" variant="gray">Gray</Button>
+      <Button isPressed={true} shape="round" variant="tinted">Tinted</Button>
+      <Button isPressed={true} shape="round" variant="filled">Filled</Button>
+    </Wrapper>
+  </ThemeWrapper></>;
 
 
 export const Icon = Template.bind({});

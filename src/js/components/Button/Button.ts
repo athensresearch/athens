@@ -25,21 +25,19 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 /**
  * Primary UI component for user interaction
  */
-export const Button = styled.button.attrs(props => {
-  const shape = props.shape || 'rect';
-  const variant = props.variant || 'plain';
-
-  return ({
-    className: classnames(
-      props.className,
-      props.isPrimary
-        ? 'variant-tinted'
-        : variant && 'variant-' + variant,
-      'shape-' + shape
-    ),
-  ariaPressed: props.isPressed,
-  })
-}) <ButtonProps>`
+export const Button = styled.button.attrs<ButtonProps>(props => ({
+  "aria-pressed": props.isPressed ? 'true' : 'false',
+  className: classnames(
+    'button',
+    props.classNames && props.classNames,
+    props.isPrimary
+      ? 'variant-tinted'
+      : props.variant
+        ? 'variant-' + props.variant
+        : 'variant-plain',
+    props.shape ? 'shape-' + props.shape : 'shape-rect'
+  )
+})) <ButtonProps>`
   margin: 0;
   font-family: inherit;
   font-size: inherit;
@@ -49,8 +47,8 @@ export const Button = styled.button.attrs(props => {
   place-items: center;
   place-content: center;
   color: var(--body-text-color);
-  background-color: transparent;
-  transition-property: filter, background, color, opacity;
+  background-color: var(--background-color);
+  transition-property: filter, backdrop-filter, background, color, opacity;
   transition-duration: 0.075s;
   transition-timing-function: ease;
   gap: 0.5rem;
@@ -111,13 +109,28 @@ export const Button = styled.button.attrs(props => {
     &[aria-pressed="true"] {
       transition: filter 0s ease-in-out;
 
+      &.variant-plain {
+        filter: brightness(90%);
+
+        .is-theme-dark & {
+          filter: contrast(90%) brightness(120%);
+        }
+      }
+
       &.variant-filled {
         filter: brightness(90%);
+
+        .is-theme-dark & {
+          filter: brightness(120%);
+        }
       }
       &.variant-gray,
-      &.variant-plain,
       &.variant-tinted {
-        backdrop-filter: brightness(90%);
+        backdrop-filter: brightness(90%) blur(2px);
+
+        .is-theme-dark & {
+          backdrop-filter: brightness(150%);
+        }
       }
     }
   }

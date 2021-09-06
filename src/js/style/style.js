@@ -106,6 +106,11 @@ export const GlobalStyles = createGlobalStyle`
     .is-theme-dark {
       ${darkThemeColors}
     }
+
+    [class*="is-theme-"] {
+      background: var(--background-color);
+      color: var(--body-text-color);
+    }
   }
 
   body {
