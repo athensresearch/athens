@@ -107,6 +107,25 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   &:enabled {
     cursor: pointer;
 
+    &:hover {
+      &.variant-filled {
+        filter: brightness(95%);
+
+        .is-theme-dark & {
+          filter: brightness(110%);
+        }
+      }
+      &.variant-plain,
+      &.variant-gray,
+      &.variant-tinted {
+        backdrop-filter: brightness(95%) blur(2px);
+
+        .is-theme-dark & {
+          backdrop-filter: brightness(125%);
+        }
+      }
+    }
+
     &:active,
     &[aria-pressed="true"] {
 
