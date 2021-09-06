@@ -35,13 +35,11 @@ export const Basic = () => {
       isPreviewOpen={isPreviewOpen}
     >
       <Preview.Media src="https://source.unsplash.com/random/400x400" />
-      <Preview.Title>Link</Preview.Title>
       <Preview.Body>{(
         recurseBlocks({
           tree: blockTree.tree,
           content: blockTree.blocks,
-          // lengthLimit: 3,
-          // depthLimit: 3,
+          lengthLimit: 3,
           blockComponent: <Preview.MiniBlock />
         })
       )}</Preview.Body>
