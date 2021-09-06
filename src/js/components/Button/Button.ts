@@ -12,13 +12,13 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
    */
   isPressed?: boolean;
   /**
-   * Button shape
+   * Button shape. Set to 'unset' to manually style padding and radius.
    */
-  shape: 'rect' | 'round',
+  shape: 'rect' | 'round' | 'unset';
   /**
-   * Button style type
+   * Button shape style. Set to 'unset' to manually style color and interaction styles.
    */
-  variant: 'plain' | 'gray' | 'tinted' | 'filled';
+  variant: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
 }
 
 
@@ -26,8 +26,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
  * Primary UI component for user interaction
  */
 export const Button = styled.button.attrs<ButtonProps>(props => {
-  const _shape = props.shape || 'rect';
-  let _variant = props.variant || 'plain';
+  const _shape = props.shape ? props.shape : 'rect';
+  let _variant = props.variant ? props.variant : 'plain';
   if (props.isPrimary) _variant = 'tinted';
   return ({
   "aria-pressed": props.isPressed ? 'true' : 'false',
@@ -109,7 +109,10 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
 
     &:active,
     &[aria-pressed="true"] {
-      transition: filter 0s ease-in-out;
+
+      &[class*="variant-"] {
+        transition: filter 0s ease-in-out;
+      }
 
       &.variant-filled {
         filter: brightness(90%);
