@@ -4,7 +4,7 @@ import { Block } from './Block';
 import { BADGE, Storybook } from '../../storybook';
 import { Checklist } from '../Checkbox/Checkbox.stories';
 import { block, blockTree, blockTreeSeries, blockTreeWithAvatars } from './mockData';
-import { recurseBlocks } from './recurseBlocks';
+import { recurseBlocks } from '../../utils/recurseBlocks';
 
 export default {
   title: 'Components/Block',
