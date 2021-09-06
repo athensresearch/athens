@@ -1,10 +1,11 @@
 import { createGlobalStyle } from 'styled-components';
-import { transparentize } from 'polished';
+import { transparentize, readableColor } from 'polished';
 
 export const permuteColorOpacities = (theme) =>
   Object.keys(theme).map((color) => {
     return (
       `--${color}: ${theme[color]};` +
+      `--${color}---contrast: ${readableColor(theme[color])};` +
       Object.keys(opacities)
         .map((opacity) => {
           return `--${color}---${opacity}: ${transparentize(
@@ -27,7 +28,7 @@ const opacities = {
 };
 
 const themeLight = {
-  "link-color": "#0075E1",
+  "link-color": "#0071DB",
   "highlight-color": "#F9A132",
   "text-highlight-color": "#ffdb8a",
   "warning-color": "#D20000",

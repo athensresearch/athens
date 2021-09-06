@@ -10,7 +10,7 @@ const IconWrap = styled.svg`
 
   text {
     text-transform: uppercase;
-    fill: #fff;
+    fill: var(--link-color---contrast);
     font-size: 100%;
     font-weight: bold;
     text-anchor: middle;
