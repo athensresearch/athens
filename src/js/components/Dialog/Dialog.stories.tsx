@@ -20,7 +20,7 @@ export const DialogWithState = () => {
 
   return (
     <>
-      <Button onClick={() => setIsDialogOpen(true)}>Open Dialog</Button>
+      <Button shape="round" isPrimary onClick={() => setIsDialogOpen(true)}>Open Dialog</Button>
       <Dialog
         isDialogOpen={isDialogOpen}
         handleClose={() => setIsDialogOpen(false)}

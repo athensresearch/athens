@@ -15,6 +15,9 @@ import { EmptyMessage } from './components/EmptyMessage';
 
 const MainContent = styled.div`
   flex: 1 1 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
   grid-area: main-content;
   align-items: flex-start;
   justify-content: stretch;
@@ -43,7 +46,7 @@ const MainContent = styled.div`
 
 const PageWrap = styled.article`
   width: min(40ch, 100% - 2rem);
-  padding: 1rem 3rem 10rem;
+  padding: 1rem 0 10rem;
   flex-basis: 100%;
   align-self: stretch;
   max-width: 55rem;
@@ -51,6 +54,7 @@ const PageWrap = styled.article`
 
 const PageHeader = styled.header`
   position: relative;
+  padding: 0 3rem;
 `;
 
 const Title = styled.h1`
@@ -115,6 +119,12 @@ const PageMenuToggle = styled(Button)`
   height: 2rem;
   color: var(--body-text-color---opacity-high);
   vertical-align: bottom;
+`;
+
+
+export const PageBlocksContainer = styled.div`
+  padding-left: 1rem;
+  padding-right: 1rem;
 `;
 
 interface PageProps {
@@ -212,7 +222,7 @@ export const Page = ({
             </Modal>
             {title} {isDailyNote && <Today />}</Title>
         </PageHeader>
-        {children ? children : isEditable ? <Block /> : <EmptyMessage />}
+        {children ? children : isEditable ? <PageBlocksContainer><Block /></PageBlocksContainer> : <EmptyMessage />}
       </PageWrap>
     </MainContent>);
 };

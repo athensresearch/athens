@@ -1,7 +1,12 @@
+import styled from 'styled-components';
+
 import { Page } from '../Page';
 import { BADGE, Storybook } from '../../storybook';
 import { DateTime } from 'luxon';
 import { preferredDateFormat } from '../../config';
+
+import { BlockTree } from '../Block/Block.stories';
+import { PageBlocksContainer } from './Page';
 
 export default {
   title: 'Components/Page',
@@ -12,6 +17,7 @@ export default {
   },
   decorators: [(Story) => <Storybook.Wrapper>{Story()}</Storybook.Wrapper>]
 };
+
 
 // Stories
 
@@ -24,6 +30,7 @@ export const NodePage = () => <Page
   handlePressShowLocalGraph={() => null}
   title="Node Page"
   isDailyNote={false}
+  children={<PageBlocksContainer><BlockTree /></PageBlocksContainer>}
   uid="123" />;
 
 export const BlockPage = Template.bind({});
