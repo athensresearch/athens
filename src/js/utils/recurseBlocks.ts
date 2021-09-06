@@ -5,7 +5,7 @@ interface recurseBlocksProps {
   tree: any[];
   content: any;
   setBlockState?: Function;
-  blockProps?: BlockProps;
+  blockProps?: BlockProps | any; // Any so we can add more props to the block
   blockComponent: any;
   lengthLimit?: number;
   depthLimit?: number;
@@ -67,8 +67,6 @@ export const recurseBlocksFn = ({
   getCurrentLength,
   getCurrentDepth,
 }: recurseBlocksProps) => {
-  console.log(incCurrentLength);
-
   return tree.map((block) => {
     incCurrentLength();
 
@@ -97,7 +95,6 @@ export const recurseBlocksFn = ({
         },
         ))
     } else {
-      console.log('exiting');
       return
     }
   });
