@@ -47,7 +47,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   place-items: center;
   place-content: center;
   color: var(--body-text-color);
-  background-color: var(--background-color);
+  background-color: transparent;
   transition-property: filter, backdrop-filter, background, color, opacity;
   transition-duration: 0.075s;
   transition-timing-function: ease;
@@ -84,7 +84,29 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     padding: 0.375em 0.8rem;
   }
 
-  /* Variants */
+
+  /** Variants
+   * Variants are prepared with with null filters
+   * to prevent ugly flashing in some browsers when
+   * filters change.
+   */
+  &.variant-filled {
+    filter: brightness(100%);
+
+    .is-theme-dark & {
+      filter: brightness(100%);
+    }
+  }
+  &.variant-plain,
+  &.variant-gray,
+  &.variant-tinted {
+    backdrop-filter: brightness(100%);
+
+    .is-theme-dark & {
+      backdrop-filter: brightness(100%);
+    }
+  }
+
   &.variant-plain {
     background: transparent;
   }
@@ -118,7 +140,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
       &.variant-plain,
       &.variant-gray,
       &.variant-tinted {
-        backdrop-filter: brightness(95%) blur(2px);
+        backdrop-filter: brightness(95%);
 
         .is-theme-dark & {
           backdrop-filter: brightness(125%);
@@ -143,7 +165,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
       &.variant-plain,
       &.variant-gray,
       &.variant-tinted {
-        backdrop-filter: brightness(90%) blur(2px);
+        backdrop-filter: brightness(90%);
 
         .is-theme-dark & {
           backdrop-filter: brightness(150%);

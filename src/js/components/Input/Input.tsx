@@ -90,10 +90,21 @@ Input.LabelWrapper = styled.label`
     grid-area: help;
   }
 
-  .icon-right {
+  .input-right {
+    grid-area: input;
+    margin: auto 0;
+    margin-left: auto;
+    z-index: 1;
+  }
+
+  .icon-right,
+  .icon-left {
     grid-area: input;
     pointer-events: none;
     margin: auto;
+  }
+
+  .icon-right {
     margin-right: 0.25rem;
 
     ~ ${Input} {
@@ -102,9 +113,6 @@ Input.LabelWrapper = styled.label`
   }
 
   .icon-left {
-    grid-area: input;
-    pointer-events: none;
-    margin: auto;
     margin-left: 0.25rem;
 
     ~ ${Input} {

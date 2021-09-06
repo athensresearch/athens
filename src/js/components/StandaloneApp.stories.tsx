@@ -132,6 +132,11 @@ const Template = (args, context) => {
             activeDatabase={mockDatabases[0]}
             inactiveDatabases={mockDatabases.slice(1, 4)}
             synced={true}
+            handleChooseDatabase={() => null}
+            handlePressAddDatabase={() => null}
+            handlePressRemoveDatabase={() => null}
+            handlePressImportDatabase={() => null}
+            handlePressMoveDatabase={() => null}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
             handlePressDailyNotes={() => setRoute('/daily-notes')}
             handlePressAllPages={() => setRoute('/all-pages')}

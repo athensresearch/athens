@@ -9,6 +9,7 @@ export default {
   component: Settings,
   argTypes: {},
   parameters: {
+    layout: 'centered',
     badges: [BADGE.DEV]
   },
 };
@@ -29,6 +30,6 @@ export const Basic = () => {
       handleChangeEmail={handleChangeEmail}
       handleSubmitEmail={handleSubmitEmail}
       handleCloseSettings={() => setIsSettingsOpen(false)}
-    /> : <Button onClick={() => setIsSettingsOpen(true)}>Open Settings</Button>
+    /> : <Button shape="round" variant="filled" onClick={() => setIsSettingsOpen(true)}>Open Settings</Button>
   );
 };
