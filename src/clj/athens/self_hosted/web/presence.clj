@@ -65,12 +65,12 @@
          [current-username
           new-username]}         args
         max-tx                   (:max-tx @datahike)
-        broadcast-username-event (common-events/build-presence-broadcast-rename-event max-tx
-                                                                                      current-username
-                                                                                      new-username)]
+        broadcast-rename-event (common-events/build-presence-broadcast-rename-event max-tx
+                                                                                    current-username
+                                                                                    new-username)]
 
     (clients/add-client! channel new-username)
-    (clients/broadcast! broadcast-username-event)
+    (clients/broadcast! broadcast-rename-event)
     (common-events/build-event-accepted id max-tx)))
 
 
