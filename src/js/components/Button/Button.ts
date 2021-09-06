@@ -30,12 +30,12 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   let _variant = props.variant ? props.variant : 'plain';
   if (props.isPrimary) _variant = 'tinted';
   return ({
-  "aria-pressed": props.isPressed ? 'true' : 'false',
-  className: classnames(
-    'button',
-    props.className,
-    'shape-' + _shape,
-    'variant-' + _variant)
+    "aria-pressed": props.isPressed ? 'true' : 'false',
+    className: classnames(
+      'button',
+      props.className,
+      'shape-' + _shape,
+      'variant-' + _variant)
   })
 }) <ButtonProps>`
   margin: 0;
