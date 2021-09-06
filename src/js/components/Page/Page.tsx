@@ -196,6 +196,7 @@ export const Page = ({
 
           <Title>
             <PageMenuToggle
+              shape="round"
               isPressed={isPageMenuOpen}
               onClick={handlePressMenuToggle}
             >
