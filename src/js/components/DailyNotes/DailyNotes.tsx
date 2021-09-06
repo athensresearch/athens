@@ -1,7 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { DateTime, toISODate } from 'luxon';
-import { Page } from '../Page';
+import { Page, PageBlocksContainer } from '../Page';
+import { BlockTree } from '../Block/Block.stories';
 
 const dateFormat = { month: 'long', day: 'numeric' };
 
@@ -39,6 +40,11 @@ export const DailyNotes = ({ }) => {
           title={today.toLocaleString(dateFormat)}
           isDailyNote={true}
           uid={today.toISODate()}
+          handlePressRemoveShortcut={() => null}
+          handlePressAddShortcut={() => null}
+          handlePressShowLocalGraph={() => null}
+          handlePressDelete={() => null}
+          children={<PageBlocksContainer><BlockTree /></PageBlocksContainer>}
         />
       </DailyNotesPageWrap>
     </DailyNotesWrap>

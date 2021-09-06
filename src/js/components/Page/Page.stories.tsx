@@ -5,7 +5,7 @@ import { BADGE, Storybook } from '../../storybook';
 import { DateTime } from 'luxon';
 import { preferredDateFormat } from '../../config';
 
-import { BlockTree } from '../Block/Block.stories';
+import { BlockTree, BlockTreeWithTasks } from '../Block/Block.stories';
 import { PageBlocksContainer } from './Page';
 
 export default {
@@ -37,20 +37,31 @@ export const BlockPage = Template.bind({});
 BlockPage.args = {
   isDailyNote: false,
   title: 'Block Page',
-  uid: '123'
+  uid: '123',
+  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
+};
+
+export const NodePageWithTasks = Template.bind({});
+BlockPage.args = {
+  isDailyNote: false,
+  title: 'Node Page With Tasks',
+  uid: '123',
+  children: <PageBlocksContainer><BlockTreeWithTasks /></PageBlocksContainer>
 };
 
 export const BlockPageWithLongTitle = Template.bind({});
 BlockPageWithLongTitle.args = {
   isDailyNote: false,
   title: 'Lorem ipsum dolor sit amet donec consectetur',
-  uid: '123'
+  uid: '123',
+  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
 };
 
 export const DailyNote = Template.bind({});
 DailyNote.args = {
   isDailyNote: true,
   hasShortcut: false,
+  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>,
   title: DateTime.now().toLocaleString(preferredDateFormat),
   uid: DateTime.now().toISODate()
 };
