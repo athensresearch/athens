@@ -85,7 +85,9 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   }
 
   /* Variants */
-  &.variant-plain { }
+  &.variant-plain {
+    background: transparent;
+  }
 
   &.variant-gray {
     background: var(--body-text-color---opacity-lower);
@@ -109,14 +111,6 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     &[aria-pressed="true"] {
       transition: filter 0s ease-in-out;
 
-      &.variant-plain {
-        filter: brightness(90%);
-
-        .is-theme-dark & {
-          filter: contrast(90%) brightness(120%);
-        }
-      }
-
       &.variant-filled {
         filter: brightness(90%);
 
@@ -124,6 +118,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
           filter: brightness(120%);
         }
       }
+      &.variant-plain,
       &.variant-gray,
       &.variant-tinted {
         backdrop-filter: brightness(90%) blur(2px);
