@@ -8,7 +8,7 @@ import { AppToolbar } from './AppToolbar';
 import * as mockAppToolbarData from './AppToolbar/mockData';
 import { mockDatabases } from './AppToolbar/components/DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
-import { AppLayout } from './AppLayout';
+import { AppLayout, MainContent } from './App';
 import { NodePage } from './Page/Page.stories';
 
 export default {
@@ -176,7 +176,9 @@ const Template = (args, context) => {
             }]}
             version="1.0.0"
           />
-          <NodePage />
+          <MainContent>
+            <NodePage />
+          </MainContent>
           <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}
           {isCommandBarOpen && (<CommandBar

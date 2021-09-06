@@ -14,43 +14,10 @@ import { Block } from '../Block';
 import { EmptyMessage } from './components/EmptyMessage';
 import { References, ReferencesProps } from './components/References';
 
-const MainContent = styled.div`
-  flex: 1 1 100%;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  grid-area: main-content;
-  align-items: flex-start;
-  justify-content: stretch;
-  padding-top: var(--app-upper-spacing);
-  display: flex;
-  overflow-y: auto;
-
-  @supports (overflow-y: overlay) {
-    overflow-y: overlay;
-  }
-
-  &::-webkit-scrollbar {
-    background: var(--background-minus-1);
-    width: 0.5rem;
-    height: 0.5rem;
-  }
-
-  &::-webkit-scrollbar-corner {
-    background: var(--background-minus-1);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--background-minus-2);
-  }
-`;
-
 const PageWrap = styled.article`
-  width: min(40ch, 100% - 2rem);
   padding: 1rem 0 10rem;
   flex-basis: 100%;
   align-self: stretch;
-  max-width: 55rem;
 `;
 
 const PageHeader = styled.header`
@@ -190,7 +157,6 @@ export const Page = ({
   };
 
   return (
-    <MainContent>
       <PageWrap className={isDailyNote ? 'is-daily-note' : ''}>
         <PageHeader>
 
@@ -235,6 +201,5 @@ export const Page = ({
           handlePressLinkedToggle={handlePressLinkedToggle}
           handlePressUnlinkedToggle={handlePressUnlinkedToggle}
         />
-      </PageWrap>
-    </MainContent>);
+    </PageWrap>);
 };

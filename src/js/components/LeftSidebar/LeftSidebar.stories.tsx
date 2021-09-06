@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
 
 import { LeftSidebar } from './LeftSidebar';
-import { AppLayout } from '../AppLayout';
+import { AppLayout } from '../App';
 
 export default {
   title: 'Sections/LeftSidebar',
