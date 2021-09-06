@@ -1,4 +1,6 @@
+import { BlockTree } from '.';
 import { mockPeople } from '../Avatar/mockData';
+import { Checkbox } from '../Checkbox';
 
 export const block = {
   uid: '1',
@@ -61,18 +63,23 @@ export const blockTree = {
   }
 };
 
-export const blockTreeWithSelected = () => ({
-  ...blockTree,
-  blocks: Object.keys(blockTree.blocks).map(block => ({
-    ...blockTree.blocks[block],
-    isSelected: true
+export const blockTreeWithTasks = () => {
+  return ({
+    ...blockTree,
+    blocks: Object.keys(blockTree.blocks).map(uid => ({
+      ...blockTree.blocks[uid],
+      renderedContent: (<Checkbox
+        styleCircle>
+        {blockTree.blocks[uid].renderedContent}</Checkbox>),
   })),
-})
+  })
+}
+
 
 export const blockTreeWithAvatars = () => ({
   ...blockTree,
-  blocks: Object.keys(blockTree.blocks).map(block => ({
-    ...blockTree.blocks[block],
+  blocks: Object.keys(blockTree.blocks).map(uid => ({
+    ...blockTree.blocks[uid],
     presentUser: mockPeople[Math.random() * mockPeople.length | 0]
   })),
 })

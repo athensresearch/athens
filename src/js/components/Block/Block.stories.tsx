@@ -3,7 +3,13 @@ import React from 'react';
 import { Block } from './Block';
 import { BADGE, Storybook } from '../../storybook';
 import { Checklist } from '../Checkbox/Checkbox.stories';
-import { block, blockTree, blockTreeSeries, blockTreeWithAvatars } from './mockData';
+import {
+  block,
+  blockTree,
+  blockTreeSeries,
+  blockTreeWithTasks,
+  blockTreeWithAvatars
+} from './mockData';
 import { recurseBlocks } from '../../utils/recurseBlocks';
 
 export default {
@@ -52,8 +58,6 @@ export const BlockTree = () => {
     setBlockState: setBlockState,
     blockProps: {
       handlePressToggle: (uid) => {
-        // console.log(blocks);
-        // console.log(uid);
         toggleBlockOpen(uid, setBlockState)
       }
     },
@@ -68,7 +72,9 @@ export const Series = () => {
     content: blockState.blocks,
     setBlockState: setBlockState,
     blockProps: {
-      handlePressToggle: () => toggleBlockOpen(block.uid, setBlockState)
+      handlePressToggle: (uid) => {
+        toggleBlockOpen(uid, setBlockState)
+      }
     },
     blockComponent: <Block />
   })
@@ -81,7 +87,24 @@ export const WithPresence = () => {
     content: blockState.blocks,
     setBlockState: setBlockState,
     blockProps: {
-      handlePressToggle: () => toggleBlockOpen(block.uid, setBlockState)
+      handlePressToggle: (uid) => {
+        toggleBlockOpen(uid, setBlockState)
+      }
+    },
+    blockComponent: <Block />
+  })
+}
+
+export const WithTasks = () => {
+  const [blockState, setBlockState] = React.useState(blockTreeWithTasks);
+  return recurseBlocks({
+    tree: blockState.tree,
+    content: blockState.blocks,
+    setBlockState: setBlockState,
+    blockProps: {
+      handlePressToggle: (uid) => {
+        toggleBlockOpen(uid, setBlockState)
+      }
     },
     blockComponent: <Block />
   })
