@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Popper } from '@material-ui/core';
 
 import { DOMRoot } from '../../config';
@@ -10,41 +10,12 @@ import { Content } from './components/Content';
 import { Toggle } from './components/Toggle';
 import { Refs } from './components/Refs';
 import { Container } from './components/Container';
-import { AvatarProps } from '../Avatar/Avatar';
 
-export interface BlockProps {
-  /**
-   * Children
-   */
-  children?: any;
-  /**
-   * The raw content of the block
-   */
-  rawContent: string;
-  /**
-   * The rendered content of the block
-   */
-  renderedContent?: ReactNode;
-  /**
-   * Whether the block is part of a user selection
-   */
-  isSelected?: boolean;
-  /**
-   * Whether this block's children should be shown
-   */
-  isOpen: boolean;
-  /**
-   * Whether this block is locked
-   */
-  isLocked?: boolean;
+export interface BlockProps extends Block {
   /**
    * Whether this block is in editing mode
    */
   isDragging?: boolean;
-  /**
-   * Whether this block is editable
-   */
-  isEditable?: boolean;
   /**
    * Whether this block is being dragged
    */
@@ -57,17 +28,6 @@ export interface BlockProps {
    * Whether to display the avatar of a present user
    */
   showPresentUserAvatar?: boolean;
-  /**
-   * A user attached to this block
-   */
-  presentUser?: AvatarProps;
-  /**
-   * The UID of this block
-   */
-  uid: string;
-  /**
-   * The UID of some other block
-   */
   linkedRef?: string;
   /**
    * When toggle is pressed
