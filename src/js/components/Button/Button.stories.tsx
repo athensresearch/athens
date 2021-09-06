@@ -1,5 +1,12 @@
+import styled from 'styled-components';
+
 import { Button } from './Button';
 import { BADGE, Storybook } from '../../storybook';
+
+const Wrapper = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
 
 export default {
   title: 'Components/Button',
@@ -22,7 +29,7 @@ Default.args = {
 
 export const isPrimary = Template.bind({});
 isPrimary.args = {
-  isPrimary: true,
+  isPrimary: false,
   children: 'Button',
 };
 
@@ -32,6 +39,17 @@ Pressed.args = {
   "aria-pressed": true,
   children: 'Button',
 };
+
+export const Variants = () => <Wrapper>
+  <Button variant="plain">Plain</Button>
+  <Button variant="gray">Gray</Button>
+  <Button variant="tinted">Tinted</Button>
+  <Button variant="filled">Filled</Button>
+  <Button shape="round" variant="plain">Plain</Button>
+  <Button shape="round" variant="gray">Gray</Button>
+  <Button shape="round" variant="tinted">Tinted</Button>
+  <Button shape="round" variant="filled">Filled</Button>
+</Wrapper>
 
 
 export const Icon = Template.bind({});
