@@ -1,5 +1,5 @@
 import { CommandBar } from './CommandBar';
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE } from '../../storybook';
 
 export default {
   title: 'Components/CommandBar',
