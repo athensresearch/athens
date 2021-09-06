@@ -58,29 +58,18 @@ export const Container = styled.div`
     top: 4px;
   }
 
-  .block-body {
-    display: grid;
-    grid-template-areas: 'above above above above'
-                        'toggle bullet content refs'
-                        'below below below below';
-    grid-template-columns: 1em 1em 1fr auto;
-    grid-template-rows: 0 1fr 0;
-    border-radius: 0.5rem;
-    position: relative;
-
-    .block-edit-toggle {
-      position: absolute;
-      appearance: none;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: none;
-      border: none;
-      cursor: text;
-      display: block;
-      z-index: 1;
-    }
+  .block-edit-toggle {
+    position: absolute;
+    appearance: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: none;
+    border: none;
+    cursor: text;
+    display: block;
+    z-index: 1;
   }
 
   .block-content {

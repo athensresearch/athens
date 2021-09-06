@@ -6,6 +6,7 @@ import { classnames } from '../../utils/classnames';
 
 import { Avatar } from '../Avatar';
 import { Anchor } from './components/Anchor';
+import { Body } from './components/Body';
 import { Content } from './components/Content';
 import { Toggle } from './components/Toggle';
 import { Refs } from './components/Refs';
@@ -114,16 +115,14 @@ export const Block = ({
         isEditing && 'is-editing')}
   >
     {/* Drop area indicator before */}
-    <div
-      className="block-body"
+      <Body
         ref={showPresentUserAvatar && setAvatarAnchorEl}
         onMouseEnter={() => { handleMouseEnterBlock; isEditable && setRenderEditableDom(true) }}
         onMouseLeave={() => { handleMouseLeaveBlock; isEditable && setRenderEditableDom(false) }}
-    >
+      >
         {children && !isLocked && (
           <Toggle
             isOpen={isOpen}
-            linkedRef={linkedRef}
             uid={uid}
             handlePressToggle={handlePressToggle}
           />)}
@@ -143,7 +142,7 @@ export const Block = ({
       {(refsCount >= 1) && <Refs
         refsCount={refsCount}
       />}
-    </div>
+      </Body>
     {/* inline search el */}
     {/* slash menu el */}
     {isOpen && children}
@@ -177,3 +176,9 @@ export const Block = ({
     )}
   </>)
 };
+
+Block.Anchor = Anchor;
+Block.Container = Container;
+Block.Toggle = Toggle;
+Block.Body = Body;
+Block.Content = Content;
