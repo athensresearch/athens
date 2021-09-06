@@ -78,6 +78,7 @@ export const recurseBlocksFn = ({
         React.cloneElement(blockComponent,
         {
           key: block.uid,
+          uid: block.uid,
           ...content[block.uid],
           ...blockProps,
           children: block.children && (lengthLimit >= getCurrentLength() && depthLimit >= getCurrentDepth()) && recurseBlocksFn({

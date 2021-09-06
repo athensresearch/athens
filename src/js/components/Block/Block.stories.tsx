@@ -16,16 +16,15 @@ export default {
   }
 };
 
-const toggleBlockOpen = (blockUid, setBlockState) => {
+const toggleBlockOpen = (uid, setBlockState) => {
   setBlockState(prevState => {
-    console.log(prevState);
     return ({
       ...prevState,
       blocks: {
         ...prevState.blocks,
-        [blockUid]: {
-          ...prevState.blocks[blockUid],
-          isOpen: !prevState.blocks[blockUid].isOpen
+        [uid]: {
+          ...prevState.blocks[uid],
+          isOpen: !prevState.blocks[uid].isOpen
         }
       }
     })
@@ -52,7 +51,11 @@ export const BlockTree = () => {
     content: blockState.blocks,
     setBlockState: setBlockState,
     blockProps: {
-      handlePressToggle: () => toggleBlockOpen(block.uid, setBlockState)
+      handlePressToggle: (uid) => {
+        // console.log(blocks);
+        // console.log(uid);
+        toggleBlockOpen(uid, setBlockState)
+      }
     },
     blockComponent: <Block />
   })

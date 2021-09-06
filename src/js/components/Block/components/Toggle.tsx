@@ -64,7 +64,7 @@ export const Toggle = ({ isOpen, handlePressToggle, linkedRef, uid, ...props }) 
     tabIndex={0}
     onClick={(e) => {
       e.stopPropagation();
-      handlePressToggle();
+      handlePressToggle(uid);
       console.log('toggled block open/closed')
     }}
     {...props}

@@ -32,7 +32,7 @@ export interface BlockProps extends Block {
   /**
    * When toggle is pressed
    */
-  handlePressToggle?: () => void;
+  handlePressToggle?: (uid) => void;
   /**
    * When anchor is pressed
    */
@@ -120,12 +120,13 @@ export const Block = ({
         onMouseEnter={() => { handleMouseEnterBlock; isEditable && setRenderEditableDom(true) }}
         onMouseLeave={() => { handleMouseLeaveBlock; isEditable && setRenderEditableDom(false) }}
     >
-        {children && !isLocked && <Toggle
-        isOpen={isOpen}
-        linkedRef={linkedRef}
-        uid={uid}
-        handlePressToggle={handlePressToggle}
-      />}
+        {children && !isLocked && (
+          <Toggle
+            isOpen={isOpen}
+            linkedRef={linkedRef}
+            uid={uid}
+            handlePressToggle={handlePressToggle}
+          />)}
       <Anchor
         anchorElement="circle"
         handlePressAnchor={handlePressAnchor}
