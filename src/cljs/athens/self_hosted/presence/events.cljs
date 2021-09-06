@@ -36,7 +36,7 @@
 
 
 (rf/reg-event-db
-  :presence/update-username
+  :presence/update-rename
   (fn [db [_ {:keys [current-username new-username]}]]
     (-> db
         (update-in [:presence :users] set/rename-keys {current-username new-username})
@@ -44,6 +44,6 @@
 
 
 (rf/reg-event-fx
-  :presence/send-username
+  :presence/send-rename
   (fn [_ [_ current-username new-username]]
-    {:fx [[:presence/send-username! [current-username new-username]]]}))
+    {:fx [[:presence/send-rename! [current-username new-username]]]}))

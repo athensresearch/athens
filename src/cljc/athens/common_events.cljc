@@ -663,23 +663,23 @@
                      :block-uid block-uid}}))
 
 
-(defn build-presence-username-event
+(defn build-presence-rename-event
   "Sent by client when username is updated"
   [last-tx current-username new-username]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
-     :event/type    :presence/username
+     :event/type    :presence/rename
      :event/args    {:current-username current-username
                      :new-username new-username}}))
 
 
-(defn build-presence-broadcast-username-event
+(defn build-presence-broadcast-rename-event
   "Sent by server when the updated username is broadcasted"
   [last-tx current-username new-username]
   (let [event-id (gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
-     :event/type    :presence/broadcast-username
+     :event/type    :presence/broadcast-rename
      :event/args    {:current-username current-username
                      :new-username new-username}}))

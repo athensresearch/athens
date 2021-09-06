@@ -273,6 +273,6 @@
                                  (dispatch [:fs/update-write-db]))]
       [remote-backups-comp]
       [remote-username-comp username (fn [current-username new-username]
-                                       (dispatch [:presence/send-username current-username new-username])
+                                       (dispatch [:presence/send-rename current-username new-username])
                                        (dispatch [:settings/update :username new-username]))]
       [reset-settings-comp #(dispatch [:settings/reset])]]]))

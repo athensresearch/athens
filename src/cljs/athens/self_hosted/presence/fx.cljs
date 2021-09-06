@@ -12,6 +12,6 @@
 
 
 (rf/reg-fx
-  :presence/send-username!
+  :presence/send-rename!
   (fn [[current-username new-username]]
-    (client/send! (common-events/build-presence-username-event 42 current-username new-username))))
+    (client/send! (common-events/build-presence-rename-event 42 current-username new-username))))
