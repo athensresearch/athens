@@ -87,7 +87,7 @@ export interface AnchorProps {
   /**
    * What style of anchor to display
    */
-  anchorElement: 'circle' | 'dash' | number;
+  anchorElement?: 'circle' | 'dash' | number;
   /**
    * Whether block is closed and has children
    */

@@ -17,6 +17,7 @@ export const ToggleButton = styled.button`
   color: inherit;
   padding: 0;
   -webkit-appearance: none;
+  color: var(--body-text-color---opacity-med);
 
   &:hover {
     color: var(--link-color);
@@ -58,7 +59,7 @@ export const ToggleButton = styled.button`
 /**
  * Button to toggle the visibility of a block's child blocks.
  */
-export const Toggle = ({ isOpen, handlePressToggle, linkedRef, uid, ...props }) => (
+export const Toggle = ({ isOpen, handlePressToggle, uid, ...props }) => (
   <ToggleButton
     className={isOpen ? 'open' : 'closed'}
     tabIndex={0}
