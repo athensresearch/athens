@@ -48,7 +48,7 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   place-content: center;
   color: var(--body-text-color);
   background-color: transparent;
-  transition-property: filter, backdrop-filter, background, color, opacity;
+  transition-property: background, color;
   transition-duration: 0.075s;
   transition-timing-function: ease;
   gap: 0.5rem;
@@ -84,93 +84,59 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     padding: 0.375em 0.8rem;
   }
 
-
-  /** Variants
-   * Variants are prepared with with null filters
-   * to prevent ugly flashing in some browsers when
-   * filters change.
-   */
-  &.variant-filled {
-    filter: brightness(100%);
-
-    .is-theme-dark & {
-      filter: brightness(100%);
-    }
-  }
-  &.variant-plain,
-  &.variant-gray,
-  &.variant-tinted {
-    backdrop-filter: brightness(100%);
-
-    .is-theme-dark & {
-      backdrop-filter: brightness(100%);
-    }
-  }
-
+  /* Variants */
   &.variant-plain {
     background: transparent;
+
+    &:hover {
+      background: var(--body-text-color---opacity-05);
+    }
+
+    &[aria-pressed="true"],
+    &:active {
+      background: var(--body-text-color---opacity-10);
+    }
   }
 
   &.variant-gray {
-    background: var(--body-text-color---opacity-lower);
+    color: var(--link-color);
+    background: var(--body-text-color---opacity-10);
+
+    &:hover {
+      background: var(--body-text-color---opacity-15);
+    }
+
+    &[aria-pressed="true"],
+    &:active {
+      background: var(--body-text-color---opacity-20);
+    }
   }
 
   &.variant-tinted {
-    background: var(--link-color---opacity-lower);
     color: var(--link-color);
+    background: var(--link-color---opacity-15);
+
+    &:hover {
+      background: var(--link-color---opacity-20);
+    }
+
+    &[aria-pressed="true"],
+    &:active {
+      background: var(--link-color---opacity-25);
+    }
   }
 
   &.variant-filled {
+    color: var(--link-color---contrast);
     background: var(--link-color);
-    color: var(--link-color---contrast, #fff);
-  }
-
-  /* States */
-  &:enabled {
-    cursor: pointer;
 
     &:hover {
-      &.variant-filled {
-        filter: brightness(95%);
-
-        .is-theme-dark & {
-          filter: brightness(110%);
-        }
-      }
-      &.variant-plain,
-      &.variant-gray,
-      &.variant-tinted {
-        backdrop-filter: brightness(95%);
-
-        .is-theme-dark & {
-          backdrop-filter: brightness(125%);
-        }
-      }
+      background: var(--link-color---opacity-90);
     }
 
-    &:active,
-    &[aria-pressed="true"] {
-
-      &[class*="variant-"] {
-        transition: filter 0s ease-in-out;
-      }
-
-      &.variant-filled {
-        filter: brightness(90%);
-
-        .is-theme-dark & {
-          filter: brightness(120%);
-        }
-      }
-      &.variant-plain,
-      &.variant-gray,
-      &.variant-tinted {
-        backdrop-filter: brightness(90%);
-
-        .is-theme-dark & {
-          backdrop-filter: brightness(150%);
-        }
-      }
+    &[aria-pressed="true"],
+    &:active {
+      background: var(--link-color---opacity-80);
     }
   }
 `;

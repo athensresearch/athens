@@ -25,6 +25,14 @@ const opacities = {
   "opacity-med": 0.5,
   "opacity-high": 0.75,
   "opacity-higher": 0.85,
+  "opacity-05": 0.05,
+  "opacity-10": 0.10,
+  "opacity-15": 0.15,
+  "opacity-20": 0.20,
+  "opacity-25": 0.25,
+  "opacity-30": 0.30,
+  "opacity-80": 0.80,
+  "opacity-90": 0.9,
 };
 
 const themeLight = {
