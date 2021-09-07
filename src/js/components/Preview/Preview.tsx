@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import { DOMRoot } from '../../config';
+import { Block } from '../Block';
 
 import { Overlay } from '../Overlay';
 import { Popper } from '@material-ui/core';
@@ -55,10 +56,10 @@ Preview.Media = styled.img`
   margin-bottom: 1rem;
 `;
 
-
 Preview.BlockWrap = styled.div`
   overflow: hidden;
 `;
+
 Preview.BlockContent = styled.span`
   display: flex;
   line-clamp: 1;
@@ -70,7 +71,9 @@ Preview.BlockContent = styled.span`
 `;
 
 Preview.MiniBlock = ({ renderedContent, children }) => {
-  return (<Preview.BlockWrap><Preview.BlockContent>{renderedContent}</Preview.BlockContent>
-    <div style={{ marginLeft: "1rem" }}>{children}</div>
-  </Preview.BlockWrap>)
+  return (
+    <Preview.BlockWrap>
+      <Preview.BlockContent>{renderedContent}</Preview.BlockContent>
+      <div style={{ marginLeft: "1rem" }}>{children}</div>
+    </Preview.BlockWrap>)
 }
