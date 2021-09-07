@@ -73,8 +73,8 @@ Resources:
             - ContainerPort: 3010
               Protocol: tcp
           Environment:
-            - Name: datahike_store_path
-              Value: /var/lib/athens
+            - Name: config_edn
+              Value: '{:datahike {:store {:path "/var/lib/athens"}}}'
           MountPoints:
             - ContainerPath: /var/lib/athens
               SourceVolume: !Sub '${AWS::StackName}AthensDataVolume'
