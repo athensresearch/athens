@@ -19,6 +19,7 @@ const DialogWrap = styled(Overlay)`
 
 interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
   isDialogOpen?: boolean;
+  modalProps: any;
   handleClose?: () => void;
   handlePressOk?: () => void;
   handlePressCancel?: () => void;
@@ -28,12 +29,14 @@ export const Dialog = ({
   children,
   isDialogOpen = true,
   handleClose,
+  modalProps,
 }: DialogProps) => {
   return (
     <Modal
       container={DOMRoot}
       open={isDialogOpen}
       onClose={handleClose}
+      {...modalProps}
     >
       <DialogWrap>
         {children}
