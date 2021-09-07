@@ -6,12 +6,11 @@ import * as mockPresence from '../PresenceDetails/mockData';
 
 import { AppToolbar } from './AppToolbar';
 
-const ToolbarStoryWrapper = styled(Storybook.Wrapper)`
-  background: rebeccapurple;
-
+const ToolbarStoryWrapper = styled(Storybook.Desktop)`
   > * {
     /* Make the macOS toolbar behave inside the story */
     position: static !important;
+    width: 100%;
   }
 `;
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { classnames } from '../utils/classnames';
+import { Storybook } from '../storybook';
 
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
@@ -20,17 +21,10 @@ export default {
   }
 };
 
-const Desktop = styled.div`
-  background: rebeccapurple;
-  display: flex;
-`;
-
 const WindowWrapper = styled.div`
-  --margin: 2rem;
-  margin: var(--margin);
+  justify-self: stretch;
+  width: 100%;
   border-radius: 5px;
-  height: calc(100vh - (var(--margin) * 2));
-  width: calc(100vw - (var(--margin) * 2));
   box-shadow: 0 10px 12px rgb(0 0 0 / 0.1);
   overflow: hidden;
   position: relative;
@@ -101,7 +95,7 @@ const Template = (args, context) => {
   const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
 
   return (
-    <Desktop>
+    <Storybook.Desktop>
       <WindowWrapper {...args}
         className={classnames(
           'os-' + args.os,
@@ -188,7 +182,7 @@ const Template = (args, context) => {
           }
         </AppLayout>
       </WindowWrapper>
-    </Desktop>)
+    </Storybook.Desktop>)
 };
 
 export const MacOs = Template.bind({});

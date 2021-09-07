@@ -54,5 +54,20 @@ const Wrapper = styled.div`
   padding: 2rem;
 `;
 
+const Desktop = styled(Wrapper)`
+  padding: 2rem;
+  background: rebeccapurple;
+
+  .is-storybook-canvas & {
+    min-height: 100vh;
+    display: flex;
+
+    #app-layout {
+      height: 100%;
+    }
+  }
+`;
+
 Storybook.App = App;
+Storybook.Desktop = Desktop;
 Storybook.Wrapper = Wrapper;

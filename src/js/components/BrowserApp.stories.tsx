@@ -1,5 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
+
+import { Storybook } from '../storybook';
 import { classnames } from '../utils/classnames';
 import { getOs } from '../utils/getOs';
 
@@ -21,17 +23,9 @@ export default {
   }
 };
 
-const Desktop = styled.div`
-  background: rebeccapurple;
-  display: flex;
-`;
-
 const BrowserWrapper = styled.div`
-  --margin: 2rem;
-  margin: var(--margin);
+  width: 100%;
   border-radius: 5px;
-  height: calc(100vh - (var(--margin) * 2));
-  width: calc(100vw - (var(--margin) * 2));
   box-shadow: 0 10px 12px rgb(0 0 0 / 0.1);
   overflow: hidden;
   position: relative;
@@ -74,7 +68,7 @@ const Template = (args, context) => {
   const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
 
   return (
-    <Desktop>
+    <Storybook.Desktop>
       <BrowserWrapper {...args}
         className={classnames(
           isWinMaximized && 'is-win-maximized',
@@ -161,7 +155,7 @@ const Template = (args, context) => {
           }
         </AppLayout>
       </BrowserWrapper>
-    </Desktop>)
+    </Storybook.Desktop>)
 };
 
 export const Browser = Template.bind({});
