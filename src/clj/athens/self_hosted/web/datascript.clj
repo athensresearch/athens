@@ -2,6 +2,7 @@
   (:require
     [athens.common-events          :as common-events]
     [athens.common-events.resolver :as resolver]
+    [athens.self-hosted.clients    :as clients]
     [clojure.tools.logging         :as log]
     [datahike.api                  :as d])
   (:import
@@ -82,7 +83,7 @@
 
 (defn datascript-handler
   [datahike channel {:event/keys [id type args] :as event}]
-  (log/info channel "Received:" type "with args:" args)
+  (log/debug (clients/get-client-username channel) "-> Received:" type "with args:" args)
   ;; TODO Check if potentially conflicting event?
   ;; if so compare tx-id from client with HEAD master DB
   ;; current -> continue
