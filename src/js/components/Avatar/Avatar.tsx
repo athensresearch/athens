@@ -84,7 +84,7 @@ export const Avatar = ({
 
   let initials;
   if (username) {
-    initials = username.split(' ').map(word => word[0]).join('').slice(0).toUpperCase();
+    initials = username.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase();
   }
 
   return (
