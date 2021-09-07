@@ -1,5 +1,5 @@
 
-import { BADGE, Storybook } from '../../../../storybook';
+import { BADGE, Storybook } from '../../storybook';
 import { mockDatabases } from './mockData';
 
 import { DatabaseMenu } from './DatabaseMenu';

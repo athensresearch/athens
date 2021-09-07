@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
-import * as mockData from './mockData';
-import { mockDatabases } from './components/DatabaseMenu/mockData';
+import { mockDatabases } from '../DatabaseMenu/mockData';
+import * as mockPresence from '../PresenceDetails/mockData';
 
 import { AppToolbar } from './AppToolbar';
 
@@ -48,9 +48,9 @@ const Template = (args) => {
     isMergeDialogOpen={isMergeDialogOpen}
     isDatabaseDialogOpen={isDatabaseDialogOpen}
     isThemeDark={isThemeDark}
-    hostAddress={mockData.hostAddress}
-    currentPageMembers={mockData.currentPageMembers}
-    differentPageMembers={mockData.differentPageMembers}
+    hostAddress={mockPresence.hostAddress}
+    currentPageMembers={mockPresence.currentPageMembers}
+    differentPageMembers={mockPresence.differentPageMembers}
     handleChooseDatabase={() => null}
     handlePressAddDatabase={() => null}
     handlePressRemoveDatabase={() => null}

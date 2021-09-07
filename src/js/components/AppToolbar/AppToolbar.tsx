@@ -4,10 +4,9 @@ import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, Mer
 
 import { Button } from '../Button';
 
-import { DatabaseMenu, DatabaseMenuProps } from './components/DatabaseMenu';
+import { DatabaseMenu, DatabaseMenuProps } from '../DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetailsOverlay } from './components/PresenceDetailsOverlay';
-import { PresenceDetailsIndicator } from './components/PresenceDetailsIndicator';
+import { PresenceDetails } from '../PresenceDetails';
 
 
 const AppToolbarWrapper = styled.header`
@@ -205,8 +204,6 @@ export const AppToolbar = ({
   handlePressClose,
   handlePressHostAddress,
 }: AppToolbarProps): React.ReactElement => {
-  const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
-  const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
 
   return (<AppToolbarWrapper>
     <AppToolbar.MainControls>
@@ -239,25 +236,13 @@ export const AppToolbar = ({
       <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
-      <PresenceDetailsIndicator
-        isPresenceDetailsOpen={isPresenceDetailsOpen}
-        setIsPresenceDetailsOpen={setIsPresenceDetailsOpen}
-        setPresenceDetailsAnchor={setPresenceDetailsAnchor}
+      <PresenceDetails
         currentPageMembers={currentPageMembers}
         differentPageMembers={differentPageMembers}
+        hostAddress={hostAddress}
+        handlePressHostAddress={handlePressHostAddress}
+        handlePressMember={handlePressMember}
       />
-      {isPresenceDetailsOpen && (
-        <PresenceDetailsOverlay
-          hostAddress={hostAddress}
-          currentPageMembers={currentPageMembers}
-          differentPageMembers={differentPageMembers}
-          handlePressHostAddress={handlePressHostAddress}
-          handlePressMember={handlePressMember}
-          setIsPresenceDetailsOpen={setIsPresenceDetailsOpen}
-          isPresenceDetailsOpen={isPresenceDetailsOpen}
-          presenceDetailsAnchor={presenceDetailsAnchor}
-        />
-      )}
       <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
       <Button isPressed={isDatabaseDialogOpen} onClick={handlePressDatabase}><Storage /></Button>

@@ -1,14 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
-import { DOMRoot } from '../../../../config';
+import { DOMRoot } from '../../config';
 
 import { AddCircle } from '@material-ui/icons';
 import { Modal, Popper } from '@material-ui/core';
 
-import { Button } from '../../../Button';
-import { Overlay } from '../../../Overlay';
-import { Badge } from '../../../Badge';
-import { Menu } from '../../../Menu';
+import { Button } from '../Button';
+import { Overlay } from '../Overlay';
+import { Badge } from '../Badge';
+import { Menu } from '../Menu';
 
 import { DatabaseIcon } from './components/DatabaseIcon';
 import { DatabaseMenuItem } from './components/DatabaseMenuItem';
