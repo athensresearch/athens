@@ -1,3 +1,4 @@
+import React from 'react';
 import styled from 'styled-components';
 
 import { Page } from '../Page';
@@ -21,31 +22,39 @@ export default {
 
 // Stories
 
-const Template = (args) => <Page {...args} />;
+const Template = (args) => {
+  const [isLinkedReferencesOpen, setIsLinkedReferencesOpen] = React.useState(false);
+  const [isUnlinkedReferencesOpen, setIsUnlinkedReferencesOpen] = React.useState(false);
+  const handlePressLinkedReferencesToggle = () => setIsLinkedReferencesOpen(!isLinkedReferencesOpen);
+  const handlePressUnlinkedReferencesToggle = () => setIsUnlinkedReferencesOpen(!isUnlinkedReferencesOpen);
+  return <Page
+    uid="123"
+    isLinkedReferencesOpen={isLinkedReferencesOpen}
+    isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
+    handlePressLinkedReferencesToggle={handlePressLinkedReferencesToggle}
+    handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
+    {...args}
+  />
+};
 
-export const NodePage = () => <Page
-  handlePressAddShortcut={() => null}
-  handlePressDelete={() => null}
-  handlePressRemoveShortcut={() => null}
-  handlePressShowLocalGraph={() => null}
-  title="Node Page"
-  isDailyNote={false}
-  children={<PageBlocksContainer><BlockTree /></PageBlocksContainer>}
-  uid="123" />;
+export const NodePage = Template.bind({});
+NodePage.args = {
+  title: "Node Page",
+  isDailyNote: false,
+  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>,
+}
 
 export const BlockPage = Template.bind({});
 BlockPage.args = {
   isDailyNote: false,
   title: 'Block Page',
-  uid: '123',
   children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
 };
 
 export const NodePageWithTasks = Template.bind({});
-BlockPage.args = {
+NodePageWithTasks.args = {
   isDailyNote: false,
   title: 'Node Page With Tasks',
-  uid: '123',
   children: <PageBlocksContainer><BlockTreeWithTasks /></PageBlocksContainer>
 };
 
@@ -53,7 +62,6 @@ export const BlockPageWithLongTitle = Template.bind({});
 BlockPageWithLongTitle.args = {
   isDailyNote: false,
   title: 'Lorem ipsum dolor sit amet donec consectetur',
-  uid: '123',
   children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
 };
 

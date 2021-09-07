@@ -9,8 +9,18 @@ import { recurseBlocks } from '../../../../utils/recurseBlocks';
 import { Reference } from './components/Reference';
 
 
-const Section = styled.section`
-  margin-top: 3em;
+const Section = styled.section``;
+
+const Count = styled.span`
+  border-radius: 100em;
+  background: var(--background-minus-2);
+  color: var(--body-text-color---opacity-high);
+  font-weight: bold;
+  padding: 0.125rem 0.25rem;
+  min-width: 1.25rem;
+  font-size: var(--font-size--text-xs);
+  text-align: center;
+  margin-left: 0.5rem;
 `;
 
 const SectionHeading = styled.h4`
@@ -87,8 +97,12 @@ const SectionToggleButton = styled(Button).attrs(props => ({
 `;
 
 const ReferencesWrapper = styled.div`
-  padding-left: 3rem;
-  padding-right: 3rem;
+  padding: 1rem 3rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 
@@ -96,7 +110,7 @@ const ReferenceSection = ({ label, isOpen, handlePressToggle, references }) => {
   return (<Section>
     <SectionToggleButton shape="round" variant="unset" isOpen={isOpen} onClick={handlePressToggle}>
       <SectionHeading>
-        <ChevronRight /> {label}
+        <ChevronRight /> {label} {!isOpen && (<Count>2</Count>)}
       </SectionHeading>
     </SectionToggleButton>
     {isOpen && (
@@ -122,28 +136,28 @@ export interface ReferencesProps {
   isLinkedReferencesOpen: boolean;
   isUnlinkedReferencesOpen: boolean;
   handlePressLinkedReferencesToggle: () => void;
-  handlePressUninkedReferencesToggle: () => void;
+  handlePressUnlinkedReferencesToggle: () => void;
 }
 
 export const References = ({
   linkedRefs,
   unlinkedRefs,
   isLinkedReferencesOpen,
-  handlePressLinkedToggle,
   isUnlinkedReferencesOpen,
-  handlePressUnlinkedToggle,
+  handlePressLinkedReferencesToggle,
+  handlePressUnlinkedReferencesToggle,
 }) => {
   return (
     <ReferencesWrapper>
       <ReferenceSection
         label="Linked References"
-        handlePressToggle={handlePressLinkedToggle}
+        handlePressToggle={handlePressLinkedReferencesToggle}
         isOpen={isLinkedReferencesOpen}
         references={linkedRefs}
       />
       <ReferenceSection
         label="Unlinked References"
-        handlePressToggle={handlePressUnlinkedToggle}
+        handlePressToggle={handlePressUnlinkedReferencesToggle}
         isOpen={isUnlinkedReferencesOpen}
         references={unlinkedRefs}
       />
