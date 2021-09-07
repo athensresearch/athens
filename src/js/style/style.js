@@ -51,7 +51,7 @@ const themeLight = {
 }
 
 const themeDark = {
-  "link-color": "#2399E7",
+  "link-color": "#0071DB",
   "highlight-color": "#FBBE63",
   "text-highlight-color": "#FBBE63",
   "warning-color": "#DE3C21",
