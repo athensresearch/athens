@@ -20,7 +20,7 @@
     "clean": "rm -rf resources/public/**/*.js && rm -rf target && rm -rf .shadow-cljs && rm -rf ./src/stories/**/*.js",
     "dist": "electron-builder -p always",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook -c .storybook -o public"
   },
   "main": "resources/main.js",
   "build": {
