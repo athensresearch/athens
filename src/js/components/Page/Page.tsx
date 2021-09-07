@@ -15,7 +15,7 @@ import { EmptyMessage } from './components/EmptyMessage';
 import { References, ReferencesProps } from './components/References';
 
 const PageWrap = styled.article`
-  padding: 1rem 0 10rem;
+  padding: 1rem 0;
   flex-basis: 100%;
   align-self: stretch;
 `;
@@ -134,6 +134,10 @@ export const Page = ({
   children,
   title,
   uid,
+  isLinkedReferencesOpen,
+  isUnlinkedReferencesOpen,
+  handlePressLinkedReferencesToggle,
+  handlePressUnlinkedReferencesToggle,
   handlePressRemoveShortcut,
   handlePressAddShortcut,
   handlePressShowLocalGraph,
@@ -141,10 +145,6 @@ export const Page = ({
 }: PageProps) => {
   const [isPageMenuOpen, setIsPageMenuOpen] = React.useState(false);
   const [pageMenuAnchor, setPageMenuAnchor] = React.useState(null);
-  const [isLinkedReferencesOpen, setIsLinkedReferencesOpen] = React.useState(true);
-  const [isUnlinkedReferencesOpen, setIsUnlinkedReferencesOpen] = React.useState(true);
-  const handlePressLinkedToggle = () => setIsLinkedReferencesOpen(!isLinkedReferencesOpen);
-  const handlePressUnlinkedToggle = () => setIsUnlinkedReferencesOpen(!isUnlinkedReferencesOpen);
 
   const handlePressMenuToggle = (e) => {
     setPageMenuAnchor(e.currentTarget);
@@ -198,8 +198,8 @@ export const Page = ({
         <References
           isLinkedReferencesOpen={isLinkedReferencesOpen}
           isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
-          handlePressLinkedToggle={handlePressLinkedToggle}
-          handlePressUnlinkedToggle={handlePressUnlinkedToggle}
+        handlePressLinkedReferencesToggle={handlePressLinkedReferencesToggle}
+        handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
         />
     </PageWrap>);
 };
