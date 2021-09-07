@@ -89,7 +89,6 @@ const WindowWrapper = styled.div`
 `;
 
 const Template = (args, context) => {
-  const [os, setOs] = React.useState(args.os);
   const [route, setRoute] = React.useState(args.route);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
@@ -105,6 +104,7 @@ const Template = (args, context) => {
     <Desktop>
       <WindowWrapper {...args}
         className={classnames(
+          'os-' + args.os,
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',
@@ -112,7 +112,7 @@ const Template = (args, context) => {
       >
         <AppLayout>
           <AppToolbar
-            os={os}
+            os={args.os}
             isElectron={args.isElectron}
             route={route}
             isWinFullscreen={isWinFullscreen}

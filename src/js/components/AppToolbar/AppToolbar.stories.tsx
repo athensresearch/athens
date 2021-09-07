@@ -37,7 +37,8 @@ const Template = (args) => {
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
   const [isThemeDark, setIsThemeDark] = React.useState(false);
 
-  return <AppToolbar
+  return <ToolbarStoryWrapper className={'os-' + args.os}>
+    <AppToolbar
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}
@@ -70,11 +71,9 @@ const Template = (args) => {
     handlePressShortcuts={() => setIsLeftOpen(!isLeftSidebarOpen)}
     handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
     handlePressMember={(member) => console.log(member)}
-    {...args} />
+      {...args} />
+  </ToolbarStoryWrapper>
 };
-
-export const Auto = Template.bind({});
-Auto.args = {};
 
 export const MacOs = Template.bind({});
 MacOs.args = {
