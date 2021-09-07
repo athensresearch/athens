@@ -49,10 +49,10 @@ Use the domain name returned by the last command followed by `:3010` to connect 
 Run the command below to restart the server and update to the latest Athens server:
 
 ```sh
-aws ecs update-service --force-new-deployment --service athens-svc --cluster athens-cluster
+aws ecs update-service --force-new-deployment --service athens-demo-athens-svc --cluster athens-demo-athens-cluster
 ```
 ```sh
-aws ecs wait services-stable --service athens-svc --cluster athens-cluster
+aws ecs wait services-stable --service athens-demo-athens-svc --cluster athens-demo-athens-cluster
 ```
 
 
