@@ -318,7 +318,7 @@
    :alert/confirm-fn     nil
    :alert/cancel-fn      nil
    "Linked References"   true
-   "Unlinked References" false})
+   :is-unlinked-ref? false})
 
 
 (defn menu-dropdown
@@ -430,66 +430,51 @@
 
 
 (defn unlinked-ref-el
-  [state daily-notes? unlinked-refs title]
-  (let [unlinked? "Unlinked References"]
-    (when (not daily-notes?)
-      [:section (use-style references-style)
-       [:h4 (use-style references-heading-style)
-        [button {:on-click (fn []
-                             (if (get @state unlinked?)
-                               (swap! state assoc unlinked? false)
-                               (let [un-refs (get-unlinked-references (escape-str title))]
-                                 (swap! state assoc unlinked? true)
-                                 (reset! unlinked-refs un-refs))))}
-         (if (get @state unlinked?)
-           [:> KeyboardArrowDown]
-           [:> ChevronRight])]
-        [(r/adapt-react-class Link)]
-        [:div {:style {:display         "flex"
-                       :justify-content "space-between"
-                       :width "100%"}}
-         [:span unlinked?]
-         (when (and unlinked? (not-empty @unlinked-refs))
-           [button {:style    {:font-size "14px"}
-                    :on-click (fn []
-                                (let [unlinked-str-ids (->> @unlinked-refs
-                                                            (mapcat second)
-                                                            (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
-                                  (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
-
-                                (swap! state assoc unlinked? false)
-
-                                (reset! unlinked-refs []))}
-            "Link All"])]]
-       (when (get @state unlinked?)
-         [:div (use-style references-list-style)
-          (doall
-            (for [[group-title group] @unlinked-refs]
-              [:div (use-style references-group-style {:key (str "group-" group-title)})
-               [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
-               (doall
-                 (for [block group]
-                   ^{:key (str "ref-" (:block/uid block))}
-                   [:div {:style {:display         "flex"
-                                  :justify-content "space-between"
-                                  :align-items     "flex-start"}}
-                    [:div (merge
-                            (use-style references-group-block-style)
-                            {:style {:max-width "90%"}})
-                     [ref-comp block]]
-                    (when unlinked?
-                      [button {:style    {:margin-top "1.5em"}
-                               :on-click (fn []
-                                           (let [hm                (into (hash-map) @unlinked-refs)
-                                                 new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                               (= uid (:block/uid block)))
-                                                                                                             %))
-                                                                        seq)]
-                                             ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                             (reset! unlinked-refs new-unlinked-refs)
-                                             (dispatch [:unlinked-references/link block title])))}
-                       "Link"])]))]))])])))
+  [_ title]
+  (let [unlinked-refs (r/track get-unlinked-references (escape-str title))]
+    (fn [state _]
+      (let [is-unlinked-ref? (:is-unlinked-ref? @state)]
+        [:section (use-style references-style)
+         [:h4 (use-style references-heading-style)
+          [button {:on-click #(swap! state update :is-unlinked-ref? not)}
+           (if is-unlinked-ref?
+             [:> KeyboardArrowDown]
+             [:> ChevronRight])]
+          [:> Link]
+          [:div {:style {:display         "flex"
+                         :justify-content "space-between"
+                         :width "100%"}}
+           [:span "Unlinked References"]
+           (when (and is-unlinked-ref? (not-empty @unlinked-refs))
+             [button {:style    {:font-size "14px"}
+                      :on-click (fn []
+                                  (swap! state assoc :is-unlinked-ref? false)
+                                  (let [unlinked-str-ids (->> @unlinked-refs
+                                                              (mapcat second)
+                                                              (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                    (dispatch [:unlinked-references/link-all unlinked-str-ids title])))}
+              "Link All"])]]
+         (when is-unlinked-ref?
+           [:div (use-style references-list-style)
+            (doall
+              (for [[group-title group] @unlinked-refs]
+                [:div (use-style references-group-style {:key (str "group-" group-title)})
+                 [:h4 (use-style references-group-title-style)
+                  [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                 (doall
+                   (for [block group]
+                     ^{:key (str "ref-" (:block/uid block))}
+                     [:div {:style {:display         "flex"
+                                    :justify-content "space-between"
+                                    :align-items     "flex-start"}}
+                      [:div (merge
+                              (use-style references-group-block-style)
+                              {:style {:max-width "90%"}})
+                       [ref-comp block]]
+                      (when is-unlinked-ref?
+                        [button {:style    {:margin-top "1.5em"}
+                                 :on-click #(dispatch [:unlinked-references/link block title])}
+                         "Link"])]))]))])]))))
 
 
 ;; TODO: where to put page-level link filters?
@@ -500,12 +485,10 @@
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
   [_ _ _ _]
   (let [state         (r/atom init-state)
-        unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
     (fn [node editing-uid linked-refs]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
-        (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
@@ -570,7 +553,8 @@
 
          ;; References
          [linked-ref-el state on-daily-notes? linked-refs]
-         [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
+         (when (not on-daily-notes?)
+           [unlinked-ref-el state title])]))))
 
 
 (defn page
