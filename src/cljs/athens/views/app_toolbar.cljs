@@ -197,9 +197,9 @@
                        (unzoom))
         [:div (use-style app-header-control-section-style)
          [db-menu]
-         [:> Button {:isPressed @left-open?
-                  :title "Toggle Navigation Sidebar"
-                  :on-click #(dispatch [:left-sidebar/toggle])}
+         [:> Button {:is-pressed @left-open?
+                     :title "Toggle Navigation Sidebar"
+                     :on-click #(dispatch [:left-sidebar/toggle])}
           [:> Menu]]
          [separator]
          ;; TODO: refactor to effects
@@ -209,47 +209,47 @@
             [:> Button {:on-click #(.forward js/window.history)} [:> ChevronRight]]
             [separator]])
          [:> Button {:on-click router/nav-daily-notes
-                  :title "Open Today's Daily Note"
-                  :isPressed   (= @route-name :home)} [:> Today]]
+                     :title "Open Today's Daily Note"
+                     :is-pressed   (= @route-name :home)} [:> Today]]
          [:> Button {:on-click #(router/navigate :pages)
-                  :title "Open All Pages"
-                  :isPressed   (= @route-name :pages)} [:> FileCopy]]
+                     :title "Open All Pages"
+                     :is-pressed   (= @route-name :pages)} [:> FileCopy]]
          [:> Button {:on-click #(router/navigate :graph)
-                  :title "Open Graph"
-                  :isPressed   (= @route-name :graph)} [:> BubbleChart]]
+                     :title "Open Graph"
+                     :is-pressed   (= @route-name :graph)} [:> BubbleChart]]
          ;; below is used for testing error tracking
          #_[:> Button {:on-click #(throw (js/Error "error"))
                     :style {:border "1px solid red"}} [:> Warning]]
          [:> Button {:on-click #(dispatch [:athena/toggle])
                      :class "athena"
                      :style    {:background "inherit"}
-                     :isPressed   @(subscribe [:athena/open])}
+                     :is-pressed   @(subscribe [:athena/open])}
           [:> Search] [:span (use-style athena-button-label-style) "Find or Create a Page"]]]
 
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
             [:> Button {:on-click #(swap! merge-open? not)
-                     :title "Merge Roam Database"}
+                        :title "Merge Roam Database"}
              [:> MergeType]]
             [:> Button {:on-click #(router/navigate :settings)
-                     :title "Open Settings"
-                     :isPressed   (= @route-name :settings)}
+                        :title "Open Settings"
+                        :is-pressed   (= @route-name :settings)}
              [:> Settings]]
 
             [:div {:style {:display "flex"}}
              [:> Storage {:style {:align-self "center"}}]]
             [separator]]
-           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :isPrimary true} "Load Test DB"])
+           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :is-primary true} "Load Test DB"])
          [:> Button {:on-click #(dispatch [:theme/toggle])
-                  :title "Toggle Color Scheme"}
+                     :title "Toggle Color Scheme"}
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
          [separator]
-         [:> Button {:isPressed   @right-open?
-                  :title "Toggle Sidebar"
-                  :on-click #(dispatch [:right-sidebar/toggle])}
+         [:> Button {:is-pressed   @right-open?
+                     :title "Toggle Sidebar"
+                     :on-click #(dispatch [:right-sidebar/toggle])}
           [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
 
         (when (and (contains? #{:windows :linux} os) electron?)

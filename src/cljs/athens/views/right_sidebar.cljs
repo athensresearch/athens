@@ -1,5 +1,6 @@
 (ns athens.views.right-sidebar
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/Close" :default Close]
@@ -8,12 +9,9 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.parse-renderer :as parse-renderer]
     [athens.style :refer [color OPACITIES ZINDICES]]
-    ["/components/Button/Button" :refer [Button]]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -248,8 +246,8 @@
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
                                            [:> Button {:style    sidebar-item-toggle-style
-                                                    :on-click #(dispatch [:right-sidebar/toggle-item uid])
-                                                    :class    (when open "is-open")}
+                                                       :on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                       :class    (when open "is-open")}
                                             [:> ChevronRight]]
                                            [:h2
                                             (cond

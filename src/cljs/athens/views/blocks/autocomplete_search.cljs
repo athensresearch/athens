@@ -1,13 +1,13 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-   ["/components/Button/Button" :refer [Button]]
-   [athens.style :as style]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [athens.views.dropdown :as dropdown]
-   [clojure.string :as string]
-   [goog.events :as events]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy]))
+    ["/components/Button/Button" :refer [Button]]
+    [athens.style :as style]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [athens.views.dropdown :as dropdown]
+    [clojure.string :as string]
+    [goog.events :as events]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy]))
 
 
 (defn inline-item-click
@@ -52,10 +52,10 @@
                                          (doall
                                            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
                                              [:> Button {:key      (str "inline-search-item" uid)
-                                                              :id       (str "dropdown-item-" i)
-                                                              :isPressed   (= index i)
-                                                              ;; if page link, expand to title. otherwise expand to uid for a block ref
-                                                              :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                                                              :style    {:text-align "left"}}
+                                                         :id       (str "dropdown-item-" i)
+                                                         :is-pressed   (= index i)
+                                                         ;; if page link, expand to title. otherwise expand to uid for a block ref
+                                                         :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
+                                                         :style    {:text-align "left"}}
                                               (or title string)])))]])))})))
 

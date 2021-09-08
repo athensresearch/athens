@@ -8,9 +8,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "src/js/",
-    "typeRoots": [
-      "src/js"
-    ]
-  }
+    "rootDir": "src/js/components/"
+  },
+  "include": [
+    "src/js/components/**/*.tsx"
+  ],
+  "exclude": [
+    "src/js/components/**/*.stories.tsx"
+  ]
 }

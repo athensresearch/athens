@@ -4,8 +4,6 @@
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [posh.reagent :refer [q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]

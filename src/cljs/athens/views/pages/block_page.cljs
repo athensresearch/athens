@@ -8,8 +8,6 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.pages.node-page :as node-page]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [re-frame.core :refer [dispatch subscribe]]

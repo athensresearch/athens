@@ -15,8 +15,6 @@
     [athens.util :refer [js-event->val]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [komponentit.modal :as modal]
@@ -147,10 +145,10 @@
                             ^{:key x}
                             [:li (str "[[" x "]]")])]
                          [:> Button {:style    {:align-self "center"}
-                                  :isPrimary  true
-                                  :on-click (fn []
-                                              (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
-                                              (close-modal))}
+                                     :is-primary  true
+                                     :on-click (fn []
+                                                 (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
+                                                 (close-modal))}
                           "Merge"]]))]
 
          :on-close close-modal}]])))
@@ -169,12 +167,12 @@
                      :justify-content "space-between"
                      :align-items     "center"
                      :width           "80%"})
-    [:> Button {:isPrimary  true
-             :on-click #(dialogs/open-dialog!)}
+    [:> Button {:is-primary  true
+                :on-click #(dialogs/open-dialog!)}
      "Open"]
     [:> Button {:disabled @loading
-             :isPrimary  true
-             :on-click #(dialogs/move-dialog!)}
+                :is-primary  true
+                :on-click #(dialogs/move-dialog!)}
      "Move"]]])
 
 
@@ -194,9 +192,9 @@
                   :justify-content "space-between"
                   :width           "100%"}}
     [:h5 "New Location"]
-    [:> Button {:isPrimary  true
-             :disabled (clojure.string/blank? (:input @state))
-             :on-click #(dialogs/create-dialog! (:input @state))}
+    [:> Button {:is-primary  true
+                :disabled (clojure.string/blank? (:input @state))
+                :on-click #(dialogs/create-dialog! (:input @state))}
      "Browse"]]])
 
 
@@ -241,11 +239,11 @@
                                  :disabled    true ; TODO: not supported yet
                                  :on-change   #(reset! password (js-event->val %))}]]]
          doall)
-       [:> Button {:isPrimary  true
-                :style    {:margin-top "0.5rem"}
-                :disabled (or (clojure.string/blank? @name)
-                              (clojure.string/blank? @address))
-                :on-click #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address)])}
+       [:> Button {:is-primary  true
+                   :style    {:margin-top "0.5rem"}
+                   :disabled (or (clojure.string/blank? @name)
+                                 (clojure.string/blank? @address))
+                   :on-click #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address)])}
         "Join"]])))
 
 

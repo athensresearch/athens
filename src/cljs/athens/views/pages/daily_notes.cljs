@@ -4,11 +4,6 @@
     [athens.style :refer [DEPTH-SHADOWS]]
     [athens.util :refer [get-day uid-to-date]]
     [athens.views.pages.node-page :as node-page]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [goog.dom :refer [getElement]]
-    [goog.functions :refer [debounce]]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
 
