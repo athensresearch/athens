@@ -37,10 +37,10 @@ const Template = (args, context) => {
           showTooltip={true}
           tooltipPlacement="bottom"
         />
-      <Button
-        shape="round"
+        <Button
+          shape="round"
           variant="gray"
-        onClick={() => setIsDialogOpen(true)}>
+          onClick={() => setIsDialogOpen(true)}>
           Edit
         </Button>
       </div>
