@@ -5,7 +5,7 @@ import { readableColor } from 'polished';
 
 import { DOMRoot } from '../../config';
 
-const AvatarWrap = styled.svg`
+const Wrapper = styled.svg`
   overflow: visible;
   cursor: default;
   border-radius: 100%;
@@ -89,7 +89,7 @@ export const Avatar = ({
 
   return (
     <>
-      <AvatarWrap
+      <Wrapper
         viewBox="0 0 24 24"
         ref={setAvatarEl}
         onMouseOver={() => { if (showTooltip === 'hover') setIsShowingTooltip(true) }}
@@ -117,7 +117,7 @@ export const Avatar = ({
         >
           {initials || username}
         </Name>
-      </AvatarWrap>
+      </Wrapper>
       <Popper
         open={showTooltip === true || isShowingTooltip}
         anchorEl={avatarEl}
@@ -164,7 +164,7 @@ Avatar.Stack = styled.div<AvatarStackProps>`
   --stack-overlap: ${props => props.overlap || '0.5'};
   display: inline-flex;
 
-  ${AvatarWrap} {
+  ${Wrapper} {
     &:not(:first-of-type) {
       margin-inline-start: calc(var(--size, 1.5em) * (var(--stack-overlap) * -1));
       mask-image: radial-gradient(
@@ -175,4 +175,6 @@ Avatar.Stack = styled.div<AvatarStackProps>`
   }
 `;
 
+Avatar.Wrapper = Wrapper;
 Avatar.Fullname = FullName;
+Avatar.Name = Name;

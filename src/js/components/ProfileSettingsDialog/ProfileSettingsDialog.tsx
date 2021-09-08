@@ -2,6 +2,7 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { readableColor } from 'polished';
 import { HexColorPicker } from "react-colorful";
+import { Fade, Grow } from '@material-ui/core';
 
 import { Button } from '../Button';
 import { Avatar } from '../Avatar';
@@ -59,14 +60,14 @@ const pulse = keyframes`
 const ColorPickerWrap = styled.div`
   .react-colorful {
     width: 8.5rem;
-    height: 2rem;
+    height: 3rem;
     gap: 1rem;
-    margin: 0.25rem 0 1rem;
+    margin: -0.25rem 0 1rem;
     flex-direction: row;
 
     > * {
-      border-radius: 0.25rem;
-      height: 2rem;
+      border-radius: 0.5rem;
+      height: 100%;
       flex: 0 0 4rem;
     }
   }
@@ -119,6 +120,7 @@ export const ProfileSettingsDialog = ({
   }
 
   return (
+    <Fade>
     <Dialog
       isDialogOpen={isOpen}
       handleClose={handleClose}
@@ -167,6 +169,7 @@ export const ProfileSettingsDialog = ({
           </Button>
         </Actions>
       </ProfileWrap>
-    </Dialog>
+      </Dialog>
+    </Fade>
   )
 }

@@ -20,7 +20,7 @@ export default {
 const testPerson = { personId: '123', username: 'John Doe', color: '#0071ed' };
 
 const Template = (args, context) => {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(args.isOpen);
   const [person, setPerson] = React.useState(testPerson);
 
   const handleUpdatePerson = React.useCallback((person) => {
@@ -37,10 +37,10 @@ const Template = (args, context) => {
           showTooltip={true}
           tooltipPlacement="bottom"
         />
-      <Button
-        shape="round"
+        <Button
+          shape="round"
           variant="gray"
-        onClick={() => setIsDialogOpen(true)}>
+          onClick={() => setIsDialogOpen(true)}>
           Edit
         </Button>
       </div>
@@ -50,10 +50,14 @@ const Template = (args, context) => {
           isOpen={isDialogOpen}
           handleUpdatePerson={handleUpdatePerson}
           handleClose={() => setIsDialogOpen(false)}
-          {...args}
         />
       </Storybook.Wrapper>
     </>)
 };
 
 export const Default = Template.bind({});
+
+export const Shown = Template.bind({});
+Shown.args = {
+  isOpen: true
+}

@@ -2,19 +2,15 @@ import styled from 'styled-components'
 import React from 'react';
 
 import { DOMRoot } from '../../../config';
-import { Wifi, Settings } from '@material-ui/icons'
+import { Wifi } from '@material-ui/icons'
 import { Popper, Modal, Fade } from '@material-ui/core'
 
 import { Button } from '../../Button';
 import { Menu } from '../../Menu';
 import { Overlay } from '../../Overlay';
 import { Avatar } from '../../Avatar';
-import { Input } from '../../Input';
-import { Dialog } from '../../Dialog';
+import { ProfileSettingsDialog } from '../../ProfileSettingsDialog';
 
-
-
-const ColorOptions = ["#0071DB", "#F9A132", "#009E23"];
 
 const MemberCount = styled.span`
   margin-left: 0.125rem;
@@ -28,7 +24,7 @@ const Heading = styled.h3`
 `;
 
 const PresenceOverlay = styled(Overlay)`
-  min-width: 12em;
+  min-width: 14em;
 `;
 
 const HostIcon = styled(Wifi)`
@@ -37,11 +33,25 @@ const HostIcon = styled(Wifi)`
   border-radius: 100em;
 `;
 
+const Profile = styled.div`
+  display: flex;
+  padding: 0.35rem;
+  align-items: center;
+
+  ${Avatar.Wrapper} {
+    margin-right: 0.75rem;
+  }
+
+  button {
+    margin-left: auto;
+    font-size: var(--font-size--text-xs);
+  }
+`;
+
 export const PresenceDetails = ({
   hostAddress,
   currentUser,
   currentPageMembers,
-  handlePressSelf,
   differentPageMembers,
   handlePressHostAddress,
   handlePressMember,
@@ -50,8 +60,6 @@ export const PresenceDetails = ({
   setCurrentUserUsername,
   setIsUserSettingsDialogOpen,
   setCurrentUserColor,
-  currentUserUsername,
-  currentUserColor,
 }) => {
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
@@ -103,7 +111,7 @@ export const PresenceDetails = ({
           {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={250}>
               <PresenceOverlay className="animate-in">
-                <Button onClick={() => handlePressSelf()} key={currentUser.personId}>
+                <Profile>
                   <Avatar
                     username={currentUser.username}
                     personId={currentUser.personId}
@@ -111,8 +119,13 @@ export const PresenceDetails = ({
                     showTooltip={false}
                   />
                   <span>{currentUser.username}</span>
-                  <Settings />
-                </Button>
+                  <Button
+                    onClick={() => setIsUserSettingsDialogOpen(true)}
+                    key={currentUser.personId}
+                  >
+                    Edit
+                  </Button>
+                </Profile>
 
                 {hostAddress && <><Button onClick={handlePressHostAddress}><HostIcon /> <span>{hostAddress}</span></Button>
                   <Menu.Separator /></>
@@ -156,26 +169,17 @@ export const PresenceDetails = ({
         </Popper>
       </Modal>
 
-      {isUserSettingsDialogOpen && <Dialog
-        handleClose={() => setIsUserSettingsDialogOpen(false)}
-      >
-        <Dialog.Header>
-          <Dialog.Title>You</Dialog.Title>
-          <Dialog.CloseButton onClick={() => setIsUserSettingsDialogOpen(false)} />
-        </Dialog.Header>
-        <Dialog.Body>
-          <div>
-            <Avatar personId="123" username={currentUserUsername} color={currentUserColor} />
-            {ColorOptions.map((color) => <Button key={color} onClick={() => setCurrentUserColor(color)}>{color}</Button>)}
-          </div>
-          <div>
-            <Input type="name" defaultValue={currentUserUsername} onChange={e => setCurrentUserUsername(e.target.value)} />
-          </div>
-        </Dialog.Body>
-        <Dialog.Actions>
-
-        </Dialog.Actions>
-      </Dialog>}
+      {isUserSettingsDialogOpen &&
+        <ProfileSettingsDialog
+          person={{ ...currentUser }}
+          isOpen={isUserSettingsDialogOpen}
+          handleClose={() => setIsUserSettingsDialogOpen(false)}
+          handleUpdatePerson={(person) => {
+            setCurrentUserUsername(person.username);
+            setCurrentUserColor(person.color);
+            setIsUserSettingsDialogOpen(false)
+          }}
+        />}
     </>
   );
 };
