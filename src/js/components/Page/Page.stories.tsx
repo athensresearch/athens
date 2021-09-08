@@ -6,7 +6,10 @@ import { BADGE, Storybook } from '../../storybook';
 import { DateTime } from 'luxon';
 import { preferredDateFormat } from '../../config';
 
-import { BlockTree, BlockTreeWithTasks } from '../Block/Block.stories';
+import {
+  BlockTree,
+  WithTasks
+} from '../Block/Block.stories';
 import { PageBlocksContainer } from './Page';
 
 export default {
@@ -55,7 +58,7 @@ export const NodePageWithTasks = Template.bind({});
 NodePageWithTasks.args = {
   isDailyNote: false,
   title: 'Node Page With Tasks',
-  children: <PageBlocksContainer><BlockTreeWithTasks /></PageBlocksContainer>
+  children: <PageBlocksContainer><WithTasks /></PageBlocksContainer>
 };
 
 export const BlockPageWithLongTitle = Template.bind({});
