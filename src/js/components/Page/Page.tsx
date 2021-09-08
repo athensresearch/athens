@@ -18,6 +18,10 @@ const PageWrap = styled.article`
   padding: 1rem 0;
   flex-basis: 100%;
   align-self: stretch;
+  width: 100%;
+  max-width: 60em;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const PageHeader = styled.header`
