@@ -45,3 +45,8 @@ Positive consequences:
 * CLJS proficiency is not necessary for design work
 * Easier for contributors to contribute to components
 * Reduced bus factor in design
+
+Deferred work items:
+* The [devcards style guide](https://github.com/athensresearch/athens/blob/c697b7c62d60dd9fca0b03a32b35cc4776a90c54/src/cljs/athens/devcards/style_guide.cljs) will need to be reimplemented in Storybook
+* The [devcards stylify guide conventions](https://github.com/athensresearch/athens/blob/c697b7c62d60dd9fca0b03a32b35cc4776a90c54/src/cljs/athens/devcards/styling_with_stylefy.cljs) will need to be carried over to Storybook equivalents
+* The [partial work on filters](https://github.com/athensresearch/athens/blob/feature/rtc-v1/src/cljs/athens/views/filters.cljs) should be used as reference for a future filters implementation
