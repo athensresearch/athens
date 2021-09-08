@@ -9,9 +9,8 @@ Parameters:
   InstanceType:
     Description: The EC2 instance type
     Type: String
-    Default: t3.micro
+    Default: t3.small
     AllowedValues:
-      - t3.micro
       - t3.small
       - t3.medium
       - t3.large
@@ -88,7 +87,7 @@ Resources:
             - AvailabilityZone: !GetAtt 
                 - Subnet1
                 - AvailabilityZone
-      Memory: '512'
+      Memory: '2048'
       Cpu: '512'
       Family: !Sub '${AWS::StackName}-athens-task'
       NetworkMode: awsvpc
