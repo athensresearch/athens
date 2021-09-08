@@ -8,7 +8,8 @@ import { preferredDateFormat } from '../../config';
 
 import {
   BlockTree,
-  WithTasks
+  WithTasks,
+  WithPresence
 } from '../Block/Block.stories';
 import { PageBlocksContainer } from './Page';
 
@@ -52,6 +53,13 @@ BlockPage.args = {
   isDailyNote: false,
   title: 'Block Page',
   children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
+};
+
+export const PageWithPresence = Template.bind({});
+PageWithPresence.args = {
+  isDailyNote: false,
+  title: 'Block Page',
+  children: <PageBlocksContainer><WithPresence /></PageBlocksContainer>
 };
 
 export const NodePageWithTasks = Template.bind({});
