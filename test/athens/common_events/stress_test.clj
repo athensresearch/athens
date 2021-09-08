@@ -57,8 +57,23 @@
   (subs s 1 (- (count s) 2)))
 
 
+(defn step
+  [iteration f]
+  (when (and (not= iteration 0)
+             (= (rem iteration 50) 0))
+    (println "Sleeping 5 seconds every 50 iterations to allow for GC")
+    (sleep 5))
+  (run-gc)
+  (println "Iteration:" iteration "-"
+           "Used memory:" (used-memory) "-"
+           (remove-enclosing-quotes-and-newline
+             (with-out-str (time
+                             ;; ignore printed output from f
+                             (with-out-str (f)))))))
+
+
 (t/deftest ^:stress block-split
-  (t/testing "Block split, 1st Page link stays in 1st block, and 2nd Page link goes to a new block"
+  (t/testing "Block split, 100 iterations"
     (let [iterations        100
           source-string     (apply str (repeat iterations "a"))
           testing-block-uid "testing-block-uid"
@@ -72,30 +87,33 @@
       (transact-with-linkmaker setup-tx)
 
       (dotimes [n iterations]
-        (when (and (not= n 0)
-                   (= (rem n 50) 0))
-          (println "Sleeping 5 seconds every 50 iterations to allow for GC")
-          (sleep 5))
-        (run-gc)
-        (println "Iteration:" n "-"
-                 "Used memory:" (used-memory) "-"
-                 (remove-enclosing-quotes-and-newline
-                   (with-out-str
-                     (time
-                       (with-out-str
-                         (let [{curr-string :block/string} (get-block testing-block-uid)
-                               split-block-event           (common-events/build-split-block-event -1
-                                                                                                  testing-block-uid
-                                                                                                  curr-string
-                                                                                                  ;; split at the last char
-                                                                                                  (dec (count curr-string))
-                                                                                                  (resolver/gen-block-uid))
-                               split-block-tx              (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
+        (step n (fn []
+                  (let [{curr-string :block/string} (get-block testing-block-uid)
+                        split-block-event           (common-events/build-split-block-event -1
+                                                                                           testing-block-uid
+                                                                                           curr-string
+                                                                                           ;; split at the last char
+                                                                                           (dec (count curr-string))
+                                                                                           (resolver/gen-block-uid))
+                        split-block-tx              (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
 
-                           ;; Debug if perf changes with and without linkmaker
-                           #_(transact-without-linkmaker split-block-tx)
-                           (transact-with-linkmaker split-block-tx)))))))))))
+                    (transact-with-linkmaker split-block-tx))))))))
+
+
+(t/deftest ^:stress basic
+  (t/testing "Insert block structure, 100 iterations, no common events usage"
+    (let [iterations 100]
+      (dotimes [n iterations]
+        (step n (fn []
+                  (let [tx [{:db/id -1
+                             :block/order 1
+                             :block/uid (resolver/gen-block-uid)
+                             :block/open true
+                             :block/children []
+                             :block/string "random string"}]]
+                    (transact-without-linkmaker tx))))))))
 
 
 (comment
-  (t/test-vars [#'athens.common-events.stress-test/block-split]))
+  (t/test-vars [#'athens.common-events.stress-test/block-split])
+  (t/test-vars [#'athens.common-events.stress-test/basic]))
