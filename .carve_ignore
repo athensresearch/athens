@@ -32,3 +32,4 @@ athens.self-hosted.clients/get-clients
 athens.self-hosted.presence.views/toolbar-presence-el
 athens.self-hosted.client/retract-args
 athens.events/select-down
+athens.common-events.stress-test/transact-without-linkmaker

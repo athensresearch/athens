@@ -99,6 +99,9 @@
              :cljstyle {:dependencies
                         [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
 
+  :test-selectors {:default (complement :stress)
+                   :stress :stress}
+
   :prep-tasks ["compile"]
 
   :repl-options {:init-ns user
