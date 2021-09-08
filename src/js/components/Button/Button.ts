@@ -139,4 +139,14 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
       background: var(--link-color---opacity-80);
     }
   }
+
+  &:disabled {
+    &,
+    &:hover,
+    &:active {
+      color: var(--body-text-color---opacity-med);
+      background: var(---body-text-color---opacity-10);
+      cursor: not-allowed;
+    }
+  }
 `;
