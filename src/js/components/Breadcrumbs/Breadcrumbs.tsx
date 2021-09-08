@@ -38,7 +38,7 @@ const SeparatorSVG = styled.svg`
 `;
 
 const Separator = () => <SeparatorSVG viewBox="0 0 24 24">
-  <path d="M9 6L15 12L9 18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M9 6L15 12L9 18" stroke="currentColor" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 </SeparatorSVG>
 
 interface BreadcrumbsProps extends React.OlHTMLAttributes<HTMLOListElement> {
