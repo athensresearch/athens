@@ -2,8 +2,6 @@
   (:require
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy]))
 
@@ -88,20 +86,20 @@
 ;;                    [:<>
 ;;                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
 ;;                     ;;  [textinput {:icon [:> Face] :placeholder "Type to filter"}]
-;;                     [button [:<> [:> Link] [:span "Copy Page Reference"]]]
-;;                     [button [:<> [:> Star] [:span "Add to Shortcuts"]]]
-;;                     [button [:<> [:> Face] [:span "Add Reaction"] [submenu-indicator]]]
+;;                     [:> Button [:<> [:> Link] [:span "Copy Page Reference"]]]
+;;                     [:> Button [:<> [:> Star] [:span "Add to Shortcuts"]]]
+;;                     [:> Button [:<> [:> Face] [:span "Add Reaction"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
-;;                     [button [:<> [:> Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
-;;                     [button [:<> [:> UnfoldMore] [:span "Expand All"]]]
-;;                     [button [:<> [:> UnfoldLess] [:span "Collapse All"]]]
-;;                     [button [:<> [:> Slideshow] [:span "View As"] [submenu-indicator]]]
+;;                     [:> Button [:<> [:> LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
+;;                     [:> Button [:<> [:> Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
+;;                     [:> Button [:<> [:> UnfoldMore] [:span "Expand All"]]]
+;;                     [:> Button [:<> [:> UnfoldLess] [:span "Collapse All"]]]
+;;                     [:> Button [:<> [:> Slideshow] [:span "View As"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> FileCopy] [:span "Duplicate and Break Links"]]]
-;;                     [button [:<> [:> LibraryAdd] [:span "Save as Template"]]]
-;;                     [button [:<> [:> History] [:span "Browse Versions"]]]
-;;                     [button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
+;;                     [:> Button [:<> [:> FileCopy] [:span "Duplicate and Break Links"]]]
+;;                     [:> Button [:<> [:> LibraryAdd] [:span "Save as Template"]]]
+;;                     [:> Button [:<> [:> History] [:span "Browse Versions"]]]
+;;                     [:> Button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
 ;;
 ;;
 ;; (def items

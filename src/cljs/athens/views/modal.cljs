@@ -2,8 +2,6 @@
   (:require
     [athens.db]
     [athens.style :refer [color ZINDICES DEPTH-SHADOWS]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy]))
 

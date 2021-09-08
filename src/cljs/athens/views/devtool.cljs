@@ -1,6 +1,6 @@
 (ns athens.views.devtool
   (:require
-    ["@material-ui/icons/Build" :default Build]
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
     ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/History" :default History]
@@ -8,11 +8,8 @@
     [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
-    [athens.views.buttons :refer [button]]
     [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.core.protocols :as core-p]
     [clojure.datafy :refer [nav datafy]]
     [datascript.core :as d]
@@ -195,10 +192,10 @@
                          ""
                          (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
-         [button {:on-click #(swap! limit + 10)
-                  :style {:width "100%"
-                          :justify-content "center"
-                          :margin "0.25rem 0"}}
+         [:> Button {:on-click #(swap! limit + 10)
+                     :style {:width "100%"
+                             :justify-content "center"
+                             :margin "0.25rem 0"}}
           "Load More"])])))
 
 
@@ -332,11 +329,11 @@
              (for [i (-> navs count range)]
                (let [nav (get navs i)]
                  ^{:key i}
-                 [button {:style {:padding "0.125rem 0.25rem"}
-                          :on-click #(swap! state (fn [s]
-                                                    (-> s
-                                                        (update :navs subvec 0 i)
-                                                        (dissoc :viewer))))}
+                 [:> Button {:style {:padding "0.125rem 0.25rem"}
+                             :on-click #(swap! state (fn [s]
+                                                       (-> s
+                                                           (update :navs subvec 0 i)
+                                                           (dissoc :viewer))))}
                   [:<> [:> ChevronLeft] [:span (first nav)]]])))
            [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
            [:div (use-style current-location-controls-style)
@@ -344,23 +341,14 @@
             (for [v applicable-vs]
               (let [click-fn #(swap! state assoc :viewer v)]
                 ^{:key v}
-                [button {:on-click click-fn
-                         :active (= v viewer-name)}
+                [:> Button {:on-click click-fn
+                            :is-pressed (= v viewer-name)}
                  (name v)]))]]]
          (when (d/db? navved-data)
-           [button {:on-click #(restore-db! navved-data)
-                    :primary true}
+           [:> Button {:on-click #(restore-db! navved-data)
+                       :is-primary true}
             "Restore this db"])
          [viewer datafied-data add-nav!]]))))
-
-
-(defn handler
-  []
-  (let [n (inc (:max-eid @dsdb))
-        n-child (inc n)]
-    (d/transact! dsdb [{:node/title     (str "Test Page " n)
-                        :block/uid      (str "uid-" n)
-                        :block/children [{:block/string (str "Test Block" n-child) :block/uid (str "uid-" n-child)}]}])))
 
 
 (defn eval-with-sci
@@ -462,19 +450,9 @@
   [data-browser tx-reports])
 
 
-(defn devtool-prompt-el
-  []
-  [button {:on-click #(dispatch [:devtool/toggle])
-           :primary true
-           :style {:font-size "11px"}}
-   [:<>
-    [:> Build]
-    [:span "Toggle devtool"]]])
-
-
 (defn devtool-close-el
   []
-  [button {:on-click #(dispatch [:devtool/toggle])}
+  [:> Button {:on-click #(dispatch [:devtool/toggle])}
    [:> Clear]])
 
 
@@ -486,11 +464,11 @@
       [:div (use-style container-style)
        [:nav (use-style tabs-style)
         [:div (use-style tabs-section-style)
-         [button {:on-click #(switch-panel :query)
-                  :active (= active-panel :query)}
+         [:> Button {:on-click #(switch-panel :query)
+                     :is-pressed (= active-panel :query)}
           [:<> [:> ShortText] [:span "Query"]]]
-         [button {:on-click #(switch-panel :txes)
-                  :active (= active-panel :txes)}]
+         [:> Button {:on-click #(switch-panel :txes)
+                     :is-pressed (= active-panel :txes)}]
          [:<> [:> History] [:span "Transactions"]]]
         [devtool-close-el]]
        [:div (use-style panels-style)
