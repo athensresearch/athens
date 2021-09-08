@@ -174,3 +174,5 @@ Avatar.Stack = styled.div<AvatarStackProps>`
     }
   }
 `;
+
+Avatar.Fullname = FullName;

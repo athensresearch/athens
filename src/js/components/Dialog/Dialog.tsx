@@ -1,25 +1,26 @@
 import styled from 'styled-components';
 import { DOMRoot } from '../../config';
 
-import { Modal } from '@material-ui/core'
+import { Modal, ModalProps } from '@material-ui/core'
 import { Close } from '@material-ui/icons'
 
 import { Button } from '../Button';
 import { Overlay } from '../Overlay';
+import React from 'react';
 
 const DialogWrap = styled(Overlay)`
+  --edge-spacing: 1rem;
+
   width: min(30em, calc(100% - 2rem));
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-
-  --edge-spacing: 1rem;
 `;
 
 interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
   isDialogOpen?: boolean;
-  modalProps: any;
+  modalProps?: ModalProps;
   handleClose?: () => void;
   handlePressOk?: () => void;
   handlePressCancel?: () => void;

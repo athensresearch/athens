@@ -38,7 +38,7 @@ export const Input = styled.input<InputProps>`
       cursor: default;
     }
 
-    &.is-invalid:not(:placeholder-shown):not(:empty) {
+    &.is-invalid {
       color: var(--warning-color);
       background: var(--warning-color---opacity-lower);
 
@@ -51,7 +51,7 @@ export const Input = styled.input<InputProps>`
       }
     }
 
-    &.is-valid:not(:placeholder-shown) {
+    &.is-valid {
       color: var(--confirmation-color);
       background: var(--confirmation-color---opacity-lower);
 
