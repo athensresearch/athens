@@ -34,3 +34,4 @@ dist
 
 # design system ts output
 /src/js/components/**/*.js
+/storybook-static
