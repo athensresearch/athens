@@ -99,6 +99,7 @@ const Template = (args, context) => {
       <WindowWrapper {...args}
         className={classnames(
           'os-' + args.os,
+          'is-electron',
           isWinMaximized && 'is-win-maximized',
           isWinFocused && 'is-win-focused',
           isWinFullscreen && 'is-win-fullscreen',

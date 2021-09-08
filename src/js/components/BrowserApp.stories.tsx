@@ -30,6 +30,7 @@ const BrowserWrapper = styled.div`
   overflow: hidden;
   position: relative;
   background: var(--background-color);
+  --browser-toolbar-height: 48px;
 
   > * {
     z-index: 1;
@@ -40,18 +41,55 @@ const BrowserWrapper = styled.div`
   }
 
   ${AppToolbar} {
-    height: calc(100vh - 52px);
+    height: calc(100vh - var(--browser-toolbar-height));
     margin-top: 52px;
+  }
+
+  #app-layout {
+    height: calc(100% - var(--browser-toolbar-height));
+    margin-top: var(--browser-toolbar-height);
+  }
+`;
+
+const BrowserToolbarWrapper = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--browser-toolbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-minus-2);
+    pointer-events: none;
+
+  span {
+    padding: 0.25rem 1rem;
+    color: var(--body-text-color---opacity-med);
+    font-weight: bold;
+  }
+
+  input {
+    border-radius: 100em;
+    padding: 0.25rem;
+    border: 0;
+    background: var(--background-plus-1);
+    color: inherit;
+    width: max(70%, 70em);
+    height: 60%;
+    text-align: center;
+    margin: auto;
+    color: var(--body-text-color---opacity-med);
   }
 `;
 
 const BrowserToolbar = () => {
-  return (<>
-    <div style={{ display: 'flex', border: "2px solid red" }}>
-      <span>Browser chrome</span>
-      <input readOnly={true} defaultValue="https://athensresearch.org/app/#bjs350" />
-    </div>
-  </>)
+  return (
+    <BrowserToolbarWrapper>
+      <span>Browser</span>
+      <input readOnly={true} tabIndex={-1} defaultValue="athens" />
+    </BrowserToolbarWrapper>
+  )
 }
 
 const Template = (args, context) => {
