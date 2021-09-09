@@ -19,7 +19,8 @@
     "clean": "rm -rf resources/public/**/*.js target .shadow-cljs ./src/stories/**/*.js",
     "dist": "electron-builder -p always",
     "storybook:watch": "start-storybook -p 6006",
-    "storybook": "build-storybook"
+    "storybook": "build-storybook",
+    "vercel-build": "yarn storybook"
   },
   "main": "resources/main.js",
   "build": {
