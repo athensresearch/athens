@@ -4,6 +4,15 @@
 type UID = string;
 
 /**
+ * OS the name of supported OSs
+ */
+enum OS {
+  WINDOWS = 'windows',
+  MAC = 'mac',
+  LINUX = 'linux',
+}
+
+/**
  * A person interacting with Athens in a multiplayer context
  */
 type Person = {
