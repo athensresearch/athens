@@ -746,8 +746,9 @@
   recursive case: keep going until no longer present"
   [uid]
   (let [prev-block-uid (db/prev-block-uid uid)
-        has-presence? @(subscribe [:presence/has-presence prev-block-uid])]
-    (if has-presence?
+        has-presence?  @(subscribe [:presence/has-presence prev-block-uid])]
+    (if (and prev-block-uid
+             has-presence?)
       (prev-block-uid-without-presence-recursively prev-block-uid)
       prev-block-uid)))
 
@@ -762,8 +763,9 @@
 (defn next-block-uid-without-presence-recursively
   [uid]
   (let [next-block-uid (db/next-block-uid uid)
-        has-presence? @(subscribe [:presence/has-presence next-block-uid])]
-    (if has-presence?
+        has-presence?  @(subscribe [:presence/has-presence next-block-uid])]
+    (if (and next-block-uid
+             has-presence?)
       (next-block-uid-without-presence-recursively next-block-uid)
       next-block-uid)))
 
