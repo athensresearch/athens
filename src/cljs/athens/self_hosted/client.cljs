@@ -38,6 +38,8 @@
 
 
 (def ^:private reconnect-timer (atom nil))
+(def ^:private MAX_RECONNECT_TRY 2)
+(def ^:private reconnect-counter (atom -1))
 
 
 (defn- await-response!
@@ -58,18 +60,25 @@
   ([url]
    (delayed-reconnect! url 3000))
   ([url delay-ms]
+   (swap! reconnect-counter inc)
    (js/console.log "WSClient scheduling reconnect in" delay-ms "ms to" url)
-   (let [timer-id (js/setTimeout (fn []
-                                   (reset! reconnect-timer nil)
-                                   (connect-to-self-hosted! url))
-                                 delay-ms)]
-     (reset! reconnect-timer timer-id))))
+   (if (< @reconnect-counter MAX_RECONNECT_TRY)
+     (let [timer-id (js/setTimeout (fn []
+                                     (reset! reconnect-timer nil)
+                                     (connect-to-self-hosted! url))
+                                   delay-ms)]
+       (reset! reconnect-timer timer-id))
+     (do
+       (js/console.warn "Reconnect max tries" @reconnect-counter)
+       (rf/dispatch [:remote/connection-failed])))))
 
 
 (defn- close-reconnect-timer!
   []
   (when-let [timer-id @reconnect-timer]
-    (js/clearTimeout timer-id)))
+    (js/clearTimeout timer-id)
+    (reset! reconnect-timer nil)
+    (reset! reconnect-counter -1)))
 
 
 (defn open?
@@ -129,6 +138,8 @@
   (let [connection (.-target event)
         last-tx    @(rf/subscribe [:remote/last-seen-tx])]
     (reset! ws-connection connection)
+    (reset! reconnect-timer nil)
+    (reset! reconnect-counter -1)
     (send! connection (common-events/build-presence-hello-event last-tx @(rf/subscribe [:username])))
     (when (seq @send-queue)
       (js/console.log "WSClient sending queued packets #" (count @send-queue))

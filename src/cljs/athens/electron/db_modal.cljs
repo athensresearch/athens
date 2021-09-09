@@ -1,6 +1,7 @@
 (ns athens.electron.db-modal
   (:require
     ["/components/Button/Button" :refer [Button]]
+    [cljsjs.react.dom]
     ["@material-ui/icons/AddBox" :default AddBox]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Folder" :default Folder]
