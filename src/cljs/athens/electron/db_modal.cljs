@@ -1,7 +1,6 @@
 (ns athens.electron.db-modal
   (:require
     ["/components/Button/Button" :refer [Button]]
-    [cljsjs.react.dom]
     ["@material-ui/icons/AddBox" :default AddBox]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Folder" :default Folder]
@@ -16,6 +15,7 @@
     [athens.util :refer [js-event->val]]
     [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
+    [cljsjs.react.dom]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [komponentit.modal :as modal]
