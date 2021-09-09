@@ -500,15 +500,16 @@
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
-  (let [[uid embed-id]  (uid-and-embed-id uid)
-        block           (get-block [:block/uid uid])
-        parent          (get-parent [:block/uid uid])
-        prev-sibling    (nth-sibling uid -1)
-        {:block/keys    [open uid]} prev-sibling
-        prev-block      (cond
-                          (zero? (:block/order block)) parent
-                          (false? open) prev-sibling
-                          (true? open) (deepest-child-block [:block/uid uid]))]
+  (let [[uid embed-id]                (uid-and-embed-id uid)
+        block                         (get-block [:block/uid uid])
+        parent                        (get-parent [:block/uid uid])
+        prev-sibling                  (nth-sibling uid -1)
+        {:block/keys      [open]
+         prev-sibling-uid :block/uid} prev-sibling
+        prev-block                    (cond
+                                        (zero? (:block/order block)) parent
+                                        (false? open)                prev-sibling
+                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))]
     (cond-> (:block/uid prev-block)
       embed-id (str "-embed-" embed-id))))
 
