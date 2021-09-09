@@ -7,6 +7,7 @@
     ["@material-ui/icons/Group" :default Group]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Storage" :default Storage]
+    ["react-dom" :as react-dom]
     [athens.electron.dialogs :as dialogs]
     [athens.electron.utils :as utils]
     [athens.events :as events]
@@ -261,7 +262,8 @@
         state             (r/atom {:input     ""
                                    :tab-value 0})]
     (fn []
-      (js/ReactDOM.createPortal
+      (.createPortal
+        react-dom
         (r/as-element [:div (use-style modal-style)
                        [modal/modal
                         {:title    [:div.modal__title
