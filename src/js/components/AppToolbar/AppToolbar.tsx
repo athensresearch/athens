@@ -6,7 +6,8 @@ import { Button } from '../Button';
 
 import { DatabaseMenu, DatabaseMenuProps } from '../DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetails } from '../PresenceDetails';
+import { PresenceDetails, PresenceDetailsProps } from '../PresenceDetails/Concept/PresenceDetails';
+import * as mockPresence from '../PresenceDetails/mockData';
 
 
 const AppToolbarWrapper = styled.header`
@@ -70,7 +71,7 @@ const AppToolbarWrapper = styled.header`
   }
 `;
 
-export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps {
+export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps, PresenceDetailsProps {
   /**
   * The application's current route
   */
@@ -91,18 +92,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   * The name of the host OS
   */
   os: string;
-  /**
-  * The address of the server in a multiplayer context
-  */
-  hostAddress?: string;
-  /**
-  * People present on the current page
-  */
-  currentPageMembers?: PersonPresence[];
-  /**
-  * People present on the domain but not on the current page
-  */
-  differentPageMembers?: PersonPresence[];
   /**
   * Whether the renderer is in Electron or a browser
   */
@@ -151,7 +140,8 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressHistoryForward(): void;
   handlePressLeftSidebar(): void;
   handlePressRightSidebar(): void;
-  // Presence Menu
+  // Presence Details
+  handleUpdateProfile(person): void;
   handlePressHostAddress?(): void;
   handlePressMember?(member): void;
   // DB Menu
@@ -160,6 +150,45 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressRemoveDatabase: (db: Database) => void
   handlePressImportDatabase: (db: Database) => void
   handlePressMoveDatabase: (db: Database) => void
+}
+
+export const useAppToolbarState = () => {
+  const [route, setRoute] = React.useState('');
+  const [isWinFullscreen, setIsWinFullscreen] = React.useState(false);
+  const [isWinFocused, setIsWinFocused] = React.useState(true);
+  const [isWinMaximized, setIsWinMaximized] = React.useState(false);
+  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false);
+  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(false);
+  const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(false);
+  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
+  const [isThemeDark, setIsThemeDark] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState(mockPresence.currentUser);
+
+  return {
+    route,
+    setRoute,
+    isWinFullscreen,
+    setIsWinFullscreen,
+    isWinFocused,
+    setIsWinFocused,
+    isWinMaximized,
+    setIsWinMaximized,
+    isLeftSidebarOpen,
+    setIsLeftOpen,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    isCommandBarOpen,
+    setIsCommandBarOpen,
+    isMergeDialogOpen,
+    setIsMergeDialogOpen,
+    isDatabaseDialogOpen,
+    setIsDatabaseDialogOpen,
+    isThemeDark,
+    setIsThemeDark,
+    currentUser,
+    setCurrentUser,
+  }
 }
 
 export const AppToolbar = ({
@@ -176,6 +205,7 @@ export const AppToolbar = ({
   isMergeDialogOpen,
   isDatabaseDialogOpen,
   hostAddress,
+  currentUser,
   currentPageMembers,
   differentPageMembers,
   activeDatabase,
@@ -203,6 +233,7 @@ export const AppToolbar = ({
   handlePressMaximizeRestore,
   handlePressClose,
   handlePressHostAddress,
+  handleUpdateProfile,
 }: AppToolbarProps): React.ReactElement => {
 
   return (<AppToolbarWrapper>
@@ -237,11 +268,14 @@ export const AppToolbar = ({
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       <PresenceDetails
+        currentUser={currentUser}
         currentPageMembers={currentPageMembers}
         differentPageMembers={differentPageMembers}
         hostAddress={hostAddress}
+        placement="bottom-end"
         handlePressHostAddress={handlePressHostAddress}
         handlePressMember={handlePressMember}
+        handleUpdateProfile={handleUpdateProfile}
       />
       <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>

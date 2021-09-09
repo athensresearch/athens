@@ -48,21 +48,27 @@ const Profile = styled.div`
   }
 `;
 
+export interface PresenceDetailsProps {
+  handleUpdateProfile(person): void
+  hostAddress: string
+  currentUser: Person
+  currentPageMembers: Person[]
+  differentPageMembers: Person[]
+}
+
 export const PresenceDetails = ({
   hostAddress,
   currentUser,
+  placement,
   currentPageMembers,
   differentPageMembers,
   handlePressHostAddress,
   handlePressMember,
-  placement,
-  isUserSettingsDialogOpen,
-  setCurrentUserUsername,
-  setIsUserSettingsDialogOpen,
-  setCurrentUserColor,
+  handleUpdateProfile,
 }) => {
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
+  const [isUserSettingsDialogOpen, setIsUserSettingsDialogOpen] = React.useState(false);
 
   const maxToDisplay = 5;
   const showablePersons = [...currentPageMembers, ...differentPageMembers];
@@ -175,8 +181,7 @@ export const PresenceDetails = ({
           isOpen={isUserSettingsDialogOpen}
           handleClose={() => setIsUserSettingsDialogOpen(false)}
           handleUpdatePerson={(person) => {
-            setCurrentUserUsername(person.username);
-            setCurrentUserColor(person.color);
+            handleUpdateProfile(person)
             setIsUserSettingsDialogOpen(false)
           }}
         />}

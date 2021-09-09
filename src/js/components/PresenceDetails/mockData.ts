@@ -1,6 +1,12 @@
 
 export const hostAddress = "192.168.0.1";
 
+export const currentUser = {
+  personId: "1",
+  username: "John Doe",
+  color: "#0071fd"
+}
+
 export const currentPageMembers = [{
   username: "crechert0",
   color: "#ba0f68",
