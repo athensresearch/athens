@@ -10,7 +10,7 @@
   "scripts": {
     "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
-    "dev": "concurrently \"yarn components:watch\" \"yarn client:watch\"",
+    "dev": "yarn components && concurrently \"yarn components:watch\" \"yarn client:watch\"",
     "client:watch": "shadow-cljs watch main renderer app",
     "components": "yarn tsc",
     "components:watch": "yarn tsc --watch",
