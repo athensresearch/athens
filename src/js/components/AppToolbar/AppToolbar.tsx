@@ -91,7 +91,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   /**
   * The name of the host OS
   */
-  os: string;
+  os: OS;
   /**
   * Whether the renderer is in Electron or a browser
   */
@@ -127,6 +127,8 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressMaximizeRestore?(): void;
   handlePressMaximizeRestore?(): void;
   handlePressFullscreen?(): void;
+  handlePressHistoryBack(): void;
+  handlePressHistoryForward(): void;
   // Main toolbar
   handlePressCommandBar(): void;
   handlePressDailyNotes(): void;
@@ -138,62 +140,13 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressDatabase(): void;
   handlePressHistoryBack(): void;
   handlePressHistoryForward(): void;
-  handlePressLeftSidebar(): void;
-  handlePressRightSidebar(): void;
-  // Presence Details
-  handleUpdateProfile(person): void;
-  handlePressHostAddress?(): void;
-  handlePressMember?(member): void;
-  // DB Menu
-  handleChooseDatabase: (db: Database) => void
-  handlePressAddDatabase: () => void
-  handlePressRemoveDatabase: (db: Database) => void
-  handlePressImportDatabase: (db: Database) => void
-  handlePressMoveDatabase: (db: Database) => void
-}
-
-export const useAppToolbarState = () => {
-  const [route, setRoute] = React.useState('');
-  const [isWinFullscreen, setIsWinFullscreen] = React.useState(false);
-  const [isWinFocused, setIsWinFocused] = React.useState(true);
-  const [isWinMaximized, setIsWinMaximized] = React.useState(false);
-  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(false);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false);
-  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(false);
-  const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(false);
-  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
-  const [isThemeDark, setIsThemeDark] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState(mockPresence.currentUser);
-
-  return {
-    route,
-    setRoute,
-    isWinFullscreen,
-    setIsWinFullscreen,
-    isWinFocused,
-    setIsWinFocused,
-    isWinMaximized,
-    setIsWinMaximized,
-    isLeftSidebarOpen,
-    setIsLeftOpen,
-    isRightSidebarOpen,
-    setIsRightSidebarOpen,
-    isCommandBarOpen,
-    setIsCommandBarOpen,
-    isMergeDialogOpen,
-    setIsMergeDialogOpen,
-    isDatabaseDialogOpen,
-    setIsDatabaseDialogOpen,
-    isThemeDark,
-    setIsThemeDark,
-    currentUser,
-    setCurrentUser,
-  }
+  handlePressLeftSidebarToggle(): void;
+  handlePressRightSidebarToggle(): void;
 }
 
 export const AppToolbar = ({
-  route,
   os,
+  route,
   isElectron,
   isWinFullscreen,
   isWinFocused,
@@ -227,8 +180,8 @@ export const AppToolbar = ({
   handlePressDatabase,
   handlePressHistoryBack,
   handlePressHistoryForward,
-  handlePressLeftSidebar,
-  handlePressRightSidebar,
+  handlePressLeftSidebarToggle,
+  handlePressRightSidebarToggle,
   handlePressMinimize,
   handlePressMaximizeRestore,
   handlePressClose,
@@ -249,7 +202,7 @@ export const AppToolbar = ({
         handlePressMoveDatabase={handlePressMoveDatabase}
       />
       <Button
-        onClick={handlePressLeftSidebar}
+        onClick={handlePressLeftSidebarToggle}
         isPressed={isLeftSidebarOpen}
       >
         <MenuIcon />
@@ -287,7 +240,7 @@ export const AppToolbar = ({
       <AppToolbar.Separator />
       <Button
         isPressed={isRightSidebarOpen}
-        onClick={handlePressRightSidebar}
+        onClick={handlePressRightSidebarToggle}
       >
         <VerticalSplit />
       </Button>

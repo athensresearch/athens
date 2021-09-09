@@ -3,8 +3,11 @@ import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
 import { mockDatabases } from '../DatabaseMenu/mockData';
 import * as mockPresence from '../PresenceDetails/mockData';
+import { useAppState } from '../../useAppState';
 
-import { AppToolbar } from './AppToolbar';
+import { AppToolbar, AppToolbarProps } from './AppToolbar';
+import { DatabaseMenu } from '../DatabaseMenu';
+import { PresenceDetails } from '../PresenceDetails';
 
 const ToolbarStoryWrapper = styled(Storybook.Desktop)`
   > * {
@@ -14,9 +17,11 @@ const ToolbarStoryWrapper = styled(Storybook.Desktop)`
   }
 `;
 
+
 export default {
   title: 'Sections/AppToolbar',
   component: AppToolbar,
+  subcomponents: { DatabaseMenu, PresenceDetails },
   argTypes: {},
   parameters: {
     badges: [BADGE.DEV]
@@ -24,17 +29,28 @@ export default {
   decorators: [(Story) => <ToolbarStoryWrapper>{Story()}</ToolbarStoryWrapper>]
 };
 
-const Template = (args) => {
-  const [route, setRoute] = React.useState('');
-  const [isWinFullscreen, setIsWinFullscreen] = React.useState(false);
-  const [isWinFocused, setIsWinFocused] = React.useState(true);
-  const [isWinMaximized, setIsWinMaximized] = React.useState(false);
-  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(false);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false);
-  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(false);
-  const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(false);
-  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(false);
-  const [isThemeDark, setIsThemeDark] = React.useState(false);
+const Template = (args: AppToolbarProps) => {
+  const {
+    currentUser,
+    setCurrentUser,
+    route,
+    setRoute,
+    isWinFullscreen,
+    isWinFocused,
+    isWinMaximized,
+    isLeftSidebarOpen,
+    setIsLeftSidebarOpen,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    isCommandBarOpen,
+    setIsCommandBarOpen,
+    isMergeDialogOpen,
+    setIsMergeDialogOpen,
+    isDatabaseDialogOpen,
+    setIsDatabaseDialogOpen,
+    isThemeDark,
+    setIsThemeDark
+  } = useAppState();
 
   return <ToolbarStoryWrapper className={'os-' + args.os}>
     <AppToolbar
@@ -49,6 +65,7 @@ const Template = (args) => {
     isDatabaseDialogOpen={isDatabaseDialogOpen}
     isThemeDark={isThemeDark}
     hostAddress={mockPresence.hostAddress}
+      currentUser={currentUser}
     currentPageMembers={mockPresence.currentPageMembers}
     differentPageMembers={mockPresence.differentPageMembers}
     handleChooseDatabase={() => null}
@@ -58,7 +75,7 @@ const Template = (args) => {
     activeDatabase={mockDatabases[0]}
     inactiveDatabases={mockDatabases.slice(1, 4)}
     synced={true}
-    handlePessLeftButton={() => setIsLeftOpen(!isLeftSidebarOpen)}
+      handlePressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
     handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
     handlePressDailyNotes={() => setRoute('/daily-notes')}
     handlePressAllPages={() => setRoute('/all-pages')}
@@ -67,9 +84,9 @@ const Template = (args) => {
     handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
     handlePressSettings={() => setRoute('/settings')}
     handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
-    handlePressShortcuts={() => setIsLeftOpen(!isLeftSidebarOpen)}
-    handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+      handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
     handlePressMember={(member) => console.log(member)}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
       {...args} />
   </ToolbarStoryWrapper>
 };

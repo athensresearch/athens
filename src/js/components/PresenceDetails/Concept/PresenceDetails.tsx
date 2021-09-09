@@ -3,7 +3,7 @@ import React from 'react';
 
 import { DOMRoot } from '../../../config';
 import { Wifi } from '@material-ui/icons'
-import { Popper, Modal, Fade } from '@material-ui/core'
+import { Popper, Modal, Fade, PopperPlacementType } from '@material-ui/core'
 
 import { Button } from '../../Button';
 import { Menu } from '../../Menu';
@@ -49,11 +49,14 @@ const Profile = styled.div`
 `;
 
 export interface PresenceDetailsProps {
-  handleUpdateProfile(person): void
-  hostAddress: string
+  hostAddress: HostAddress
   currentUser: Person
+  placement?: PopperPlacementType
   currentPageMembers: Person[]
   differentPageMembers: Person[]
+  handleUpdateProfile(person: Person): void
+  handlePressHostAddress(hostAddress: HostAddress): void
+  handlePressMember(person: Person): void
 }
 
 export const PresenceDetails = ({
@@ -65,7 +68,7 @@ export const PresenceDetails = ({
   handlePressHostAddress,
   handlePressMember,
   handleUpdateProfile,
-}) => {
+}: PresenceDetailsProps) => {
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
   const [isUserSettingsDialogOpen, setIsUserSettingsDialogOpen] = React.useState(false);
@@ -133,7 +136,7 @@ export const PresenceDetails = ({
                   </Button>
                 </Profile>
 
-                {hostAddress && <><Button onClick={handlePressHostAddress}><HostIcon /> <span>{hostAddress}</span></Button>
+                {hostAddress && <><Button onClick={(hostAddress) => handlePressHostAddress(hostAddress)}><HostIcon /> <span>{hostAddress}</span></Button>
                   <Menu.Separator /></>
                 }
                 {currentPageMembers.length > 0 && (

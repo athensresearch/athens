@@ -3,7 +3,7 @@ import React from 'react';
 
 import { DOMRoot } from '../../config';
 import { Wifi } from '@material-ui/icons'
-import { Popper, Modal, Fade } from '@material-ui/core'
+import { Popper, Modal, Fade, PopperPlacementType } from '@material-ui/core'
 
 import { Button } from '../Button';
 import { Menu } from '../Menu';
@@ -31,13 +31,24 @@ const HostIcon = styled(Wifi)`
   border-radius: 100em;
 `;
 
+export interface PresenceDetailsProps {
+  hostAddress: HostAddress
+  currentUser: Person
+  placement?: PopperPlacementType
+  currentPageMembers: Person[]
+  differentPageMembers: Person[]
+  handleUpdateProfile(person: Person): void
+  handlePressHostAddress(hostAddress: HostAddress): void
+  handlePressMember(person: Person): void
+}
+
 export const PresenceDetails = ({
   hostAddress,
   currentPageMembers,
   differentPageMembers,
   handlePressHostAddress,
   handlePressMember,
-}) => {
+}: PresenceDetailsProps) => {
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
 

@@ -5,12 +5,17 @@ import { Storybook } from '../storybook';
 
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
-import { AppToolbar } from './AppToolbar';
+// import { AppToolbar } from './AppToolbar';
+import { Auto as AppToolbar } from './AppToolbar/AppToolbar.stories';
 import * as mockAppToolbarData from './PresenceDetails/mockData';
 import { mockDatabases } from './DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout, MainContent } from './App';
-import { NodePage } from './Page/Page.stories';
+import { Page, PageBlocksContainer } from './Page';
+
+import {
+  WithPresence
+} from './Block/Block.stories';
 
 export default {
   title: 'App/Standalone',
@@ -83,6 +88,7 @@ const WindowWrapper = styled.div`
 `;
 
 const Template = (args, context) => {
+  // App Properties
   const [route, setRoute] = React.useState(args.route);
   const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
   const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
@@ -93,6 +99,13 @@ const Template = (args, context) => {
   const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
   const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(args.isDatabaseDialogOpen);
   const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
+
+  // Page Properties
+  const [isLinkedReferencesOpen, setIsLinkedReferencesOpen] = React.useState(true);
+  const [isUnlinkedReferencesOpen, setIsUnlinkedReferencesOpen] = React.useState(true);
+  const handlePressLinkedReferencesToggle = () => setIsLinkedReferencesOpen(!isLinkedReferencesOpen);
+  const handlePressUnlinkedReferencesToggle = () => setIsUnlinkedReferencesOpen(!isUnlinkedReferencesOpen);
+
 
   return (
     <Storybook.Desktop>
@@ -106,7 +119,8 @@ const Template = (args, context) => {
         )}
       >
         <AppLayout>
-          <AppToolbar
+          <AppToolbar />
+          {/* <AppToolbar
             os={args.os}
             isElectron={args.isElectron}
             route={route}
@@ -121,6 +135,7 @@ const Template = (args, context) => {
             isThemeDark={isThemeDark}
             handlePressHistoryBack={() => null}
             handlePressHistoryForward={() => null}
+            handleUpdateProfile={(person) => null}
             hostAddress={mockAppToolbarData.hostAddress}
             currentPageMembers={mockAppToolbarData.currentPageMembers}
             differentPageMembers={mockAppToolbarData.differentPageMembers}
@@ -144,7 +159,7 @@ const Template = (args, context) => {
             handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
             handlePressFullscreen={() => setIsWinFullscreen(true)}
             handlePressMaximizeRestore={() => setIsWinMaximized(!isWinMaximized)}
-          />
+          /> */}
           <LeftSidebar
             isLeftSidebarOpen={isLeftSidebarOpen}
             handlePressShortcut={() => null}
@@ -172,7 +187,18 @@ const Template = (args, context) => {
             version="1.0.0"
           />
           <MainContent>
-            <NodePage />
+            <PageBlocksContainer>
+              <Page
+                uid="123"
+                title="Test Page"
+                isLinkedReferencesOpen={isLinkedReferencesOpen}
+                isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
+                handlePressLinkedReferencesToggle={handlePressLinkedReferencesToggle}
+                handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
+              >
+                <PageBlocksContainer><WithPresence /></PageBlocksContainer>
+              </Page>
+            </PageBlocksContainer>
           </MainContent>
           <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
           {/* <Devtool /> */}

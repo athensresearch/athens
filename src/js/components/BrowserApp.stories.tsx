@@ -7,7 +7,7 @@ import { getOs } from '../utils/getOs';
 
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
-import { AppToolbar } from './AppToolbar';
+import { Default as AppToolbarStory } from './AppToolbar/AppToolbar.stories';
 import * as mockAppToolbarData from './PresenceDetails/mockData';
 import { mockDatabases } from './DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
@@ -116,7 +116,7 @@ const Template = (args, context) => {
       >
         <AppLayout>
           <BrowserToolbar />
-          <AppToolbar
+          <AppToolbarStory
             os={os}
             isElectron={false}
             route={route}
