@@ -87,7 +87,7 @@ Resources:
             - AvailabilityZone: !GetAtt 
                 - Subnet1
                 - AvailabilityZone
-      Memory: '1024'
+      Memory: '2048'
       Cpu: '512'
       Family: !Sub '${AWS::StackName}-task'
       NetworkMode: awsvpc
