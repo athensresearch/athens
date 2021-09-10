@@ -96,3 +96,6 @@ aws cloudformation create-stack \
 You can make a new Athens stack side-by-side with your existing ones.
 This is useful to check past states or recover data deleted accidentally.
 
+You can delete snapshots taken by Athens in the [Athens snapshot listing](https://console.aws.amazon.com/ec2/home?#Snapshots:visibility=owned-by-me;tag:Athens=DataVolume;sort=snapshotId), by selecting the snapshots you want to delete and pressing `Actions`->`Delete`.
+AWS will also bill you for stored snapshots so it is a good idea to delete them if you removing Athens from your AWS account and you don't need them anymore.
+
