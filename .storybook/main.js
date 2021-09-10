@@ -1,4 +1,7 @@
 module.exports = {
+  features: {
+    postcss: false,
+  }, 
   "stories": [
     "../src/js/**/*.stories.mdx",
     "../src/js/**/*.stories.tsx"
