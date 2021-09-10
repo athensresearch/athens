@@ -318,7 +318,7 @@
    :alert/confirm-fn     nil
    :alert/cancel-fn      nil
    "Linked References"   true
-   :is-unlinked-ref? false})
+   :is-unlinked-ref false})
 
 
 (defn menu-dropdown
@@ -431,13 +431,13 @@
 
 (defn unlinked-ref-el
   [_ title]
-  (let [unlinked-refs (r/track get-unlinked-references (escape-str title))]
+  (let [unlinked-refs (get-unlinked-references (escape-str title))]
     (fn [state _]
-      (let [is-unlinked-ref? (:is-unlinked-ref? @state)]
+      (let [is-unlinked-ref (:is-unlinked-ref @state)]
         [:section (use-style references-style)
          [:h4 (use-style references-heading-style)
-          [button {:on-click #(swap! state update :is-unlinked-ref? not)}
-           (if is-unlinked-ref?
+          [button {:on-click #(swap! state update :is-unlinked-ref not)}
+           (if is-unlinked-ref
              [:> KeyboardArrowDown]
              [:> ChevronRight])]
           [:> Link]
@@ -445,19 +445,19 @@
                          :justify-content "space-between"
                          :width "100%"}}
            [:span "Unlinked References"]
-           (when (and is-unlinked-ref? (not-empty @unlinked-refs))
+           (when (and is-unlinked-ref (not-empty unlinked-refs))
              [button {:style    {:font-size "14px"}
                       :on-click (fn []
-                                  (swap! state assoc :is-unlinked-ref? false)
-                                  (let [unlinked-str-ids (->> @unlinked-refs
+                                  (swap! state assoc :is-unlinked-ref false)
+                                  (let [unlinked-str-ids (->> unlinked-refs
                                                               (mapcat second)
                                                               (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
                                     (dispatch [:unlinked-references/link-all unlinked-str-ids title])))}
               "Link All"])]]
-         (when is-unlinked-ref?
+         (when is-unlinked-ref
            [:div (use-style references-list-style)
             (doall
-              (for [[group-title group] @unlinked-refs]
+              (for [[group-title group] unlinked-refs]
                 [:div (use-style references-group-style {:key (str "group-" group-title)})
                  [:h4 (use-style references-group-title-style)
                   [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
@@ -471,7 +471,7 @@
                               (use-style references-group-block-style)
                               {:style {:max-width "90%"}})
                        [ref-comp block]]
-                      (when is-unlinked-ref?
+                      (when is-unlinked-ref
                         [button {:style    {:margin-top "1.5em"}
                                  :on-click #(dispatch [:unlinked-references/link block title])}
                          "Link"])]))]))])]))))
