@@ -9,7 +9,7 @@ export default {
   component: DatabaseMenu,
   argTypes: {},
   parameters: {
-    badges: [BADGE.DEV]
+    badges: [BADGE.DEV, BADGE.IN_USE]
   },
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };

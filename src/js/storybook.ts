@@ -6,9 +6,15 @@ export enum BADGE {
   STABLE = 'stable',
   CONCEPT = 'concept',
   DEV = 'dev',
+  IN_USE = 'in use',
 }
 
 export const badges = {
+  [BADGE.IN_USE]: {
+    color: '#fff',
+    contrast: '#E1230C',
+    title: 'In Use'
+  },
   [BADGE.DEV]: {
     color: '#fff',
     contrast: '#E1230C',

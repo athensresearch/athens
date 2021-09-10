@@ -14,7 +14,7 @@ export default {
   argTypes: {},
   parameters: {
     layout: 'centered',
-    badges: [BADGE.BETA]
+    badges: [BADGE.BETA, BADGE.IN_USE]
   },
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };

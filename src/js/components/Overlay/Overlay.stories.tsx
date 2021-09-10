@@ -12,7 +12,7 @@ export default {
   argTypes: {},
   parameters: {
     layout: 'centered',
-    badges: [BADGE.DEV]
+    badges: [BADGE.DEV, BADGE.IN_USE]
   }
 };
 

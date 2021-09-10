@@ -15,7 +15,7 @@ export default {
     }
   },
   parameters: {
-    badges: [BADGE.DEV]
+    badges: [BADGE.DEV, BADGE.IN_USE]
   },
   decorators: [(Story) => {
 

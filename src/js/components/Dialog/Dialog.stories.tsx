@@ -10,7 +10,7 @@ export default {
   argTypes: {},
   parameters: {
     layout: 'fullscreen',
-    badges: [BADGE.DEV]
+    badges: [BADGE.DEV, BADGE.IN_USE]
   },
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };
