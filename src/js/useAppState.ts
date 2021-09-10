@@ -1,5 +1,5 @@
 import React from 'react';
-import { mockDatabases as databaseMenuData } from './components/DatabaseMenu/mockData';
+import { mockDatabases as databaseMenuData } from './components/concept/DatabaseMenu/mockData';
 import * as presenceData from './components/PresenceDetails/mockData';
 
 const mockData = {

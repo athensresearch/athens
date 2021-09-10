@@ -1,5 +1,5 @@
 import React from 'react';
-import { BlockProps } from '../components/Block/Block';
+import { BlockProps } from '../components/concept/Block/Block';
 
 interface recurseBlocksProps {
   tree: any[];

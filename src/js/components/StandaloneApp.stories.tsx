@@ -4,16 +4,16 @@ import { Storybook } from '../storybook';
 
 import { useAppState } from '../useAppState';
 
-import { LeftSidebar } from './LeftSidebar';
-import { RightSidebar } from './RightSidebar';
-import { AppToolbar } from './AppToolbar';
-import { CommandBar } from './CommandBar';
-import { AppLayout, MainContent } from './App';
-import { Page, PageBlocksContainer } from './Page';
+import { LeftSidebar } from './concept/LeftSidebar';
+import { RightSidebar } from './concept/RightSidebar';
+import { AppToolbar } from './concept/AppToolbar';
+import { CommandBar } from './concept/CommandBar';
+import { AppLayout, MainContent } from './concept/App';
+import { Page, PageBlocksContainer } from './concept/Page';
 
 import {
   WithPresence
-} from './Block/Block.stories';
+} from './concept/Block/Block.stories';
 
 export default {
   title: 'App/Standalone',

@@ -6,12 +6,12 @@ import { getOs } from '../utils/getOs';
 
 import { useAppState } from '../useAppState';
 
-import { LeftSidebar } from './LeftSidebar';
-import { RightSidebar } from './RightSidebar';
-import { AppToolbar } from './AppToolbar';
-import { CommandBar } from './CommandBar';
-import { AppLayout, MainContent } from './App';
-import { NodePage } from './Page/Page.stories';
+import { LeftSidebar } from './concept/LeftSidebar';
+import { RightSidebar } from './concept/RightSidebar';
+import { AppToolbar } from './concept/AppToolbar';
+import { CommandBar } from './concept/CommandBar';
+import { AppLayout, MainContent } from './concept/App';
+import { NodePage } from './concept/Page/Page.stories';
 
 export default {
   title: 'App/Browser',

@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar } from './Avatar';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
-import { WithPresence } from '../Block/Block.stories';
+import { WithPresence } from '../concept/Block/Block.stories';
 
 const Wrapper = styled(Storybook.Wrapper)`
   display: flex;
