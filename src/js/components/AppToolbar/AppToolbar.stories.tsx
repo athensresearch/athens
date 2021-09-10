@@ -82,7 +82,7 @@ const Template = (args: AppToolbarProps) => {
     handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
     handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
     handlePressSettings={() => setRoute('/settings')}
-    handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
+    // handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
       handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
     handlePressMember={(member) => console.log(member)}
       handleUpdateProfile={(person) => setCurrentUser(person)}
