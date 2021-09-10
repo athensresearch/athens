@@ -22,6 +22,17 @@ type Person = {
 }
 
 /**
+ * The state of a session's connection to the Athens host
+ */
+enum ConnectionStatus {
+  LOCAL = 'local',
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  RECONNECTING = 'reconnecting',
+  OFFLINE = 'offline',
+}
+
+/**
  *  A Person associated with a specific Athens block in a multiplayer context
 */
 type PersonPresence = Person & {
@@ -69,6 +80,8 @@ type Block = {
    */
   presentUser?: PersonPresence;
 }
+
+type HostAddress = string;
 
 /**
  * A knowledge graph
