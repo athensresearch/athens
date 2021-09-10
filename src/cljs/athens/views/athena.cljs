@@ -3,15 +3,11 @@
     ["@material-ui/icons/ArrowForward" :default ArrowForward]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
-    ["@material-ui/icons/Search" :default Search]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [gen-block-uid scroll-into-view]]
-    [athens.views.buttons :refer [button]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
@@ -240,16 +236,6 @@
 
 
 ;; Components
-
-
-(defn athena-prompt-el
-  []
-  [button {:on-click #(dispatch [:athena/toggle])
-           :primary true
-           :style {:font-size "11px"}}
-   [:<>
-    [:> Search]
-    [:span "Find or Create a Page"]]])
 
 
 (defn results-el

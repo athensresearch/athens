@@ -1,5 +1,6 @@
 (ns athens.views.blocks.core
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.events.selection                 :as select-events]
@@ -15,9 +16,6 @@
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [athens.views.blocks.toggle              :as toggle]
     [athens.views.blocks.tooltip             :as tooltip]
-    [athens.views.buttons                    :as buttons]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [com.rpl.specter                         :as s]
     [re-frame.core                           :as rf]
     [reagent.core                            :as r]
@@ -113,10 +111,10 @@
                             :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [buttons/button {:primary true
-                    :on-click (fn [e]
-                                (.. e stopPropagation)
-                                (rf/dispatch [:right-sidebar/open-item uid]))}
+   [:> Button {:is-primary true
+               :on-click (fn [e]
+                           (.. e stopPropagation)
+                           (rf/dispatch [:right-sidebar/open-item uid]))}
     count]])
 
 

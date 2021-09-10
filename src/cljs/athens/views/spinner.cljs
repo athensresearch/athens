@@ -2,8 +2,6 @@
   (:require
     [athens.db]
     [athens.style :as style]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [goog.dom :refer [getElement]]
     [reagent.dom :as r-dom]
     [stylefy.core :as stylefy :refer [use-style]]))

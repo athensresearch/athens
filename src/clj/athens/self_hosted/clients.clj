@@ -77,9 +77,7 @@
 
 (defn get-client-username
   [channel]
-  (let [username (get @clients channel)]
-    (log/debug channel "get-client-username" username)
-    username))
+  (get @clients channel))
 
 
 (defn get-clients

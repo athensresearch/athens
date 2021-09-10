@@ -1,5 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -20,10 +21,7 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
@@ -326,9 +324,9 @@
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
                 [:<>
-                 [button {:class    [(when @ele "is-active")]
-                          :on-click #(reset! ele (.-currentTarget %))
-                          :style    page-menu-toggle-style}
+                 [:> Button {:class    [(when @ele "is-active")]
+                             :on-click #(reset! ele (.-currentTarget %))
+                             :style    page-menu-toggle-style}
                   [:> MoreHoriz]]
                  [m-popover
                   (merge (use-style dropdown-style)
@@ -346,25 +344,22 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                       [:<>
-                        [:> BookmarkBorder]
-                        [:span "Remove Shortcut"]]]
-                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                       [:<>
-                        [:> Bookmark]
-                        [:span "Add Shortcut"]]])
-                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:<>
-                      [:> BubbleChart]
-                      [:span "Show Local Graph"]]]]
+                      [:> Button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                       [:> BookmarkBorder]
+                       [:span "Remove Shortcut"]]
+                      [:> Button {:on-click #(dispatch [:page/add-shortcut uid])}
+                       [:> Bookmark]
+                       [:span "Add Shortcut"]])
+                    [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                     [:> BubbleChart]
+                     [:span "Show Local Graph"]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(do
-                                         (if daily-note?
-                                           (dispatch [:daily-note/delete uid title])
-                                           (dispatch [:page/delete uid title]))
-                                         (navigate :pages))}
-                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
+                   [:> Button {:on-click #(do
+                                            (if daily-note?
+                                              (dispatch [:daily-note/delete uid title])
+                                              (dispatch [:page/delete uid title]))
+                                            (navigate :pages))}
+                    [:> Delete] [:span "Delete Page"]]]]])))
 
 
 (defn ref-comp
@@ -402,7 +397,7 @@
               (not daily-notes?))
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn [] (swap! state update linked? not))}
+        [:> Button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]

@@ -18,6 +18,7 @@
 (def supported-event-types
   #{:presence/hello
     :presence/editing
+    :presence/rename
     :presence/goodbye})
 
 
@@ -58,6 +59,21 @@
         (common-events/build-event-accepted id max-tx)))))
 
 
+(defn rename-handler
+  [datahike channel {:event/keys [id args]}]
+  (let [{:keys
+         [current-username
+          new-username]}         args
+        max-tx                   (:max-tx @datahike)
+        broadcast-rename-event (common-events/build-presence-broadcast-rename-event max-tx
+                                                                                    current-username
+                                                                                    new-username)]
+
+    (clients/add-client! channel new-username)
+    (clients/broadcast! broadcast-rename-event)
+    (common-events/build-event-accepted id max-tx)))
+
+
 (defn goodbye-handler
   [channel _event]
   (let [_username (clients/get-client-username channel)]
@@ -69,4 +85,5 @@
   (condp = type
     :presence/hello   (hello-handler datahike channel event)
     :presence/editing (editing-handler datahike channel event)
+    :presence/rename (rename-handler datahike channel event)
     #_#_:presence/goodbye (goodbye-handler channel event)))

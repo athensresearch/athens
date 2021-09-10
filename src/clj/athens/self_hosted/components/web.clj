@@ -23,7 +23,7 @@
         ;; TODO: max-tx shouldn't be 42
         presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
     (clients/remove-client! channel)
-    (log/info channel username "closed, status" status)
+    (log/debug username "!! closed, status" status)
     (when username
       (clients/broadcast! presence-offline-event))))
 
@@ -47,7 +47,7 @@
 
                       :else
                       (do
-                        (log/error "receive-handler, unsupported event:" (pr-str type))
+                        (log/error username "-> receive-handler, unsupported event:" (pr-str type))
                         (common-events/build-event-rejected id
                                                             (str "Unsupported event: " type)
                                                             {:unsupported-type type})))]
@@ -64,20 +64,20 @@
   [datahike]
   (fn receive-handler
     [channel msg]
-    (log/debug channel "<-" msg)
+    (log/debug (clients/get-client-username channel) "->" msg)
     (let [username (clients/get-client-username channel)
           data     (clients/<-transit msg)]
       (if-not (schema/valid-event? data)
         (let [explanation (schema/explain-event data)]
-          (log/warn channel "invalid event received:" explanation)
+          (log/warn (clients/get-client-username channel) "-> invalid event received:" explanation)
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
         (let [{:event/keys [_id type]} data]
-          (log/debug channel "decoded valid event" (pr-str data))
+          (log/debug (clients/get-client-username channel) "-> decoded valid event" (pr-str data))
           (let [{:event/keys [status]
                  :as         result} (valid-event-handler datahike channel username data)]
-            (log/debug channel "<- event processed, result:" (pr-str result))
+            (log/debug (clients/get-client-username channel) "-> event processed, result:" (pr-str result))
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
                        (contains? forwardable-events type))

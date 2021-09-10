@@ -1,12 +1,12 @@
 (ns athens.self-hosted.presence.views
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Link" :default Link]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
     [athens.style :as style]
-    [athens.views.buttons :refer [button]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -178,7 +178,7 @@
                 [:<>
 
                  ;; Preview
-                 [button {:on-click #(reset! ele (.-currentTarget %))}
+                 [:> Button {:on-click #(reset! ele (.-currentTarget %))}
                   [avatar-stack-el
                    (cond
 
@@ -213,7 +213,7 @@
                                         :horizontal "center"}}
                   [list-header-el
                    [list-header-url-el "ath.ns/34op5fds0a"]
-                   [button [:> Link]]]
+                   [:> Button [:> Link]]]
 
                   [list-el
                    ;; On same page
