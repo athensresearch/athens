@@ -431,7 +431,7 @@
       (let [is-unlinked-ref (:is-unlinked-ref @state)]
         [:section (use-style references-style)
          [:h4 (use-style references-heading-style)
-          [button {:on-click #(swap! state update :is-unlinked-ref not)}
+          [:> Button {:on-click #(swap! state update :is-unlinked-ref not)}
            (if is-unlinked-ref
              [:> KeyboardArrowDown]
              [:> ChevronRight])]
@@ -441,13 +441,13 @@
                          :width "100%"}}
            [:span "Unlinked References"]
            (when (and is-unlinked-ref (not-empty unlinked-refs))
-             [button {:style    {:font-size "14px"}
-                      :on-click (fn []
-                                  (swap! state assoc :is-unlinked-ref false)
-                                  (let [unlinked-str-ids (->> unlinked-refs
-                                                              (mapcat second)
-                                                              (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
-                                    (dispatch [:unlinked-references/link-all unlinked-str-ids title])))}
+             [:> Button {:style    {:font-size "14px"}
+                         :on-click (fn []
+                                     (swap! state assoc :is-unlinked-ref false)
+                                     (let [unlinked-str-ids (->> unlinked-refs
+                                                                 (mapcat second)
+                                                                 (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                       (dispatch [:unlinked-references/link-all unlinked-str-ids title])))}
               "Link All"])]]
          (when is-unlinked-ref
            [:div (use-style references-list-style)
@@ -467,8 +467,8 @@
                               {:style {:max-width "90%"}})
                        [ref-comp block]]
                       (when is-unlinked-ref
-                        [button {:style    {:margin-top "1.5em"}
-                                 :on-click #(dispatch [:unlinked-references/link block title])}
+                        [:> Button {:style    {:margin-top "1.5em"}
+                                    :on-click #(dispatch [:unlinked-references/link block title])}
                          "Link"])]))]))])]))))
 
 
