@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 
 import { Storybook } from '../storybook';
@@ -10,7 +9,6 @@ import { useAppState } from '../useAppState';
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
 import { AppToolbar } from './AppToolbar';
-import { Default as AppToolbarStory } from './AppToolbar/AppToolbar.stories';
 import { CommandBar } from './CommandBar';
 import { AppLayout, MainContent } from './App';
 import { NodePage } from './Page/Page.stories';
@@ -97,44 +95,32 @@ const Template = (args, context) => {
   const {
     currentUser,
     setCurrentUser,
-    isOnline,
-    setIsOnline,
+    isSynced,
     route,
     currentPageMembers,
-    setCurrentPageMembers,
     differentPageMembers,
-    setDifferentPageMembers,
     activeDatabase,
     setActiveDatabase,
     inactiveDatabases,
-    setInactiveDatabases,
-    isSynced,
-    setIsSynced,
+    connectionStatus,
     isElectron,
-    setIsElectron,
     setRoute,
     hostAddress,
-    setHostAddress,
     isThemeDark,
     setIsThemeDark,
     isWinFullscreen,
-    setIsWinFullscreen,
     isWinFocused,
-    setIsWinFocused,
     isWinMaximized,
-    setIsWinMaximized,
     isLeftSidebarOpen,
     setIsLeftSidebarOpen,
     isRightSidebarOpen,
     setIsRightSidebarOpen,
-    isSettingsOpen,
     setIsSettingsOpen,
     isCommandBarOpen,
     setIsCommandBarOpen,
     isMergeDialogOpen,
     setIsMergeDialogOpen,
     isDatabaseDialogOpen,
-    setIsDatabaseDialogOpen,
   } = useAppState();
 
   return (
@@ -167,6 +153,7 @@ const Template = (args, context) => {
             differentPageMembers={differentPageMembers}
             activeDatabase={activeDatabase}
             inactiveDatabases={inactiveDatabases}
+            connectionStatus={connectionStatus}
             isSynced={isSynced}
             handleChooseDatabase={(database) => setActiveDatabase(database)}
             handlePressAddDatabase={() => console.log('pressed add database')}

@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 import { classnames } from '../utils/classnames';
 import { Storybook } from '../storybook';
@@ -15,7 +14,6 @@ import { Page, PageBlocksContainer } from './Page';
 import {
   WithPresence
 } from './Block/Block.stories';
-import { SettingsInputComponent } from '@material-ui/icons';
 
 export default {
   title: 'App/Standalone',
@@ -97,44 +95,31 @@ const Template = (args, context) => {
   const {
     currentUser,
     setCurrentUser,
-    isOnline,
-    setIsOnline,
     route,
     currentPageMembers,
-    setCurrentPageMembers,
     differentPageMembers,
-    setDifferentPageMembers,
     activeDatabase,
     setActiveDatabase,
     inactiveDatabases,
-    setInactiveDatabases,
     isSynced,
-    setIsSynced,
     isElectron,
-    setIsElectron,
     setRoute,
     hostAddress,
-    setHostAddress,
     isThemeDark,
     setIsThemeDark,
     isWinFullscreen,
-    setIsWinFullscreen,
     isWinFocused,
-    setIsWinFocused,
     isWinMaximized,
-    setIsWinMaximized,
     isLeftSidebarOpen,
     setIsLeftSidebarOpen,
     isRightSidebarOpen,
     setIsRightSidebarOpen,
-    isSettingsOpen,
     setIsSettingsOpen,
     isCommandBarOpen,
     setIsCommandBarOpen,
     isMergeDialogOpen,
     setIsMergeDialogOpen,
     isDatabaseDialogOpen,
-    setIsDatabaseDialogOpen,
   } = useAppState();
 
   return (

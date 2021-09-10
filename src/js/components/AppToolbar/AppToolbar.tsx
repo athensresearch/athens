@@ -6,9 +6,7 @@ import { Button } from '../Button';
 
 import { DatabaseMenu, DatabaseMenuProps } from '../DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetails, PresenceDetailsProps } from '../PresenceDetails/Concept/PresenceDetails';
-import * as mockPresence from '../PresenceDetails/mockData';
-
+import { PresenceDetails, PresenceDetailsProps } from '../PresenceDetails';
 
 const AppToolbarWrapper = styled.header`
   background: var(--color-background);
