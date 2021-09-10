@@ -76,10 +76,10 @@ Resources:
               Value: '{:datahike {:store {:path "/var/lib/athens"}}}'
           MountPoints:
             - ContainerPath: /var/lib/athens
-              SourceVolume: !Sub '${AWS::StackName}AthensDataVolume'
+              SourceVolume: !Sub '${AWS::StackName}DataVolume'
           Image: !Ref AthensImage
           Essential: true
-          Name: !Sub '${AWS::StackName}-athens-cnt'
+          Name: !Sub '${AWS::StackName}-ctn'
       PlacementConstraints:
         - Type: memberOf
           Expression: !Sub 
@@ -87,14 +87,14 @@ Resources:
             - AvailabilityZone: !GetAtt 
                 - Subnet1
                 - AvailabilityZone
-      Memory: '2048'
+      Memory: '1024'
       Cpu: '512'
-      Family: !Sub '${AWS::StackName}-athens-task'
+      Family: !Sub '${AWS::StackName}-task'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - EC2
       Volumes:
-        - Name: !Sub '${AWS::StackName}AthensDataVolume'
+        - Name: !Sub '${AWS::StackName}DataVolume'
           DockerVolumeConfiguration:
             Scope: shared
             Autoprovision: false
@@ -107,11 +107,11 @@ Resources:
     Type: 'AWS::ECS::Service'
     Properties:
       Cluster: !Ref ECSCluster
-      ServiceName: !Sub '${AWS::StackName}-athens-svc'
+      ServiceName: !Sub '${AWS::StackName}-svc'
       TaskDefinition: !Ref AthensTaskDef
       LoadBalancers:
         - TargetGroupArn: !Ref AthensTargetGroup
-          ContainerName: !Sub '${AWS::StackName}-athens-cnt'
+          ContainerName: !Sub '${AWS::StackName}-ctn'
           ContainerPort: 3010
       DesiredCount: 1
       LaunchType: EC2
@@ -148,7 +148,7 @@ Resources:
         - Key: Athens
           Value: DataVolume
         - Key: Name
-          Value: !Sub '${AWS::StackName}AthensDataVolume'
+          Value: !Sub '${AWS::StackName}DataVolume'
         - Key: AthensStack
           Value: !Ref AWS::StackName
     DeletionPolicy: Snapshot
@@ -209,7 +209,7 @@ Resources:
   ECSCluster:
     Type: 'AWS::ECS::Cluster'
     Properties:
-      ClusterName: !Sub '${AWS::StackName}-athens-cluster'
+      ClusterName: !Sub '${AWS::StackName}-cluster'
   ECSAutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
