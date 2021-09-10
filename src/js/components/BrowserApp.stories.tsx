@@ -5,11 +5,12 @@ import { Storybook } from '../storybook';
 import { classnames } from '../utils/classnames';
 import { getOs } from '../utils/getOs';
 
+import { useAppState } from '../useAppState';
+
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
+import { AppToolbar } from './AppToolbar';
 import { Default as AppToolbarStory } from './AppToolbar/AppToolbar.stories';
-import * as mockAppToolbarData from './PresenceDetails/mockData';
-import { mockDatabases } from './DatabaseMenu/mockData';
 import { CommandBar } from './CommandBar';
 import { AppLayout, MainContent } from './App';
 import { NodePage } from './Page/Page.stories';
@@ -93,17 +94,48 @@ const BrowserToolbar = () => {
 }
 
 const Template = (args, context) => {
-  const [os, setOs] = React.useState(args.os);
-  const [route, setRoute] = React.useState(args.route);
-  const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
-  const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
-  const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
-  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen || true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen || false);
-  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen || false);
-  const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
-  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(args.isDatabaseDialogOpen);
-  const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
+  const {
+    currentUser,
+    setCurrentUser,
+    isOnline,
+    setIsOnline,
+    route,
+    currentPageMembers,
+    setCurrentPageMembers,
+    differentPageMembers,
+    setDifferentPageMembers,
+    activeDatabase,
+    setActiveDatabase,
+    inactiveDatabases,
+    setInactiveDatabases,
+    isSynced,
+    setIsSynced,
+    isElectron,
+    setIsElectron,
+    setRoute,
+    hostAddress,
+    setHostAddress,
+    isThemeDark,
+    setIsThemeDark,
+    isWinFullscreen,
+    setIsWinFullscreen,
+    isWinFocused,
+    setIsWinFocused,
+    isWinMaximized,
+    setIsWinMaximized,
+    isLeftSidebarOpen,
+    setIsLeftSidebarOpen,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isCommandBarOpen,
+    setIsCommandBarOpen,
+    isMergeDialogOpen,
+    setIsMergeDialogOpen,
+    isDatabaseDialogOpen,
+    setIsDatabaseDialogOpen,
+  } = useAppState();
 
   return (
     <Storybook.Desktop>
@@ -116,44 +148,48 @@ const Template = (args, context) => {
       >
         <AppLayout>
           <BrowserToolbar />
-          <AppToolbarStory
-            os={os}
-            isElectron={false}
+          <AppToolbar
+            os={args.os}
             route={route}
+            isElectron={isElectron}
             isWinFullscreen={isWinFullscreen}
             isWinFocused={isWinFocused}
             isWinMaximized={isWinMaximized}
+            isThemeDark={isThemeDark}
             isLeftSidebarOpen={isLeftSidebarOpen}
             isRightSidebarOpen={isRightSidebarOpen}
             isCommandBarOpen={isCommandBarOpen}
             isMergeDialogOpen={isMergeDialogOpen}
             isDatabaseDialogOpen={isDatabaseDialogOpen}
-            isThemeDark={isThemeDark}
-            hostAddress={mockAppToolbarData.hostAddress}
-            currentPageMembers={mockAppToolbarData.currentPageMembers}
-            differentPageMembers={mockAppToolbarData.differentPageMembers}
-            activeDatabase={mockDatabases[0]}
-            inactiveDatabases={mockDatabases.slice(1, 4)}
-            synced={true}
-            handleChooseDatabase={() => null}
-            handlePressAddDatabase={() => null}
-            handlePressRemoveDatabase={() => null}
-            handlePressImportDatabase={() => null}
-            handlePressMoveDatabase={() => null}
-            handlePressHistoryBack={() => null}
-            handlePressHistoryForward={() => null}
+            hostAddress={hostAddress}
+            currentUser={currentUser}
+            currentPageMembers={currentPageMembers}
+            differentPageMembers={differentPageMembers}
+            activeDatabase={activeDatabase}
+            inactiveDatabases={inactiveDatabases}
+            isSynced={isSynced}
+            handleChooseDatabase={(database) => setActiveDatabase(database)}
+            handlePressAddDatabase={() => console.log('pressed add database')}
+            handlePressRemoveDatabase={() => console.log('pressed remove database')}
+            handlePressImportDatabase={() => console.log('pressed import database')}
+            handlePressMoveDatabase={() => console.log('pressed move database')}
+            handlePressMember={(person) => console.log(person)}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
             handlePressDailyNotes={() => setRoute('/daily-notes')}
             handlePressAllPages={() => setRoute('/all-pages')}
             handlePressGraph={() => setRoute('/graph')}
             handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
-            handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
-            handlePressSettings={() => setRoute('/settings')}
-            handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
-            handlePressLeftSidebar={() => setIsLeftOpen(!isLeftSidebarOpen)}
-            handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-            handlePressFullscreen={() => setIsWinFullscreen(true)}
-            handlePressMaximizeRestore={() => setIsWinMaximized(!isWinMaximized)}
+            handlePressMerge={() => setIsMergeDialogOpen(true)}
+            handlePressSettings={() => setIsSettingsOpen(true)}
+            handlePressHistoryBack={() => console.log('pressed go back')}
+            handlePressHistoryForward={() => console.log('pressed go forward')}
+            handlePressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+            handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+            handlePressMinimize={() => console.log('pressed minimize')}
+            handlePressMaximizeRestore={() => console.log('pressed maximize/restore')}
+            handlePressClose={() => console.log('pressed close')}
+            handlePressHostAddress={(hostAddress) => console.log('pressed', hostAddress)}
+            handleUpdateProfile={(person) => setCurrentUser(person)}
           />
           <LeftSidebar
             isLeftSidebarOpen={isLeftSidebarOpen}

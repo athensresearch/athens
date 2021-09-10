@@ -3,12 +3,11 @@ import styled from 'styled-components';
 import { classnames } from '../utils/classnames';
 import { Storybook } from '../storybook';
 
+import { useAppState } from '../useAppState';
+
 import { LeftSidebar } from './LeftSidebar';
 import { RightSidebar } from './RightSidebar';
-// import { AppToolbar } from './AppToolbar';
-import { Auto as AppToolbar } from './AppToolbar/AppToolbar.stories';
-import * as mockAppToolbarData from './PresenceDetails/mockData';
-import { mockDatabases } from './DatabaseMenu/mockData';
+import { AppToolbar } from './AppToolbar';
 import { CommandBar } from './CommandBar';
 import { AppLayout, MainContent } from './App';
 import { Page, PageBlocksContainer } from './Page';
@@ -16,11 +15,18 @@ import { Page, PageBlocksContainer } from './Page';
 import {
   WithPresence
 } from './Block/Block.stories';
+import { SettingsInputComponent } from '@material-ui/icons';
 
 export default {
   title: 'App/Standalone',
   component: Window,
-  argTypes: {},
+  argTypes: {
+    connectionStatus: {
+      options: ['local', 'connecting', 'connected', 'reconnecting', 'offline'],
+      control: { type: 'radio' },
+      defaultValue: 'local'
+    }
+  },
   parameters: {
     layout: 'fullscreen'
   }
@@ -88,24 +94,48 @@ const WindowWrapper = styled.div`
 `;
 
 const Template = (args, context) => {
-  // App Properties
-  const [route, setRoute] = React.useState(args.route);
-  const [isWinFullscreen, setIsWinFullscreen] = React.useState(args.isWinFullscreen);
-  const [isWinFocused, setIsWinFocused] = React.useState(args.isWinFocused);
-  const [isWinMaximized, setIsWinMaximized] = React.useState(args.isWinMaximized);
-  const [isLeftSidebarOpen, setIsLeftOpen] = React.useState(args.isLeftSidebarOpen || true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(args.isRightSidebarOpen || false);
-  const [isCommandBarOpen, setIsCommandBarOpen] = React.useState(args.isCommandBarOpen || false);
-  const [isMergeDialogOpen, setIsMergeDialogOpen] = React.useState(args.isMergeDialogOpen);
-  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = React.useState(args.isDatabaseDialogOpen);
-  const [isThemeDark, setIsThemeDark] = React.useState(args.isThemeDark);
-
-  // Page Properties
-  const [isLinkedReferencesOpen, setIsLinkedReferencesOpen] = React.useState(true);
-  const [isUnlinkedReferencesOpen, setIsUnlinkedReferencesOpen] = React.useState(true);
-  const handlePressLinkedReferencesToggle = () => setIsLinkedReferencesOpen(!isLinkedReferencesOpen);
-  const handlePressUnlinkedReferencesToggle = () => setIsUnlinkedReferencesOpen(!isUnlinkedReferencesOpen);
-
+  const {
+    currentUser,
+    setCurrentUser,
+    isOnline,
+    setIsOnline,
+    route,
+    currentPageMembers,
+    setCurrentPageMembers,
+    differentPageMembers,
+    setDifferentPageMembers,
+    activeDatabase,
+    setActiveDatabase,
+    inactiveDatabases,
+    setInactiveDatabases,
+    isSynced,
+    setIsSynced,
+    isElectron,
+    setIsElectron,
+    setRoute,
+    hostAddress,
+    setHostAddress,
+    isThemeDark,
+    setIsThemeDark,
+    isWinFullscreen,
+    setIsWinFullscreen,
+    isWinFocused,
+    setIsWinFocused,
+    isWinMaximized,
+    setIsWinMaximized,
+    isLeftSidebarOpen,
+    setIsLeftSidebarOpen,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isCommandBarOpen,
+    setIsCommandBarOpen,
+    isMergeDialogOpen,
+    setIsMergeDialogOpen,
+    isDatabaseDialogOpen,
+    setIsDatabaseDialogOpen,
+  } = useAppState();
 
   return (
     <Storybook.Desktop>
@@ -119,47 +149,50 @@ const Template = (args, context) => {
         )}
       >
         <AppLayout>
-          <AppToolbar />
-          {/* <AppToolbar
+          <AppToolbar
             os={args.os}
-            isElectron={args.isElectron}
             route={route}
+            isElectron={isElectron}
             isWinFullscreen={isWinFullscreen}
             isWinFocused={isWinFocused}
             isWinMaximized={isWinMaximized}
+            isThemeDark={isThemeDark}
             isLeftSidebarOpen={isLeftSidebarOpen}
             isRightSidebarOpen={isRightSidebarOpen}
             isCommandBarOpen={isCommandBarOpen}
             isMergeDialogOpen={isMergeDialogOpen}
             isDatabaseDialogOpen={isDatabaseDialogOpen}
-            isThemeDark={isThemeDark}
-            handlePressHistoryBack={() => null}
-            handlePressHistoryForward={() => null}
-            handleUpdateProfile={(person) => null}
-            hostAddress={mockAppToolbarData.hostAddress}
-            currentPageMembers={mockAppToolbarData.currentPageMembers}
-            differentPageMembers={mockAppToolbarData.differentPageMembers}
-            activeDatabase={mockDatabases[0]}
-            inactiveDatabases={mockDatabases.slice(1, 4)}
-            synced={true}
-            handleChooseDatabase={() => null}
-            handlePressAddDatabase={() => null}
-            handlePressRemoveDatabase={() => null}
-            handlePressImportDatabase={() => null}
-            handlePressMoveDatabase={() => null}
+            hostAddress={hostAddress}
+            currentUser={currentUser}
+            currentPageMembers={currentPageMembers}
+            differentPageMembers={differentPageMembers}
+            activeDatabase={activeDatabase}
+            inactiveDatabases={inactiveDatabases}
+            isSynced={isSynced}
+            connectionStatus={args.connectionStatus}
+            handleChooseDatabase={(database) => setActiveDatabase(database)}
+            handlePressAddDatabase={() => console.log('pressed add database')}
+            handlePressRemoveDatabase={() => console.log('pressed remove database')}
+            handlePressImportDatabase={() => console.log('pressed import database')}
+            handlePressMoveDatabase={() => console.log('pressed move database')}
+            handlePressMember={(person) => console.log(person)}
             handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
             handlePressDailyNotes={() => setRoute('/daily-notes')}
             handlePressAllPages={() => setRoute('/all-pages')}
             handlePressGraph={() => setRoute('/graph')}
             handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
-            handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
-            handlePressSettings={() => setRoute('/settings')}
-            handlePressDatabase={() => setIsDatabaseDialogOpen(!isDatabaseDialogOpen)}
-            handlePressLeftSidebar={() => setIsLeftOpen(!isLeftSidebarOpen)}
-            handlePressRightSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-            handlePressFullscreen={() => setIsWinFullscreen(true)}
-            handlePressMaximizeRestore={() => setIsWinMaximized(!isWinMaximized)}
-          /> */}
+            handlePressMerge={() => setIsMergeDialogOpen(true)}
+            handlePressSettings={() => setIsSettingsOpen(true)}
+            handlePressHistoryBack={() => console.log('pressed go back')}
+            handlePressHistoryForward={() => console.log('pressed go forward')}
+            handlePressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+            handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+            handlePressMinimize={() => console.log('pressed minimize')}
+            handlePressMaximizeRestore={() => console.log('pressed maximize/restore')}
+            handlePressClose={() => console.log('pressed close')}
+            handlePressHostAddress={(hostAddress) => console.log('pressed', hostAddress)}
+            handleUpdateProfile={(person) => setCurrentUser(person)}
+          />
           <LeftSidebar
             isLeftSidebarOpen={isLeftSidebarOpen}
             handlePressShortcut={() => null}
@@ -191,10 +224,10 @@ const Template = (args, context) => {
               <Page
                 uid="123"
                 title="Test Page"
-                isLinkedReferencesOpen={isLinkedReferencesOpen}
-                isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
-                handlePressLinkedReferencesToggle={handlePressLinkedReferencesToggle}
-                handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
+                isLinkedReferencesOpen={true}
+                isUnlinkedReferencesOpen={true}
+                handlePressLinkedReferencesToggle={() => null}
+                handlePressUnlinkedReferencesToggle={() => null}
               >
                 <PageBlocksContainer><WithPresence /></PageBlocksContainer>
               </Page>
@@ -215,7 +248,7 @@ const Template = (args, context) => {
 export const MacOs = Template.bind({});
 MacOs.args = {
   os: 'mac',
-  isElectron: true
+  isElectron: true,
 };
 
 export const Windows = Template.bind({});

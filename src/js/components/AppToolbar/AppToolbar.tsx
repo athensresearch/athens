@@ -124,8 +124,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressMinimize?(): void;
   handlePressClose?(): void;
   handlePressMaximizeRestore?(): void;
-  handlePressMaximizeRestore?(): void;
-  handlePressMaximizeRestore?(): void;
   handlePressFullscreen?(): void;
   handlePressHistoryBack(): void;
   handlePressHistoryForward(): void;
@@ -137,7 +135,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressThemeToggle(): void;
   handlePressMerge(): void;
   handlePressSettings(): void;
-  handlePressDatabase(): void;
   handlePressHistoryBack(): void;
   handlePressHistoryForward(): void;
   handlePressLeftSidebarToggle(): void;
@@ -163,7 +160,7 @@ export const AppToolbar = ({
   differentPageMembers,
   activeDatabase,
   inactiveDatabases,
-  synced,
+  isSynced,
   handleChooseDatabase,
   handlePressAddDatabase,
   handlePressRemoveDatabase,
@@ -177,7 +174,6 @@ export const AppToolbar = ({
   handlePressThemeToggle,
   handlePressMerge,
   handlePressSettings,
-  handlePressDatabase,
   handlePressHistoryBack,
   handlePressHistoryForward,
   handlePressLeftSidebarToggle,
@@ -230,9 +226,8 @@ export const AppToolbar = ({
         handlePressMember={handlePressMember}
         handleUpdateProfile={handleUpdateProfile}
       />
-      <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
+      {/* <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button> */}
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
-      <Button isPressed={isDatabaseDialogOpen} onClick={handlePressDatabase}><Storage /></Button>
       <Button
         onClick={handlePressThemeToggle}>
         {isThemeDark ? <ToggleOff /> : <ToggleOn />}

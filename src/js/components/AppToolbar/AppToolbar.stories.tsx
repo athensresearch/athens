@@ -52,8 +52,7 @@ const Template = (args: AppToolbarProps) => {
     setIsThemeDark
   } = useAppState();
 
-  return <ToolbarStoryWrapper className={'os-' + args.os}>
-    <AppToolbar
+  return <AppToolbar
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}
@@ -74,7 +73,7 @@ const Template = (args: AppToolbarProps) => {
     handlePressImportDatabase={() => null}
     activeDatabase={mockDatabases[0]}
     inactiveDatabases={mockDatabases.slice(1, 4)}
-    synced={true}
+    isSynced={true}
       handlePressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
     handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
     handlePressDailyNotes={() => setRoute('/daily-notes')}
@@ -87,9 +86,14 @@ const Template = (args: AppToolbarProps) => {
       handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
     handlePressMember={(member) => console.log(member)}
       handleUpdateProfile={(person) => setCurrentUser(person)}
-      {...args} />
-  </ToolbarStoryWrapper>
+    {...args} />
 };
+
+export const Default = Template.bind({});
+Default.args = {
+  isElectron: true,
+};
+Default.decorators = [];
 
 export const MacOs = Template.bind({});
 MacOs.args = {
