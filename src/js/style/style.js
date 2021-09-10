@@ -112,6 +112,10 @@ export const GlobalStyles = createGlobalStyle`
     ${opacityStyles}
     ${lightThemeColors}
 
+    .is-theme-light {
+      ${lightThemeColors}
+    }
+
     .is-theme-dark {
       ${darkThemeColors}
     }
