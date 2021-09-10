@@ -40,6 +40,7 @@ export interface PresenceDetailsProps {
   handleUpdateProfile(person: Person): void
   handlePressHostAddress(hostAddress: HostAddress): void
   handlePressMember(person: Person): void
+  connectionStatus: ConnectionStatus
 }
 
 export const PresenceDetails = ({
@@ -48,12 +49,13 @@ export const PresenceDetails = ({
   differentPageMembers,
   handlePressHostAddress,
   handlePressMember,
+  connectionStatus,
 }: PresenceDetailsProps) => {
   const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState(false);
   const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState(null);
 
   const maxToDisplay = 5;
-  const showablePersons = [...currentPageMembers, ...differentPageMembers];
+  const showablePersons = [...currentPageMembers, ...differentPageMembers] || [];
 
   return (
     <><div ref={setPresenceDetailsAnchor}>
@@ -102,7 +104,7 @@ export const PresenceDetails = ({
                 {hostAddress && <><Button onClick={handlePressHostAddress}><HostIcon /> <span>{hostAddress}</span></Button>
                   <Menu.Separator /></>
                 }
-                {currentPageMembers.length > 0 && (
+                {currentPageMembers && currentPageMembers.length > 0 && (
                   <>
                     <Heading>On this page</Heading>
                     <Menu>
@@ -118,23 +120,27 @@ export const PresenceDetails = ({
                         </Button>
                       )}
                     </Menu>
-                    <Menu.Separator />
                   </>
                 )}
-                <Menu>
-                  {differentPageMembers.length > 0 && differentPageMembers.map(member =>
-                    <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
-                      <Avatar
-                        username={member.username}
-                        personId={member.personId}
-                        color={member.color}
-                        showTooltip={false}
-                        isMuted={true}
-                      />
-                      <span>{member.username}</span>
-                    </Button>
-                  )}
-                </Menu>
+                {differentPageMembers && (
+                  <>
+                    <Menu.Separator />
+                    <Menu>
+                      {differentPageMembers.length > 0 && differentPageMembers.map(member =>
+                        <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
+                          <Avatar
+                            username={member.username}
+                            personId={member.personId}
+                            color={member.color}
+                            showTooltip={false}
+                            isMuted={true}
+                          />
+                          <span>{member.username}</span>
+                        </Button>
+                      )}
+                    </Menu>
+                  </>
+                )}
               </PresenceOverlay>
             </Fade>
           )}

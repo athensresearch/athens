@@ -183,6 +183,7 @@ export const AppToolbar = ({
   handlePressClose,
   handlePressHostAddress,
   handleUpdateProfile,
+  connectionStatus
 }: AppToolbarProps): React.ReactElement => {
 
   return (<AppToolbarWrapper>
@@ -190,7 +191,7 @@ export const AppToolbar = ({
       <DatabaseMenu
         activeDatabase={activeDatabase}
         inactiveDatabases={inactiveDatabases}
-        synced={synced}
+        isSynced={isSynced}
         handleChooseDatabase={handleChooseDatabase}
         handlePressAddDatabase={handlePressAddDatabase}
         handlePressRemoveDatabase={handlePressRemoveDatabase}
@@ -222,6 +223,7 @@ export const AppToolbar = ({
         differentPageMembers={differentPageMembers}
         hostAddress={hostAddress}
         placement="bottom-end"
+        connectionStatus={connectionStatus}
         handlePressHostAddress={handlePressHostAddress}
         handlePressMember={handlePressMember}
         handleUpdateProfile={handleUpdateProfile}

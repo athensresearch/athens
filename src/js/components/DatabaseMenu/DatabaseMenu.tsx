@@ -86,7 +86,7 @@ const Path = styled.span`
 export interface DatabaseMenuProps {
   activeDatabase: Database
   inactiveDatabases: Database[]
-  synced: boolean
+  isSynced: boolean
   handleChooseDatabase: (database: Database) => void
   handlePressAddDatabase: () => void
   handlePressRemoveDatabase: (database: Database) => void
@@ -105,7 +105,7 @@ export const DatabaseMenu = ({
   handlePressMoveDatabase,
   activeDatabase,
   inactiveDatabases,
-  synced
+  isSynced
 }: DatabaseMenuProps) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [menuAnchor, setMenuAnchor] = React.useState(null);
@@ -126,7 +126,7 @@ export const DatabaseMenu = ({
         isPressed={isMenuOpen}
         onClick={handlePressDatabaseMenu}
       >
-        {synced ? (
+        {isSynced ? (
           <Badge><DatabaseIcon name={activeDatabase.name} /></Badge>
         ) : (
           <DatabaseIcon name={activeDatabase.name} />

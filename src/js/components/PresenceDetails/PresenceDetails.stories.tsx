@@ -2,6 +2,8 @@ import React from 'react';
 import { BADGE, Storybook } from '../../storybook';
 import * as mockData from './mockData';
 
+import { useAppState } from '../../useAppState';
+
 import { PresenceDetails } from './PresenceDetails';
 import { PresenceDetails as WithUserSettingsDetails } from './Concept/PresenceDetails';
 
@@ -13,7 +15,9 @@ export default {
     // layout: 'centered',
     badges: [BADGE.DEV]
   },
-  decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
+  decorators: [(Story) => {
+    return <Storybook.Wrapper><Story /></Storybook.Wrapper>
+  }]
 };
 
 const Template = (args) => {
@@ -28,6 +32,50 @@ export const Basic = Template.bind({});
 Basic.args = {}
 
 export const WithUserSettings = () => {
+  const {
+    currentUser,
+    setCurrentUser,
+    isOnline,
+    setIsOnline,
+    route,
+    currentPageMembers,
+    setCurrentPageMembers,
+    differentPageMembers,
+    setDifferentPageMembers,
+    activeDatabase,
+    setActiveDatabase,
+    inactiveDatabases,
+    setInactiveDatabases,
+    isSynced,
+    setIsSynced,
+    isElectron,
+    setIsElectron,
+    setRoute,
+    hostAddress,
+    setHostAddress,
+    isThemeDark,
+    setIsThemeDark,
+    isWinFullscreen,
+    setIsWinFullscreen,
+    isWinFocused,
+    setIsWinFocused,
+    isWinMaximized,
+    setIsWinMaximized,
+    isLeftSidebarOpen,
+    setIsLeftSidebarOpen,
+    isRightSidebarOpen,
+    setIsRightSidebarOpen,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isCommandBarOpen,
+    setIsCommandBarOpen,
+    isMergeDialogOpen,
+    setIsMergeDialogOpen,
+    isDatabaseDialogOpen,
+    setIsDatabaseDialogOpen,
+    connectionStatus,
+  } = useAppState();
+
   const [isUserSettingsDialogOpen, setIsUserSettingsDialogOpen] = React.useState(false);
   const [currentUserColor, setCurrentUserColor] = React.useState('#ff0000');
   const [currentUserUsername, setCurrentUserUsername] = React.useState('Jeff Tang');
@@ -37,6 +85,7 @@ export const WithUserSettings = () => {
   }
 
   return (<WithUserSettingsDetails
+    connectionStatus={connectionStatus}
     hostAddress={mockData.hostAddress}
     currentUser={{ username: currentUserUsername, color: currentUserColor, personId: '123' }}
     handlePressSelf={handlePressSelf}
