@@ -413,6 +413,15 @@
        (get-data db)))
 
 
+(defn get-all-pages
+  [db]
+  (->> (d/q '[:find [?e ...]
+              :where
+              [?e :node/title ?t]]
+            db)
+       (d/pull-many db '[* :block/_refs])))
+
+
 (defn not-contains?
   [coll v]
   (not (contains? coll v)))
