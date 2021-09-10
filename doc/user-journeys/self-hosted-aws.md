@@ -8,6 +8,7 @@ The Athens Self-Hosted server can be deployed on AWS using a [CloudFormation](ht
 - should using a nginx container as well to filter traffic to athens by http and so that we don't have to set the port on Athens.
 - https cert support & instructions
 - replace filipesilva/athens-server:rtc.alpha.2 image with official one
+- find a way to autodeploy the s3 --template-url
 
 ## Pre-requisites
 
@@ -28,7 +29,7 @@ Run the following command to automatically set up an Athens stack.
 ```sh
 aws cloudformation create-stack \
     --capabilities CAPABILITY_NAMED_IAM \
-    --template-url https://raw.githubusercontent.com/athensresearch/athens/main/data/self-hosted.cloudformation.yml \
+    --template-url https://athens-cloudformation.s3.eu-west-1.amazonaws.com/self-hosted.cloudformation.yml \
     --stack-name athens-demo
 ```
 ```sh
