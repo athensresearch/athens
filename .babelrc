@@ -1,0 +1,15 @@
+{
+  "presets": [
+    "@babel/env",
+    "@babel/preset-typescript",
+    ["@babel/preset-react", {"runtime": "automatic"}]
+  ],
+  "plugins": [
+    ["module-resolver", {"alias": {"@": "./src/js/components"}}],
+    "@babel/proposal-class-properties",
+    "@babel/proposal-object-rest-spread"
+  ],
+  "ignore": [
+    "**/*.stories.tsx"
+  ]
+}

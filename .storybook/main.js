@@ -1,3 +1,6 @@
+const path = require('path');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+
 module.exports = {
   features: {
     postcss: false,
@@ -16,6 +19,12 @@ module.exports = {
     // storybook to process the original .tsx for the additional TS tooling.
     config.resolve.extensions.unshift(".tsx");
     
+    config.resolve.plugins.push(
+      new TsconfigPathsPlugin({
+        configFile: path.resolve(__dirname, '../tsconfig.json'),
+      })
+    );
+
     // Return the altered config.
     return config;
   }
