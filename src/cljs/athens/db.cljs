@@ -6,7 +6,8 @@
     [clojure.string :as string]
     [datascript.core :as d]
     [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]))
+    [re-frame.core :refer [dispatch]]
+    [reagent.core :as r]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -220,6 +221,12 @@
 
 
 (defonce dsdb (d/create-conn schema))
+
+
+(defonce tx-update (r/atom {}))
+
+
+(d/listen! dsdb :tx-update #(reset! tx-update %))
 
 
 ;; todo: turn into an effect

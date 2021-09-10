@@ -6,6 +6,7 @@
     [athens.util :refer [get-day]]
     [athens.views.pages.node-page :as node-page]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [stylefy.core :refer [use-style]]))
 
 
@@ -42,11 +43,12 @@
   This happens because (dispatch [:daily-note/next (get-day)]) updates re-frame faster than the datascript tx can happen
 
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
-  [ids]
+  [db ids]
   (keep
     (fn [uid]
-      (try (common-db/get-block @db/dsdb [:block/uid uid])
-           (catch js/Error _e nil)))
+      (try (common-db/get-block db [:block/uid uid])
+           (catch js/Error _e
+             (dispatch [:daily-note/remove uid]))))
     ids))
 
 
@@ -55,11 +57,12 @@
 
 (defn page
   []
-  (let [note-refs (subscribe [:daily-notes/items])]
+  (let [note-refs (subscribe [:daily-notes/items])
+        db        (r/track #(:db-after @db/tx-update))]
     (fn []
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (get-day)])
-        (let [notes (safe-pull-many @note-refs)]
+        (let [notes (safe-pull-many @db @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
            (doall
              (for [{:keys [block/uid]} notes]

@@ -457,6 +457,12 @@
     (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
 
 
+(reg-event-db
+  :daily-note/remove
+  (fn [db [_ uid]]
+    (update db :daily-notes/items (fn [xs] (remove #(= % uid) xs)))))
+
+
 (reg-event-fx
   :daily-note/prev
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
