@@ -19,7 +19,8 @@ export default {
   argTypes: {},
   parameters: {
     layout: 'fullscreen'
-  }
+    },
+  decorators: [(Story) => <Storybook.Desktop><Story /></Storybook.Desktop>]
 };
 
 const BrowserWrapper = styled.div`
@@ -124,7 +125,6 @@ const Template = (args, context) => {
   } = useAppState();
 
   return (
-    <Storybook.Desktop>
       <BrowserWrapper {...args}
         className={classnames(
           isWinMaximized && 'is-win-maximized',
@@ -132,8 +132,8 @@ const Template = (args, context) => {
           isWinFullscreen && 'is-win-fullscreen',
         )}
       >
+        <BrowserToolbar />
         <AppLayout>
-          <BrowserToolbar />
           <AppToolbar
             os={args.os}
             route={route}
@@ -215,8 +215,7 @@ const Template = (args, context) => {
           />)
           }
         </AppLayout>
-      </BrowserWrapper>
-    </Storybook.Desktop>)
+      </BrowserWrapper>)
 };
 
 export const Browser = Template.bind({});

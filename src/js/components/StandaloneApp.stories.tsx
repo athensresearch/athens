@@ -27,7 +27,8 @@ export default {
   },
   parameters: {
     layout: 'fullscreen'
-  }
+    },
+  decorators: [(Story) => <Storybook.Desktop><Story /></Storybook.Desktop>]
 };
 
 const WindowWrapper = styled.div`
@@ -123,7 +124,6 @@ const Template = (args, context) => {
   } = useAppState();
 
   return (
-    <Storybook.Desktop>
       <WindowWrapper {...args}
         className={classnames(
           'os-' + args.os,
@@ -226,8 +226,7 @@ const Template = (args, context) => {
           />)
           }
         </AppLayout>
-      </WindowWrapper>
-    </Storybook.Desktop>)
+      </WindowWrapper>)
 };
 
 export const MacOs = Template.bind({});
