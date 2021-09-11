@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Popper } from '@material-ui/core';
 
 import { DOMRoot } from '../../../config';
@@ -182,3 +183,7 @@ Block.Container = Container;
 Block.Toggle = Toggle;
 Block.Body = Body;
 Block.Content = Content;
+Block.ListContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+`

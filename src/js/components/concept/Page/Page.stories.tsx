@@ -1,5 +1,4 @@
 import React from 'react';
-import styled from 'styled-components';
 
 import { Page } from '.';
 import { BADGE, Storybook } from '../../../storybook';
@@ -11,7 +10,6 @@ import {
   WithTasks,
   WithPresence
 } from '../Block/Block.stories';
-import { PageBlocksContainer } from './Page';
 
 export default {
   title: 'Components/Page',
@@ -45,42 +43,42 @@ export const NodePage = Template.bind({});
 NodePage.args = {
   title: "Node Page",
   isDailyNote: false,
-  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>,
+  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>,
 }
 
 export const BlockPage = Template.bind({});
 BlockPage.args = {
   isDailyNote: false,
   title: 'Block Page',
-  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
+  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>
 };
 
 export const PageWithPresence = Template.bind({});
 PageWithPresence.args = {
   isDailyNote: false,
   title: 'Block Page',
-  children: <PageBlocksContainer><WithPresence /></PageBlocksContainer>
+  children: <Page.BlocksContainer><WithPresence /></Page.BlocksContainer>
 };
 
 export const NodePageWithTasks = Template.bind({});
 NodePageWithTasks.args = {
   isDailyNote: false,
   title: 'Node Page With Tasks',
-  children: <PageBlocksContainer><WithTasks /></PageBlocksContainer>
+  children: <Page.BlocksContainer><WithTasks /></Page.BlocksContainer>
 };
 
 export const BlockPageWithLongTitle = Template.bind({});
 BlockPageWithLongTitle.args = {
   isDailyNote: false,
   title: 'Lorem ipsum dolor sit amet donec consectetur',
-  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>
+  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>
 };
 
 export const DailyNote = Template.bind({});
 DailyNote.args = {
   isDailyNote: true,
   hasShortcut: false,
-  children: <PageBlocksContainer><BlockTree /></PageBlocksContainer>,
+  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>,
   title: DateTime.now().toLocaleString(preferredDateFormat),
   uid: DateTime.now().toISODate()
 };

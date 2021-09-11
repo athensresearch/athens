@@ -1,4 +1,3 @@
-import { BlockTree } from '.';
 import { mockPeople } from '../../Avatar/mockData';
 import { Checkbox } from '../Checkbox';
 

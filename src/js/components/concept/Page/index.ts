@@ -1,2 +1,2 @@
-import { Page, PageBlocksContainer } from './Page';
-export { Page, PageBlocksContainer };
+import { Page } from './Page';
+export { Page };

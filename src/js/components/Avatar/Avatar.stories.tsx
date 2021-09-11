@@ -3,6 +3,7 @@ import { Avatar } from './Avatar';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
 import { WithPresence } from '../concept/Block/Block.stories';
+import { Block } from '../concept/Block';
 
 const Wrapper = styled(Storybook.Wrapper)`
   display: flex;
@@ -106,3 +107,4 @@ export const StackWide = () => (
 )
 
 export const OnBlocks = WithPresence;
+OnBlocks.decorators = [(Story) => <Storybook.Wrapper><Block.ListContainer><Story /></Block.ListContainer></Storybook.Wrapper>];

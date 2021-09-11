@@ -94,9 +94,11 @@ const PageMenuToggle = styled(Button)`
 `;
 
 
-export const PageBlocksContainer = styled.div`
+const BlocksContainer = styled(Block.ListContainer)`
   padding-left: 1rem;
   padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
 `;
 
 interface PageProps extends ReferencesProps {
@@ -198,7 +200,7 @@ export const Page = ({
           </Modal>
           {title} {isDailyNote && <Today />}</Title>
       </PageHeader>
-      {children ? children : isEditable ? <PageBlocksContainer><Block /></PageBlocksContainer> : <EmptyMessage />}
+      {children ? children : isEditable ? <BlocksContainer><Block /></BlocksContainer> : <EmptyMessage />}
       <References
         isLinkedReferencesOpen={isLinkedReferencesOpen}
         isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
@@ -207,3 +209,5 @@ export const Page = ({
       />
     </PageWrap>);
 };
+
+Page.BlocksContainer = BlocksContainer;

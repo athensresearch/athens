@@ -2,9 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { classnames } from '../../../../utils/classnames';
 import { dateFormat } from '../../../../config';
-import { DateTime, toISODate } from 'luxon';
-import { Page, PageBlocksContainer } from '../../Page';
-import { Button } from '../../../Button';
+import { DateTime } from 'luxon';
+import { Page } from '../../Page';
 import { BlockTree } from '../../Block/Block.stories';
 import { useInView } from 'react-intersection-observer';
 import DayPicker from 'react-day-picker';
@@ -79,7 +78,7 @@ const DailyNotesPage = ({
         handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
         isLinkedReferencesOpen={isLinkedReferencesOpen}
         isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
-        children={<PageBlocksContainer>{hasContent ? <BlockTree /> : <></>}</PageBlocksContainer>}
+        children={<Page.BlocksContainer>{hasContent ? <BlockTree /> : <></>}</Page.BlocksContainer>}
       />
     </DailyNotesPageWrap>
   );
