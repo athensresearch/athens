@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 
 import { Button } from '../../../Button';
@@ -21,6 +20,7 @@ const ItemButton = styled(Button)`
     justify-items: stretch;
     text-align: left;
     grid-template-areas: "icon name" "icon detail";
+    grid-template-columns: auto 1fr;
     gap: 0 0.125rem;
 
     ${DatabaseIcon.Wrap} {
@@ -49,13 +49,13 @@ const Detail = styled.span`
     color: var(--body-text-color---opacity-med);
 `;
 
-export const Item = ({ handlePress, name, id, status, isRemote }) => {
+export const Item = ({ onChooseDatabase, db }) => {
     return (
         <ItemWrap>
-            <ItemButton onClick={handlePress}>
-                <DatabaseIcon name={name} size="2em" />
-                <Name>{name}</Name>
-                <Detail>{id}</Detail>
+            <ItemButton onClick={onChooseDatabase}>
+                <DatabaseIcon {...db} size="2em" />
+                <Name>{db.name}</Name>
+                <Detail>{db.id}</Detail>
             </ItemButton>
         </ItemWrap>
     );

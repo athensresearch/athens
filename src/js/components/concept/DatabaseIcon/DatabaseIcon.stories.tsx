@@ -53,17 +53,11 @@ export const Styles = () => <>
     <DatabaseIcon size="2em" name="T" color="#FED766" />
     <DatabaseIcon size="2em" name="N" color="#2B2D42" />
     <DatabaseIcon size="2em" name="E" color="#B8F2E6" />
-    <DatabaseIcon size="2em" name='🔥' color="#0075E1" />
-    <DatabaseIcon size="2em" name="🎉" color="#000" />
-    <DatabaseIcon size="2em" name="💲" color="#FE4A49" />
-    <DatabaseIcon size="2em" name="🏠" color="#FED766" />
-    <DatabaseIcon size="2em" name="👻" color="#2B2D42" />
-    <DatabaseIcon size="2em" name="🤖" color="#B8F2E6" />
+    <DatabaseIcon size="2em" name="R" icon='🔥' color="#0075E1" />
+    <DatabaseIcon size="2em" name="L" icon="🎉" color="#000" />
+    <DatabaseIcon size="2em" name="S" icon="💲" color="#FE4A49" />
+    <DatabaseIcon size="2em" name="T" icon="🏠" color="#FED766" />
+    <DatabaseIcon size="2em" name="N" icon="👻" color="#2B2D42" />
+    <DatabaseIcon size="2em" name="E" icon="🤖" color="#B8F2E6" />
 </>;
 Styles.decorators = [(Story) => <Grid><Story /></Grid>];
-
-
-export const Emoji = Template.bind({});
-Emoji.args = {
-    name: '🔥'
-};

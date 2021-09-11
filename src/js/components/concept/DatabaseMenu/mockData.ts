@@ -2,131 +2,195 @@
 export const synced = false;
 
 export const mockDatabases = [{
-  name: "Zathin",
-  id: "https:///eu/est/congue/elementum/in/hac/habitasse.xml?interdum=lacinia&in=erat&ante=vestibulum&vestibulum=sed",
-  isRemote: true
+    name: "Duke Energy Corporation",
+    id: "/penatibus/et/magnis/dis/parturient.js",
+    color: "#96c622",
+    icon: "📔",
+    isRemote: true
 }, {
-  name: "Ventosanzap",
-  id: "http:///in/sapien/iaculis.png?posuere=hac&cubilia=habitasse&curae=platea&donec=dictumst&pharetra=aliquam&magna=augue&vestibulum=quam&aliquet=sollicitudin&ultrices=vitae&erat=consectetuer&tortor=eget&sollicitudin=rutrum&mi=at&sit=lorem&amet=integer&lobortis=tincidunt&sapien=ante&sapien=vel&non=ipsum&mi=praesent&integer=blandit&ac=lacinia&neque=erat&duis=vestibulum&bibendum=sed&morbi=magna&non=at&quam=nunc&nec=commodo&dui=placerat&luctus=praesent&rutrum=blandit&nulla=nam&tellus=nulla&in=integer&sagittis=pede&dui=justo&vel=lacinia&nisl=eget&duis=tincidunt&ac=eget&nibh=tempus&fusce=vel&lacus=pede&purus=morbi&aliquet=porttitor&at=lorem&feugiat=id&non=ligula&pretium=suspendisse&quis=ornare&lectus=consequat&suspendisse=lectus&potenti=in&in=est&eleifend=risus&quam=auctor&a=sed&odio=tristique&in=in&hac=tempus&habitasse=sit&platea=amet&dictumst=sem&maecenas=fusce&ut=consequat&massa=nulla&quis=nisl&augue=nunc&luctus=nisl&tincidunt=duis&nulla=bibendum",
-  isRemote: false
+    name: "Lumber Liquidators Holdings, Inc",
+    id: "/morbi/non/lectus.aspx",
+    color: "#3ab348",
+    icon: "🎒",
+    isRemote: true
 }, {
-  name: "Tresom",
-  id: "https:///praesent/blandit/lacinia.aspx?congue=quisque&vivamus=porta&metus=volutpat&arcu=erat&adipiscing=quisque&molestie=erat&hendrerit=eros&at=viverra&vulputate=eget&vitae=congue&nisl=eget&aenean=semper&lectus=rutrum&pellentesque=nulla&eget=nunc&nunc=purus&donec=phasellus&quis=in&orci=felis&eget=donec&orci=semper&vehicula=sapien&condimentum=a&curabitur=libero&in=nam&libero=dui&ut=proin&massa=leo&volutpat=odio&convallis=porttitor&morbi=id&odio=consequat&odio=in&elementum=consequat&eu=ut&interdum=nulla&eu=sed&tincidunt=accumsan&in=felis&leo=ut&maecenas=at&pulvinar=dolor&lobortis=quis&est=odio&phasellus=consequat&sit=varius&amet=integer&erat=ac&nulla=leo&tempus=pellentesque&vivamus=ultrices&in=mattis&felis=odio&eu=donec&sapien=vitae&cursus=nisi&vestibulum=nam&proin=ultrices",
-  isRemote: false
+    name: "RELX N.V.",
+    id: "/libero/non/mattis/pulvinar/nulla/pede.js",
+    color: "#0215d1",
+    icon: "📚",
+    isRemote: true
 }, {
-  name: "Fixflex",
-  id: "http:///facilisi/cras/non/velit.xml?mi=diam&nulla=cras&ac=pellentesque&enim=volutpat&in=dui&tempor=maecenas&turpis=tristique&nec=est&euismod=et&scelerisque=tempus&quam=semper&turpis=est&adipiscing=quam&lorem=pharetra&vitae=magna&mattis=ac&nibh=consequat&ligula=metus&nec=sapien&sem=ut&duis=nunc&aliquam=vestibulum&convallis=ante&nunc=ipsum&proin=primis&at=in&turpis=faucibus&a=orci&pede=luctus&posuere=et&nonummy=ultrices&integer=posuere&non=cubilia&velit=curae&donec=mauris&diam=viverra&neque=diam&vestibulum=vitae&eget=quam&vulputate=suspendisse&ut=potenti&ultrices=nullam&vel=porttitor&augue=lacus&vestibulum=at&ante=turpis&ipsum=donec&primis=posuere&in=metus&faucibus=vitae&orci=ipsum&luctus=aliquam&et=non&ultrices=mauris&posuere=morbi&cubilia=non&curae=lectus&donec=aliquam&pharetra=sit&magna=amet&vestibulum=diam&aliquet=in&ultrices=magna&erat=bibendum&tortor=imperdiet&sollicitudin=nullam&mi=orci&sit=pede&amet=venenatis&lobortis=non&sapien=sodales&sapien=sed&non=tincidunt&mi=eu&integer=felis&ac=fusce&neque=posuere&duis=felis&bibendum=sed&morbi=lacus&non=morbi&quam=sem&nec=mauris&dui=laoreet&luctus=ut&rutrum=rhoncus&nulla=aliquet&tellus=pulvinar",
-  isRemote: false
+    name: "Laredo Petroleum, Inc.",
+    id: "/vestibulum/sit.jsp",
+    color: "#209adc",
+    icon: "💻",
+    isRemote: false
 }, {
-  name: "Namfix",
-  id: "http:///non/pretium/quis/lectus/suspendisse/potenti/in.aspx?ac=ut&neque=tellus&duis=nulla&bibendum=ut&morbi=erat&non=id&quam=mauris&nec=vulputate&dui=elementum&luctus=nullam&rutrum=varius&nulla=nulla&tellus=facilisi&in=cras&sagittis=non&dui=velit&vel=nec&nisl=nisi&duis=vulputate&ac=nonummy&nibh=maecenas&fusce=tincidunt&lacus=lacus&purus=at&aliquet=velit&at=vivamus&feugiat=vel&non=nulla&pretium=eget&quis=eros&lectus=elementum&suspendisse=pellentesque&potenti=quisque&in=porta&eleifend=volutpat&quam=erat&a=quisque&odio=erat&in=eros&hac=viverra&habitasse=eget&platea=congue&dictumst=eget",
-  isRemote: false
+    name: "Turquoise Hill Resources Ltd.",
+    id: "/morbi/vestibulum/velit/id/pretium/iaculis.jsp",
+    color: "#8c3a6a",
+    icon: null,
+    isRemote: false
 }, {
-  name: "Bitchip",
-  id: "https:///nascetur/ridiculus/mus/etiam.jsp?semper=nulla&rutrum=tempus&nulla=vivamus&nunc=in&purus=felis&phasellus=eu&in=sapien&felis=cursus&donec=vestibulum&semper=proin&sapien=eu&a=mi&libero=nulla&nam=ac&dui=enim&proin=in&leo=tempor&odio=turpis&porttitor=nec&id=euismod&consequat=scelerisque&in=quam&consequat=turpis&ut=adipiscing&nulla=lorem&sed=vitae&accumsan=mattis&felis=nibh&ut=ligula&at=nec&dolor=sem&quis=duis&odio=aliquam&consequat=convallis&varius=nunc&integer=proin&ac=at&leo=turpis&pellentesque=a&ultrices=pede&mattis=posuere&odio=nonummy&donec=integer&vitae=non&nisi=velit&nam=donec&ultrices=diam&libero=neque&non=vestibulum&mattis=eget&pulvinar=vulputate&nulla=ut&pede=ultrices&ullamcorper=vel&augue=augue&a=vestibulum&suscipit=ante&nulla=ipsum&elit=primis&ac=in&nulla=faucibus&sed=orci&vel=luctus&enim=et&sit=ultrices&amet=posuere&nunc=cubilia&viverra=curae&dapibus=donec&nulla=pharetra&suscipit=magna&ligula=vestibulum&in=aliquet&lacus=ultrices&curabitur=erat&at=tortor&ipsum=sollicitudin&ac=mi&tellus=sit&semper=amet&interdum=lobortis&mauris=sapien&ullamcorper=sapien&purus=non&sit=mi&amet=integer&nulla=ac&quisque=neque&arcu=duis&libero=bibendum&rutrum=morbi&ac=non&lobortis=quam&vel=nec&dapibus=dui&at=luctus&diam=rutrum&nam=nulla&tristique=tellus&tortor=in",
-  isRemote: false
+    name: "Timken Company (The)",
+    id: "/egestas/metus/aenean/fermentum/donec.json",
+    color: "#0c1050",
+    icon: "📖",
+    isRemote: false
 }, {
-  name: "Cardguard",
-  id: "https:///ultricies/eu/nibh.png?accumsan=suscipit&felis=a&ut=feugiat&at=et&dolor=eros&quis=vestibulum&odio=ac&consequat=est&varius=lacinia&integer=nisi&ac=venenatis&leo=tristique&pellentesque=fusce",
-  isRemote: true
+    name: "Thor Industries, Inc.",
+    id: "/dui/nec/nisi/volutpat/eleifend.jpg",
+    color: "#7bd0b1",
+    icon: null,
+    isRemote: false
 }, {
-  name: "Gembucket",
-  id: "https:///orci/luctus/et.jpg?vivamus=ante&vel=nulla&nulla=justo&eget=aliquam&eros=quis&elementum=turpis&pellentesque=eget&quisque=elit&porta=sodales&volutpat=scelerisque&erat=mauris&quisque=sit&erat=amet&eros=eros&viverra=suspendisse&eget=accumsan&congue=tortor&eget=quis&semper=turpis&rutrum=sed&nulla=ante&nunc=vivamus&purus=tortor&phasellus=duis&in=mattis&felis=egestas&donec=metus&semper=aenean&sapien=fermentum&a=donec&libero=ut&nam=mauris&dui=eget&proin=massa&leo=tempor&odio=convallis&porttitor=nulla",
-  isRemote: false
+    name: "Enterprise Bancorp Inc",
+    id: "/sociis/natoque/penatibus/et/magnis/dis/parturient.js",
+    color: "#f7b0aa",
+    icon: "💻",
+    isRemote: true
 }, {
-  name: "Cardify",
-  id: "http:///ante/nulla/justo.jpg?pede=id&posuere=consequat&nonummy=in&integer=consequat&non=ut&velit=nulla&donec=sed&diam=accumsan&neque=felis&vestibulum=ut&eget=at&vulputate=dolor&ut=quis&ultrices=odio&vel=consequat&augue=varius&vestibulum=integer&ante=ac&ipsum=leo&primis=pellentesque&in=ultrices&faucibus=mattis&orci=odio&luctus=donec&et=vitae&ultrices=nisi&posuere=nam&cubilia=ultrices&curae=libero&donec=non&pharetra=mattis&magna=pulvinar&vestibulum=nulla&aliquet=pede&ultrices=ullamcorper&erat=augue&tortor=a&sollicitudin=suscipit&mi=nulla&sit=elit&amet=ac&lobortis=nulla&sapien=sed&sapien=vel&non=enim&mi=sit&integer=amet&ac=nunc&neque=viverra&duis=dapibus&bibendum=nulla&morbi=suscipit&non=ligula&quam=in&nec=lacus&dui=curabitur&luctus=at&rutrum=ipsum&nulla=ac&tellus=tellus&in=semper&sagittis=interdum&dui=mauris&vel=ullamcorper&nisl=purus&duis=sit&ac=amet&nibh=nulla&fusce=quisque&lacus=arcu&purus=libero&aliquet=rutrum&at=ac&feugiat=lobortis&non=vel&pretium=dapibus&quis=at&lectus=diam",
-  isRemote: false
+    name: "Qwest Corporation",
+    id: "/dapibus/dolor/vel/est.xml",
+    color: "#092888",
+    icon: null,
+    isRemote: false
 }, {
-  name: "Redhold",
-  id: "https:///mattis/egestas/metus/aenean.jpg?laoreet=pulvinar&ut=sed&rhoncus=nisl&aliquet=nunc&pulvinar=rhoncus&sed=dui&nisl=vel&nunc=sem&rhoncus=sed&dui=sagittis&vel=nam&sem=congue&sed=risus&sagittis=semper&nam=porta&congue=volutpat&risus=quam&semper=pede&porta=lobortis&volutpat=ligula&quam=sit&pede=amet&lobortis=eleifend&ligula=pede&sit=libero&amet=quis&eleifend=orci&pede=nullam&libero=molestie&quis=nibh&orci=in&nullam=lectus&molestie=pellentesque&nibh=at&in=nulla&lectus=suspendisse&pellentesque=potenti&at=cras&nulla=in&suspendisse=purus&potenti=eu&cras=magna&in=vulputate&purus=luctus&eu=cum&magna=sociis&vulputate=natoque&luctus=penatibus&cum=et&sociis=magnis&natoque=dis&penatibus=parturient&et=montes&magnis=nascetur&dis=ridiculus&parturient=mus&montes=vivamus&nascetur=vestibulum&ridiculus=sagittis&mus=sapien&vivamus=cum&vestibulum=sociis&sagittis=natoque&sapien=penatibus&cum=et&sociis=magnis&natoque=dis&penatibus=parturient&et=montes&magnis=nascetur&dis=ridiculus&parturient=mus&montes=etiam&nascetur=vel&ridiculus=augue&mus=vestibulum&etiam=rutrum&vel=rutrum&augue=neque&vestibulum=aenean&rutrum=auctor&rutrum=gravida&neque=sem&aenean=praesent&auctor=id&gravida=massa&sem=id",
-  isRemote: true
+    name: "Capitala Finance Corp.",
+    id: "/sed.aspx",
+    color: "#0583ff",
+    icon: "📘",
+    isRemote: true
 }, {
-  name: "Sonair",
-  id: "http:///vitae.jpg?auctor=pretium&gravida=iaculis&sem=justo&praesent=in&id=hac",
-  isRemote: false
+    name: "uniQure N.V.",
+    id: "/natoque/penatibus.js",
+    color: "#aa3dd0",
+    icon: null,
+    isRemote: false
 }, {
-  name: "Transcof",
-  id: "https:///augue.html?in=etiam&tempus=faucibus&sit=cursus&amet=urna&sem=ut&fusce=tellus&consequat=nulla&nulla=ut&nisl=erat&nunc=id&nisl=mauris&duis=vulputate&bibendum=elementum&felis=nullam&sed=varius&interdum=nulla&venenatis=facilisi&turpis=cras&enim=non&blandit=velit&mi=nec&in=nisi&porttitor=vulputate&pede=nonummy&justo=maecenas&eu=tincidunt&massa=lacus&donec=at&dapibus=velit&duis=vivamus&at=vel",
-  isRemote: false
+    name: "HDFC Bank Limited",
+    id: "/consequat/dui/nec/nisi/volutpat/eleifend/donec.js",
+    color: "#2ca775",
+    icon: "📓",
+    isRemote: false
 }, {
-  name: "Ventosanzap",
-  id: "https:///in.jpg?ac=interdum&est=eu&lacinia=tincidunt&nisi=in&venenatis=leo&tristique=maecenas&fusce=pulvinar&congue=lobortis&diam=est&id=phasellus&ornare=sit&imperdiet=amet&sapien=erat&urna=nulla&pretium=tempus&nisl=vivamus&ut=in&volutpat=felis&sapien=eu&arcu=sapien&sed=cursus&augue=vestibulum&aliquam=proin&erat=eu&volutpat=mi&in=nulla&congue=ac&etiam=enim&justo=in&etiam=tempor&pretium=turpis&iaculis=nec&justo=euismod&in=scelerisque&hac=quam&habitasse=turpis&platea=adipiscing&dictumst=lorem",
-  isRemote: true
+    name: "Choice Hotels International, Inc.",
+    id: "/nulla/suscipit/ligula/in/lacus/curabitur.aspx",
+    color: "#660751",
+    icon: "💻",
+    isRemote: true
 }, {
-  name: "Viva",
-  id: "http:///luctus/cum/sociis/natoque/penatibus.jpg?porttitor=erat&pede=tortor&justo=sollicitudin&eu=mi&massa=sit&donec=amet&dapibus=lobortis&duis=sapien&at=sapien&velit=non&eu=mi&est=integer&congue=ac&elementum=neque&in=duis&hac=bibendum&habitasse=morbi&platea=non&dictumst=quam&morbi=nec&vestibulum=dui&velit=luctus&id=rutrum&pretium=nulla&iaculis=tellus&diam=in&erat=sagittis&fermentum=dui&justo=vel&nec=nisl&condimentum=duis&neque=ac",
-  isRemote: false
+    name: "PennantPark Investment Corporation",
+    id: "/nec/euismod/scelerisque/quam.xml",
+    color: "#ec2f42",
+    icon: "🔖",
+    isRemote: true
 }, {
-  name: "Home Ing",
-  id: "https:///velit/eu/est.aspx?nullam=mauris&sit=lacinia&amet=sapien&turpis=quis&elementum=libero&ligula=nullam&vehicula=sit&consequat=amet&morbi=turpis&a=elementum&ipsum=ligula&integer=vehicula&a=consequat&nibh=morbi&in=a&quis=ipsum&justo=integer&maecenas=a&rhoncus=nibh&aliquam=in&lacus=quis&morbi=justo&quis=maecenas&tortor=rhoncus&id=aliquam&nulla=lacus&ultrices=morbi&aliquet=quis&maecenas=tortor&leo=id&odio=nulla&condimentum=ultrices&id=aliquet&luctus=maecenas&nec=leo&molestie=odio&sed=condimentum&justo=id&pellentesque=luctus&viverra=nec&pede=molestie&ac=sed&diam=justo&cras=pellentesque&pellentesque=viverra&volutpat=pede&dui=ac&maecenas=diam&tristique=cras&est=pellentesque&et=volutpat&tempus=dui&semper=maecenas&est=tristique&quam=est&pharetra=et&magna=tempus",
-  isRemote: true
+    name: "AMN Healthcare Services Inc",
+    id: "/velit/nec/nisi/vulputate/nonummy/maecenas/tincidunt.aspx",
+    color: "#4eb180",
+    icon: "📓",
+    isRemote: true
 }, {
-  name: "Wrapsafe",
-  id: "http:///bibendum/imperdiet/nullam/orci/pede.js?posuere=habitasse&cubilia=platea&curae=dictumst&donec=etiam&pharetra=faucibus&magna=cursus&vestibulum=urna&aliquet=ut&ultrices=tellus&erat=nulla&tortor=ut&sollicitudin=erat&mi=id&sit=mauris&amet=vulputate&lobortis=elementum&sapien=nullam&sapien=varius&non=nulla&mi=facilisi&integer=cras&ac=non&neque=velit&duis=nec&bibendum=nisi&morbi=vulputate&non=nonummy&quam=maecenas&nec=tincidunt&dui=lacus&luctus=at&rutrum=velit&nulla=vivamus&tellus=vel&in=nulla&sagittis=eget&dui=eros&vel=elementum&nisl=pellentesque&duis=quisque&ac=porta&nibh=volutpat&fusce=erat&lacus=quisque&purus=erat&aliquet=eros&at=viverra&feugiat=eget&non=congue&pretium=eget&quis=semper&lectus=rutrum&suspendisse=nulla&potenti=nunc",
-  isRemote: true
+    name: "Gabelli Utility Trust (The)",
+    id: "/amet.jsp",
+    color: "#60ebea",
+    icon: "💁",
+    isRemote: true
 }, {
-  name: "Stringtough",
-  id: "http:///in.aspx?risus=pharetra&auctor=magna&sed=vestibulum&tristique=aliquet&in=ultrices&tempus=erat&sit=tortor&amet=sollicitudin&sem=mi&fusce=sit&consequat=amet&nulla=lobortis&nisl=sapien&nunc=sapien&nisl=non&duis=mi&bibendum=integer&felis=ac&sed=neque&interdum=duis&venenatis=bibendum&turpis=morbi&enim=non&blandit=quam&mi=nec&in=dui&porttitor=luctus&pede=rutrum&justo=nulla&eu=tellus&massa=in&donec=sagittis&dapibus=dui&duis=vel&at=nisl&velit=duis&eu=ac&est=nibh&congue=fusce&elementum=lacus&in=purus&hac=aliquet&habitasse=at&platea=feugiat&dictumst=non&morbi=pretium&vestibulum=quis&velit=lectus&id=suspendisse&pretium=potenti&iaculis=in",
-  isRemote: true
+    name: "Champions Oncology, Inc.",
+    id: "/sem/fusce/consequat/nulla/nisl/nunc/nisl.jsp",
+    color: "#69e3a1",
+    icon: "💁",
+    isRemote: true
 }, {
-  name: "Tres-Zap",
-  id: "http:///quis.aspx?quam=in&nec=felis&dui=eu&luctus=sapien&rutrum=cursus&nulla=vestibulum&tellus=proin&in=eu&sagittis=mi&dui=nulla&vel=ac&nisl=enim&duis=in&ac=tempor&nibh=turpis&fusce=nec&lacus=euismod&purus=scelerisque&aliquet=quam&at=turpis&feugiat=adipiscing&non=lorem&pretium=vitae&quis=mattis&lectus=nibh&suspendisse=ligula&potenti=nec&in=sem&eleifend=duis&quam=aliquam&a=convallis&odio=nunc&in=proin&hac=at&habitasse=turpis&platea=a&dictumst=pede&maecenas=posuere&ut=nonummy&massa=integer&quis=non&augue=velit&luctus=donec&tincidunt=diam&nulla=neque&mollis=vestibulum&molestie=eget&lorem=vulputate&quisque=ut&ut=ultrices&erat=vel&curabitur=augue&gravida=vestibulum&nisi=ante&at=ipsum&nibh=primis&in=in&hac=faucibus&habitasse=orci&platea=luctus&dictumst=et&aliquam=ultrices&augue=posuere&quam=cubilia&sollicitudin=curae&vitae=donec&consectetuer=pharetra&eget=magna&rutrum=vestibulum&at=aliquet&lorem=ultrices&integer=erat&tincidunt=tortor&ante=sollicitudin&vel=mi&ipsum=sit&praesent=amet&blandit=lobortis&lacinia=sapien&erat=sapien&vestibulum=non&sed=mi&magna=integer&at=ac&nunc=neque&commodo=duis&placerat=bibendum&praesent=morbi&blandit=non",
-  isRemote: true
+    name: "OncoGenex Pharmaceuticals Inc.",
+    id: "/leo/odio/condimentum/id/luctus/nec/molestie.jpg",
+    color: "#d937f2",
+    icon: "🔖",
+    isRemote: false
 }, {
-  name: "Flexidy",
-  id: "http:///at/turpis/donec/posuere/metus.aspx?elementum=maecenas&eu=rhoncus&interdum=aliquam&eu=lacus&tincidunt=morbi&in=quis&leo=tortor&maecenas=id&pulvinar=nulla&lobortis=ultrices&est=aliquet&phasellus=maecenas&sit=leo&amet=odio&erat=condimentum&nulla=id&tempus=luctus&vivamus=nec&in=molestie&felis=sed&eu=justo&sapien=pellentesque&cursus=viverra&vestibulum=pede&proin=ac&eu=diam&mi=cras&nulla=pellentesque&ac=volutpat&enim=dui&in=maecenas&tempor=tristique&turpis=est&nec=et&euismod=tempus&scelerisque=semper&quam=est&turpis=quam&adipiscing=pharetra&lorem=magna&vitae=ac&mattis=consequat&nibh=metus&ligula=sapien&nec=ut&sem=nunc&duis=vestibulum&aliquam=ante&convallis=ipsum&nunc=primis&proin=in&at=faucibus&turpis=orci&a=luctus&pede=et&posuere=ultrices&nonummy=posuere&integer=cubilia&non=curae&velit=mauris&donec=viverra&diam=diam&neque=vitae&vestibulum=quam&eget=suspendisse&vulputate=potenti&ut=nullam&ultrices=porttitor&vel=lacus&augue=at&vestibulum=turpis&ante=donec&ipsum=posuere",
-  isRemote: false
+    name: "Ollie's Bargain Outlet Holdings, Inc.",
+    id: "/cras/non/velit.aspx",
+    color: "#0703b7",
+    icon: "📗",
+    isRemote: true
 }, {
-  name: "Konklab",
-  id: "http:///adipiscing/molestie.png?lorem=nulla&id=tellus&ligula=in&suspendisse=sagittis&ornare=dui&consequat=vel&lectus=nisl&in=duis&est=ac&risus=nibh&auctor=fusce&sed=lacus&tristique=purus&in=aliquet&tempus=at&sit=feugiat&amet=non&sem=pretium&fusce=quis&consequat=lectus&nulla=suspendisse&nisl=potenti&nunc=in&nisl=eleifend&duis=quam&bibendum=a&felis=odio&sed=in&interdum=hac",
-  isRemote: false
+    name: "Viking Therapeutics, Inc.",
+    id: "/volutpat/dui/maecenas/tristique.xml",
+    color: "#939adf",
+    icon: "🎒",
+    isRemote: false
 }, {
-  name: "Prodder",
-  id: "https:///aenean/lectus/pellentesque/eget.html?libero=magna&nam=ac&dui=consequat&proin=metus&leo=sapien&odio=ut&porttitor=nunc&id=vestibulum&consequat=ante&in=ipsum&consequat=primis&ut=in&nulla=faucibus&sed=orci&accumsan=luctus&felis=et&ut=ultrices&at=posuere&dolor=cubilia&quis=curae&odio=mauris&consequat=viverra&varius=diam&integer=vitae&ac=quam&leo=suspendisse&pellentesque=potenti&ultrices=nullam&mattis=porttitor&odio=lacus",
-  isRemote: false
+    name: "American Financial Group, Inc.",
+    id: "/vivamus/vestibulum/sagittis/sapien/cum.html",
+    color: "#3f38ec",
+    icon: "💁",
+    isRemote: false
 }, {
-  name: "Aerified",
-  id: "http:///nullam/varius/nulla/facilisi/cras/non.xml?ut=ante&massa=ipsum&volutpat=primis&convallis=in&morbi=faucibus&odio=orci&odio=luctus&elementum=et&eu=ultrices&interdum=posuere&eu=cubilia&tincidunt=curae&in=duis&leo=faucibus&maecenas=accumsan&pulvinar=odio&lobortis=curabitur&est=convallis&phasellus=duis&sit=consequat&amet=dui&erat=nec&nulla=nisi&tempus=volutpat&vivamus=eleifend&in=donec&felis=ut&eu=dolor&sapien=morbi&cursus=vel&vestibulum=lectus&proin=in&eu=quam&mi=fringilla&nulla=rhoncus&ac=mauris&enim=enim&in=leo&tempor=rhoncus&turpis=sed&nec=vestibulum&euismod=sit&scelerisque=amet&quam=cursus&turpis=id&adipiscing=turpis&lorem=integer&vitae=aliquet&mattis=massa&nibh=id&ligula=lobortis&nec=convallis&sem=tortor&duis=risus&aliquam=dapibus&convallis=augue&nunc=vel&proin=accumsan&at=tellus&turpis=nisi&a=eu&pede=orci&posuere=mauris&nonummy=lacinia&integer=sapien&non=quis&velit=libero&donec=nullam&diam=sit&neque=amet&vestibulum=turpis&eget=elementum&vulputate=ligula&ut=vehicula&ultrices=consequat&vel=morbi&augue=a&vestibulum=ipsum&ante=integer&ipsum=a&primis=nibh&in=in&faucibus=quis&orci=justo&luctus=maecenas&et=rhoncus",
-  isRemote: true
+    name: "Harmony Merger Corp.",
+    id: "/justo/in/hac/habitasse/platea.aspx",
+    color: "#43f9f1",
+    icon: "📗",
+    isRemote: false
 }, {
-  name: "Voltsillam",
-  id: "http:///maecenas/tincidunt/lacus/at.xml?porttitor=orci&lacus=luctus&at=et&turpis=ultrices&donec=posuere&posuere=cubilia&metus=curae&vitae=donec&ipsum=pharetra&aliquam=magna&non=vestibulum&mauris=aliquet&morbi=ultrices&non=erat&lectus=tortor&aliquam=sollicitudin&sit=mi",
-  isRemote: true
+    name: "Boulevard Acquisition Corp. II",
+    id: "/odio/elementum/eu/interdum/eu.js",
+    color: "#b161e8",
+    icon: "😎",
+    isRemote: false
 }, {
-  name: "Y-find",
-  id: "http:///viverra/dapibus/nulla/suscipit/ligula.js?neque=consequat&libero=nulla&convallis=nisl&eget=nunc&eleifend=nisl&luctus=duis&ultricies=bibendum&eu=felis&nibh=sed&quisque=interdum&id=venenatis&justo=turpis&sit=enim&amet=blandit&sapien=mi&dignissim=in&vestibulum=porttitor&vestibulum=pede&ante=justo&ipsum=eu&primis=massa&in=donec&faucibus=dapibus&orci=duis&luctus=at&et=velit&ultrices=eu&posuere=est&cubilia=congue&curae=elementum&nulla=in&dapibus=hac&dolor=habitasse&vel=platea&est=dictumst&donec=morbi&odio=vestibulum&justo=velit&sollicitudin=id&ut=pretium&suscipit=iaculis&a=diam&feugiat=erat&et=fermentum&eros=justo&vestibulum=nec&ac=condimentum&est=neque&lacinia=sapien&nisi=placerat&venenatis=ante&tristique=nulla&fusce=justo&congue=aliquam&diam=quis&id=turpis",
-  isRemote: true
+    name: "KNOT Offshore Partners LP",
+    id: "/dolor/morbi/vel/lectus/in/quam/fringilla.xml",
+    color: "#f79c0e",
+    icon: "📖",
+    isRemote: false
 }, {
-  name: "Fix San",
-  id: "https:///amet.jsp?semper=ut&est=tellus&quam=nulla&pharetra=ut&magna=erat&ac=id&consequat=mauris&metus=vulputate&sapien=elementum&ut=nullam&nunc=varius&vestibulum=nulla&ante=facilisi&ipsum=cras&primis=non&in=velit&faucibus=nec&orci=nisi&luctus=vulputate&et=nonummy&ultrices=maecenas&posuere=tincidunt&cubilia=lacus&curae=at&mauris=velit&viverra=vivamus&diam=vel&vitae=nulla&quam=eget&suspendisse=eros&potenti=elementum&nullam=pellentesque&porttitor=quisque&lacus=porta&at=volutpat&turpis=erat&donec=quisque&posuere=erat&metus=eros&vitae=viverra&ipsum=eget&aliquam=congue&non=eget&mauris=semper&morbi=rutrum&non=nulla&lectus=nunc&aliquam=purus&sit=phasellus&amet=in&diam=felis&in=donec&magna=semper&bibendum=sapien&imperdiet=a&nullam=libero&orci=nam&pede=dui&venenatis=proin&non=leo&sodales=odio&sed=porttitor&tincidunt=id&eu=consequat&felis=in&fusce=consequat&posuere=ut&felis=nulla&sed=sed",
-  isRemote: true
+    name: "Buckle, Inc. (The)",
+    id: "/velit/id/pretium/iaculis/diam.xml",
+    color: "#683f8e",
+    icon: null,
+    isRemote: true
 }, {
-  name: "Temp",
-  id: "http:///volutpat/quam/pede/lobortis/ligula/sit/amet.js?tempus=id&vivamus=ornare&in=imperdiet&felis=sapien&eu=urna&sapien=pretium&cursus=nisl&vestibulum=ut&proin=volutpat&eu=sapien&mi=arcu&nulla=sed&ac=augue&enim=aliquam&in=erat&tempor=volutpat&turpis=in&nec=congue&euismod=etiam&scelerisque=justo&quam=etiam&turpis=pretium&adipiscing=iaculis&lorem=justo&vitae=in&mattis=hac&nibh=habitasse&ligula=platea&nec=dictumst&sem=etiam&duis=faucibus&aliquam=cursus&convallis=urna&nunc=ut&proin=tellus&at=nulla&turpis=ut&a=erat&pede=id&posuere=mauris&nonummy=vulputate&integer=elementum&non=nullam",
-  isRemote: false
+    name: "NeoGenomics, Inc.",
+    id: "/volutpat/quam/pede/lobortis/ligula.aspx",
+    color: "#1c7dbf",
+    icon: "📓",
+    isRemote: false
 }, {
-  name: "Namfix",
-  id: "http:///consequat/morbi/a/ipsum/integer.js?felis=erat&donec=curabitur&semper=gravida&sapien=nisi&a=at&libero=nibh&nam=in&dui=hac&proin=habitasse&leo=platea&odio=dictumst&porttitor=aliquam&id=augue&consequat=quam&in=sollicitudin&consequat=vitae&ut=consectetuer&nulla=eget&sed=rutrum&accumsan=at&felis=lorem&ut=integer&at=tincidunt&dolor=ante&quis=vel&odio=ipsum&consequat=praesent&varius=blandit&integer=lacinia&ac=erat",
-  isRemote: false
+    name: "J. Alexander's Holdings, Inc.",
+    id: "/sagittis/nam/congue.png",
+    color: "#0240e7",
+    icon: "🔖",
+    isRemote: false
 }, {
-  name: "Sub-Ex",
-  id: "http:///sed/interdum/venenatis.html?faucibus=pellentesque&cursus=volutpat&urna=dui&ut=maecenas&tellus=tristique&nulla=est&ut=et&erat=tempus&id=semper&mauris=est&vulputate=quam&elementum=pharetra&nullam=magna&varius=ac",
-  isRemote: true
+    name: "Haynes International, Inc.",
+    id: "/massa/quis.xml",
+    color: "#a7cbf9",
+    icon: "💁",
+    isRemote: false
 }, {
-  name: "Job",
-  id: "https:///porttitor/pede/justo/eu.jpg?eget=hendrerit&tincidunt=at&eget=vulputate&tempus=vitae&vel=nisl&pede=aenean&morbi=lectus&porttitor=pellentesque&lorem=eget&id=nunc&ligula=donec&suspendisse=quis&ornare=orci&consequat=eget&lectus=orci&in=vehicula&est=condimentum&risus=curabitur&auctor=in&sed=libero&tristique=ut&in=massa&tempus=volutpat&sit=convallis&amet=morbi&sem=odio&fusce=odio&consequat=elementum&nulla=eu&nisl=interdum&nunc=eu&nisl=tincidunt&duis=in&bibendum=leo&felis=maecenas&sed=pulvinar&interdum=lobortis&venenatis=est&turpis=phasellus&enim=sit&blandit=amet&mi=erat&in=nulla&porttitor=tempus&pede=vivamus&justo=in&eu=felis&massa=eu&donec=sapien&dapibus=cursus&duis=vestibulum&at=proin&velit=eu&eu=mi&est=nulla&congue=ac&elementum=enim&in=in&hac=tempor&habitasse=turpis&platea=nec&dictumst=euismod&morbi=scelerisque&vestibulum=quam&velit=turpis&id=adipiscing&pretium=lorem&iaculis=vitae&diam=mattis&erat=nibh&fermentum=ligula&justo=nec&nec=sem&condimentum=duis&neque=aliquam&sapien=convallis&placerat=nunc&ante=proin&nulla=at&justo=turpis&aliquam=a&quis=pede&turpis=posuere&eget=nonummy&elit=integer&sodales=non&scelerisque=velit&mauris=donec&sit=diam&amet=neque&eros=vestibulum&suspendisse=eget&accumsan=vulputate&tortor=ut&quis=ultrices&turpis=vel&sed=augue&ante=vestibulum",
-  isRemote: false
+    name: "Surmodics, Inc.",
+    id: "/convallis/eget/eleifend/luctus/ultricies/eu.jpg",
+    color: "#c8c9e0",
+    icon: "📖",
+    isRemote: false
 }, {
-  name: "Zaam-Dox",
-  id: "http:///leo.html?libero=rhoncus&convallis=aliquet&eget=pulvinar&eleifend=sed&luctus=nisl&ultricies=nunc&eu=rhoncus&nibh=dui&quisque=vel&id=sem&justo=sed&sit=sagittis&amet=nam&sapien=congue&dignissim=risus&vestibulum=semper&vestibulum=porta&ante=volutpat&ipsum=quam&primis=pede&in=lobortis&faucibus=ligula&orci=sit&luctus=amet&et=eleifend&ultrices=pede&posuere=libero&cubilia=quis&curae=orci&nulla=nullam&dapibus=molestie&dolor=nibh&vel=in&est=lectus&donec=pellentesque&odio=at&justo=nulla&sollicitudin=suspendisse&ut=potenti&suscipit=cras&a=in&feugiat=purus&et=eu&eros=magna&vestibulum=vulputate&ac=luctus&est=cum&lacinia=sociis&nisi=natoque&venenatis=penatibus&tristique=et&fusce=magnis&congue=dis&diam=parturient&id=montes&ornare=nascetur&imperdiet=ridiculus&sapien=mus&urna=vivamus&pretium=vestibulum&nisl=sagittis&ut=sapien&volutpat=cum&sapien=sociis&arcu=natoque&sed=penatibus&augue=et&aliquam=magnis&erat=dis&volutpat=parturient&in=montes&congue=nascetur&etiam=ridiculus&justo=mus&etiam=etiam&pretium=vel&iaculis=augue&justo=vestibulum&in=rutrum&hac=rutrum",
-  isRemote: true
+    name: "First Trust RBA Quality Income ETF",
+    id: "/nisi/at/nibh/in.html",
+    color: "#ab583c",
+    icon: "📖",
+    isRemote: true
 }, {
-  name: "Namfix",
-  id: "http:///donec/ut/dolor.xml?maecenas=luctus&tincidunt=et&lacus=ultrices&at=posuere&velit=cubilia&vivamus=curae&vel=mauris&nulla=viverra&eget=diam&eros=vitae&elementum=quam&pellentesque=suspendisse&quisque=potenti&porta=nullam&volutpat=porttitor&erat=lacus&quisque=at&erat=turpis&eros=donec&viverra=posuere&eget=metus&congue=vitae&eget=ipsum&semper=aliquam&rutrum=non&nulla=mauris&nunc=morbi&purus=non&phasellus=lectus&in=aliquam&felis=sit&donec=amet&semper=diam&sapien=in&a=magna&libero=bibendum&nam=imperdiet",
-  isRemote: true
+    name: "Colonial Municipal Income Trust",
+    id: "/cursus.jpg",
+    color: "#781854",
+    icon: null,
+    isRemote: false
 }, {
-  name: "Hatity",
-  id: "https:///non.aspx?lectus=facilisi&vestibulum=cras&quam=non&sapien=velit&varius=nec&ut=nisi&blandit=vulputate&non=nonummy&interdum=maecenas&in=tincidunt&ante=lacus&vestibulum=at&ante=velit&ipsum=vivamus&primis=vel&in=nulla&faucibus=eget&orci=eros&luctus=elementum&et=pellentesque&ultrices=quisque&posuere=porta&cubilia=volutpat&curae=erat&duis=quisque&faucibus=erat&accumsan=eros&odio=viverra",
-  isRemote: false
-}];
+    name: "Bridgepoint Education, Inc.",
+    id: "/pellentesque/at/nulla/suspendisse/potenti/cras/in.png",
+    color: "#c04dd0",
+    icon: "📖",
+    isRemote: false
+}]

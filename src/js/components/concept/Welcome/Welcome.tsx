@@ -146,7 +146,7 @@ export const Welcome = ({
                     <Heading>Recent</Heading>
                     <List>
                         {databases.map(db => (
-                            <Item {...db} />
+                            <Item db={db} onChooseDatabase={() => console.log('test')} />
                         ))}
                     </List>
                 </Section>

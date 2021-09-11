@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import { Button } from '../Button';
+
 /**
  * Wraps buttons into a menu.
  */
@@ -9,10 +11,6 @@ export const Menu = styled.div`
   min-width: 9em;
   align-items: stretch;
   grid-auto-flow: row;
-
-  button svg {
-    font-size: 16px;
-  }
 `;
 
 /**
@@ -25,4 +23,11 @@ Menu.Separator = styled.hr`
   justify-self: stretch;
   height: 1px;
   margin: 0.25rem 0;
+`;
+
+/**
+ * Wraps a menu item.
+ */
+Menu.Button = styled(Button)`
+    justify-content: flex-start;
 `;

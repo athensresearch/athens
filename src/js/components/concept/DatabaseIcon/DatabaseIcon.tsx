@@ -11,10 +11,12 @@ const IconWrap = styled.svg`
     text-transform: uppercase;
     font-weight: bold;
     user-select: none;
+    font-family: var(--font-family-serif);
   }
 `;
 
 export interface DatabaseIcon {
+    icon?: string;
     name: string;
     color?: CSSProperties["color"];
     size?: CSSProperties["width"];
@@ -24,13 +26,13 @@ export interface DatabaseIcon {
  * Icon representing a database
  */
 export const DatabaseIcon = ({
+    icon,
     name,
     color,
     size
 }: DatabaseIcon): React.ReactElement => {
-    const isEmojiIcon = /\p{Emoji}/u.test(name.trim());
-
-    console.log(color);
+    // Validate is a valid emoji icon
+    const isEmojiIcon = icon && /\p{Emoji}/u.test(icon);
 
     return (
         <IconWrap
@@ -52,7 +54,7 @@ export const DatabaseIcon = ({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill={color ? readableColor(color) : "var(--link-color---contrast)"}
-            >{isEmojiIcon ? name : name.trim().charAt(0)}</text>
+            >{isEmojiIcon ? icon.trim() : name.trim().charAt(0)}</text>
         </IconWrap>)
 };
 

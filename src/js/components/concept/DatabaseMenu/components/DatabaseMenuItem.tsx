@@ -13,7 +13,6 @@ const MenuItem = styled(Button)`
 
   > svg {
     flex: 0 0 2rem;
-    font-size: inherit;
   }
 
   main {
@@ -52,19 +51,19 @@ const Path = styled.span`
 `;
 
 interface DatabaseMenuItemProps {
-  database: Database;
-  handleChooseDatabase: (database: Database) => void;
+    database: Database;
+    handleChooseDatabase: (database: Database) => void;
 }
 
 export const DatabaseMenuItem = ({
-  database,
-  handleChooseDatabase,
+    database,
+    handleChooseDatabase,
 }: DatabaseMenuItemProps) => <MenuItem
-  onClick={(database) => handleChooseDatabase(database)}
+    onClick={(database) => handleChooseDatabase(database)}
 >
-    <DatabaseIcon name={database.name} />
-    <main>
-      <Name>{database.name}</Name>
-      <Path>{database["is-remote"] && <Link />} {database.id}</Path>
-    </main>
-  </MenuItem>
+        <DatabaseIcon {...database} />
+        <main>
+            <Name>{database.name}</Name>
+            <Path>{database["is-remote"] && <Link />} {database.id}</Path>
+        </main>
+    </MenuItem>
