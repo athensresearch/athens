@@ -5,7 +5,10 @@ module.exports = {
     ],
     "addons": [
         "@storybook/addon-links",
-        "@storybook/addon-essentials"
+        "@storybook/addon-essentials",
+        "@storybook/addon-a11y",
+        'storybook-dark-mode',
+        '@geometricpanda/storybook-addon-badges'
     ],
     webpackFinal: async (config, { configType }) => {
         // Always prefer .tsx files when resolving modules.
