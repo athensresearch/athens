@@ -23,7 +23,6 @@ export const Overlay = styled.div`
   min-height: 2em;
   animation-fill-mode: both;
   box-shadow: var(--depth-shadow-16), 0 0 0 1px rgb(0 0 0 / 0.05);
-  flex-direction: column;
   background: var(--background-plus-1);
   
   &.animate-in {
