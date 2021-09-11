@@ -10,7 +10,7 @@ import { Overlay } from '../../Overlay';
 import { Badge } from '../Badge';
 import { Menu } from '../../Menu';
 
-import { DatabaseIcon } from './components/DatabaseIcon';
+import { DatabaseIcon } from '../DatabaseIcon';
 import { DatabaseMenuItem } from './components/DatabaseMenuItem';
 
 const DatabaseMenuOverlay = styled(Overlay)`

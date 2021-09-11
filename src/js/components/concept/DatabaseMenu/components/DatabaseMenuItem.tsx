@@ -2,9 +2,8 @@ import styled from 'styled-components';
 
 import { Link } from '@material-ui/icons';
 
-import { Badge } from '../../Badge';
 import { Button } from '../../../Button';
-import { DatabaseIcon } from './DatabaseIcon';
+import { DatabaseIcon } from '../../DatabaseIcon';
 
 const MenuItem = styled(Button)`
   display: flex;
