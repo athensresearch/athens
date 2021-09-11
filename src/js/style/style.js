@@ -94,6 +94,7 @@ export const GlobalStyles = createGlobalStyle`
     --zindex-popover: 1060;
     --zindex-tooltip: 1070;
 
+    --font-family-serif: "IBM Plex Serif", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     --font-family-default: "IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     --font-family-code: "IBM Plex Mono", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 
