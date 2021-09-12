@@ -1,10 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 
+import { mockPeople } from '../../Avatar/mockData';
+import { DOMRoot } from '../../../config';
+
 import { Today, MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
 import { Popper, Modal } from "@material-ui/core";
-
-import { DOMRoot } from '../../../config';
 
 import { Button } from '../../Button';
 import { Overlay } from '../../Overlay';
@@ -13,6 +14,9 @@ import { Block } from '../Block';
 
 import { EmptyMessage } from './components/EmptyMessage';
 import { References, ReferencesProps } from './components/References';
+import { usePresenceProvider } from '../Block/hooks/usePresenceProvider';
+
+const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 
 const PageWrap = styled.article`
   padding: 1rem;
@@ -129,7 +133,6 @@ interface PageProps extends ReferencesProps {
   handlePressDelete(): void,
 }
 
-
 /**
  * Display whole page content
  */
@@ -151,6 +154,7 @@ export const Page = ({
 }: PageProps) => {
   const [isPageMenuOpen, setIsPageMenuOpen] = React.useState(false);
   const [pageMenuAnchor, setPageMenuAnchor] = React.useState(null);
+  const { PresenceProvider, clearPresence } = usePresenceProvider({ presentPeople: mockPresence });
 
   const handlePressMenuToggle = (e) => {
     setPageMenuAnchor(e.currentTarget);
@@ -165,7 +169,6 @@ export const Page = ({
   return (
     <PageWrap className={isDailyNote ? 'is-daily-note' : ''}>
       <PageHeader>
-
         <Title>
           <PageMenuToggle
             shape="round"
@@ -200,13 +203,15 @@ export const Page = ({
           </Modal>
           {title} {isDailyNote && <Today />}</Title>
       </PageHeader>
-      {children ? children : isEditable ? <BlocksContainer><Block /></BlocksContainer> : <EmptyMessage />}
-      <References
+      <PresenceProvider>
+        {children ? children : isEditable ? <BlocksContainer><Block /></BlocksContainer> : <EmptyMessage />}
+      </PresenceProvider>
+      {/* <References
         isLinkedReferencesOpen={isLinkedReferencesOpen}
         isUnlinkedReferencesOpen={isUnlinkedReferencesOpen}
         handlePressLinkedReferencesToggle={handlePressLinkedReferencesToggle}
         handlePressUnlinkedReferencesToggle={handlePressUnlinkedReferencesToggle}
-      />
+      /> */}
     </PageWrap>);
 };
 

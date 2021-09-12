@@ -12,6 +12,8 @@ import { useSelection } from './hooks/useSelection';
 import { useBlockState } from './hooks/useBlockState';
 import { usePresenceProvider } from './hooks/usePresenceProvider';
 
+const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
+
 export default {
   title: 'Components/Block',
   blockComponent: Block,
@@ -60,11 +62,9 @@ export const WithToggle = () => {
   return blocks;
 }
 
-const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 
-export const BlocksWithPresence = () => {
+export const WithPresence = () => {
   const { blockGraph: withState, setBlockState: withStateState } = useBlockState(blockTree);
-  // hook is used inside here
   const { blockGraph, setBlockState } = usePresence(withState, withStateState);
 
   const blocks = renderBlocks({
@@ -75,13 +75,13 @@ export const BlocksWithPresence = () => {
 
   return blocks;
 }
-BlocksWithPresence.decorators = [(Story) => {
+
+WithPresence.decorators = [(Story) => {
   const { PresenceProvider, clearPresence } = usePresenceProvider({ presentPeople: mockPresence });
 
   return <Storybook.Wrapper>
     <PresenceProvider>
       <button onClick={() => clearPresence()}>Clear Presence</button>
-      <hr />
       <Story />
     </PresenceProvider>
   </Storybook.Wrapper>
