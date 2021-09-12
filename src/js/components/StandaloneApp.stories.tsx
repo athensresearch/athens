@@ -10,6 +10,7 @@ import { AppToolbar } from './concept/AppToolbar';
 import { CommandBar } from './concept/CommandBar';
 import { AppLayout, MainContent } from './concept/App';
 import { Page } from './concept/Page';
+import { usePresenceProvider } from './concept/Block/hooks/usePresenceProvider';
 
 import {
   WithPresence
@@ -123,6 +124,8 @@ const Template = (args, context) => {
     isDatabaseDialogOpen,
   } = useAppState();
 
+  const { PresenceProvider, clearPresence } = usePresenceProvider({ presentPeople: mockPresence });
+
   return (
     <WindowWrapper {...args}
       className={classnames(
@@ -213,7 +216,9 @@ const Template = (args, context) => {
             handlePressLinkedReferencesToggle={() => null}
             handlePressUnlinkedReferencesToggle={() => null}
           >
-            <Page.BlocksContainer><WithPresence /></Page.BlocksContainer>
+            <PresenceProvider>
+              <Page.BlocksContainer><WithPresence /></Page.BlocksContainer>
+            </PresenceProvider>
           </Page>
         </MainContent>
         <RightSidebar isRightSidebarOpen={isRightSidebarOpen} />
