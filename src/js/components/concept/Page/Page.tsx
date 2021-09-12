@@ -15,7 +15,7 @@ import { EmptyMessage } from './components/EmptyMessage';
 import { References, ReferencesProps } from './components/References';
 
 const PageWrap = styled.article`
-  padding: 1rem 0;
+  padding: 1rem;
   flex-basis: 100%;
   align-self: stretch;
   width: 100%;

@@ -1,11 +1,11 @@
-import React from 'react';
 import { mockPeople } from '../../Avatar/mockData';
 
 import { Block } from './Block';
 import { BADGE, Storybook } from '../../../storybook';
 import { Meter } from '../Meter';
 import { blockTree } from './mockData';
-import { recurseBlocks } from '../../../utils/recurseBlocks';
+import { renderBlocks } from './utils/renderBlocks';
+import { useToggle } from './hooks/useToggle';
 import { usePresence } from './hooks/usePresence';
 import { useChecklist } from './hooks/useChecklist';
 import { useSelection } from './hooks/useSelection';
@@ -35,70 +35,6 @@ Editing.args = {
   isEditing: true,
 };
 
-export const BlockTree = () => {
-  const toggleBlockOpen = (uid, setBlockState) => {
-    setBlockState(prevState => {
-      return ({
-        ...prevState,
-        blocks: {
-          ...prevState.blocks,
-          [uid]: {
-            ...prevState.blocks[uid],
-            isOpen: !prevState.blocks[uid].isOpen
-          }
-        }
-      })
-    })
-  }
-
-  const [blockState, setBlockState] = React.useState(blockTree);
-  return recurseBlocks({
-    tree: blockState.tree,
-    content: blockState.blocks,
-    setBlockState: setBlockState,
-    ApplyProps: (block) => ({
-      ...block,
-      handlePressToggle: (uid) => {
-        toggleBlockOpen(uid, setBlockState)
-      }
-    }),
-    blockComponent: <Block />
-  })
-}
-
-export const WithPresence = () => {
-  const presence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }));
-  const { blocks } = usePresence(blockTree, presence);
-  return blocks;
-}
-
-// export const WithChecklist = () => {
-//   const { blocks, checked, total } = useChecklist(blockTree);
-//   return <>
-//     <Meter value={checked} maxValue={total} label="Completed" />
-//     <br />
-//     {blocks}
-//   </>;
-// }
-
-export const WithChecklist = () => {
-  // const { blockState, setBlockState } = useBlockState(blockTree);
-  const { blocks, checked, total } = useChecklist(blockTree);
-  // const { blocks, setBlocks, checked, total } = useChecklist(blockState, setBlockState);
-  return <>
-    <Meter value={checked} maxValue={total} label="Completed" />
-    <br />
-    {blocks}
-  </>;
-}
-
-export const WithSelection = () => {
-  const { blocks } = useSelection(blockTree);
-  return <>
-    {blocks}
-  </>;
-}
-
 export const References = Template.bind({});
 References.args = {
   ...blockTree.blocks["1"],
@@ -111,33 +47,105 @@ Selected.args = {
   isSelected: true,
 };
 
-export const MultipleSelected = () => {
+export const WithToggle = () => {
+  const { blockGraph: withState, setBlockState } = useBlockState(blockTree);
+  const { blockGraph } = useToggle(withState, setBlockState);
 
-  const toggleBlockOpen = (uid, setBlockState) => {
-    setBlockState(prevState => {
-      return ({
-        ...prevState,
-        blocks: {
-          ...prevState.blocks,
-          [uid]: {
-            ...prevState.blocks[uid],
-            isOpen: !prevState.blocks[uid].isOpen
-          }
-        }
-      })
-    })
+  const blocks = renderBlocks({
+    blockGraph: blockGraph,
+    setBlockState: setBlockState,
+    blockComponent: <Block />
+  });
+
+  return blocks;
+}
+
+export const WithPresence = () => {
+  const presence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }));
+
+  const { blockGraph: withState, setBlockState: withStateState } = useBlockState(blockTree);
+  const { blockGraph, setBlockState, setPresence } = usePresence(withState, withStateState, []);
+
+  const randomPerson = () => mockPeople[Math.floor(Math.random() * mockPeople.length)];
+  const numberOfBlocks = Object.keys(blockGraph.blocks).length;
+
+  const clearPresence = () => {
+    setPresence([]);
   }
 
-  const [blockState, setBlockState] = React.useState(blockTree);
-  return recurseBlocks({
-    tree: blockState.tree,
-    content: blockState.blocks,
+  const fillPresence = () => {
+    setPresence(presence.slice(0, numberOfBlocks + 1));
+  }
+
+  const removePresence = () => {
+    setPresence(prevState => [...prevState.slice(0, prevState.length - 1)]);
+  }
+
+  const addPresence = () => {
+    setPresence(prevState => [...prevState,
+    { ...randomPerson(), uid: Math.ceil(Math.random() * numberOfBlocks).toString() }]);
+  }
+
+  const blocks = renderBlocks({
+    blockGraph: blockGraph,
     setBlockState: setBlockState,
-    ApplyProps: (block) => ({
-      ...block,
-      isSelected: true,
-      handlePressToggle: () => toggleBlockOpen(block.uid, setBlockState)
-    }),
     blockComponent: <Block />
-  })
+  });
+
+  // return <div>
+  //   <button onClick={fillPresence}>Reset Presence</button>
+  //   <button onClick={addPresence}>Add Presence</button>
+  //   <button onClick={removePresence}>Remove Presence</button>
+  //   <button onClick={clearPresence}>Clear Presence</button>
+
+  //   {blocks}
+  // </div>;
+
+  return blocks;
+}
+
+export const WithChecklist = () => {
+  const { blockGraph: withState, setBlockState } = useBlockState(blockTree);
+  const { blockGraph: withToggle } = useToggle(withState, setBlockState);
+  const { blockGraph, checked, total } = useChecklist(withToggle, setBlockState);
+
+  const blocks = renderBlocks({
+    blockGraph: blockGraph,
+    setBlockState: setBlockState,
+    blockComponent: <Block />
+  });
+
+  return <>
+    <Meter value={checked} maxValue={total} label="Completed" />
+    <br />
+    {blocks}
+  </>;
+}
+
+export const WithSelection = () => {
+  const { blockGraph: withState, setBlockState } = useBlockState(blockTree);
+  const { blockGraph: withToggle } = useToggle(withState, setBlockState);
+  const { blockGraph } = useSelection(withToggle, setBlockState);
+
+  const blocks = renderBlocks({
+    blockGraph: blockGraph,
+    setBlockState: setBlockState,
+    blockComponent: <Block />
+  });
+
+  return blocks;
+}
+
+export const MultipleSelected = () => {
+  const { blockGraph: withState, setBlockState } = useBlockState(blockTree);
+  const { blockGraph: withToggle } = useToggle(withState, setBlockState);
+  const { blockGraph } = useSelection(withToggle, setBlockState, true);
+
+  const blocks = renderBlocks({
+    blockGraph: blockGraph,
+    setBlockState: setBlockState,
+    blockComponent: <Block />
+  });
+
+  return blocks;
 }

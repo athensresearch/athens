@@ -5,7 +5,7 @@ import { ChevronRight } from '@material-ui/icons';
 
 import { Button } from '../../../../Button';
 import { blockTree } from '../../../Block/mockData';
-import { recurseBlocks } from '../../../../../utils/recurseBlocks';
+import { renderBlocks } from '../../../Block/utils/renderBlocks';
 import { Reference } from './components/Reference';
 
 
@@ -118,9 +118,8 @@ const ReferenceSection = ({ label, isOpen, handlePressToggle, references }) => {
         <Group>
           <GroupTitle><a>Athens UX Priorities</a></GroupTitle>
           <GroupItems>
-            {recurseBlocks({
-              tree: blockTree.tree,
-              content: blockTree.blocks,
+            {renderBlocks({
+              blockGraph: blockTree,
               blockComponent: <Reference />
             })}
           </GroupItems>

@@ -1,22 +1,16 @@
-import React from 'react';
-import { Block } from '../Block';
-import { recurseBlocks } from '../../../../utils/recurseBlocks';
+import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
+import { BlockGraph } from '../../../../main';
 
-export const useSelection = (blockTree, BlockComponent?) => {
-  const [blockState, setBlockState] = React.useState(blockTree);
+export const useSelection = (blockGraph: BlockGraph, setBlockState, defaultSelected = undefined) => {
 
-  const blocks = recurseBlocks({
-    tree: blockState.tree,
-    content: blockState.blocks,
-    setBlockState: setBlockState,
+  const graph = modifyBlocks({
+    blockGraph: blockGraph,
     ApplyProps: (block) => ({
-      ...block,
-      handlePressToggle: () => toggleBlockProperty(block.uid, 'isOpen', setBlockState),
+      isSelected: block.isSelected ? block.isSelected : defaultSelected,
       handlePressContainer: () => toggleBlockProperty(block.uid, 'isSelected', setBlockState),
     }),
-    blockComponent: BlockComponent ? BlockComponent : <Block />
   });
 
-  return { blocks };
+  return { blockGraph: graph };
 };

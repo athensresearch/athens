@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { blockTree } from './components/concept/Block/mockData';
 
 /**
  * The ID of a unique Athens block
@@ -98,3 +99,8 @@ type Block = {
    */
   presentUser?: PersonPresence;
 }
+
+export type BlockGraph = {
+  tree: any[],
+  blocks: any,
+};

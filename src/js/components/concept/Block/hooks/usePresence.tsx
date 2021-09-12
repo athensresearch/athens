@@ -1,23 +1,19 @@
 import React from 'react';
-import { Block } from '../Block';
-import { recurseBlocks } from '../../../../utils/recurseBlocks';
+import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
+import { BlockGraph } from '../../../../main';
 
-export const usePresence = (blockTree, presence, BlockComponent?) => {
-  const [blockState, setBlockState] = React.useState(blockTree);
+export const usePresence = (blockGraph: BlockGraph, setBlockState, presence) => {
   const [presenceState, setPresenceState] = React.useState(presence);
 
-  const blocks = recurseBlocks({
-    tree: blockState.tree,
-    content: blockState.blocks,
-    setBlockState: setBlockState,
+  const resultGraph = modifyBlocks({
+    blockGraph: blockGraph,
     ApplyProps: (block) => ({
       ...block,
       presentUser: presenceState.find((p: PersonPresence) => p.uid === block.uid),
       handlePressToggle: (uid: UID) => toggleBlockProperty(uid, 'isOpen', setBlockState),
     }),
-    blockComponent: BlockComponent ? BlockComponent : <Block />
   });
 
-  return { blocks };
+  return { blockGraph: resultGraph, setBlockState, setPresence: setPresenceState };
 };

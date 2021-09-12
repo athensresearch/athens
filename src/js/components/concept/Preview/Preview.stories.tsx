@@ -4,7 +4,7 @@ import { blockTree } from '../Block/mockData';
 
 import { Preview } from './Preview';
 import { Link } from '../../Link';
-import { recurseBlocks } from '../../../utils/recurseBlocks';
+import { renderBlocks } from '../Block/utils/renderBlocks';
 
 export default {
   title: 'concepts/Preview',
@@ -36,7 +36,7 @@ export const Basic = () => {
     >
       <Preview.Media src="https://source.unsplash.com/random/400x400" />
       <Preview.Body>{(
-        recurseBlocks({
+        renderBlocks({
           tree: blockTree.tree,
           content: blockTree.blocks,
           lengthLimit: 3,

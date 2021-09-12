@@ -8,6 +8,7 @@ import { DatabaseIcon } from '../../DatabaseIcon';
 const MenuItem = styled(Button)`
   display: flex;
   padding: 0.25rem 1rem 0.25rem 0.5rem;
+  flex: 0 0 auto;
   gap: 0.25rem;
   overflow: hidden;
 
@@ -51,19 +52,19 @@ const Path = styled.span`
 `;
 
 interface DatabaseMenuItemProps {
-    database: Database;
-    handleChooseDatabase: (database: Database) => void;
+  database: Database;
+  handleChooseDatabase: (database: Database) => void;
 }
 
 export const DatabaseMenuItem = ({
-    database,
-    handleChooseDatabase,
+  database,
+  handleChooseDatabase,
 }: DatabaseMenuItemProps) => <MenuItem
-    onClick={(database) => handleChooseDatabase(database)}
+  onClick={(database) => handleChooseDatabase(database)}
 >
-        <DatabaseIcon {...database} />
-        <main>
-            <Name>{database.name}</Name>
-            <Path>{database["is-remote"] && <Link />} {database.id}</Path>
-        </main>
-    </MenuItem>
+    <DatabaseIcon {...database} />
+    <main>
+      <Name>{database.name}</Name>
+      <Path>{database["is-remote"] && <Link />} {database.id}</Path>
+    </main>
+  </MenuItem>

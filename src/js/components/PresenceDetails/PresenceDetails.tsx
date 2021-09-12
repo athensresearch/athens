@@ -32,6 +32,7 @@ const Heading = styled.h3`
 
 const PresenceOverlay = styled(Overlay)`
   min-width: 14em;
+  flex-direction: column;
 `;
 
 const HostIcon = styled(Wifi)`

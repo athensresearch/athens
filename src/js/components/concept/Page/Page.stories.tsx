@@ -6,7 +6,7 @@ import { DateTime } from 'luxon';
 import { preferredDateFormat } from '../../../config';
 
 import {
-  BlockTree,
+  WithToggle,
   WithSelection,
   WithChecklist,
   WithPresence
@@ -19,7 +19,7 @@ export default {
   parameters: {
     badges: [BADGE.DEV]
   },
-  decorators: [(Story) => <Storybook.Wrapper>{Story()}</Storybook.Wrapper>]
+  decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };
 
 
@@ -44,14 +44,14 @@ export const NodePage = Template.bind({});
 NodePage.args = {
   title: "Node Page",
   isDailyNote: false,
-  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>,
+  children: <Page.BlocksContainer><WithToggle /></Page.BlocksContainer>,
 }
 
 export const BlockPage = Template.bind({});
 BlockPage.args = {
   isDailyNote: false,
   title: 'Block Page',
-  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>
+  children: <Page.BlocksContainer><WithToggle /></Page.BlocksContainer>
 };
 
 export const PageWithPresence = Template.bind({});
@@ -79,14 +79,14 @@ export const PageWithLongTitle = Template.bind({});
 PageWithLongTitle.args = {
   isDailyNote: false,
   title: 'Lorem ipsum dolor sit amet donec consectetur',
-  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>
+  children: <Page.BlocksContainer><WithToggle /></Page.BlocksContainer>
 };
 
 export const DailyNote = Template.bind({});
 DailyNote.args = {
   isDailyNote: true,
   hasShortcut: false,
-  children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>,
+  children: <Page.BlocksContainer><WithToggle /></Page.BlocksContainer>,
   title: DateTime.now().toLocaleString(preferredDateFormat),
   uid: DateTime.now().toISODate()
 };

@@ -12,6 +12,7 @@ const DialogWrap = styled(Overlay)`
   --edge-spacing: 1rem;
 
   width: min(30em, calc(100% - 2rem));
+  flex-direction: column;
   position: absolute;
   left: 50%;
   top: 50%;
