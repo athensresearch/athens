@@ -7,7 +7,8 @@ import { preferredDateFormat } from '../../../config';
 
 import {
   BlockTree,
-  WithTasks,
+  WithSelection,
+  WithChecklist,
   WithPresence
 } from '../Block/Block.stories';
 
@@ -60,15 +61,22 @@ PageWithPresence.args = {
   children: <Page.BlocksContainer><WithPresence /></Page.BlocksContainer>
 };
 
-export const NodePageWithTasks = Template.bind({});
-NodePageWithTasks.args = {
+export const PageWithChecklist = Template.bind({});
+PageWithChecklist.args = {
   isDailyNote: false,
   title: 'Node Page With Tasks',
-  children: <Page.BlocksContainer><WithTasks /></Page.BlocksContainer>
+  children: <Page.BlocksContainer><WithChecklist /></Page.BlocksContainer>
 };
 
-export const BlockPageWithLongTitle = Template.bind({});
-BlockPageWithLongTitle.args = {
+export const PageWithSelection = Template.bind({});
+PageWithSelection.args = {
+  isDailyNote: false,
+  title: 'Node Page With Selection',
+  children: <Page.BlocksContainer><WithSelection /></Page.BlocksContainer>
+};
+
+export const PageWithLongTitle = Template.bind({});
+PageWithLongTitle.args = {
   isDailyNote: false,
   title: 'Lorem ipsum dolor sit amet donec consectetur',
   children: <Page.BlocksContainer><BlockTree /></Page.BlocksContainer>

@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 /**
  * The ID of a unique Athens block
  */

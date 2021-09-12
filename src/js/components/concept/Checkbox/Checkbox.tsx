@@ -129,6 +129,7 @@ interface CheckboxProps {
   children?: React.ReactNode;
   styleCircle?: React.ReactNode;
   shouldStrikethroughWhenChecked?: boolean;
+  labelProps?: React.LabelHTMLAttributes<any>;
 }
 
 const Checkbox = (props: CheckboxProps) => {
@@ -138,6 +139,7 @@ const Checkbox = (props: CheckboxProps) => {
     isDisabled = false,
     shouldStrikethroughWhenChecked = false,
     children,
+    labelProps,
   } = props;
   let inputRef = React.useRef<HTMLInputElement>(null);
   let { inputProps } = useCheckbox(props, useToggleState(props), inputRef);
@@ -153,8 +155,9 @@ const Checkbox = (props: CheckboxProps) => {
           shouldStrikethroughWhenChecked && 'should-strikethrough-when-checked',
           props.styleCircle && 'style-circle',
           !!children && 'has-children'
-        )
-      }>
+        )}
+      {...labelProps}
+    >
       <HiddenInput {...inputProps} ref={inputRef} />
       <CheckboxWrap
         viewBox="0 0 24 24"
@@ -175,3 +178,6 @@ const Checkbox = (props: CheckboxProps) => {
 
 let _Checkbox = React.forwardRef(Checkbox);
 export { _Checkbox as Checkbox };
+
+Checkbox.Label = Label;
+Checkbox.CheckboxWrap = Checkbox;

@@ -19,7 +19,7 @@ export const recurseBlocks = ({
   tree,
   content,
   setBlockState,
-  ApplyProps,
+  ApplyProps = () => null,
   blockComponent,
   lengthLimit = Infinity,
   depthLimit = Infinity,
@@ -46,8 +46,7 @@ export const recurseBlocks = ({
   });
 }
 
-
-export const recurseBlocksFn = ({
+const recurseBlocksFn = ({
   tree,
   content,
   setBlockState,

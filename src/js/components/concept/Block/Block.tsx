@@ -2,18 +2,19 @@ import React from 'react';
 import styled from 'styled-components';
 import { Popper } from '@material-ui/core';
 
+import { Block as BlockType } from '../../../main';
 import { DOMRoot } from '../../../config';
 import { classnames } from '../../../utils/classnames';
 
 import { Avatar } from '../../Avatar';
 import { Anchor } from './components/Anchor';
 import { Body } from './components/Body';
-import { Content } from './components/Content';
+import { Content, ContentProps } from './components/Content';
 import { Toggle } from './components/Toggle';
 import { Refs } from './components/Refs';
 import { Container } from './components/Container';
 
-export interface BlockProps extends Block {
+export interface BlockProps extends BlockType, ContentProps {
   /**
    * Whether this block is in editing mode
    */
@@ -88,6 +89,8 @@ export const Block = ({
   linkedRef,
   refsCount,
   uid,
+  contentProps,
+  textareaProps,
   handleContentChange,
   handleMouseEnterBlock,
   handleMouseLeaveBlock,
@@ -104,7 +107,7 @@ export const Block = ({
   return (<>
     <Container
       style={(showPresentUser && presentUser) ? { "--user-color": presentUser.color } : undefined}
-      onClick={handlePressContainer}
+      onClick={(e) => { e.stopPropagation(); handlePressContainer && handlePressContainer(e); }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -142,6 +145,8 @@ export const Block = ({
           rawContent={rawContent}
           renderedContent={renderedContent}
           handleContentChange={handleContentChange}
+          contentProps={contentProps}
+          textareaProps={textareaProps}
         />
         {(refsCount >= 1) && <Refs
           refsCount={refsCount}
@@ -173,7 +178,7 @@ export const Block = ({
           <Avatar
             {...presentUser}
             size="1.5rem"
-            style={{ filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.1))", zIndex: 99999 }}
+            style={{ filter: "drop-shadow(0 2px 2px var(--shadow-color---opacity-lower))" }}
           />
         </Popper>
       </>

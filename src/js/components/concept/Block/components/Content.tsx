@@ -1,4 +1,4 @@
-import React, { ReactNode, useImperativeHandle } from 'react';
+import React, { ReactNode } from 'react';
 import styled from 'styled-components';
 
 const ContentWrap = styled.div`
@@ -197,39 +197,26 @@ const ContentWrap = styled.div`
 `;
 
 export interface ContentProps {
-  /**
-   * The raw content of the block
-   */
+  /** The raw content of the block */
   rawContent: string;
-  /**
-   * The rendered content of the block
-   */
+  /** The rendered content of the block */
   renderedContent?: ReactNode;
-  /**
-   * Whether the block is in editing mode
-   */
+  /** Whether the block is in editing mode */
   isEditable?: boolean;
-  /**
-   * Whether the block is in editing mode
-   */
+  /** Whether the block is in editing mode */
   isEditing?: boolean;
-  /**
-   * Whether the block has child blocks
-   */
+  /** Whether the block has child blocks */
   isLocked?: boolean;
-  /**
-   * Whether the block should render its editable components or just the static content
-   */
+  /** Whether the block should render its editable components or just the static content */
   showEditableDom?: boolean;
-  /**
-   * When raw content of a block is modified.
-   * Returns the new value of the raw content.
-   */
+  /** When raw content of a block is modified. Returns the new value of the raw content. */
   handleContentChange?: (e: any) => void;
-  /**
-   * When the content is clicked or tapped
-   */
+  /** When the content is clicked or tapped */
   handlePressContent?: () => void;
+  /** Props on the content container */
+  contentProps: React.HTMLAttributes<HTMLDivElement>;
+  /** Props on the editable textarea */
+  textareaProps: React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 }
 
 export const Content = ({
@@ -240,7 +227,8 @@ export const Content = ({
   isEditing,
   showEditableDom,
   handleContentChange,
-  handlePressContent,
+  contentProps,
+  textareaProps,
 }: ContentProps) => (
   <ContentWrap
     className={[
@@ -248,11 +236,12 @@ export const Content = ({
       isEditing ? 'is-editing' : '',
       showEditableDom ? 'show-editable-dom' : '',
     ].join(' ')}
-    onClick={handlePressContent}
+    {...contentProps}
   >
     {(isEditing || showEditableDom) && (<textarea
       rows={1}
       placeholder="Enter text"
+      {...textareaProps}
       onKeyUp={handleContentChange}
       defaultValue={rawContent}
     />)
@@ -260,3 +249,5 @@ export const Content = ({
     <div className="rendered-content">{renderedContent || rawContent}</div>
   </ContentWrap>
 );
+
+Content.ContentWrap = ContentWrap;
