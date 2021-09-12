@@ -29,7 +29,10 @@ export interface BlockProps extends Block {
   /**
    * Whether to display the avatar of a present user
    */
-  showPresentUserAvatar?: boolean;
+  showPresentUser?: boolean;
+  /**
+   * 
+   */
   linkedRef?: string;
   /**
    * When toggle is pressed
@@ -75,7 +78,7 @@ export const Block = ({
   rawContent,
   renderedContent,
   presentUser,
-  showPresentUserAvatar = true,
+  showPresentUser = true,
   isOpen = true,
   isSelected,
   isEditable,
@@ -95,12 +98,12 @@ export const Block = ({
   handleDragLeave,
   handleDrop,
 }: BlockProps) => {
-  const [showEditableDom, setRenderEditableDom] = React.useState(false);
-  const [avatarAnchorEl, setAvatarAnchorEl] = React.useState(null);
+  const [showEditableDom, setRenderEditableDom] = React.useState<boolean>(false);
+  const [avatarAnchorEl, setAvatarAnchorEl] = React.useState<HTMLDivElement | null>(null);
 
   return (<>
     <Container
-      style={(showPresentUserAvatar && presentUser) ? { "--user-color": presentUser.color } : undefined}
+      style={(showPresentUser && presentUser) ? { "--user-color": presentUser.color } : undefined}
       onClick={handlePressContainer}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -111,13 +114,13 @@ export const Block = ({
         linkedRef && 'is-linked-ref',
         isLocked && 'is-locked',
         isSelected && 'is-selected',
-        presentUser && showPresentUserAvatar && 'is-presence',
+        presentUser && showPresentUser && 'is-presence',
         isSelected && isDragging && 'is-dragging',
         isEditing && 'is-editing')}
     >
       {/* Drop area indicator before */}
       <Body
-        ref={showPresentUserAvatar && setAvatarAnchorEl}
+        ref={showPresentUser && setAvatarAnchorEl}
         onMouseEnter={() => { handleMouseEnterBlock; isEditable && setRenderEditableDom(true) }}
         onMouseLeave={() => { handleMouseLeaveBlock; isEditable && setRenderEditableDom(false) }}
       >
@@ -152,7 +155,7 @@ export const Block = ({
 
     </Container>
 
-    {(showPresentUserAvatar && presentUser) && (
+    {(showPresentUser && presentUser) && (
       <>
         <Popper
           open={true}
@@ -186,4 +189,4 @@ Block.Content = Content;
 Block.ListContainer = styled.div`
     display: flex;
     flex-direction: column;
-`
+`;

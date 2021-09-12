@@ -5,7 +5,7 @@ interface recurseBlocksProps {
   tree: any[];
   content: any;
   setBlockState?: Function;
-  blockProps?: BlockProps | any; // Any so we can add more props to the block
+  ApplyProps?(block: BlockProps): BlockProps; // Any so we can add more props to the block
   blockComponent: any;
   lengthLimit?: number;
   depthLimit?: number;
@@ -15,20 +15,13 @@ interface recurseBlocksProps {
   getCurrentDepth?(): number;
 }
 
-
-// makeBlocks
-// set currentLenght = 0
-// const incCurrentLength = (currentLength) => currentLength++
-// 
-// recurseBlocks(...stuff, incCurrentLength)
-
 export const recurseBlocks = ({
   tree,
   content,
   setBlockState,
-  blockProps,
+  ApplyProps,
   blockComponent,
-  lengthLimit = Infinity, // FIXME: this doesn't work properly
+  lengthLimit = Infinity,
   depthLimit = Infinity,
 }: recurseBlocksProps) => {
   let currentLength = 0;
@@ -42,7 +35,7 @@ export const recurseBlocks = ({
     tree,
     content,
     setBlockState,
-    blockProps,
+    ApplyProps,
     blockComponent,
     lengthLimit,
     depthLimit,
@@ -58,7 +51,7 @@ export const recurseBlocksFn = ({
   tree,
   content,
   setBlockState,
-  blockProps,
+  ApplyProps,
   blockComponent,
   lengthLimit,
   depthLimit,
@@ -72,25 +65,26 @@ export const recurseBlocksFn = ({
 
     if (lengthLimit >= getCurrentLength()) {
       incCurrentDepth();
+
       return (
-        React.cloneElement(blockComponent,
-        {
+        React.cloneElement(blockComponent, {
           key: block.uid,
           uid: block.uid,
           ...content[block.uid],
-          ...blockProps,
+          ...ApplyProps(block),
+          ApplyProps: ApplyProps,
           children: block.children && (lengthLimit >= getCurrentLength() && depthLimit >= getCurrentDepth()) && recurseBlocksFn({
             tree: block.children,
             content: content,
             setBlockState: setBlockState,
-            blockProps: blockProps,
+            ApplyProps: ApplyProps,
             blockComponent: blockComponent,
             lengthLimit: lengthLimit,
             depthLimit: depthLimit,
-              incCurrentLength,
-              incCurrentDepth,
-              getCurrentLength,
-              getCurrentDepth,
+            incCurrentLength,
+            incCurrentDepth,
+            getCurrentLength,
+            getCurrentDepth,
           }),
         },
         ))

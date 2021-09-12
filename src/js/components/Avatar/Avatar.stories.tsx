@@ -1,4 +1,3 @@
-import React from 'react';
 import { Avatar } from './Avatar';
 import styled from 'styled-components';
 import { BADGE, Storybook } from '../../storybook';
