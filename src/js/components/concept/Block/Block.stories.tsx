@@ -10,7 +10,7 @@ import { usePresence } from './hooks/usePresence';
 import { useChecklist } from './hooks/useChecklist';
 import { useSelection } from './hooks/useSelection';
 import { useBlockState } from './hooks/useBlockState';
-
+import { usePresenceProvider } from './hooks/usePresenceProvider';
 
 export default {
   title: 'Components/Block',
@@ -60,31 +60,12 @@ export const WithToggle = () => {
   return blocks;
 }
 
-export const WithPresence = () => {
-  const presence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }));
+const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 
+export const BlocksWithPresence = () => {
   const { blockGraph: withState, setBlockState: withStateState } = useBlockState(blockTree);
-  const { blockGraph, setBlockState, setPresence } = usePresence(withState, withStateState, []);
-
-  const randomPerson = () => mockPeople[Math.floor(Math.random() * mockPeople.length)];
-  const numberOfBlocks = Object.keys(blockGraph.blocks).length;
-
-  const clearPresence = () => {
-    setPresence([]);
-  }
-
-  const fillPresence = () => {
-    setPresence(presence.slice(0, numberOfBlocks + 1));
-  }
-
-  const removePresence = () => {
-    setPresence(prevState => [...prevState.slice(0, prevState.length - 1)]);
-  }
-
-  const addPresence = () => {
-    setPresence(prevState => [...prevState,
-    { ...randomPerson(), uid: Math.ceil(Math.random() * numberOfBlocks).toString() }]);
-  }
+  // hook is used inside here
+  const { blockGraph, setBlockState } = usePresence(withState, withStateState);
 
   const blocks = renderBlocks({
     blockGraph: blockGraph,
@@ -92,17 +73,19 @@ export const WithPresence = () => {
     blockComponent: <Block />
   });
 
-  // return <div>
-  //   <button onClick={fillPresence}>Reset Presence</button>
-  //   <button onClick={addPresence}>Add Presence</button>
-  //   <button onClick={removePresence}>Remove Presence</button>
-  //   <button onClick={clearPresence}>Clear Presence</button>
-
-  //   {blocks}
-  // </div>;
-
   return blocks;
 }
+BlocksWithPresence.decorators = [(Story) => {
+  const { PresenceProvider, clearPresence } = usePresenceProvider({ presentPeople: mockPresence });
+
+  return <Storybook.Wrapper>
+    <PresenceProvider>
+      <button onClick={() => clearPresence()}>Clear Presence</button>
+      <hr />
+      <Story />
+    </PresenceProvider>
+  </Storybook.Wrapper>
+}];
 
 export const WithChecklist = () => {
   const { blockGraph: withState, setBlockState } = useBlockState(blockTree);

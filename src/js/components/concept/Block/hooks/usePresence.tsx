@@ -2,18 +2,19 @@ import React from 'react';
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
 import { BlockGraph } from '../../../../main';
+import { PresenceContext } from './usePresenceProvider';
 
-export const usePresence = (blockGraph: BlockGraph, setBlockState, presence) => {
-  const [presenceState, setPresenceState] = React.useState(presence);
+export const usePresence = (blockGraph: BlockGraph, setBlockState) => {
+  const { presence } = React.useContext(PresenceContext);
 
   const resultGraph = modifyBlocks({
     blockGraph: blockGraph,
     ApplyProps: (block) => ({
       ...block,
-      presentUser: presenceState.find((p: PersonPresence) => p.uid === block.uid),
+      presentUser: presence.find((p: PersonPresence) => p.uid === block.uid),
       handlePressToggle: (uid: UID) => toggleBlockProperty(uid, 'isOpen', setBlockState),
     }),
   });
 
-  return { blockGraph: resultGraph, setBlockState, setPresence: setPresenceState };
+  return { blockGraph: resultGraph, setBlockState };
 };

@@ -5,7 +5,7 @@ import { BlockGraph } from '../../../../main';
 interface renderBlocksProps {
   blockGraph: BlockGraph;
   setBlockState?: Function;
-  ApplyProps?(block: BlockProps): BlockProps; // Any so we can add more props to the block
+  ApplyProps?(block: BlockProps): BlockProps;
   blockComponent?: any;
   lengthLimit?: number;
   depthLimit?: number;
