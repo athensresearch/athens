@@ -14,11 +14,7 @@ module.exports = {
     "@storybook/addon-essentials"
   ],
   webpackFinal: async (config, { configType }) => {
-    // Always prefer .tsx files when resolving modules.
-    // We output the .js files from tsc directly on the same folder, but want
-    // storybook to process the original .tsx for the additional TS tooling.
-    config.resolve.extensions.unshift(".tsx");
-    
+    // Resolve the root path defined in tsconfig.json
     config.resolve.plugins.push(
       new TsconfigPathsPlugin({
         configFile: path.resolve(__dirname, '../tsconfig.json'),

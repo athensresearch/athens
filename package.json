@@ -12,7 +12,7 @@
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
     "dev": "yarn components && concurrently \"yarn components:watch\" \"yarn client:watch\"",
     "client:watch": "shadow-cljs watch main renderer app",
-    "components": "babel ./src/js/components/ --extensions \".ts,.tsx\" --out-dir ./src/js/components/",
+    "components": "babel ./src/js/components/ --extensions \".ts,.tsx\" --out-dir ./dist/js/components/",
     "components:watch": "yarn components --watch",
     "compile": "yarn components && shadow-cljs compile main renderer app",
     "prod": "yarn components && shadow-cljs release main renderer app",
