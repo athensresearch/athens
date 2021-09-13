@@ -105,7 +105,8 @@
   [:map
    [:event/args
     [:map
-     [:username string?]]]])
+     [:username string?]
+     [:password {:optional true} string?]]]])
 
 
 (def presence-editing
