@@ -1,6 +1,5 @@
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
-import { BlockGraph, UID } from '../../../../main';
 
 export const useToggle = (blockGraph: BlockGraph, setBlockState) => {
   const graph = modifyBlocks({

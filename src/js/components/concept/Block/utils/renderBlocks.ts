@@ -1,6 +1,5 @@
 import React from 'react';
 import { BlockProps } from '../Block';
-import { BlockGraph } from '../../../../main';
 
 interface renderBlocksProps {
   blockGraph: BlockGraph;

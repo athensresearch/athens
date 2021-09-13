@@ -1,7 +1,6 @@
 import React from 'react';
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
-import { BlockGraph } from '../../../../main';
 import { PresenceContext } from './usePresenceProvider';
 
 export const usePresence = (blockGraph: BlockGraph, setBlockState) => {

@@ -1,5 +1,4 @@
 import { BlockProps } from '../Block';
-import { BlockGraph } from '../../../../main';
 
 interface modifyBlocksProps {
   blockGraph: BlockGraph;

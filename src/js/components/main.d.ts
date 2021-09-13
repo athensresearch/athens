@@ -1,30 +1,26 @@
-import { ReactNode } from 'react';
-import { blockTree } from './components/concept/Block/mockData';
-
 /**
  * The ID of a unique Athens block
  */
 type UID = string | number;
 
 /**
+ * A person interacting with Athens in a multiplayer context
+ */
+type Person = {
+  personId: string;
+  username: string;
+  color: string; // CSS color
+}
+
+/**
  * OS the name of supported OSs
  */
-enum OS {
-  WINDOWS = 'windows',
-  MAC = 'mac',
-  LINUX = 'linux',
-}
+type OS = 'mac' | 'windows' | 'linux';
 
 /**
  * The state of a session's connection to the Athens host
  */
-enum ConnectionStatus {
-  LOCAL = 'local',
-  CONNECTING = 'connecting',
-  CONNECTED = 'connected',
-  RECONNECTING = 'reconnecting',
-  OFFLINE = 'offline',
-}
+type ConnectionStatus = 'local' | 'connecting' | 'connected' | 'reconnecting' | 'offline';
 
 type HostAddress = string;
 
@@ -36,20 +32,11 @@ type Database = {
   name: string;
   isRemote: boolean;
   icon?: string; // Emoji
-  color?: CSSProperties["color"];
+  color?: string; // CSS color
 }
 
 type Synced = boolean;
 
-
-/**
- * A person interacting with Athens in a multiplayer context
- */
-type Person = {
-  personId: string;
-  username: string;
-  color: CSSProperties["color"];
-}
 
 /**
  *  A Person associated with a specific Athens block in a multiplayer context
@@ -81,7 +68,7 @@ type Block = {
   /**
    * The rendered content of the block
    */
-  renderedContent?: ReactNode;
+  renderedContent?: any;
   /**
    * Whether the block is part of a user selection
    */
@@ -95,12 +82,16 @@ type Block = {
    */
   isEditable?: boolean;
   /**
+   * Whether this block represents a checked checkbox
+   */
+  isChecked?: boolean;
+  /**
    * A user attached to this block
    */
   presentUser?: PersonPresence;
 }
 
-export type BlockGraph = {
+type BlockGraph = {
   tree: any[],
   blocks: any,
 };

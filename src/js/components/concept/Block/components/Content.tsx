@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const ContentWrap = styled.div`
@@ -200,7 +200,7 @@ export interface ContentProps {
   /** The raw content of the block */
   rawContent: string;
   /** The rendered content of the block */
-  renderedContent?: ReactNode;
+  renderedContent?: RenderedContent;
   /** Whether the block is in editing mode */
   isEditable?: boolean;
   /** Whether the block is in editing mode */

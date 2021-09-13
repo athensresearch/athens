@@ -1,5 +1,4 @@
 import React from 'react';
-import { PersonPresence } from '../../../../main';
 import { mockPeople } from '../../../Avatar/mockData';
 
 export const PresenceContext = React.createContext(null);

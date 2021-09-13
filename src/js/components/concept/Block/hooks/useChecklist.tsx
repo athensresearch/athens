@@ -2,7 +2,6 @@
 import { Checkbox } from '../../Checkbox';
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
-import { BlockGraph } from '../../../../main';
 
 export const useChecklist = (blockGraph: BlockGraph, setBlockState) => {
   const total = Object.keys(blockGraph.blocks).length;

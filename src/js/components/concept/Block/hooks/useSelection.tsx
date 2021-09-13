@@ -1,6 +1,5 @@
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
-import { BlockGraph } from '../../../../main';
 
 export const useSelection = (blockGraph: BlockGraph, setBlockState, defaultSelected = undefined) => {
 
