@@ -15,6 +15,6 @@
     "src/js/components/**/*.tsx"
   ],
   "exclude": [
-    "src/js/components/**/*.stories.tsx"
+    "src/js/**/*.stories.tsx"
   ]
 }
