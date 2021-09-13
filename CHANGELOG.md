@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.3](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.2...v1.0.0-alpha.rtc.3) (2021-09-09)
+
+
+### Features
+
+* notify client that lan-party is over 😢 ([864582a](https://github.com/athensresearch/athens/commit/864582a639ca06dc1c2a47eb7a6f9076b094af86))
+* replace block refs with content ([80f2be0](https://github.com/athensresearch/athens/commit/80f2be03443eb6213c5fe8e4660698a2ce1fc053))
+* replace block refs with text on ref delete ([8529546](https://github.com/athensresearch/athens/commit/8529546b012b2f63b00dde02b950e18fd4245334))
+* unlink multiple block refs ([57130cd](https://github.com/athensresearch/athens/commit/57130cd1c5b5bc63689cc48dfffef96c17232552))
+* use one event handler for conn-status ([6afd0fc](https://github.com/athensresearch/athens/commit/6afd0fcdb25a0d3af42d302448d9fca2f3824a71))
+
+
+### Bug Fixes
+
+* `docker-compose` setup timing-out. ([50bbc0d](https://github.com/athensresearch/athens/commit/50bbc0daf6a7da24f689f05bf6f6e9799d2f5046))
+* block refs replace failing in single uid ([02d913d](https://github.com/athensresearch/athens/commit/02d913dfb34c434d69626df58a78996f5bf9d5df))
+* bullet too big ([ffd026d](https://github.com/athensresearch/athens/commit/ffd026de803366bdeee49a3534486e5d912a3b1a))
+* bullet too small ([49439d5](https://github.com/athensresearch/athens/commit/49439d52b01060999e5fe56623a37547ff3b7414))
+* detect when client is not able to connect to remote. ([1bddf89](https://github.com/athensresearch/athens/commit/1bddf8973aa4aaf2a02738bd64cac88c679784f2))
+* error when deleting a block with block ref ([f6cba22](https://github.com/athensresearch/athens/commit/f6cba22ced3f585a09d90101306f805b56042bc7))
+* import react-dom instead of using missing global ([70027b9](https://github.com/athensresearch/athens/commit/70027b95188eb0e2c5a5a7ccfdbc20337641e00c)), closes [/github.com/athensresearch/athens/pull/1564#discussion_r704963708](https://github.com/athensresearch//github.com/athensresearch/athens/pull/1564/issues/discussion_r704963708)
+* Make backend logs a bit more readable. ([2d79531](https://github.com/athensresearch/athens/commit/2d79531685520afab6848b1c5fdcc6b8f96b62db))
+* Remote client freezes when navigating down. ([ab910a1](https://github.com/athensresearch/athens/commit/ab910a1c014f6b271a3742c89774f635c0c31bf2))
+* schema of selected-delete ([d135dbd](https://github.com/athensresearch/athens/commit/d135dbdac068f0ec21a92beeafca25de5803dcb0))
+* use vector to convert title ([084b168](https://github.com/athensresearch/athens/commit/084b168940a78cb9a7ec5094822fd2b75a44456f))
+
+
+* add basic stress test ([29ae7d8](https://github.com/athensresearch/athens/commit/29ae7d87ee4837b86900dfe50fb84da69c6d5e95))
+* add stress test ([63ed490](https://github.com/athensresearch/athens/commit/63ed4909fcd4b2f5db4efe39a79796f0bf506721))
+* Add Vercel previews ([#1643](https://github.com/athensresearch/athens/issues/1643)) ([c860ab4](https://github.com/athensresearch/athens/commit/c860ab465fca94eefe1aa5044c54a58b04bc4c03))
+* build components once before starting client watch ([9fa0690](https://github.com/athensresearch/athens/commit/9fa0690a817fd784ecdf628c6209f4cdf7d2b787))
+* fix spacing ([dd329df](https://github.com/athensresearch/athens/commit/dd329df9cb61613a06d905d174e6619980df904b))
+* linked refs text replacement ([35200af](https://github.com/athensresearch/athens/commit/35200af3e76e8d05ec90705946a84c4eb93eb0c3))
+* support tsx components and storybook ([#1564](https://github.com/athensresearch/athens/issues/1564)) ([925f7a4](https://github.com/athensresearch/athens/commit/925f7a4c089d8d64a1082da2a452d5b7dc008ba1))
+
 ## [1.0.0-alpha.rtc.2](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.1...v1.0.0-alpha.rtc.2) (2021-08-26)
 
 
