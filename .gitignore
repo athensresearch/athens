@@ -32,6 +32,5 @@
 # electron build
 dist
 
-# design system ts output
-/src/js/components/**/*.js
+# design system static build
 /storybook-static
