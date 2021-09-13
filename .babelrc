@@ -8,8 +8,5 @@
     ["module-resolver", {"alias": {"@": "./src/js/components"}}],
     "@babel/proposal-class-properties",
     "@babel/proposal-object-rest-spread"
-  ],
-  "ignore": [
-    "**/*.stories.tsx"
   ]
 }

@@ -10,6 +10,7 @@
     ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    ["/components/Button/Button" :refer [Button]]
     [athens.common-db :as common-db]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
