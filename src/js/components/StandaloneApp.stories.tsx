@@ -12,6 +12,9 @@ import { AppLayout, MainContent } from './concept/App';
 import { Page } from './concept/Page';
 import { usePresenceProvider } from './concept/Block/hooks/usePresenceProvider';
 
+import { mockPeople } from './Avatar/mockData';
+const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
+
 import {
   WithPresence
 } from './concept/Block/Block.stories';
