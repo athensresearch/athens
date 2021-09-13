@@ -1,10 +1,10 @@
 import React from 'react';
-import { BADGE, Storybook } from '../../../storybook';
-import { blockTree } from '../Block/mockData';
+import { BADGE, Storybook } from '@/utils/storybook';
+import { blockTree } from '@/concept/Block/mockData';
 
 import { Preview } from './Preview';
-import { Link } from '../../Link';
-import { renderBlocks } from '../Block/utils/renderBlocks';
+import { Link } from '@/Link';
+import { renderBlocks } from '@/concept/Block/utils/renderBlocks';
 
 export default {
   title: 'concepts/Preview',

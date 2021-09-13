@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Badge } from './Badge';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { Home } from '@material-ui/icons';
 

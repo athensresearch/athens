@@ -1,9 +1,9 @@
 import React from 'react';
 import { themes } from '@storybook/theming';
 
-import { classnames } from '../src/js/utils/classnames';
-import { GlobalStyles } from '../src/js/style/style';
-import { badges, Storybook } from '../src/js/storybook';
+import { classnames } from '../src/js/components/utils/classnames';
+import { GlobalStyles } from '../src/js/components/utils/style/style';
+import { badges, Storybook } from '../src/js/components/utils/storybook';
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },

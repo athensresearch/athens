@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 import { ProfileSettingsDialog } from './ProfileSettingsDialog';
 
 
 import { Avatar } from '../Avatar';
-import { Button } from '../Button';
+import { Button } from '@/Button';
 
 export default {
   title: 'Components/ProfileSettingsDialog',

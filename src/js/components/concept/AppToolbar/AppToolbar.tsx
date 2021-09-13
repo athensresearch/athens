@@ -2,11 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
-import { Button } from '../../Button';
+import { Button } from '@/Button';
 
-import { DatabaseMenu, DatabaseMenuProps } from '../DatabaseMenu';
+import { DatabaseMenu, DatabaseMenuProps } from '@/concept/DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetails, PresenceDetailsProps } from '../../PresenceDetails';
+import { PresenceDetails, PresenceDetailsProps } from '@/PresenceDetails';
 
 const AppToolbarWrapper = styled.header`
   background: var(--color-background);

@@ -1,9 +1,9 @@
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { Link } from '@material-ui/icons'
 
 import { Menu } from './Menu';
-import { Overlay } from '../Overlay';
+import { Overlay } from '@/Overlay';
 
 export default {
   title: 'Components/Menu',

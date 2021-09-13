@@ -1,16 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
-import { DOMRoot } from '../../../config';
+import { DOMRoot } from '@/utils/config';
 
 import { AddCircle } from '@material-ui/icons';
 import { Modal, Popper } from '@material-ui/core';
 
-import { Button } from '../../Button';
-import { Overlay } from '../../Overlay';
-import { Badge } from '../Badge';
-import { Menu } from '../../Menu';
+import { Button } from '@/Button';
+import { Overlay } from '@/Overlay';
+import { Badge } from '@/concept/Badge';
+import { Menu } from '@/Menu';
 
-import { DatabaseIcon } from '../DatabaseIcon';
+import { DatabaseIcon } from '@/concept/DatabaseIcon';
 import { DatabaseMenuItem } from './components/DatabaseMenuItem';
 
 const DatabaseMenuOverlay = styled(Overlay)`

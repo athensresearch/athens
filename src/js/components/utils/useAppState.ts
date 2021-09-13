@@ -1,6 +1,6 @@
 import React from 'react';
-import { mockDatabases as databaseMenuData } from './components/concept/DatabaseMenu/mockData';
-import * as presenceData from './components/PresenceDetails/mockData';
+import { mockDatabases as databaseMenuData } from '@/concept/DatabaseMenu/mockData';
+import * as presenceData from '@/PresenceDetails/mockData';
 
 const mockData = {
   connectionStatus: 'connected',

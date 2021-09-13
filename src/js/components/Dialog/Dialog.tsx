@@ -1,11 +1,11 @@
 import styled from 'styled-components';
-import { DOMRoot } from '../../config';
+import { DOMRoot } from '@/utils/config';
 
 import { Modal, ModalProps } from '@material-ui/core'
 import { Close } from '@material-ui/icons'
 
-import { Button } from '../Button';
-import { Overlay } from '../Overlay';
+import { Button } from '@/Button';
+import { Overlay } from '@/Overlay';
 import React from 'react';
 
 const DialogWrap = styled(Overlay)`

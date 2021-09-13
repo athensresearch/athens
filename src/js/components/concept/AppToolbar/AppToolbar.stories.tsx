@@ -1,13 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
-import { BADGE, Storybook } from '../../../storybook';
-import { mockDatabases } from '../DatabaseMenu/mockData';
-import * as mockPresence from '../../PresenceDetails/mockData';
-import { useAppState } from '../../../useAppState';
+import { BADGE, Storybook } from '@/utils/storybook';
+import { mockDatabases } from '@/concept/DatabaseMenu/mockData';
+import * as mockPresence from '@/PresenceDetails/mockData';
+import { useAppState } from '@/utils/useAppState';
 
 import { AppToolbar, AppToolbarProps } from './AppToolbar';
-import { DatabaseMenu } from '../DatabaseMenu';
-import { PresenceDetails } from '../../PresenceDetails';
+import { DatabaseMenu } from '@/concept/DatabaseMenu';
+import { PresenceDetails } from '@/PresenceDetails';
 
 const ToolbarStoryWrapper = styled(Storybook.Desktop)`
   > * {

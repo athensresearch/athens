@@ -1,6 +1,6 @@
 import { DailyNotes } from './DailyNotes';
 import { DailyNotes as DailyNotesSidebarCalendar } from './SidebarCalendar/DailyNotes';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 export default {
   title: 'Routes/DailyNotes',

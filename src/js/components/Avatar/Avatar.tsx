@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Fade, Popper, PopperPlacementType } from '@material-ui/core';
 import { readableColor } from 'polished';
 
-import { DOMRoot } from '../../config';
+import { DOMRoot } from '@/utils/config';
 
 const Wrapper = styled.svg`
   overflow: visible;

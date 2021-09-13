@@ -1,18 +1,18 @@
 import styled from 'styled-components';
 
-import { Storybook } from '../storybook';
-import { classnames } from '../utils/classnames';
-import { getOs } from '../utils/getOs';
+import { Storybook } from '@/utils/storybook';
+import { classnames } from '@/utils/classnames';
+import { getOs } from '@/utils/getOs';
 
-import { useAppState } from '../useAppState';
+import { useAppState } from '@/utils/useAppState';
 
-import { LeftSidebar } from './concept/LeftSidebar';
-import { RightSidebar } from './concept/RightSidebar';
-import { AppToolbar } from './concept/AppToolbar';
-import { CommandBar } from './concept/CommandBar';
-import { AppLayout, MainContent } from './concept/App';
-import { Page } from './concept/Page';
-import { WithToggle } from './concept/Block/Block.stories';
+import { LeftSidebar } from '@/concept/LeftSidebar';
+import { RightSidebar } from '@/concept/RightSidebar';
+import { AppToolbar } from '@/concept/AppToolbar';
+import { CommandBar } from '@/concept/CommandBar';
+import { AppLayout, MainContent } from '@/concept/App';
+import { Page } from '@/concept/Page';
+import { WithToggle } from '@/concept/Block/Block.stories';
 
 export default {
   title: 'App/Browser',

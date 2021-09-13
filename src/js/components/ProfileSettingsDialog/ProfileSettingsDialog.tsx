@@ -4,7 +4,7 @@ import { readableColor } from 'polished';
 import { HexColorPicker } from "react-colorful";
 import { Fade, Grow } from '@material-ui/core';
 
-import { Button } from '../Button';
+import { Button } from '@/Button';
 import { Avatar } from '../Avatar';
 import { Input } from '../Input';
 import { Dialog } from '../Dialog';

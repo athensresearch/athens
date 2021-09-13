@@ -1,18 +1,18 @@
 import styled from 'styled-components';
-import { classnames } from '../utils/classnames';
-import { Storybook } from '../storybook';
+import { classnames } from '@/utils/classnames';
+import { Storybook } from '@/utils/storybook';
 
-import { useAppState } from '../useAppState';
+import { useAppState } from '@/utils/useAppState';
 
-import { LeftSidebar } from './concept/LeftSidebar';
-import { RightSidebar } from './concept/RightSidebar';
-import { AppToolbar } from './concept/AppToolbar';
-import { CommandBar } from './concept/CommandBar';
-import { AppLayout, MainContent } from './concept/App';
-import { Page } from './concept/Page';
-import { usePresenceProvider } from './concept/Block/hooks/usePresenceProvider';
+import { LeftSidebar } from '@/concept/LeftSidebar';
+import { RightSidebar } from '@/concept/RightSidebar';
+import { AppToolbar } from '@/concept/AppToolbar';
+import { CommandBar } from '@/concept/CommandBar';
+import { AppLayout, MainContent } from '@/concept/App';
+import { Page } from '@/concept/Page';
+import { usePresenceProvider } from '@/concept/Block/hooks/usePresenceProvider';
 
-import { mockPeople } from './Avatar/mockData';
+import { mockPeople } from '@/Avatar/mockData';
 const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 
 import {

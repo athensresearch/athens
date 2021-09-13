@@ -2,11 +2,11 @@ import styled from 'styled-components';
 import { Modal } from '@material-ui/core';
 import { Close, Block, CheckBox } from '@material-ui/icons';
 
-import { DOMRoot } from '../../../config';
+import { DOMRoot } from '@/utils/config';
 
-import { Input } from '../../Input';
-import { Overlay } from '../../Overlay';
-import { Button } from '../../Button';
+import { Input } from '@/Input';
+import { Overlay } from '@/Overlay';
+import { Button } from '@/Button';
 
 import { OpenCollectiveSettings } from './components/OpenCollectiveSettings';
 

@@ -1,8 +1,8 @@
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { Embed } from './Embed';
-import { Block } from '../Block';
-import { block } from '../Block/mockData';
+import { Block } from '@/concept/Block';
+import { block } from '@/concept/Block/mockData';
 
 export default {
   title: 'Concepts/Embed',

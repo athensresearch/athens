@@ -2,10 +2,10 @@ import React from 'react';
 import styled from 'styled-components';
 import { Popper } from '@material-ui/core';
 
-import { DOMRoot } from '../../../config';
-import { classnames } from '../../../utils/classnames';
+import { DOMRoot } from '@/utils/config';
+import { classnames } from '@/utils/classnames';
 
-import { Avatar } from '../../Avatar';
+import { Avatar } from '@/Avatar';
 import { Anchor } from './components/Anchor';
 import { Body } from './components/Body';
 import { Content, ContentProps } from './components/Content';

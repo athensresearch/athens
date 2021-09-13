@@ -1,9 +1,9 @@
 import React from 'react';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { Checkbox } from './Checkbox';
 
-import { Meter } from '../Meter';
+import { Meter } from '@/concept/Meter';
 
 export default {
   title: 'Concepts/Checkbox',

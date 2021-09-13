@@ -1,8 +1,8 @@
-import { mockPeople } from '../../Avatar/mockData';
+import { mockPeople } from '@/Avatar/mockData';
 
 import { Block } from './Block';
-import { BADGE, Storybook } from '../../../storybook';
-import { Meter } from '../Meter';
+import { BADGE, Storybook } from '@/utils/storybook';
+import { Meter } from '@/concept/Meter';
 import { blockTree } from './mockData';
 import { renderBlocks } from './utils/renderBlocks';
 import { useToggle } from './hooks/useToggle';

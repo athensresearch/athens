@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { Button } from '../Button';
+import { Button } from '@/Button';
 
 /**
  * Wraps buttons into a menu.

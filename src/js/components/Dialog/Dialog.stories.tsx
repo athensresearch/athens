@@ -1,7 +1,7 @@
 import React from 'react';
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
-import { Button } from '../Button';
+import { Button } from '@/Button';
 import { Dialog } from './Dialog';
 
 export default {

@@ -3,8 +3,8 @@ import styled from 'styled-components';
 
 import { Check, Mail } from '@material-ui/icons';
 
-import { Button } from '../../../Button';
-import { Input } from '../../../Input';
+import { Button } from '@/Button';
+import { Input } from '@/Input';
 import * as Setting from './Setting';
 
 const Body = styled(Setting.Body)`

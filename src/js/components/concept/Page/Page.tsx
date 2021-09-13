@@ -1,20 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { mockPeople } from '../../Avatar/mockData';
-import { DOMRoot } from '../../../config';
+import { mockPeople } from '@/Avatar/mockData';
+import { DOMRoot } from '@/utils/config';
 
 import { Today, MoreHoriz, Delete, Bookmark, BubbleChart } from '@material-ui/icons';
 import { Popper, Modal } from "@material-ui/core";
 
-import { Button } from '../../Button';
-import { Overlay } from '../../Overlay';
-import { Menu } from '../../Menu';
-import { Block } from '../Block';
+import { Button } from '@/Button';
+import { Overlay } from '@/Overlay';
+import { Menu } from '@/Menu';
+import { Block } from '@/concept/Block';
 
 import { EmptyMessage } from './components/EmptyMessage';
 import { References, ReferencesProps } from './components/References';
-import { usePresenceProvider } from '../Block/hooks/usePresenceProvider';
+import { usePresenceProvider } from '@/concept/Block/hooks/usePresenceProvider';
 
 const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 

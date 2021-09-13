@@ -1,5 +1,5 @@
 
-import { Checkbox } from '../../Checkbox';
+import { Checkbox } from '@/concept/Checkbox';
 import { modifyBlocks } from '../utils/modifyBlocks';
 import { toggleBlockProperty } from '../utils/toggleBlockProperty';
 

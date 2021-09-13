@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { classnames } from '../../utils/classnames';
+import { classnames } from '@/utils/classnames';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**

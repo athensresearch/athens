@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useMeter } from '@react-aria/meter'
 
-import { classnames } from '../../../utils/classnames'
+import { classnames } from '@/utils/classnames'
 
 export const MeterWrap = styled.div`
   display: inline-flex;

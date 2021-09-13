@@ -1,5 +1,5 @@
 import { CommandBar } from './CommandBar';
-import { BADGE } from '../../../storybook';
+import { BADGE } from '@/utils/storybook';
 
 export default {
   title: 'Concepts/CommandBar',

@@ -1,5 +1,5 @@
 import { Meter } from './Meter';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 export default {
   title: 'Concepts/Meter',

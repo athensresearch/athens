@@ -1,10 +1,10 @@
 import styled from 'styled-components';
 import { Create } from '@material-ui/icons';
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { Overlay } from './Overlay';
-import { Menu } from '../Menu';
-import { Button } from '../Button';
+import { Menu } from '@/Menu';
+import { Button } from '@/Button';
 
 export default {
   title: 'Components/Overlay',

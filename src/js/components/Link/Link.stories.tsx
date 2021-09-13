@@ -1,5 +1,5 @@
 import { Link } from './Link';
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 export default {
   title: 'components/Link',

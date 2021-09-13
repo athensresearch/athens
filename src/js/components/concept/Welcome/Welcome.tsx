@@ -2,8 +2,8 @@ import styled from 'styled-components'
 
 import { AddBox, Wifi } from '@material-ui/icons'
 
-import { Button } from '../../Button';
-import { Overlay } from '../../Overlay';
+import { Button } from '@/Button';
+import { Overlay } from '@/Overlay';
 import { Item } from './components/Item';
 
 const WelcomeWrap = styled(Overlay)`

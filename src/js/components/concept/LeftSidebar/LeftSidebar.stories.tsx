@@ -1,8 +1,8 @@
 import styled from 'styled-components';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { LeftSidebar } from './LeftSidebar';
-import { AppLayout } from '../App';
+import { AppLayout } from '@/concept/App';
 
 export default {
   title: 'Sections/LeftSidebar',

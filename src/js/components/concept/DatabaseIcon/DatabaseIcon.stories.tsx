@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { DatabaseIcon } from './DatabaseIcon';
 

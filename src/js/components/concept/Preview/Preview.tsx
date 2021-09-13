@@ -1,9 +1,9 @@
 import styled from 'styled-components';
 
-import { DOMRoot } from '../../../config';
-import { Block } from '../Block';
+import { DOMRoot } from '@/utils/config';
+import { Block } from '@/concept/Block';
 
-import { Overlay } from '../../Overlay';
+import { Overlay } from '@/Overlay';
 import { Popper } from '@material-ui/core';
 
 export const Preview = ({

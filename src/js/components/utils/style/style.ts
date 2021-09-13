@@ -35,7 +35,7 @@ const opacities = {
     "opacity-90": 0.9,
 };
 
-const themeLight = {
+export const themeLight = {
     "link-color": "#0071DB",
     "highlight-color": "#F9A132",
     "text-highlight-color": "#ffdb8a",
@@ -58,7 +58,7 @@ const themeLight = {
     "shadow-color": "#000"
 }
 
-const themeDark = {
+export const themeDark = {
     "link-color": "#0071DB",
     "highlight-color": "#FBBE63",
     "text-highlight-color": "#FBBE63",

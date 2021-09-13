@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { DateTime } from 'luxon';
-import { Page } from '../Page';
-import { BlockTree } from '../Block/Block.stories';
+import { Page } from '@/concept/Page';
+import { BlockTree } from '@/concept/Block/Block.stories';
 
 const dateFormat = { month: 'long', day: 'numeric' };
 

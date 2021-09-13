@@ -1,5 +1,5 @@
 import { Welcome } from './Welcome';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 import { mockDatabases } from './mockData';
 

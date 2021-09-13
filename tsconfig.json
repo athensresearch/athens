@@ -23,8 +23,5 @@
   "include": [
     "src/js/components/**/*.tsx",
     "src/js/components/**/*.ts"
-  ],
-  "exclude": [
-    "**/*.stories.tsx"
   ]
 }

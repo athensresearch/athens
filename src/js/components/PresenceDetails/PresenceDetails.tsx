@@ -1,17 +1,17 @@
 import styled from 'styled-components'
 import React from 'react';
 
-import { DOMRoot } from '../../config';
+import { DOMRoot } from '@/utils/config';
 import {
   Wifi, SettingsEthernet, SyncProblem, Lock,
 } from '@material-ui/icons'
 import { Popper, Modal, Fade, PopperPlacementType } from '@material-ui/core'
 
-import { Button } from '../Button';
-import { Menu } from '../Menu';
-import { Overlay } from '../Overlay';
-import { Avatar } from '../Avatar';
-import { ProfileSettingsDialog } from '../ProfileSettingsDialog';
+import { Button } from '@/Button';
+import { Menu } from '@/Menu';
+import { Overlay } from '@/Overlay';
+import { Avatar } from '@/Avatar';
+import { ProfileSettingsDialog } from '@/ProfileSettingsDialog';
 
 
 const ConnectionButton = styled(Button)`

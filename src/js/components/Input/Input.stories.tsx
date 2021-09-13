@@ -1,6 +1,6 @@
 import React from 'react'
 import { Input } from './Input';
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 import { Mail, Check } from '@material-ui/icons';
 import styled from 'styled-components';
 

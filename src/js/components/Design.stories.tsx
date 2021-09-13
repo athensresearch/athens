@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 import { readableColor } from 'polished';
-import { permuteColorOpacities, themeLight, themeDark } from '../style/style'
+import { permuteColorOpacities, themeLight, themeDark } from '@/utils/style/style'
 
 export default {
   title: 'Design',

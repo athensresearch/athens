@@ -1,6 +1,6 @@
-import { BADGE, Storybook } from '../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 
-import { useAppState } from '../../useAppState';
+import { useAppState } from '@/utils/useAppState';
 
 import { PresenceDetails } from './PresenceDetails';
 

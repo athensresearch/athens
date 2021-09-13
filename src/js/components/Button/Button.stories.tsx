@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { Button } from './Button';
-import { BADGE, Storybook } from '../../storybook';
+import { Button } from '@/Button';
+import { BADGE, Storybook } from '@/utils/storybook';
 
 const Wrapper = styled.div`
   display: flex;

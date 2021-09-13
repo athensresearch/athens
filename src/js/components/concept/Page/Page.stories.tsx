@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { Page } from '.';
-import { BADGE, Storybook } from '../../../storybook';
+import { BADGE, Storybook } from '@/utils/storybook';
 import { DateTime } from 'luxon';
-import { preferredDateFormat } from '../../../config';
+import { preferredDateFormat } from '@/utils/config';
 
 import {
   WithToggle,

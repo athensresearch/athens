@@ -1,6 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
-import { Button } from '../../../Button'
+import { Button } from '@/Button'
 import { Close, ChevronRight, BubbleChart, Description, FiberManualRecord } from "@material-ui/icons";
 
 const ItemWrap = styled.article`

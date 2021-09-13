@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
-import { Breadcrumbs } from '../../../../Breadcrumbs';
+import { Breadcrumbs } from '@/concept/Breadcrumbs';
 
-import { Block } from '../../../../Block';
+import { Block } from '@/concept/Block';
 
 const ReferenceWrap = styled.li`
   list-style: none;

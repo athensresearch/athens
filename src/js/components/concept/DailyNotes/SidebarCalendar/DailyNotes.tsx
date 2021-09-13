@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { classnames } from '../../../../utils/classnames';
-import { dateFormat } from '../../../../config';
+import { classnames } from '@/utils/classnames';
+import { preferredDateFormat } from '@/utils/config';
 import { DateTime } from 'luxon';
-import { Page } from '../../Page';
-import { BlockTree } from '../../Block/Block.stories';
+import { Page } from '@/concept/Page';
+import { BlockTree } from '@/concept/Block/Block.stories';
 import { useInView } from 'react-intersection-observer';
 import DayPicker from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
@@ -67,7 +67,7 @@ const DailyNotesPage = ({
         isToday ? "is-today" : "",
       )}>
       <Page
-        title={date.plus({ days: 1 }).toLocaleString(dateFormat)}
+        title={date.plus({ days: 1 }).toLocaleString(preferredDateFormat)}
         isDailyNote={true}
         uid={date.plus({ days: 1 }).toString()}
         handlePressRemoveShortcut={() => null}

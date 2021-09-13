@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { DOMRoot } from '../../../config';
+import { DOMRoot } from '@/utils/config';
 
 import { Close } from '@material-ui/icons';
 import { Modal } from '@material-ui/core';

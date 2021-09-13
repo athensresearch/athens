@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import { classnames } from '../../../utils/classnames';
+import { classnames } from '@/utils/classnames';
 
 import { useCheckbox } from '@react-aria/checkbox'
 import { useToggleState } from '@react-stately/toggle';

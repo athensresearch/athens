@@ -3,9 +3,9 @@ import styled from 'styled-components';
 
 import { ChevronRight } from '@material-ui/icons';
 
-import { Button } from '../../../../Button';
-import { blockTree } from '../../../Block/mockData';
-import { renderBlocks } from '../../../Block/utils/renderBlocks';
+import { Button } from '@/Button';
+import { blockTree } from '@/concept/Block/mockData';
+import { renderBlocks } from '@/concept/Block/utils/renderBlocks';
 import { Reference } from './components/Reference';
 
 

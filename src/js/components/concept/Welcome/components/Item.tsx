@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
-import { Button } from '../../../Button';
-import { DatabaseIcon } from '../../DatabaseIcon'
+import { Button } from '@/Button';
+import { DatabaseIcon } from '@/concept/DatabaseIcon'
 
 const ItemWrap = styled.li`
     align-self: stretch;

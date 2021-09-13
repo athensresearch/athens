@@ -1,6 +1,6 @@
 import { RightSidebar } from './RightSidebar';
-import { BADGE } from '../../../storybook';
-import { AppLayout } from '../App';
+import { BADGE } from '@/utils/storybook';
+import { AppLayout } from '@/concept/App';
 
 export default {
   title: 'Sections/RightSidebar',
