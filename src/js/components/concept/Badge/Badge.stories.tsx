@@ -5,7 +5,7 @@ import { BADGE, Storybook } from '../../../storybook';
 import { Home } from '@material-ui/icons';
 
 export default {
-  title: 'Components/Badge',
+  title: 'Concepts/Badge',
   component: Badge,
   argTypes: {},
   parameters: {

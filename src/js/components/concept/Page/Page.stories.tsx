@@ -13,7 +13,7 @@ import {
 } from '../Block/Block.stories';
 
 export default {
-  title: 'Components/Page',
+  title: 'Concepts/Page',
   component: Page,
   argTypes: {},
   parameters: {

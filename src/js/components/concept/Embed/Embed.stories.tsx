@@ -5,7 +5,7 @@ import { Block } from '../Block';
 import { block } from '../Block/mockData';
 
 export default {
-  title: 'Components/Embed',
+  title: 'Concepts/Embed',
   component: Embed,
   argTypes: {},
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>],

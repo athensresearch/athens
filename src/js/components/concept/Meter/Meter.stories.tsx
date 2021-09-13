@@ -2,7 +2,7 @@ import { Meter } from './Meter';
 import { BADGE, Storybook } from '../../../storybook';
 
 export default {
-  title: 'components/Meter',
+  title: 'Concepts/Meter',
   component: Meter,
   argTypes: {},
   parameters: {

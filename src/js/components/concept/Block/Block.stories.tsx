@@ -15,7 +15,7 @@ import { usePresenceProvider } from './hooks/usePresenceProvider';
 const mockPresence = mockPeople.map((p, index) => ({ ...p, uid: index.toString() }))
 
 export default {
-  title: 'Components/Block',
+  title: 'Concepts/Block',
   blockComponent: Block,
   argTypes: {},
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>],

@@ -3,7 +3,7 @@ import { BADGE, Storybook } from '../../../storybook';
 import { Breadcrumbs } from './Breadcrumbs';
 
 export default {
-  title: 'Components/Breadcrumbs',
+  title: 'Concepts/Breadcrumbs',
   component: Breadcrumbs,
   argTypes: {},
   decorators: [(Story) => <Storybook.Wrapper>{Story()}</Storybook.Wrapper>],

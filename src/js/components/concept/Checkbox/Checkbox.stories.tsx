@@ -6,7 +6,7 @@ import { Checkbox } from './Checkbox';
 import { Meter } from '../Meter';
 
 export default {
-  title: 'components/Checkbox',
+  title: 'Concepts/Checkbox',
   component: Checkbox,
   argTypes: {},
   parameters: {

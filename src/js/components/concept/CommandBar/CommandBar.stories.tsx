@@ -2,7 +2,7 @@ import { CommandBar } from './CommandBar';
 import { BADGE } from '../../../storybook';
 
 export default {
-  title: 'Components/CommandBar',
+  title: 'Concepts/CommandBar',
   component: CommandBar,
   argTypes: {},
   parameters: {

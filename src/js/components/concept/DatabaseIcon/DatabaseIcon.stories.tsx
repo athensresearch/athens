@@ -4,7 +4,7 @@ import { BADGE, Storybook } from '../../../storybook';
 import { DatabaseIcon } from './DatabaseIcon';
 
 export default {
-  title: 'Components/DatabaseIcon',
+  title: 'Concepts/DatabaseIcon',
   component: DatabaseIcon,
   argTypes: {
     color: { control: { type: 'color' } },

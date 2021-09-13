@@ -4,7 +4,7 @@ import { BADGE, Storybook } from '../../../storybook';
 import { mockDatabases } from './mockData';
 
 export default {
-    title: 'Components/Welcome',
+    title: 'Concepts/Welcome',
     component: Welcome,
     argTypes: {},
     parameters: {

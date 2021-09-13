@@ -5,7 +5,7 @@ import { mockDatabases } from './mockData';
 import { DatabaseMenu } from './DatabaseMenu';
 
 export default {
-  title: 'Components/DatabaseMenu',
+  title: 'Concepts/DatabaseMenu',
   component: DatabaseMenu,
   argTypes: {},
   parameters: {
