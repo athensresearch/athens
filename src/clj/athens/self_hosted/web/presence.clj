@@ -29,7 +29,8 @@
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
 
-    (let [datoms (d/datoms @datahike :eavt)]
+    (let [datoms (remove #(= :dx/dbInstant (:a %))
+                         (d/datoms @datahike :eavt))]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump-event max-tx datoms))
