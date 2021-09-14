@@ -34,3 +34,4 @@ dist
 
 # design system static build
 /storybook-static
+/src/gen
