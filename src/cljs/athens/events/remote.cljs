@@ -1,15 +1,16 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
-    [athens.common-events          :as common-events]
-    [athens.common-events.resolver :as resolver]
-    [athens.common-events.schema   :as schema]
-    [athens.db                     :as db]
-    [athens.events.selection       :as select-events]
-    [athens.util                   :as util]
-    [malli.core                    :as m]
-    [malli.error                   :as me]
-    [re-frame.core                 :as rf]))
+    [athens.common-events                 :as common-events]
+    [athens.common-events.resolver        :as resolver]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.schema          :as schema]
+    [athens.db                            :as db]
+    [athens.events.selection              :as select-events]
+    [athens.util                          :as util]
+    [malli.core                           :as m]
+    [malli.error                          :as me]
+    [re-frame.core                        :as rf]))
 
 
 ;; Connection Management
@@ -192,7 +193,10 @@
   :remote/apply-forwarded-event
   (fn [{_db :db} [_ event]]
     (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
-    (let [txs (resolver/resolve-event-to-tx @db/dsdb event)]
+    (let [type (:event/type event)
+          txs (if (contains? #{:op/atomic} type)
+                (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb (:event/op event))
+                (resolver/resolve-event-to-tx @db/dsdb event))]
       (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
       {:fx [[:dispatch [:transact txs]]]})))
 

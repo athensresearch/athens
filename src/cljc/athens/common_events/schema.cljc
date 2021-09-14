@@ -691,7 +691,10 @@
    (dispatch :presence/all-online presence-all-online true)
    (dispatch :presence/offline presence-offline true)
    (dispatch :presence/broadcast-editing presence-broadcast-editing true)
-   (dispatch :presence/broadcast-rename presence-broadcast-rename true)])
+   (dispatch :presence/broadcast-rename presence-broadcast-rename true)
+
+   ;; ⚛️ Atomic Graph Ops
+   (dispatch :op/atomic graph-ops-atomic true)])
 
 
 (def valid-server-event?

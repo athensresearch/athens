@@ -1,6 +1,8 @@
 (ns athens.common-events.graph.schema
   (:require
-   [malli.core :as m]))
+   [malli.core  :as m]
+   [malli.error :as me]
+   [malli.util  :as mu]))
 
 
 (def atomic-op-types
@@ -19,6 +21,33 @@
    :shortcut/move])
 
 
-(def atomic-op
+(def op-type-atomic-common
   [:map
-   [:op/type atomic-op-types]])
+   [:op/type atomic-op-types]
+   [:op/atomic? boolean?]])
+
+
+(def op-block-new
+  [:map
+   [:op/args
+    [:map
+     [:parent-uid string?]
+     [:block-uid string?]
+     [:block-order int?]]]])
+
+(def atomic-op
+  [:multi {:dispatch :op/type}
+   [:block/new (mu/merge
+                op-type-atomic-common
+                op-block-new)]])
+
+
+(def valid-atomic-op?
+  (m/validator atomic-op))
+
+
+(defn explain-atomic-op
+  [data]
+  (-> atomic-op
+      (m/explain data)
+      (me/humanize)))
