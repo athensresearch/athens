@@ -75,10 +75,14 @@
         (common-events/build-event-rejected event-id err-msg err-data)))))
 
 
+(def single-writer-guard (Object.))
+
+
 (defn default-handler
   [datahike _channel {:event/keys [id] :as event}]
-  (let [txs (resolver/resolve-event-to-tx @datahike event)]
-    (transact! datahike id txs)))
+  (locking single-writer-guard
+    (let [txs (resolver/resolve-event-to-tx @datahike event)]
+      (transact! datahike id txs))))
 
 
 (defn datascript-handler
