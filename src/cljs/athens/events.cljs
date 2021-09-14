@@ -2,7 +2,9 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver        :as resolver]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.db                            :as db]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
@@ -927,11 +929,10 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/new-block local?" local?)
       (if local?
-        (let [new-block-event (common-events/build-new-block-event -1
-                                                                   (:block/uid parent)
-                                                                   (:block/order block)
-                                                                   new-uid)
-              tx              (resolver/resolve-event-to-tx @db/dsdb new-block-event)]
+        (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
+                                                               new-uid
+                                                               (:block/order block))
+              tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})

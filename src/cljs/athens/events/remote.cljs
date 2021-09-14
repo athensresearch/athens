@@ -2,6 +2,7 @@
   "`re-frame` events related to `:remote/*`."
   (:require
     [athens.common-events                 :as common-events]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
@@ -380,7 +381,7 @@
   (fn [{db :db} [_ {:keys [event-id embed-id]}]]
     (js/console.debug ":remote/followup-new-block" event-id)
     (let [{:keys [event]}   (get-event-acceptance-info db event-id)
-          {:keys [new-uid]} (:event/args event)]
+          new-uid           (-> event :event/op :op/args :block-uid)]
       (js/console.log ":remote/followup-new-block, new-uid" new-uid)
       {:fx [[:dispatch-n [[:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]
@@ -391,16 +392,17 @@
   :remote/new-block
   (fn [{db :db} [_ {:keys [block parent new-uid embed-id]}]]
     (let [last-seen-tx               (:remote/last-seen-tx db)
+          block-new-op               (atomic-graph-ops/make-block-new-op (:block/uid parent)
+                                                                         new-uid
+                                                                         (:block/order block))
           {event-id :event/id
-           :as      new-block-event} (common-events/build-new-block-event last-seen-tx
-                                                                          (:block/uid parent)
-                                                                          (:block/order block)
-                                                                          new-uid)
+           :as      block-new-event} (common-events/build-atomic-event last-seen-tx
+                                                                       block-new-op)
           followup-fx                [[:dispatch [:remote/followup-new-block {:event-id event-id
                                                                               :embed-id embed-id}]]]]
-      (js/console.debug ":remote/new-block" (pr-str new-block-event))
+      (js/console.debug ":remote/new-block" (pr-str block-new-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
-                          [:remote/send-event! new-block-event]]]]})))
+                          [:remote/send-event! block-new-event]]]]})))
 
 
 (rf/reg-event-fx
