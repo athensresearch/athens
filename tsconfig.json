@@ -1,0 +1,27 @@
+// This file is used for the editor TS support and for
+// editor and storybook path resolution.
+// Babel is what's compiling typescope and also contains
+// path resolution settings.
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "jsx": "react-jsx",
+    "importHelpers": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "rootDir": "src/js/components/",
+    "baseUrl": "src/js/components",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+    }
+  },
+  "include": [
+    "src/js/components/**/*.tsx",
+    "src/js/components/**/*.ts"
+  ]
+}

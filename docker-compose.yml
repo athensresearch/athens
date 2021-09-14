@@ -8,6 +8,7 @@ services:
       - 3010 # Change this according to config.edn
     volumes:
       - datahike-db:/srv/athens/db
+      - crash-logs:/srv/athens/logs
     environment:   # set environment variables
       # config_edn is deep merged with the whole config file
       config_edn: "{:datahike {:store {:path \"/srv/athens/db\"}}}"
@@ -25,3 +26,4 @@ services:
 
 volumes:
   datahike-db:
+  crash-logs:

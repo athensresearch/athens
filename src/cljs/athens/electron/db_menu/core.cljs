@@ -1,12 +1,12 @@
 (ns athens.electron.db-menu.core
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/AddCircleOutline" :default AddCircleOutline]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.electron.dialogs :as dialogs]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -34,13 +34,12 @@
   {:color (color :body-text-color :opacity-high)
    :background "inherit"
    :padding "0"
-   :border "1px solid transparent"
-   ::stylefy/manual [["&:hover" {:filter "brightness(110%)"}]
-                     ["&:active" {:filter "brightness(90%)"}]
-                     [:&.is-active {:color (color :body-text-color);
-                                    :filter "brightness(90%)"}]
-                     [:.icon {:width "1.75em"
-                              :height "1.75em"}]]})
+   :align-items "stretch"
+   :justify-content "stretch"
+   :justify-items "stretch"
+   :width "1.75em"
+   :height "1.75em"
+   :border "1px solid transparent"})
 
 
 (def current-db-area-style
@@ -61,15 +60,15 @@
    [:div (use-style current-db-tools-style)
     (if (:is-remote db)
       [:<>
-       [button "Import"]
-       [button "Copy Link"]
-       [button "Remove"]]
+       [:> Button "Import"]
+       [:> Button "Copy Link"]
+       [:> Button "Remove"]]
       [:<>
-       [button {:onClick #(dialogs/move-dialog!)} "Move"]
-       ;; [button {:onClick "Rename"]
-       [button {:onClick #(if (= 1 (count all-dbs))
-                            (js/alert "Can't remove last db from the list")
-                            (dialogs/delete-dialog! db))}
+       [:> Button {:onClick #(dialogs/move-dialog!)} "Move"]
+       ;; [:> Button {:onClick "Rename"]
+       [:> Button {:onClick #(if (= 1 (count all-dbs))
+                               (js/alert "Can't remove last db from the list")
+                               (dialogs/delete-dialog! db))}
         "Delete"]])]))
 
 
@@ -84,9 +83,9 @@
                                        :synchronising)]
                 [:<>
                  ;; DB Icon + Dropdown toggle
-                 [button {:class [(when @ele "is-active")]
-                          :on-click #(reset! ele (.-currentTarget %))
-                          :style db-menu-button-style}
+                 [:> Button {:class [(when @ele "is-active")]
+                             :on-click #(reset! ele (.-currentTarget %))
+                             :style db-menu-button-style}
                   [db-icon {:db     active-db
                             :status sync-status}]]
                  ;; Dropdown menu
@@ -120,7 +119,6 @@
                                        :key key}]))
                     [:hr (use-style menu-separator-style)]
                     ;; Add DB control
-                    [button {:on-click #(dispatch [:modal/toggle])}
-                     [:<>
-                      [:> AddCircleOutline]
-                      [:span "Add Database"]]]]]]])))
+                    [:> Button {:on-click #(dispatch [:modal/toggle])}
+                     [:> AddCircleOutline]
+                     [:span "Add Database"]]]]]])))

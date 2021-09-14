@@ -22,7 +22,7 @@
      :cljs (.getTime (js/Date.))))
 
 
-(defn- gen-block-uid
+(defn gen-block-uid
   []
   #?(:clj (subs (.toString (UUID/randomUUID)) 27)
      :cljs (subs (str (random-uuid)) 27)))

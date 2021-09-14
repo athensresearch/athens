@@ -22,7 +22,6 @@
                  [metosin/reitit "0.5.13"]
                  [metosin/komponentit "0.3.10"]
                  [instaparse/instaparse "1.4.10"]
-                 [devcards/devcards "0.2.7"]
                  [borkdude/sci "0.2.5"]
                  [garden/garden "1.3.10"]
                  [stylefy/stylefy "3.0.0"]
@@ -58,7 +57,7 @@
 
   :min-lein-version "2.5.3"
 
-  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/js" "dist/js"]
 
   :main athens.self-hosted.core
   :aot [athens.self-hosted.core]
@@ -76,8 +75,6 @@
                             ["run" "-m" "shadow.cljs.devtools.cli" "compile" "main" "renderer" "app"]]
             "prod"         ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "release" "main" "renderer" "app"]]
-            "devcards"     ["with-profile" "dev" "do"
-                            ["run" "-m" "shadow.cljs.devtools.cli" "watch" "devcards"]]
             "build-report" ["with-profile" "prod" "do"
                             ["run" "-m" "shadow.cljs.devtools.cli" "run" "shadow.cljs.build-report" "app" "target/build-report.html"]
                             ["shell" "open" "target/build-report.html"]]
@@ -98,6 +95,9 @@
              :uberjar  {:aot :all}
              :cljstyle {:dependencies
                         [[mvxcvi/cljstyle "0.15.0" :exclusions [org.clojure/clojure]]]}}
+
+  :test-selectors {:default (complement :stress)
+                   :stress :stress}
 
   :prep-tasks ["compile"]
 

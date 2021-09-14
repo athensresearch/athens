@@ -1,5 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
+    ["/components/Button/Button" :refer [Button]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -20,10 +21,7 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
@@ -326,9 +324,9 @@
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
                 [:<>
-                 [button {:class    [(when @ele "is-active")]
-                          :on-click #(reset! ele (.-currentTarget %))
-                          :style    page-menu-toggle-style}
+                 [:> Button {:class    [(when @ele "is-active")]
+                             :on-click #(reset! ele (.-currentTarget %))
+                             :style    page-menu-toggle-style}
                   [:> MoreHoriz]]
                  [m-popover
                   (merge (use-style dropdown-style)
@@ -346,25 +344,22 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                       [:<>
-                        [:> BookmarkBorder]
-                        [:span "Remove Shortcut"]]]
-                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                       [:<>
-                        [:> Bookmark]
-                        [:span "Add Shortcut"]]])
-                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:<>
-                      [:> BubbleChart]
-                      [:span "Show Local Graph"]]]]
+                      [:> Button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                       [:> BookmarkBorder]
+                       [:span "Remove Shortcut"]]
+                      [:> Button {:on-click #(dispatch [:page/add-shortcut uid])}
+                       [:> Bookmark]
+                       [:span "Add Shortcut"]])
+                    [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                     [:> BubbleChart]
+                     [:span "Show Local Graph"]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click #(do
-                                         (if daily-note?
-                                           (dispatch [:daily-note/delete uid title])
-                                           (dispatch [:page/delete uid title]))
-                                         (navigate :pages))}
-                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
+                   [:> Button {:on-click #(do
+                                            (if daily-note?
+                                              (dispatch [:daily-note/delete uid title])
+                                              (dispatch [:page/delete uid title]))
+                                            (navigate :pages))}
+                    [:> Delete] [:span "Delete Page"]]]]])))
 
 
 (defn ref-comp
@@ -402,7 +397,7 @@
               (not daily-notes?))
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn [] (swap! state update linked? not))}
+        [:> Button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
@@ -435,12 +430,12 @@
     (when (not daily-notes?)
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn []
-                             (if (get @state unlinked?)
-                               (swap! state assoc unlinked? false)
-                               (let [un-refs (get-unlinked-references (escape-str title))]
-                                 (swap! state assoc unlinked? true)
-                                 (reset! unlinked-refs un-refs))))}
+        [:> Button {:on-click (fn []
+                                (if (get @state unlinked?)
+                                  (swap! state assoc unlinked? false)
+                                  (let [un-refs (get-unlinked-references (escape-str title))]
+                                    (swap! state assoc unlinked? true)
+                                    (reset! unlinked-refs un-refs))))}
          (if (get @state unlinked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
@@ -450,16 +445,16 @@
                        :width "100%"}}
          [:span unlinked?]
          (when (and unlinked? (not-empty @unlinked-refs))
-           [button {:style    {:font-size "14px"}
-                    :on-click (fn []
-                                (let [unlinked-str-ids (->> @unlinked-refs
-                                                            (mapcat second)
-                                                            (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
-                                  (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
+           [:> Button {:style    {:font-size "14px"}
+                       :on-click (fn []
+                                   (let [unlinked-str-ids (->> @unlinked-refs
+                                                               (mapcat second)
+                                                               (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                     (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
 
-                                (swap! state assoc unlinked? false)
+                                   (swap! state assoc unlinked? false)
 
-                                (reset! unlinked-refs []))}
+                                   (reset! unlinked-refs []))}
             "Link All"])]]
        (when (get @state unlinked?)
          [:div (use-style references-list-style)
@@ -479,16 +474,16 @@
                             {:style {:max-width "90%"}})
                      [ref-comp block]]
                     (when unlinked?
-                      [button {:style    {:margin-top "1.5em"}
-                               :on-click (fn []
-                                           (let [hm                (into (hash-map) @unlinked-refs)
-                                                 new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                               (= uid (:block/uid block)))
-                                                                                                             %))
-                                                                        seq)]
-                                             ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                             (reset! unlinked-refs new-unlinked-refs)
-                                             (dispatch [:unlinked-references/link block title])))}
+                      [:> Button {:style    {:margin-top "1.5em"}
+                                  :on-click (fn []
+                                              (let [hm                (into (hash-map) @unlinked-refs)
+                                                    new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                  (= uid (:block/uid block)))
+                                                                                                                %))
+                                                                           seq)]
+                                                ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                (reset! unlinked-refs new-unlinked-refs)
+                                                (dispatch [:unlinked-references/link block title])))}
                        "Link"])]))]))])])))
 
 

@@ -11,7 +11,8 @@
 (def event-type-presence
   [:enum
    :presence/hello
-   :presence/editing])
+   :presence/editing
+   :presence/rename])
 
 
 (def event-type-presence-server
@@ -19,7 +20,8 @@
    :presence/online
    :presence/all-online
    :presence/offline
-   :presence/broadcast-editing])
+   :presence/broadcast-editing
+   :presence/broadcast-rename])
 
 
 (def event-type-graph
@@ -120,6 +122,14 @@
     [:map
      [:username string?]
      [:block-uid string?]]]])
+
+
+(def presence-rename
+  [:map
+   [:event/args
+    [:map
+     [:current-username string?]
+     [:new-username string?]]]])
 
 
 (def datascript-create-page
@@ -461,6 +471,7 @@
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello-args)
    (dispatch :presence/editing presence-editing)
+   (dispatch :presence/rename presence-rename)
    (dispatch :datascript/create-page datascript-create-page)
    (dispatch :datascript/rename-page datascript-rename-page)
    ;; Same args as `datascript-rename-page`
@@ -619,6 +630,14 @@
      [:block-uid string?]]]])
 
 
+(def presence-broadcast-rename
+  [:map
+   [:event/args
+    [:map
+     [:current-username string?]
+     [:new-username string?]]]])
+
+
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
@@ -671,7 +690,8 @@
    (dispatch :presence/online presence-online true)
    (dispatch :presence/all-online presence-all-online true)
    (dispatch :presence/offline presence-offline true)
-   (dispatch :presence/broadcast-editing presence-broadcast-editing true)])
+   (dispatch :presence/broadcast-editing presence-broadcast-editing true)
+   (dispatch :presence/broadcast-rename presence-broadcast-rename true)])
 
 
 (def valid-server-event?

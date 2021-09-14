@@ -33,6 +33,17 @@
 
 
 (rf/reg-event-fx
+  :remote/connection-failed
+  (fn [_ _]
+    (js/console.log ":remote/connection-failed")
+    {:fx [[:dispatch-n [[:loading/unset]
+                        [:conn-status :disconnected]
+                        [:db/sync]
+                        ;; THIS was not recommendation from Stu
+                        [:modal/toggle]]]]}))
+
+
+(rf/reg-event-fx
   :remote/disconnect!
   (fn [_ _]
     {:remote/client-disconnect! nil}))

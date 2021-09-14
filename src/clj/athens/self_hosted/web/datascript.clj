@@ -2,6 +2,7 @@
   (:require
     [athens.common-events          :as common-events]
     [athens.common-events.resolver :as resolver]
+    [athens.self-hosted.clients    :as clients]
     [clojure.tools.logging         :as log]
     [datahike.api                  :as d])
   (:import
@@ -74,15 +75,19 @@
         (common-events/build-event-rejected event-id err-msg err-data)))))
 
 
+(def single-writer-guard (Object.))
+
+
 (defn default-handler
   [datahike _channel {:event/keys [id] :as event}]
-  (let [txs (resolver/resolve-event-to-tx @datahike event)]
-    (transact! datahike id txs)))
+  (locking single-writer-guard
+    (let [txs (resolver/resolve-event-to-tx @datahike event)]
+      (transact! datahike id txs))))
 
 
 (defn datascript-handler
   [datahike channel {:event/keys [id type args] :as event}]
-  (log/info channel "Received:" type "with args:" args)
+  (log/debug (clients/get-client-username channel) "-> Received:" type "with args:" args)
   ;; TODO Check if potentially conflicting event?
   ;; if so compare tx-id from client with HEAD master DB
   ;; current -> continue
