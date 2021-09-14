@@ -1,15 +1,16 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
-    [athens.common-events        :as common-events]
-    [athens.common-events.schema :as schema]
-    [athens.db                   :as db]
-    [clojure.set                 :as set]
-    [cognitect.transit           :as transit]
-    [com.cognitect.transit.types :as ty]
-    [com.stuartsierra.component  :as component]
-    [datascript.core             :as d]
-    [re-frame.core               :as rf]))
+    [athens.common-events              :as common-events]
+    [athens.common-events.graph.atomic :as atomic-graph-ops]
+    [athens.common-events.schema       :as schema]
+    [athens.db                         :as db]
+    [clojure.set                       :as set]
+    [cognitect.transit                 :as transit]
+    [com.cognitect.transit.types       :as ty]
+    [com.stuartsierra.component        :as component]
+    [datascript.core                   :as d]
+    [re-frame.core                     :as rf]))
 
 
 (extend-type ty/UUID IUUID)
@@ -521,7 +522,13 @@
           :event/type :op/atomic
           :event/args #:op{:type :block/new,
                            :atomic? true,
-                           :args {:parent-uid "test1", :block-uid "test2", :block-order 2}}}))
+                           :args {:parent-uid "test1", :block-uid "test2", :block-order 2}}})
+
+  (send! (common-events/build-atomic-event
+          1
+          (atomic-graph-ops/make-page-new-op "test title"
+                                             "abc123"
+                                             "abc1234"))))
 
 
 (comment

@@ -7,12 +7,12 @@
 
 (def atomic-op-types
   [:enum
-   :block/new
+   :block/new ;; ✓
    :block/save
    :block/open
    :block/remove
    :block/move
-   :page/new
+   :page/new ;; ✓
    :page/rename
    :page/merge
    :page/remove
@@ -24,7 +24,7 @@
 (def op-type-atomic-common
   [:map
    [:op/type atomic-op-types]
-   [:op/atomic? boolean?]])
+   [:op/atomic? true?]])
 
 
 (def op-block-new
@@ -35,11 +35,25 @@
      [:block-uid string?]
      [:block-order int?]]]])
 
+
+(def op-page-new
+  [:map
+   [:op/args
+    [:map
+     [:title string?]
+     [:page-uid string?]
+     [:block-uid string?]]]])
+
+
 (def atomic-op
   [:multi {:dispatch :op/type}
    [:block/new (mu/merge
                 op-type-atomic-common
-                op-block-new)]])
+                op-block-new)]
+
+   [:page/new (mu/merge
+               op-type-atomic-common
+               op-page-new)]])
 
 
 (def valid-atomic-op?
