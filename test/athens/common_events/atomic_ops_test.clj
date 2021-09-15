@@ -77,7 +77,7 @@
           (t/is (= #{[child-1-eid] [child-2-eid]} children)))))))
 
 
-(test/deftest page-new-test
+(t/deftest page-new-test
               (let [test-title        "test page title"
                     test-page-uid     "test-page-uid-1"
                     test-block-uid    "test-block-uid-1"
@@ -95,5 +95,5 @@
                                       :where [?e :block/uid ?uid]
                                       :in $ ?uid]
                                     @@fixture/connection test-page-uid)]
-                  (test/is (seq e-by-title))
-                  (test/is (= e-by-title e-by-uid)))))
+                  (t/is (seq e-by-title))
+                  (t/is (= e-by-title e-by-uid)))))
