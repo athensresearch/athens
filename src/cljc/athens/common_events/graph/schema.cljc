@@ -54,6 +54,14 @@
      [:block-uid string?]]]])
 
 
+(def op-composite-consequence
+  [:map
+   [:op/type [:enum :composite/consequence]]
+   [:op/atomic? false?]
+   [:op/trigger map?]
+   [:op/consequences [:vector map?]]])
+
+
 (def atomic-op
   [:multi {:dispatch :op/type}
    [:block/new (mu/merge
@@ -62,7 +70,9 @@
 
    [:page/new (mu/merge
                op-type-atomic-common
-               op-page-new)]])
+               op-page-new)]
+
+   [:composite/consequence op-composite-consequence]])
 
 
 (def valid-atomic-op?

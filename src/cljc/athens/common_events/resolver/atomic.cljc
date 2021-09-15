@@ -35,9 +35,9 @@
                                :edit/time    now}
         reindex               (concat [new-block]
                                       (common-db/inc-after db [:block/uid parent-uid] block-order))
-        tx-data               [{:block/uid      parent-uid
-                                :block/children reindex
-                                :edit/time      now}]]
+        tx-data               {:block/uid      parent-uid
+                               :block/children reindex
+                               :edit/time      now}]
     tx-data))
 
 
@@ -60,6 +60,7 @@
 
 (defmethod resolve-atomic-op-to-tx :page/new
   [_db {:op/keys [args]}]
+  (println "atomic resolver :page/new")
   (let [{:keys [page-uid
                 block-uid
                 title]} args
@@ -75,5 +76,18 @@
                          :block/children [child]
                          :create/time    now
                          :edit/time      now}]
-    [page]))
+    page))
 
+
+(defmethod resolve-atomic-op-to-tx :composite/consequence
+  [db {:op/keys [consequences] :as composite}]
+  (println "composite:" (pr-str composite))
+  (into []
+        (for [{:op/keys [atomic? type] :as consequence} consequences]
+          (if atomic?
+            (do
+              (println "composite-type:" (pr-str type))
+              (resolve-atomic-op-to-tx db consequence))
+            (throw
+             (ex-info "Composite in composite graph ops not supported, yet."
+                      {:composite composite}))))))

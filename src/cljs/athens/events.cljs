@@ -3,6 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.db                            :as db]
@@ -12,6 +13,7 @@
     [athens.style                         :as style]
     [athens.util                          :refer [gen-block-uid] :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.set                          :as set]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
@@ -903,7 +905,7 @@
         (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
                                                                new-uid
                                                                (:block/order block))
-              tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
+              tx           [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -913,29 +915,46 @@
                                              :embed-id embed-id}]]]}))))
 
 
+(defn- find-page-links [s]
+  (->> (common-db/string->lookup-refs s)
+       (filter #(= :node/title (first %)))
+       (map second)
+       (into #{})))
+
+
 (reg-event-fx
   :block/save
-  (fn [_ [_ {:keys [uid old-string new-string callback add-time?]
-             ;; TODO `add-time?` has to go, we'll always add time
-             :or   {add-time? false}
+  (fn [_ [_ {:keys [uid old-string new-string callback]
              :as   args}]]
     (js/console.debug ":block/save args" (pr-str args))
     (let [local?        (not (client/open?))
           block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing?   (or (not block-eid)
-                            ;; TODO Question to Jeff: shold we really ignore save event if entity doesn't exists?
-                            ;; Seems like correct thing to do would be to create entity
-                            ;; Do you know why?
-                            ;; /giphy but why?
                             (= old-string new-string))
-          ;; TODO check for new links (atomic or composite)
-          block-save-op (atomic-graph-ops/make-block-save-op uid old-string new-string)]
+          links-in-old  (find-page-links old-string)
+          links-in-new  (find-page-links new-string)
+          link-diff     (set/difference links-in-new links-in-old)
+          atomic-pages  (when-not (empty? link-diff)
+                          (into []
+                                (for [title link-diff]
+                                  (atomic-graph-ops/make-page-new-op title
+                                                                     (gen-block-uid)
+                                                                     (gen-block-uid)))))
+          atomic-save   (atomic-graph-ops/make-block-save-op uid old-string new-string)
+          block-save-op (if (empty? atomic-pages)
+                          atomic-save
+                          (composite-graph-ops/make-consequence-op {:op/type :block/save}
+                                                                   (conj atomic-pages
+                                                                         atomic-save)))]
       (js/console.debug ":block/save local?" local?
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         (if local?
-          (let [block-save-tx [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]]
-            {:fx [[:dispatch [:transact block-save-tx]]
+          (let [block-save-tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]
+            (println "block-save-tx:" (pr-str block-save-tx))
+            {:fx [[:dispatch [:transact (if (map? block-save-tx)
+                                          [block-save-tx]
+                                          block-save-tx)]]
                   [:invoke-callback callback]]})
           {:fx [[:dispatch [:remote/block-save {:op       block-save-op
                                                 :callback callback}]]]})))))
@@ -951,7 +970,7 @@
         (let [page-new-op (atomic-graph-ops/make-page-new-op title
                                                              page-uid
                                                              block-uid)
-              tx          (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]
+              tx          [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch [:remote/page-new {:title     title
