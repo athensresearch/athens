@@ -406,6 +406,35 @@
 
 
 (rf/reg-event-fx
+  :remote/followup-page-new
+  (fn [{db :db} [_ event-id]]
+    (js/console.debug ":remote/followup-page-new" event-id)
+    (let [{:keys [event]}     (get-event-acceptance-info db event-id)
+          {:keys [page-uid
+                  block-uid]} (:event/args event)]
+      (js/console.log ":remote/followup-page-new, page-uid" page-uid)
+      {:fx [[:dispatch-n [[:editing/uid block-uid]
+                          [:remote/unregister-followup event-id]]]]})))
+
+
+(rf/reg-event-fx
+  :remote/page-new
+  (fn [{db :db} [_ page-uid block-uid title]]
+    (let [last-seen-tx  (:remote/last-seen-tx db)
+          page-new-op   (atomic-graph-ops/make-page-new-op title
+                                                           page-uid
+                                                           block-uid)
+          {event-id :event/id
+           :as      page-new-event} (common-events/build-atomic-event last-seen-tx
+                                                                      page-new-op)
+
+          followup-fx                  [[:dispatch [:remote/followup-page-new event-id]]]]
+      (js/console.debug ":remote/page-new" (pr-str page-new-event))
+      {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
+                          [:remote/send-event! page-new-event]]]]})))
+
+
+(rf/reg-event-fx
   :remote/delete-only-child
   (fn [{db :db} [_ uid]]
     (let [last-seen-tx          (:remote/last-seen-tx db)
