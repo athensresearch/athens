@@ -920,27 +920,25 @@
              :or   {add-time? false}
              :as   args}]]
     (js/console.debug ":block/save args" (pr-str args))
-    (let [local?      (not (client/open?))
-          block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
-          do-nothing? (or (not block-eid)
-                          ;; TODO Question to Jeff: shold we really ignore save event if entity doesn't exists?
-                          ;; Seems like correct thing to do would be to create entity
-                          ;; Do you know why?
-                          ;; /giphy but why?
-                          (= old-string new-string))]
+    (let [local?        (not (client/open?))
+          block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
+          do-nothing?   (or (not block-eid)
+                            ;; TODO Question to Jeff: shold we really ignore save event if entity doesn't exists?
+                            ;; Seems like correct thing to do would be to create entity
+                            ;; Do you know why?
+                            ;; /giphy but why?
+                            (= old-string new-string))
+          ;; TODO check for new links (atomic or composite)
+          block-save-op (atomic-graph-ops/make-block-save-op uid old-string new-string)]
       (js/console.debug ":block/save local?" local?
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         (if local?
-          ;; TODO check for new links (atomic or composite)
-          (let [block-save-op (atomic-graph-ops/make-block-save-op uid old-string new-string)
-                block-save-tx [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]]
+          (let [block-save-tx [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]]
             {:fx [[:dispatch [:transact block-save-tx]]
                   [:invoke-callback callback]]})
-          {:fx [[:dispatch [:remote/block-save {:uid        uid
-                                                :new-string new-string
-                                                :callback   callback
-                                                :add-time?  add-time?}]]]})))))
+          {:fx [[:dispatch [:remote/block-save {:op       block-save-op
+                                                :callback callback}]]]})))))
 
 
 (reg-event-fx

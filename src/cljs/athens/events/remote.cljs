@@ -362,13 +362,10 @@
 
 (rf/reg-event-fx
   :remote/block-save
-  (fn [{db :db} [_ {:keys [uid new-string callback add-time?]}]]
+  (fn [{db :db} [_ {:keys [op callback]}]]
     (let [last-seen-tx     (:remote/last-seen-tx db)
           {event-id :event/id
-           :as      event} (common-events/build-block-save-event last-seen-tx
-                                                                 uid
-                                                                 new-string
-                                                                 add-time?)
+           :as      event} (common-events/build-atomic-event last-seen-tx op)
           followup-fx      [[:dispatch [:remote/followup-block-save {:event-id event-id
                                                                      :callback callback}]]]]
       (js/console.debug ":remote/block-stave" (pr-str event))

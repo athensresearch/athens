@@ -54,6 +54,7 @@
 
 (def supported-atomic-ops
   #{:block/new
+    :block/save
     :page/new})
 
 
