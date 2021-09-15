@@ -921,6 +921,7 @@
                                                 :callback   callback
                                                 :add-time?  add-time?}]]]})))))
 
+;; Atomic events start ==========
 
 (reg-event-fx
   :enter/new-block
@@ -940,6 +941,25 @@
                                              :parent   parent
                                              :new-uid  new-uid
                                              :embed-id embed-id}]]]}))))
+(reg-event-fx
+  :page/new
+  (fn [_ [_ {:keys [title page-uid block-uid] :as args}]]
+    (js/console.debug ":page/new args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":page/new local?" local?)
+      (if local?
+        (let [page-new-op (atomic-graph-ops/make-page-new-op title
+                                                             page-uid
+                                                             block-uid)
+              tx          (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid block-uid]]]]})
+        {:fx [[:dispatch [:remote/page-new {:title     title
+                                            :page-uid  page-uid
+                                            :block-uid block-uid}]]]}))))
+
+
+;; Atomic events end ==========
 
 
 (reg-event-fx
