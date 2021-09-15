@@ -891,6 +891,28 @@
                                                            :embed-id embed-id}]]]}))))
 
 
+;; Atomic events start ==========
+
+(reg-event-fx
+  :enter/new-block
+  (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
+    (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
+    (let [local? (not (client/open?))]
+      (js/console.debug ":enter/new-block local?" local?)
+      (if local?
+        (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
+                                                               new-uid
+                                                               (:block/order block))
+              tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid (str new-uid (when embed-id
+                                                           (str "-embed-" embed-id)))]]]]})
+        {:fx [[:dispatch [:remote/new-block {:block    block
+                                             :parent   parent
+                                             :new-uid  new-uid
+                                             :embed-id embed-id}]]]}))))
+
+
 (reg-event-fx
   :block/save
   (fn [_ [_ {:keys [uid old-string new-string callback add-time?]
@@ -920,26 +942,7 @@
                                                 :callback   callback
                                                 :add-time?  add-time?}]]]})))))
 
-;; Atomic events start ==========
 
-(reg-event-fx
-  :enter/new-block
-  (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
-    (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
-    (let [local? (not (client/open?))]
-      (js/console.debug ":enter/new-block local?" local?)
-      (if local?
-        (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
-                                                               new-uid
-                                                               (:block/order block))
-              tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
-          {:fx [[:dispatch-n [[:transact tx]
-                              [:editing/uid (str new-uid (when embed-id
-                                                           (str "-embed-" embed-id)))]]]]})
-        {:fx [[:dispatch [:remote/new-block {:block    block
-                                             :parent   parent
-                                             :new-uid  new-uid
-                                             :embed-id embed-id}]]]}))))
 (reg-event-fx
   :page/new
   (fn [_ [_ {:keys [title page-uid block-uid] :as args}]]
