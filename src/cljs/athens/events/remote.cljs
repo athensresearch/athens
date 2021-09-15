@@ -72,6 +72,7 @@
   (fn [{db :db} [_ {:keys [event-id]}]]
     (let [followups (get-in db [:remote/followup event-id])]
       (js/console.debug ":remote/accepted-event: " event-id "followup" (pr-str followups))
+      ;; TODO(rtc): automatically remove/unregister followup
       (when (seq followups)
         {:fx followups}))))
 
@@ -185,7 +186,8 @@
                             (m/explain event)
                             (me/humanize))]
         ;; TODO display alert?
-        (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))))))
+        (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))
+        (js/console.warn "Invalid event was:" (pr-str event))))))
 
 
 ;; Remote graph related events
@@ -368,7 +370,7 @@
            :as      event} (common-events/build-atomic-event last-seen-tx op)
           followup-fx      [[:dispatch [:remote/followup-block-save {:event-id event-id
                                                                      :callback callback}]]]]
-      (js/console.debug ":remote/block-stave" (pr-str event))
+      (js/console.debug ":remote/block-save" (pr-str event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! event]]]]})))
 

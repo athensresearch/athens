@@ -55,7 +55,8 @@
 (def supported-atomic-ops
   #{:block/new
     :block/save
-    :page/new})
+    :page/new
+    :composite/consequence})
 
 
 (defn transact!

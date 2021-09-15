@@ -72,6 +72,10 @@
                op-type-atomic-common
                op-page-new)]
 
+   [:block/save (mu/merge
+                 op-type-atomic-common
+                 op-block-save)]
+
    [:composite/consequence op-composite-consequence]])
 
 

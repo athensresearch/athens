@@ -38,7 +38,7 @@
         tx-data               {:block/uid      parent-uid
                                :block/children reindex
                                :edit/time      now}]
-    tx-data))
+    [tx-data]))
 
 
 ;; This is Atomic Graph Op, there is also composite version of it
@@ -51,7 +51,7 @@
             updated-block {:db/id        [:block/uid block-uid]
                            :block/string new-string
                            :edit/time    now}]
-        updated-block)
+        [updated-block])
       (throw
        (ex-info ":block/save operation started from a stale state."
                 {:op/args           args
@@ -76,18 +76,16 @@
                          :block/children [child]
                          :create/time    now
                          :edit/time      now}]
-    page))
+    [page]))
 
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [db {:op/keys [consequences] :as composite}]
   (println "composite:" (pr-str composite))
   (into []
-        (for [{:op/keys [atomic? type] :as consequence} consequences]
+        (for [{:op/keys [atomic?] :as consequence} consequences]
           (if atomic?
-            (do
-              (println "composite-type:" (pr-str type))
-              (resolve-atomic-op-to-tx db consequence))
+            (first (resolve-atomic-op-to-tx db consequence))
             (throw
              (ex-info "Composite in composite graph ops not supported, yet."
                       {:composite composite}))))))

@@ -952,9 +952,7 @@
         (if local?
           (let [block-save-tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]
             (println "block-save-tx:" (pr-str block-save-tx))
-            {:fx [[:dispatch [:transact (if (map? block-save-tx)
-                                          [block-save-tx]
-                                          block-save-tx)]]
+            {:fx [[:dispatch [:transact block-save-tx]]
                   [:invoke-callback callback]]})
           {:fx [[:dispatch [:remote/block-save {:op       block-save-op
                                                 :callback callback}]]]})))))
