@@ -894,8 +894,9 @@
 (reg-event-fx
   :block/save
   (fn [_ [_ {:keys [uid old-string new-string callback add-time?]
-             :or {add-time? false}
-             :as args}]]
+             ;; TODO `add-time?` has to go, we'll always add time
+             :or   {add-time? false}
+             :as   args}]]
     (js/console.debug ":block/save args" (pr-str args))
     (let [local?      (not (client/open?))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
@@ -909,11 +910,9 @@
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         (if local?
-          (let [block-save-event (common-events/build-block-save-event -1
-                                                                       uid
-                                                                       new-string
-                                                                       add-time?)
-                block-save-tx    (resolver/resolve-event-to-tx @db/dsdb block-save-event)]
+          ;; TODO check for new links (atomic or composite)
+          (let [block-save-op (atomic-graph-ops/make-block-save-op uid old-string new-string)
+                block-save-tx [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]]
             {:fx [[:dispatch [:transact block-save-tx]]
                   [:invoke-callback callback]]})
           {:fx [[:dispatch [:remote/block-save {:uid        uid

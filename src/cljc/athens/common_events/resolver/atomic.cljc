@@ -41,6 +41,23 @@
     tx-data))
 
 
+;; This is Atomic Graph Op, there is also composite version of it
+(defmethod resolve-atomic-op-to-tx :block/save
+  [db {:op/keys [args]}]
+  (let [{:keys [block-uid new-string old-string]} args
+        {stored-old-string :block/string}         (d/pull db [:block/string] [:block/uid block-uid])]
+    (if (= stored-old-string old-string)
+      (let [now           (now-ts)
+            updated-block {:db/id        [:block/uid block-uid]
+                           :block/string new-string
+                           :edit/time    now}]
+        updated-block)
+      (throw
+       (ex-info ":block/save operation started from a stale state."
+                {:op/args           args
+                 :actual-old-string stored-old-string})))))
+
+
 (defmethod resolve-atomic-op-to-tx :page/new
   [_db {:op/keys [args]}]
   (let [{:keys [page-uid
@@ -59,3 +76,4 @@
                          :create/time    now
                          :edit/time      now}]
     [page]))
+

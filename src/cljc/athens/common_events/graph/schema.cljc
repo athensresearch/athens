@@ -36,6 +36,15 @@
      [:block-order int?]]]])
 
 
+(def op-block-save
+  [:map
+   [:op/args
+    [:map
+     [:block-uid string?]
+     [:new-string string?]
+     [:old-string string?]]]])
+
+
 (def op-page-new
   [:map
    [:op/args
