@@ -378,14 +378,12 @@
 
 (rf/reg-event-fx
   :remote/followup-new-block
-  (fn [{db :db} [_ {:keys [event-id embed-id]}]]
+  (fn [_ [_ {:keys [event-id embed-id new-uid]}]]
     (js/console.debug ":remote/followup-new-block" event-id)
-    (let [{:keys [event]}   (get-event-acceptance-info db event-id)
-          new-uid           (-> event :event/op :op/args :block-uid)]
-      (js/console.log ":remote/followup-new-block, new-uid" new-uid)
-      {:fx [[:dispatch-n [[:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]
-                          [:remote/unregister-followup event-id]]]]})))
+    (js/console.log ":remote/followup-new-block, new-uid" new-uid)
+    {:fx [[:dispatch-n [[:editing/uid (str new-uid (when embed-id
+                                                     (str "-embed-" embed-id)))]
+                        [:remote/unregister-followup event-id]]]]}))
 
 
 (rf/reg-event-fx
@@ -399,7 +397,8 @@
            :as      block-new-event} (common-events/build-atomic-event last-seen-tx
                                                                        block-new-op)
           followup-fx                [[:dispatch [:remote/followup-new-block {:event-id event-id
-                                                                              :embed-id embed-id}]]]]
+                                                                              :embed-id embed-id
+                                                                              :new-uid  new-uid}]]]]
       (js/console.debug ":remote/new-block" (pr-str block-new-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! block-new-event]]]]})))
@@ -407,14 +406,11 @@
 
 (rf/reg-event-fx
   :remote/followup-page-new
-  (fn [{db :db} [_ event-id]]
+  (fn [_ [_ event-id page-uid block-uid]]
     (js/console.debug ":remote/followup-page-new" event-id)
-    (let [{:keys [event]}     (get-event-acceptance-info db event-id)
-          {:keys [page-uid
-                  block-uid]} (:event/args event)]
-      (js/console.log ":remote/followup-page-new, page-uid" page-uid)
-      {:fx [[:dispatch-n [[:editing/uid block-uid]
-                          [:remote/unregister-followup event-id]]]]})))
+    (js/console.log ":remote/followup-page-new, page-uid" page-uid)
+    {:fx [[:dispatch-n [[:editing/uid block-uid]
+                        [:remote/unregister-followup event-id]]]]}))
 
 
 (rf/reg-event-fx
@@ -428,7 +424,7 @@
            :as      page-new-event} (common-events/build-atomic-event last-seen-tx
                                                                       page-new-op)
 
-          followup-fx                  [[:dispatch [:remote/followup-page-new event-id]]]]
+          followup-fx                  [[:dispatch [:remote/followup-page-new event-id page-uid block-uid]]]]
       (js/console.debug ":remote/page-new" (pr-str page-new-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! page-new-event]]]]})))
