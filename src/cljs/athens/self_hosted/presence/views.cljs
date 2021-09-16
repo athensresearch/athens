@@ -86,6 +86,7 @@
   [current-username js-person]
   (let [{:keys [username color]} (js->clj js-person :keywordize-keys true)]
     (rf/dispatch [:settings/update :username username])
+    (rf/dispatch [:settings/update :color color])
     ;; Change the color of the old name immediately, then wait for the
     ;; rename to happen in the server.
     (rf/dispatch [:presence/update-color current-username color])
@@ -101,20 +102,29 @@
                all-users              (rf/subscribe [:presence/users-with-page-data])
                same-page              (rf/subscribe [:presence/same-page])
                diff-page              (rf/subscribe [:presence/diff-page])
+               settings               (rf/subscribe [:settings])
                others-seq             #(->> (dissoc % (:username @current-user))
                                             vals
-                                            (map user->person))
-               current-page-members   (others-seq @same-page)
-               different-page-members (others-seq @diff-page)]
-              [:> PresenceDetails {:current-user              (user->person @current-user)
-                                   :current-page-members      current-page-members
-                                   :different-page-members    different-page-members
-                                   :host-address              (:url @selected-db)
-                                   :handle-press-host-address copy-host-address-to-clipboard
-                                   :handle-press-member       #(go-to-user-block @all-users %)
-                                   :handle-update-profile     #(edit-current-user (:username @current-user) %)
-                                   ;; TODO: show other states when we support them.
-                                   :connection-status         "connected"}]))
+                                            (map user->person))]
+              (fn []
+                (let [current-user'          (user->person (or @current-user
+                                                               ;; TODO: this is only needed because we don't
+                                                               ;; have real ids, so it's possible while changing
+                                                               ;; name that the current-user does not match the
+                                                               ;; user in settings for a while since there's
+                                                               ;; no way to track it.
+                                                               (select-keys @settings [:username :color])))
+                      current-page-members   (others-seq @same-page)
+                      different-page-members (others-seq @diff-page)]
+                  [:> PresenceDetails {:current-user              current-user'
+                                       :current-page-members      current-page-members
+                                       :different-page-members    different-page-members
+                                       :host-address              (:url @selected-db)
+                                       :handle-press-host-address copy-host-address-to-clipboard
+                                       :handle-press-member       #(go-to-user-block @all-users %)
+                                       :handle-update-profile     #(edit-current-user (:username @current-user) %)
+                                       ;; TODO: show other states when we support them.
+                                       :connection-status         "connected"}]))))
 
 
 ;; inline
