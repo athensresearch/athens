@@ -154,7 +154,7 @@ export const PresenceDetails = ({
   const [isUserSettingsDialogOpen, setIsUserSettingsDialogOpen] = React.useState<boolean>(false);
   const [timeLastOnline, setTimeLastOnline] = React.useState<string | null>(null);
 
-  const showablePersons = [currentUser, ...currentPageMembers, ...differentPageMembers];
+  const showablePersons = [...currentPageMembers, ...differentPageMembers];
 
   React.useEffect(() => {
     if (connectionStatus === 'offline') {
@@ -179,7 +179,16 @@ export const PresenceDetails = ({
         isPressed={isPresenceDetailsOpen}>
 
         {connectionStatus === 'connected' && (
+
           <>
+            <Avatar
+              key={currentUser.personId}
+              username={currentUser.username}
+              color={currentUser.color}
+              personId={currentUser.personId}
+              showTooltip={false}
+              size="1em"
+            />
             <Avatar.Stack
               size="1em"
               maskSize="1.5px"
