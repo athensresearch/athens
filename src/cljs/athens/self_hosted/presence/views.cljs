@@ -1,18 +1,12 @@
 (ns athens.self-hosted.presence.views
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    ["@material-ui/core/Popover" :as Popover]
-    ["@material-ui/icons/Link" :default Link]
+    ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
-    [athens.style :as style]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
-
-
-(def m-popover (r/adapt-react-class (.-default Popover)))
 
 
 ;; Avatar
@@ -59,177 +53,68 @@
        initials]])))
 
 
-(def ^:private avatar-stack-style
-  {:display "flex"
-   ::stylefy/manual [[:svg {:width "1.5rem"
-                            :height "1.5rem"}
-                      ;; In a stack, each sequential item sucks in the spacing
-                      ;; from the item before it
-                      ["&:not(:first-child)" {:margin-left "-0.8rem"}]
-                      ;; All but the last get a slice masked out for readability
-                      ;;
-                      ;; I'm not clear on why 1.55rem / 1.1rem work in this case
-                      ;; It'd be nice to have a simpler masking method
-                      ;; or a better-constructed string with some documentation
-                      ["&:not(:last-child)" {:mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"
-                                             :-webkit-mask-image "radial-gradient(1.55rem 1.1rem at 160% 50%, transparent calc(96%), #000 100%)"}]]]})
+(defn user->person
+  [{:keys [username color]}]
+  ;; TODO: have a real notion of user-id, not just username.
+  {:personId username
+   :username  username
+   :color     color})
 
 
-(defn- avatar-stack-el
-  [& children]
-  [:div (use-style avatar-stack-style)
-   children])
+(defn copy-host-address-to-clipboard
+  [host-address]
+  (.. js/navigator -clipboard (writeText host-address))
+  (rf/dispatch [:show-snack-msg {:msg "Host address copied to clipboard"
+                                 :type :success}]))
 
 
-;; List
-
-(defn- list-el
-  [& children]
-  [:ul (use-style {:padding        0
-                   :margin         0
-                   :display        "flex"
-                   :flex-direction "column"
-                   :list-style     "none"})
-   children])
-
-
-(defn- list-header-el
-  [& children]
-  [:header (use-style {:border-bottom "1px solid #ddd"
-                       :padding "0.25rem 0.5rem"
-                       :display "flex"
-                       :justify-content "space-between"
-                       :align-items "center"})
-   children])
+(defn go-to-user-block
+  [all-users js-person]
+  (let [{_block-uid :block/uid
+         page-uid  :page/uid}
+        (->> (js->clj js-person :keywordize-keys true)
+             :username
+             (get all-users))]
+    (rf/dispatch (if page-uid
+                   ;; TODO: if we support navigating to a block, it should be added here.
+                   [:navigate :page {:id page-uid}]
+                   [:show-snack-msg {:msg "User is not on any page"
+                                     :type :success}]))))
 
 
-(defn- list-section-header-el
-  [& children]
-  [:li (use-style {:font-size "12px"
-                   :font-weight "bold"
-                   :opacity "0.5"
-                   :padding "1rem 1rem 0.25rem"})
-   children])
-
-
-(defn- list-header-url-el
-  [& children]
-  [:span (use-style {:font-size     "12px"
-                     :font-weight   "700"
-                     :display       "inline-block"
-                     :opacity       "0.5"
-                     :padding       "0.5rem"
-                     :user-select   "all"
-                     :margin-right  "1em"
-                     :flex          "1 1 100%"
-                     :white-space   "nowrap"
-                     :text-overflow "hidden"})
-   children])
-
-
-(defn- list-separator-el
-  []
-  [:li (use-style {:margin "0.5rem 0 0.5rem 1rem"
-                   :border-bottom "1px solid #ddd"})])
-
-
-(def ^:private member-list-item-style
-  {:padding "0.375rem 1rem"
-   :display "flex"
-   :font-size "14px"
-   :align-items "center"
-   :font-weight "600"
-   :color (style/color :body-text-color :opacity-higher)
-   :transition "backdrop-filter 0.1s ease"
-   :cursor "default"
-   ::stylefy/manual [[:svg {:margin-right "0.25rem"}]]})
-
-
-;; turn off interactive button stylings until we implement interactions like "jump" or "follow"
-;; [:&:hover {:background (style/color :body-text-color :opacity-lower)}]
-;; [:&:active
-;; :&:hover:active
-;; :&.is-active {:color (style/color :body-text-color)
-;;               :background (style/color :body-text-color :opacity-lower)}]
-;; [:&:active
-;; :&:hover:active
-;; :&:active.is-active {:background (style/color :body-text-color :opacity-low)}]
-;; [:&:disabled :&:disabled:active {:color (style/color :body-text-color :opacity-low)
-;;                                 :background (style/color :body-text-color :opacity-lower)
-;;                                 :cursor "default"}]]})
-
-
-
-(defn- member-item-el
-  [user props]
-  [:li (use-style member-list-item-style #_{:on-click #(prn user)})
-   [avatar-el user props]
-   (:username user)])
+(defn edit-current-user
+  [current-username js-person]
+  (let [{:keys [username color]} (js->clj js-person :keywordize-keys true)]
+    (rf/dispatch [:settings/update :username username])
+    ;; Change the color of the old name immediately, then wait for the
+    ;; rename to happen in the server.
+    (rf/dispatch [:presence/update-color current-username color])
+    (rf/dispatch [:presence/send-rename current-username username])))
 
 
 ;; Exports
+
 (defn toolbar-presence-el
   []
-  (r/with-let [ele (r/atom nil)]
-              (let [users (rf/subscribe [:presence/users-with-page-data])
-                    same-page-users (rf/subscribe [:presence/same-page])
-                    diff-page-users (rf/subscribe [:presence/diff-page])
-                    current-route-name (rf/subscribe [:current-route/name])]
-                [:<>
-
-                 ;; Preview
-                 [:> Button {:on-click #(reset! ele (.-currentTarget %))}
-                  [avatar-stack-el
-                   (cond
-
-                     (= @current-route-name :page)
-                     [:<>
-                      ;; same page
-                      (for [[username user] @same-page-users]
-                        ^{:key username}
-                        [avatar-el user {:filled true}])
-                      ;; diff page but online
-                      (for [[username user] @diff-page-users]
-                        ^{:key username}
-                        [avatar-el user {:filled false}])]
-
-                     ;; TODO: capture what page user is scrolled to on Daily Notes
-                     ;; (= @current-route-name :home)
-                     ;; [:div "TODO"]
-
-                     ;; default to showing all users
-                     :else (for [[username user] @users]
-                             ^{:key username}
-                             [avatar-el user {:filled false}]))]]
-
-                 ;; Dropdown
-                 [m-popover
-                  {:open            (boolean @ele)
-                   :anchorEl        @ele
-                   :onClose         #(reset! ele nil)
-                   :anchorOrigin    #js{:vertical   "bottom"
-                                        :horizontal "center"}
-                   :transformOrigin #js{:vertical   "top"
-                                        :horizontal "center"}}
-                  [list-header-el
-                   [list-header-url-el "ath.ns/34op5fds0a"]
-                   [:> Button [:> Link]]]
-
-                  [list-el
-                   ;; On same page
-
-                   (when-not (empty? @same-page-users)
-                     [:<>
-                      [list-section-header-el "On This Page"]
-                      (for [[username user] @same-page-users]
-                        ^{:key username}
-                        [member-item-el user {:filled true}])
-                      [list-separator-el]])
-
-                   ;; Online, different page
-                   (for [[username user] @diff-page-users]
-                     ^{:key username}
-                     [member-item-el user {:filled false}])]]])))
+  (r/with-let [selected-db            (rf/subscribe [:db-picker/selected-db])
+               current-user           (rf/subscribe [:presence/current-user])
+               all-users              (rf/subscribe [:presence/users-with-page-data])
+               same-page              (rf/subscribe [:presence/same-page])
+               diff-page              (rf/subscribe [:presence/diff-page])
+               others-seq             #(->> (dissoc % (:username @current-user))
+                                            vals
+                                            (map user->person))
+               current-page-members   (others-seq @same-page)
+               different-page-members (others-seq @diff-page)]
+              [:> PresenceDetails {:current-user              (user->person @current-user)
+                                   :current-page-members      current-page-members
+                                   :different-page-members    different-page-members
+                                   :host-address              (:url @selected-db)
+                                   :handle-press-host-address copy-host-address-to-clipboard
+                                   :handle-press-member       #(go-to-user-block @all-users %)
+                                   :handle-update-profile     #(edit-current-user (:username @current-user) %)
+                                   ;; TODO: show other states when we support them.
+                                   :connection-status         "connected"}]))
 
 
 ;; inline

@@ -16,7 +16,9 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
+    [athens.electron.utils :as electron.utils]
     [athens.router :as router]
+    [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
@@ -181,7 +183,8 @@
         win-fullscreen?   (if electron?
                             (subscribe [:win-fullscreen?])
                             (r/atom false))
-        merge-open?       (reagent.core/atom false)]
+        merge-open?       (reagent.core/atom false)
+        selected-db       (subscribe [:db-picker/selected-db])]
     (fn []
       [:<>
        (when @merge-open?
@@ -228,6 +231,8 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
+            (when (electron.utils/remote-db? @selected-db)
+              [toolbar-presence-el])
             [:> Button {:on-click #(swap! merge-open? not)
                         :title "Merge Roam Database"}
              [:> MergeType]]
