@@ -13,11 +13,6 @@
     [com.rpl.specter :refer [recursive-path]]))
 
 
-(defn gen-block-uid
-  []
-  (subs (str (random-uuid)) 27))
-
-
 ;; Electron ipcMain Channels
 
 (def ipcMainChannels

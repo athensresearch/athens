@@ -4,6 +4,7 @@
     [athens.common-events          :as common-events]
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
+    [athens.common.utils           :as common.utils]
     [clojure.test                  :as t]
     [datahike.api                  :as d])
   (:import
@@ -14,7 +15,7 @@
 (defn random-tmp-folder-config
   []
   {:store {:backend :file
-           :path    (str "/tmp/example-" (resolver/gen-block-uid))}})
+           :path    (str "/tmp/example-" (common.utils/gen-block-uid))}})
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture [] (random-tmp-folder-config)))
@@ -94,7 +95,7 @@
                                                                                            curr-string
                                                                                            ;; split at the last char
                                                                                            (dec (count curr-string))
-                                                                                           (resolver/gen-block-uid))
+                                                                                           (common.utils/gen-block-uid))
                         split-block-tx              (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
 
                     (transact-with-linkmaker split-block-tx))))))))
@@ -107,7 +108,7 @@
         (step n (fn []
                   (let [tx [{:db/id -1
                              :block/order 1
-                             :block/uid (resolver/gen-block-uid)
+                             :block/uid (common.utils/gen-block-uid)
                              :block/open true
                              :block/children []
                              :block/string "random string"}]]

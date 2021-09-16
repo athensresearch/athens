@@ -5,6 +5,7 @@
     [athens.self-hosted.clients        :as clients]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
+    [clojure.set                       :as set]
     [clojure.tools.logging             :as log]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
@@ -45,6 +46,9 @@
                       (contains? datascript/supported-event-types type)
                       (datascript/datascript-handler (:conn datahike) channel data)
 
+                      (= :op/atomic type)
+                      (datascript/atomic-op-handler (:conn datahike) channel data)
+
                       :else
                       (do
                         (log/error username "-> receive-handler, unsupported event:" (pr-str type))
@@ -57,7 +61,9 @@
 
 
 (def ^:private forwardable-events
-  datascript/supported-event-types)
+  (set/union
+    datascript/supported-event-types
+    #{:op/atomic}))
 
 
 (defn- make-receive-handler

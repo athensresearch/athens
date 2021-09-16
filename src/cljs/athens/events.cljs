@@ -2,13 +2,16 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver        :as resolver]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid] :as util]
+    [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
@@ -67,7 +70,7 @@
         page-roam                (db/get-roam-node-document shared-page roam-db)
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
-        new-uid                  (gen-block-uid)
+        new-uid                  (common.utils/gen-block-uid)
         today-date-page          (:title (athens.util/get-day))
         new-children             (conj (:block/children page-athens)
                                        {:block/string   (str "[[Roam Import]] "
@@ -462,7 +465,7 @@
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db    (update db :daily-notes/items (fn [items]
                                                     (into [uid] items)))
-          block-uid (gen-block-uid)]
+          block-uid (common.utils/gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
         {:db       new-db
@@ -478,7 +481,7 @@
             [:dispatch [:daily-note/add uid]]
             [:dispatch [:page/create {:title     title
                                       :page-uid  uid
-                                      :block-uid (gen-block-uid)}]])]}))
+                                      :block-uid (common.utils/gen-block-uid)}]])]}))
 
 
 (reg-event-fx
@@ -889,36 +892,7 @@
                                                            :embed-id embed-id}]]]}))))
 
 
-(reg-event-fx
-  :block/save
-  (fn [_ [_ {:keys [uid old-string new-string callback add-time?]
-             :or {add-time? false}
-             :as args}]]
-    (js/console.debug ":block/save args" (pr-str args))
-    (let [local?      (not (client/open?))
-          block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
-          do-nothing? (or (not block-eid)
-                          ;; TODO Question to Jeff: shold we really ignore save event if entity doesn't exists?
-                          ;; Seems like correct thing to do would be to create entity
-                          ;; Do you know why?
-                          ;; /giphy but why?
-                          (= old-string new-string))]
-      (js/console.debug ":block/save local?" local?
-                        ", do-nothing?" do-nothing?)
-      (when-not do-nothing?
-        (if local?
-          (let [block-save-event (common-events/build-block-save-event -1
-                                                                       uid
-                                                                       new-string
-                                                                       add-time?)
-                block-save-tx    (resolver/resolve-event-to-tx @db/dsdb block-save-event)]
-            {:fx [[:dispatch [:transact block-save-tx]]
-                  [:invoke-callback callback]]})
-          {:fx [[:dispatch [:remote/block-save {:uid        uid
-                                                :new-string new-string
-                                                :callback   callback
-                                                :add-time?  add-time?}]]]})))))
-
+;; Atomic events start ==========
 
 (reg-event-fx
   :enter/new-block
@@ -927,11 +901,10 @@
     (let [local? (not (client/open?))]
       (js/console.debug ":enter/new-block local?" local?)
       (if local?
-        (let [new-block-event (common-events/build-new-block-event -1
-                                                                   (:block/uid parent)
-                                                                   (:block/order block)
-                                                                   new-uid)
-              tx              (resolver/resolve-event-to-tx @db/dsdb new-block-event)]
+        (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
+                                                               new-uid
+                                                               (:block/order block))
+              tx           [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -939,6 +912,49 @@
                                              :parent   parent
                                              :new-uid  new-uid
                                              :embed-id embed-id}]]]}))))
+
+
+(reg-event-fx
+  :block/save
+  (fn [_ [_ {:keys [uid old-string new-string callback]
+             :as   args}]]
+    (js/console.debug ":block/save args" (pr-str args))
+    (let [local?        (not (client/open?))
+          block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
+          do-nothing?   (or (not block-eid)
+                            (= old-string new-string))
+          block-save-op (atomic-graph-ops/build-block-save-op @db/dsdb uid old-string new-string)]
+      (js/console.debug ":block/save local?" local?
+                        ", do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        (if local?
+          (let [block-save-tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]
+            (println "block-save-tx:" (pr-str block-save-tx))
+            {:fx [[:dispatch [:transact block-save-tx]]
+                  [:invoke-callback callback]]})
+          {:fx [[:dispatch [:remote/block-save {:op       block-save-op
+                                                :callback callback}]]]})))))
+
+
+(reg-event-fx
+  :page/new
+  (fn [_ [_ {:keys [title page-uid block-uid] :as args}]]
+    (js/console.debug ":page/new args" (pr-str args))
+    (let [local? (not (client/open?))]
+      (js/console.debug ":page/new local?" local?)
+      (if local?
+        (let [page-new-op (atomic-graph-ops/make-page-new-op title
+                                                             page-uid
+                                                             block-uid)
+              tx          [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]]
+          {:fx [[:dispatch-n [[:transact tx]
+                              [:editing/uid block-uid]]]]})
+        {:fx [[:dispatch [:remote/page-new {:title     title
+                                            :page-uid  page-uid
+                                            :block-uid block-uid}]]]}))))
+
+
+;; Atomic events end ==========
 
 
 (reg-event-fx
@@ -1049,7 +1065,7 @@
                                  (str (:block/uid parent) "-embed-" embed-id))
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
-        new-uid               (gen-block-uid)
+        new-uid               (common.utils/gen-block-uid)
         {:keys [value start]} d-key-down
         event                 (cond
                                 (and (:block/open block)

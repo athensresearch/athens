@@ -1,10 +1,11 @@
 (ns athens.self-hosted.web.datascript
   (:require
-    [athens.common-events          :as common-events]
-    [athens.common-events.resolver :as resolver]
-    [athens.self-hosted.clients    :as clients]
-    [clojure.tools.logging         :as log]
-    [datahike.api                  :as d])
+    [athens.common-events                 :as common-events]
+    [athens.common-events.resolver        :as resolver]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.self-hosted.clients           :as clients]
+    [clojure.tools.logging                :as log]
+    [datahike.api                         :as d])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -49,6 +50,13 @@
     :datascript/delete-only-child
     :datascript/delete-merge-block
     :datascript/bump-up})
+
+
+(def supported-atomic-ops
+  #{:block/new
+    :block/save
+    :page/new
+    :composite/consequence})
 
 
 (defn transact!
@@ -100,3 +108,31 @@
                                           (str "Unsupported event: " type)
                                           {:unsupported-type type}))))
 
+
+(defn atomic-op-exec
+  [datahike _channel id op]
+  (locking single-writer-guard
+    (try
+      (let [txs (atomic-resolver/resolve-atomic-op-to-tx @datahike op)]
+        (transact! datahike id txs))
+      (catch ExceptionInfo ex
+        (let [err-msg   (ex-message ex)
+              err-data  (ex-data ex)
+              err-cause (ex-cause ex)]
+          (log/error ex (str "Atomic Graph Op event-id: " id
+                             " FAIL: " (pr-str {:msg   err-msg
+                                                :data  err-data
+                                                :cause err-cause})))
+          (common-events/build-event-rejected id err-msg err-data))))))
+
+
+(defn atomic-op-handler
+  [datahike channel {:event/keys [id op]}]
+  (let [username          (clients/get-client-username channel)
+        {:op/keys [type]} op]
+    (log/debug username "-> Received Atomic Op:" (pr-str op))
+    (if (contains? supported-atomic-ops type)
+      (atomic-op-exec datahike channel id op)
+      (common-events/build-event-rejected id
+                                          (str "Under development event: " type)
+                                          {:unsuported-type type}))))
