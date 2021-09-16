@@ -934,6 +934,7 @@
           links-in-old  (find-page-links old-string)
           links-in-new  (find-page-links new-string)
           link-diff     (set/difference links-in-new links-in-old)
+          ;; TODO: does page already exists
           atomic-pages  (when-not (empty? link-diff)
                           (into []
                                 (for [title link-diff]
