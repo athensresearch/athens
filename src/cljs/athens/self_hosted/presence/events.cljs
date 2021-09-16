@@ -43,6 +43,12 @@
         (update-in [:presence :users new-username] assoc :username new-username))))
 
 
+(rf/reg-event-db
+  :presence/update-color
+  (fn [db [_ username color]]
+    (assoc-in db [:presence :users username :color] color)))
+
+
 (rf/reg-event-fx
   :presence/send-rename
   (fn [_ [_ current-username new-username]]

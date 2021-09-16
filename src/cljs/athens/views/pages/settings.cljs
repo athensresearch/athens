@@ -4,7 +4,6 @@
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
     [athens.db :refer [default-athens-persist]]
-    [athens.util :refer [js-event->val]]
     [athens.views.textinput :as textinput]
     [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
@@ -216,22 +215,6 @@
   [:div (stylefy/use-style settings-page-styles) child])
 
 
-(defn remote-username-comp
-  [username update-fn]
-  [setting-wrapper
-   [:<>
-    [:header
-     [:h3 "Username"]
-     [:span.glance username]]
-    [:main
-     [textinput/textinput {:type         "text"
-                           :placeholder  "Username"
-                           :on-blur      #(update-fn username (js-event->val %))
-                           :defaultValue username}]
-     [:aside
-      [:p "For now, a username is only needed if you are connected to a server."]]]]])
-
-
 (defn reset-settings-comp
   [reset-fn]
   [setting-wrapper
@@ -262,7 +245,7 @@
 
 (defn page
   []
-  (let [{:keys [email username monitoring backup-time]} @(subscribe [:settings])]
+  (let [{:keys [email monitoring backup-time]} @(subscribe [:settings])]
     [settings-container
      [:<>
       [:h1 "Settings"]
@@ -272,7 +255,4 @@
                                  (dispatch [:settings/update :backup-time x])
                                  (dispatch [:fs/update-write-db]))]
       [remote-backups-comp]
-      [remote-username-comp username (fn [current-username new-username]
-                                       (dispatch [:presence/send-rename current-username new-username])
-                                       (dispatch [:settings/update :username new-username]))]
       [reset-settings-comp #(dispatch [:settings/reset])]]]))

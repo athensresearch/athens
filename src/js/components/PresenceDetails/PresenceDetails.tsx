@@ -179,7 +179,16 @@ export const PresenceDetails = ({
         isPressed={isPresenceDetailsOpen}>
 
         {connectionStatus === 'connected' && (
+
           <>
+            <Avatar
+              key={currentUser.personId}
+              username={currentUser.username}
+              color={currentUser.color}
+              personId={currentUser.personId}
+              showTooltip={false}
+              size="1em"
+            />
             <Avatar.Stack
               size="1em"
               maskSize="1.5px"
@@ -222,7 +231,7 @@ export const PresenceDetails = ({
               <Fade {...TransitionProps} timeout={250}>
                 <PresenceOverlay className="animate-in">
                   {hostAddress && (<>
-                    <Button onClick={(hostAddress) => handlePressHostAddress(hostAddress)}>
+                    <Button onClick={() => handlePressHostAddress(hostAddress)}>
                       <HostIcon />
                       <span>{hostAddress}</span>
                     </Button>
@@ -253,7 +262,7 @@ export const PresenceDetails = ({
                       <Heading>On this page</Heading>
                       <Menu>
                         {currentPageMembers.map(member =>
-                          <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
+                          <Button onClick={() => handlePressMember(member)} key={member.personId}>
                             <Avatar
                               username={member.username}
                               personId={member.personId}
@@ -270,7 +279,7 @@ export const PresenceDetails = ({
 
                   <Menu>
                     {differentPageMembers.length > 0 && differentPageMembers.map(member =>
-                      <Button onClick={(member) => handlePressMember(member)} key={member.personId}>
+                      <Button onClick={() => handlePressMember(member)} key={member.personId}>
                         <Avatar
                           username={member.username}
                           personId={member.personId}
